@@ -19,6 +19,7 @@ import qualified Elm.ModuleName as ModuleName
 import qualified Reporting.Annotation as A
 import qualified Reporting.Error.Type as E
 import qualified Type.Instantiate as Instantiate
+import qualified Type.Recorder as Recorder
 import Type.Type as T
 
 
@@ -40,8 +41,25 @@ data State =
 type Header = Map.Map N.Name (A.Located Type)
 
 
-add :: Can.Pattern -> E.PExpected Type -> State -> IO State
-add (A.At region pattern) expectation state =
+-- In typed mode (Just recorder) every pattern node also gets a type variable of
+-- its own: a flex variable equal to the type the pattern is expected to have.
+add :: Maybe Recorder.Recorder -> Can.Pattern -> E.PExpected Type -> State -> IO State
+add maybeRec pat@(A.At region pattern) expectation state =
+  do  newState <- addHelp maybeRec pat expectation state
+      case maybeRec of
+        Nothing ->
+          return newState
+
+        Just recorder ->
+          do  var <- mkFlexVar
+              Recorder.recordPat recorder region pattern var
+              let (State headers vars revCons) = newState
+              let eqCon = CEqual region E.Unit (VarN var) (E.NoExpectation (getType expectation))
+              return $ State headers (var:vars) (eqCon:revCons)
+
+
+addHelp :: Maybe Recorder.Recorder -> Can.Pattern -> E.PExpected Type -> State -> IO State
+addHelp maybeRec (A.At region pattern) expectation state =
   case pattern of
     Can.PAnything ->
       return state
@@ -50,7 +68,7 @@ add (A.At region pattern) expectation state =
       return $ addToHeaders region name expectation state
 
     Can.PAlias realPattern name ->
-      add realPattern expectation $
+      add maybeRec realPattern expectation $
         addToHeaders region name expectation state
 
     Can.PUnit ->
@@ -59,13 +77,13 @@ add (A.At region pattern) expectation state =
           return $ State headers vars (unitCon:revCons)
 
     Can.PPair a b ->
-      addPair region a b expectation state
+      addPair maybeRec region a b expectation state
 
     Can.PTriple a b c ->
-      addTriple region a b c expectation state
+      addTriple maybeRec region a b c expectation state
 
     Can.PCtor home typeName (Can.Union typeVars _ _ _) ctorName _ args ->
-      addCtor region home typeName typeVars ctorName args expectation state
+      addCtor maybeRec region home typeName typeVars ctorName args expectation state
 
     Can.PList patterns ->
       do  entryVar <- mkFlexVar
@@ -73,7 +91,7 @@ add (A.At region pattern) expectation state =
           let listType = AppN ModuleName.list T.list [entryType]
 
           (State headers vars revCons) <-
-            foldM (addEntry region entryType) state (Index.indexedMap (,) patterns)
+            foldM (addEntry maybeRec region entryType) state (Index.indexedMap (,) patterns)
 
           let listCon = CPattern region E.PList listType expectation
           return $ State headers (entryVar:vars) (listCon:revCons)
@@ -87,8 +105,8 @@ add (A.At region pattern) expectation state =
           let tailExpectation = E.PFromContext region E.PTail listType
 
           (State headers vars revCons) <-
-            add headPattern headExpectation =<<
-              add tailPattern tailExpectation state
+            add maybeRec headPattern headExpectation =<<
+              add maybeRec tailPattern tailExpectation state
 
           let listCon = CPattern region E.PList listType expectation
           return $ State headers (entryVar:vars) (listCon : revCons)
@@ -161,37 +179,37 @@ getType expectation =
 -- CONSTRAIN LIST
 
 
-addEntry :: A.Region -> Type -> State -> (Index.ZeroBased, Can.Pattern) -> IO State
-addEntry listRegion tipe state (index, pattern) =
+addEntry :: Maybe Recorder.Recorder -> A.Region -> Type -> State -> (Index.ZeroBased, Can.Pattern) -> IO State
+addEntry maybeRec listRegion tipe state (index, pattern) =
   let
     expectation =
       E.PFromContext listRegion (E.PListEntry index) tipe
   in
-  add pattern expectation state
+  add maybeRec pattern expectation state
 
 
 
 -- CONSTRAIN TUPLE
 
 
-addPair :: A.Region -> Can.Pattern -> Can.Pattern -> E.PExpected Type -> State -> IO State
-addPair region a b expectation state =
+addPair :: Maybe Recorder.Recorder -> A.Region -> Can.Pattern -> Can.Pattern -> E.PExpected Type -> State -> IO State
+addPair maybeRec region a b expectation state =
   do  aVar <- mkFlexVar
       bVar <- mkFlexVar
       let aType = VarN aVar
       let bType = VarN bVar
 
       (State headers vars revCons) <-
-        simpleAdd b bType =<<
-        simpleAdd a aType state
+        simpleAdd maybeRec b bType =<<
+        simpleAdd maybeRec a aType state
 
       let tupleCon = CPattern region E.PTuple (PairN aType bType) expectation
 
       return $ State headers (aVar:bVar:vars) (tupleCon:revCons)
 
 
-addTriple :: A.Region -> Can.Pattern -> Can.Pattern -> Can.Pattern -> E.PExpected Type -> State -> IO State
-addTriple region a b c expectation state =
+addTriple :: Maybe Recorder.Recorder -> A.Region -> Can.Pattern -> Can.Pattern -> Can.Pattern -> E.PExpected Type -> State -> IO State
+addTriple maybeRec region a b c expectation state =
   do  aVar <- mkFlexVar
       bVar <- mkFlexVar
       cVar <- mkFlexVar
@@ -200,32 +218,32 @@ addTriple region a b c expectation state =
       let cType = VarN cVar
 
       (State headers vars revCons) <-
-        simpleAdd c cType =<<
-        simpleAdd b bType =<<
-        simpleAdd a aType state
+        simpleAdd maybeRec c cType =<<
+        simpleAdd maybeRec b bType =<<
+        simpleAdd maybeRec a aType state
 
       let tupleCon = CPattern region E.PTuple (TripleN aType bType cType) expectation
 
       return $ State headers (aVar:bVar:cVar:vars) (tupleCon:revCons)
 
 
-simpleAdd :: Can.Pattern -> Type -> State -> IO State
-simpleAdd pattern patternType state =
-  add pattern (E.PNoExpectation patternType) state
+simpleAdd :: Maybe Recorder.Recorder -> Can.Pattern -> Type -> State -> IO State
+simpleAdd maybeRec pattern patternType state =
+  add maybeRec pattern (E.PNoExpectation patternType) state
 
 
 
 -- CONSTRAIN CONSTRUCTORS
 
 
-addCtor :: A.Region -> ModuleName.Canonical -> T.Name -> [T.Var] -> N.Name -> [Can.PatternCtorArg] -> E.PExpected Type -> State -> IO State
-addCtor region home typeName typeVarNames ctorName args expectation state =
+addCtor :: Maybe Recorder.Recorder -> A.Region -> ModuleName.Canonical -> T.Name -> [T.Var] -> N.Name -> [Can.PatternCtorArg] -> E.PExpected Type -> State -> IO State
+addCtor maybeRec region home typeName typeVarNames ctorName args expectation state =
   do  varPairs <- traverse (\var -> (,) var <$> nameToFlex var) typeVarNames
       let typePairs = map (second VarN) varPairs
       let freeVarDict = Map.fromList typePairs
 
       (State headers vars revCons) <-
-        foldM (addCtorArg region ctorName freeVarDict) state args
+        foldM (addCtorArg maybeRec region ctorName freeVarDict) state args
 
       let ctorType = AppN home typeName (map snd typePairs)
       let ctorCon = CPattern region (E.PCtor ctorName) ctorType expectation
@@ -238,8 +256,8 @@ addCtor region home typeName typeVarNames ctorName args expectation state =
           }
 
 
-addCtorArg :: A.Region -> N.Name -> Map.Map T.Var Type -> State -> Can.PatternCtorArg -> IO State
-addCtorArg region ctorName freeVarDict state (Can.PatternCtorArg index srcType pattern) =
+addCtorArg :: Maybe Recorder.Recorder -> A.Region -> N.Name -> Map.Map T.Var Type -> State -> Can.PatternCtorArg -> IO State
+addCtorArg maybeRec region ctorName freeVarDict state (Can.PatternCtorArg index srcType pattern) =
   do  tipe <- Instantiate.fromSrcType freeVarDict srcType
       let expectation = E.PFromContext region (E.PCtorArg ctorName index) tipe
-      add pattern expectation state
+      add maybeRec pattern expectation state

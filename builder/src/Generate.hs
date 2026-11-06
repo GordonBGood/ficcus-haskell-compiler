@@ -4,6 +4,7 @@ module Generate
   , dev
   , prod
   , c
+  , typeDumps
   , repl
   )
   where
@@ -13,6 +14,7 @@ import Prelude hiding (cycle, print)
 import Control.Concurrent (readMVar)
 import Control.Monad (liftM2)
 import qualified Data.ByteString.Builder as B
+import qualified Data.List as List
 import qualified Data.Map as Map
 import qualified Data.Map.Utils as Map
 import qualified Data.Maybe as Maybe
@@ -80,6 +82,30 @@ prod stuff details (Build.Artifacts pkg _ roots modules) =
       let mode = Mode.Prod (Mode.shortenFieldNames graph)
       let mains = gatherMains pkg objects roots
       return $ JS.generate mode graph mains
+
+
+-- Ficcus: `--output=x.types`: the type dumps that Build wrote for the project modules
+typeDumps :: R.Stuff -> Build.Artifacts -> IO B.Builder
+typeDumps stuff (Build.Artifacts _ _ _ modules) =
+  do  let names = List.sort (map moduleName modules)
+      parts <- traverse (readDump stuff) names
+      return (mconcat parts)
+
+
+moduleName :: Build.Module -> Module.Name
+moduleName modul =
+  case modul of
+    Build.Fresh name _ _ -> name
+    Build.Cached name _ _ -> name
+
+
+readDump :: R.Stuff -> Module.Name -> IO B.Builder
+readDump stuff name =
+  do  let path = R.typesFile stuff name
+      found <- File.exists path
+      if found
+        then (\bytes -> B.byteString bytes <> B.char7 '\n') <$> File.readUtf8 path
+        else return (B.string7 ("-- module " ++ Module.toChars name ++ ": no type dump (module was cached)\n"))
 
 
 -- Ficcus: C back end (milestone 1: a dump of the reachable optimized graph)

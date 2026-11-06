@@ -21,6 +21,7 @@ import qualified AST.Optimized as Opt
 import qualified AST.Prim.Module as Module
 import qualified Build
 import qualified Elm.Details as Details
+import qualified Ficcus.Flags as Flags
 import qualified File
 import qualified Generate
 import qualified Generate.Html as Html
@@ -49,6 +50,7 @@ data Output
   = JS FilePath
   | Html FilePath
   | C FilePath
+  | Types FilePath
   | DevNull
 
 
@@ -78,6 +80,9 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs) =
   R.withRootLock root $ \writer stuff ->
   Task.run $
   do  desiredMode <- getMode debug optimize
+      case maybeOutput of
+        Just (Types _) -> Task.io (Flags.setTypedOutput True)
+        _              -> return ()
       details <- Task.eio Exit.MakeBadDetails (Details.load writer style root stuff)
       case paths of
         [] ->
@@ -111,6 +116,10 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs) =
 
                     name:names ->
                       Task.throw (Exit.MakeNonMainFilesIntoJavaScript name names)
+
+                Just (Types target) ->
+                  do  builder <- Task.io (Generate.typeDumps stuff artifacts)
+                      generate writer style target builder (Build.getRootNames artifacts)
 
                 Just (C target) ->
                   case getNoMains artifacts of
@@ -305,6 +314,7 @@ parseOutput name
   | hasExt ".html" name = Just (Html name)
   | hasExt ".js"   name = Just (JS name)
   | hasExt ".c"    name = Just (C name)
+  | hasExt ".types" name = Just (Types name)
   | otherwise           = Nothing
 
 

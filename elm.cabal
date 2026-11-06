@@ -156,6 +156,7 @@ executable elm
         Canonicalize.Pattern
         Canonicalize.Type
         Compile
+        Ficcus.Flags
         Generate.C
         Generate.Html
         Generate.JavaScript
@@ -210,6 +211,9 @@ executable elm
         Type.Error
         Type.Instantiate
         Type.Occurs
+        Type.Dump
+        Type.Readout
+        Type.Recorder
         Type.Solve
         Type.Type
         Type.Unify

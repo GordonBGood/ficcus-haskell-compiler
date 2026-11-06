@@ -46,7 +46,12 @@ import qualified Elm.Docs as Docs
 import qualified Elm.Interface as I
 import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Package as Pkg
+import qualified Ficcus.Flags as Flags
 import qualified File
+import qualified Data.ByteString.Builder as BB
+import qualified Type.Dump as Dump
+import qualified Type.Readout as Typed
+import System.IO (hPutStrLn, stderr)
 import qualified Json.Encode as E
 import qualified Parse.Module as Parse
 import qualified Reporting
@@ -260,12 +265,13 @@ crawlModule env@(Env _ root _ projectType srcDirs buildID locals foreigns) mvar 
 
             Nothing ->
               do  newTime <- File.getTime path
+                  typedOutput <- Flags.getTypedOutput
                   case Map.lookup name locals of
                     Nothing ->
                       crawlFile env mvar docsNeed name elm newTime buildID
 
                     Just local@(Details.Local oldPath oldTime deps _ lastChange _) ->
-                      if path /= oldPath || oldTime /= newTime || needsDocs docsNeed
+                      if path /= oldPath || oldTime /= newTime || needsDocs docsNeed || typedOutput
                       then crawlFile env mvar docsNeed name elm newTime lastChange
                       else crawlDeps env mvar deps (SCached local)
 
@@ -686,8 +692,18 @@ compile writer (Env key _ stuff projectType _ buildID _ _) docsNeed (Details.Loc
   let
     pkg = projectTypeToPkg projectType
   in
-  case Compile.compile pkg ifaces modul of
-    Right (Compile.Artifacts canonical annotations objects) ->
+  do  typedOutput <- Flags.getTypedOutput
+      let compiled =
+            if typedOutput
+              then fmap (\(a, t) -> (a, Just t)) (Compile.compileTyped pkg ifaces modul)
+              else fmap (\a -> (a, Nothing)) (Compile.compile pkg ifaces modul)
+      compileHelp writer key stuff pkg path time deps main lastChange buildID docsNeed source modul compiled
+
+
+compileHelp :: File.Writer R.PROJECT -> Reporting.BKey -> R.Stuff -> Pkg.Name -> FilePath -> File.Time -> [Module.Name] -> Bool -> Details.BuildID -> Details.BuildID -> DocsNeed -> B.ByteString -> Src.Module -> Either Error.Error (Compile.Artifacts, Maybe Typed.Typed) -> IO Result
+compileHelp writer key stuff pkg path time deps main lastChange buildID docsNeed source modul compiled =
+  case compiled of
+    Right (Compile.Artifacts canonical annotations objects, maybeTyped) ->
       do  result <- makeDocs docsNeed canonical
           case result of
             Left err ->
@@ -699,6 +715,7 @@ compile writer (Env key _ stuff projectType _ buildID _ _) docsNeed (Details.Loc
                   let iface = I.fromModule pkg canonical annotations
                   let elmi = R.elmi stuff name
                   File.writeBytes writer (R.elmo stuff name) Opt.eLocalGraph objects
+                  mapM_ (writeTypes writer stuff name canonical) maybeTyped
                   maybeOldi <- File.readBytes I.dInterface elmi
                   case maybeOldi of
                     Just oldi | oldi == iface ->
@@ -717,6 +734,22 @@ compile writer (Env key _ stuff projectType _ buildID _ _) docsNeed (Details.Loc
     Left err ->
       return $ RProblem $
         Error.Module (Src.getName modul) path time source err
+
+
+-- Ficcus: the `.types` dump of one module, written next to its .elmo
+writeTypes :: File.Writer R.PROJECT -> R.Stuff -> Module.Name -> Can.Module -> Typed.Typed -> IO ()
+writeTypes writer stuff name canonical typed =
+  do  let result = Dump.render canonical typed
+      let summary =
+            "-- module " ++ Module.toChars name
+            ++ ": problems=" ++ show (Dump._problems result)
+            ++ " instances=" ++ show (Dump._matched result)
+            ++ " instance-failures=" ++ show (Dump._matchFailed result)
+            ++ " defaulted=" ++ show (Dump._defaulted result)
+      if Dump._problems result > 0
+        then hPutStrLn stderr ("type dump of " ++ Module.toChars name ++ " has " ++ show (Dump._problems result) ++ " problem(s), see the !! lines")
+        else return ()
+      File.writeBuilder writer (R.typesFile stuff name) (BB.stringUtf8 (unlines (summary : Dump._text result)))
 
 
 projectTypeToPkg :: Parse.ProjectType -> Pkg.Name

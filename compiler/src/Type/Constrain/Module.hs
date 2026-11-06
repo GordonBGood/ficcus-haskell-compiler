@@ -15,6 +15,7 @@ import qualified Reporting.Annotation as A
 import qualified Reporting.Error.Type as E
 import qualified Type.Constrain.Expression as Expr
 import qualified Type.Instantiate as Instantiate
+import qualified Type.Recorder as Recorder
 import Type.Type (Type(..), Constraint(..), (==>), mkFlexVar, nameToRigid, never)
 
 
@@ -22,43 +23,44 @@ import Type.Type (Type(..), Constraint(..), (==>), mkFlexVar, nameToRigid, never
 -- CONSTRAIN
 
 
-constrain :: Can.Module -> IO Constraint
-constrain (Can.Module home _ _ decls _ _ _ effects) =
+constrain :: Maybe Recorder.Recorder -> Can.Module -> IO Constraint
+constrain maybeRec (Can.Module home _ _ decls _ _ _ effects) =
+  let env = Expr.Env Map.empty maybeRec in
   case effects of
     Can.NoEffects ->
-      constrainDecls decls CSaveTheEnvironment
+      constrainDecls env decls CSaveTheEnvironment
 
     Can.Ports ports ->
-      Map.foldrWithKey letPort (constrainDecls decls CSaveTheEnvironment) ports
+      Map.foldrWithKey letPort (constrainDecls env decls CSaveTheEnvironment) ports
 
     Can.Manager r0 r1 r2 manager ->
       case manager of
         Can.Cmd cmdName ->
           letCmd home cmdName =<<
-            constrainDecls decls =<< constrainEffects home r0 r1 r2 manager
+            constrainDecls env decls =<< constrainEffects home r0 r1 r2 manager
 
         Can.Sub subName ->
           letSub home subName =<<
-            constrainDecls decls =<< constrainEffects home r0 r1 r2 manager
+            constrainDecls env decls =<< constrainEffects home r0 r1 r2 manager
 
         Can.Fx cmdName subName ->
           letCmd home cmdName =<<
           letSub home subName =<<
-            constrainDecls decls =<< constrainEffects home r0 r1 r2 manager
+            constrainDecls env decls =<< constrainEffects home r0 r1 r2 manager
 
 
 
 -- CONSTRAIN DECLARATIONS
 
 
-constrainDecls :: Can.Decls -> Constraint -> IO Constraint
-constrainDecls decls finalConstraint =
+constrainDecls :: Expr.Env -> Can.Decls -> Constraint -> IO Constraint
+constrainDecls env decls finalConstraint =
   case decls of
     Can.Declare def otherDecls ->
-      Expr.constrainDef Map.empty def =<< constrainDecls otherDecls finalConstraint
+      Expr.constrainDef env def =<< constrainDecls env otherDecls finalConstraint
 
     Can.DeclareRec def defs otherDecls ->
-      Expr.constrainRecursiveDefs Map.empty (def:defs) =<< constrainDecls otherDecls finalConstraint
+      Expr.constrainRecursiveDefs env (def:defs) =<< constrainDecls env otherDecls finalConstraint
 
     Can.SaveTheEnvironment ->
       return finalConstraint

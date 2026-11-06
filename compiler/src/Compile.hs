@@ -2,11 +2,13 @@
 module Compile
   ( Artifacts(..)
   , compile
+  , compileTyped
   )
   where
 
 
 import qualified Data.Map as Map
+import qualified Data.NonEmptyList as NE
 
 import qualified AST.Source as Src
 import qualified AST.Canonical as Can
@@ -19,9 +21,12 @@ import qualified Elm.Package as Pkg
 import qualified Nitpick.PatternMatches as PatternMatches
 import qualified Optimize.Module as Optimize
 import qualified Reporting.Error as E
+import qualified Reporting.Error.Type as Error
 import qualified Reporting.Result as R
 import qualified Reporting.Render.Type.Localizer as Localizer
 import qualified Type.Constrain.Module as Type
+import qualified Type.Readout as Readout
+import qualified Type.Recorder as Recorder
 import qualified Type.Solve as Type
 
 import System.IO.Unsafe (unsafePerformIO)
@@ -49,6 +54,18 @@ compile pkg ifaces modul =
 
 
 
+-- Ficcus: the same phases with the type recorder switched on. The extra
+-- result holds the type of every expression and pattern node.
+compileTyped :: Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Either E.Error (Artifacts, Readout.Typed)
+compileTyped pkg ifaces modul =
+  do  canonical   <- canonicalize pkg ifaces modul
+      (annotations, typed) <- typeCheckTyped modul canonical
+      ()          <- nitpick canonical
+      objects     <- optimize modul annotations canonical
+      return (Artifacts canonical annotations objects, typed)
+
+
+
 -- PHASES
 
 
@@ -64,12 +81,36 @@ canonicalize pkg ifaces modul =
 
 typeCheck :: Src.Module -> Can.Module -> Either E.Error (Map.Map N.Name Can.Annotation)
 typeCheck modul canonical =
-  case unsafePerformIO (Type.run =<< Type.constrain canonical) of
+  case unsafePerformIO (Type.run =<< Type.constrain Nothing canonical) of
     Right annotations ->
       Right annotations
 
     Left errors ->
       Left (E.BadTypes (Localizer.fromModule modul) errors)
+
+
+typeCheckTyped :: Src.Module -> Can.Module -> Either E.Error (Map.Map N.Name Can.Annotation, Readout.Typed)
+typeCheckTyped modul canonical =
+  case unsafePerformIO (typeCheckTypedIO canonical) of
+    Right result ->
+      Right result
+
+    Left errors ->
+      Left (E.BadTypes (Localizer.fromModule modul) errors)
+
+
+typeCheckTypedIO :: Can.Module -> IO (Either (NE.List Error.Error) (Map.Map N.Name Can.Annotation, Readout.Typed))
+typeCheckTypedIO canonical =
+  do  recorder <- Recorder.new
+      constraint <- Type.constrain (Just recorder) canonical
+      result <- Type.run constraint
+      case result of
+        Left errors ->
+          return (Left errors)
+
+        Right annotations ->
+          do  typed <- Readout.readout recorder
+              return (Right (annotations, typed))
 
 
 nitpick :: Can.Module -> Either E.Error ()

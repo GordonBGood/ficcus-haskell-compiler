@@ -17,6 +17,7 @@ module Root
   , objects
   , elmi
   , elmo
+  , typesFile
   --
   , Path(..)
   , toAbsolutePath
@@ -132,6 +133,11 @@ elmo :: Stuff -> Module.Name -> FilePath
 
 elmi (Stuff stuff) name = stuff </> Module.toDashPath name <.> "elmi"
 elmo (Stuff stuff) name = stuff </> Module.toDashPath name <.> "elmo"
+
+
+-- Ficcus: the type dump of one module (`--output=x.types`)
+typesFile :: Stuff -> Module.Name -> FilePath
+typesFile (Stuff stuff) name = stuff </> Module.toDashPath name <.> "types"
 
 
 

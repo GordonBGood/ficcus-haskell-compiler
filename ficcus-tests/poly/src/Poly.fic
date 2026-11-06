@@ -1,0 +1,66 @@
+module Poly exposing (main)
+
+-- Milestone 2 test: polymorphic functions used at several types, a local
+-- polymorphic helper, an extensible record function, a custom type, comparable
+-- and number variables, and variables that stay unresolved (dead).
+
+
+twice : (a -> a) -> a -> a
+twice f x =
+    f (f x)
+
+
+type Box a
+    = Box a
+
+
+unbox : Box a -> a
+unbox (Box v) =
+    v
+
+
+getX : { r | x : Int } -> Int
+getX r =
+    r.x
+
+
+biggest : List comparable -> Maybe comparable
+biggest xs =
+    List.maximum xs
+
+
+results : List String
+results =
+    let
+        id2 y =
+            y
+
+        pairUp a b =
+            ( id2 a, id2 b )
+
+        ( n, s ) =
+            pairUp 1 "one"
+    in
+    [ String.fromInt (twice (\k -> k + 1) 40)
+    , twice (\t -> t ++ "!") "hi"
+    , String.fromInt (unbox (Box (getX { x = 7, y = 2.5 })))
+    , String.fromInt n ++ s
+    , Debug.toString (biggest [ 3, 1, 2 ])
+    , Debug.toString (biggest [])
+    , String.fromInt (List.length [])
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ =
+                        Debug.log "r" results
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
