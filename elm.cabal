@@ -157,6 +157,7 @@ executable elm
         Canonicalize.Type
         Compile
         Ficcus.Flags
+        Ficcus.TypesFile
         Generate.C
         Generate.Html
         Generate.JavaScript

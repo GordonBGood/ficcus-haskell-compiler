@@ -18,6 +18,8 @@ module Root
   , elmi
   , elmo
   , typesFile
+  , packageTypesFile
+  , packageTypesDir
   --
   , Path(..)
   , toAbsolutePath
@@ -138,6 +140,15 @@ elmo (Stuff stuff) name = stuff </> Module.toDashPath name <.> "elmo"
 -- Ficcus: the type dump of one module (`--output=x.types`)
 typesFile :: Stuff -> Module.Name -> FilePath
 typesFile (Stuff stuff) name = stuff </> Module.toDashPath name <.> "types"
+
+
+-- Ficcus: the type dumps of package modules (typed mode recompiles packages)
+packageTypesDir :: Stuff -> FilePath
+packageTypesDir (Stuff stuff) = stuff </> "typed"
+
+
+packageTypesFile :: Stuff -> Pkg.Name -> Module.Name -> FilePath
+packageTypesFile stuff pkg name = packageTypesDir stuff </> Pkg.toUrl pkg </> Module.toDashPath name <.> "types"
 
 
 

@@ -48,10 +48,8 @@ import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Package as Pkg
 import qualified Ficcus.Flags as Flags
 import qualified File
-import qualified Data.ByteString.Builder as BB
-import qualified Type.Dump as Dump
+import qualified Ficcus.TypesFile as TypesFile
 import qualified Type.Readout as Typed
-import System.IO (hPutStrLn, stderr)
 import qualified Json.Encode as E
 import qualified Parse.Module as Parse
 import qualified Reporting
@@ -739,17 +737,7 @@ compileHelp writer key stuff pkg path time deps main lastChange buildID docsNeed
 -- Ficcus: the `.types` dump of one module, written next to its .elmo
 writeTypes :: File.Writer R.PROJECT -> R.Stuff -> Module.Name -> Can.Module -> Typed.Typed -> IO ()
 writeTypes writer stuff name canonical typed =
-  do  let result = Dump.render canonical typed
-      let summary =
-            "-- module " ++ Module.toChars name
-            ++ ": problems=" ++ show (Dump._problems result)
-            ++ " instances=" ++ show (Dump._matched result)
-            ++ " instance-failures=" ++ show (Dump._matchFailed result)
-            ++ " defaulted=" ++ show (Dump._defaulted result)
-      if Dump._problems result > 0
-        then hPutStrLn stderr ("type dump of " ++ Module.toChars name ++ " has " ++ show (Dump._problems result) ++ " problem(s), see the !! lines")
-        else return ()
-      File.writeBuilder writer (R.typesFile stuff name) (BB.stringUtf8 (unlines (summary : Dump._text result)))
+  TypesFile.write writer (R.typesFile stuff name) name canonical typed
 
 
 projectTypeToPkg :: Parse.ProjectType -> Pkg.Name

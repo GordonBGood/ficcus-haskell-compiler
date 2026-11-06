@@ -19,6 +19,8 @@ import qualified Data.Map as Map
 import qualified Data.Map.Utils as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.NonEmptyList as NE
+import qualified System.Directory as Dir
+import qualified System.FilePath as FP
 
 import qualified ThreadSafe.Fork as Fork
 
@@ -89,7 +91,43 @@ typeDumps :: R.Stuff -> Build.Artifacts -> IO B.Builder
 typeDumps stuff (Build.Artifacts _ _ _ modules) =
   do  let names = List.sort (map moduleName modules)
       parts <- traverse (readDump stuff) names
-      return (mconcat parts)
+      packages <- packageDumps stuff
+      return (mconcat parts <> packages)
+
+
+-- the dumps of the package modules (typed mode recompiled them from source)
+packageDumps :: R.Stuff -> IO B.Builder
+packageDumps stuff =
+  do  let root = R.packageTypesDir stuff
+      found <- Dir.doesDirectoryExist root
+      if not found
+        then return mempty
+        else
+          do  files <- listDumps root
+              parts <- traverse (readPackageDump root) files
+              return (mconcat parts)
+
+
+listDumps :: FilePath -> IO [FilePath]
+listDumps dir =
+  do  entries <- List.sort <$> Dir.listDirectory dir
+      concat <$> traverse (listEntry dir) entries
+
+
+listEntry :: FilePath -> FilePath -> IO [FilePath]
+listEntry dir entry =
+  do  let path = dir FP.</> entry
+      isDir <- Dir.doesDirectoryExist path
+      if isDir
+        then listDumps path
+        else return [ path | FP.takeExtension path == ".types" ]
+
+
+readPackageDump :: FilePath -> FilePath -> IO B.Builder
+readPackageDump root path =
+  do  bytes <- File.readUtf8 path
+      let package = List.intercalate "/" (take 2 (FP.splitDirectories (FP.makeRelative root path)))
+      return (B.string7 ("-- package " ++ package ++ "\n") <> B.byteString bytes <> B.char7 '\n')
 
 
 moduleName :: Build.Module -> Module.Name

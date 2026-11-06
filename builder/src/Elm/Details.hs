@@ -54,6 +54,8 @@ import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Outline as Outline
 import qualified Elm.Package as Pkg
 import qualified Elm.Version as V
+import qualified Ficcus.Flags as Flags
+import qualified Ficcus.TypesFile as TypesFile
 import qualified File
 import qualified Http
 import qualified Json.Decode as JD
@@ -171,7 +173,16 @@ verifyInstall writer root stuff (Solver.Env cache manager connection registry) o
 load :: File.Writer R.PROJECT -> Reporting.Style -> R.Root -> R.Stuff -> IO (Either Exit.Details Details)
 load writer style root stuff =
   do  newTime <- File.getTime (R.elm_json root)
-      maybeDetails <- File.readBytes dDetails (R.details stuff)
+      -- Ficcus: typed output (`--output=x.types`) recompiles packages from
+      -- source, so the cached details are not used and the old dumps go.
+      typedOutput <- Flags.getTypedOutput
+      maybeDetails <-
+        if typedOutput
+          then
+            do  stale <- Dir.doesDirectoryExist (R.packageTypesDir stuff)
+                if stale then Dir.removeDirectoryRecursive (R.packageTypesDir stuff) else return ()
+                return Nothing
+          else File.readBytes dDetails (R.details stuff)
       case maybeDetails of
         Nothing ->
           generate writer style root stuff newTime
@@ -379,21 +390,26 @@ type Dep =
 
 
 verifyDep :: File.Writer R.PACKAGES -> Env -> MVar (Map.Map Pkg.Name (Fork.SafeMVar Dep)) -> Map.Map Pkg.Name Solver.Details -> Pkg.Name -> Solver.Details -> IO Dep
-verifyDep writer (Env key _ cache manager _ _) depsMVar solution pkg details@(Solver.Details vsn directDeps) =
-  do  let fingerprint = Map.intersectionWith (\(Solver.Details v _) _ -> v) solution directDeps
+verifyDep writer (Env key stuff cache manager _ _) depsMVar solution pkg details@(Solver.Details vsn directDeps) =
+  do  typedOutput <- Flags.getTypedOutput
+      let typed = if typedOutput then Just stuff else Nothing
+      let fingerprint = Map.intersectionWith (\(Solver.Details v _) _ -> v) solution directDeps
       exists <- Dir.doesDirectoryExist (R.package cache pkg vsn </> "src")
       if exists
         then
           do  Reporting.report key Reporting.DCached
-              maybeCache <- File.readBytes dArtifactCache (R.package cache pkg vsn </> "artifacts.dat")
+              maybeCache <-
+                if typedOutput
+                  then return Nothing
+                  else File.readBytes dArtifactCache (R.package cache pkg vsn </> "artifacts.dat")
               case maybeCache of
                 Nothing ->
-                  build writer key cache depsMVar pkg details fingerprint Set.empty
+                  build writer key cache typed depsMVar pkg details fingerprint Set.empty
 
                 Just (ArtifactCache fingerprints artifacts) ->
                   if Set.member fingerprint fingerprints
                     then Reporting.report key Reporting.DBuilt >> return (Right artifacts)
-                    else build writer key cache depsMVar pkg details fingerprint fingerprints
+                    else build writer key cache typed depsMVar pkg details fingerprint fingerprints
         else
           do  Reporting.report key Reporting.DRequested
               result <- downloadPackage cache manager pkg vsn
@@ -404,7 +420,7 @@ verifyDep writer (Env key _ cache manager _ _) depsMVar solution pkg details@(So
 
                 Right () ->
                   do  Reporting.report key (Reporting.DReceived pkg vsn)
-                      build writer key cache depsMVar pkg details fingerprint Set.empty
+                      build writer key cache typed depsMVar pkg details fingerprint Set.empty
 
 
 
@@ -426,8 +442,8 @@ type Fingerprint =
 -- BUILD
 
 
-build :: File.Writer R.PACKAGES -> Reporting.DKey -> R.PackageCache -> MVar (Map.Map Pkg.Name (Fork.SafeMVar Dep)) -> Pkg.Name -> Solver.Details -> Fingerprint -> Set.Set Fingerprint -> IO Dep
-build writer key cache depsMVar pkg (Solver.Details vsn _) f fs =
+build :: File.Writer R.PACKAGES -> Reporting.DKey -> R.PackageCache -> Maybe R.Stuff -> MVar (Map.Map Pkg.Name (Fork.SafeMVar Dep)) -> Pkg.Name -> Solver.Details -> Fingerprint -> Set.Set Fingerprint -> IO Dep
+build writer key cache typed depsMVar pkg (Solver.Details vsn _) f fs =
   do  eitherOutline <- Outline.read (R.packageRoot cache pkg vsn)
       case eitherOutline of
         Left _ ->
@@ -450,7 +466,7 @@ build writer key cache depsMVar pkg (Solver.Details vsn _) f fs =
                   do  let src = R.package cache pkg vsn </> "src"
                       let foreignDeps = gatherForeignInterfaces directArtifacts
                       let exposedDict = Map.fromKeys (\_ -> ()) (Outline.flattenExposed exposed)
-                      docsStatus <- getDocsStatus cache pkg vsn
+                      docsStatus <- if Maybe.isJust typed then return DocsNotNeeded else getDocsStatus cache pkg vsn
                       mvar <- newEmptyMVar
                       mvars <- Fork.forkWithKey (crawlModule foreignDeps mvar pkg src docsStatus) exposedDict
                       putMVar mvar mvars
@@ -463,7 +479,7 @@ build writer key cache depsMVar pkg (Solver.Details vsn _) f fs =
 
                         Just statuses ->
                           do  rmvar <- newEmptyMVar
-                              rmvars <- Fork.forkWithKey (compile pkg rmvar) statuses
+                              rmvars <- Fork.forkWithKey (compile (fmap (\stuff -> (writer, stuff)) typed) pkg rmvar) statuses
                               putMVar rmvar rmvars
                               maybeResults <- traverse Fork.await rmvars
                               case sequence maybeResults of
@@ -479,8 +495,11 @@ build writer key cache depsMVar pkg (Solver.Details vsn _) f fs =
                                     artifacts = Artifacts ifaces objects
                                     fingerprints = Set.insert f fs
                                   in
-                                  do  writeDocs writer cache pkg vsn docsStatus results
-                                      File.writeBytes writer path eArtifactCache (ArtifactCache fingerprints artifacts)
+                                  do  if Maybe.isJust typed
+                                        then return ()
+                                        else
+                                          do  writeDocs writer cache pkg vsn docsStatus results
+                                              File.writeBytes writer path eArtifactCache (ArtifactCache fingerprints artifacts)
                                       Reporting.report key Reporting.DBuilt
                                       return (Right artifacts)
 
@@ -653,8 +672,8 @@ data Result
   | RKernelForeign
 
 
-compile :: Pkg.Name -> MVar (Map.Map Module.Name (Fork.SafeMVar (Maybe Result))) -> Module.Name -> Status -> IO (Maybe Result)
-compile pkg mvar _ status =
+compile :: Maybe (File.Writer R.PACKAGES, R.Stuff) -> Pkg.Name -> MVar (Map.Map Module.Name (Fork.SafeMVar (Maybe Result))) -> Module.Name -> Status -> IO (Maybe Result)
+compile typed pkg mvar name status =
   case status of
     SLocal docsStatus deps modul ->
       do  resultsDict <- readMVar mvar
@@ -664,14 +683,27 @@ compile pkg mvar _ status =
               return Nothing
 
             Just results ->
-              case Compile.compile pkg (Map.mapMaybe getInterface results) modul of
-                Left _ ->
-                  return Nothing
+              case typed of
+                Nothing ->
+                  case Compile.compile pkg (Map.mapMaybe getInterface results) modul of
+                    Left _ ->
+                      return Nothing
 
-                Right (Compile.Artifacts canonical annotations objects) ->
-                  do  let ifaces = I.fromModule pkg canonical annotations
-                      docs <- makeDocs docsStatus canonical
-                      return $ Just $ RLocal ifaces objects docs
+                    Right (Compile.Artifacts canonical annotations objects) ->
+                      do  let ifaces = I.fromModule pkg canonical annotations
+                          docs <- makeDocs docsStatus canonical
+                          return $ Just $ RLocal ifaces objects docs
+
+                Just (writer, stuff) ->
+                  case Compile.compileTyped pkg (Map.mapMaybe getInterface results) modul of
+                    Left _ ->
+                      return Nothing
+
+                    Right (Compile.Artifacts canonical annotations objects, types) ->
+                      do  TypesFile.write writer (R.packageTypesFile stuff pkg name) name canonical types
+                          let ifaces = I.fromModule pkg canonical annotations
+                          docs <- makeDocs docsStatus canonical
+                          return $ Just $ RLocal ifaces objects docs
 
     SForeign iface ->
       return (Just (RForeign iface))
