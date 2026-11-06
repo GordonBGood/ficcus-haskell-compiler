@@ -17,6 +17,9 @@ module File
   , writeBytes_
   --
   , exists
+  , sourceExtensions
+  , isSourceExtension
+  , existingModuleFiles
   , remove
   , removeDir
   --
@@ -230,6 +233,31 @@ writeBytes_ writer@(Writer workList) path func value =
 exists :: FilePath -> IO Bool
 exists path =
   Dir.doesFileExist path
+
+
+
+-- SOURCE FILES (Ficcus: .fic is accepted beside .elm)
+
+
+sourceExtensions :: [String]
+sourceExtensions =
+  [".elm", ".fic"]
+
+
+-- takes the extension with its dot, as FP.takeExtension gives it
+isSourceExtension :: String -> Bool
+isSourceExtension ext =
+  ext `elem` sourceExtensions
+
+
+-- all existing source files for one module: base is the path without extension
+existingModuleFiles :: FilePath -> IO [FilePath]
+existingModuleFiles base =
+  concat <$> traverse check sourceExtensions
+  where
+    check ext =
+      do  found <- exists (base FP.<.> ext)
+          return [ base FP.<.> ext | found ]
 
 
 

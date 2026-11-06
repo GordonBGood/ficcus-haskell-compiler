@@ -86,7 +86,7 @@ elmFile =
 
 parseElmFile :: String -> Maybe FilePath
 parseElmFile chars =
-  if FP.takeExtension chars == ".elm" then
+  if FP.takeExtension chars `elem` [".elm", ".fic"] then
     Just chars
   else
     Nothing

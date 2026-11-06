@@ -16,7 +16,6 @@ module Build
 
 import Prelude hiding (cycle)
 import Control.Concurrent.MVar
-import Control.Monad (filterM)
 import Data.Coerce (coerce)
 import qualified Data.ByteString as B
 import qualified Data.Char as Char
@@ -249,9 +248,9 @@ crawlDeps env mvar deps blockedValue =
 
 crawlModule :: Env -> MVar StatusDict -> DocsNeed -> Module.Name -> IO Status
 crawlModule env@(Env _ root _ projectType srcDirs buildID locals foreigns) mvar docsNeed name =
-  do  let fileName = Module.toFilePath name <.> "elm"
+  do  let baseName = Module.toFilePath name
 
-      paths <- filterM (File.exists . coerce) (map (`toAbsoluteElm` fileName) srcDirs)
+      paths <- concat <$> traverse (\d -> map AbsoluteElm <$> File.existingModuleFiles (coerce (toAbsoluteElm d baseName))) srcDirs
 
       case paths of
         [elm@(AbsoluteElm path)] ->
@@ -1006,7 +1005,7 @@ getRootInfoHelp (Env _ _ _ _ srcDirs _ _ _) path absolutePath =
     (dirs, file) = FP.splitFileName absolutePath
     (final, ext) = FP.splitExtension file
   in
-  if ext /= ".elm"
+  if not (File.isSourceExtension ext)
   then
     return $ Left $ Exit.BP_WithBadExtension path
   else
@@ -1019,12 +1018,10 @@ getRootInfoHelp (Env _ _ _ _ srcDirs _ _ _) path absolutePath =
 
       [(_, Right names)] ->
         do  let name = Module.fromString (S.fromChars (List.intercalate "." names))
-            matchingDirs <- filterM (isInsideSrcDirByName names) srcDirs
-            case matchingDirs of
-              d1:d2:_ ->
-                do  let p1 = coerce $ toAbsoluteElm d1 (FP.joinPath names <.> "elm")
-                    let p2 = coerce $ toAbsoluteElm d2 (FP.joinPath names <.> "elm")
-                    return $ Left $ Exit.BP_RootNameDuplicate name p1 p2
+            matchingFiles <- concat <$> traverse (\d -> File.existingModuleFiles (coerce (toAbsoluteElm d (FP.joinPath names)))) srcDirs
+            case matchingFiles of
+              p1:p2:_ ->
+                return $ Left $ Exit.BP_RootNameDuplicate name p1 p2
 
               _ ->
                 return $ Right $ RootInfo absolutePath path (LInside name)
@@ -1035,11 +1032,6 @@ getRootInfoHelp (Env _ _ _ _ srcDirs _ _ _) path absolutePath =
       (s1,_):(s2,_):_ ->
         return $ Left $ Exit.BP_WithAmbiguousSrcDir path s1 s2
 
-
-
-isInsideSrcDirByName :: [String] -> AbsoluteSrcDir -> IO Bool
-isInsideSrcDirByName names srcDir =
-  File.exists (coerce (toAbsoluteElm srcDir (FP.joinPath names <.> "elm")))
 
 
 isInsideSrcDirByPath :: [String] -> AbsoluteSrcDir -> Maybe (FilePath, Either [String] [String])

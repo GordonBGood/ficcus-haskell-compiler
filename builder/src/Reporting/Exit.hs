@@ -1804,7 +1804,7 @@ toProjectProblemReport projectProblem =
 
     BP_WithBadExtension path ->
       Help.report "UNEXPECTED FILE EXTENSION" Nothing
-        "I can only compile Elm files (with a .elm extension) but you want me to compile:"
+        "I can only compile Elm files (with a .elm extension) or Ficcus files (with a .fic extension) but you want me to compile:"
         [ D.indent 4 $ D.red $ D.fromChars path
         , D.reflow $ "Is there a typo? Can the file extension be changed?"
         ]
