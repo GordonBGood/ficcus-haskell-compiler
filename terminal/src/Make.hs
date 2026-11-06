@@ -48,6 +48,7 @@ data Flags =
 data Output
   = JS FilePath
   | Html FilePath
+  | C FilePath
   | DevNull
 
 
@@ -106,6 +107,15 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs) =
                   case getNoMains artifacts of
                     [] ->
                       do  builder <- toBuilder stuff details desiredMode artifacts
+                          generate writer style target builder (Build.getRootNames artifacts)
+
+                    name:names ->
+                      Task.throw (Exit.MakeNonMainFilesIntoJavaScript name names)
+
+                Just (C target) ->
+                  case getNoMains artifacts of
+                    [] ->
+                      do  builder <- Task.mapError Exit.MakeBadGenerate (Generate.c stuff details artifacts)
                           generate writer style target builder (Build.getRootNames artifacts)
 
                     name:names ->
@@ -285,7 +295,7 @@ output =
     , _plural = "output files"
     , _parser = parseOutput
     , _suggest = \_ -> return []
-    , _examples = \_ -> return [ "elm.js", "index.html", "/dev/null" ]
+    , _examples = \_ -> return [ "elm.js", "index.html", "x.c", "/dev/null" ]
     }
 
 
@@ -294,6 +304,7 @@ parseOutput name
   | isDevNull name      = Just DevNull
   | hasExt ".html" name = Just (Html name)
   | hasExt ".js"   name = Just (JS name)
+  | hasExt ".c"    name = Just (C name)
   | otherwise           = Nothing
 
 

@@ -3,6 +3,7 @@ module Generate
   ( debug
   , dev
   , prod
+  , c
   , repl
   )
   where
@@ -29,6 +30,7 @@ import qualified Elm.Interface as I
 import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Package as Pkg
 import qualified File
+import qualified Generate.C as GC
 import qualified Generate.JavaScript as JS
 import qualified Generate.Mode as Mode
 import qualified Nitpick.Debug as Nitpick
@@ -78,6 +80,15 @@ prod stuff details (Build.Artifacts pkg _ roots modules) =
       let mode = Mode.Prod (Mode.shortenFieldNames graph)
       let mains = gatherMains pkg objects roots
       return $ JS.generate mode graph mains
+
+
+-- Ficcus: C back end (milestone 1: a dump of the reachable optimized graph)
+c :: R.Stuff -> Details.Details -> Build.Artifacts -> Task B.Builder
+c stuff details (Build.Artifacts pkg _ roots modules) =
+  do  objects <- finalizeObjects =<< loadObjects stuff details modules
+      let graph = objectsToGlobalGraph objects
+      let mains = gatherMains pkg objects roots
+      return $ GC.dump graph mains
 
 
 repl :: R.Stuff -> Details.Details -> Bool -> Build.ReplArtifacts -> N.Name -> Task B.Builder
