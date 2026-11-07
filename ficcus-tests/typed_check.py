@@ -57,7 +57,8 @@ def exposed_files(proj):
 
 
 def run(safe, elm, args, cwd, env, timeout):
-    env = dict(env, SAFE_TIMEOUT=str(timeout))
+    # the typed dump of a large project (Chadtech/elm-vector) peaks at about 3.3 GB: allow 5 GB unless SAFE_MEM is set
+    env = dict(env, SAFE_TIMEOUT=str(timeout), SAFE_MEM=env.get("SAFE_MEM", "5G"))
     # one automatic retry when the process was killed (rc -9 / 137: memory pressure under load)
     for attempt in (0, 1):
         try:
