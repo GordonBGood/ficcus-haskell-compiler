@@ -1617,10 +1617,10 @@ toRigidEscapeReport source region name var =
               \ and the type of that value is not generalized there. So `" <> var
               <> "` cannot stand for any type here."
           , D.toSimpleHint $
-              "A type variable written in an annotation inside a `let` is a new variable, it does not\
-              \ mean the variable of the same name in the outer annotation unless the outer definition\
-              \ has an annotation that mentions it. Try removing the inner annotation, or write the\
-              \ type that the outer value really has."
+              "In Elm a type variable in an annotation is always a new variable, even when an annotation\
+              \ around it uses the same name. So it can only mean \"any type\" if the definition does not\
+              \ depend on values from outside whose types are fixed there. Try removing this annotation,\
+              \ or write the type that the outside value really has."
           ]
       )
 
