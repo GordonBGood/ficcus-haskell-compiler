@@ -89,6 +89,9 @@ solve env rank pools state constraint =
               do  introduce rank pools vars
                   return state
 
+            Unify.Runaway isCycle ->
+              return $ addError state (Error.Runaway region isCycle)
+
             Unify.Err vars actualType expectedType ->
               do  introduce rank pools vars
                   return $ addError state $
@@ -103,6 +106,9 @@ solve env rank pools state constraint =
             Unify.Ok vars ->
               do  introduce rank pools vars
                   return state
+
+            Unify.Runaway isCycle ->
+              return $ addError state (Error.Runaway region isCycle)
 
             Unify.Err vars actualType expectedType ->
               do  introduce rank pools vars
@@ -119,6 +125,9 @@ solve env rank pools state constraint =
               do  introduce rank pools vars
                   return state
 
+            Unify.Runaway isCycle ->
+              return $ addError state (Error.Runaway region isCycle)
+
             Unify.Err vars actualType expectedType ->
               do  introduce rank pools vars
                   return $ addError state $
@@ -134,6 +143,9 @@ solve env rank pools state constraint =
               do  introduce rank pools vars
                   return state
 
+            Unify.Runaway isCycle ->
+              return $ addError state (Error.Runaway region isCycle)
+
             Unify.Err vars actualType expectedType ->
               do  introduce rank pools vars
                   return $ addError state $
@@ -148,6 +160,9 @@ solve env rank pools state constraint =
             Unify.Ok vars ->
               do  introduce rank pools vars
                   return state
+
+            Unify.Runaway isCycle ->
+              return $ addError state (Error.Runaway region isCycle)
 
             Unify.Err vars actualType expectedType ->
               do  introduce rank pools vars

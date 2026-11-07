@@ -48,7 +48,10 @@ fromSrcType freeVars sourceType =
                 fromSrcType freeVars realType
 
               Can.Holey realType ->
-                fromSrcType (Map.fromList targs) realType
+                -- The arguments are converted once, by the solver; inside the alias body they
+                -- are referred to by name, so that nested aliases do not copy them
+                -- (it used to double the work at every level of 20 nested aliases).
+                fromSrcType (Map.fromList [ (n, PlaceHolder n) | (n, _) <- targs ]) realType
 
     Can.TPair a b ->
       PairN

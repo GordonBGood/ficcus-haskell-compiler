@@ -503,6 +503,10 @@ termToErrorType term =
                 ET.RigidVar ext ->
                     ET.Record errFields (ET.RigidOpen ext)
 
+                ET.Infinite ->
+                    -- the extension of the record is the record itself
+                    ET.Infinite
+
                 _ ->
                     $(Crash.crash 'termToErrorType) "Used toErrorType on a type that is not well-formed"
 
