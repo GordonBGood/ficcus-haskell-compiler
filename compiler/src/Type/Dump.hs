@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE BangPatterns, MagicHash #-}
 module Type.Dump
   ( render
   , Result(..)
@@ -23,6 +23,9 @@ module Type.Dump
 
 
 import Control.Monad (forM_, when)
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Builder as BB
+import qualified Data.ByteString.Lazy as BL
 import Control.Monad.State.Strict (State, execState, gets, modify')
 import Data.Bits (shiftR, (.&.))
 import qualified Data.List as List
@@ -40,7 +43,7 @@ import qualified Elm.Package as Pkg
 import qualified AST.Prim.Module as Module
 import qualified Reporting.Annotation as A
 import Type.Readout
-import Type.Recorder (Key(..), DefKey)
+import Type.Recorder (Key(..), DefKey(..))
 import qualified Type.Recorder as Recorder
 
 
@@ -50,7 +53,7 @@ import qualified Type.Recorder as Recorder
 
 data Result =
   Result
-    { _text :: [String]
+    { _text :: [BS.ByteString]   -- the lines, UTF-8, without line ends
     , _problems :: Int
     , _matched :: Int
     , _matchFailed :: Int
@@ -66,7 +69,7 @@ data Result =
 
 data W =
   W
-    { _out :: [String]                 -- reversed
+    { _out :: [BS.ByteString]          -- reversed; strict, so a line costs its bytes and not a String
     , _bad :: Int
     , _ok :: Int
     , _failed :: Int
@@ -89,6 +92,8 @@ data Ctx =
     , _vals :: Map.Map N.Name (Either DefKey Key)   -- a definition, or a name bound by a let pattern
     , _depth :: Int
     , _home :: ModuleName.Canonical
+    , _tops :: Set.Set DefKey                        -- the top level definitions of the module
+    , _owned :: Map.Map String String               -- scheme variable -> token naming its owner definition and index
     }
 
 
@@ -101,7 +106,7 @@ render (Can.Module home _ _ decls _ _ _ _) typed =
   let
     topDefs = declsToDefs decls
     vals = Map.fromList [ (defName d, Left (defKeyOf d)) | d <- topDefs ]
-    ctx = Ctx typed Set.empty vals 0 home
+    ctx = Ctx typed Set.empty vals 0 home (Set.fromList [ defKeyOf d | d <- topDefs ]) Map.empty
     start = W [] 0 0 0 0 0 [] Set.empty Map.empty Set.empty
     w = execState (walkModule ctx home topDefs) start
     unvisited = Map.size (_nodes typed) - Set.size (_seen w)
@@ -111,7 +116,7 @@ render (Can.Module home _ _ decls _ _ _ _) typed =
         else []
   in
   Result
-    { _text = reverse (_out w) ++ extra
+    { _text = reverse (_out w) ++ map packLine extra
     , _problems = _bad w + (if unvisited /= 0 then 1 else 0)
     , _matched = _ok w
     , _matchFailed = _failed w
@@ -162,7 +167,12 @@ defKeyOf def =
 
 emit :: Ctx -> String -> M ()
 emit ctx line =
-  modify' (\w -> w { _out = (replicate (2 * _depth ctx) ' ' ++ line) : _out w })
+  let !packed = packLine (replicate (2 * _depth ctx) ' ' ++ line)
+  in modify' (\w -> w { _out = packed : _out w })
+
+
+packLine :: String -> BS.ByteString
+packLine = BL.toStrict . BB.toLazyByteString . BB.stringUtf8
 
 
 problem :: Ctx -> String -> M ()
@@ -203,8 +213,12 @@ walkDef ctx def =
 
     Just scheme ->
       do  shown <- showScheme ctx scheme
-          emit ctx ("def " ++ N.toChars name ++ " :: " ++ shown ++ "    [" ++ regionText region ++ "]")
-          let inner = ctx { _scope = Set.union (_scope ctx) (Set.fromList (map fst (tvars scheme))), _depth = _depth ctx + 1 }
+          let did = defIdOf ctx (defKeyOf def)
+          sigText <- sigOf ctx scheme
+          emit ctx ("def " ++ N.toChars name ++ " :: " ++ shown ++ "    [" ++ regionText region ++ "]"
+                    ++ "   id: " ++ did ++ "   sig: " ++ sigText ++ "   kinds: " ++ kindsText scheme)
+          let owned' = List.foldl' (\m (u, i) -> Map.insertWith (\_ old -> old) u (varToken did i) m) (_owned ctx) (canonVars scheme)
+          let inner = ctx { _scope = Set.union (_scope ctx) (Set.fromList (map fst (tvars scheme))), _depth = _depth ctx + 1, _owned = owned' }
           mapM_ (walkPattern inner) argPatterns
           walkExpr inner body
 
@@ -453,9 +467,9 @@ displayName unique kind _ =
 
 calleeText :: Ctx -> Can.Expr_ -> String
 calleeText ctx e =
-  case calleeOf ctx e of
+  case calleeId ctx e of
     Nothing -> ""
-    Just (home, name) -> "   callee: " ++ moduleChars home ++ "." ++ N.toChars name
+    Just cid -> "   callee: " ++ cid
 
 
 calleeOf :: Ctx -> Can.Expr_ -> Maybe (ModuleName.Canonical, N.Name)
@@ -472,6 +486,103 @@ calleeOf ctx e =
         Just (Left _) -> Just (_home ctx, name)
         _ -> Nothing
     _ -> Nothing
+
+
+-- the identity of a definition of this module: top level `Module.name`, local
+-- `Module.name@row:col` (position of the name, so that equal names in different
+-- scopes differ)
+defIdOf :: Ctx -> DefKey -> String
+defIdOf ctx key@(DefKey s _ n) =
+  moduleChars (_home ctx) ++ "." ++ N.toChars n ++
+    (if Set.member key (_tops ctx) then "" else "@" ++ show r ++ ":" ++ show c)
+  where (r, c) = rowCol s
+
+
+-- the id of the callee at a use, as in `callee:` but exact for local definitions
+calleeId :: Ctx -> Can.Expr_ -> Maybe String
+calleeId ctx e =
+  case e of
+    Can.VarLocal name ->
+      case Map.lookup name (_vals ctx) of
+        Just (Left key) -> Just (defIdOf ctx key)
+        _ -> Nothing
+    Can.VarTopLevel _ name ->
+      case Map.lookup name (_vals ctx) of
+        Just (Left key) -> Just (defIdOf ctx key)
+        _ -> Nothing
+    _ -> fmap (\(home, name) -> moduleChars home ++ "." ++ N.toChars name) (calleeOf ctx e)
+
+
+-- SCHEMES AS DATA (stage (ii) step 7, item 2)
+--
+-- The variables of a scheme are numbered v0, v1, ... in order of first occurrence,
+-- so the numbering depends on the scheme only and is the same at the definition
+-- (`def` line: id, sig, kinds) and at every use (`subst:` line). A variable that an
+-- enclosing definition owns is written `<<ownerId|vN>>` wherever it occurs.
+-- Kinds: any, number, comparable, appendable, compappend, or row (the extension
+-- variable of a record type).
+
+
+canonVars :: TType -> [(String, Int)]
+canonVars scheme = zip (List.nub (map fst (tvars scheme))) [0 ..]
+
+
+varToken :: String -> Int -> String
+varToken did i = "<<" ++ did ++ "|v" ++ show i ++ ">>"
+
+
+rowVarNames :: TType -> Set.Set String
+rowVarNames tipe =
+  case tipe of
+    TCon _ _ args -> Set.unions (map rowVarNames args)
+    TFun a b -> Set.union (rowVarNames a) (rowVarNames b)
+    TRecord fields ext ->
+      Set.unions (maybe Set.empty extVars ext : map rowVarNames (Map.elems fields))
+    TPair a b -> Set.union (rowVarNames a) (rowVarNames b)
+    TTriple a b c -> Set.unions [rowVarNames a, rowVarNames b, rowVarNames c]
+    TAlias _ _ _ real -> rowVarNames real
+    _ -> Set.empty
+  where
+    extVars t =
+      case t of
+        TVar n _ _ -> Set.singleton n
+        other -> rowVarNames other
+
+
+kindsText :: TType -> String
+kindsText scheme =
+  let rows = rowVarNames scheme
+      kindOf u = case [ k | (n, k) <- tvars scheme, n == u ] of { k : _ -> k; [] -> KAny }
+  in List.intercalate "," [ "v" ++ show i ++ ":" ++ (if Set.member u rows then "row" else kindWord (kindOf u)) | (u, i) <- canonVars scheme ]
+
+
+-- run a rendering with some variables shown under given names; the names chosen
+-- for other variables meanwhile are kept
+withNames :: [(String, String)] -> M a -> M a
+withNames pairs act =
+  do  saved <- gets _display
+      modify' (\w -> w { _display = Map.union (Map.fromList pairs) (_display w) })
+      r <- act
+      modify' (\w -> w { _display = List.foldl' (\m (u, _) -> maybe (Map.delete u m) (\o -> Map.insert u o m) (Map.lookup u saved)) (_display w) pairs })
+      return r
+
+
+-- the names a scheme is shown under: v<i> for its own variables, the owner's token for others
+schemeNames :: Ctx -> TType -> [(String, String)]
+schemeNames ctx scheme =
+  [ (u, maybe ("v" ++ show i) id (Map.lookup u (_owned ctx))) | (u, i) <- canonVars scheme ]
+
+
+sigOf :: Ctx -> TType -> M String
+sigOf ctx scheme = withNames (schemeNames ctx scheme) (showType scheme)
+
+
+sigHash :: String -> String
+sigHash text =
+  let h = List.foldl' (\acc c -> (acc * 33 + fromEnum c) `mod` 4294967291) (5381 :: Int) text
+  in showHex8 h
+  where
+    showHex8 n = [ "0123456789abcdef" !! ((n `div` (16 ^ k)) `mod` 16) | k <- [7, 6 .. 0 :: Int] ]
 
 
 
@@ -502,8 +613,27 @@ instanceText ctx e raw =
                       let atFun = any hasFunction (Map.elems subst)
                       modify' (\w -> w { _eqCount = _eqCount w + 1
                                        , _eqFuns = if atFun then (opName ++ " " ++ List.intercalate "," shown) : _eqFuns w else _eqFuns w })
-              return (if null real then "" else "   instance: " ++ List.intercalate ", " real)
+              substPart <- substText scheme subst
+              return ((if null real then "" else "   instance: " ++ List.intercalate ", " real) ++ substPart)
   where
+    -- the substitution as data, in the callee's canonical variable names
+    substText scheme subst =
+      do  let ownedNames = [ (u, tok) | (u, tok) <- Map.toList (_owned ctx) ]
+          let dead n = not (Set.member n (_scope ctx))
+          sig <- sigOf ctx scheme
+          entries <-
+            mapM
+              (\(u, i) ->
+                  case Map.lookup u subst of
+                    Nothing -> return Nothing
+                    Just (TVar other _ _) | other == u -> return Nothing
+                    Just value ->
+                      do  shown <- withNames ownedNames (showType (applyDefault dead value))
+                          return (Just ("v" ++ show i ++ " := " ++ shown)))
+              (canonVars scheme)
+          let present = [ x | Just x <- entries ]
+          return (if null present then "" else "   sig#: " ++ sigHash sig ++ "   subst: " ++ List.intercalate ", " present)
+
     bindingText dead (name, value) =
       case value of
         TVar other _ _ | other == name -> return Nothing
