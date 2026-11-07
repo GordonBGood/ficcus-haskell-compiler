@@ -88,6 +88,7 @@ data Ctx =
     , _scope :: Set.Set String
     , _vals :: Map.Map N.Name (Either DefKey Key)   -- a definition, or a name bound by a let pattern
     , _depth :: Int
+    , _home :: ModuleName.Canonical
     }
 
 
@@ -100,7 +101,7 @@ render (Can.Module home _ _ decls _ _ _ _) typed =
   let
     topDefs = declsToDefs decls
     vals = Map.fromList [ (defName d, Left (defKeyOf d)) | d <- topDefs ]
-    ctx = Ctx typed Set.empty vals 0
+    ctx = Ctx typed Set.empty vals 0 home
     start = W [] 0 0 0 0 0 [] Set.empty Map.empty Set.empty
     w = execState (walkModule ctx home topDefs) start
     unvisited = Map.size (_nodes typed) - Set.size (_seen w)
@@ -302,7 +303,7 @@ nodeLine ctx region e =
         Just raw ->
           do  (shown, extra) <- typeText ctx raw
               inst <- instanceText ctx e raw
-              emit ctx (regionText region ++ " " ++ Recorder.exprKind e ++ " :: " ++ shown ++ extra ++ inst)
+              emit ctx (regionText region ++ " " ++ Recorder.exprKind e ++ " :: " ++ shown ++ extra ++ calleeText ctx e ++ inst)
 
 
 
@@ -438,6 +439,39 @@ displayName unique kind _ =
               let chosen = List.foldr const base (dropWhile (`Set.member` used) candidates)
               modify' (\w -> w { _display = Map.insert unique chosen (_display w), _usedNames = Set.insert chosen (_usedNames w) })
               return chosen
+
+
+
+-- CALLEE IDENTITY (Ficcus stage (ii) step 7, item 1)
+--
+-- Every use of a named value says which definition it uses: `callee: pkg:Module.name`
+-- (home module and name; for an operator the function it resolves to). A name bound
+-- by a let or at top level of the current module has the same form with the current
+-- module; a name bound by a pattern has no callee. The identity is the pair, the
+-- region of the definition is in the `def` line of its own module.
+
+
+calleeText :: Ctx -> Can.Expr_ -> String
+calleeText ctx e =
+  case calleeOf ctx e of
+    Nothing -> ""
+    Just (home, name) -> "   callee: " ++ moduleChars home ++ "." ++ N.toChars name
+
+
+calleeOf :: Ctx -> Can.Expr_ -> Maybe (ModuleName.Canonical, N.Name)
+calleeOf ctx e =
+  case e of
+    Can.VarTopLevel home name -> Just (home, name)
+    Can.VarForeign home name _ -> Just (home, name)
+    Can.VarDebug home name _ -> Just (home, name)
+    Can.VarCtor _ home name _ _ -> Just (home, name)
+    Can.VarOperator _ home name _ -> Just (home, name)
+    Can.Binop _ home name _ _ _ -> Just (home, name)
+    Can.VarLocal name ->
+      case Map.lookup name (_vals ctx) of
+        Just (Left _) -> Just (_home ctx, name)
+        _ -> Nothing
+    _ -> Nothing
 
 
 
