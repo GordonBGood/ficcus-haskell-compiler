@@ -13,7 +13,7 @@ license-file: LICENSE
 
 
 executable elm
-    ghc-options: -O2 -rtsopts -threaded "-with-rtsopts=-N -qg -A128m" -Wall -Werror
+    ghc-options: -O2 -rtsopts -threaded "-with-rtsopts=-N -qg -A64m" -Wall -Werror
         -- add -eventlog for (elm make src/Main.elm +RTS -l; threadscope elm.eventlog)
         -- https://www.oreilly.com/library/view/parallel-and-concurrent/9781449335939/
 
