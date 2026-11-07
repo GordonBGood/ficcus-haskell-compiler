@@ -1,9 +1,9 @@
 -- module Fibonacci: problems=0 instances=22 instance-failures=0 defaulted=2
 -- equality-uses: total=0 at-function=0
 module author/project:Fibonacci
-def countFibsTo :: number -> Int    [17:1-17:12]   id: author/project:Fibonacci.countFibsTo   sig: v0 -> Int   kinds: v0:number
+def countFibsTo :: number -> Int    [17:1-17:12]   id: author/project:Fibonacci.countFibsTo   sig: v0 -> Int   kinds: v0:number   group: author/project:Fibonacci.countFibsTo nonrec ann
   17:13-17:14 PVar n :: number
-  def worker :: number -> number -> number1 -> number1    [19:9-19:15]   id: author/project:Fibonacci.worker@19:9   sig: <<author/project:Fibonacci.countFibsTo|v0>> -> <<author/project:Fibonacci.countFibsTo|v0>> -> v1 -> v1   kinds: v0:number,v1:number
+  def worker :: number -> number -> number1 -> number1    [19:9-19:15]   id: author/project:Fibonacci.worker@19:9   sig: <<author/project:Fibonacci.countFibsTo|v0>> -> <<author/project:Fibonacci.countFibsTo|v0>> -> v1 -> v1   kinds: v0:number,v1:number   group: author/project:Fibonacci.worker@19:9 rec inferred
     19:16-19:17 PVar f :: number
     19:18-19:19 PVar s :: number
     19:20-19:23 PVar cnt :: number1
@@ -13,7 +13,7 @@ def countFibsTo :: number -> Int    [17:1-17:12]   id: author/project:Fibonacci.
         20:20-20:21 VarLocal :: number
       21:17-21:20 VarLocal :: number1
       24:17-24:42 Call :: number1
-        24:17-24:23 VarLocal :: number -> number -> number1 -> number1   callee: author/project:Fibonacci.worker@19:9
+        24:17-24:23 VarLocal :: number -> number -> number1 -> number1   callee: author/project:Fibonacci.worker@19:9   use: rec
         24:24-24:25 VarLocal :: number
         24:27-24:32 Binop :: number   callee: elm/core:Basics.add   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Fibonacci.countFibsTo|v0>>
           24:27-24:28 VarLocal :: number
@@ -22,42 +22,42 @@ def countFibsTo :: number -> Int    [17:1-17:12]   id: author/project:Fibonacci.
           24:35-24:38 VarLocal :: number1
           24:41-24:42 Int :: number1
   26:5-26:17 Call :: Int
-    26:5-26:11 VarLocal :: number -> number -> Int -> Int   callee: author/project:Fibonacci.worker@19:9   instance: number1 := Int   sig#: a81b7981   subst: v1 := Int
+    26:5-26:11 VarLocal :: number -> number -> Int -> Int   callee: author/project:Fibonacci.worker@19:9   use: gen   instance: number1 := Int   sig#: a81b7981   subst: v1 := Int
     26:12-26:13 Int :: number
     26:14-26:15 Int :: number
     26:16-26:17 Int :: Int
-def limit :: number    [13:1-13:6]   id: author/project:Fibonacci.limit   sig: v0   kinds: v0:number
+def limit :: number    [13:1-13:6]   id: author/project:Fibonacci.limit   sig: v0   kinds: v0:number   group: author/project:Fibonacci.limit nonrec ann
   13:9-13:19 Binop :: number   callee: elm/core:Basics.sub   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Fibonacci.limit|v0>>
     13:9-13:15 Binop :: number   callee: elm/core:Basics.pow   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Fibonacci.limit|v0>>
       13:9-13:10 Int :: number
       13:13-13:15 Int :: number
     13:18-13:19 Int :: number
-def main :: Program () () ()    [32:1-32:5]   id: author/project:Fibonacci.main   sig: Program () () ()   kinds: 
+def main :: Program () () ()    [32:1-32:5]   id: author/project:Fibonacci.main   sig: Program () () ()   kinds:    group: author/project:Fibonacci.main nonrec ann
   33:5-50:10 Call :: Program () () ()
     33:5-33:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
     34:9-50:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
       35:13-47:33 Lambda :: () -> ( (), Cmd () )
         35:14-35:15 PAnything :: ()
-        def answer :: String    [37:21-37:27]   id: author/project:Fibonacci.answer@37:21   sig: String   kinds: 
+        def answer :: String    [37:21-37:27]   id: author/project:Fibonacci.answer@37:21   sig: String   kinds:    group: author/project:Fibonacci.answer@37:21 nonrec inferred
           38:25-42:45 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
             38:25-38:33 Str :: String
             39:32-42:45 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
               39:32-39:65 Call :: String
                 39:32-39:46 VarForeign :: Int -> String   callee: elm/core:String.fromInt
                 39:48-39:65 Call :: Int
-                  39:48-39:59 VarTopLevel :: Int -> Int   <= number -> Int   callee: author/project:Fibonacci.countFibsTo   instance: number1 := Int (defaulted)   sig#: 0ddc4b5e   subst: v0 := Int
-                  39:60-39:65 VarTopLevel :: Int   <= number   callee: author/project:Fibonacci.limit   instance: number2 := Int (defaulted)   sig#: 005979ab   subst: v0 := Int
+                  39:48-39:59 VarTopLevel :: Int -> Int   <= number -> Int   callee: author/project:Fibonacci.countFibsTo   use: gen   instance: number1 := Int (defaulted)   sig#: 0ddc4b5e   subst: v0 := Int
+                  39:60-39:65 VarTopLevel :: Int   <= number   callee: author/project:Fibonacci.limit   use: gen   instance: number2 := Int (defaulted)   sig#: 005979ab   subst: v0 := Int
               40:32-42:45 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
                 40:32-40:56 Str :: String
                 41:32-42:45 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
                   41:32-41:52 Call :: String
                     41:32-41:46 VarForeign :: Int -> String   callee: elm/core:String.fromInt
-                    41:47-41:52 VarTopLevel :: Int   callee: author/project:Fibonacci.limit   instance: number2 := Int   sig#: 005979ab   subst: v0 := Int
+                    41:47-41:52 VarTopLevel :: Int   callee: author/project:Fibonacci.limit   use: gen   instance: number2 := Int   sig#: 005979ab   subst: v0 := Int
                   42:32-42:45 Str :: String
         44:21-44:22 PAnything :: ()
         45:25-45:44 Call :: ()
           45:25-45:34 VarDebug :: String -> () -> ()   callee: elm/core:Debug.log   instance: a := ()   sig#: 6ecaa5dd   subst: v0 := ()
-          45:35-45:41 VarLocal :: String   callee: author/project:Fibonacci.answer@37:21
+          45:35-45:41 VarLocal :: String   callee: author/project:Fibonacci.answer@37:21   use: gen
           45:42-45:44 Unit :: ()
         47:17-47:33 Pair :: ( (), Cmd () )
           47:19-47:21 Unit :: ()

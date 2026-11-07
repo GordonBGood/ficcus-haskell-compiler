@@ -46,7 +46,7 @@ def split_top(s):
 
 LINE_DEF = re.compile(r"^\s*def \S+ :: .*?   id: (\S+)   sig: (.*?)   kinds: (.*)$")
 LINE_CTOR = re.compile(r"^  ctor \S+   id: (\S+)   tag: \d+   arity: \d+   fields: .*?   sig: (.*?)   kinds: (.*)$")
-LINE_USE = re.compile(r"   callee: (\S+)(?:   instance: .*?)?   sig#: (\w+)   subst: (.*)$")
+LINE_USE = re.compile(r"   callee: (\S+)(?:   use: \w+)?(?:   instance: .*?)?   sig#: (\w+)   subst: (.*)$")
 
 
 def parse(path):
