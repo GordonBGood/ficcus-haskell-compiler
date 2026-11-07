@@ -56,7 +56,7 @@ def main :: Program () () ()    [32:1-32:5]   id: author/project:Fibonacci.main 
                   42:32-42:45 Str :: String
         44:21-44:22 PAnything :: ()
         45:25-45:44 Call :: ()
-          45:25-45:34 VarDebug :: String -> () -> ()   callee: author/project:Fibonacci.log   instance: a := ()   sig#: 6ecaa5dd   subst: v0 := ()
+          45:25-45:34 VarDebug :: String -> () -> ()   callee: elm/core:Debug.log   instance: a := ()   sig#: 6ecaa5dd   subst: v0 := ()
           45:35-45:41 VarLocal :: String   callee: author/project:Fibonacci.answer@37:21
           45:42-45:44 Unit :: ()
         47:17-47:33 Pair :: ( (), Cmd () )

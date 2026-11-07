@@ -35,6 +35,7 @@ import Data.Word (Word64)
 import GHC.Word (Word64(..))
 
 import qualified AST.Canonical as Can
+import qualified Data.Index as Index
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.Operator as Op
 import qualified AST.Prim.TypeName as T
@@ -102,13 +103,13 @@ data Ctx =
 
 
 render :: Can.Module -> Typed -> Result
-render (Can.Module home _ _ decls _ _ _ _) typed =
+render (Can.Module home _ _ decls unions _ _ _) typed =
   let
     topDefs = declsToDefs decls
     vals = Map.fromList [ (defName d, Left (defKeyOf d)) | d <- topDefs ]
     ctx = Ctx typed Set.empty vals 0 home (Set.fromList [ defKeyOf d | d <- topDefs ]) Map.empty
     start = W [] 0 0 0 0 0 [] Set.empty Map.empty Set.empty
-    w = execState (walkModule ctx home topDefs) start
+    w = execState (walkModule ctx home unions topDefs) start
     unvisited = Map.size (_nodes typed) - Set.size (_seen w)
     extra =
       if unvisited /= 0
@@ -126,9 +127,10 @@ render (Can.Module home _ _ decls _ _ _ _) typed =
     }
 
 
-walkModule :: Ctx -> ModuleName.Canonical -> [Can.Def] -> M ()
-walkModule ctx home defs =
+walkModule :: Ctx -> ModuleName.Canonical -> Map.Map T.Name Can.Union -> [Can.Def] -> M ()
+walkModule ctx home unions defs =
   do  emit (ctx { _depth = 0 }) ("module " ++ moduleChars home)
+      walkUnions ctx home unions
       forM_ defs $ \def ->
         do  modify' (\w -> w { _display = Map.empty, _usedNames = Set.empty })
             walkDef ctx def
@@ -510,6 +512,8 @@ calleeId ctx e =
       case Map.lookup name (_vals ctx) of
         Just (Left key) -> Just (defIdOf ctx key)
         _ -> Nothing
+    -- VarDebug carries the home of the module that uses it, not of Debug
+    Can.VarDebug _ name _ -> Just ("elm/core:Debug." ++ N.toChars name)
     _ -> fmap (\(home, name) -> moduleChars home ++ "." ++ N.toChars name) (calleeOf ctx e)
 
 
@@ -697,3 +701,37 @@ hasFunction t =
     TTriple a b c -> any hasFunction [a, b, c]
     TAlias _ _ _ inner -> hasFunction inner
     _ -> False
+
+
+
+-- CONSTRUCTOR FIELD TYPES (stage (ii) step 7, item 4)
+--
+-- Every custom type of the module: its id, number of parameters and constructors, and
+-- Elm's own classification of its layout (normal, enum: no constructor has fields,
+-- unbox: one constructor with one field). Every constructor: id (the `callee:` of its
+-- uses), tag, arity, the type of each field, and its scheme `f1 -> .. -> T a b` with
+-- the variables numbered v0, v1, .. by first occurrence, as for definitions; the
+-- parameters of the type all occur in the result, so a phantom parameter is numbered
+-- too. A use of the constructor has `sig#` and `subst` in these names.
+
+
+walkUnions :: Ctx -> ModuleName.Canonical -> Map.Map T.Name Can.Union -> M ()
+walkUnions ctx home unions =
+  forM_ (Map.toList unions) $ \(tname, Can.Union vars alts numAlts opts) ->
+    do  modify' (\w -> w { _display = Map.empty, _usedNames = Set.empty })
+        let typeName = N.toChars (T.nameToName tname)
+        let layout = case opts of { Can.Normal -> "normal"; Can.Enum -> "enum"; Can.Unbox -> "unbox" }
+        emit ctx ("type " ++ typeName ++ "   id: " ++ moduleChars home ++ "." ++ typeName
+                  ++ "   params: " ++ show (length vars) ++ "   ctors: " ++ show numAlts ++ "   layout: " ++ layout)
+        let result = canToTType (Can.TType home tname (map Can.TVar vars))
+        forM_ alts $ \(Can.Ctor cname index arity fields) ->
+          do  let fieldTypes = map canToTType fields
+              let scheme = foldr TFun result fieldTypes
+              let names = [ (u, "v" ++ show i) | (u, i) <- canonVars scheme ]
+              shownFields <- withNames names (mapM showType fieldTypes)
+              sig <- withNames names (showType scheme)
+              emit (ctx { _depth = _depth ctx + 1 })
+                ("ctor " ++ N.toChars cname ++ "   id: " ++ moduleChars home ++ "." ++ N.toChars cname
+                 ++ "   tag: " ++ show (Index.toMachine index) ++ "   arity: " ++ show arity
+                 ++ "   fields: " ++ List.intercalate " ;; " shownFields
+                 ++ "   sig: " ++ sig ++ "   kinds: " ++ kindsText scheme)

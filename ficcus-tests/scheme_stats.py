@@ -45,12 +45,19 @@ def split_top(s):
 
 
 LINE_DEF = re.compile(r"^\s*def \S+ :: .*?   id: (\S+)   sig: (.*?)   kinds: (.*)$")
+LINE_CTOR = re.compile(r"^  ctor \S+   id: (\S+)   tag: \d+   arity: \d+   fields: .*?   sig: (.*?)   kinds: (.*)$")
 LINE_USE = re.compile(r"   callee: (\S+)(?:   instance: .*?)?   sig#: (\w+)   subst: (.*)$")
 
 
 def parse(path):
     defs, uses = {}, set()
     for line in open(path, encoding="utf-8"):
+        if line.startswith("  ctor "):
+            m = LINE_CTOR.match(line.rstrip("\n"))
+            if m:
+                kinds = dict(k.split(":", 1) for k in m.group(3).split(",") if k)
+                defs[m.group(1)] = (kinds, sig_hash(m.group(2)))
+            continue
         if "def " in line[:200] and "   kinds: " in line:
             m = LINE_DEF.match(line.rstrip("\n"))
             if m:
@@ -71,10 +78,30 @@ def parse(path):
     return defs, uses
 
 
+LOCAL_MISMATCH = set()         # (callee, use hash, def hash) inside one dump (one version of every package)
+UNKNOWN = collections.Counter()
+UNKNOWN_OTHER = collections.Counter()
+
+
+def classify(callee):
+    if callee.startswith("elm/core:Debug."): return "debug"
+    last = callee.rsplit(":", 1)[-1].split("@")[0].rsplit(".", 1)[-1]
+    if last[:1].isupper(): return "constructor"
+    if last and not (last[0].isalpha() or last[0] == "_"): return "operator"
+    return "other"
+
+
 def count(path):
     d, u = parse(path)
+    lm, un, uo = set(), collections.Counter(), collections.Counter()
+    for c, h, _ in u:
+        if c in d:
+            if d[c][1] != h: lm.add((c, h, d[c][1]))
+        else:
+            k = classify(c); un[k] += 1
+            if k == "other": uo[c] += 1
     with LOCK:
-        DEFS.update(d); USES.update(u)
+        DEFS.update(d); USES.update(u); LOCAL_MISMATCH.update(lm); UNKNOWN.update(un); UNKNOWN_OTHER.update(uo)
 
 
 # ---- type text -> tree
@@ -232,12 +259,13 @@ def main():
     eq = {k for k in eq if k[0] in DEFS}
     eq_only = {k for k in eq if k not in constrained}      # not already keyed by its kind
 
-    def clones(marked):
+    def clones(marked, product=True):
         """distinct instances of the marked variables of each callee, with closure over polymorphic callers"""
         marked_by = collections.defaultdict(set)
         for d, v in marked: marked_by[d].add(v)
         keys = collections.defaultdict(set)        # callee -> set of tuple((v, text))
         nonconc = 0
+        product_callees = set()
         # all uses of a callee with marked variables
         pending = collections.defaultdict(list)    # owner id -> uses that mention its tokens in a marked position
         queue = []
@@ -270,6 +298,8 @@ def main():
                     others = [x for x in owners if x != o]
                     if any(x not in keys for x in others): continue
                     import itertools
+                    if not product: continue
+                    product_callees.add(c)
                     combos = itertools.product(*[sorted(keys[x]) for x in others])
                 else:
                     combos = [()]
@@ -281,16 +311,16 @@ def main():
                     if any("<<" in t for _, t in new): continue
                     if new not in keys[c]:
                         keys[c].add(new); queue.append((c, new))
-        return keys, nonconc, marked_by
+        return keys, nonconc, marked_by, product_callees
 
-    def summary(marked):
-        keys, nonconc, marked_by = clones(marked)
+    def summary(marked, product=True):
+        keys, nonconc, marked_by, pcal = clones(marked, product)
         sizes = sorted((len(v) for v in keys.values()), reverse=True)
         hist = collections.Counter(min(s, 5) for s in sizes)
         top = sorted(keys.items(), key=lambda kv: -len(kv[1]))[:8]
         return {"callees_marked": len(marked_by), "callees_with_clones": len(keys), "clones": sum(sizes),
                 "hist(1..5+)": [hist.get(i, 0) for i in range(1, 6)], "max": sizes[0] if sizes else 0,
-                "nonconcrete_uses": nonconc, "top": [(c, len(v)) for c, v in top]}
+                "nonconcrete_uses": nonconc, "callees_using_product": len(pcal), "top": [(c, len(v)) for c, v in top]}
 
     res = {"defs": len(DEFS), "distinct uses": len(USES), "sig_mismatch": mismatch, "use_of_unknown_callee": unknown_callee,
            "equatable_marked_vars": len(eq), "equatable_only_vars(not number/comparable/appendable)": len(eq_only),
@@ -298,6 +328,16 @@ def main():
     for k in CONSTRAINED:
         res[k] = summary({(d, v) for d, (ks, _) in DEFS.items() for v, kk in ks.items() if kk == k})
     res["equatable"] = summary(eq)
+    res["equatable_without_product"] = summary(eq, False)
+    res["number_without_product"] = summary({(d, v) for d, (ks, _) in DEFS.items() for v, kk in ks.items() if kk == "number"}, False)
+    res["comparable_without_product"] = summary({(d, v) for d, (ks, _) in DEFS.items() for v, kk in ks.items() if kk == "comparable"}, False)
+    gl = collections.Counter(classify(c) for c in {c for c, _, _ in USES if c not in DEFS})
+    res["unknown_callees_global_distinct_by_kind"] = dict(gl)
+    res["unknown_global_other_examples"] = sorted(c for c in {c for c, _, _ in USES if c not in DEFS} if classify(c) == "other")[:25]
+    res["mismatch_within_one_dump"] = len(LOCAL_MISMATCH)
+    res["mismatch_examples"] = sorted(LOCAL_MISMATCH)[:15]
+    res["unknown_callee_uses_by_kind(per dump, distinct)"] = dict(UNKNOWN)
+    res["unknown_other_examples"] = UNKNOWN_OTHER.most_common(25)
     res["equatable_only"] = summary(eq_only)
     res["row"] = summary(rows)
     res["row_keys_note"] = "row variable instance = the record's remaining fields"
