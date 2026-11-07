@@ -19,11 +19,8 @@ import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeVar as T
 import qualified Reporting.Annotation as A
 import qualified Reporting.Error.Type as Error
-import qualified Reporting.Render.Type as RT
-import qualified Reporting.Render.Type.Localizer as L
 import qualified Type.Occurs as Occurs
 import Type.Type as Type
-import qualified Type.Error as ET
 import qualified Type.Unify as Unify
 import qualified Type.UnionFind as UF
 
@@ -202,30 +199,40 @@ solve env rank pools state constraint =
           generalize youngMark visitMark nextRank nextPools
           MVector.write nextPools nextRank []
 
-          -- check that things went well
-          mapM_ isGeneric rigids
+          -- check that things went well: a rigid variable that was unified with
+          -- a variable of an outer definition is no longer generic (elm/compiler#1639)
+          escapes <- fmap concat (traverse (rigidEscape header) rigids)
 
           let newEnv = Map.union env (Map.map A.toValue locals)
-          let tempState = State savedEnv finalMark errors
+          let tempState = State savedEnv finalMark (escapes ++ errors)
           newState <- solve newEnv rank nextPools tempState subCon
 
           foldM occurs newState (Map.toList locals)
 
 
--- Check that a variable has rank == noRank, meaning that it can be generalized.
-isGeneric :: Variable -> IO ()
-isGeneric var =
-  do  (Descriptor _ rank _ _) <- UF.get var
+-- Check that a rigid variable still has rank == noRank, meaning that it can be
+-- generalized. If not, it was unified with something from an outer scope: report
+-- that as a type error (it used to be a compiler crash).
+rigidEscape :: Map.Map N.Name (A.Located Type) -> Variable -> IO [Error.Error]
+rigidEscape header var =
+  do  (Descriptor content rank _ _) <- UF.get var
       if rank == noRank
-        then return ()
+        then return []
         else
-          do  tipe <- Type.toErrorType var
-              $(Crash.crashIO 'isGeneric) $
-                "You ran into a compiler bug. Here are some details for the developers:\n\n"
-                ++ "    " ++ show (ET.toDoc L.empty RT.None tipe) ++ " [rank = " ++ show rank ++ "]\n\n"
-                ++
-                  "Please create an <http://sscce.org/> and then report it\n\
-                  \at <https://github.com/elm/compiler/issues>\n\n"
+          case Map.toList header of
+            [] ->
+              $(Crash.crashIO 'rigidEscape) "rigid variable escaped from a let with no annotated names"
+
+            (name, A.At region _) : _ ->
+              return [ Error.RigidEscape region name (rigidName content) ]
+
+
+rigidName :: Content -> String
+rigidName content =
+  case content of
+    RigidVar name -> T.varToChars name
+    RigidSuper _ name -> T.varToChars name
+    _ -> "a"
 
 
 

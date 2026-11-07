@@ -45,6 +45,7 @@ data Error
   = BadExpr A.Region Category T.Type (Expected T.Type)
   | BadPattern A.Region PCategory T.Type (PExpected T.Type)
   | InfiniteType A.Region N.Name T.Type
+  | RigidEscape A.Region N.Name String  -- annotated definition, type variable of its annotation
 
 
 
@@ -179,6 +180,9 @@ toReport source localizer err =
 
     InfiniteType region name overallType ->
       toInfiniteReport source localizer region name overallType
+
+    RigidEscape region name var ->
+      toRigidEscapeReport source region name var
 
 
 
@@ -1596,6 +1600,29 @@ badEquality localizer op tipe expected =
 
 
 -- INFINITE TYPES
+
+
+toRigidEscapeReport :: Code.Source -> A.Region -> N.Name -> String -> Report.Report
+toRigidEscapeReport source region name var =
+  Report.Report "TYPE MISMATCH" region [] $
+    Code.toSnippet source region Nothing
+      (
+        D.reflow $
+          "The type annotation for `" <> N.toChars name <> "` says the type variable `"
+          <> var <> "` can be any type, but the definition ties it to something outside:"
+      ,
+        D.stack
+          [ D.reflow $
+              "The body of `" <> N.toChars name <> "` uses a value that is defined in the code around it,\
+              \ and the type of that value is not generalized there. So `" <> var
+              <> "` cannot stand for any type here."
+          , D.toSimpleHint $
+              "A type variable written in an annotation inside a `let` is a new variable, it does not\
+              \ mean the variable of the same name in the outer annotation unless the outer definition\
+              \ has an annotation that mentions it. Try removing the inner annotation, or write the\
+              \ type that the outer value really has."
+          ]
+      )
 
 
 toInfiniteReport :: Code.Source -> L.Localizer -> A.Region -> N.Name -> T.Type -> Report.Report
