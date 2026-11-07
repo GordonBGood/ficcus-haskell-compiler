@@ -303,8 +303,8 @@ unifyRigid context maybeSuper content otherContent =
     RigidSuper _ _ ->
         mismatch
 
-    Alias _ _ _ _ ->
-        mismatch
+    Alias _ _ _ realVar ->
+        subUnify (_first context) realVar
 
     Structure _ ->
         mismatch
