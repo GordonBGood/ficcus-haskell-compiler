@@ -58,11 +58,15 @@ def exposed_files(proj):
 
 def run(safe, elm, args, cwd, env, timeout):
     env = dict(env, SAFE_TIMEOUT=str(timeout))
-    try:
-        p = subprocess.run([safe, elm] + args, cwd=cwd, env=env, capture_output=True, timeout=timeout + 30)
+    # one automatic retry when the process was killed (rc -9 / 137: memory pressure under load)
+    for attempt in (0, 1):
+        try:
+            p = subprocess.run([safe, elm] + args, cwd=cwd, env=env, capture_output=True, timeout=timeout + 30)
+        except subprocess.TimeoutExpired:
+            return 124, "timeout"
+        if p.returncode in (-9, 137) and attempt == 0:
+            continue
         return p.returncode, (p.stdout + p.stderr).decode("utf-8", "replace")
-    except subprocess.TimeoutExpired:
-        return 124, "timeout"
 
 
 NOISE = re.compile(r"(Success!|───>|Dependencies ready|Verifying dependencies|Compiling|Starting downloads|Downloading|Finished|Dependencies)")
