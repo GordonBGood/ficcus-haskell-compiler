@@ -702,8 +702,12 @@ recDefsHelp env defs bodyCon rigidInfo flexInfo =
         Can.Def (A.At region name) args expr ->
           do  let (Info flexVars flexSchemeVars _ flexCons flexHeaders) = flexInfo
 
+              -- Each definition starts from an empty pattern state, and the variables of all
+              -- definitions of the group are generalized together by the outer let (as in 0.19.4).
+              -- Passing the previous definition's variables in made the let of this definition
+              -- generalize them before any body was solved (elm/compiler#2274).
               (Args newFlexVars tipe resultType (Pattern.State headers pvars revCons)) <-
-                argsHelp (_recorder env) args (Pattern.State Map.empty flexVars [])
+                argsHelp (_recorder env) args Pattern.emptyState
 
               exprCon <-
                 constrain env expr (NoExpectation resultType)
@@ -722,7 +726,7 @@ recDefsHelp env defs bodyCon rigidInfo flexInfo =
 
               recDefsHelp env otherDefs bodyCon rigidInfo $
                 Info
-                  { _vars = newFlexVars
+                  { _vars = newFlexVars ++ flexVars
                   , _schemeVars = schemeVars ++ flexSchemeVars
                   , _schemeCons = []
                   , _cons = schemeCons ++ (defCon : flexCons)
