@@ -46,6 +46,7 @@ data Error
   | BadPattern A.Region PCategory T.Type (PExpected T.Type)
   | InfiniteType A.Region N.Name T.Type
   | RigidEscape A.Region N.Name String  -- annotated definition, type variable of its annotation
+  | Runaway A.Region Bool               -- unification does not terminate; True: an infinite type
 
 
 
@@ -183,6 +184,9 @@ toReport source localizer err =
 
     RigidEscape region name var ->
       toRigidEscapeReport source region name var
+
+    Runaway region isCycle ->
+      toRunawayReport source region isCycle
 
 
 
@@ -1623,6 +1627,41 @@ toRigidEscapeReport source region name var =
               \ or write the type that the outside value really has."
           ]
       )
+
+
+toRunawayReport :: Code.Source -> A.Region -> Bool -> Report.Report
+toRunawayReport source region isCycle =
+  if isCycle then
+    Report.Report "INFINITE TYPE" region [] $
+      Code.toSnippet source region Nothing
+        (
+          D.reflow "I am inferring a weird self-referential type here:"
+        ,
+          D.stack
+            [ D.reflow
+                "Two record types here are extensions of the same row variable, but each one adds\
+                \ fields that the other does not have. Satisfying that would need a type that contains\
+                \ itself again and again, so there is no finite type that fits."
+            , D.toSimpleHint
+                "Make sure the values meet in a type that lists the fields of both, for example\
+                \ by writing the type of the function with an annotation."
+            ]
+        )
+  else
+    Report.Report "TYPE TOO COMPLEX" region [] $
+      Code.toSnippet source region Nothing
+        (
+          D.reflow "I gave up on the types here because they are too complex:"
+        ,
+          D.stack
+            [ D.reflow
+                "Comparing these types did not finish after a very large number of steps. This usually\
+                \ means that a type is being built up again and again, so it would be infinite."
+            , D.toSimpleHint
+                "Try adding type annotations to the definitions around here. They help me find which\
+                \ part does not fit."
+            ]
+        )
 
 
 toInfiniteReport :: Code.Source -> L.Localizer -> A.Region -> N.Name -> T.Type -> Report.Report

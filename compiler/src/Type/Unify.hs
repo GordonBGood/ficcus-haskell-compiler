@@ -6,6 +6,7 @@ module Type.Unify
   where
 
 
+import Control.Exception (Exception, throwIO, try)
 import qualified Data.Map.Strict as Map
 
 import qualified AST.Prim.Name as N
@@ -25,21 +26,53 @@ import qualified Type.UnionFind as UF
 data Answer
   = Ok [Variable]
   | Err [Variable] Error.Type Error.Type
+  | Runaway Bool
+      -- ^ unification did not terminate within the step budget, or met a row that
+      -- can only be satisfied by an infinite type; True means "infinite type"
+
+
+-- How many steps one call of `unify` may take. Every step unifies two variables
+-- that are not yet equal, so a call that stays within the size of the types being
+-- compared needs far fewer. No program that Elm 0.19 accepts comes anywhere near it.
+stepBudget :: Int
+stepBudget =
+  2000000
+
+
+data RunawayException = RunawayException Bool
+  deriving Show
+
+instance Exception RunawayException
 
 
 unify :: Variable -> Variable -> IO Answer
 unify v1 v2 =
-  case guardedUnify v1 v2 of
-    Unify k ->
-      k [] onSuccess $ \vars () ->
-        do  t1 <- Type.toErrorType v1
-            t2 <- Type.toErrorType v2
-            UF.union v1 v2 errorDescriptor
-            return (Err vars t1 t2)
+  do  result <- try $
+        case guardedUnify v1 v2 of
+          Unify k ->
+            k (Vars 0 []) onSuccess $ \(Vars _ vars) () ->
+              do  t1 <- Type.toErrorType v1
+                  t2 <- Type.toErrorType v2
+                  UF.union v1 v2 errorDescriptor
+                  return (Err vars t1 t2)
+      case result of
+        Right answer ->
+          return answer
+
+        Left (RunawayException isCycle) ->
+          do  -- what was built so far is abandoned: both sides become Error, as for a mismatch
+              UF.union v1 v2 errorDescriptor
+              return (Runaway isCycle)
 
 
-onSuccess :: [Variable] -> () -> IO Answer
-onSuccess vars () =
+-- the variables created so far (they have to be introduced into the pools afterwards)
+-- and the number of steps taken
+data Vars =
+  Vars !Int [Variable]
+
+
+onSuccess :: Vars -> () -> IO Answer
+onSuccess (Vars _ vars) () =
   return (Ok vars)
 
 
@@ -55,9 +88,9 @@ errorDescriptor =
 
 newtype Unify a =
   Unify (forall r.
-    [Variable]
-    -> ([Variable] -> a -> IO r)
-    -> ([Variable] -> () -> IO r)
+    Vars
+    -> (Vars -> a -> IO r)
+    -> (Vars -> () -> IO r)
     -> IO r
   )
 
@@ -112,7 +145,7 @@ register :: IO Variable -> Unify Variable
 register mkVar =
   Unify $ \vars ok _ ->
     do  var <- mkVar
-        ok (var:vars) var
+        ok (case vars of Vars n vs -> Vars n (var:vs)) var
 
 
 mismatch :: Unify a
@@ -162,12 +195,14 @@ fresh (Context _ (Descriptor _ rank1 _ _) _ (Descriptor _ rank2 _ _)) content =
 
 guardedUnify :: Variable -> Variable -> Unify ()
 guardedUnify left right =
-  Unify $ \vars ok err ->
+  Unify $ \(Vars steps vs) ok err ->
     do  equivalent <- UF.equivalent left right
         if equivalent
-          then ok vars ()
+          then ok (Vars steps vs) ()
           else
-            do  leftDesc <- UF.get left
+            do  if steps >= stepBudget then throwIO (RunawayException False) else return ()
+                let vars = Vars (steps + 1) vs
+                leftDesc <- UF.get left
                 rightDesc <- UF.get right
                 case actuallyUnify (Context left leftDesc right rightDesc) of
                   Unify k ->
@@ -482,7 +517,7 @@ unifyAlias context home name args realVar otherContent =
       merge context Error
 
 
-unifyAliasArgs :: [Variable] -> Context -> [(T.Var,Variable)] -> [(T.Var,Variable)] -> ([Variable] -> () -> IO r) -> ([Variable] -> () -> IO r) -> IO r
+unifyAliasArgs :: Vars -> Context -> [(T.Var,Variable)] -> [(T.Var,Variable)] -> (Vars -> () -> IO r) -> (Vars -> () -> IO r) -> IO r
 unifyAliasArgs vars context args1 args2 ok err =
   case args1 of
     (_,arg1):others1 ->
@@ -587,7 +622,7 @@ unifyStructure context flatType content otherContent =
 -- UNIFY ARGS
 
 
-unifyArgs :: [Variable] -> Context -> [Variable] -> [Variable] -> ([Variable] -> () -> IO r) -> ([Variable] -> () -> IO r) -> IO r
+unifyArgs :: Vars -> Context -> [Variable] -> [Variable] -> (Vars -> () -> IO r) -> (Vars -> () -> IO r) -> IO r
 unifyArgs vars context args1 args2 ok err =
   case args1 of
     arg1:others1 ->
@@ -641,13 +676,38 @@ unifyRecord context (RecordStructure fields1 ext1) (RecordStructure fields2 ext2
           unifySharedFields context sharedFields Map.empty subRecord
 
     else
-      do  let otherFields = Map.union uniqueFields1 uniqueFields2
+      do  sameExt <- sameVariable ext1 ext2
+          -- { r | a : x } against { r | b : y } with the same row r: r would have to contain
+          -- the fields of both sides again and again, an infinite type (each round
+          -- of this unifier would only create fresh variables and start over)
+          if sameExt then abortRunaway True else return ()
+          let otherFields = Map.union uniqueFields1 uniqueFields2
           ext <- fresh context Type.unnamedFlexVar
           sub1 <- fresh context (Structure (Record1 uniqueFields1 ext))
           sub2 <- fresh context (Structure (Record1 uniqueFields2 ext))
           subUnify ext1 sub2
           subUnify sub1 ext2
           unifySharedFields context sharedFields otherFields ext
+
+
+-- the same row variable that can still be unified (a rigid one gives an ordinary mismatch)
+sameVariable :: Variable -> Variable -> Unify Bool
+sameVariable v1 v2 =
+  Unify $ \vars ok _ ->
+    do  same <- UF.equivalent v1 v2
+        (Descriptor content _ _ _) <- UF.get v1
+        ok vars $
+          same &&
+            case content of
+              FlexVar _ -> True
+              FlexSuper _ _ -> True
+              _ -> False
+
+
+abortRunaway :: Bool -> Unify ()
+abortRunaway isCycle =
+  Unify $ \_ _ _ ->
+    throwIO (RunawayException isCycle)
 
 
 unifySharedFields :: Context -> Map.Map N.Name (Variable, Variable) -> Map.Map N.Name Variable -> Variable -> Unify ()
@@ -679,16 +739,29 @@ data RecordStructure =
     }
 
 
+-- The extension chain of a record can be cyclic (a row variable that was unified with
+-- a record that contains it, as in `Tricky x x` with `Tricky { r | a : Int } { r | b : Int }`).
+-- The chain stops at the first variable that was already visited, so that gathering
+-- terminates; the occurs check reports the cycle afterwards (elm/compiler#2106 and others).
 gatherFields :: Map.Map N.Name Variable -> Variable -> IO RecordStructure
-gatherFields fields variable =
+gatherFields =
+  gatherFieldsHelp []
+
+
+gatherFieldsHelp :: [Variable] -> Map.Map N.Name Variable -> Variable -> IO RecordStructure
+gatherFieldsHelp seen fields variable =
+  if elem variable seen then
+    return (RecordStructure fields variable)
+  else
   do  (Descriptor content _ _ _) <- UF.get variable
+      let newSeen = variable : seen
       case content of
         Structure (Record1 subFields subExt) ->
-            gatherFields (Map.union fields subFields) subExt
+            gatherFieldsHelp newSeen (Map.union fields subFields) subExt
 
         Alias _ _ _ var ->
             -- TODO may be dropping useful alias info here
-            gatherFields fields var
+            gatherFieldsHelp newSeen fields var
 
         _ ->
             return (RecordStructure fields variable)
