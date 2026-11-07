@@ -454,8 +454,8 @@ introduce :: Int -> Pools -> [Variable] -> IO ()
 introduce rank pools variables =
   do  MVector.modify pools (variables++) rank
       forM_ variables $ \var ->
-        UF.modify var $ \(Descriptor content _ mark copy) ->
-          Descriptor content rank mark copy
+        UF.modify var $ \(Descriptor content oldRank mark copy) ->
+          Descriptor content (if oldRank == noRank then rank else min oldRank rank) mark copy
 
 
 
