@@ -1,6 +1,8 @@
 -- module Poly: problems=0 instances=29 instance-failures=0 defaulted=18
 -- equality-uses: total=0 at-function=0
 module author/project:Poly
+type Box   id: author/project:Poly.Box   params: 1   ctors: 1   layout: unbox
+  ctor Box   id: author/project:Poly.Box   tag: 0   arity: 1   fields: v0   sig: v0 -> Box v0   kinds: v0:any
 def biggest :: List comparable -> Maybe comparable    [28:1-28:8]   id: author/project:Poly.biggest   sig: List v0 -> Maybe v0   kinds: v0:comparable
   28:9-28:11 PVar xs :: List comparable
   29:5-29:20 Call :: Maybe comparable
@@ -79,7 +81,7 @@ def results :: List String    [33:1-33:8]   id: author/project:Poly.results   si
         47:22-47:23 VarLocal :: Int   instance: number := Int   sig#: 005979ab   subst: v0 := Int
       47:27-47:28 VarLocal :: String
     48:7-48:42 Call :: String
-      48:7-48:21 VarDebug :: Maybe Int -> String   <= Maybe number1 -> String   callee: author/project:Poly.toString   instance: a := Maybe Int (defaulted)   sig#: d170fa67   subst: v0 := Maybe Int
+      48:7-48:21 VarDebug :: Maybe Int -> String   <= Maybe number1 -> String   callee: elm/core:Debug.toString   instance: a := Maybe Int (defaulted)   sig#: d170fa67   subst: v0 := Maybe Int
       48:23-48:42 Call :: Maybe Int   <= Maybe number1
         48:23-48:30 VarTopLevel :: List Int -> Maybe Int   <= List number1 -> Maybe number1   callee: author/project:Poly.biggest   instance: comparable := Int (defaulted)   sig#: b3e932e3   subst: v0 := Int
         48:31-48:42 List :: List Int   <= List number1
@@ -87,7 +89,7 @@ def results :: List String    [33:1-33:8]   id: author/project:Poly.results   si
           48:36-48:37 Int :: Int   <= number1
           48:39-48:40 Int :: Int   <= number1
     49:7-49:33 Call :: String
-      49:7-49:21 VarDebug :: Maybe ref(comparable) -> String   <= Maybe comparable1 -> String   callee: author/project:Poly.toString   instance: a := Maybe ref(comparable) (defaulted)   sig#: d170fa67   subst: v0 := Maybe ref(comparable)
+      49:7-49:21 VarDebug :: Maybe ref(comparable) -> String   <= Maybe comparable1 -> String   callee: elm/core:Debug.toString   instance: a := Maybe ref(comparable) (defaulted)   sig#: d170fa67   subst: v0 := Maybe ref(comparable)
       49:23-49:33 Call :: Maybe ref(comparable)   <= Maybe comparable1
         49:23-49:30 VarTopLevel :: List ref(comparable) -> Maybe ref(comparable)   <= List comparable1 -> Maybe comparable1   callee: author/project:Poly.biggest   instance: comparable := ref(comparable) (defaulted)   sig#: b3e932e3   subst: v0 := ref(comparable)
         49:31-49:33 List :: List ref(comparable)   <= List comparable1
@@ -104,7 +106,7 @@ def main :: Program () () ()    [55:1-55:5]   id: author/project:Poly.main   sig
         58:14-58:15 PAnything :: ()
         60:21-60:22 PAnything :: List String
         61:25-61:46 Call :: List String
-          61:25-61:34 VarDebug :: String -> List String -> List String   callee: author/project:Poly.log   instance: a := List String   sig#: 6ecaa5dd   subst: v0 := List String
+          61:25-61:34 VarDebug :: String -> List String -> List String   callee: elm/core:Debug.log   instance: a := List String   sig#: 6ecaa5dd   subst: v0 := List String
           61:35-61:38 Str :: String
           61:39-61:46 VarTopLevel :: List String   callee: author/project:Poly.results
         63:17-63:33 Pair :: ( (), Cmd () )
