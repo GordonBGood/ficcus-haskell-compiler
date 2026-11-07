@@ -760,12 +760,23 @@ recDefsHelp env defs bodyCon rigidInfo flexInfo =
                     { _vars = Map.foldr (:) rigidVars newRigids
                     , _schemeVars = schemeVars ++ rigidSchemeVars
                     , _schemeCons = schemeCons ++ rigidSchemeCons
-                    , _cons = CLet (Map.elems newRigids) [] Map.empty defCon CTrue : rigidCons
+                    , _cons = CLet (Map.elems newRigids) [] (nameOnlyHeader region name) defCon CTrue : rigidCons
                     , _headers = Map.insert name (A.At region headerType) rigidHeaders
                     }
                 )
                 flexInfo
 
+
+
+-- The solver reports a rigid variable that escapes its let (elm/compiler#1639) using the
+-- names in the header of the CLet. The CLet built for an annotated definition of a recursive
+-- group has no header of its own (its names are bound by the enclosing let), so this
+-- gives it one entry that carries only the name and region for that report. The type is
+-- the closed type Int: it has no variables, so it cannot change inference, and the name is
+-- only visible to the (trivial) body constraint CTrue.
+nameOnlyHeader :: A.Region -> N.Name -> Map.Map N.Name (A.Located Type)
+nameOnlyHeader region name =
+  Map.singleton name (A.At region Type.int)
 
 
 -- CONSTRAIN ARGS
