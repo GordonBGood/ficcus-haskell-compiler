@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE BangPatterns, MagicHash #-}
 module Type.Dump
   ( render
   , Result(..)
@@ -23,6 +23,9 @@ module Type.Dump
 
 
 import Control.Monad (forM_, when)
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Builder as BB
+import qualified Data.ByteString.Lazy as BL
 import Control.Monad.State.Strict (State, execState, gets, modify')
 import Data.Bits (shiftR, (.&.))
 import qualified Data.List as List
@@ -50,7 +53,7 @@ import qualified Type.Recorder as Recorder
 
 data Result =
   Result
-    { _text :: [String]
+    { _text :: [BS.ByteString]   -- the lines, UTF-8, without line ends
     , _problems :: Int
     , _matched :: Int
     , _matchFailed :: Int
@@ -66,7 +69,7 @@ data Result =
 
 data W =
   W
-    { _out :: [String]                 -- reversed
+    { _out :: [BS.ByteString]          -- reversed; strict, so a line costs its bytes and not a String
     , _bad :: Int
     , _ok :: Int
     , _failed :: Int
@@ -113,7 +116,7 @@ render (Can.Module home _ _ decls _ _ _ _) typed =
         else []
   in
   Result
-    { _text = reverse (_out w) ++ extra
+    { _text = reverse (_out w) ++ map packLine extra
     , _problems = _bad w + (if unvisited /= 0 then 1 else 0)
     , _matched = _ok w
     , _matchFailed = _failed w
@@ -164,7 +167,12 @@ defKeyOf def =
 
 emit :: Ctx -> String -> M ()
 emit ctx line =
-  modify' (\w -> w { _out = (replicate (2 * _depth ctx) ' ' ++ line) : _out w })
+  let !packed = packLine (replicate (2 * _depth ctx) ' ' ++ line)
+  in modify' (\w -> w { _out = packed : _out w })
+
+
+packLine :: String -> BS.ByteString
+packLine = BL.toStrict . BB.toLazyByteString . BB.stringUtf8
 
 
 problem :: Ctx -> String -> M ()

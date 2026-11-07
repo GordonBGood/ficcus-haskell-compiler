@@ -35,4 +35,4 @@ write writer path name canonical typed =
             "-- equality-uses: total=" ++ show (Dump._eqUses result)
             ++ " at-function=" ++ show (length (Dump._eqFunUses result))
       let funLines = map ("-- equality-at-function: " ++) (Dump._eqFunUses result)
-      File.writeBuilder writer path (BB.stringUtf8 (unlines (summary : equality : funLines ++ Dump._text result)))
+      File.writeBuilder writer path (BB.stringUtf8 (unlines (summary : equality : funLines)) <> foldMap (\l -> BB.byteString l <> BB.char7 '\n') (Dump._text result))
