@@ -33,6 +33,7 @@ import GHC.Word (Word64(..))
 
 import qualified AST.Canonical as Can
 import qualified AST.Prim.Name as N
+import qualified AST.Prim.Operator as Op
 import qualified AST.Prim.TypeName as T
 import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Package as Pkg
@@ -54,6 +55,8 @@ data Result =
     , _matched :: Int
     , _matchFailed :: Int
     , _defaulted :: Int
+    , _eqUses :: Int          -- direct uses of ==, /=, compare
+    , _eqFunUses :: [String]  -- those whose instance type contains a function
     }
 
 
@@ -68,6 +71,8 @@ data W =
     , _ok :: Int
     , _failed :: Int
     , _defaultedCount :: Int
+    , _eqCount :: Int
+    , _eqFuns :: [String]
     , _seen :: Set.Set Key
     , _display :: Map.Map String String
     , _usedNames :: Set.Set String
@@ -96,7 +101,7 @@ render (Can.Module home _ _ decls _ _ _ _) typed =
     topDefs = declsToDefs decls
     vals = Map.fromList [ (defName d, Left (defKeyOf d)) | d <- topDefs ]
     ctx = Ctx typed Set.empty vals 0
-    start = W [] 0 0 0 0 Set.empty Map.empty Set.empty
+    start = W [] 0 0 0 0 0 [] Set.empty Map.empty Set.empty
     w = execState (walkModule ctx home topDefs) start
     unvisited = Map.size (_nodes typed) - Set.size (_seen w)
     extra =
@@ -110,6 +115,8 @@ render (Can.Module home _ _ decls _ _ _ _) typed =
     , _matched = _ok w
     , _matchFailed = _failed w
     , _defaulted = _defaultedCount w
+    , _eqUses = _eqCount w
+    , _eqFunUses = reverse (_eqFuns w)
     }
 
 
@@ -454,6 +461,13 @@ instanceText ctx e raw =
               let dead n = not (Set.member n (_scope ctx))
               parts <- mapM (bindingText dead) (Map.toList subst)
               let real = [ p | Just p <- parts ]
+              case equalityUse e of
+                Nothing -> return ()
+                Just opName ->
+                  do  shown <- mapM showType (Map.elems subst)
+                      let atFun = any hasFunction (Map.elems subst)
+                      modify' (\w -> w { _eqCount = _eqCount w + 1
+                                       , _eqFuns = if atFun then (opName ++ " " ++ List.intercalate "," shown) : _eqFuns w else _eqFuns w })
               return (if null real then "" else "   instance: " ++ List.intercalate ", " real)
   where
     bindingText dead (name, value) =
@@ -495,3 +509,27 @@ schemeOf ctx e raw =
     annotation (Can.Forall _ tipe) = canToTType tipe
 
     nodeType (A.At r x) = Map.lookup (Recorder.exprKey r x) (_nodes (_typed ctx))
+
+
+-- a direct use of ==, /= or compare (Basics)
+equalityUse :: Can.Expr_ -> Maybe String
+equalityUse e =
+  case e of
+    Can.Binop op home _ _ _ _ -> if isBasics home && Op.toChars op `elem` ["==", "/="] then Just (Op.toChars op) else Nothing
+    Can.VarOperator op home _ _ -> if isBasics home && Op.toChars op `elem` ["==", "/="] then Just (Op.toChars op) else Nothing
+    Can.VarForeign home name _ -> if isBasics home && N.toChars name == "compare" then Just "compare" else Nothing
+    _ -> Nothing
+  where
+    isBasics home = moduleChars home == "elm/core:Basics"
+
+
+hasFunction :: TType -> Bool
+hasFunction t =
+  case t of
+    TFun _ _ -> True
+    TCon _ _ args -> any hasFunction args
+    TRecord fields ext -> any hasFunction (Map.elems fields) || maybe False hasFunction ext
+    TPair a b -> hasFunction a || hasFunction b
+    TTriple a b c -> any hasFunction [a, b, c]
+    TAlias _ _ _ inner -> hasFunction inner
+    _ -> False

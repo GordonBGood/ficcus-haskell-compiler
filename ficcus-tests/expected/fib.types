@@ -1,4 +1,5 @@
 -- module Fibonacci: problems=0 instances=22 instance-failures=0 defaulted=2
+-- equality-uses: total=0 at-function=0
 module author/project:Fibonacci
 def countFibsTo :: number -> Int    [17:1-17:12]
   17:13-17:14 PVar n :: number

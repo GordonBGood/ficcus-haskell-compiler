@@ -1,4 +1,5 @@
 -- module Poly: problems=0 instances=29 instance-failures=0 defaulted=18
+-- equality-uses: total=0 at-function=0
 module author/project:Poly
 def biggest :: List comparable -> Maybe comparable    [28:1-28:8]
   28:9-28:11 PVar xs :: List comparable

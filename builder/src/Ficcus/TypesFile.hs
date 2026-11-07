@@ -31,4 +31,8 @@ write writer path name canonical typed =
       if Dump._problems result > 0
         then hPutStrLn stderr ("type dump of " ++ Module.toChars name ++ " has " ++ show (Dump._problems result) ++ " problem(s), see the !! lines")
         else return ()
-      File.writeBuilder writer path (BB.stringUtf8 (unlines (summary : Dump._text result)))
+      let equality =
+            "-- equality-uses: total=" ++ show (Dump._eqUses result)
+            ++ " at-function=" ++ show (length (Dump._eqFunUses result))
+      let funLines = map ("-- equality-at-function: " ++) (Dump._eqFunUses result)
+      File.writeBuilder writer path (BB.stringUtf8 (unlines (summary : equality : funLines ++ Dump._text result)))
