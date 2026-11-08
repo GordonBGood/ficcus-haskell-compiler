@@ -81,13 +81,33 @@ renderDef d =
      ++ "   needs: " ++ List.intercalate "," [ "c" ++ show k | CloneId k <- mdNeeds d ]
 
 
+-- | the readable name of a keyed clone: `limit__i64`, `limit__f64`; exact types other than Int and Float are
+-- spelled `t`, a class part by its class (the C names add a counter)
+cloneLabel :: MDef -> String
+cloneLabel d =
+  case mdKey d of
+    Key [] -> ""
+    Key parts -> "   name: " ++ baseName ++ concatMap (\p -> "__" ++ part p) parts
+  where
+    baseName = reverse (takeWhile (/= '.') (reverse (mdName d)))
+    part p =
+      case p of
+        ByType (TyCon "elm/core:Basics.Int" []) -> "i64"
+        ByType (TyCon "elm/core:Basics.Float" []) -> "f64"
+        ByType _ -> "t"
+        ByClass c -> classText c
+        ByApp AStr -> "str"
+        ByApp (AList c) -> "list_" ++ classText c
+        ByLayout _ -> "row"
+
+
 -- | a clone of the program: its line and its body
 renderClone :: MDef -> [String]
 renderClone d =
   let CloneId n = mdClone d
       owner = maybe "" (\(CloneId o) -> "   lifted-from: c" ++ show o) (mdLifted d)
   in
-  ( "clone c" ++ show n ++ "   def: " ++ mdName d ++ "   key: " ++ keyText (mdKey d)
+  ( "clone c" ++ show n ++ "   def: " ++ mdName d ++ "   key: " ++ keyText (mdKey d) ++ cloneLabel d
     ++ "   kind: " ++ (case mdKind d of { Value -> "value"; Function -> "function" })
     ++ "   params: " ++ unwords [ pn ++ ":" ++ classText pc | (pn, pc) <- mdParams d ]
     ++ "   result: " ++ classText (mdResult d) ++ owner )

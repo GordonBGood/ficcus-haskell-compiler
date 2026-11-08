@@ -5,7 +5,7 @@ mark author/project:Fibonacci.worker@19:9   v0=number v1=number
 mark author/project:Fibonacci.limit   v0=number
 clone c0   def: author/project:Fibonacci.main   key: ()   kind: value   init: 2   needs: 
 -- program: 5 clones, reachable from main, dependencies first
-clone c4   def: author/project:Fibonacci.worker@19:9   key: (v0=type elm/core:Basics.Int)   kind: function   params: f:i64 s:i64 cnt:i64   result: i64   lifted-from: c2
+clone c4   def: author/project:Fibonacci.worker@19:9   key: (v0=type elm/core:Basics.Int)   name: worker@19:9__i64   kind: function   params: f:i64 s:i64 cnt:i64   result: i64   lifted-from: c2
   If :: i64
     Call :: enum
       Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
@@ -23,13 +23,13 @@ clone c4   def: author/project:Fibonacci.worker@19:9   key: (v0=type elm/core:Ba
         Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
         Local cnt :: i64
         Lit 1 :: i64
-clone c2   def: author/project:Fibonacci.countFibsTo   key: (v0=type elm/core:Basics.Int)   kind: function   params: n:i64   result: i64
+clone c2   def: author/project:Fibonacci.countFibsTo   key: (v0=type elm/core:Basics.Int)   name: countFibsTo__i64   kind: function   params: n:i64   result: i64
   Call :: i64
     Global c4 :: ref
     Lit 0 :: i64
     Lit 1 :: i64
     Lit 0 :: i64
-clone c3   def: author/project:Fibonacci.limit   key: (v0=type elm/core:Basics.Int)   kind: value   params:    result: i64
+clone c3   def: author/project:Fibonacci.limit   key: (v0=type elm/core:Basics.Int)   name: limit__i64   kind: value   params:    result: i64
   Call :: i64
     Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
     Call :: i64

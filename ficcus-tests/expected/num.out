@@ -1,0 +1,7 @@
+limit int: 100
+limit float: 100.5
+bigger float: 25
+int: 702
+float: 399
+add: 3
+addf: 3.25

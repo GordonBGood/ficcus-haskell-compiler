@@ -1,0 +1,67 @@
+module Num exposing (main)
+
+-- Slice 2: `number` clones and polymorphic values. `limit` and `bigger` are polymorphic values used at
+-- Int and at Float (clones limit__i64, limit__f64, ...); `addLimit` is a number function at both.
+
+
+limit : number
+limit =
+    100
+
+
+bigger : number
+bigger =
+    limit + limit
+
+
+addLimit : number -> number
+addLimit x =
+    x + limit
+
+
+scaled : number -> number
+scaled x =
+    x * bigger - x
+
+
+intResult : Int
+intResult =
+    addLimit 5 + scaled 3
+
+
+floatResult : Float
+floatResult =
+    addLimit 0.5 + scaled 1.5
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ =
+                        Debug.log "limit int" (limit + 0)
+
+                    _ =
+                        Debug.log "limit float" (limit + 0.5)
+
+                    _ =
+                        Debug.log "bigger float" (bigger / 8)
+
+                    _ =
+                        Debug.log "int" intResult
+
+                    _ =
+                        Debug.log "float" floatResult
+
+                    _ =
+                        Debug.log "add" ((+) 1 2)
+
+                    _ =
+                        Debug.log "addf" ((+) 1.25 2)
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

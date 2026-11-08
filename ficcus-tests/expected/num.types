@@ -1,0 +1,109 @@
+-- module Num: problems=0 instances=35 instance-failures=0 defaulted=13
+-- equality-uses: total=0 at-function=0
+module author/project:Num
+def limit :: number    [8:1-8:6]   id: author/project:Num.limit   sig: v0   kinds: v0:number   group: author/project:Num.limit nonrec ann
+  9:5-9:8 Int :: number
+def bigger :: number    [13:1-13:7]   id: author/project:Num.bigger   sig: v0   kinds: v0:number   group: author/project:Num.bigger nonrec ann
+  14:5-14:18 Binop :: number   callee: elm/core:Basics.add   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Num.bigger|v0>>
+    14:5-14:10 VarTopLevel :: number   callee: author/project:Num.limit   use: gen   instance: number1 := number   sig#: 005979ab   subst: v0 := <<author/project:Num.bigger|v0>>
+    14:13-14:18 VarTopLevel :: number   callee: author/project:Num.limit   use: gen   instance: number1 := number   sig#: 005979ab   subst: v0 := <<author/project:Num.bigger|v0>>
+def scaled :: number -> number    [23:1-23:7]   id: author/project:Num.scaled   sig: v0 -> v0   kinds: v0:number   group: author/project:Num.scaled nonrec ann
+  23:8-23:9 PVar x :: number
+  24:5-24:19 Binop :: number   callee: elm/core:Basics.sub   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Num.scaled|v0>>
+    24:5-24:15 Binop :: number   callee: elm/core:Basics.mul   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Num.scaled|v0>>
+      24:5-24:6 VarLocal :: number
+      24:9-24:15 VarTopLevel :: number   callee: author/project:Num.bigger   use: gen   instance: number1 := number   sig#: 005979ab   subst: v0 := <<author/project:Num.scaled|v0>>
+    24:18-24:19 VarLocal :: number
+def addLimit :: number -> number    [18:1-18:9]   id: author/project:Num.addLimit   sig: v0 -> v0   kinds: v0:number   group: author/project:Num.addLimit nonrec ann
+  18:10-18:11 PVar x :: number
+  19:5-19:14 Binop :: number   callee: elm/core:Basics.add   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Num.addLimit|v0>>
+    19:5-19:6 VarLocal :: number
+    19:9-19:14 VarTopLevel :: number   callee: author/project:Num.limit   use: gen   instance: number1 := number   sig#: 005979ab   subst: v0 := <<author/project:Num.addLimit|v0>>
+def intResult :: Int    [28:1-28:10]   id: author/project:Num.intResult   sig: Int   kinds:    group: author/project:Num.intResult nonrec ann
+  29:5-29:26 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    29:5-29:15 Call :: Int
+      29:5-29:13 VarTopLevel :: Int -> Int   callee: author/project:Num.addLimit   use: gen   instance: number := Int   sig#: 1f734da5   subst: v0 := Int
+      29:14-29:15 Int :: Int
+    29:18-29:26 Call :: Int
+      29:18-29:24 VarTopLevel :: Int -> Int   callee: author/project:Num.scaled   use: gen   instance: number1 := Int   sig#: 1f734da5   subst: v0 := Int
+      29:25-29:26 Int :: Int
+def floatResult :: Float    [33:1-33:12]   id: author/project:Num.floatResult   sig: Float   kinds:    group: author/project:Num.floatResult nonrec ann
+  34:5-34:30 Binop :: Float   callee: elm/core:Basics.add   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+    34:5-34:17 Call :: Float
+      34:5-34:13 VarTopLevel :: Float -> Float   callee: author/project:Num.addLimit   use: gen   instance: number := Float   sig#: 1f734da5   subst: v0 := Float
+      34:14-34:17 Float :: Float
+    34:20-34:30 Call :: Float
+      34:20-34:26 VarTopLevel :: Float -> Float   callee: author/project:Num.scaled   use: gen   instance: number1 := Float   sig#: 1f734da5   subst: v0 := Float
+      34:27-34:30 Float :: Float
+def main :: Program () () ()    [38:1-38:5]   id: author/project:Num.main   sig: Program () () ()   kinds:    group: author/project:Num.main nonrec ann
+  39:5-67:10 Call :: Program () () ()
+    39:5-39:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    40:9-67:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      41:13-64:33 Lambda :: () -> ( (), Cmd () )
+        41:14-41:15 PAnything :: ()
+        43:21-43:22 PAnything :: Int   <= number
+        44:25-44:57 Call :: Int   <= number
+          44:25-44:34 VarDebug :: String -> Int -> Int   <= String -> number -> number   callee: elm/core:Debug.log   instance: a := Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := Int
+          44:35-44:46 Str :: String
+          44:48-44:57 Binop :: Int   <= number   callee: elm/core:Basics.add   instance: number := Int (defaulted)   sig#: 08810ccc   subst: v0 := Int
+            44:48-44:53 VarTopLevel :: Int   <= number   callee: author/project:Num.limit   use: gen   instance: number1 := Int (defaulted)   sig#: 005979ab   subst: v0 := Int
+            44:56-44:57 Int :: Int   <= number
+        46:21-46:22 PAnything :: Float
+        47:25-47:61 Call :: Float
+          47:25-47:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          47:35-47:48 Str :: String
+          47:50-47:61 Binop :: Float   callee: elm/core:Basics.add   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+            47:50-47:55 VarTopLevel :: Float   callee: author/project:Num.limit   use: gen   instance: number1 := Float   sig#: 005979ab   subst: v0 := Float
+            47:58-47:61 Float :: Float
+        49:21-49:22 PAnything :: Float
+        50:25-50:61 Call :: Float
+          50:25-50:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          50:35-50:49 Str :: String
+          50:51-50:61 Binop :: Float   callee: elm/core:Basics.fdiv
+            50:51-50:57 VarTopLevel :: Float   callee: author/project:Num.bigger   use: gen   instance: number2 := Float   sig#: 005979ab   subst: v0 := Float
+            50:60-50:61 Int :: Float
+        52:21-52:22 PAnything :: Int
+        53:25-53:50 Call :: Int
+          53:25-53:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          53:35-53:40 Str :: String
+          53:41-53:50 VarTopLevel :: Int   callee: author/project:Num.intResult   use: gen
+        55:21-55:22 PAnything :: Float
+        56:25-56:54 Call :: Float
+          56:25-56:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          56:35-56:42 Str :: String
+          56:43-56:54 VarTopLevel :: Float   callee: author/project:Num.floatResult   use: gen
+        58:21-58:22 PAnything :: Int   <= number3
+        59:25-59:49 Call :: Int   <= number3
+          59:25-59:34 VarDebug :: String -> Int -> Int   <= String -> number3 -> number3   callee: elm/core:Debug.log   instance: a := Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := Int
+          59:35-59:40 Str :: String
+          59:42-59:49 Call :: Int   <= number3
+            59:42-59:45 VarOperator :: Int -> Int -> Int   <= number3 -> number3 -> number3   callee: elm/core:Basics.add   instance: number := Int (defaulted)   sig#: 08810ccc   subst: v0 := Int
+            59:46-59:47 Int :: Int   <= number3
+            59:48-59:49 Int :: Int   <= number3
+        61:21-61:22 PAnything :: Float
+        62:25-62:53 Call :: Float
+          62:25-62:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          62:35-62:41 Str :: String
+          62:43-62:53 Call :: Float
+            62:43-62:46 VarOperator :: Float -> Float -> Float   callee: elm/core:Basics.add   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+            62:47-62:51 Float :: Float
+            62:52-62:53 Int :: Float
+        64:17-64:33 Pair :: ( (), Cmd () )
+          64:19-64:21 Unit :: ()
+          64:23-64:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      65:20-65:44 Lambda :: () -> () -> ( (), Cmd () )
+        65:21-65:22 PAnything :: ()
+        65:23-65:24 PAnything :: ()
+        65:28-65:44 Pair :: ( (), Cmd () )
+          65:30-65:32 Unit :: ()
+          65:34-65:42 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      66:27-66:41 Lambda :: () -> Sub ()
+        66:28-66:29 PAnything :: ()
+        66:33-66:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Num.limit   kind: value   reads:    needs:    init-dep: no
+init: 1   id: author/project:Num.bigger   kind: value   reads: author/project:Num.limit   needs: author/project:Num.limit   init-dep: yes
+init: 2   id: author/project:Num.scaled   kind: function   reads: author/project:Num.bigger   needs: author/project:Num.limit,author/project:Num.bigger
+init: 3   id: author/project:Num.addLimit   kind: function   reads: author/project:Num.limit   needs: author/project:Num.limit
+init: 4   id: author/project:Num.intResult   kind: value   reads: author/project:Num.scaled,author/project:Num.addLimit   needs: author/project:Num.limit,author/project:Num.bigger   init-dep: yes
+init: 5   id: author/project:Num.floatResult   kind: value   reads: author/project:Num.scaled,author/project:Num.addLimit   needs: author/project:Num.limit,author/project:Num.bigger   init-dep: yes
+init: 6   id: author/project:Num.main   kind: value   reads: author/project:Num.limit,author/project:Num.bigger,author/project:Num.intResult,author/project:Num.floatResult   needs: author/project:Num.limit,author/project:Num.bigger,author/project:Num.intResult,author/project:Num.floatResult   init-dep: yes

@@ -140,9 +140,9 @@ prelude = unlines
   , "  fwrite(FIC_STR(shown)->data, 1, (size_t)FIC_STR(shown)->len, stdout);"
   , "  fputc('\\n', stdout);"
   , "}"
-  , "/* a log of () prints the tag alone: the reference outputs of targets/ have the `: ()` of Elm removed (run_all.py) */"
+  , "/* a log of () prints `tag: ()` as Elm does (run_all.py strips the trailing `: ()` on both sides) */"
   , "static void fic_log_unit(fic_ref tag) {"
   , "  fwrite(FIC_STR(tag)->data, 1, (size_t)FIC_STR(tag)->len, stdout);"
-  , "  fputc('\\n', stdout);"
+  , "  fputs(\": ()\\n\", stdout);"
   , "}"
   ]
