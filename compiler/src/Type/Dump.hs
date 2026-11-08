@@ -80,6 +80,7 @@ data W =
     , _seen :: Set.Set Key
     , _display :: Map.Map String String
     , _usedNames :: Set.Set String
+    , _refs :: Map.Map String (Set.Set String)   -- top level definition id -> top level definitions of the module it mentions
     }
 
 
@@ -95,6 +96,7 @@ data Ctx =
     , _home :: ModuleName.Canonical
     , _tops :: Set.Set DefKey                        -- the top level definitions of the module
     , _groups :: Map.Map DefKey (String, Bool)      -- binding group of a definition: id, recursive
+    , _topDef :: String                              -- id of the top level definition being walked
     , _inGroups :: Set.Set String                    -- groups whose definitions are being walked
     , _owned :: Map.Map String String               -- scheme variable -> token naming its owner definition and index
     }
@@ -109,9 +111,9 @@ render (Can.Module home _ _ decls unions _ _ _) typed =
   let
     topDefs = declsToDefs decls
     vals = Map.fromList [ (defName d, Left (defKeyOf d)) | d <- topDefs ]
-    ctx0 = Ctx typed Set.empty vals 0 home (Set.fromList [ defKeyOf d | d <- topDefs ]) Map.empty Set.empty Map.empty
+    ctx0 = Ctx typed Set.empty vals 0 home (Set.fromList [ defKeyOf d | d <- topDefs ]) Map.empty "" Set.empty Map.empty
     ctx = ctx0 { _groups = groupsOfDecls ctx0 decls }
-    start = W [] 0 0 0 0 0 [] Set.empty Map.empty Set.empty
+    start = W [] 0 0 0 0 0 [] Set.empty Map.empty Set.empty Map.empty
     w = execState (walkModule ctx home unions topDefs) start
     unvisited = Map.size (_nodes typed) - Set.size (_seen w)
     extra =
@@ -137,6 +139,7 @@ walkModule ctx home unions defs =
       forM_ defs $ \def ->
         do  modify' (\w -> w { _display = Map.empty, _usedNames = Set.empty })
             walkDef ctx def
+      emitInitOrder ctx defs
 
 
 moduleChars :: ModuleName.Canonical -> String
@@ -224,6 +227,7 @@ walkDef ctx def =
                     ++ "   id: " ++ did ++ "   sig: " ++ sigText ++ "   kinds: " ++ kindsText scheme ++ groupText ctx def)
           let owned' = List.foldl' (\m (u, i) -> Map.insertWith (\_ old -> old) u (varToken did i) m) (_owned ctx) (canonVars scheme)
           let inner = ctx { _scope = Set.union (_scope ctx) (Set.fromList (map fst (tvars scheme))), _depth = _depth ctx + 1, _owned = owned'
+                          , _topDef = if Set.member (defKeyOf def) (_tops ctx) then did else _topDef ctx
                           , _inGroups = case Map.lookup (defKeyOf def) (_groups ctx) of { Just (gid, True) -> Set.insert gid (_inGroups ctx); _ -> _inGroups ctx } }
           mapM_ (walkPattern inner) argPatterns
           walkExpr inner body
@@ -374,7 +378,8 @@ nodeLine ctx region e =
           problem ctx ("missing type for " ++ Recorder.exprKind e ++ " at " ++ regionText region)
 
         Just raw ->
-          do  (shown, extra) <- typeText ctx raw
+          do  noteTopRef ctx e
+              (shown, extra) <- typeText ctx raw
               inst <- instanceText ctx e raw
               emit ctx (regionText region ++ " " ++ Recorder.exprKind e ++ " :: " ++ shown ++ extra ++ calleeText ctx e ++ useGroupText ctx e ++ inst)
 
@@ -792,3 +797,55 @@ walkUnions ctx home unions =
                  ++ "   tag: " ++ show (Index.toMachine index) ++ "   arity: " ++ show arity
                  ++ "   fields: " ++ List.intercalate " ;; " shownFields
                  ++ "   sig: " ++ sig ++ "   kinds: " ++ kindsText scheme)
+
+
+
+-- INITIALISATION ORDER OF TOP LEVEL VALUES (stage (ii) step 7, item 7)
+--
+-- Elm sorts the declarations of a module by their dependencies (Canonicalize: strongly
+-- connected components, dependencies first); that order is the one in `Can.Decls` and
+-- the one given here (`init: i`, from 0). `kind` is `value` for a definition without
+-- arguments (it is evaluated once, when the module is initialised) and `function` for
+-- one with arguments. `reads` are the top level definitions of this module mentioned
+-- in its body (including local definitions inside it), `needs` the top level *values*
+-- of this module that have to be initialised before it can be evaluated: the values
+-- reached through `reads`, also through functions (a function called while a value is
+-- initialised reads values too). A value with a non-empty `needs` has `init-dep: yes`.
+-- Values of other modules are initialised earlier, module by module.
+
+
+noteTopRef :: Ctx -> Can.Expr_ -> M ()
+noteTopRef ctx e =
+  case e of
+    Can.VarTopLevel _ _ ->
+      case (calleeId ctx e, _topDef ctx) of
+        (Just target, from) | not (null from) && target /= from ->
+          modify' (\w -> w { _refs = Map.insertWith Set.union from (Set.singleton target) (_refs w) })
+        _ -> return ()
+    _ -> return ()
+
+
+emitInitOrder :: Ctx -> [Can.Def] -> M ()
+emitInitOrder ctx defs =
+  do  refs <- gets _refs
+      let entries = [ (defIdOf ctx (defKeyOf d), isValue d, d) | d <- defs ]
+      let valueIds = Set.fromList [ i | (i, True, _) <- entries ]
+      let readsOf i = Map.findWithDefault Set.empty i refs
+      let reach i = go (Set.empty :: Set.Set String) [i]
+            where
+              go seen [] = seen
+              go seen (x : rest) =
+                let new = Set.toList (Set.difference (readsOf x) seen)
+                in go (List.foldl' (flip Set.insert) seen new) (new ++ rest)
+      let order = Map.fromList (zip [ i | (i, _, _) <- entries ] [0 :: Int ..])
+      let byOrder = List.sortOn (\x -> Map.findWithDefault 0 x order) . Set.toList
+      forM_ (zip [0 :: Int ..] entries) $ \(n, (i, value, d)) ->
+        do  let needs = Set.filter (/= i) (Set.intersection valueIds (reach i))
+            emit ctx ("init: " ++ show n ++ "   id: " ++ i ++ "   kind: " ++ (if value then "value" else "function")
+                      ++ "   reads: " ++ List.intercalate "," (byOrder (readsOf i))
+                      ++ "   needs: " ++ List.intercalate "," (byOrder needs)
+                      ++ (if value then "   init-dep: " ++ (if Set.null needs then "no" else "yes") else "")
+                      ++ groupSuffix d)
+  where
+    isValue d = case d of { Can.Def _ args _ -> null args; Can.TypedDef _ _ args _ _ -> null args }
+    groupSuffix d = case Map.lookup (defKeyOf d) (_groups ctx) of { Just (gid, True) -> "   group: " ++ gid; _ -> "" }
