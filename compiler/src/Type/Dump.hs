@@ -2,6 +2,7 @@
 {-# LANGUAGE BangPatterns, MagicHash #-}
 module Type.Dump
   ( render
+  , moduleLabel
   , Result(..)
   )
   where
@@ -43,6 +44,7 @@ import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Package as Pkg
 import qualified AST.Prim.Module as Module
 import qualified Reporting.Annotation as A
+import qualified Ficcus.Mono.Facts as Facts
 import Type.Readout
 import Type.Recorder (Key(..), DefKey(..))
 import qualified Type.Recorder as Recorder
@@ -61,6 +63,9 @@ data Result =
     , _defaulted :: Int
     , _eqUses :: Int          -- direct uses of ==, /=, compare
     , _eqFunUses :: [String]  -- those whose instance type contains a function
+    , _defFacts :: [Facts.DefFact]
+    , _initFacts :: [Facts.InitFact]
+    , _useFacts :: [Facts.UseFact]
     }
 
 
@@ -81,6 +86,9 @@ data W =
     , _display :: Map.Map String String
     , _usedNames :: Set.Set String
     , _refs :: Map.Map String (Set.Set String)   -- top level definition id -> top level definitions of the module it mentions
+    , _fDefs :: [Facts.DefFact]                  -- reversed
+    , _fInits :: [Facts.InitFact]                -- reversed
+    , _fUses :: [Facts.UseFact]                  -- reversed
     }
 
 
@@ -113,7 +121,7 @@ render (Can.Module home _ _ decls unions _ _ _) typed =
     vals = Map.fromList [ (defName d, Left (defKeyOf d)) | d <- topDefs ]
     ctx0 = Ctx typed Set.empty vals 0 home (Set.fromList [ defKeyOf d | d <- topDefs ]) Map.empty "" Set.empty Map.empty
     ctx = ctx0 { _groups = groupsOfDecls ctx0 decls }
-    start = W [] 0 0 0 0 0 [] Set.empty Map.empty Set.empty Map.empty
+    start = W [] 0 0 0 0 0 [] Set.empty Map.empty Set.empty Map.empty [] [] []
     w = execState (walkModule ctx home unions topDefs) start
     unvisited = Map.size (_nodes typed) - Set.size (_seen w)
     extra =
@@ -129,6 +137,9 @@ render (Can.Module home _ _ decls unions _ _ _) typed =
     , _defaulted = _defaultedCount w
     , _eqUses = _eqCount w
     , _eqFunUses = reverse (_eqFuns w)
+    , _defFacts = reverse (_fDefs w)
+    , _initFacts = reverse (_fInits w)
+    , _useFacts = reverse (_fUses w)
     }
 
 
@@ -140,6 +151,11 @@ walkModule ctx home unions defs =
         do  modify' (\w -> w { _display = Map.empty, _usedNames = Set.empty })
             walkDef ctx def
       emitInitOrder ctx defs
+
+
+-- package and module of a canonical module, e.g. `elm/core:List`
+moduleLabel :: Can.Module -> String
+moduleLabel (Can.Module home _ _ _ _ _ _ _) = moduleChars home
 
 
 moduleChars :: ModuleName.Canonical -> String
@@ -225,6 +241,7 @@ walkDef ctx def =
           sigText <- sigOf ctx scheme
           emit ctx ("def " ++ N.toChars name ++ " :: " ++ shown ++ "    [" ++ regionText region ++ "]"
                     ++ "   id: " ++ did ++ "   sig: " ++ sigText ++ "   kinds: " ++ kindsText scheme ++ groupText ctx def)
+          modify' (\w -> w { _fDefs = Facts.DefFact did (kindList scheme) False : _fDefs w })
           let owned' = List.foldl' (\m (u, i) -> Map.insertWith (\_ old -> old) u (varToken did i) m) (_owned ctx) (canonVars scheme)
           let inner = ctx { _scope = Set.union (_scope ctx) (Set.fromList (map fst (tvars scheme))), _depth = _depth ctx + 1, _owned = owned'
                           , _topDef = if Set.member (defKeyOf def) (_tops ctx) then did else _topDef ctx
@@ -593,6 +610,17 @@ canonVars :: TType -> [(String, Int)]
 canonVars scheme = zip (List.nub (map fst (tvars scheme))) [0 ..]
 
 
+-- the owner definition id and variable index of a token `<<id|vN>>`
+parseToken :: String -> Maybe (String, Int)
+parseToken tok =
+  case reverse (drop 2 (reverse (drop 2 tok))) of
+    inner ->
+      let (revIx, revId) = break (== 'v') (reverse inner)
+      in case (reverse revIx, revId) of
+           (digits@(_ : _), 'v' : '|' : restId) | all (`elem` "0123456789") digits -> Just (reverse restId, read digits)
+           _ -> Nothing
+
+
 varToken :: String -> Int -> String
 varToken did i = "<<" ++ did ++ "|v" ++ show i ++ ">>"
 
@@ -617,9 +645,15 @@ rowVarNames tipe =
 
 kindsText :: TType -> String
 kindsText scheme =
+  List.intercalate "," [ "v" ++ show i ++ ":" ++ k | (i, k) <- zip [0 :: Int ..] (kindList scheme) ]
+
+
+-- the kind of each quantified variable v0, v1, ...
+kindList :: TType -> [String]
+kindList scheme =
   let rows = rowVarNames scheme
       kindOf u = case [ k | (n, k) <- tvars scheme, n == u ] of { k : _ -> k; [] -> KAny }
-  in List.intercalate "," [ "v" ++ show i ++ ":" ++ (if Set.member u rows then "row" else kindWord (kindOf u)) | (u, i) <- canonVars scheme ]
+  in [ if Set.member u rows then "row" else kindWord (kindOf u) | (u, _) <- canonVars scheme ]
 
 
 -- run a rendering with some variables shown under given names; the names chosen
@@ -686,19 +720,58 @@ instanceText ctx e raw =
     substText scheme subst =
       do  let ownedNames = [ (u, tok) | (u, tok) <- Map.toList (_owned ctx) ]
           let dead n = not (Set.member n (_scope ctx))
-          sig <- sigOf ctx scheme
+          sig <- sigOf sigCtx scheme
           entries <-
             mapM
               (\(u, i) ->
                   case Map.lookup u subst of
                     Nothing -> return Nothing
-                    Just (TVar other _ _) | other == u -> return Nothing
+                    Just (TVar other _ _) | other == u && not isRecUse -> return Nothing
                     Just value ->
                       do  shown <- withNames ownedNames (showType (applyDefault dead value))
                           return (Just ("v" ++ show i ++ " := " ++ shown)))
               (canonVars scheme)
           let present = [ x | Just x <- entries ]
+          let factBinds =
+                [ (i, owners)
+                | (u, i) <- canonVars scheme
+                , Just value <- [Map.lookup u subst]
+                , not (isIdentity u value && not isRecUse)
+                , let owners = List.nub [ o | (n, _) <- tvars (applyDefault dead value), Just tok <- [Map.lookup n (_owned ctx)], Just o <- [parseToken tok] ]
+                ]
+          case (calleeId ctx e, present) of
+            (Just callee, _ : _) -> modify' (\w -> w { _fUses = Facts.UseFact callee factBinds : _fUses w })
+            _ -> return ()
           return (if null present then "" else "   sig#: " ++ sigHash sig ++ "   subst: " ++ List.intercalate ", " present)
+
+    -- A1: a use inside the callee's own group is at the group's own variables. Its subst is
+    -- written in full (identity entries too): the callee's variable is the owner's (`<<owner|vK>>`).
+    -- A variable of the group that the owner's signature does not contain is dead in the owner and
+    -- is defaulted like any dead variable (`ref` or `Int`, by kind).
+    isRecUse = useGroupText ctx e == "   use: rec"
+
+    -- the signature is shown as on the callee's own `def` line: there the variables of the group's
+    -- members were not yet owned by them, so inside the group they are v0, v1, ... again
+    sigCtx =
+      if not isRecUse then ctx else
+        let members = case calleeGroupId of
+              Nothing -> Set.empty
+              Just gid -> Set.fromList [ defIdOf ctx k | (k, (g, _)) <- Map.toList (_groups ctx), g == gid ]
+            ownedByMember tok = maybe False (\(o, _) -> Set.member o members) (parseToken tok)
+        in ctx { _owned = Map.filter (not . ownedByMember) (_owned ctx) }
+
+    calleeGroupId =
+      case e of
+        Can.VarLocal name -> byName name
+        Can.VarTopLevel _ name -> byName name
+        _ -> Nothing
+      where
+        byName name =
+          case Map.lookup name (_vals ctx) of
+            Just (Left key) -> fmap fst (Map.lookup key (_groups ctx))
+            _ -> Nothing
+
+    isIdentity u value = case value of { TVar other _ _ -> other == u; _ -> False }
 
     bindingText dead (name, value) =
       case value of
@@ -792,6 +865,7 @@ walkUnions ctx home unions =
               let names = [ (u, "v" ++ show i) | (u, i) <- canonVars scheme ]
               shownFields <- withNames names (mapM showType fieldTypes)
               sig <- withNames names (showType scheme)
+              modify' (\w -> w { _fDefs = Facts.DefFact (moduleChars home ++ "." ++ N.toChars cname) (kindList scheme) True : _fDefs w })
               emit (ctx { _depth = _depth ctx + 1 })
                 ("ctor " ++ N.toChars cname ++ "   id: " ++ moduleChars home ++ "." ++ N.toChars cname
                  ++ "   tag: " ++ show (Index.toMachine index) ++ "   arity: " ++ show arity
@@ -841,6 +915,8 @@ emitInitOrder ctx defs =
       let byOrder = List.sortOn (\x -> Map.findWithDefault 0 x order) . Set.toList
       forM_ (zip [0 :: Int ..] entries) $ \(n, (i, value, d)) ->
         do  let needs = Set.filter (/= i) (Set.intersection valueIds (reach i))
+            modify' (\w -> w { _fInits = Facts.InitFact i n value (byOrder needs) (value && not (Set.null needs))
+                                         (case Map.lookup (defKeyOf d) (_groups ctx) of { Just (gid, True) -> Just gid; _ -> Nothing }) : _fInits w })
             emit ctx ("init: " ++ show n ++ "   id: " ++ i ++ "   kind: " ++ (if value then "value" else "function")
                       ++ "   reads: " ++ List.intercalate "," (byOrder (readsOf i))
                       ++ "   needs: " ++ List.intercalate "," (byOrder needs)

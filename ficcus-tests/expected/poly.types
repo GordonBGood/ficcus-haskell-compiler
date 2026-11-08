@@ -127,4 +127,3 @@ init: 2   id: author/project:Poly.twice   kind: function   reads:    needs:
 init: 3   id: author/project:Poly.getX   kind: function   reads:    needs: 
 init: 4   id: author/project:Poly.results   kind: value   reads: author/project:Poly.biggest,author/project:Poly.unbox,author/project:Poly.twice,author/project:Poly.getX   needs:    init-dep: no
 init: 5   id: author/project:Poly.main   kind: value   reads: author/project:Poly.results   needs: author/project:Poly.results   init-dep: yes
-

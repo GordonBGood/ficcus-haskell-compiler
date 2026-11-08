@@ -737,7 +737,7 @@ compileHelp writer key stuff pkg path time deps main lastChange buildID docsNeed
 -- Ficcus: the `.types` dump of one module, written next to its .elmo
 writeTypes :: File.Writer R.PROJECT -> R.Stuff -> Module.Name -> Can.Module -> Typed.Typed -> IO ()
 writeTypes writer stuff name canonical typed =
-  TypesFile.write writer (R.typesFile stuff name) name canonical typed
+  TypesFile.write True writer (R.typesFile stuff name) name canonical typed
 
 
 projectTypeToPkg :: Parse.ProjectType -> Pkg.Name

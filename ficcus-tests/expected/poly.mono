@@ -1,0 +1,6 @@
+-- mono: stage (iii) slice 0, modules=21
+-- module author/project:Poly (project)
+mark author/project:Poly.biggest   v0=comparable
+mark author/project:Poly.getX   v0=row
+clone c0   def: author/project:Poly.results   key: ()   kind: value   init: 4   needs: 
+clone c1   def: author/project:Poly.main   key: ()   kind: value   init: 5   needs: c0

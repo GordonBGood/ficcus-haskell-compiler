@@ -22,6 +22,9 @@ import argparse, json, os, re, shutil, subprocess, sys, tempfile
 from concurrent.futures import ThreadPoolExecutor
 
 
+# the output file of the typed run; `x.mono` writes the .mono file and x.types beside it (marks_check.py)
+TYPED_OUT = os.environ.get("TYPED_OUT", "x.types")
+
 def find_projects(paths):
     found = []
     for p in paths:
@@ -88,7 +91,7 @@ def check(job):
     shutil.copytree(proj, dst, ignore=shutil.ignore_patterns("elm-stuff", ".git", "node_modules"))
     env = dict(os.environ, ELM_HOME=args.elm_home)
     ra, ta = run(args.safe, args.elm, ["make"] + files + ["--output=/dev/null"], dst, env, args.timeout)
-    rb, tb = run(args.safe, args.elm, ["make"] + files + ["--output=x.types"], dst, env, args.timeout)
+    rb, tb = run(args.safe, args.elm, ["make"] + files + ["--output=" + TYPED_OUT], dst, env, args.timeout)
     res = {"name": name, "exit_a": ra, "exit_b": rb}
     if ra == 124 or rb == 124:
         res["status"] = "TIMEOUT"

@@ -700,7 +700,7 @@ compile typed pkg mvar name status =
                       return Nothing
 
                     Right (Compile.Artifacts canonical annotations objects, types) ->
-                      do  TypesFile.write writer (R.packageTypesFile stuff pkg name) name canonical types
+                      do  TypesFile.write False writer (R.packageTypesFile stuff pkg name) name canonical types
                           let ifaces = I.fromModule pkg canonical annotations
                           docs <- makeDocs docsStatus canonical
                           return $ Just $ RLocal ifaces objects docs

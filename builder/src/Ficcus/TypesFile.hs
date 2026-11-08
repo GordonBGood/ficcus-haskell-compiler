@@ -15,13 +15,15 @@ import System.IO (hPutStrLn, stderr)
 import qualified AST.Canonical as Can
 import qualified AST.Prim.Module as Module
 import qualified File
+import qualified Ficcus.Mono.Facts as Facts
 import qualified Type.Dump as Dump
 import qualified Type.Readout as Typed
 
 
-write :: File.Writer t -> FilePath -> Module.Name -> Can.Module -> Typed.Typed -> IO ()
-write writer path name canonical typed =
+write :: Bool -> File.Writer t -> FilePath -> Module.Name -> Can.Module -> Typed.Typed -> IO ()
+write isProject writer path name canonical typed =
   do  let result = Dump.render canonical typed
+      Facts.register (Facts.ModuleFacts (Dump.moduleLabel canonical) isProject (Dump._defFacts result) (Dump._initFacts result) (Dump._useFacts result))
       let summary =
             "-- module " ++ Module.toChars name
             ++ ": problems=" ++ show (Dump._problems result)

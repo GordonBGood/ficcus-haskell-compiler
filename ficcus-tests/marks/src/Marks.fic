@@ -1,0 +1,57 @@
+module Marks exposing (count, describe, plain, relay, same, sameList, smallest, total)
+
+
+-- == marks its operand type
+same : a -> a -> Bool
+same x y =
+    x == y
+
+
+-- passing the operand to a marked variable marks it too (propagated through the owner's variable)
+sameList : List a -> List a -> Bool
+sameList xs ys =
+    same xs ys
+
+
+-- Debug.toString marks as "printed", and the mark propagates to callers
+describe : a -> String
+describe x =
+    Debug.toString x
+
+
+relay : b -> String
+relay y =
+    describe y
+
+
+-- not marked: unconstrained, class keyed
+plain : a -> a
+plain x =
+    x
+
+
+-- constrained kinds come from the scheme
+smallest : List comparable -> Maybe comparable
+smallest xs =
+    List.minimum xs
+
+
+total : List number -> number
+total xs =
+    List.foldl (+) 0 xs
+
+
+-- monomorphic values and functions: one clone each, in initialisation order
+limit : Int
+limit =
+    10
+
+
+table : List Int
+table =
+    List.range 1 limit
+
+
+count : Int
+count =
+    List.length table + limit

@@ -1,4 +1,4 @@
-module Rec exposing (count, evens, odds, result, wrap)
+module Rec exposing (chase, count, evens, odds, stop, result, wrap)
 
 
 -- inferred mutual recursion at top level: one group, generalized together
@@ -63,3 +63,18 @@ result =
             ++ List.map String.fromInt (odds [ 4, 5 ])
             ++ [ String.fromInt (count [ 1, 2 ]), String.concat (wrap "w") ]
         )
+
+
+-- inferred mutual recursion whose members have different variables: chase : List a -> b -> c, stop : b -> c.
+-- `a` is a variable of the group that does not occur in stop's signature
+chase xs y =
+    case xs of
+        [] ->
+            stop y
+
+        _ :: rest ->
+            chase rest y
+
+
+stop z =
+    chase [] z

@@ -22,6 +22,8 @@ import qualified AST.Prim.Module as Module
 import qualified Build
 import qualified Elm.Details as Details
 import qualified Ficcus.Flags as Flags
+import qualified Ficcus.Mono.Facts as Facts
+import qualified Ficcus.Mono.Print as Print
 import qualified File
 import qualified Generate
 import qualified Generate.Html as Html
@@ -51,6 +53,7 @@ data Output
   | Html FilePath
   | C FilePath
   | Types FilePath
+  | Mono FilePath
   | DevNull
 
 
@@ -82,6 +85,7 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs) =
   do  desiredMode <- getMode debug optimize
       case maybeOutput of
         Just (Types _) -> Task.io (Flags.setTypedOutput True)
+        Just (Mono _)  -> Task.io (Flags.setTypedOutput True)
         _              -> return ()
       details <- Task.eio Exit.MakeBadDetails (Details.load writer style root stuff)
       case paths of
@@ -120,6 +124,14 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs) =
                 Just (Types target) ->
                   do  builder <- Task.io (Generate.typeDumps stuff artifacts)
                       generate writer style target builder (Build.getRootNames artifacts)
+
+                Just (Mono target) ->
+                  -- Ficcus stage (iii) slice 0: the clone table and marks; the type dump is written beside it
+                  do  typesBuilder <- Task.io (Generate.typeDumps stuff artifacts)
+                      Task.io (Dir.createDirectoryIfMissing True (FP.takeDirectory target))
+                      Task.io (File.writeBuilder writer (FP.replaceExtension target ".types") typesBuilder)
+                      facts <- Task.io Facts.takeAll
+                      generate writer style target (B.stringUtf8 (unlines (Print.renderProgram facts))) (Build.getRootNames artifacts)
 
                 Just (C target) ->
                   case getNoMains artifacts of
@@ -315,6 +327,7 @@ parseOutput name
   | hasExt ".js"   name = Just (JS name)
   | hasExt ".c"    name = Just (C name)
   | hasExt ".types" name = Just (Types name)
+  | hasExt ".mono" name = Just (Mono name)
   | otherwise           = Nothing
 
 

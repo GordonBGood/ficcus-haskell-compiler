@@ -1,0 +1,11 @@
+-- mono: stage (iii) slice 0, modules=21
+-- module author/project:Marks (project)
+mark author/project:Marks.smallest   v0=comparable
+mark author/project:Marks.describe   v0=any+printed
+mark author/project:Marks.total   v0=number
+mark author/project:Marks.relay   v0=any+printed
+mark author/project:Marks.same   v0=any+equatable
+mark author/project:Marks.sameList   v0=any+equatable
+clone c0   def: author/project:Marks.limit   key: ()   kind: value   init: 5   needs: 
+clone c1   def: author/project:Marks.table   key: ()   kind: value   init: 6   needs: c0
+clone c2   def: author/project:Marks.count   key: ()   kind: value   init: 7   needs: c0,c1
