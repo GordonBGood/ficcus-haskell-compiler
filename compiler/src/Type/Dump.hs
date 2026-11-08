@@ -720,7 +720,7 @@ instanceText ctx e raw =
     substText scheme subst =
       do  let ownedNames = [ (u, tok) | (u, tok) <- Map.toList (_owned ctx) ]
           let dead n = not (Set.member n (_scope ctx))
-          sig <- sigOf ctx scheme
+          sig <- sigOf sigCtx scheme
           entries <-
             mapM
               (\(u, i) ->
@@ -749,6 +749,27 @@ instanceText ctx e raw =
     -- A variable of the group that the owner's signature does not contain is dead in the owner and
     -- is defaulted like any dead variable (`ref` or `Int`, by kind).
     isRecUse = useGroupText ctx e == "   use: rec"
+
+    -- the signature is shown as on the callee's own `def` line: there the variables of the group's
+    -- members were not yet owned by them, so inside the group they are v0, v1, ... again
+    sigCtx =
+      if not isRecUse then ctx else
+        let members = case calleeGroupId of
+              Nothing -> Set.empty
+              Just gid -> Set.fromList [ defIdOf ctx k | (k, (g, _)) <- Map.toList (_groups ctx), g == gid ]
+            ownedByMember tok = maybe False (\(o, _) -> Set.member o members) (parseToken tok)
+        in ctx { _owned = Map.filter (not . ownedByMember) (_owned ctx) }
+
+    calleeGroupId =
+      case e of
+        Can.VarLocal name -> byName name
+        Can.VarTopLevel _ name -> byName name
+        _ -> Nothing
+      where
+        byName name =
+          case Map.lookup name (_vals ctx) of
+            Just (Left key) -> fmap fst (Map.lookup key (_groups ctx))
+            _ -> Nothing
 
     isIdentity u value = case value of { TVar other _ _ -> other == u; _ -> False }
 
