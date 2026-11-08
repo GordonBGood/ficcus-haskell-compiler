@@ -9,6 +9,8 @@ module Ficcus.Mono.Ir
   , DefKind(..)
   , MDef(..)
   , MProgram(..)
+  , children
+  , exprRefs
   )
   where
 
@@ -49,7 +51,8 @@ data MNode
   | MCall MExpr [MExpr]
   | MLam [(String, Class)] MExpr
   | MIf [(MExpr, MExpr)] MExpr
-  | MLet [MDef] MExpr                      -- local clones (a group or a single definition)
+  | MLetVal String MExpr MExpr             -- let name = value in body (a local value; local functions are lifted clones)
+  | MSeq MExpr MExpr                       -- evaluate the first for its effect, then the second
   | MCase MExpr [(MPat, MExpr)]
   | MAccess MExpr String
   | MUpdate MExpr [(String, MExpr)]
@@ -92,6 +95,7 @@ data MDef =
     , mdBody :: Maybe MExpr                -- Nothing while a clone is only listed (slice 0)
     , mdInit :: Maybe Int                  -- position in the module's initialisation order (top level)
     , mdNeeds :: [CloneId]                 -- clones of values that must be initialised first
+    , mdLifted :: Maybe CloneId            -- a local function or lambda lifted out of this clone
     }
   deriving (Show)
 
@@ -102,3 +106,33 @@ data MProgram =
     , mpMain :: Maybe CloneId
     }
   deriving (Show)
+
+
+-- | the direct sub-expressions of a node, in evaluation order
+children :: MExpr -> [MExpr]
+children (MExpr _ node) =
+  case node of
+    MLit _ -> []
+    MLocal _ -> []
+    MGlobal _ -> []
+    MKernel _ _ -> []
+    MCtor _ _ _ -> []
+    MCall f args -> f : args
+    MLam _ b -> [b]
+    MIf bs e -> concat [ [c, b] | (c, b) <- bs ] ++ [e]
+    MLetVal _ v b -> [v, b]
+    MSeq a b -> [a, b]
+    MCase s bs -> s : map snd bs
+    MAccess x _ -> [x]
+    MUpdate x fs -> x : map snd fs
+    MRecord fs -> map snd fs
+    MTuple xs -> xs
+    MList xs -> xs
+
+
+-- | the clones an expression refers to, in order of first occurrence
+exprRefs :: MExpr -> [CloneId]
+exprRefs e =
+  case mNode e of
+    MGlobal c -> [c]
+    _ -> concatMap exprRefs (children e)

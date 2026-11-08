@@ -1,0 +1,15 @@
+int: 42
+negative: -7
+big: 1099511627776
+float: 1.5
+sum: 0.30000000000000004
+whole: 100
+tiny: 1e-7
+huge: 1e+21
+long: 123456789012345680000
+half: -2.5
+inf: Infinity
+nan: NaN
+string: "plain"
+escapes: "quote\" back\\ line\nend"
+joined: "7/0.5"

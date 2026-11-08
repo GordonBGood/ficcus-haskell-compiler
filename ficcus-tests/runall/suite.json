@@ -1,0 +1,26 @@
+{
+ "description": "Ficcus acceptance subset: the tests of targets/suite.json that the Ficcus compiler can already compile (see docs/STAGE3-PLAN.md); run with run.sh",
+ "c_flags": [
+  "-std=c99",
+  "-pedantic",
+  "-Wall",
+  "-Wextra",
+  "-Wno-unused-function",
+  "-ffp-contract=off",
+  "-O2"
+ ],
+ "tests": [
+  {
+   "name": "fibonacci",
+   "elm": {
+    "dir": "fib",
+    "main": "src/Fibonacci.elm",
+    "js": "fib.js"
+   },
+   "c": {
+    "file": "fibonacci.c"
+   },
+   "fic": "../fib/src/Fibonacci.fic"
+  }
+ ]
+}

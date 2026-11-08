@@ -4,6 +4,19 @@ module Type.Dump
   ( render
   , moduleLabel
   , Result(..)
+  , Ctx(..)
+  , mkCtx
+  , defIdOf
+  , calleeId
+  , schemeOf
+  , bindDefs
+  , canonVars
+  , kindList
+  , defName
+  , defKeyOf
+  , declsToDefs
+  , moduleChars
+  , regionText
   )
   where
 
@@ -118,9 +131,7 @@ render :: Can.Module -> Typed -> Result
 render (Can.Module home _ _ decls unions _ _ _) typed =
   let
     topDefs = declsToDefs decls
-    vals = Map.fromList [ (defName d, Left (defKeyOf d)) | d <- topDefs ]
-    ctx0 = Ctx typed Set.empty vals 0 home (Set.fromList [ defKeyOf d | d <- topDefs ]) Map.empty "" Set.empty Map.empty
-    ctx = ctx0 { _groups = groupsOfDecls ctx0 decls }
+    ctx = mkCtx home decls typed
     start = W [] 0 0 0 0 0 [] Set.empty Map.empty Set.empty Map.empty [] [] []
     w = execState (walkModule ctx home unions topDefs) start
     unvisited = Map.size (_nodes typed) - Set.size (_seen w)
@@ -141,6 +152,17 @@ render (Can.Module home _ _ decls unions _ _ _) typed =
     , _initFacts = reverse (_fInits w)
     , _useFacts = reverse (_fUses w)
     }
+
+
+-- the context of a module's top level (also used by the specializer)
+mkCtx :: ModuleName.Canonical -> Can.Decls -> Typed -> Ctx
+mkCtx home decls typed =
+  let
+    topDefs = declsToDefs decls
+    vals = Map.fromList [ (defName d, Left (defKeyOf d)) | d <- topDefs ]
+    ctx0 = Ctx typed Set.empty vals 0 home (Set.fromList [ defKeyOf d | d <- topDefs ]) Map.empty "" Set.empty Map.empty
+  in
+  ctx0 { _groups = groupsOfDecls ctx0 decls }
 
 
 walkModule :: Ctx -> ModuleName.Canonical -> Map.Map T.Name Can.Union -> [Can.Def] -> M ()

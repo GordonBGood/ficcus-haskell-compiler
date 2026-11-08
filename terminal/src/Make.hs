@@ -12,6 +12,8 @@ module Make
 
 
 import qualified Data.ByteString.Builder as B
+import System.Exit (ExitCode(..), exitWith)
+import System.IO (hPutStrLn, stderr)
 import qualified Data.Maybe as Maybe
 import qualified Data.NonEmptyList as NE
 import qualified System.Directory as Dir
@@ -22,8 +24,12 @@ import qualified AST.Prim.Module as Module
 import qualified Build
 import qualified Elm.Details as Details
 import qualified Ficcus.Flags as Flags
+import qualified Ficcus.Mono.CGen as CGen
 import qualified Ficcus.Mono.Facts as Facts
+import qualified Ficcus.Mono.Marks as Marks
+import qualified Ficcus.Mono.Modules as Modules
 import qualified Ficcus.Mono.Print as Print
+import qualified Ficcus.Mono.Spec as Spec
 import qualified File
 import qualified Generate
 import qualified Generate.Html as Html
@@ -32,6 +38,15 @@ import qualified Reporting.Exit as Exit
 import qualified Reporting.Task as Task
 import qualified Root as R
 import Terminal (Parser(..))
+
+
+
+-- Ficcus: report problems of the specializer or the C generator and stop
+failWith :: [String] -> Task a
+failWith msgs =
+  Task.io $
+    do  hPutStrLn stderr ("-- FICCUS: the program cannot be compiled to C yet --------------------------------\n\n" ++ unlines msgs)
+        exitWith (ExitFailure 1)
 
 
 
@@ -51,7 +66,8 @@ data Flags =
 data Output
   = JS FilePath
   | Html FilePath
-  | C FilePath
+  | C FilePath                 -- the dump of the optimized graph (milestone 1), `--output=x.optc`
+  | FicC FilePath              -- the generated C of the specializer (stage iii), `--output=x.c`
   | Types FilePath
   | Mono FilePath
   | DevNull
@@ -85,7 +101,8 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs) =
   do  desiredMode <- getMode debug optimize
       case maybeOutput of
         Just (Types _) -> Task.io (Flags.setTypedOutput True)
-        Just (Mono _)  -> Task.io (Flags.setTypedOutput True)
+        Just (Mono _)  -> Task.io (Flags.setTypedOutput True >> Flags.setKeepModules True)
+        Just (FicC _)  -> Task.io (Flags.setTypedOutput True >> Flags.setKeepModules True)
         _              -> return ()
       details <- Task.eio Exit.MakeBadDetails (Details.load writer style root stuff)
       case paths of
@@ -131,7 +148,21 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs) =
                       Task.io (Dir.createDirectoryIfMissing True (FP.takeDirectory target))
                       Task.io (File.writeBuilder writer (FP.replaceExtension target ".types") typesBuilder)
                       facts <- Task.io Facts.takeAll
-                      generate writer style target (B.stringUtf8 (unlines (Print.renderProgram facts))) (Build.getRootNames artifacts)
+                      mods <- Task.io Modules.takeAll
+                      let program = if null mods then Nothing else Spec.specialize mods (Marks.compute facts)
+                      generate writer style target (B.stringUtf8 (unlines (Print.renderProgram facts program))) (Build.getRootNames artifacts)
+
+                Just (FicC target) ->
+                  -- Ficcus stage (iii): specialize, then generate C
+                  do  facts <- Task.io Facts.takeAll
+                      mods <- Task.io Modules.takeAll
+                      case Spec.specialize mods (Marks.compute facts) of
+                        Nothing -> failWith ["no `main` in the project"]
+                        Just (Left errs) -> failWith errs
+                        Just (Right program) ->
+                          case CGen.generate program of
+                            Left errs -> failWith errs
+                            Right text -> generate writer style target (B.stringUtf8 text) (Build.getRootNames artifacts)
 
                 Just (C target) ->
                   case getNoMains artifacts of
@@ -325,7 +356,8 @@ parseOutput name
   | isDevNull name      = Just DevNull
   | hasExt ".html" name = Just (Html name)
   | hasExt ".js"   name = Just (JS name)
-  | hasExt ".c"    name = Just (C name)
+  | hasExt ".optc" name = Just (C name)
+  | hasExt ".c"    name = Just (FicC name)
   | hasExt ".types" name = Just (Types name)
   | hasExt ".mono" name = Just (Mono name)
   | otherwise           = Nothing

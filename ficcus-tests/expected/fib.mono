@@ -4,3 +4,69 @@ mark author/project:Fibonacci.countFibsTo   v0=number
 mark author/project:Fibonacci.worker@19:9   v0=number v1=number
 mark author/project:Fibonacci.limit   v0=number
 clone c0   def: author/project:Fibonacci.main   key: ()   kind: value   init: 2   needs: 
+-- program: 5 clones, reachable from main, dependencies first
+clone c4   def: author/project:Fibonacci.worker@19:9   key: (v0=type elm/core:Basics.Int)   kind: function   params: f:i64 s:i64 cnt:i64   result: i64   lifted-from: c2
+  If :: i64
+    Call :: enum
+      Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+      Local f :: i64
+      Local n :: i64
+    Local cnt :: i64
+    Call :: i64
+      Global c4 :: ref
+      Local s :: i64
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Local f :: i64
+        Local s :: i64
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Local cnt :: i64
+        Lit 1 :: i64
+clone c2   def: author/project:Fibonacci.countFibsTo   key: (v0=type elm/core:Basics.Int)   kind: function   params: n:i64   result: i64
+  Call :: i64
+    Global c4 :: ref
+    Lit 0 :: i64
+    Lit 1 :: i64
+    Lit 0 :: i64
+clone c3   def: author/project:Fibonacci.limit   key: (v0=type elm/core:Basics.Int)   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+    Call :: i64
+      Kernel elm/core:Basics.pow (v0=type elm/core:Basics.Int) :: ref
+      Lit 2 :: i64
+      Lit 53 :: i64
+    Lit 1 :: i64
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Let answer :: struct(unit,unit)
+    Call :: ref
+      Kernel elm/core:Basics.append (v0=app string) :: ref
+      Lit "Found " :: ref
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Call :: ref
+          Kernel elm/core:String.fromInt () :: ref
+          Call :: i64
+            Global c2 :: ref
+            Global c3 :: i64
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Lit " Fibonacci numbers to " :: ref
+          Call :: ref
+            Kernel elm/core:Basics.append (v0=app string) :: ref
+            Call :: ref
+              Kernel elm/core:String.fromInt () :: ref
+              Global c3 :: i64
+            Lit " inclusive." :: ref
+    Seq :: struct(unit,unit)
+      Call :: unit
+        Kernel elm/core:Debug.log (v0=type ()) :: ref
+        Local answer :: ref
+        Lit () :: unit
+      Tuple :: struct(unit,unit)
+        Lit () :: unit
+        Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Fibonacci.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref
