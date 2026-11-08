@@ -1,0 +1,143 @@
+-- module Rec: problems=0 instances=34 instance-failures=0 defaulted=6
+-- equality-uses: total=0 at-function=0
+module author/project:Rec
+def count :: List a -> Int    [25:1-25:6]   id: author/project:Rec.count   sig: List v0 -> Int   kinds: v0:any   group: author/project:Rec.count rec ann
+  25:7-25:9 PVar xs :: List a
+  26:5-31:27 Case :: Int
+    26:10-26:12 VarLocal :: List a
+    27:9-27:11 PList :: List a
+    28:13-28:14 Int :: Int
+    30:9-30:18 PCons :: List a
+      30:9-30:10 PAnything :: a
+      30:14-30:18 PVar rest :: List a
+    31:13-31:27 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      31:13-31:14 Int :: Int
+      31:17-31:27 Call :: Int
+        31:17-31:22 VarTopLevel :: List a -> Int   callee: author/project:Rec.count   use: rec
+        31:23-31:27 VarLocal :: List a
+def wrap :: a -> List a    [36:1-36:5]   id: author/project:Rec.wrap   sig: v0 -> List v0   kinds: v0:any   group: author/project:Rec.wrap nonrec ann
+  36:6-36:7 PVar x :: a
+  37:5-37:10 List :: List a
+    37:7-37:8 VarLocal :: a
+def evens :: List a -> List a    [5:1-5:6]   id: author/project:Rec.evens   sig: List v0 -> List v0   kinds: v0:any   group: author/project:Rec.evens rec inferred
+  5:7-5:9 PVar xs :: List a
+  6:5-11:27 Case :: List a
+    6:10-6:12 VarLocal :: List a
+    7:9-7:11 PList :: List a
+    8:13-8:15 List :: List a
+    10:9-10:18 PCons :: List a
+      10:9-10:10 PVar x :: a
+      10:14-10:18 PVar rest :: List a
+    11:13-11:27 Binop :: List a   callee: elm/core:List.cons   instance: a := a   sig#: ddd4c5f2   subst: v0 := <<author/project:Rec.evens|v0>>
+      11:13-11:14 VarLocal :: a
+      11:18-11:27 Call :: List a
+        11:18-11:22 VarTopLevel :: List a -> List a   callee: author/project:Rec.odds   use: rec
+        11:23-11:27 VarLocal :: List a
+def odds :: List a -> List a    [14:1-14:5]   id: author/project:Rec.odds   sig: List v0 -> List v0   kinds: v0:any   group: author/project:Rec.evens rec inferred
+  14:6-14:8 PVar xs :: List a
+  15:5-20:23 Case :: List a
+    15:10-15:12 VarLocal :: List a
+    16:9-16:11 PList :: List a
+    17:13-17:15 List :: List a
+    19:9-19:18 PCons :: List a
+      19:9-19:10 PAnything :: a
+      19:14-19:18 PVar rest :: List a
+    20:13-20:23 Call :: List a
+      20:13-20:18 VarTopLevel :: List a -> List a   callee: author/project:Rec.evens   use: rec
+      20:19-20:23 VarLocal :: List a
+def result :: String    [42:1-42:7]   id: author/project:Rec.result   sig: String   kinds:    group: author/project:Rec.result nonrec ann
+  def twice :: (t -> t) -> t -> t    [56:9-56:14]   id: author/project:Rec.twice@56:9   sig: (v0 -> v0) -> v0 -> v0   kinds: v0:any   group: author/project:Rec.twice@56:9 nonrec inferred
+    56:15-56:16 PVar f :: t -> t
+    56:17-56:18 PVar x :: t
+    57:13-57:19 Call :: t
+      57:13-57:14 VarLocal :: t -> t
+      57:16-57:19 Call :: t
+        57:16-57:17 VarLocal :: t -> t
+        57:18-57:19 VarLocal :: t
+  def pong :: number -> List String    [50:9-50:13]   id: author/project:Rec.pong@50:9   sig: v0 -> List String   kinds: v0:number   group: author/project:Rec.ping@44:9 rec inferred
+    50:14-50:15 PVar n :: number
+    51:13-54:39 If :: List String
+      51:16-51:22 Binop :: Bool   callee: elm/core:Basics.le   instance: comparable := number   sig#: 2cdc0786   subst: v0 := <<author/project:Rec.pong@50:9|v0>>
+        51:16-51:17 VarLocal :: number
+        51:21-51:22 Int :: number
+      52:17-52:19 List :: List String
+      54:17-54:39 Binop :: List String   callee: elm/core:List.cons   instance: a := String   sig#: ddd4c5f2   subst: v0 := String
+        54:17-54:23 Str :: String
+        54:27-54:38 Call :: List String
+          54:27-54:31 VarLocal :: number -> List String   callee: author/project:Rec.ping@44:9   use: rec
+          54:33-54:38 Binop :: number   callee: elm/core:Basics.sub   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Rec.pong@50:9|v0>>
+            54:33-54:34 VarLocal :: number
+            54:37-54:38 Int :: number
+  def ping :: number -> List String    [44:9-44:13]   id: author/project:Rec.ping@44:9   sig: v0 -> List String   kinds: v0:number   group: author/project:Rec.ping@44:9 rec inferred
+    44:14-44:15 PVar n :: number
+    45:13-48:39 If :: List String
+      45:16-45:22 Binop :: Bool   callee: elm/core:Basics.le   instance: comparable := number   sig#: 2cdc0786   subst: v0 := <<author/project:Rec.ping@44:9|v0>>
+        45:16-45:17 VarLocal :: number
+        45:21-45:22 Int :: number
+      46:17-46:19 List :: List String
+      48:17-48:39 Binop :: List String   callee: elm/core:List.cons   instance: a := String   sig#: ddd4c5f2   subst: v0 := String
+        48:17-48:23 Str :: String
+        48:27-48:38 Call :: List String
+          48:27-48:31 VarLocal :: number -> List String   callee: author/project:Rec.pong@50:9   use: rec
+          48:33-48:38 Binop :: number   callee: elm/core:Basics.sub   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Rec.ping@44:9|v0>>
+            48:33-48:34 VarLocal :: number
+            48:37-48:38 Int :: number
+  59:5-64:77 Call :: String
+    59:5-59:18 VarForeign :: List String -> String   callee: elm/core:String.concat
+    60:10-64:77 Binop :: List String   callee: elm/core:Basics.append   instance: appendable := List String   sig#: 08810ccc   subst: v0 := List String
+      60:10-60:16 Call :: List String
+        60:10-60:14 VarLocal :: Int -> List String   <= number1 -> List String   callee: author/project:Rec.ping@44:9   use: gen   instance: number := Int (defaulted)   sig#: 8904fd0d   subst: v0 := Int
+        60:15-60:16 Int :: Int   <= number1
+      61:16-64:77 Binop :: List String   callee: elm/core:Basics.append   instance: appendable := List String   sig#: 08810ccc   subst: v0 := List String
+        61:16-61:86 List :: List String
+          61:18-61:44 Call :: String
+            61:18-61:23 VarLocal :: (String -> String) -> String -> String   callee: author/project:Rec.twice@56:9   use: gen   instance: t := String   sig#: d7b537f4   subst: v0 := String
+            61:25-61:39 Lambda :: String -> String
+              61:26-61:27 PVar t :: String
+              61:31-61:39 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                61:31-61:32 VarLocal :: String
+                61:36-61:39 Str :: String
+            61:41-61:44 Str :: String
+          61:46-61:83 Call :: String
+            61:46-61:60 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+            61:62-61:83 Call :: Int
+              61:62-61:67 VarLocal :: (Int -> Int) -> Int -> Int   callee: author/project:Rec.twice@56:9   use: gen   instance: t := Int   sig#: d7b537f4   subst: v0 := Int
+              61:69-61:80 Lambda :: Int -> Int
+                61:70-61:71 PVar k :: Int
+                61:75-61:80 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  61:75-61:76 VarLocal :: Int
+                  61:79-61:80 Int :: Int
+              61:82-61:83 Int :: Int
+        62:16-64:77 Binop :: List String   callee: elm/core:Basics.append   instance: appendable := List String   sig#: 08810ccc   subst: v0 := List String
+          62:16-62:58 Call :: List String
+            62:16-62:24 VarForeign :: (Int -> String) -> List Int -> List String   callee: elm/core:List.map   instance: a := Int, b := String   sig#: 6a702f63   subst: v0 := Int, v1 := String
+            62:25-62:39 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+            62:41-62:58 Call :: List Int
+              62:41-62:46 VarTopLevel :: List Int -> List Int   callee: author/project:Rec.evens   use: gen   instance: a := Int   sig#: c2fcf511   subst: v0 := Int
+              62:47-62:58 List :: List Int
+                62:49-62:50 Int :: Int
+                62:52-62:53 Int :: Int
+                62:55-62:56 Int :: Int
+          63:16-64:77 Binop :: List String   callee: elm/core:Basics.append   instance: appendable := List String   sig#: 08810ccc   subst: v0 := List String
+            63:16-63:54 Call :: List String
+              63:16-63:24 VarForeign :: (Int -> String) -> List Int -> List String   callee: elm/core:List.map   instance: a := Int, b := String   sig#: 6a702f63   subst: v0 := Int, v1 := String
+              63:25-63:39 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+              63:41-63:54 Call :: List Int
+                63:41-63:45 VarTopLevel :: List Int -> List Int   callee: author/project:Rec.odds   use: gen   instance: a := Int   sig#: c2fcf511   subst: v0 := Int
+                63:46-63:54 List :: List Int
+                  63:48-63:49 Int :: Int
+                  63:51-63:52 Int :: Int
+            64:16-64:77 List :: List String
+              64:18-64:48 Call :: String
+                64:18-64:32 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                64:34-64:48 Call :: Int
+                  64:34-64:39 VarTopLevel :: List Int -> Int   <= List number2 -> Int   callee: author/project:Rec.count   use: gen   instance: a1 := Int (defaulted)   sig#: 8f686fa0   subst: v0 := Int
+                  64:40-64:48 List :: List Int   <= List number2
+                    64:42-64:43 Int :: Int   <= number2
+                    64:45-64:46 Int :: Int   <= number2
+              64:51-64:74 Call :: String
+                64:51-64:64 VarForeign :: List String -> String   callee: elm/core:String.concat
+                64:66-64:74 Call :: List String
+                  64:66-64:70 VarTopLevel :: String -> List String   callee: author/project:Rec.wrap   use: gen   instance: a2 := String   sig#: cb26b68a   subst: v0 := String
+                  64:71-64:74 Str :: String
+

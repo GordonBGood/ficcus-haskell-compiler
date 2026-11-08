@@ -94,6 +94,8 @@ data Ctx =
     , _depth :: Int
     , _home :: ModuleName.Canonical
     , _tops :: Set.Set DefKey                        -- the top level definitions of the module
+    , _groups :: Map.Map DefKey (String, Bool)      -- binding group of a definition: id, recursive
+    , _inGroups :: Set.Set String                    -- groups whose definitions are being walked
     , _owned :: Map.Map String String               -- scheme variable -> token naming its owner definition and index
     }
 
@@ -107,7 +109,8 @@ render (Can.Module home _ _ decls unions _ _ _) typed =
   let
     topDefs = declsToDefs decls
     vals = Map.fromList [ (defName d, Left (defKeyOf d)) | d <- topDefs ]
-    ctx = Ctx typed Set.empty vals 0 home (Set.fromList [ defKeyOf d | d <- topDefs ]) Map.empty
+    ctx0 = Ctx typed Set.empty vals 0 home (Set.fromList [ defKeyOf d | d <- topDefs ]) Map.empty Set.empty Map.empty
+    ctx = ctx0 { _groups = groupsOfDecls ctx0 decls }
     start = W [] 0 0 0 0 0 [] Set.empty Map.empty Set.empty
     w = execState (walkModule ctx home unions topDefs) start
     unvisited = Map.size (_nodes typed) - Set.size (_seen w)
@@ -218,9 +221,10 @@ walkDef ctx def =
           let did = defIdOf ctx (defKeyOf def)
           sigText <- sigOf ctx scheme
           emit ctx ("def " ++ N.toChars name ++ " :: " ++ shown ++ "    [" ++ regionText region ++ "]"
-                    ++ "   id: " ++ did ++ "   sig: " ++ sigText ++ "   kinds: " ++ kindsText scheme)
+                    ++ "   id: " ++ did ++ "   sig: " ++ sigText ++ "   kinds: " ++ kindsText scheme ++ groupText ctx def)
           let owned' = List.foldl' (\m (u, i) -> Map.insertWith (\_ old -> old) u (varToken did i) m) (_owned ctx) (canonVars scheme)
-          let inner = ctx { _scope = Set.union (_scope ctx) (Set.fromList (map fst (tvars scheme))), _depth = _depth ctx + 1, _owned = owned' }
+          let inner = ctx { _scope = Set.union (_scope ctx) (Set.fromList (map fst (tvars scheme))), _depth = _depth ctx + 1, _owned = owned'
+                          , _inGroups = case Map.lookup (defKeyOf def) (_groups ctx) of { Just (gid, True) -> Set.insert gid (_inGroups ctx); _ -> _inGroups ctx } }
           mapM_ (walkPattern inner) argPatterns
           walkExpr inner body
 
@@ -261,11 +265,11 @@ walkExpr ctx (A.At region e) =
           do  forM_ branches $ \(c, b) -> walkExpr sub c >> walkExpr sub b
               walkExpr sub final
         Can.Let def body ->
-          do  let ctx1 = bindDefs ctx [def]
+          do  let ctx1 = bindDefs ctx False [def]
               walkDef ctx1 def
               walkExpr ctx1 body
         Can.LetRec defs body ->
-          do  let ctx1 = bindDefs ctx defs
+          do  let ctx1 = bindDefs ctx True defs
               mapM_ (walkDef ctx1) defs
               walkExpr ctx1 body
         Can.LetDestruct pat x body ->
@@ -303,9 +307,62 @@ patBinders (A.At region p) =
     _ -> []
 
 
-bindDefs :: Ctx -> [Can.Def] -> Ctx
-bindDefs ctx defs =
-  ctx { _vals = List.foldl' (\m d -> Map.insert (defName d) (Left (defKeyOf d)) m) (_vals ctx) defs }
+bindDefs :: Ctx -> Bool -> [Can.Def] -> Ctx
+bindDefs ctx isRec defs =
+  ctx
+    { _vals = List.foldl' (\m d -> Map.insert (defName d) (Left (defKeyOf d)) m) (_vals ctx) defs
+    , _groups = List.foldl' (\m d -> Map.insert (defKeyOf d) (groupId, isRec) m) (_groups ctx) defs
+    }
+  where
+    groupId = case map defKeyOf defs of { [] -> ""; keys -> defIdOf ctx (minimum keys) }
+
+
+-- BINDING GROUPS (stage (ii) step 7, item 5)
+--
+-- A group is a set of mutually recursive definitions (Elm's strongly connected
+-- component), or one definition that is not recursive. Its id is the id of the member that comes first in the
+-- source. A `def` line says `group: <id> rec|nonrec` and whether the definition has
+-- an annotation (`ann`) or is inferred. A use of a definition of this module says
+-- `use: rec` when it is inside the definitions of its own group: the use is at the
+-- definition being checked, not a fresh instance (also for an annotated definition: Elm
+-- gives it its annotation, with the type variables rigid, so there is no polymorphic
+-- recursion; the subst of such a use is empty), or `use: gen` outside it (an ordinary use of the generalized
+-- scheme, with its own subst).
+
+
+groupsOfDecls :: Ctx -> Can.Decls -> Map.Map DefKey (String, Bool)
+groupsOfDecls ctx decls =
+  case decls of
+    Can.Declare d rest -> Map.insert (defKeyOf d) (defIdOf ctx (defKeyOf d), False) (groupsOfDecls ctx rest)
+    Can.DeclareRec d ds rest ->
+      let gid = defIdOf ctx (minimum (map defKeyOf (d : ds)))
+      in List.foldl' (\m x -> Map.insert (defKeyOf x) (gid, True) m) (groupsOfDecls ctx rest) (d : ds)
+    Can.SaveTheEnvironment -> Map.empty
+
+
+groupText :: Ctx -> Can.Def -> String
+groupText ctx def =
+  case Map.lookup (defKeyOf def) (_groups ctx) of
+    Nothing -> ""
+    Just (gid, isRec) ->
+      "   group: " ++ gid ++ (if isRec then " rec" else " nonrec")
+      ++ (case def of { Can.TypedDef {} -> " ann"; Can.Def {} -> " inferred" })
+
+
+useGroupText :: Ctx -> Can.Expr_ -> String
+useGroupText ctx e =
+  case e of
+    Can.VarLocal name -> byName name
+    Can.VarTopLevel _ name -> byName name
+    _ -> ""
+  where
+    byName name =
+      case Map.lookup name (_vals ctx) of
+        Just (Left key) ->
+          case Map.lookup key (_groups ctx) of
+            Just (gid, _) -> if Set.member gid (_inGroups ctx) then "   use: rec" else "   use: gen"
+            Nothing -> ""
+        _ -> ""
 
 
 nodeLine :: Ctx -> A.Region -> Can.Expr_ -> M ()
@@ -319,7 +376,7 @@ nodeLine ctx region e =
         Just raw ->
           do  (shown, extra) <- typeText ctx raw
               inst <- instanceText ctx e raw
-              emit ctx (regionText region ++ " " ++ Recorder.exprKind e ++ " :: " ++ shown ++ extra ++ calleeText ctx e ++ inst)
+              emit ctx (regionText region ++ " " ++ Recorder.exprKind e ++ " :: " ++ shown ++ extra ++ calleeText ctx e ++ useGroupText ctx e ++ inst)
 
 
 
