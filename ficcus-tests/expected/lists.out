@@ -1,0 +1,25 @@
+range: "1;2;3;4;5;6;7;8;9;10;"
+map int int: "3;6;9;12;15;18;21;24;27;30;"
+map int string: "1;2;3;4;5;6;7;8;9;10;"
+map string string: "aa;bcbc;"
+map shape float: 21
+map tuple: 440
+filter: "8;9;10;"
+length: 13
+reverse: "10;9;8;7;6;5;4;3;2;1;"
+foldl: 11
+foldr: 13
+sum: 55
+sum float: 0.75
+product: 24
+append: "1;2;3;"
+concat: "1;2;3;"
+concatMap: "1;1;2;2;"
+take drop: "3;4;5;"
+repeat: "7;7;7;"
+any all: 2
+head: 1
+maximum: 9
+filterMap: "18;20;"
+partition: "6;7;8;9;10;"
+unzip: "1;4;9;16;25;36;49;64;81;100;"
