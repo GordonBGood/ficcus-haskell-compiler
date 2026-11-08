@@ -1,0 +1,328 @@
+module Clo exposing (main)
+
+-- Slice 3b: lambdas, partial application, functions as values, unknown calls through the closure ABI (arity checked
+-- at run time), boxed structs at the closure ABI, constructors as functions, and List.map/foldl/foldr/filter/
+-- length/reverse from elm/core. Every output is compared with Elm.
+
+
+type Box a
+    = Box a
+
+
+type Stream
+    = Cons Int (() -> Stream)
+
+
+twice : (a -> a) -> a -> a
+twice f x =
+    f (f x)
+
+
+compose : (b -> c) -> (a -> b) -> a -> c
+compose g f x =
+    g (f x)
+
+
+add : Int -> Int -> Int
+add a b =
+    a + b
+
+
+add3 : Int -> Int -> Int -> Int
+add3 a b c =
+    a + b + c
+
+
+curried : Int -> (Int -> Int)
+curried k =
+    \x -> x + k
+
+
+useF : (a -> b) -> a -> b
+useF f x =
+    f x
+
+
+apply3 : (a -> b -> c -> d) -> a -> b -> c -> d
+apply3 f a b c =
+    f a b c
+
+
+pairSum : ( Int, Int ) -> Int
+pairSum ( a, b ) =
+    a + b
+
+
+mkPair : Int -> ( Int, Int )
+mkPair n =
+    ( n, n + 1 )
+
+
+unbox : Box a -> a
+unbox (Box x) =
+    x
+
+
+nats : Int -> Stream
+nats n =
+    Cons n (\() -> nats (n + 1))
+
+
+sumStream : Int -> Stream -> Int -> Int
+sumStream count (Cons h tl) acc =
+    if count <= 0 then
+        acc
+
+    else
+        sumStream (count - 1) (tl ()) (acc + h)
+
+
+type alias P =
+    { x : Int, y : Float }
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    -- a lambda passed to a polymorphic function, at Int, String and a tuple (a boxed struct)
+                    twiceInt =
+                        twice (\n -> n + 1) 5
+
+                    twiceString =
+                        twice (\s -> s ++ "!") "hi"
+
+                    twiceTuple =
+                        pairSum (twice (\( a, b ) -> ( b, a + b )) ( 1, 1 ))
+
+                    -- composition with a partial application and a kernel function used as a value
+                    composed =
+                        compose (\x -> x * 2) (\x -> x + 1) 5
+
+                    composedString =
+                        compose String.fromInt (add 1) 41
+
+                    -- partial application of functions with 2 and 3 parameters
+                    plusTen =
+                        add 10
+
+                    partial3 =
+                        add3 1 2
+
+                    partialSum =
+                        plusTen 1 + plusTen 2 + partial3 3
+
+                    -- a function that returns a lambda, called with two arguments at once
+                    over =
+                        curried 3 4
+
+                    overLocal =
+                        (curried 10) 5
+
+                    -- captured Int, String, Float and tuple
+                    k =
+                        10
+
+                    pre =
+                        "ab"
+
+                    fl =
+                        0.5
+
+                    tup =
+                        ( 3, 4 )
+
+                    capture =
+                        useF (\x -> x + k + pairSum tup) 100
+
+                    captureString =
+                        useF (\x -> pre ++ x) "cd"
+
+                    captureFloat =
+                        useF (\x -> x * fl) 5.0
+
+                    -- local functions as values
+                    scale =
+                        2
+
+                    scaled x =
+                        x * scale
+
+                    localValue =
+                        useF scaled 21
+
+                    -- constructors as functions, a constructor pattern in a lambda
+                    boxes =
+                        List.map Box [ 1, 2, 3 ]
+
+                    boxSum =
+                        List.foldl (\(Box x) acc -> x + acc) 0 boxes
+
+                    -- unknown calls with more arguments than the closure's arity
+                    arity1 =
+                        apply3 (\a -> \b -> \c -> a * b * c) 2 3 4
+
+                    arity3 =
+                        apply3 add3 1 2 3
+
+                    arityMixed =
+                        apply3 (\a b -> \c -> a ++ b ++ String.fromInt c) "x" "y" 7
+
+                    -- a closure of the unit argument, in a constructor
+                    thunk =
+                        \() -> 42
+
+                    streamSum =
+                        sumStream 5 (nats 1) 0
+
+                    -- a struct through the closure ABI (argument and result)
+                    structArg =
+                        useF pairSum ( 20, 22 )
+
+                    structResult =
+                        pairSum (useF mkPair 5)
+
+                    -- Float words
+                    floatClosure =
+                        useF (\x -> x * 2.5) 4.0
+
+                    -- pipelines
+                    piped =
+                        5 |> add 1 |> add 2
+
+                    backPiped =
+                        String.fromInt <| add 1 2
+
+                    -- the List functions of elm/core, at several classes
+                    ints =
+                        [ 1, 2, 3, 4, 5, 6 ]
+
+                    mapped =
+                        List.foldl (+) 0 (List.map (\n -> n * n) ints)
+
+                    mappedStrings =
+                        List.foldl (\str acc -> acc ++ str ++ ",") "" (List.map String.fromInt ints)
+
+                    mappedRefs =
+                        List.foldl (\str acc -> acc ++ str) "" (List.map (\str -> str ++ ".") [ "a", "b", "c" ])
+
+                    recs =
+                        List.map (\n -> { x = n, y = 2.5 }) ints
+
+                    recSum =
+                        List.foldl (\p acc -> p.x + acc) 0 recs
+
+                    recFloat =
+                        List.foldl (\p acc -> p.y + acc) 0.0 recs
+
+                    filtered =
+                        List.length (List.filter (\n -> n > 2) ints)
+
+                    reversed =
+                        List.foldl (\n acc -> acc * 10 + n) 0 (List.reverse ints)
+
+                    folded =
+                        List.foldr (\n acc -> acc ++ String.fromInt n) "" ints
+
+                    unboxed =
+                        List.foldl add 0 (List.map unbox boxes)
+
+                    _ =
+                        Debug.log "twice int" twiceInt
+
+                    _ =
+                        Debug.log "twice string" twiceString
+
+                    _ =
+                        Debug.log "twice tuple" twiceTuple
+
+                    _ =
+                        Debug.log "composed" composed
+
+                    _ =
+                        Debug.log "composed string" composedString
+
+                    _ =
+                        Debug.log "partial" partialSum
+
+                    _ =
+                        Debug.log "over" (over + overLocal)
+
+                    _ =
+                        Debug.log "capture" capture
+
+                    _ =
+                        Debug.log "capture string" captureString
+
+                    _ =
+                        Debug.log "capture float" captureFloat
+
+                    _ =
+                        Debug.log "local value" localValue
+
+                    _ =
+                        Debug.log "box sum" boxSum
+
+                    _ =
+                        Debug.log "arity 1" arity1
+
+                    _ =
+                        Debug.log "arity 3" arity3
+
+                    _ =
+                        Debug.log "arity mixed" arityMixed
+
+                    _ =
+                        Debug.log "thunk" (thunk ())
+
+                    _ =
+                        Debug.log "stream" streamSum
+
+                    _ =
+                        Debug.log "struct arg" structArg
+
+                    _ =
+                        Debug.log "struct result" structResult
+
+                    _ =
+                        Debug.log "float closure" floatClosure
+
+                    _ =
+                        Debug.log "piped" piped
+
+                    _ =
+                        Debug.log "back piped" backPiped
+
+                    _ =
+                        Debug.log "map" mapped
+
+                    _ =
+                        Debug.log "map strings" mappedStrings
+
+                    _ =
+                        Debug.log "map refs" mappedRefs
+
+                    _ =
+                        Debug.log "records" recSum
+
+                    _ =
+                        Debug.log "records float" recFloat
+
+                    _ =
+                        Debug.log "filter" filtered
+
+                    _ =
+                        Debug.log "reverse" reversed
+
+                    _ =
+                        Debug.log "foldr" folded
+
+                    _ =
+                        Debug.log "unboxed" unboxed
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

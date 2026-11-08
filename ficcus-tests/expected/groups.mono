@@ -1,4 +1,4 @@
--- mono: stage (iii) slice 2, modules=21
+-- mono: stage (iii) slice 3b, modules=21
 -- module author/project:Groups (project)
 clone c0   def: author/project:Groups.main   key: ()   kind: value   init: 5   needs: 
 -- program: 16 clones, reachable from main, dependencies first

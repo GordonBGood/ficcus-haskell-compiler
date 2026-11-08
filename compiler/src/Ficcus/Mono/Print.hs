@@ -75,7 +75,7 @@ markLine marks d =
 
 -- | the slice of STAGE3-PLAN.md the output format belongs to
 stageLabel :: String
-stageLabel = "slice 2"
+stageLabel = "slice 3b"
 
 
 renderDef :: MDef -> String

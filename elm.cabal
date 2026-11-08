@@ -2,6 +2,8 @@ cabal-version: 3.6
 build-type: Simple
 extra-source-files:
     runtime/*.h
+    runtime/*.c
+    runtime/*.py
 
 name: elm
 version: 0.19.3

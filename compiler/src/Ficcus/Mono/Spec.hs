@@ -32,11 +32,14 @@ import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import Data.Char (ord)
 import qualified Data.Index as Index
+import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 
 import qualified AST.Canonical as Can
+import qualified AST.Prim.Module as Module
+import qualified String
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
 import qualified Elm.Float as EF
@@ -489,14 +492,22 @@ specExpr se (A.At region e) =
           pat' <- specPat se pat
           b' <- specExpr se body
           return (MExpr (mRep b') (MCase x' [(pat', b')]))
+    Can.VarCtor _ h name _ _
+      | moduleChars h ++ "." ++ N.toChars name == "elm/core:Basics.True" -> return (MExpr CEnum (MLit (LInt 1)))      -- Bool is 0 or 1 in C
+      | moduleChars h ++ "." ++ N.toChars name == "elm/core:Basics.False" -> return (MExpr CEnum (MLit (LInt 0)))
     Can.VarCtor {} -> specRef se region e
-    Can.Call (A.At fregion f) args -> specCall se region fregion f args
-    Can.Binop _ _ _ _ l r -> specCall' se region region e [l, r]
+    Can.Call (A.At fregion f) args -> specCall se region e fregion f args
+    Can.Binop _ h n _ l@(A.At lregion l') r@(A.At rregion r')
+      | moduleChars h ++ "." ++ N.toChars n == "elm/core:Basics.apR" -> specCall se region e rregion r' [l]      -- x |> f is f x
+      | moduleChars h ++ "." ++ N.toChars n == "elm/core:Basics.apL" -> specCall se region e lregion l' [r]      -- f <| x is f x
+    Can.Binop _ _ _ _ l r -> specCall' se region e region e [l, r]
+    Can.Lambda pats body -> specLambda se region pats body
     Can.VarLocal _ -> specRef se region e
     Can.VarTopLevel _ _ -> specRef se region e
     Can.VarForeign {} -> specRef se region e
     Can.VarDebug {} -> specRef se region e
     Can.VarOperator {} -> specRef se region e
+    Can.VarKernel home name -> unsupported ("the kernel function Elm.Kernel." ++ String.toChars (Module.kernelToString home) ++ "." ++ N.toChars name ++ " (it has no Elm body; the runtime table is Ficcus.Mono.Kernel)") region
     _ -> unsupported ("expression " ++ Recorder.exprKind e) region
 
 
@@ -610,16 +621,22 @@ data Ref
   | RClone CloneId Int Bool            -- clone, arity, is a value
   | RLocal String                      -- parameter or local value
   | RCtor String Int Int               -- constructor name, tag, number of arguments
+  | RRec [String]                      -- the constructor function of a record alias: the field names in argument order
   | RNone
 
 
-specCall :: SEnv -> A.Region -> A.Region -> Can.Expr_ -> [Can.Expr] -> SM MExpr
-specCall se region fregion f args =
+-- a call: `f a b` where f is named (a clone, a kernel function, a constructor, a local) or computed
+specCall :: SEnv -> A.Region -> Can.Expr_ -> A.Region -> Can.Expr_ -> [Can.Expr] -> SM MExpr
+specCall se region resNode fregion f args =
   case f of
-    Can.VarForeign _ _ _ | isWorker f ->
-      specWorker se region fregion f args
-    _ | isVarLike f -> specCall' se region fregion f args
-    _ -> unsupported "calling a computed function (closure)" region
+    Can.VarForeign _ _ _ | isWorker f -> specWorker se region fregion f args
+    Can.Call (A.At gregion g) gargs -> specCall se region resNode gregion g (gargs ++ args)   -- (g a) b is g a b
+    _ | isVarLike f -> specCall' se region resNode fregion f args
+    _ ->
+      do  cls <- exprClass se region resNode
+          f' <- specExpr se (A.At fregion f)
+          args' <- mapM (specExpr se) args
+          return (MExpr cls (MCall f' args'))
   where
     isWorker (Can.VarForeign h n _) = moduleChars h ++ "." ++ N.toChars n == "elm/core:Platform.worker"
     isWorker _ = False
@@ -634,26 +651,42 @@ isVarLike e =
     Can.VarDebug {} -> True
     Can.VarOperator {} -> True
     Can.VarCtor {} -> True
-    Can.Binop {} -> True
-    _ -> False
+    _ -> False                                      -- (a Binop is an expression of its own: `(f << g) x` is a computed call)
 
 
--- a call of a named function with all its arguments
-specCall' :: SEnv -> A.Region -> A.Region -> Can.Expr_ -> [Can.Expr] -> SM MExpr
-specCall' se region fregion f args =
-  do  cls <- exprClass se region (callNodeOf f args)
-      ref <- resolve se fregion f
+-- a call of a named function. With as many arguments as its arity it is a direct call; with fewer a partial
+-- application (a lifted lambda that holds the arguments, `partialApp`); with more, a call with the first
+-- ones and an unknown call of the result with the rest. A local variable is always an unknown call.
+-- `resNode` is the node whose recorded type is the type of the whole expression.
+specCall' :: SEnv -> A.Region -> Can.Expr_ -> A.Region -> Can.Expr_ -> [Can.Expr] -> SM MExpr
+specCall' se region resNode fregion f args =
+  do  ref <- resolve se fregion f
       args' <- mapM (specExpr se) args
       case ref of
-        RKernel name key arity | arity == length args' -> return (MExpr cls (MCall (MExpr CRef (MKernel name key)) args'))
-        RClone c arity _ | arity == length args' -> return (MExpr cls (MCall (MExpr CRef (MGlobal c)) args'))
-        RCtor name tag arity | arity == length args' && arity > 0 ->
-          return (MExpr cls (MCall (MExpr CRef (MCtor name tag (Key [ ByClass (boxed (mRep a)) | a <- args' ]))) args'))
+        RKernel name key arity -> known arity (\as -> MCall (MExpr CRef (MKernel name key)) as) args'
+        RClone c arity isVal -> known arity (cloneCall c isVal) args'
+        RCtor name tag arity | arity > 0 -> known arity (\as -> MCall (MExpr CRef (MCtor name tag (Key [ ByClass (boxed (mRep a)) | a <- as ]))) as) args'
+        RLocal n ->
+          do  cls <- exprClass se region resNode
+              hcls <- exprClass se fregion f
+              return (MExpr cls (MCall (MExpr hcls (MLocal n)) args'))
+        RRec names -> known (length names) (\as -> MRecord (List.sortOn fst (zip names as))) args'
         RNone -> return unitLit
-        _ -> unsupported "a partial or over-applied call (closure)" region
+        _ -> unsupported "a call of this kind of name" region
   where
-    -- the node whose recorded type is the result: the Binop itself, otherwise the Call node (same region as the call)
-    callNodeOf _ _ = case f of { Can.Binop {} -> f; _ -> Can.Call (A.At region f) args }
+    known arity mk args'
+      | n == arity =
+          do  cls <- exprClass se region resNode
+              return (MExpr cls (mk args'))
+      | n < arity = partialApp se region resNode (arity - n) mk args'
+      | otherwise =
+          do  cls <- exprClass se region resNode
+              let (first, rest) = splitAt arity args'
+              return (MExpr cls (MCall (MExpr CRef (mk first)) rest))
+      where n = length args'
+    cloneCall c isVal as
+      | null as = if isVal then MGlobal c else MCall (MExpr CRef (MGlobal c)) []
+      | otherwise = MCall (MExpr CRef (MGlobal c)) as
 
 
 -- a name used as a value (no arguments)
@@ -663,12 +696,66 @@ specRef se region e =
       cls <- exprClass se region e
       case ref of
         RKernel name key 0 -> return (MExpr cls (MKernel name key))
+        RKernel name key arity -> partialApp se region e arity (\as -> MCall (MExpr CRef (MKernel name key)) as) []
         RClone c 0 True -> return (MExpr cls (MGlobal c))
         RClone c 0 False -> return (MExpr cls (MCall (MExpr CRef (MGlobal c)) []))
+        RClone c _ _ -> return (MExpr CRef (MGlobal c))           -- a function used as a value: a closure (CGen)
         RLocal n -> return (MExpr cls (MLocal n))
         RCtor name tag 0 -> return (MExpr cls (MCtor name tag (Key [])))
+        RCtor name tag arity -> partialApp se region e arity (\as -> MCall (MExpr CRef (MCtor name tag (Key [ ByClass (boxed (mRep a)) | a <- as ]))) as) []
+        RRec [] -> return (MExpr cls (MRecord []))
+        RRec names -> partialApp se region e (length names) (\as -> MRecord (List.sortOn fst (zip names as))) []
         RNone -> return unitLit
-        _ -> unsupported "a function used as a value (closure)" region
+
+
+-- | a partial application `f a b` of a function that needs `remaining` more arguments: the arguments are
+-- evaluated now and bound to locals, and a lifted lambda `\x y -> f a b x y` (a clone of its own; the locals
+-- are its captured variables) is the value. The classes of the new parameters come from the recorded type
+-- of the expression, which is a function type.
+partialApp :: SEnv -> A.Region -> Can.Expr_ -> Int -> ([MExpr] -> MNode) -> [MExpr] -> SM MExpr
+partialApp se region resNode remaining mk supplied =
+  case nodeType se (Recorder.exprKey region resNode) >>= peelFun remaining of
+    Nothing -> unsupported "a partial application whose type is not a function type" region
+    Just (ptys, rty) ->
+      do  pcls <- mapM (classOfTy se) ptys
+          rcls <- classOfTy se rty
+          lamId <- freshId
+          let CloneId k = lamId
+          let sup = [ ("_pa" ++ show k ++ "_" ++ show i, a) | (i, a) <- zip [0 :: Int ..] supplied ]
+          let ps = [ ("_pb" ++ show k ++ "_" ++ show i, c) | (i, c) <- zip [0 :: Int ..] pcls ]
+          let body = MExpr rcls (mk ([ MExpr (mRep a) (MLocal t) | (t, a) <- sup ] ++ [ MExpr c (MLocal p) | (p, c) <- ps ]))
+          modify' (\st -> st { sDone = Map.insert lamId (MDef lamId (lambdaName se region) (Key []) Function ps rcls (Just body) Nothing [] (Just (seClone se)) []) (sDone st) })
+          return (foldr (\(t, a) acc -> MExpr CRef (MLetVal t a acc)) (MExpr CRef (MGlobal lamId)) sup)
+
+
+-- the id of a lifted lambda: like a local definition, the module and the position
+lambdaName :: SEnv -> A.Region -> String
+lambdaName se region =
+  moduleChars (_home (seCtx se)) ++ ".lambda@" ++ map (\c -> if c == ':' then ':' else c) (takeWhile (/= '-') (regionText region))
+
+
+-- the first n parameter types of a function type and what is left
+peelFun :: Int -> TType -> Maybe ([TType], TType)
+peelFun n t
+  | n == 0 = Just ([], t)
+  | otherwise =
+      case t of
+        TFun a b -> (\(as, r) -> (a : as, r)) <$> peelFun (n - 1) b
+        TAlias _ _ _ real -> peelFun n real
+        _ -> Nothing
+
+
+-- | a lambda expression: a lifted clone of its own (its free variables are found by the code generator, as for
+-- a local function) and the value is that clone used as a value
+specLambda :: SEnv -> A.Region -> [Can.Pattern] -> Can.Expr -> SM MExpr
+specLambda se region pats body =
+  do  lamId <- freshId
+      let se' = se { seClone = lamId }
+      ps <- forM (zip [0 :: Int ..] pats) (param se')
+      body0 <- specExpr se' body
+      body' <- wrapParams se' (zip pats ps) body0
+      modify' (\st -> st { sDone = Map.insert lamId (MDef lamId (lambdaName se region) (Key []) Function ps (mRep body') (Just body') Nothing [] (Just (seClone se)) []) (sDone st) })
+      return (MExpr CRef (MGlobal lamId))
 
 
 resolve :: SEnv -> A.Region -> Can.Expr_ -> SM Ref
@@ -688,12 +775,25 @@ resolve se region e =
     Can.VarOperator _ h n _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.Binop _ h n _ _ _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.VarDebug _ n _ -> foreignOrTop ("elm/core:Debug." ++ N.toChars n)
-    Can.VarCtor _ _ name idx (Can.Forall _ tipe) -> return (RCtor (N.toChars name) (Index.toMachine idx) (arrows tipe))
+    Can.VarCtor _ _ name idx (Can.Forall _ tipe) ->
+      return (case recordCtor tipe of
+                Just names -> RRec names
+                Nothing -> RCtor (N.toChars name) (Index.toMachine idx) (arrows tipe))
     _ -> return RNone
   where
     ctx = seCtx se
     raw = Map.lookup (Recorder.exprKey region e) (_nodes (_typed ctx))
     arrows t = case t of { Can.TLambda _ r -> 1 + arrows r; _ -> 0 :: Int }
+
+    -- `type alias P = { x : Int, y : Float }` makes a constructor function `P`: its result type is the alias,
+    -- and the arguments are the fields in the order of the declaration (the field type carries the index)
+    recordCtor t =
+      case t of
+        Can.TLambda _ r -> recordCtor r
+        Can.TAlias _ _ _ (Can.Filled (Can.TRecord fields Nothing)) -> Just (fieldNames fields)
+        Can.TAlias _ _ _ (Can.Holey (Can.TRecord fields Nothing)) -> Just (fieldNames fields)
+        _ -> Nothing
+    fieldNames fields = map (N.toChars . fst) (List.sortOn (\(_, Can.FieldType i _) -> i) (Map.toList fields))
 
     subst cid =
       case (calleeId ctx e, schemeInst) of

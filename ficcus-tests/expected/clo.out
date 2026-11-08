@@ -1,0 +1,31 @@
+twice int: 7
+twice string: "hi!!"
+twice tuple: 5
+composed: 12
+composed string: "42"
+partial: 29
+over: 22
+capture string: "abcd"
+local value: 42
+box sum: 6
+arity 1: 24
+arity 3: 6
+arity mixed: "xy7"
+thunk: 42
+stream: 15
+struct arg: 42
+struct result: 11
+float closure: 10
+piped: 8
+back piped: "3"
+map: 91
+map strings: "1,2,3,4,5,6,"
+map refs: "a.b.c."
+records: 21
+records float: 15
+filter: 4
+reverse: 654321
+foldr: "654321"
+unboxed: 6
+capture float: 2.5
+capture: 117

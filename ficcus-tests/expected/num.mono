@@ -1,4 +1,4 @@
--- mono: stage (iii) slice 2, modules=21
+-- mono: stage (iii) slice 3b, modules=21
 -- module author/project:Num (project)
 mark author/project:Num.combine   v0=number
 mark author/project:Num.go@32:9   v0=number v1=number
