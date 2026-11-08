@@ -1,11 +1,11 @@
--- mono: stage (iii) slice 0, modules=21
+-- mono: stage (iii) slice 2, modules=21
 -- module author/project:Fibonacci (project)
 mark author/project:Fibonacci.countFibsTo   v0=number
 mark author/project:Fibonacci.worker@19:9   v0=number v1=number
 mark author/project:Fibonacci.limit   v0=number
 clone c0   def: author/project:Fibonacci.main   key: ()   kind: value   init: 2   needs: 
 -- program: 5 clones, reachable from main, dependencies first
-clone c4   def: author/project:Fibonacci.worker@19:9   key: (v0=type elm/core:Basics.Int)   name: worker@19:9__i64   kind: function   params: f:i64 s:i64 cnt:i64   result: i64   lifted-from: c2
+clone c4   def: author/project:Fibonacci.worker@19:9   key: (v1=type elm/core:Basics.Int)   outer: c2 (v0=type elm/core:Basics.Int)   name: worker@19:9__i64   kind: function   params: f:i64 s:i64 cnt:i64   result: i64   lifted-from: c2
   If :: i64
     Call :: enum
       Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref

@@ -1,4 +1,4 @@
--- mono: stage (iii) slice 0, modules=21
+-- mono: stage (iii) slice 2, modules=21
 -- module author/project:Rec (project)
 mark author/project:Rec.pong@50:9   v0=number
 mark author/project:Rec.ping@44:9   v0=number

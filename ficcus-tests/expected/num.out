@@ -3,5 +3,11 @@ limit float: 100.5
 bigger float: 25
 int: 702
 float: 399
+go float: 10.5
+go int: 10
+combine int: ()
+go float: 7.5
+go int: 7
+combine float: ()
 add: 3
 addf: 3.25

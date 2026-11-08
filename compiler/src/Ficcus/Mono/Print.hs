@@ -2,6 +2,7 @@
 module Ficcus.Mono.Print
   ( renderProgram
   , renderClone
+  , keyTextIx
   , renderDef
   , renderExpr
   )
@@ -37,10 +38,10 @@ renderProgram modules program =
         Nothing -> []
         Just (Left errs) -> "-- program: not specialized" : [ "!! " ++ e | e <- errs ]
         Just (Right p) ->
-          ("-- program: " ++ show (length (mpClones p)) ++ " clones, reachable from main, dependencies first") : concatMap renderClone (mpClones p)
+          ("-- program: " ++ show (length (mpClones p)) ++ " clones, reachable from main, dependencies first") : concatMap (renderClone (Map.fromList [ (k, c) | c <- mpClones p, let CloneId k = mdClone c ])) (mpClones p)
 
     marks = compute modules
-    header = [ "-- mono: stage (iii) slice 0, modules=" ++ show (length modules) ]
+    header = [ "-- mono: stage (iii) " ++ stageLabel ++ ", modules=" ++ show (length modules) ]
 
     one :: Int -> ModuleFacts -> (Int, [String])
     one next m =
@@ -56,7 +57,7 @@ renderProgram modules program =
       )
       where
         cloneOf _ n i =
-          (i, MDef (CloneId n) (ifId i) (Key []) (if ifValue i then Value else Function) [] CRef Nothing (Just (ifIndex i)) [] Nothing)
+          (i, MDef (CloneId n) (ifId i) (Key []) (if ifValue i then Value else Function) [] CRef Nothing (Just (ifIndex i)) [] Nothing [0 ..])
 
 
 markLine :: Marks -> DefFact -> Maybe String
@@ -70,6 +71,11 @@ markLine marks d =
   if any interesting parts
     then Just ("mark " ++ dfId d ++ "   " ++ unwords (map shown parts))
     else Nothing
+
+
+-- | the slice of STAGE3-PLAN.md the output format belongs to
+stageLabel :: String
+stageLabel = "slice 2"
 
 
 renderDef :: MDef -> String
@@ -101,17 +107,34 @@ cloneLabel d =
         ByLayout _ -> "row"
 
 
--- | a clone of the program: its line and its body
-renderClone :: MDef -> [String]
-renderClone d =
+-- | the key of a clone with the scheme index of each variable: a local function shows only its own
+-- variables (`v1=...`), those of the enclosing definitions are in the `outer:` part
+keyTextIx :: [Int] -> Key -> String
+keyTextIx ixs (Key parts) =
+  "(" ++ List.intercalate "; " (zipWith (\i p -> "v" ++ show i ++ "=" ++ keyPartText p) (ixs ++ [0 ..]) parts) ++ ")"
+
+
+-- | a clone of the program: its line and its body. `byId` finds the owner clones.
+renderClone :: Map.Map Int MDef -> MDef -> [String]
+renderClone byId d =
   let CloneId n = mdClone d
       owner = maybe "" (\(CloneId o) -> "   lifted-from: c" ++ show o) (mdLifted d)
+      ownerChain m =
+        case mdLifted m of
+          Nothing -> []
+          Just (CloneId o) ->
+            case Map.lookup o byId of
+              Nothing -> []
+              Just od -> [ "c" ++ show o ++ " " ++ keyTextIx (mdVars od) (mdKey od) | not (isEmptyKey (mdKey od)) ] ++ ownerChain od
+      outer = case ownerChain d of { [] -> ""; cs -> "   outer: " ++ List.intercalate ", " cs }
   in
-  ( "clone c" ++ show n ++ "   def: " ++ mdName d ++ "   key: " ++ keyText (mdKey d) ++ cloneLabel d
+  ( "clone c" ++ show n ++ "   def: " ++ mdName d ++ "   key: " ++ keyTextIx (mdVars d) (mdKey d) ++ outer ++ cloneLabel d
     ++ "   kind: " ++ (case mdKind d of { Value -> "value"; Function -> "function" })
     ++ "   params: " ++ unwords [ pn ++ ":" ++ classText pc | (pn, pc) <- mdParams d ]
     ++ "   result: " ++ classText (mdResult d) ++ owner )
   : maybe [] (renderExpr 1) (mdBody d)
+  where
+    isEmptyKey (Key ps) = null ps
 
 
 -- | a body, indented, one node per line with its class

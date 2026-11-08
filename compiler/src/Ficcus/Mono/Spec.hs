@@ -223,7 +223,8 @@ genClone cid (CKey did _ key@(Key parts)) src =
         case Map.lookup (defKeyOf def) (_defs (_typed ctx)) of
           Just sch -> return sch
           Nothing -> report ("no scheme recorded for " ++ did) >> return TUnit
-      let own = [ n | (n, _) <- canonVars scheme, not (Map.member n (srcOuter src)) ]
+      let ownIx = [ (n, i) | (n, i) <- canonVars scheme, not (Map.member n (srcOuter src)) ]
+      let own = map fst ownIx
       when (length own /= length parts) $
         report ("internal: " ++ did ++ " has " ++ show (length own) ++ " own variables, the key has " ++ show (length parts))
       let env = Map.union (Map.fromList (zip own parts)) (srcOuter src)
@@ -234,7 +235,7 @@ genClone cid (CKey did _ key@(Key parts)) src =
         { mdClone = cid, mdName = did, mdKey = key
         , mdKind = if null args then Value else Function
         , mdParams = params, mdResult = mRep body', mdBody = Just body'
-        , mdInit = Nothing, mdNeeds = [], mdLifted = srcOwner src }
+        , mdInit = Nothing, mdNeeds = [], mdLifted = srcOwner src, mdVars = map snd ownIx }
 
 
 param :: SEnv -> (Int, Can.Pattern) -> SM (String, Class)
@@ -648,7 +649,7 @@ specWorker se region fregion f args =
           initId <- freshId
           p <- param se (0, pat)
           body' <- specExpr (se { seClone = initId }) body
-          let def = MDef initId "init" (Key []) Function [p] (mRep body') (Just body') Nothing [] (Just (seClone se))
+          let def = MDef initId "init" (Key []) Function [p] (mRep body') (Just body') Nothing [] (Just (seClone se)) []
           modify' (\s -> s { sDone = Map.insert initId def (sDone s) })
           return (MExpr cls (MCall (MExpr CRef (MKernel "elm/core:Platform.worker" key)) [MExpr CRef (MGlobal initId)]))
     _ -> unsupported "Platform.worker without a literal record with an `init` lambda" region

@@ -24,6 +24,27 @@ scaled x =
     x * bigger - x
 
 
+-- a local function with a variable of the enclosing definition (n, through f > n) and a variable of its own
+-- (cnt): `go` is cloned per clone of combine and per instance of cnt (outer: and key: of the .mono)
+combine : number -> ()
+combine n =
+    let
+        go f cnt =
+            if f > n then
+                cnt
+
+            else
+                go (f * 2) (cnt + 1)
+
+        _ =
+            Debug.log "go int" (go 1 0)
+
+        _ =
+            Debug.log "go float" (go 1 0.5)
+    in
+    ()
+
+
 intResult : Int
 intResult =
     addLimit 5 + scaled 3
@@ -54,6 +75,12 @@ main =
 
                     _ =
                         Debug.log "float" floatResult
+
+                    _ =
+                        Debug.log "combine int" (combine 1000)
+
+                    _ =
+                        Debug.log "combine float" (combine 100.5)
 
                     _ =
                         Debug.log "add" ((+) 1 2)

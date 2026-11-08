@@ -80,6 +80,9 @@ def main():
                 sys.stdout.writelines(list(difflib.unified_diff(want.splitlines(True), got.splitlines(True), "expected", "got"))[:40])
         if name in RUN and not a.update:
             bad += run_c(a, dst, name, mod)
+            if name == "num" and shutil.which("node"):       # the float formatting routine against node (also: float_format.py alone)
+                f = subprocess.run([sys.executable, os.path.join(HERE, "float_format.py"), "--c", os.path.join(dst, "x.c"), "--n", "20000"], capture_output=True, text=True)
+                print(("ok   float format: " if f.returncode == 0 else "FAIL float format: ") + f.stdout.strip()); bad += 1 if f.returncode else 0
         shutil.rmtree(work, ignore_errors=True)
     return 1 if bad else 0
 

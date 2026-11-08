@@ -95,7 +95,9 @@ data MDef =
     , mdBody :: Maybe MExpr                -- Nothing while a clone is only listed (slice 0)
     , mdInit :: Maybe Int                  -- position in the module's initialisation order (top level)
     , mdNeeds :: [CloneId]                 -- clones of values that must be initialised first
-    , mdLifted :: Maybe CloneId            -- a local function or lambda lifted out of this clone
+    , mdLifted :: Maybe CloneId            -- the clone a local function or lambda was lifted out of (its owner)
+    , mdVars :: [Int]                      -- the scheme variable index of each part of the key (own variables only:
+                                           -- the variables of an enclosing definition belong to the owner's key)
     }
   deriving (Show)
 
