@@ -13,7 +13,7 @@ def countFibsTo :: number -> Int    [17:1-17:12]   id: author/project:Fibonacci.
         20:20-20:21 VarLocal :: number
       21:17-21:20 VarLocal :: number1
       24:17-24:42 Call :: number1
-        24:17-24:23 VarLocal :: number -> number -> number1 -> number1   callee: author/project:Fibonacci.worker@19:9   use: rec   sig#: 2fa3cefa   subst: v0 := <<author/project:Fibonacci.countFibsTo|v0>>, v1 := <<author/project:Fibonacci.worker@19:9|v1>>
+        24:17-24:23 VarLocal :: number -> number -> number1 -> number1   callee: author/project:Fibonacci.worker@19:9   use: rec   sig#: a81b7981   subst: v0 := <<author/project:Fibonacci.countFibsTo|v0>>, v1 := <<author/project:Fibonacci.worker@19:9|v1>>
         24:24-24:25 VarLocal :: number
         24:27-24:32 Binop :: number   callee: elm/core:Basics.add   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Fibonacci.countFibsTo|v0>>
           24:27-24:28 VarLocal :: number

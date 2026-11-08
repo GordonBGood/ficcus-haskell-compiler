@@ -2,7 +2,7 @@
 """Expected-file test of the small example projects (fib, poly, rec, init, marks).
 
 For each ficcus-tests/<name>/ (elm.json, src/<Name>.fic) runs `elm make src/<Name>.fic --output=x.mono` in a copy,
-which writes x.mono and x.types, and compares the project part of both (everything before the first package module)
+which writes x.mono and x.types, and compares the project part of both (the package modules are left out; the `-- program` section of .mono is kept)
 with ficcus-tests/expected/<name>.types and <name>.mono.
 
   python3 ficcus-tests/examples.py --elm bin/elmfic16 --safe tools/safe --elm-home H [--update] [--only rec,init]
@@ -15,10 +15,13 @@ NAMES = ["fib", "poly", "rec", "init", "marks"]
 
 
 def project_part(text, kind):
-    out = []
+    out, skipping = [], False
     for line in text.split("\n"):
         if kind == "types" and line.startswith("-- package"): break
-        if kind == "mono" and line.startswith("-- module ") and line.endswith("(package)"): break
+        if kind == "mono":                       # the package modules are left out, the program section stays
+            if line.startswith("-- module ") and line.endswith("(package)"): skipping = True
+            elif line.startswith("-- module ") or line.startswith("-- program"): skipping = False
+            if skipping: continue
         out.append(line)
     return "\n".join(out).rstrip("\n") + "\n"
 

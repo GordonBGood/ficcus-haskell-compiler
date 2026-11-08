@@ -162,6 +162,9 @@ executable elm
         Ficcus.Mono.Class
         Ficcus.Mono.Ir
         Ficcus.Mono.Print
+        Ficcus.Mono.Modules
+        Ficcus.Mono.Kernel
+        Ficcus.Mono.Spec
         Ficcus.TypesFile
         Generate.C
         Generate.Html

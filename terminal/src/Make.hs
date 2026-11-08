@@ -23,7 +23,10 @@ import qualified Build
 import qualified Elm.Details as Details
 import qualified Ficcus.Flags as Flags
 import qualified Ficcus.Mono.Facts as Facts
+import qualified Ficcus.Mono.Marks as Marks
+import qualified Ficcus.Mono.Modules as Modules
 import qualified Ficcus.Mono.Print as Print
+import qualified Ficcus.Mono.Spec as Spec
 import qualified File
 import qualified Generate
 import qualified Generate.Html as Html
@@ -85,7 +88,7 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs) =
   do  desiredMode <- getMode debug optimize
       case maybeOutput of
         Just (Types _) -> Task.io (Flags.setTypedOutput True)
-        Just (Mono _)  -> Task.io (Flags.setTypedOutput True)
+        Just (Mono _)  -> Task.io (Flags.setTypedOutput True >> Flags.setKeepModules True)
         _              -> return ()
       details <- Task.eio Exit.MakeBadDetails (Details.load writer style root stuff)
       case paths of
@@ -131,7 +134,9 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs) =
                       Task.io (Dir.createDirectoryIfMissing True (FP.takeDirectory target))
                       Task.io (File.writeBuilder writer (FP.replaceExtension target ".types") typesBuilder)
                       facts <- Task.io Facts.takeAll
-                      generate writer style target (B.stringUtf8 (unlines (Print.renderProgram facts))) (Build.getRootNames artifacts)
+                      mods <- Task.io Modules.takeAll
+                      let program = if null mods then Nothing else Spec.specialize mods (Marks.compute facts)
+                      generate writer style target (B.stringUtf8 (unlines (Print.renderProgram facts program))) (Build.getRootNames artifacts)
 
                 Just (C target) ->
                   case getNoMains artifacts of

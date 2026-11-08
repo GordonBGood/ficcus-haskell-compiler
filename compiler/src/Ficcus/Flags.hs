@@ -1,6 +1,8 @@
 module Ficcus.Flags
   ( setTypedOutput
   , getTypedOutput
+  , setKeepModules
+  , getKeepModules
   )
   where
 
@@ -31,3 +33,20 @@ setTypedOutput =
 getTypedOutput :: IO Bool
 getTypedOutput =
   readIORef typedOutputRef
+
+
+-- the canonical modules and their recorded types are kept for the specializer (`--output=x.c`)
+{-# NOINLINE keepModulesRef #-}
+keepModulesRef :: IORef Bool
+keepModulesRef =
+  unsafePerformIO (newIORef False)
+
+
+setKeepModules :: Bool -> IO ()
+setKeepModules =
+  writeIORef keepModulesRef
+
+
+getKeepModules :: IO Bool
+getKeepModules =
+  readIORef keepModulesRef

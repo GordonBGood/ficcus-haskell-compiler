@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wall #-}
 module Ficcus.Mono.Print
   ( renderProgram
+  , renderClone
   , renderDef
   , renderExpr
   )
@@ -27,10 +28,17 @@ import Ficcus.Mono.Ir
 import Ficcus.Mono.Marks
 
 
-renderProgram :: [ModuleFacts] -> [String]
-renderProgram modules =
-  header ++ concat (snd (List.mapAccumL one 0 modules))
+renderProgram :: [ModuleFacts] -> Maybe (Either [String] MProgram) -> [String]
+renderProgram modules program =
+  header ++ concat (snd (List.mapAccumL one 0 modules)) ++ programLines
   where
+    programLines =
+      case program of
+        Nothing -> []
+        Just (Left errs) -> "-- program: not specialized" : [ "!! " ++ e | e <- errs ]
+        Just (Right p) ->
+          ("-- program: " ++ show (length (mpClones p)) ++ " clones, reachable from main, dependencies first") : concatMap renderClone (mpClones p)
+
     marks = compute modules
     header = [ "-- mono: stage (iii) slice 0, modules=" ++ show (length modules) ]
 
@@ -48,7 +56,7 @@ renderProgram modules =
       )
       where
         cloneOf _ n i =
-          (i, MDef (CloneId n) (ifId i) (Key []) (if ifValue i then Value else Function) [] CRef Nothing (Just (ifIndex i)) [])
+          (i, MDef (CloneId n) (ifId i) (Key []) (if ifValue i then Value else Function) [] CRef Nothing (Just (ifIndex i)) [] Nothing)
 
 
 markLine :: Marks -> DefFact -> Maybe String
@@ -73,6 +81,19 @@ renderDef d =
      ++ "   needs: " ++ List.intercalate "," [ "c" ++ show k | CloneId k <- mdNeeds d ]
 
 
+-- | a clone of the program: its line and its body
+renderClone :: MDef -> [String]
+renderClone d =
+  let CloneId n = mdClone d
+      owner = maybe "" (\(CloneId o) -> "   lifted-from: c" ++ show o) (mdLifted d)
+  in
+  ( "clone c" ++ show n ++ "   def: " ++ mdName d ++ "   key: " ++ keyText (mdKey d)
+    ++ "   kind: " ++ (case mdKind d of { Value -> "value"; Function -> "function" })
+    ++ "   params: " ++ unwords [ pn ++ ":" ++ classText pc | (pn, pc) <- mdParams d ]
+    ++ "   result: " ++ classText (mdResult d) ++ owner )
+  : maybe [] (renderExpr 1) (mdBody d)
+
+
 -- | a body, indented, one node per line with its class
 renderExpr :: Int -> MExpr -> [String]
 renderExpr depth (MExpr cls node) =
@@ -85,7 +106,8 @@ renderExpr depth (MExpr cls node) =
     MCall f args -> line "Call" ++ kids (f : args)
     MLam ps b -> line ("Lambda " ++ unwords [ n ++ ":" ++ classText c | (n, c) <- ps ]) ++ kids [b]
     MIf bs e -> line "If" ++ kids (concat [ [c, b] | (c, b) <- bs ] ++ [e])
-    MLet ds b -> line "Let" ++ map (pad (depth + 1)) (map renderDef ds) ++ kids [b]
+    MLetVal n v b -> line ("Let " ++ n) ++ kids [v, b]
+    MSeq a b -> line "Seq" ++ kids [a, b]
     MCase s bs -> line "Case" ++ kids [s] ++ concat [ [pad (depth + 1) ("branch " ++ patText p)] ++ renderExpr (depth + 2) b | (p, b) <- bs ]
     MAccess x f -> line ("Access ." ++ f) ++ kids [x]
     MUpdate x fs -> line ("Update " ++ unwords (map fst fs)) ++ kids (x : map snd fs)
