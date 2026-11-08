@@ -1,4 +1,4 @@
--- module Rec: problems=0 instances=34 instance-failures=0 defaulted=6
+-- module Rec: problems=0 instances=37 instance-failures=0 defaulted=8
 -- equality-uses: total=0 at-function=0
 module author/project:Rec
 def count :: List a -> Int    [25:1-25:6]   id: author/project:Rec.count   sig: List v0 -> Int   kinds: v0:any   group: author/project:Rec.count rec ann
@@ -13,12 +13,34 @@ def count :: List a -> Int    [25:1-25:6]   id: author/project:Rec.count   sig: 
     31:13-31:27 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
       31:13-31:14 Int :: Int
       31:17-31:27 Call :: Int
-        31:17-31:22 VarTopLevel :: List a -> Int   callee: author/project:Rec.count   use: rec
+        31:17-31:22 VarTopLevel :: List a -> Int   callee: author/project:Rec.count   use: rec   sig#: d9f8b228   subst: v0 := <<author/project:Rec.count|v0>>
         31:23-31:27 VarLocal :: List a
 def wrap :: a -> List a    [36:1-36:5]   id: author/project:Rec.wrap   sig: v0 -> List v0   kinds: v0:any   group: author/project:Rec.wrap nonrec ann
   36:6-36:7 PVar x :: a
   37:5-37:10 List :: List a
     37:7-37:8 VarLocal :: a
+def chase :: List a -> a1 -> b    [70:1-70:6]   id: author/project:Rec.chase   sig: List v0 -> v1 -> v2   kinds: v0:any,v1:any,v2:any   group: author/project:Rec.chase rec inferred
+  70:7-70:9 PVar xs :: List a
+  70:10-70:11 PVar y :: a1
+  71:5-76:25 Case :: b
+    71:10-71:12 VarLocal :: List a
+    72:9-72:11 PList :: List a
+    73:13-73:19 Call :: b
+      73:13-73:17 VarTopLevel :: a1 -> b   callee: author/project:Rec.stop   use: rec   sig#: 9518ac8b   subst: v0 := <<author/project:Rec.chase|v1>>, v1 := <<author/project:Rec.chase|v2>>
+      73:18-73:19 VarLocal :: a1
+    75:9-75:18 PCons :: List a
+      75:9-75:10 PAnything :: a
+      75:14-75:18 PVar rest :: List a
+    76:13-76:25 Call :: b
+      76:13-76:18 VarTopLevel :: List a -> a1 -> b   callee: author/project:Rec.chase   use: rec   sig#: 115d5695   subst: v0 := <<author/project:Rec.chase|v0>>, v1 := <<author/project:Rec.chase|v1>>, v2 := <<author/project:Rec.chase|v2>>
+      76:19-76:23 VarLocal :: List a
+      76:24-76:25 VarLocal :: a1
+def stop :: a -> b    [79:1-79:5]   id: author/project:Rec.stop   sig: v0 -> v1   kinds: v0:any,v1:any   group: author/project:Rec.chase rec inferred
+  79:6-79:7 PVar z :: a
+  80:5-80:15 Call :: b
+    80:5-80:10 VarTopLevel :: List ref -> a -> b   <= List a1 -> a -> b   callee: author/project:Rec.chase   use: rec   sig#: efa5ab7b   subst: v0 := ref, v1 := <<author/project:Rec.stop|v0>>, v2 := <<author/project:Rec.stop|v1>>
+    80:11-80:13 List :: List ref   <= List a1
+    80:14-80:15 VarLocal :: a
 def evens :: List a -> List a    [5:1-5:6]   id: author/project:Rec.evens   sig: List v0 -> List v0   kinds: v0:any   group: author/project:Rec.evens rec inferred
   5:7-5:9 PVar xs :: List a
   6:5-11:27 Case :: List a
@@ -31,7 +53,7 @@ def evens :: List a -> List a    [5:1-5:6]   id: author/project:Rec.evens   sig:
     11:13-11:27 Binop :: List a   callee: elm/core:List.cons   instance: a := a   sig#: ddd4c5f2   subst: v0 := <<author/project:Rec.evens|v0>>
       11:13-11:14 VarLocal :: a
       11:18-11:27 Call :: List a
-        11:18-11:22 VarTopLevel :: List a -> List a   callee: author/project:Rec.odds   use: rec
+        11:18-11:22 VarTopLevel :: List a -> List a   callee: author/project:Rec.odds   use: rec   sig#: 6f57cabc   subst: v0 := <<author/project:Rec.evens|v0>>
         11:23-11:27 VarLocal :: List a
 def odds :: List a -> List a    [14:1-14:5]   id: author/project:Rec.odds   sig: List v0 -> List v0   kinds: v0:any   group: author/project:Rec.evens rec inferred
   14:6-14:8 PVar xs :: List a
@@ -43,7 +65,7 @@ def odds :: List a -> List a    [14:1-14:5]   id: author/project:Rec.odds   sig:
       19:9-19:10 PAnything :: a
       19:14-19:18 PVar rest :: List a
     20:13-20:23 Call :: List a
-      20:13-20:18 VarTopLevel :: List a -> List a   callee: author/project:Rec.evens   use: rec
+      20:13-20:18 VarTopLevel :: List a -> List a   callee: author/project:Rec.evens   use: rec   sig#: 1552c226   subst: v0 := <<author/project:Rec.odds|v0>>
       20:19-20:23 VarLocal :: List a
 def result :: String    [42:1-42:7]   id: author/project:Rec.result   sig: String   kinds:    group: author/project:Rec.result nonrec ann
   def twice :: (t -> t) -> t -> t    [56:9-56:14]   id: author/project:Rec.twice@56:9   sig: (v0 -> v0) -> v0 -> v0   kinds: v0:any   group: author/project:Rec.twice@56:9 nonrec inferred
@@ -64,7 +86,7 @@ def result :: String    [42:1-42:7]   id: author/project:Rec.result   sig: Strin
       54:17-54:39 Binop :: List String   callee: elm/core:List.cons   instance: a := String   sig#: ddd4c5f2   subst: v0 := String
         54:17-54:23 Str :: String
         54:27-54:38 Call :: List String
-          54:27-54:31 VarLocal :: number -> List String   callee: author/project:Rec.ping@44:9   use: rec
+          54:27-54:31 VarLocal :: number -> List String   callee: author/project:Rec.ping@44:9   use: rec   sig#: 477029af   subst: v0 := <<author/project:Rec.pong@50:9|v0>>
           54:33-54:38 Binop :: number   callee: elm/core:Basics.sub   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Rec.pong@50:9|v0>>
             54:33-54:34 VarLocal :: number
             54:37-54:38 Int :: number
@@ -78,7 +100,7 @@ def result :: String    [42:1-42:7]   id: author/project:Rec.result   sig: Strin
       48:17-48:39 Binop :: List String   callee: elm/core:List.cons   instance: a := String   sig#: ddd4c5f2   subst: v0 := String
         48:17-48:23 Str :: String
         48:27-48:38 Call :: List String
-          48:27-48:31 VarLocal :: number -> List String   callee: author/project:Rec.pong@50:9   use: rec
+          48:27-48:31 VarLocal :: number -> List String   callee: author/project:Rec.pong@50:9   use: rec   sig#: 07dff7f1   subst: v0 := <<author/project:Rec.ping@44:9|v0>>
           48:33-48:38 Binop :: number   callee: elm/core:Basics.sub   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Rec.ping@44:9|v0>>
             48:33-48:34 VarLocal :: number
             48:37-48:38 Int :: number
@@ -142,7 +164,8 @@ def result :: String    [42:1-42:7]   id: author/project:Rec.result   sig: Strin
                   64:71-64:74 Str :: String
 init: 0   id: author/project:Rec.count   kind: function   reads:    needs:    group: author/project:Rec.count
 init: 1   id: author/project:Rec.wrap   kind: function   reads:    needs: 
-init: 2   id: author/project:Rec.evens   kind: function   reads: author/project:Rec.odds   needs:    group: author/project:Rec.evens
-init: 3   id: author/project:Rec.odds   kind: function   reads: author/project:Rec.evens   needs:    group: author/project:Rec.evens
-init: 4   id: author/project:Rec.result   kind: value   reads: author/project:Rec.count,author/project:Rec.wrap,author/project:Rec.evens,author/project:Rec.odds   needs:    init-dep: no
-
+init: 2   id: author/project:Rec.chase   kind: function   reads: author/project:Rec.stop   needs:    group: author/project:Rec.chase
+init: 3   id: author/project:Rec.stop   kind: function   reads: author/project:Rec.chase   needs:    group: author/project:Rec.chase
+init: 4   id: author/project:Rec.evens   kind: function   reads: author/project:Rec.odds   needs:    group: author/project:Rec.evens
+init: 5   id: author/project:Rec.odds   kind: function   reads: author/project:Rec.evens   needs:    group: author/project:Rec.evens
+init: 6   id: author/project:Rec.result   kind: value   reads: author/project:Rec.count,author/project:Rec.wrap,author/project:Rec.evens,author/project:Rec.odds   needs:    init-dep: no

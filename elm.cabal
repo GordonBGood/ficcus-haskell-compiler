@@ -157,6 +157,11 @@ executable elm
         Canonicalize.Type
         Compile
         Ficcus.Flags
+        Ficcus.Mono.Facts
+        Ficcus.Mono.Marks
+        Ficcus.Mono.Class
+        Ficcus.Mono.Ir
+        Ficcus.Mono.Print
         Ficcus.TypesFile
         Generate.C
         Generate.Html

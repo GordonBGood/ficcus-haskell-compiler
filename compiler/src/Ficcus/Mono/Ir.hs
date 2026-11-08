@@ -1,0 +1,104 @@
+{-# OPTIONS_GHC -Wall #-}
+module Ficcus.Mono.Ir
+  ( CloneId(..)
+  , MLit(..)
+  , MExpr(..)
+  , MNode(..)
+  , MPat(..)
+  , MPatNode(..)
+  , DefKind(..)
+  , MDef(..)
+  , MProgram(..)
+  )
+  where
+
+
+-- Ficcus, stage (iii): the monomorphic typed IR (docs/STAGE3-PLAN.md, section 1).
+--
+-- The output of the specializer and the input of `Lower`. Every node carries a representation class;
+-- no node has a type variable. Calls name a clone (`MGlobal`), not a definition. Slice 0 only defines the
+-- types and prints the clone table; slice 1 builds bodies.
+
+
+import Ficcus.Mono.Class
+
+
+newtype CloneId = CloneId Int
+  deriving (Eq, Ord, Show)
+
+
+data MLit
+  = LInt Integer
+  | LFloat Double
+  | LChar Int                  -- code point
+  | LString String
+  | LUnit
+  deriving (Eq, Show)
+
+
+data MExpr = MExpr { mRep :: Class, mNode :: MNode }
+  deriving (Show)
+
+
+data MNode
+  = MLit MLit
+  | MLocal String                          -- parameter, let or pattern variable
+  | MGlobal CloneId                        -- a top level clone: function or value
+  | MKernel String Key                     -- a runtime (kernel) function at a key
+  | MCtor String Int Key                   -- constructor name, tag, key of the type's parameters
+  | MCall MExpr [MExpr]
+  | MLam [(String, Class)] MExpr
+  | MIf [(MExpr, MExpr)] MExpr
+  | MLet [MDef] MExpr                      -- local clones (a group or a single definition)
+  | MCase MExpr [(MPat, MExpr)]
+  | MAccess MExpr String
+  | MUpdate MExpr [(String, MExpr)]
+  | MRecord [(String, MExpr)]
+  | MTuple [MExpr]
+  | MList [MExpr]
+  deriving (Show)
+
+
+data MPat = MPat { mpRep :: Class, mpNode :: MPatNode }
+  deriving (Show)
+
+
+data MPatNode
+  = PWild
+  | PVar String
+  | PLit MLit
+  | PCtor String Int [MPat]                -- name, tag, arguments
+  | PRecord [String]
+  | PTuple [MPat]
+  | PCons MPat MPat
+  | PNil
+  | PAlias MPat String
+  deriving (Show)
+
+
+data DefKind = Value | Function
+  deriving (Eq, Show)
+
+
+-- | one clone of a definition at a key
+data MDef =
+  MDef
+    { mdClone :: CloneId
+    , mdName :: String                     -- id of the definition
+    , mdKey :: Key
+    , mdKind :: DefKind
+    , mdParams :: [(String, Class)]
+    , mdResult :: Class
+    , mdBody :: Maybe MExpr                -- Nothing while a clone is only listed (slice 0)
+    , mdInit :: Maybe Int                  -- position in the module's initialisation order (top level)
+    , mdNeeds :: [CloneId]                 -- clones of values that must be initialised first
+    }
+  deriving (Show)
+
+
+data MProgram =
+  MProgram
+    { mpClones :: [MDef]                   -- in initialisation order, main last
+    , mpMain :: Maybe CloneId
+    }
+  deriving (Show)

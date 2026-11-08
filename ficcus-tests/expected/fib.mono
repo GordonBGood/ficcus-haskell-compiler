@@ -1,0 +1,6 @@
+-- mono: stage (iii) slice 0, modules=21
+-- module author/project:Fibonacci (project)
+mark author/project:Fibonacci.countFibsTo   v0=number
+mark author/project:Fibonacci.worker@19:9   v0=number v1=number
+mark author/project:Fibonacci.limit   v0=number
+clone c0   def: author/project:Fibonacci.main   key: ()   kind: value   init: 2   needs: 

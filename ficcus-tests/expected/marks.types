@@ -1,0 +1,64 @@
+-- module Marks: problems=0 instances=13 instance-failures=0 defaulted=0
+-- equality-uses: total=1 at-function=0
+module author/project:Marks
+def smallest :: List comparable -> Maybe comparable    [35:1-35:9]   id: author/project:Marks.smallest   sig: List v0 -> Maybe v0   kinds: v0:comparable   group: author/project:Marks.smallest nonrec ann
+  35:10-35:12 PVar xs :: List comparable
+  36:5-36:20 Call :: Maybe comparable
+    36:5-36:17 VarForeign :: List comparable -> Maybe comparable   callee: elm/core:List.minimum   instance: comparable := comparable   sig#: b3e932e3   subst: v0 := <<author/project:Marks.smallest|v0>>
+    36:18-36:20 VarLocal :: List comparable
+def describe :: a -> String    [18:1-18:9]   id: author/project:Marks.describe   sig: v0 -> String   kinds: v0:any   group: author/project:Marks.describe nonrec ann
+  18:10-18:11 PVar x :: a
+  19:5-19:21 Call :: String
+    19:5-19:19 VarDebug :: a -> String   callee: elm/core:Debug.toString   instance: a := a   sig#: d170fa67   subst: v0 := <<author/project:Marks.describe|v0>>
+    19:20-19:21 VarLocal :: a
+def total :: List number -> number    [40:1-40:6]   id: author/project:Marks.total   sig: List v0 -> v0   kinds: v0:number   group: author/project:Marks.total nonrec ann
+  40:7-40:9 PVar xs :: List number
+  41:5-41:24 Call :: number
+    41:5-41:15 VarForeign :: (number -> number -> number) -> number -> List number -> number   callee: elm/core:List.foldl   instance: a := number, b := number   sig#: 8a8782c6   subst: v0 := <<author/project:Marks.total|v0>>, v1 := <<author/project:Marks.total|v0>>
+    41:16-41:19 VarOperator :: number -> number -> number   callee: elm/core:Basics.add   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Marks.total|v0>>
+    41:20-41:21 Int :: number
+    41:22-41:24 VarLocal :: List number
+def relay :: b -> String    [23:1-23:6]   id: author/project:Marks.relay   sig: v0 -> String   kinds: v0:any   group: author/project:Marks.relay nonrec ann
+  23:7-23:8 PVar y :: b
+  24:5-24:15 Call :: String
+    24:5-24:13 VarTopLevel :: b -> String   callee: author/project:Marks.describe   use: gen   instance: a := b   sig#: d170fa67   subst: v0 := <<author/project:Marks.relay|v0>>
+    24:14-24:15 VarLocal :: b
+def plain :: a -> a    [29:1-29:6]   id: author/project:Marks.plain   sig: v0 -> v0   kinds: v0:any   group: author/project:Marks.plain nonrec ann
+  29:7-29:8 PVar x :: a
+  30:5-30:6 VarLocal :: a
+def limit :: Int    [46:1-46:6]   id: author/project:Marks.limit   sig: Int   kinds:    group: author/project:Marks.limit nonrec ann
+  47:5-47:7 Int :: Int
+def table :: List Int    [51:1-51:6]   id: author/project:Marks.table   sig: List Int   kinds:    group: author/project:Marks.table nonrec ann
+  52:5-52:23 Call :: List Int
+    52:5-52:15 VarForeign :: Int -> Int -> List Int   callee: elm/core:List.range
+    52:16-52:17 Int :: Int
+    52:18-52:23 VarTopLevel :: Int   callee: author/project:Marks.limit   use: gen
+def count :: Int    [56:1-56:6]   id: author/project:Marks.count   sig: Int   kinds:    group: author/project:Marks.count nonrec ann
+  57:5-57:30 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    57:5-57:22 Call :: Int
+      57:5-57:16 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+      57:17-57:22 VarTopLevel :: List Int   callee: author/project:Marks.table   use: gen
+    57:25-57:30 VarTopLevel :: Int   callee: author/project:Marks.limit   use: gen
+def same :: a -> a -> Bool    [6:1-6:5]   id: author/project:Marks.same   sig: v0 -> v0 -> Bool   kinds: v0:any   group: author/project:Marks.same nonrec ann
+  6:6-6:7 PVar x :: a
+  6:8-6:9 PVar y :: a
+  7:5-7:11 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := a   sig#: 2cdc0786   subst: v0 := <<author/project:Marks.same|v0>>
+    7:5-7:6 VarLocal :: a
+    7:10-7:11 VarLocal :: a
+def sameList :: List a -> List a -> Bool    [12:1-12:9]   id: author/project:Marks.sameList   sig: List v0 -> List v0 -> Bool   kinds: v0:any   group: author/project:Marks.sameList nonrec ann
+  12:10-12:12 PVar xs :: List a
+  12:13-12:15 PVar ys :: List a
+  13:5-13:15 Call :: Bool
+    13:5-13:9 VarTopLevel :: List a -> List a -> Bool   callee: author/project:Marks.same   use: gen   instance: a1 := List a   sig#: 2cdc0786   subst: v0 := List <<author/project:Marks.sameList|v0>>
+    13:10-13:12 VarLocal :: List a
+    13:13-13:15 VarLocal :: List a
+init: 0   id: author/project:Marks.smallest   kind: function   reads:    needs: 
+init: 1   id: author/project:Marks.describe   kind: function   reads:    needs: 
+init: 2   id: author/project:Marks.total   kind: function   reads:    needs: 
+init: 3   id: author/project:Marks.relay   kind: function   reads: author/project:Marks.describe   needs: 
+init: 4   id: author/project:Marks.plain   kind: function   reads:    needs: 
+init: 5   id: author/project:Marks.limit   kind: value   reads:    needs:    init-dep: no
+init: 6   id: author/project:Marks.table   kind: value   reads: author/project:Marks.limit   needs: author/project:Marks.limit   init-dep: yes
+init: 7   id: author/project:Marks.count   kind: value   reads: author/project:Marks.limit,author/project:Marks.table   needs: author/project:Marks.limit,author/project:Marks.table   init-dep: yes
+init: 8   id: author/project:Marks.same   kind: function   reads:    needs: 
+init: 9   id: author/project:Marks.sameList   kind: function   reads: author/project:Marks.same   needs: 

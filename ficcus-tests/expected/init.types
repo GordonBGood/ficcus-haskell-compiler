@@ -44,4 +44,3 @@ init: 3   id: author/project:Init.factor   kind: value   reads: author/project:I
 init: 4   id: author/project:Init.scale   kind: function   reads: author/project:Init.factor   needs: author/project:Init.limit,author/project:Init.factor
 init: 5   id: author/project:Init.total   kind: value   reads: author/project:Init.table,author/project:Init.scale   needs: author/project:Init.limit,author/project:Init.table,author/project:Init.factor   init-dep: yes
 init: 6   id: author/project:Init.names   kind: value   reads: author/project:Init.total   needs: author/project:Init.limit,author/project:Init.table,author/project:Init.factor,author/project:Init.total   init-dep: yes
-

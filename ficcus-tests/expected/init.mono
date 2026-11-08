@@ -1,0 +1,9 @@
+-- mono: stage (iii) slice 0, modules=21
+-- module author/project:Init (project)
+clone c0   def: author/project:Init.unrelated   key: ()   kind: value   init: 0   needs: 
+clone c1   def: author/project:Init.limit   key: ()   kind: value   init: 1   needs: 
+clone c2   def: author/project:Init.table   key: ()   kind: value   init: 2   needs: c1
+clone c3   def: author/project:Init.factor   key: ()   kind: value   init: 3   needs: c1
+clone c4   def: author/project:Init.scale   key: ()   kind: function   init: 4   needs: c1,c3
+clone c5   def: author/project:Init.total   key: ()   kind: value   init: 5   needs: c1,c2,c3
+clone c6   def: author/project:Init.names   key: ()   kind: value   init: 6   needs: c1,c2,c3,c5
