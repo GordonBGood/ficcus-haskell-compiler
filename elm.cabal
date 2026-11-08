@@ -1,5 +1,7 @@
 cabal-version: 3.6
 build-type: Simple
+extra-source-files:
+    runtime/*.h
 
 name: elm
 version: 0.19.3
@@ -165,6 +167,7 @@ executable elm
         Ficcus.Mono.Modules
         Ficcus.Mono.Kernel
         Ficcus.Mono.Spec
+        Ficcus.Mono.Embed
         Ficcus.Mono.CRuntime
         Ficcus.Mono.CGen
         Ficcus.TypesFile

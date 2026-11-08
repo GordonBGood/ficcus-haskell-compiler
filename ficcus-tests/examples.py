@@ -46,6 +46,10 @@ def run_c(a, dst, name, mod):
     p = subprocess.run([a.safe, a.elm, "make", "src/" + mod, "--output=x.c"], cwd=dst, env=env, capture_output=True)
     if p.returncode != 0:
         print("FAIL %s.c: compiler exit %d\n%s" % (name, p.returncode, (p.stdout + p.stderr).decode()[-400:])); return 1
+    pre = "".join(open(os.path.join(HERE, "..", "runtime", f), encoding="utf-8").read()
+                  for f in ("fic_base.h", "fic_string.h", "fic_num.h", "fic_format.h", "fic_debug.h"))
+    if not open(os.path.join(dst, "x.c"), encoding="utf-8").read().startswith(pre):
+        print("FAIL %s.c: the file does not start with the runtime/ files" % name); return 1
     want = open(os.path.join(HERE, "expected", name + ".out"), encoding="utf-8").read()
     rt = os.path.join(HERE, "..", "..", "targets", "c")
     bad = 0
@@ -72,6 +76,9 @@ def main():
     a = ap.parse_args()
     bad = 0
     R1.clear()
+    if not a.update and not a.only:       # the runtime C files, compiled and tested standalone
+        t = subprocess.run([os.path.join(HERE, "..", "runtime", "test.sh")], capture_output=True, text=True)
+        print(t.stdout.strip() if t.returncode == 0 else "FAIL runtime/test.sh\n" + t.stdout + t.stderr); bad += 1 if t.returncode else 0
     for name in (a.only.split(",") if a.only else NAMES):
         src = os.path.join(HERE, name)
         mod = [f for f in os.listdir(os.path.join(src, "src")) if f.endswith(".fic")][0]
