@@ -1,0 +1,116 @@
+-- module Log: problems=0 instances=28 instance-failures=0 defaulted=16
+-- equality-uses: total=0 at-function=0
+module author/project:Log
+def main :: Program () () ()    [6:1-6:5]   id: author/project:Log.main   sig: Program () () ()   kinds:    group: author/project:Log.main nonrec ann
+  7:5-59:10 Call :: Program () () ()
+    7:5-7:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    8:9-59:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      9:13-56:33 Lambda :: () -> ( (), Cmd () )
+        9:14-9:15 PAnything :: ()
+        11:21-11:22 PAnything :: Int   <= number
+        12:25-12:43 Call :: Int   <= number
+          12:25-12:34 VarDebug :: String -> Int -> Int   <= String -> number -> number   callee: elm/core:Debug.log   instance: a := Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := Int
+          12:35-12:40 Str :: String
+          12:41-12:43 Int :: Int   <= number
+        14:21-14:22 PAnything :: Int   <= number1
+        15:25-15:55 Call :: Int   <= number1
+          15:25-15:34 VarDebug :: String -> Int -> Int   <= String -> number1 -> number1   callee: elm/core:Debug.log   instance: a := Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := Int
+          15:35-15:45 Str :: String
+          15:47-15:55 Call :: Int   <= number1
+            15:47-15:53 VarForeign :: Int -> Int   <= number1 -> number1   callee: elm/core:Basics.negate   instance: number := Int (defaulted)   sig#: 1f734da5   subst: v0 := Int
+            15:54-15:55 Int :: Int   <= number1
+        17:21-17:22 PAnything :: Int   <= number2
+        18:25-18:48 Call :: Int   <= number2
+          18:25-18:34 VarDebug :: String -> Int -> Int   <= String -> number2 -> number2   callee: elm/core:Debug.log   instance: a := Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := Int
+          18:35-18:40 Str :: String
+          18:42-18:48 Binop :: Int   <= number2   callee: elm/core:Basics.pow   instance: number := Int (defaulted)   sig#: 08810ccc   subst: v0 := Int
+            18:42-18:43 Int :: Int   <= number2
+            18:46-18:48 Int :: Int   <= number2
+        20:21-20:22 PAnything :: Float
+        21:25-21:46 Call :: Float
+          21:25-21:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          21:35-21:42 Str :: String
+          21:43-21:46 Float :: Float
+        23:21-23:22 PAnything :: Float
+        24:25-24:51 Call :: Float
+          24:25-24:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          24:35-24:40 Str :: String
+          24:42-24:51 Binop :: Float   callee: elm/core:Basics.add   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+            24:42-24:45 Float :: Float
+            24:48-24:51 Float :: Float
+        26:21-26:22 PAnything :: Float
+        27:25-27:48 Call :: Float
+          27:25-27:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          27:35-27:42 Str :: String
+          27:43-27:48 Float :: Float
+        29:21-29:22 PAnything :: Float
+        30:25-30:48 Call :: Float
+          30:25-30:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          30:35-30:41 Str :: String
+          30:42-30:48 Float :: Float
+        32:21-32:22 PAnything :: Float
+        33:25-33:48 Call :: Float
+          33:25-33:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          33:35-33:41 Str :: String
+          33:42-33:48 Float :: Float
+        35:21-35:22 PAnything :: Float
+        36:25-36:65 Call :: Float
+          36:25-36:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          36:35-36:41 Str :: String
+          36:42-36:65 Float :: Float
+        38:21-38:22 PAnything :: Float
+        39:25-39:46 Call :: Float
+          39:25-39:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          39:35-39:41 Str :: String
+          39:42-39:46 Negate :: Float
+            39:43-39:46 Float :: Float
+        41:21-41:22 PAnything :: Float
+        42:25-42:47 Call :: Float
+          42:25-42:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          42:35-42:40 Str :: String
+          42:42-42:47 Binop :: Float   callee: elm/core:Basics.fdiv
+            42:42-42:43 Int :: Float
+            42:46-42:47 Int :: Float
+        44:21-44:22 PAnything :: Float
+        45:25-45:47 Call :: Float
+          45:25-45:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          45:35-45:40 Str :: String
+          45:42-45:47 Binop :: Float   callee: elm/core:Basics.fdiv
+            45:42-45:43 Int :: Float
+            45:46-45:47 Int :: Float
+        47:21-47:22 PAnything :: String
+        48:25-48:51 Call :: String
+          48:25-48:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          48:35-48:43 Str :: String
+          48:44-48:51 Str :: String
+        50:21-50:22 PAnything :: String
+        51:25-51:71 Call :: String
+          51:25-51:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          51:35-51:44 Str :: String
+          51:45-51:71 Str :: String
+        53:21-53:22 PAnything :: String
+        54:25-54:92 Call :: String
+          54:25-54:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          54:35-54:43 Str :: String
+          54:45-54:92 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            54:45-54:61 Call :: String
+              54:45-54:59 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+              54:60-54:61 Int :: Int
+            54:65-54:92 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              54:65-54:68 Str :: String
+              54:72-54:92 Call :: String
+                54:72-54:88 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+                54:89-54:92 Float :: Float
+        56:17-56:33 Pair :: ( (), Cmd () )
+          56:19-56:21 Unit :: ()
+          56:23-56:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      57:20-57:44 Lambda :: () -> () -> ( (), Cmd () )
+        57:21-57:22 PAnything :: ()
+        57:23-57:24 PAnything :: ()
+        57:28-57:44 Pair :: ( (), Cmd () )
+          57:30-57:32 Unit :: ()
+          57:34-57:42 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      58:27-58:41 Lambda :: () -> Sub ()
+        58:28-58:29 PAnything :: ()
+        58:33-58:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Log.main   kind: value   reads:    needs:    init-dep: no

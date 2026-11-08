@@ -412,7 +412,7 @@ specExpr :: SEnv -> Can.Expr -> SM MExpr
 specExpr se (A.At region e) =
   case e of
     Can.Chr c -> return (MExpr CU32 (MLit (LChar (ord c))))
-    Can.Str s -> return (MExpr CRef (MLit (LString (ES.toChars s))))
+    Can.Str s -> return (MExpr CRef (MLit (LString (unescape (ES.toChars s)))))
     Can.Int n ->
       do  cls <- exprClass se region e
           return (MExpr cls (MLit (if cls == CF64 then LFloat (fromIntegral n) else LInt (fromIntegral n))))
@@ -652,3 +652,30 @@ specWorker se region fregion f args =
           modify' (\s -> s { sDone = Map.insert initId def (sDone s) })
           return (MExpr cls (MCall (MExpr CRef (MKernel "elm/core:Platform.worker" key)) [MExpr CRef (MGlobal initId)]))
     _ -> unsupported "Platform.worker without a literal record with an `init` lambda" region
+
+
+-- Elm.String holds a string literal as JavaScript source text: `\u0022` for a quote, `\u005C` for a backslash,
+-- `\u000A` for a newline, surrogate pairs for code points above 0xFFFF. This gives the characters themselves.
+unescape :: String -> String
+unescape str =
+  case str of
+    '\\' : 'u' : a : b : c : d : rest | all isHex [a, b, c, d] ->
+      let hi = hexValue [a, b, c, d]
+      in case rest of
+           '\\' : 'u' : e : f : g : h : rest2
+             | hi >= 0xD800 && hi < 0xDC00, all isHex [e, f, g, h], lo <- hexValue [e, f, g, h], lo >= 0xDC00 && lo < 0xE000 ->
+                 toEnum (0x10000 + (hi - 0xD800) * 0x400 + (lo - 0xDC00)) : unescape rest2
+           _ -> toEnum hi : unescape rest
+    '\\' : 'n' : rest -> '\n' : unescape rest
+    '\\' : 'r' : rest -> '\r' : unescape rest
+    '\\' : 't' : rest -> '\t' : unescape rest
+    '\\' : c : rest | c `elem` "\\\"'" -> c : unescape rest
+    c : rest -> c : unescape rest
+    [] -> []
+  where
+    isHex c = c `elem` "0123456789abcdefABCDEF"
+    hexValue = foldl (\acc c -> acc * 16 + digit c) 0
+    digit c
+      | c >= '0' && c <= '9' = ord c - 48
+      | c >= 'a' && c <= 'f' = ord c - 87
+      | otherwise = ord c - 55

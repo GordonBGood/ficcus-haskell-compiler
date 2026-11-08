@@ -1,0 +1,59 @@
+module Log exposing (main)
+
+
+-- Debug.log of Int, Float and String values, in Elm's `tag: value` format
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ =
+                        Debug.log "int" 42
+
+                    _ =
+                        Debug.log "negative" (negate 7)
+
+                    _ =
+                        Debug.log "big" (2 ^ 40)
+
+                    _ =
+                        Debug.log "float" 1.5
+
+                    _ =
+                        Debug.log "sum" (0.1 + 0.2)
+
+                    _ =
+                        Debug.log "whole" 100.0
+
+                    _ =
+                        Debug.log "tiny" 1.0e-7
+
+                    _ =
+                        Debug.log "huge" 1.0e21
+
+                    _ =
+                        Debug.log "long" 123456789012345680000.0
+
+                    _ =
+                        Debug.log "half" -2.5
+
+                    _ =
+                        Debug.log "inf" (1 / 0)
+
+                    _ =
+                        Debug.log "nan" (0 / 0)
+
+                    _ =
+                        Debug.log "string" "plain"
+
+                    _ =
+                        Debug.log "escapes" "quote\" back\\ line\nend"
+
+                    _ =
+                        Debug.log "joined" (String.fromInt 7 ++ "/" ++ String.fromFloat 0.5)
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

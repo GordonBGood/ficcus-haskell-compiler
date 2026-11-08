@@ -165,6 +165,8 @@ executable elm
         Ficcus.Mono.Modules
         Ficcus.Mono.Kernel
         Ficcus.Mono.Spec
+        Ficcus.Mono.CRuntime
+        Ficcus.Mono.CGen
         Ficcus.TypesFile
         Generate.C
         Generate.Html
