@@ -71,4 +71,7 @@ def main :: Program () () ()    [32:1-32:5]   id: author/project:Fibonacci.main 
       49:27-49:41 Lambda :: () -> Sub ()
         49:28-49:29 PAnything :: ()
         49:33-49:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Fibonacci.countFibsTo   kind: function   reads:    needs: 
+init: 1   id: author/project:Fibonacci.limit   kind: value   reads:    needs:    init-dep: no
+init: 2   id: author/project:Fibonacci.main   kind: value   reads: author/project:Fibonacci.countFibsTo,author/project:Fibonacci.limit   needs: author/project:Fibonacci.limit   init-dep: yes
 

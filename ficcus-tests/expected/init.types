@@ -1,0 +1,47 @@
+-- module Init: problems=0 instances=14 instance-failures=0 defaulted=0
+-- equality-uses: total=0 at-function=0
+module author/project:Init
+def unrelated :: Int    [42:1-42:10]   id: author/project:Init.unrelated   sig: Int   kinds:    group: author/project:Init.unrelated nonrec ann
+  43:5-43:7 Int :: Int
+def limit :: Int    [28:1-28:6]   id: author/project:Init.limit   sig: Int   kinds:    group: author/project:Init.limit nonrec ann
+  29:5-29:6 Int :: Int
+def table :: List Int    [13:1-13:6]   id: author/project:Init.table   sig: List Int   kinds:    group: author/project:Init.table nonrec ann
+  14:5-14:23 Call :: List Int
+    14:5-14:15 VarForeign :: Int -> Int -> List Int   callee: elm/core:List.range
+    14:16-14:17 Int :: Int
+    14:18-14:23 VarTopLevel :: Int   callee: author/project:Init.limit   use: gen
+def factor :: Int    [23:1-23:7]   id: author/project:Init.factor   sig: Int   kinds:    group: author/project:Init.factor nonrec ann
+  24:5-24:14 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    24:5-24:10 VarTopLevel :: Int   callee: author/project:Init.limit   use: gen
+    24:13-24:14 Int :: Int
+def scale :: Int -> Int    [18:1-18:6]   id: author/project:Init.scale   sig: Int -> Int   kinds:    group: author/project:Init.scale nonrec ann
+  18:7-18:8 PVar x :: Int
+  19:5-19:15 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    19:5-19:6 VarLocal :: Int
+    19:9-19:15 VarTopLevel :: Int   callee: author/project:Init.factor   use: gen
+def total :: Int    [8:1-8:6]   id: author/project:Init.total   sig: Int   kinds:    group: author/project:Init.total nonrec ann
+  9:5-9:35 Call :: Int
+    9:5-9:13 VarForeign :: List Int -> Int   callee: elm/core:List.sum   instance: number := Int   sig#: 78b59c50   subst: v0 := Int
+    9:15-9:35 Call :: List Int
+      9:15-9:23 VarForeign :: (Int -> Int) -> List Int -> List Int   callee: elm/core:List.map   instance: a := Int, b := Int   sig#: 6a702f63   subst: v0 := Int, v1 := Int
+      9:24-9:29 VarTopLevel :: Int -> Int   callee: author/project:Init.scale   use: gen
+      9:30-9:35 VarTopLevel :: List Int   callee: author/project:Init.table   use: gen
+def names :: List String    [33:1-33:6]   id: author/project:Init.names   sig: List String   kinds:    group: author/project:Init.names nonrec ann
+  def local :: List String    [35:9-35:14]   id: author/project:Init.local@35:9   sig: List String   kinds:    group: author/project:Init.local@35:9 nonrec inferred
+    36:13-36:25 List :: List String
+      36:15-36:18 Str :: String
+      36:20-36:23 Str :: String
+  38:5-38:38 Binop :: List String   callee: elm/core:Basics.append   instance: appendable := List String   sig#: 08810ccc   subst: v0 := List String
+    38:5-38:10 VarLocal :: List String   callee: author/project:Init.local@35:9   use: gen
+    38:14-38:38 List :: List String
+      38:16-38:36 Call :: String
+        38:16-38:30 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+        38:31-38:36 VarTopLevel :: Int   callee: author/project:Init.total   use: gen
+init: 0   id: author/project:Init.unrelated   kind: value   reads:    needs:    init-dep: no
+init: 1   id: author/project:Init.limit   kind: value   reads:    needs:    init-dep: no
+init: 2   id: author/project:Init.table   kind: value   reads: author/project:Init.limit   needs: author/project:Init.limit   init-dep: yes
+init: 3   id: author/project:Init.factor   kind: value   reads: author/project:Init.limit   needs: author/project:Init.limit   init-dep: yes
+init: 4   id: author/project:Init.scale   kind: function   reads: author/project:Init.factor   needs: author/project:Init.limit,author/project:Init.factor
+init: 5   id: author/project:Init.total   kind: value   reads: author/project:Init.table,author/project:Init.scale   needs: author/project:Init.limit,author/project:Init.table,author/project:Init.factor   init-dep: yes
+init: 6   id: author/project:Init.names   kind: value   reads: author/project:Init.total   needs: author/project:Init.limit,author/project:Init.table,author/project:Init.factor,author/project:Init.total   init-dep: yes
+

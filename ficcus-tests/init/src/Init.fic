@@ -1,0 +1,43 @@
+module Init exposing (total, table, scale, limit, names, unrelated)
+
+
+-- the order in the file is not the order of initialisation
+
+
+total : Int
+total =
+    List.sum (List.map scale table)
+
+
+table : List Int
+table =
+    List.range 1 limit
+
+
+scale : Int -> Int
+scale x =
+    x * factor
+
+
+factor : Int
+factor =
+    limit + 1
+
+
+limit : Int
+limit =
+    3
+
+
+names : List String
+names =
+    let
+        local =
+            [ "a", "b" ]
+    in
+    local ++ [ String.fromInt total ]
+
+
+unrelated : Int
+unrelated =
+    42

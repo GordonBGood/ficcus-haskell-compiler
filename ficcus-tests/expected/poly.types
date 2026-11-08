@@ -121,4 +121,10 @@ def main :: Program () () ()    [55:1-55:5]   id: author/project:Poly.main   sig
       65:27-65:41 Lambda :: () -> Sub ()
         65:28-65:29 PAnything :: ()
         65:33-65:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Poly.biggest   kind: function   reads:    needs: 
+init: 1   id: author/project:Poly.unbox   kind: function   reads:    needs: 
+init: 2   id: author/project:Poly.twice   kind: function   reads:    needs: 
+init: 3   id: author/project:Poly.getX   kind: function   reads:    needs: 
+init: 4   id: author/project:Poly.results   kind: value   reads: author/project:Poly.biggest,author/project:Poly.unbox,author/project:Poly.twice,author/project:Poly.getX   needs:    init-dep: no
+init: 5   id: author/project:Poly.main   kind: value   reads: author/project:Poly.results   needs: author/project:Poly.results   init-dep: yes
 
