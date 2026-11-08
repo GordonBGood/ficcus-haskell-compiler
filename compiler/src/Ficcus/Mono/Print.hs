@@ -152,7 +152,7 @@ renderExpr depth (MExpr cls node) =
     MLetVal n v b -> line ("Let " ++ n) ++ kids [v, b]
     MSeq a b -> line "Seq" ++ kids [a, b]
     MCase s bs -> line "Case" ++ kids [s] ++ concat [ [pad (depth + 1) ("branch " ++ patText p)] ++ renderExpr (depth + 2) b | (p, b) <- bs ]
-    MAccess x f -> line ("Access ." ++ f) ++ kids [x]
+    MAccess x f i -> line ("Access ." ++ f ++ " #" ++ show i) ++ kids [x]
     MUpdate x fs -> line ("Update " ++ unwords (map fst fs)) ++ kids (x : map snd fs)
     MRecord fs -> line ("Record " ++ unwords (map fst fs)) ++ kids (map snd fs)
     MTuple xs -> line "Tuple" ++ kids xs
@@ -180,7 +180,7 @@ patText (MPat cls node) =
     PVar n -> n
     PLit l -> litText l
     PCtor n tag ps -> unwords (n : ("#" ++ show tag) : map patText ps)
-    PRecord ns -> "{" ++ List.intercalate "," ns ++ "}"
+    PRecord ns -> "{" ++ List.intercalate "," [ n ++ "#" ++ show i ++ ":" ++ classText c | (i, n, c) <- ns ] ++ "}"
     PTuple ps -> "(" ++ List.intercalate ", " (map patText ps) ++ ")"
     PCons a b -> patText a ++ " :: " ++ patText b
     PNil -> "[]"

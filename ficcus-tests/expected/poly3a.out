@@ -1,0 +1,19 @@
+unbox int: 42
+unbox float: 3
+unbox string: "boxed!"
+count int: 3
+count string: 2
+count float: 1
+count pair: 2
+evens: 3
+odds: 2
+chase: "skipped"
+stop: "five"
+none int: 1
+none string: 1
+empty int: 1
+empty string: 2
+tally: 7
+local: "3s2.5"
+pair: "3 7.75"
+boxes: "56 box 2.5"

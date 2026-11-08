@@ -1,0 +1,153 @@
+-- module Groups: problems=0 instances=27 instance-failures=0 defaulted=22
+-- equality-uses: total=0 at-function=0
+module author/project:Groups
+def count :: List a -> Int    [27:1-27:6]   id: author/project:Groups.count   sig: List v0 -> Int   kinds: v0:any   group: author/project:Groups.count rec ann
+  27:7-27:9 PVar xs :: List a
+  28:5-33:27 Case :: Int
+    28:10-28:12 VarLocal :: List a
+    29:9-29:11 PList :: List a
+    30:13-30:14 Int :: Int
+    32:9-32:18 PCons :: List a
+      32:9-32:10 PAnything :: a
+      32:14-32:18 PVar rest :: List a
+    33:13-33:27 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      33:13-33:14 Int :: Int
+      33:17-33:27 Call :: Int
+        33:17-33:22 VarTopLevel :: List a -> Int   callee: author/project:Groups.count   use: rec   sig#: 8f686fa0   subst: v0 := <<author/project:Groups.count|v0>>
+        33:23-33:27 VarLocal :: List a
+def chase :: List a -> a1 -> a1    [36:1-36:6]   id: author/project:Groups.chase   sig: List v0 -> v1 -> v1   kinds: v0:any,v1:any   group: author/project:Groups.chase rec inferred
+  36:7-36:9 PVar xs :: List a
+  36:10-36:11 PVar y :: a1
+  37:5-42:25 Case :: a1
+    37:10-37:12 VarLocal :: List a
+    38:9-38:11 PList :: List a
+    39:13-39:19 Call :: a1
+      39:13-39:17 VarTopLevel :: a1 -> a1   callee: author/project:Groups.stop   use: rec   sig#: 1f734da5   subst: v0 := <<author/project:Groups.chase|v1>>
+      39:18-39:19 VarLocal :: a1
+    41:9-41:18 PCons :: List a
+      41:9-41:10 PAnything :: a
+      41:14-41:18 PVar rest :: List a
+    42:13-42:25 Call :: a1
+      42:13-42:18 VarTopLevel :: List a -> a1 -> a1   callee: author/project:Groups.chase   use: rec   sig#: 481958f0   subst: v0 := <<author/project:Groups.chase|v0>>, v1 := <<author/project:Groups.chase|v1>>
+      42:19-42:23 VarLocal :: List a
+      42:24-42:25 VarLocal :: a1
+def stop :: a -> a    [45:1-45:5]   id: author/project:Groups.stop   sig: v0 -> v0   kinds: v0:any   group: author/project:Groups.chase rec inferred
+  45:6-45:7 PVar z :: a
+  46:5-50:10 If :: a
+    46:8-46:23 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      46:8-46:19 Call :: Int
+        46:8-46:13 VarTopLevel :: List a -> Int   callee: author/project:Groups.count   use: gen   instance: a1 := a   sig#: 8f686fa0   subst: v0 := <<author/project:Groups.stop|v0>>
+        46:14-46:19 List :: List a
+          46:16-46:17 VarLocal :: a
+      46:22-46:23 Int :: Int
+    47:9-47:19 Call :: a
+      47:9-47:14 VarTopLevel :: List ref -> a -> a   <= List a2 -> a -> a   callee: author/project:Groups.chase   use: rec   sig#: 481958f0   subst: v0 := ref, v1 := <<author/project:Groups.stop|v0>>
+      47:15-47:17 List :: List ref   <= List a2
+      47:18-47:19 VarLocal :: a
+    50:9-50:10 VarLocal :: a
+def evens :: List a -> List a    [8:1-8:6]   id: author/project:Groups.evens   sig: List v0 -> List v0   kinds: v0:any   group: author/project:Groups.evens rec inferred
+  8:7-8:9 PVar xs :: List a
+  9:5-14:27 Case :: List a
+    9:10-9:12 VarLocal :: List a
+    10:9-10:11 PList :: List a
+    11:13-11:15 List :: List a
+    13:9-13:18 PCons :: List a
+      13:9-13:10 PVar x :: a
+      13:14-13:18 PVar rest :: List a
+    14:13-14:27 Binop :: List a   callee: elm/core:List.cons   instance: a := a   sig#: ddd4c5f2   subst: v0 := <<author/project:Groups.evens|v0>>
+      14:13-14:14 VarLocal :: a
+      14:18-14:27 Call :: List a
+        14:18-14:22 VarTopLevel :: List a -> List a   callee: author/project:Groups.odds   use: rec   sig#: c2fcf511   subst: v0 := <<author/project:Groups.evens|v0>>
+        14:23-14:27 VarLocal :: List a
+def odds :: List a -> List a    [17:1-17:5]   id: author/project:Groups.odds   sig: List v0 -> List v0   kinds: v0:any   group: author/project:Groups.evens rec inferred
+  17:6-17:8 PVar xs :: List a
+  18:5-23:23 Case :: List a
+    18:10-18:12 VarLocal :: List a
+    19:9-19:11 PList :: List a
+    20:13-20:15 List :: List a
+    22:9-22:18 PCons :: List a
+      22:9-22:10 PAnything :: a
+      22:14-22:18 PVar rest :: List a
+    23:13-23:23 Call :: List a
+      23:13-23:18 VarTopLevel :: List a -> List a   callee: author/project:Groups.evens   use: rec   sig#: c2fcf511   subst: v0 := <<author/project:Groups.odds|v0>>
+      23:19-23:23 VarLocal :: List a
+def main :: Program () () ()    [54:1-54:5]   id: author/project:Groups.main   sig: Program () () ()   kinds:    group: author/project:Groups.main nonrec ann
+  55:5-77:10 Call :: Program () () ()
+    55:5-55:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    56:9-77:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      57:13-74:33 Lambda :: () -> ( (), Cmd () )
+        57:14-57:15 PAnything :: ()
+        59:21-59:22 PAnything :: Int
+        60:25-60:78 Call :: Int
+          60:25-60:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          60:35-60:46 Str :: String
+          60:48-60:78 Call :: Int
+            60:48-60:53 VarTopLevel :: List Int -> Int   <= List number -> Int   callee: author/project:Groups.count   use: gen   instance: a := Int (defaulted)   sig#: 8f686fa0   subst: v0 := Int
+            60:55-60:78 Call :: List Int   <= List number
+              60:55-60:60 VarTopLevel :: List Int -> List Int   <= List number -> List number   callee: author/project:Groups.evens   use: gen   instance: a1 := Int (defaulted)   sig#: c2fcf511   subst: v0 := Int
+              60:61-60:78 List :: List Int   <= List number
+                60:63-60:64 Int :: Int   <= number
+                60:66-60:67 Int :: Int   <= number
+                60:69-60:70 Int :: Int   <= number
+                60:72-60:73 Int :: Int   <= number
+                60:75-60:76 Int :: Int   <= number
+        62:21-62:22 PAnything :: Int
+        63:25-63:84 Call :: Int
+          63:25-63:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          63:35-63:48 Str :: String
+          63:50-63:84 Call :: Int
+            63:50-63:55 VarTopLevel :: List String -> Int   callee: author/project:Groups.count   use: gen   instance: a := String   sig#: 8f686fa0   subst: v0 := String
+            63:57-63:84 Call :: List String
+              63:57-63:61 VarTopLevel :: List String -> List String   callee: author/project:Groups.odds   use: gen   instance: a1 := String   sig#: c2fcf511   subst: v0 := String
+              63:62-63:84 List :: List String
+                63:64-63:67 Str :: String
+                63:69-63:72 Str :: String
+                63:74-63:77 Str :: String
+                63:79-63:82 Str :: String
+        65:21-65:22 PAnything :: Int
+        66:25-66:75 Call :: Int
+          66:25-66:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          66:35-66:48 Str :: String
+          66:50-66:75 Call :: Int
+            66:50-66:55 VarTopLevel :: List Float -> Int   callee: author/project:Groups.count   use: gen   instance: a := Float   sig#: 8f686fa0   subst: v0 := Float
+            66:57-66:75 Call :: List Float
+              66:57-66:62 VarTopLevel :: List Float -> List Float   callee: author/project:Groups.evens   use: gen   instance: a1 := Float   sig#: c2fcf511   subst: v0 := Float
+              66:63-66:75 List :: List Float
+                66:65-66:68 Float :: Float
+                66:70-66:73 Float :: Float
+        68:21-68:22 PAnything :: String
+        69:25-69:67 Call :: String
+          69:25-69:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          69:35-69:42 Str :: String
+          69:44-69:67 Call :: String
+            69:44-69:49 VarTopLevel :: List Int -> String -> String   <= List number1 -> String -> String   callee: author/project:Groups.chase   use: gen   instance: a2 := Int (defaulted), a3 := String   sig#: 481958f0   subst: v0 := Int, v1 := String
+            69:50-69:61 List :: List Int   <= List number1
+              69:52-69:53 Int :: Int   <= number1
+              69:55-69:56 Int :: Int   <= number1
+              69:58-69:59 Int :: Int   <= number1
+            69:62-69:67 Str :: String
+        71:21-71:22 PAnything :: Int   <= number2
+        72:25-72:49 Call :: Int   <= number2
+          72:25-72:34 VarDebug :: String -> Int -> Int   <= String -> number2 -> number2   callee: elm/core:Debug.log   instance: a := Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := Int
+          72:35-72:41 Str :: String
+          72:43-72:49 Call :: Int   <= number2
+            72:43-72:47 VarTopLevel :: Int -> Int   <= number2 -> number2   callee: author/project:Groups.stop   use: gen   instance: a3 := Int (defaulted)   sig#: 1f734da5   subst: v0 := Int
+            72:48-72:49 Int :: Int   <= number2
+        74:17-74:33 Pair :: ( (), Cmd () )
+          74:19-74:21 Unit :: ()
+          74:23-74:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      75:20-75:44 Lambda :: () -> () -> ( (), Cmd () )
+        75:21-75:22 PAnything :: ()
+        75:23-75:24 PAnything :: ()
+        75:28-75:44 Pair :: ( (), Cmd () )
+          75:30-75:32 Unit :: ()
+          75:34-75:42 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      76:27-76:41 Lambda :: () -> Sub ()
+        76:28-76:29 PAnything :: ()
+        76:33-76:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Groups.count   kind: function   reads:    needs:    group: author/project:Groups.count
+init: 1   id: author/project:Groups.chase   kind: function   reads: author/project:Groups.stop   needs:    group: author/project:Groups.chase
+init: 2   id: author/project:Groups.stop   kind: function   reads: author/project:Groups.count,author/project:Groups.chase   needs:    group: author/project:Groups.chase
+init: 3   id: author/project:Groups.evens   kind: function   reads: author/project:Groups.odds   needs:    group: author/project:Groups.evens
+init: 4   id: author/project:Groups.odds   kind: function   reads: author/project:Groups.evens   needs:    group: author/project:Groups.evens
+init: 5   id: author/project:Groups.main   kind: value   reads: author/project:Groups.count,author/project:Groups.chase,author/project:Groups.stop,author/project:Groups.evens,author/project:Groups.odds   needs:    init-dep: no

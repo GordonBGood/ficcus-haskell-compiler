@@ -26,11 +26,12 @@ module Ficcus.Mono.Spec
 -- `Debug.log`, number clones, local functions and self recursion. Anything else is reported by name.
 
 
-import Control.Monad (forM, when)
+import Control.Monad (foldM, forM, when)
 import Control.Monad.State.Strict (State, execState, gets, modify')
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import Data.Char (ord)
+import qualified Data.Index as Index
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
@@ -230,10 +231,11 @@ genClone cid (CKey did _ key@(Key parts)) src =
       let env = Map.union (Map.fromList (zip own parts)) (srcOuter src)
       let se = SEnv ctx env (srcLocals src) cid
       params <- forM (zip [0 :: Int ..] args) (param se)
-      body' <- specExpr se body
+      body0 <- specExpr se body
+      body' <- wrapParams se (zip args params) body0
       return MDef
         { mdClone = cid, mdName = did, mdKey = key
-        , mdKind = if null args then Value else Function
+        , mdKind = if null args && srcOwner src == Nothing then Value else Function
         , mdParams = params, mdResult = mRep body', mdBody = Just body'
         , mdInit = Nothing, mdNeeds = [], mdLifted = srcOwner src, mdVars = map snd ownIx }
 
@@ -244,14 +246,27 @@ param se (i, pat@(A.At region p)) =
       case p of
         Can.PVar n -> return (N.toChars n, cls)
         Can.PAnything -> return ("_a" ++ show i, cls)
+        _ -> return ("_p" ++ show i, cls)          -- a pattern: matched in the body (wrapParams)
+  where _ = region
+
+
+-- the patterns of the parameters of a definition become cases on the parameter, outermost first
+wrapParams :: SEnv -> [(Can.Pattern, (String, Class))] -> MExpr -> SM MExpr
+wrapParams se ps body0 =
+  foldM wrap body0 (reverse ps)
+  where
+    wrap acc (pat@(A.At _ p), (n, cls)) =
+      case p of
+        Can.PVar _ -> return acc
+        Can.PAnything -> return acc
         _ ->
-          do  report ("pattern parameter not supported yet (slice 3a) at " ++ regionText region)
-              return ("_a" ++ show i, cls)
+          do  pat' <- specPat se pat
+              return (MExpr (mRep acc) (MCase (MExpr cls (MLocal n)) [(pat', acc)]))
 
 
 patClass :: SEnv -> Can.Pattern -> SM Class
 patClass se (A.At region p) =
-  case Map.lookup (Recorder.patKey region p) (_nodes (_typed (seCtx se))) of
+  case nodeType se (Recorder.patKey region p) of
     Nothing -> report "internal: no type for a pattern" >> return CRef
     Just t -> classOfTy se t
 
@@ -280,9 +295,9 @@ classOfT enums env t =
       in classOfName enums name (length args)
     TFun _ _ -> CRef
     TUnit -> CUnit
-    TPair a b -> CStruct [go a, go b]
-    TTriple a b c -> CStruct [go a, go b, go c]
-    TRecord fields Nothing -> CStruct (map go (Map.elems fields))
+    TPair a b -> CStruct [boxed (go a), boxed (go b)]
+    TTriple a b c -> CStruct [boxed (go a), boxed (go b), boxed (go c)]
+    TRecord fields Nothing -> CStruct (map (boxed . go) (Map.elems fields))
     TRecord _ (Just _) -> CRef
     TVar n _ _ ->
       case Map.lookup n env of
@@ -318,12 +333,14 @@ classOfM enums t =
   case t of
     TyCon n args -> classOfName enums n (length args)
     TyFun _ _ -> CRef
-    TyRecord fs -> CStruct [ classOfM enums x | (_, x) <- fs ]
-    TyTuple xs -> CStruct (map (classOfM enums) xs)
+    TyRecord fs -> CStruct [ boxed (classOfM enums x) | (_, x) <- fs ]
+    TyTuple xs -> CStruct (map (boxed . classOfM enums) xs)
     TyUnit -> CUnit
 
 
--- a struct that reaches an unconstrained variable is boxed (STAGE3-DESIGN section 0)
+-- a struct that reaches an unconstrained variable is boxed (STAGE3-DESIGN section 0); so is a struct that is a
+-- field of a struct, a field of a constructor or an element of a list: the layout of a type then does not
+-- depend on the key, and the only places that convert are the variable positions (CGen `adapt`)
 boxed :: Class -> Class
 boxed c =
   case c of
@@ -449,6 +466,30 @@ specExpr se (A.At region e) =
       do  x' <- specExpr se x
           b' <- specExpr se body
           return (MExpr (mRep b') (MSeq x' b'))
+    Can.List xs ->
+      do  cls <- exprClass se region e
+          xs' <- mapM (specExpr se) xs
+          return (MExpr cls (MList xs'))
+    Can.Access r@(A.At rregion r') (A.At _ fld) ->
+      do  cls <- exprClass se region e
+          r'' <- specExpr se r
+          let fields = case nodeType se (Recorder.exprKey rregion r') of
+                Just t -> recordFields t
+                Nothing -> Nothing
+          case fields >>= \fs -> lookup (N.toChars fld) (zip fs [0 :: Int ..]) of
+            Just i -> return (MExpr cls (MAccess r'' (N.toChars fld) i))
+            Nothing -> unsupported "a field access on an extensible record (row polymorphism: slice 5)" region
+    Can.Case scrut branches ->
+      do  cls <- exprClass se region e
+          s' <- specExpr se scrut
+          bs <- forM branches (\(Can.CaseBranch p b) -> (,) <$> specPat se p <*> specExpr se b)
+          return (MExpr cls (MCase s' bs))
+    Can.LetDestruct pat x body ->
+      do  x' <- specExpr se x
+          pat' <- specPat se pat
+          b' <- specExpr se body
+          return (MExpr (mRep b') (MCase x' [(pat', b')]))
+    Can.VarCtor {} -> specRef se region e
     Can.Call (A.At fregion f) args -> specCall se region fregion f args
     Can.Binop _ _ _ _ l r -> specCall' se region region e [l, r]
     Can.VarLocal _ -> specRef se region e
@@ -457,6 +498,46 @@ specExpr se (A.At region e) =
     Can.VarDebug {} -> specRef se region e
     Can.VarOperator {} -> specRef se region e
     _ -> unsupported ("expression " ++ Recorder.exprKind e) region
+
+
+-- the field names of a record type, in the order of the struct
+recordFields :: TType -> Maybe [String]
+recordFields t =
+  case t of
+    TRecord fs Nothing -> Just (map N.toChars (Map.keys fs))
+    TAlias _ _ _ real -> recordFields real
+    _ -> Nothing
+
+
+-- a pattern with the classes of its parts
+specPat :: SEnv -> Can.Pattern -> SM MPat
+specPat se pat@(A.At region p) =
+  do  cls <- patClass se pat
+      let mk = return . MPat cls
+      case p of
+        Can.PAnything -> mk PWild
+        Can.PVar n -> mk (PVar (N.toChars n))
+        Can.PUnit -> mk PWild
+        Can.PPair a b -> (\x y -> MPat cls (PTuple [x, y])) <$> specPat se a <*> specPat se b
+        Can.PTriple a b c -> (\x y z -> MPat cls (PTuple [x, y, z])) <$> specPat se a <*> specPat se b <*> specPat se c
+        Can.PAlias q n -> (\x -> MPat cls (PAlias x (N.toChars n))) <$> specPat se q
+        Can.PRecord names ->
+          do  let t = Map.lookup (Recorder.patKey region p) (_nodes (_typed (seCtx se)))
+              case t of
+                Just (TRecord fs Nothing) ->
+                  do  fields <- forM (zip [0 :: Int ..] (Map.toList fs)) $ \(i, (k, ft)) ->
+                        if k `elem` names then (\c -> [(i, N.toChars k, c)]) <$> classOfTy se (applyDefault (\v -> not (Map.member v (seEnv se))) ft) else return []
+                      mk (PRecord (concat fields))
+                _ -> report ("a record pattern on an extensible record (row polymorphism: slice 5) at " ++ regionText region) >> mk PWild
+        Can.PList ps -> foldr (\x acc -> do { x' <- specPat se x; a <- acc; return (MPat CRef (PCons x' a)) }) (return (MPat CRef PNil)) ps
+        Can.PCons h t -> (\x y -> MPat cls (PCons x y)) <$> specPat se h <*> specPat se t
+        Can.PBool _ b -> mk (PLit (LInt (if b then 1 else 0)))
+        Can.PChr c -> mk (PLit (LChar (ord c)))
+        Can.PStr s -> mk (PLit (LString (unescape (ES.toChars s))))
+        Can.PInt n -> mk (PLit (LInt (fromIntegral n)))
+        Can.PCtor { Can._p_name = name, Can._p_index = idx, Can._p_args = cargs } ->
+          do  args <- mapM (specPat se . Can._arg) cargs
+              mk (PCtor (N.toChars name) (Index.toMachine idx) args)
 
 
 unsupported :: String -> A.Region -> SM MExpr
@@ -487,20 +568,26 @@ specLet se defs isRec body@(A.At bregion _) =
   do  let ctx' = bindDefs (seCtx se) isRec defs
       let me = seClone se
       let srcFor locals d = Src ctx' d (seEnv se) locals (Just me)
-      let funs = [ d | d <- defs, not (null (defArgs d)) ]
+      let isFun d = not (null (defArgs d)) || polyValue ctx' (seEnv se) d
+      let funs = [ d | d <- defs, isFun d ]
       let locals' = Map.union (Map.fromList [ (defIdOf ctx' (defKeyOf d), srcFor locals' d) | d <- funs ]) (seLocals se)
-      let se' = se { seCtx = ctx', seLocals = Map.union (Map.fromList [ (defIdOf ctx' (defKeyOf d), srcFor locals' d) | d <- defs, null (defArgs d) ]) locals' }
-      binds <- forM [ d | d <- defs, null (defArgs d) ] $ \d ->
-        do  let scheme = Map.lookup (defKeyOf d) (_defs (_typed ctx'))
-            case scheme of
-              Just sch | not (null [ () | (n, _) <- canonVars sch, not (Map.member n (seEnv se)) ]) ->
-                report ("a polymorphic local value is not supported yet (slice 3a): " ++ defNameChars d)
-              _ -> return ()
-            v <- specExpr se' (defBody d)
+      let se' = se { seCtx = ctx', seLocals = Map.union (Map.fromList [ (defIdOf ctx' (defKeyOf d), srcFor locals' d) | d <- defs, not (isFun d) ]) locals' }
+      binds <- forM [ d | d <- defs, not (isFun d) ] $ \d ->
+        do  v <- specExpr se' (defBody d)
             return (defNameChars d, v)
       b' <- specExpr se' body
       _ <- return bregion
       return (foldr (\(n, v) acc -> MExpr (mRep acc) (MLetVal n v acc)) b' binds)
+
+
+-- a local value with variables of its own (`let e = []` generalized): a lifted clone of no arguments per key,
+-- evaluated at each use (a pure value, so the same result)
+polyValue :: Ctx -> Env -> Can.Def -> Bool
+polyValue ctx env d =
+  null (defArgs d) &&
+  case Map.lookup (defKeyOf d) (_defs (_typed ctx)) of
+    Just sch -> not (null [ () | (n, _) <- canonVars sch, not (Map.member n env) ])
+    Nothing -> False
 
 
 defArgs :: Can.Def -> [Can.Pattern]
@@ -522,6 +609,7 @@ data Ref
   = RKernel String Key Int
   | RClone CloneId Int Bool            -- clone, arity, is a value
   | RLocal String                      -- parameter or local value
+  | RCtor String Int Int               -- constructor name, tag, number of arguments
   | RNone
 
 
@@ -545,6 +633,7 @@ isVarLike e =
     Can.VarForeign {} -> True
     Can.VarDebug {} -> True
     Can.VarOperator {} -> True
+    Can.VarCtor {} -> True
     Can.Binop {} -> True
     _ -> False
 
@@ -558,6 +647,8 @@ specCall' se region fregion f args =
       case ref of
         RKernel name key arity | arity == length args' -> return (MExpr cls (MCall (MExpr CRef (MKernel name key)) args'))
         RClone c arity _ | arity == length args' -> return (MExpr cls (MCall (MExpr CRef (MGlobal c)) args'))
+        RCtor name tag arity | arity == length args' && arity > 0 ->
+          return (MExpr cls (MCall (MExpr CRef (MCtor name tag (Key [ ByClass (boxed (mRep a)) | a <- args' ]))) args'))
         RNone -> return unitLit
         _ -> unsupported "a partial or over-applied call (closure)" region
   where
@@ -573,7 +664,9 @@ specRef se region e =
       case ref of
         RKernel name key 0 -> return (MExpr cls (MKernel name key))
         RClone c 0 True -> return (MExpr cls (MGlobal c))
+        RClone c 0 False -> return (MExpr cls (MCall (MExpr CRef (MGlobal c)) []))
         RLocal n -> return (MExpr cls (MLocal n))
+        RCtor name tag 0 -> return (MExpr cls (MCtor name tag (Key [])))
         RNone -> return unitLit
         _ -> unsupported "a function used as a value (closure)" region
 
@@ -586,7 +679,7 @@ resolve se region e =
         Just (Left key) ->
           let did = defIdOf ctx key
           in case Map.lookup did (seLocals se) of
-               Just src | null (defArgs (srcDef src)) -> return (RLocal (N.toChars name))
+               Just src | null (defArgs (srcDef src)) && not (polyValue (srcCtx src) (srcOuter src) (srcDef src)) -> return (RLocal (N.toChars name))
                Just src -> viaClone src did
                Nothing -> report ("internal: local definition " ++ did ++ " is not in scope of the specializer") >> return RNone
         _ -> return (RLocal (N.toChars name))
@@ -595,11 +688,12 @@ resolve se region e =
     Can.VarOperator _ h n _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.Binop _ h n _ _ _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.VarDebug _ n _ -> foreignOrTop ("elm/core:Debug." ++ N.toChars n)
-    Can.VarCtor {} -> report ("constructors are not supported yet (slice 3a) at " ++ regionText region) >> return RNone
+    Can.VarCtor _ _ name idx (Can.Forall _ tipe) -> return (RCtor (N.toChars name) (Index.toMachine idx) (arrows tipe))
     _ -> return RNone
   where
     ctx = seCtx se
     raw = Map.lookup (Recorder.exprKey region e) (_nodes (_typed ctx))
+    arrows t = case t of { Can.TLambda _ r -> 1 + arrows r; _ -> 0 :: Int }
 
     subst cid =
       case (calleeId ctx e, schemeInst) of
@@ -633,7 +727,7 @@ resolve se region e =
             Just (scheme, s) ->
               do  key <- keyFor se did scheme s (\n -> Map.member n (srcOuter src))
                   c <- requestClone (CKey did (srcOwner src) key) src
-                  return (RClone c (length (defArgs (srcDef src))) (null (defArgs (srcDef src))))
+                  return (RClone c (length (defArgs (srcDef src))) (null (defArgs (srcDef src)) && srcOwner src == Nothing))
 
 
 -- Platform.worker { init = \flags -> ..., ... }: the init lambda becomes a clone of its own; update and

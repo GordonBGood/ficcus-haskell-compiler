@@ -1,0 +1,477 @@
+-- module Poly3a: problems=0 instances=118 instance-failures=0 defaulted=70
+-- equality-uses: total=0 at-function=0
+module author/project:Poly3a
+type Box   id: author/project:Poly3a.Box   params: 1   ctors: 1   layout: unbox
+  ctor Box   id: author/project:Poly3a.Box   tag: 0   arity: 1   fields: v0   sig: v0 -> Box v0   kinds: v0:any
+def isNothing :: Maybe a -> Int    [106:1-106:10]   id: author/project:Poly3a.isNothing   sig: Maybe v0 -> Int   kinds: v0:any   group: author/project:Poly3a.isNothing nonrec ann
+  106:11-106:12 PVar m :: Maybe a
+  107:5-112:14 Case :: Int
+    107:10-107:11 VarLocal :: Maybe a
+    108:9-108:16 PCtor Nothing :: Maybe a
+    109:13-109:14 Int :: Int
+    111:9-111:15 PCtor Just :: Maybe a
+      111:14-111:15 PAnything :: a
+    112:13-112:14 Int :: Int
+def localTwo :: String    [160:1-160:9]   id: author/project:Poly3a.localTwo   sig: String   kinds:    group: author/project:Poly3a.localTwo nonrec ann
+  def first :: ( t, t1 ) -> t    [165:9-165:14]   id: author/project:Poly3a.first@165:9   sig: ( v0, v1 ) -> v0   kinds: v0:any,v1:any   group: author/project:Poly3a.first@165:9 nonrec inferred
+    165:15-165:16 PVar p :: ( t, t1 )
+    166:13-168:22 Case :: t
+      166:18-166:19 VarLocal :: ( t, t1 )
+      167:17-167:25 PPair :: ( t, t1 )
+        167:19-167:20 PVar a :: t
+        167:22-167:23 PAnything :: t1
+      168:21-168:22 VarLocal :: t
+  def dup :: t2 -> ( t2, t2 )    [162:9-162:12]   id: author/project:Poly3a.dup@162:9   sig: v0 -> ( v0, v0 )   kinds: v0:any   group: author/project:Poly3a.dup@162:9 nonrec inferred
+    162:13-162:14 PVar x :: t2
+    163:13-163:21 Pair :: ( t2, t2 )
+      163:15-163:16 VarLocal :: t2
+      163:18-163:19 VarLocal :: t2
+  170:5-170:92 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    170:5-170:33 Call :: String
+      170:5-170:19 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+      170:21-170:33 Call :: Int
+        170:21-170:26 VarLocal :: ( Int, Int ) -> Int   callee: author/project:Poly3a.first@165:9   use: gen   instance: t := Int, t1 := Int   sig#: ee0f5e96   subst: v0 := Int, v1 := Int
+        170:28-170:33 Call :: ( Int, Int )
+          170:28-170:31 VarLocal :: Int -> ( Int, Int )   callee: author/project:Poly3a.dup@162:9   use: gen   instance: t2 := Int   sig#: c4c6e73f   subst: v0 := Int
+          170:32-170:33 Int :: Int
+    170:39-170:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      170:39-170:53 Call :: String
+        170:39-170:44 VarLocal :: ( String, String ) -> String   callee: author/project:Poly3a.first@165:9   use: gen   instance: t := String, t1 := String   sig#: ee0f5e96   subst: v0 := String, v1 := String
+        170:46-170:53 Call :: ( String, String )
+          170:46-170:49 VarLocal :: String -> ( String, String )   callee: author/project:Poly3a.dup@162:9   use: gen   instance: t2 := String   sig#: c4c6e73f   subst: v0 := String
+          170:50-170:53 Str :: String
+      170:58-170:90 Call :: String
+        170:58-170:74 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+        170:76-170:90 Call :: Float
+          170:76-170:81 VarLocal :: ( Float, Float ) -> Float   callee: author/project:Poly3a.first@165:9   use: gen   instance: t := Float, t1 := Float   sig#: ee0f5e96   subst: v0 := Float, v1 := Float
+          170:83-170:90 Call :: ( Float, Float )
+            170:83-170:86 VarLocal :: Float -> ( Float, Float )   callee: author/project:Poly3a.dup@162:9   use: gen   instance: t2 := Float   sig#: c4c6e73f   subst: v0 := Float
+            170:87-170:90 Float :: Float
+def pairUp :: a -> b -> ( a, b )    [70:1-70:7]   id: author/project:Poly3a.pairUp   sig: v0 -> v1 -> ( v0, v1 )   kinds: v0:any,v1:any   group: author/project:Poly3a.pairUp nonrec ann
+  70:8-70:9 PVar a :: a
+  70:10-70:11 PVar b :: b
+  71:5-71:13 Pair :: ( a, b )
+    71:7-71:8 VarLocal :: a
+    71:10-71:11 VarLocal :: b
+def boxedPair :: String    [174:1-174:10]   id: author/project:Poly3a.boxedPair   sig: String   kinds:    group: author/project:Poly3a.boxedPair nonrec ann
+  def p :: ( ( number, number1 ), { x : Float, y : Float } )    [176:9-176:10]   id: author/project:Poly3a.p@176:9   sig: ( ( v0, v1 ), { x : Float, y : Float } )   kinds: v0:number,v1:number   group: author/project:Poly3a.p@176:9 nonrec inferred
+    177:13-177:50 Call :: ( ( number, number1 ), { x : Float, y : Float } )
+      177:13-177:19 VarTopLevel :: ( number, number1 ) -> { x : Float, y : Float } -> ( ( number, number1 ), { x : Float, y : Float } )   callee: author/project:Poly3a.pairUp   use: gen   instance: a := ( number, number1 ), b := { x : Float, y : Float }   sig#: 354b9a33   subst: v0 := ( <<author/project:Poly3a.p@176:9|v0>>, <<author/project:Poly3a.p@176:9|v1>> ), v1 := { x : Float, y : Float }
+      177:20-177:28 Pair :: ( number, number1 )
+        177:22-177:23 Int :: number
+        177:25-177:26 Int :: number1
+      177:29-177:50 Record :: { x : Float, y : Float }
+        177:35-177:38 Float :: Float
+        177:44-177:48 Float :: Float
+  179:5-181:74 Case :: String
+    179:10-179:11 VarLocal :: ( ( Int, Int ), { x : Float, y : Float } )   callee: author/project:Poly3a.p@176:9   use: gen   instance: number := Int, number1 := Int   sig#: a1cef3fd   subst: v0 := Int, v1 := Int
+    180:9-180:24 PPair :: ( ( Int, Int ), { x : Float, y : Float } )
+      180:11-180:19 PPair :: ( Int, Int )
+        180:13-180:14 PVar a :: Int
+        180:16-180:17 PVar b :: Int
+      180:21-180:22 PVar r :: { x : Float, y : Float }
+    181:13-181:74 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      181:13-181:34 Call :: String
+        181:13-181:27 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+        181:29-181:34 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          181:29-181:30 VarLocal :: Int
+          181:33-181:34 VarLocal :: Int
+      181:39-181:73 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        181:39-181:42 Str :: String
+        181:46-181:73 Call :: String
+          181:46-181:62 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+          181:64-181:73 Binop :: Float   callee: elm/core:Basics.add   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+            181:64-181:67 Access :: Float
+              181:64-181:65 VarLocal :: { x : Float, y : Float }
+            181:70-181:73 Access :: Float
+              181:70-181:71 VarLocal :: { x : Float, y : Float }
+def unbox :: Box a -> a    [18:1-18:6]   id: author/project:Poly3a.unbox   sig: Box v0 -> v0   kinds: v0:any   group: author/project:Poly3a.unbox nonrec ann
+  18:8-18:13 PCtor Box :: Box a
+    18:12-18:13 PVar v :: a
+  19:5-19:6 VarLocal :: a
+def tally :: Int    [137:1-137:6]   id: author/project:Poly3a.tally   sig: Int   kinds:    group: author/project:Poly3a.tally nonrec ann
+  def pong :: List t -> number    [147:9-147:13]   id: author/project:Poly3a.pong@147:9   sig: List v0 -> v1   kinds: v0:any,v1:number   group: author/project:Poly3a.ping@139:9 rec inferred
+    147:14-147:16 PVar xs :: List t
+    148:13-153:31 Case :: number
+      148:18-148:20 VarLocal :: List t
+      149:17-149:19 PList :: List t
+      150:21-150:22 Int :: number
+      152:17-152:23 PCons :: List t
+        152:17-152:18 PAnything :: t
+        152:22-152:23 PVar r :: List t
+      153:21-153:31 Binop :: number   callee: elm/core:Basics.add   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Poly3a.pong@147:9|v1>>
+        153:21-153:22 Int :: number
+        153:25-153:31 Call :: number
+          153:25-153:29 VarLocal :: List t -> number   callee: author/project:Poly3a.ping@139:9   use: rec   sig#: 78b59c51   subst: v0 := <<author/project:Poly3a.pong@147:9|v0>>, v1 := <<author/project:Poly3a.pong@147:9|v1>>
+          153:30-153:31 VarLocal :: List t
+  def ping :: List t -> number    [139:9-139:13]   id: author/project:Poly3a.ping@139:9   sig: List v0 -> v1   kinds: v0:any,v1:number   group: author/project:Poly3a.ping@139:9 rec inferred
+    139:14-139:16 PVar xs :: List t
+    140:13-145:31 Case :: number
+      140:18-140:20 VarLocal :: List t
+      141:17-141:19 PList :: List t
+      142:21-142:22 Int :: number
+      144:17-144:23 PCons :: List t
+        144:17-144:18 PAnything :: t
+        144:22-144:23 PVar r :: List t
+      145:21-145:31 Binop :: number   callee: elm/core:Basics.add   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Poly3a.ping@139:9|v1>>
+        145:21-145:22 Int :: number
+        145:25-145:31 Call :: number
+          145:25-145:29 VarLocal :: List t -> number   callee: author/project:Poly3a.pong@147:9   use: rec   sig#: 78b59c51   subst: v0 := <<author/project:Poly3a.ping@139:9|v0>>, v1 := <<author/project:Poly3a.ping@139:9|v1>>
+          145:30-145:31 VarLocal :: List t
+  155:5-155:32 Call :: Int
+    155:5-155:9 VarLocal :: List Int -> Int   <= List number1 -> Int   callee: author/project:Poly3a.ping@139:9   use: gen   instance: number := Int, t := Int (defaulted)   sig#: 78b59c51   subst: v0 := Int, v1 := Int
+    155:10-155:32 List :: List Int   <= List number1
+      155:12-155:14 Int :: Int   <= number1
+      155:16-155:18 Int :: Int   <= number1
+      155:20-155:22 Int :: Int   <= number1
+      155:24-155:26 Int :: Int   <= number1
+      155:28-155:30 Int :: Int   <= number1
+def empty :: List a    [81:1-81:6]   id: author/project:Poly3a.empty   sig: List v0   kinds: v0:any   group: author/project:Poly3a.empty nonrec ann
+  82:5-82:7 List :: List a
+def emptyInt :: List Int    [96:1-96:9]   id: author/project:Poly3a.emptyInt   sig: List Int   kinds:    group: author/project:Poly3a.emptyInt nonrec ann
+  97:5-97:10 VarTopLevel :: List Int   callee: author/project:Poly3a.empty   use: gen   instance: a := Int   sig#: db5c9979   subst: v0 := Int
+def emptyString :: List String    [101:1-101:12]   id: author/project:Poly3a.emptyString   sig: List String   kinds:    group: author/project:Poly3a.emptyString nonrec ann
+  102:5-102:10 VarTopLevel :: List String   callee: author/project:Poly3a.empty   use: gen   instance: a := String   sig#: db5c9979   subst: v0 := String
+def count :: List a -> Int    [24:1-24:6]   id: author/project:Poly3a.count   sig: List v0 -> Int   kinds: v0:any   group: author/project:Poly3a.count rec ann
+  24:7-24:9 PVar xs :: List a
+  25:5-30:27 Case :: Int
+    25:10-25:12 VarLocal :: List a
+    26:9-26:11 PList :: List a
+    27:13-27:14 Int :: Int
+    29:9-29:18 PCons :: List a
+      29:9-29:10 PAnything :: a
+      29:14-29:18 PVar rest :: List a
+    30:13-30:27 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      30:13-30:14 Int :: Int
+      30:17-30:27 Call :: Int
+        30:17-30:22 VarTopLevel :: List a -> Int   callee: author/project:Poly3a.count   use: rec   sig#: 8f686fa0   subst: v0 := <<author/project:Poly3a.count|v0>>
+        30:23-30:27 VarLocal :: List a
+def wrap :: a -> Box a    [13:1-13:5]   id: author/project:Poly3a.wrap   sig: v0 -> Box v0   kinds: v0:any   group: author/project:Poly3a.wrap nonrec ann
+  13:6-13:7 PVar x :: a
+  14:5-14:10 Call :: Box a
+    14:5-14:8 VarCtor :: a -> Box a   callee: author/project:Poly3a.Box   instance: a := a   sig#: a970e1bf   subst: v0 := <<author/project:Poly3a.wrap|v0>>
+    14:9-14:10 VarLocal :: a
+def boxes :: String    [186:1-186:6]   id: author/project:Poly3a.boxes   sig: String   kinds:    group: author/project:Poly3a.boxes nonrec ann
+  188:9-188:17 PPair :: ( Int, Int )   <= ( number, number1 )
+    188:11-188:12 PVar n :: Int   <= number
+    188:14-188:15 PVar m :: Int   <= number1
+  189:13-189:33 Call :: ( Int, Int )   <= ( number, number1 )
+    189:13-189:18 VarTopLevel :: Box ( Int, Int ) -> ( Int, Int )   <= Box ( number, number1 ) -> ( number, number1 )   callee: author/project:Poly3a.unbox   use: gen   instance: a := ( Int, Int ) (defaulted)   sig#: 7dafc1a8   subst: v0 := ( Int, Int )
+    189:20-189:33 Call :: Box ( Int, Int )   <= Box ( number, number1 )
+      189:20-189:24 VarTopLevel :: ( Int, Int ) -> Box ( Int, Int )   <= ( number, number1 ) -> Box ( number, number1 )   callee: author/project:Poly3a.wrap   use: gen   instance: a1 := ( Int, Int ) (defaulted)   sig#: a970e1bf   subst: v0 := ( Int, Int )
+      189:25-189:33 Pair :: ( Int, Int )   <= ( number, number1 )
+        189:27-189:28 Int :: Int   <= number
+        189:30-189:31 Int :: Int   <= number1
+  def r :: { name : String, size : Float }    [191:9-191:10]   id: author/project:Poly3a.r@191:9   sig: { name : String, size : Float }   kinds:    group: author/project:Poly3a.r@191:9 nonrec inferred
+    192:13-192:53 Call :: { name : String, size : Float }
+      192:13-192:18 VarTopLevel :: Box { name : String, size : Float } -> { name : String, size : Float }   callee: author/project:Poly3a.unbox   use: gen   instance: a := { name : String, size : Float }   sig#: 7dafc1a8   subst: v0 := { name : String, size : Float }
+      192:20-192:53 Call :: Box { name : String, size : Float }
+        192:20-192:24 VarTopLevel :: { name : String, size : Float } -> Box { name : String, size : Float }   callee: author/project:Poly3a.wrap   use: gen   instance: a1 := { name : String, size : Float }   sig#: a970e1bf   subst: v0 := { name : String, size : Float }
+        192:25-192:53 Record :: { name : String, size : Float }
+          192:34-192:39 Str :: String
+          192:48-192:51 Float :: Float
+  194:5-194:78 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    194:5-194:26 Call :: String
+      194:5-194:19 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+      194:21-194:26 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        194:21-194:22 VarLocal :: Int   instance: number := Int   sig#: 005979ab   subst: v0 := Int
+        194:25-194:26 VarLocal :: Int   instance: number1 := Int   sig#: 005979ab   subst: v0 := Int
+    194:31-194:78 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      194:31-194:34 Str :: String
+      194:38-194:78 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        194:38-194:44 Access :: String
+          194:38-194:39 VarLocal :: { name : String, size : Float }   callee: author/project:Poly3a.r@191:9   use: gen
+        194:48-194:78 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+          194:48-194:51 Str :: String
+          194:55-194:78 Call :: String
+            194:55-194:71 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+            194:72-194:78 Access :: Float
+              194:72-194:73 VarLocal :: { name : String, size : Float }   callee: author/project:Poly3a.r@191:9   use: gen
+def chase :: List a -> a1 -> b    [55:1-55:6]   id: author/project:Poly3a.chase   sig: List v0 -> v1 -> v2   kinds: v0:any,v1:any,v2:any   group: author/project:Poly3a.chase rec inferred
+  55:7-55:9 PVar xs :: List a
+  55:10-55:11 PVar y :: a1
+  56:5-61:25 Case :: b
+    56:10-56:12 VarLocal :: List a
+    57:9-57:11 PList :: List a
+    58:13-58:19 Call :: b
+      58:13-58:17 VarTopLevel :: a1 -> b   callee: author/project:Poly3a.stop   use: rec   sig#: 1f734da6   subst: v0 := <<author/project:Poly3a.chase|v1>>, v1 := <<author/project:Poly3a.chase|v2>>
+      58:18-58:19 VarLocal :: a1
+    60:9-60:18 PCons :: List a
+      60:9-60:10 PAnything :: a
+      60:14-60:18 PVar rest :: List a
+    61:13-61:25 Call :: b
+      61:13-61:18 VarTopLevel :: List a -> a1 -> b   callee: author/project:Poly3a.chase   use: rec   sig#: 481958f1   subst: v0 := <<author/project:Poly3a.chase|v0>>, v1 := <<author/project:Poly3a.chase|v1>>, v2 := <<author/project:Poly3a.chase|v2>>
+      61:19-61:23 VarLocal :: List a
+      61:24-61:25 VarLocal :: a1
+def stop :: a -> b    [64:1-64:5]   id: author/project:Poly3a.stop   sig: v0 -> v1   kinds: v0:any,v1:any   group: author/project:Poly3a.chase rec inferred
+  64:6-64:7 PVar z :: a
+  65:5-65:15 Call :: b
+    65:5-65:10 VarTopLevel :: List ref -> a -> b   <= List a1 -> a -> b   callee: author/project:Poly3a.chase   use: rec   sig#: 481958f1   subst: v0 := ref, v1 := <<author/project:Poly3a.stop|v0>>, v2 := <<author/project:Poly3a.stop|v1>>
+    65:11-65:13 List :: List ref   <= List a1
+    65:14-65:15 VarLocal :: a
+def guarded :: String    [118:1-118:8]   id: author/project:Poly3a.guarded   sig: String   kinds:    group: author/project:Poly3a.guarded nonrec ann
+  119:5-123:18 If :: String
+    119:8-119:20 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      119:8-119:16 Call :: Int
+        119:8-119:13 VarTopLevel :: List ref -> Int   <= List a -> Int   callee: author/project:Poly3a.count   use: gen   instance: a1 := ref (defaulted)   sig#: 8f686fa0   subst: v0 := ref
+        119:14-119:16 List :: List ref   <= List a
+      119:19-119:20 Int :: Int
+    120:9-120:32 Call :: String
+      120:9-120:14 VarTopLevel :: List Int -> String -> String   <= List number -> String -> String   callee: author/project:Poly3a.chase   use: gen   instance: a2 := Int (defaulted), a3 := String, b := String   sig#: 481958f1   subst: v0 := Int, v1 := String, v2 := String
+      120:15-120:26 List :: List Int   <= List number
+        120:17-120:18 Int :: Int   <= number
+        120:20-120:21 Int :: Int   <= number
+        120:23-120:24 Int :: Int   <= number
+      120:27-120:32 Str :: String
+    123:9-123:18 Str :: String
+def guardedString :: String    [127:1-127:14]   id: author/project:Poly3a.guardedString   sig: String   kinds:    group: author/project:Poly3a.guardedString nonrec ann
+  128:5-132:15 If :: String
+    128:8-128:17 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      128:8-128:13 VarTopLevel :: Int   callee: author/project:Poly3a.tally   use: gen
+      128:16-128:17 Int :: Int
+    129:9-129:17 Call :: String
+      129:9-129:13 VarTopLevel :: String -> String   callee: author/project:Poly3a.stop   use: gen   instance: a := String, b := String   sig#: 1f734da6   subst: v0 := String, v1 := String
+      129:14-129:17 Str :: String
+    132:9-132:15 Str :: String
+def evens :: List a -> List a    [35:1-35:6]   id: author/project:Poly3a.evens   sig: List v0 -> List v0   kinds: v0:any   group: author/project:Poly3a.evens rec inferred
+  35:7-35:9 PVar xs :: List a
+  36:5-41:27 Case :: List a
+    36:10-36:12 VarLocal :: List a
+    37:9-37:11 PList :: List a
+    38:13-38:15 List :: List a
+    40:9-40:18 PCons :: List a
+      40:9-40:10 PVar x :: a
+      40:14-40:18 PVar rest :: List a
+    41:13-41:27 Binop :: List a   callee: elm/core:List.cons   instance: a := a   sig#: ddd4c5f2   subst: v0 := <<author/project:Poly3a.evens|v0>>
+      41:13-41:14 VarLocal :: a
+      41:18-41:27 Call :: List a
+        41:18-41:22 VarTopLevel :: List a -> List a   callee: author/project:Poly3a.odds   use: rec   sig#: c2fcf511   subst: v0 := <<author/project:Poly3a.evens|v0>>
+        41:23-41:27 VarLocal :: List a
+def odds :: List a -> List a    [44:1-44:5]   id: author/project:Poly3a.odds   sig: List v0 -> List v0   kinds: v0:any   group: author/project:Poly3a.evens rec inferred
+  44:6-44:8 PVar xs :: List a
+  45:5-50:23 Case :: List a
+    45:10-45:12 VarLocal :: List a
+    46:9-46:11 PList :: List a
+    47:13-47:15 List :: List a
+    49:9-49:18 PCons :: List a
+      49:9-49:10 PAnything :: a
+      49:14-49:18 PVar rest :: List a
+    50:13-50:23 Call :: List a
+      50:13-50:18 VarTopLevel :: List a -> List a   callee: author/project:Poly3a.evens   use: rec   sig#: c2fcf511   subst: v0 := <<author/project:Poly3a.odds|v0>>
+      50:19-50:23 VarLocal :: List a
+def none :: Maybe a    [76:1-76:5]   id: author/project:Poly3a.none   sig: Maybe v0   kinds: v0:any   group: author/project:Poly3a.none nonrec ann
+  77:5-77:12 VarCtor :: Maybe a   callee: elm/core:Maybe.Nothing   instance: a := a   sig#: d83d645a   subst: v0 := <<author/project:Poly3a.none|v0>>
+def noneInt :: Maybe Int    [86:1-86:8]   id: author/project:Poly3a.noneInt   sig: Maybe Int   kinds:    group: author/project:Poly3a.noneInt nonrec ann
+  87:5-87:9 VarTopLevel :: Maybe Int   callee: author/project:Poly3a.none   use: gen   instance: a := Int   sig#: d83d645a   subst: v0 := Int
+def noneString :: Maybe String    [91:1-91:11]   id: author/project:Poly3a.noneString   sig: Maybe String   kinds:    group: author/project:Poly3a.noneString nonrec ann
+  92:5-92:9 VarTopLevel :: Maybe String   callee: author/project:Poly3a.none   use: gen   instance: a := String   sig#: d83d645a   subst: v0 := String
+def main :: Program () () ()    [198:1-198:5]   id: author/project:Poly3a.main   sig: Program () () ()   kinds:    group: author/project:Poly3a.main nonrec ann
+  199:5-263:10 Call :: Program () () ()
+    199:5-199:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    200:9-263:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      201:13-260:33 Lambda :: () -> ( (), Cmd () )
+        201:14-201:15 PAnything :: ()
+        203:21-203:22 PAnything :: Int   <= number
+        204:25-204:67 Call :: Int   <= number
+          204:25-204:34 VarDebug :: String -> Int -> Int   <= String -> number -> number   callee: elm/core:Debug.log   instance: a := Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := Int
+          204:35-204:46 Str :: String
+          204:48-204:67 Binop :: Int   <= number   callee: elm/core:Basics.add   instance: number := Int (defaulted)   sig#: 08810ccc   subst: v0 := Int
+            204:48-204:62 Call :: Int   <= number
+              204:48-204:53 VarTopLevel :: Box Int -> Int   <= Box number -> number   callee: author/project:Poly3a.unbox   use: gen   instance: a := Int (defaulted)   sig#: 7dafc1a8   subst: v0 := Int
+              204:55-204:62 Call :: Box Int   <= Box number
+                204:55-204:59 VarTopLevel :: Int -> Box Int   <= number -> Box number   callee: author/project:Poly3a.wrap   use: gen   instance: a1 := Int (defaulted)   sig#: a970e1bf   subst: v0 := Int
+                204:60-204:62 Int :: Int   <= number
+            204:66-204:67 Int :: Int   <= number
+        206:21-206:22 PAnything :: Float
+        207:25-207:70 Call :: Float
+          207:25-207:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          207:35-207:48 Str :: String
+          207:50-207:70 Binop :: Float   callee: elm/core:Basics.mul   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+            207:50-207:65 Call :: Float
+              207:50-207:55 VarTopLevel :: Box Float -> Float   callee: author/project:Poly3a.unbox   use: gen   instance: a := Float   sig#: 7dafc1a8   subst: v0 := Float
+              207:57-207:65 Call :: Box Float
+                207:57-207:61 VarTopLevel :: Float -> Box Float   callee: author/project:Poly3a.wrap   use: gen   instance: a1 := Float   sig#: a970e1bf   subst: v0 := Float
+                207:62-207:65 Float :: Float
+            207:69-207:70 Int :: Float
+        209:21-209:22 PAnything :: String
+        210:25-210:78 Call :: String
+          210:25-210:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          210:35-210:49 Str :: String
+          210:51-210:78 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            210:51-210:70 Call :: String
+              210:51-210:56 VarTopLevel :: Box String -> String   callee: author/project:Poly3a.unbox   use: gen   instance: a := String   sig#: 7dafc1a8   subst: v0 := String
+              210:58-210:70 Call :: Box String
+                210:58-210:62 VarTopLevel :: String -> Box String   callee: author/project:Poly3a.wrap   use: gen   instance: a1 := String   sig#: a970e1bf   subst: v0 := String
+                210:63-210:70 Str :: String
+            210:75-210:78 Str :: String
+        212:21-212:22 PAnything :: Int
+        213:25-213:65 Call :: Int
+          213:25-213:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          213:35-213:46 Str :: String
+          213:48-213:65 Call :: Int
+            213:48-213:53 VarTopLevel :: List Int -> Int   <= List number1 -> Int   callee: author/project:Poly3a.count   use: gen   instance: a2 := Int (defaulted)   sig#: 8f686fa0   subst: v0 := Int
+            213:54-213:65 List :: List Int   <= List number1
+              213:56-213:57 Int :: Int   <= number1
+              213:59-213:60 Int :: Int   <= number1
+              213:62-213:63 Int :: Int   <= number1
+        215:21-215:22 PAnything :: Int
+        216:25-216:69 Call :: Int
+          216:25-216:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          216:35-216:49 Str :: String
+          216:51-216:69 Call :: Int
+            216:51-216:56 VarTopLevel :: List String -> Int   callee: author/project:Poly3a.count   use: gen   instance: a2 := String   sig#: 8f686fa0   subst: v0 := String
+            216:57-216:69 List :: List String
+              216:59-216:62 Str :: String
+              216:64-216:67 Str :: String
+        218:21-218:22 PAnything :: Int
+        219:25-219:63 Call :: Int
+          219:25-219:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          219:35-219:48 Str :: String
+          219:50-219:63 Call :: Int
+            219:50-219:55 VarTopLevel :: List Float -> Int   callee: author/project:Poly3a.count   use: gen   instance: a2 := Float   sig#: 8f686fa0   subst: v0 := Float
+            219:56-219:63 List :: List Float
+              219:58-219:61 Float :: Float
+        221:21-221:22 PAnything :: Int
+        222:25-222:77 Call :: Int
+          222:25-222:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          222:35-222:47 Str :: String
+          222:49-222:77 Call :: Int
+            222:49-222:54 VarTopLevel :: List ( Int, Int ) -> Int   <= List ( number2, number3 ) -> Int   callee: author/project:Poly3a.count   use: gen   instance: a2 := ( Int, Int ) (defaulted)   sig#: 8f686fa0   subst: v0 := ( Int, Int )
+            222:55-222:77 List :: List ( Int, Int )   <= List ( number2, number3 )
+              222:57-222:65 Pair :: ( Int, Int )   <= ( number2, number3 )
+                222:59-222:60 Int :: Int   <= number2
+                222:62-222:63 Int :: Int   <= number3
+              222:67-222:75 Pair :: ( Int, Int )   <= ( number2, number3 )
+                222:69-222:70 Int :: Int   <= number2
+                222:72-222:73 Int :: Int   <= number3
+        224:21-224:22 PAnything :: Int
+        225:25-225:74 Call :: Int
+          225:25-225:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          225:35-225:42 Str :: String
+          225:44-225:74 Call :: Int
+            225:44-225:49 VarTopLevel :: List Int -> Int   <= List number4 -> Int   callee: author/project:Poly3a.count   use: gen   instance: a2 := Int (defaulted)   sig#: 8f686fa0   subst: v0 := Int
+            225:51-225:74 Call :: List Int   <= List number4
+              225:51-225:56 VarTopLevel :: List Int -> List Int   <= List number4 -> List number4   callee: author/project:Poly3a.evens   use: gen   instance: a3 := Int (defaulted)   sig#: c2fcf511   subst: v0 := Int
+              225:57-225:74 List :: List Int   <= List number4
+                225:59-225:60 Int :: Int   <= number4
+                225:62-225:63 Int :: Int   <= number4
+                225:65-225:66 Int :: Int   <= number4
+                225:68-225:69 Int :: Int   <= number4
+                225:71-225:72 Int :: Int   <= number4
+        227:21-227:22 PAnything :: Int
+        228:25-228:69 Call :: Int
+          228:25-228:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          228:35-228:41 Str :: String
+          228:43-228:69 Call :: Int
+            228:43-228:48 VarTopLevel :: List Int -> Int   <= List number5 -> Int   callee: author/project:Poly3a.count   use: gen   instance: a2 := Int (defaulted)   sig#: 8f686fa0   subst: v0 := Int
+            228:50-228:69 Call :: List Int   <= List number5
+              228:50-228:54 VarTopLevel :: List Int -> List Int   <= List number5 -> List number5   callee: author/project:Poly3a.odds   use: gen   instance: a3 := Int (defaulted)   sig#: c2fcf511   subst: v0 := Int
+              228:55-228:69 List :: List Int   <= List number5
+                228:57-228:58 Int :: Int   <= number5
+                228:60-228:61 Int :: Int   <= number5
+                228:63-228:64 Int :: Int   <= number5
+                228:66-228:67 Int :: Int   <= number5
+        230:21-230:22 PAnything :: String
+        231:25-231:50 Call :: String
+          231:25-231:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          231:35-231:42 Str :: String
+          231:43-231:50 VarTopLevel :: String   callee: author/project:Poly3a.guarded   use: gen
+        233:21-233:22 PAnything :: String
+        234:25-234:55 Call :: String
+          234:25-234:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          234:35-234:41 Str :: String
+          234:42-234:55 VarTopLevel :: String   callee: author/project:Poly3a.guardedString   use: gen
+        236:21-236:22 PAnything :: Int
+        237:25-237:85 Call :: Int
+          237:25-237:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          237:35-237:45 Str :: String
+          237:47-237:85 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            237:47-237:64 Call :: Int
+              237:47-237:56 VarTopLevel :: Maybe Int -> Int   callee: author/project:Poly3a.isNothing   use: gen   instance: a4 := Int   sig#: 4d39e078   subst: v0 := Int
+              237:57-237:64 VarTopLevel :: Maybe Int   callee: author/project:Poly3a.noneInt   use: gen
+            237:67-237:84 Call :: Int
+              237:67-237:76 VarTopLevel :: Maybe Int -> Int   <= Maybe number6 -> Int   callee: author/project:Poly3a.isNothing   use: gen   instance: a4 := Int (defaulted)   sig#: 4d39e078   subst: v0 := Int
+              237:78-237:84 Call :: Maybe Int   <= Maybe number6
+                237:78-237:82 VarCtor :: Int -> Maybe Int   <= number6 -> Maybe number6   callee: elm/core:Maybe.Just   instance: a := Int (defaulted)   sig#: c14b2381   subst: v0 := Int
+                237:83-237:84 Int :: Int   <= number6
+        239:21-239:22 PAnything :: Int
+        240:25-240:70 Call :: Int
+          240:25-240:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          240:35-240:48 Str :: String
+          240:50-240:70 Call :: Int
+            240:50-240:59 VarTopLevel :: Maybe String -> Int   callee: author/project:Poly3a.isNothing   use: gen   instance: a4 := String   sig#: 4d39e078   subst: v0 := String
+            240:60-240:70 VarTopLevel :: Maybe String   callee: author/project:Poly3a.noneString   use: gen
+        242:21-242:22 PAnything :: Int
+        243:25-243:68 Call :: Int
+          243:25-243:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          243:35-243:46 Str :: String
+          243:48-243:68 Call :: Int
+            243:48-243:53 VarTopLevel :: List Int -> Int   callee: author/project:Poly3a.count   use: gen   instance: a2 := Int   sig#: 8f686fa0   subst: v0 := Int
+            243:55-243:68 Binop :: List Int   callee: elm/core:List.cons   instance: a := Int   sig#: ddd4c5f2   subst: v0 := Int
+              243:55-243:56 Int :: Int
+              243:60-243:68 VarTopLevel :: List Int   callee: author/project:Poly3a.emptyInt   use: gen
+        245:21-245:22 PAnything :: Int
+        246:25-246:83 Call :: Int
+          246:25-246:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          246:35-246:49 Str :: String
+          246:51-246:83 Call :: Int
+            246:51-246:56 VarTopLevel :: List String -> Int   callee: author/project:Poly3a.count   use: gen   instance: a2 := String   sig#: 8f686fa0   subst: v0 := String
+            246:58-246:83 Binop :: List String   callee: elm/core:List.cons   instance: a := String   sig#: ddd4c5f2   subst: v0 := String
+              246:58-246:61 Str :: String
+              246:65-246:83 Binop :: List String   callee: elm/core:List.cons   instance: a := String   sig#: ddd4c5f2   subst: v0 := String
+                246:65-246:68 Str :: String
+                246:72-246:83 VarTopLevel :: List String   callee: author/project:Poly3a.emptyString   use: gen
+        248:21-248:22 PAnything :: Int
+        249:25-249:48 Call :: Int
+          249:25-249:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          249:35-249:42 Str :: String
+          249:43-249:48 VarTopLevel :: Int   callee: author/project:Poly3a.tally   use: gen
+        251:21-251:22 PAnything :: String
+        252:25-252:51 Call :: String
+          252:25-252:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          252:35-252:42 Str :: String
+          252:43-252:51 VarTopLevel :: String   callee: author/project:Poly3a.localTwo   use: gen
+        254:21-254:22 PAnything :: String
+        255:25-255:51 Call :: String
+          255:25-255:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          255:35-255:41 Str :: String
+          255:42-255:51 VarTopLevel :: String   callee: author/project:Poly3a.boxedPair   use: gen
+        257:21-257:22 PAnything :: String
+        258:25-258:48 Call :: String
+          258:25-258:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          258:35-258:42 Str :: String
+          258:43-258:48 VarTopLevel :: String   callee: author/project:Poly3a.boxes   use: gen
+        260:17-260:33 Pair :: ( (), Cmd () )
+          260:19-260:21 Unit :: ()
+          260:23-260:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      261:20-261:44 Lambda :: () -> () -> ( (), Cmd () )
+        261:21-261:22 PAnything :: ()
+        261:23-261:24 PAnything :: ()
+        261:28-261:44 Pair :: ( (), Cmd () )
+          261:30-261:32 Unit :: ()
+          261:34-261:42 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      262:27-262:41 Lambda :: () -> Sub ()
+        262:28-262:29 PAnything :: ()
+        262:33-262:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Poly3a.isNothing   kind: function   reads:    needs: 
+init: 1   id: author/project:Poly3a.localTwo   kind: value   reads:    needs:    init-dep: no
+init: 2   id: author/project:Poly3a.pairUp   kind: function   reads:    needs: 
+init: 3   id: author/project:Poly3a.boxedPair   kind: value   reads: author/project:Poly3a.pairUp   needs:    init-dep: no
+init: 4   id: author/project:Poly3a.unbox   kind: function   reads:    needs: 
+init: 5   id: author/project:Poly3a.tally   kind: value   reads:    needs:    init-dep: no
+init: 6   id: author/project:Poly3a.empty   kind: value   reads:    needs:    init-dep: no
+init: 7   id: author/project:Poly3a.emptyInt   kind: value   reads: author/project:Poly3a.empty   needs: author/project:Poly3a.empty   init-dep: yes
+init: 8   id: author/project:Poly3a.emptyString   kind: value   reads: author/project:Poly3a.empty   needs: author/project:Poly3a.empty   init-dep: yes
+init: 9   id: author/project:Poly3a.count   kind: function   reads:    needs:    group: author/project:Poly3a.count
+init: 10   id: author/project:Poly3a.wrap   kind: function   reads:    needs: 
+init: 11   id: author/project:Poly3a.boxes   kind: value   reads: author/project:Poly3a.unbox,author/project:Poly3a.wrap   needs:    init-dep: no
+init: 12   id: author/project:Poly3a.chase   kind: function   reads: author/project:Poly3a.stop   needs:    group: author/project:Poly3a.chase
+init: 13   id: author/project:Poly3a.stop   kind: function   reads: author/project:Poly3a.chase   needs:    group: author/project:Poly3a.chase
+init: 14   id: author/project:Poly3a.guarded   kind: value   reads: author/project:Poly3a.count,author/project:Poly3a.chase   needs:    init-dep: no
+init: 15   id: author/project:Poly3a.guardedString   kind: value   reads: author/project:Poly3a.tally,author/project:Poly3a.stop   needs: author/project:Poly3a.tally   init-dep: yes
+init: 16   id: author/project:Poly3a.evens   kind: function   reads: author/project:Poly3a.odds   needs:    group: author/project:Poly3a.evens
+init: 17   id: author/project:Poly3a.odds   kind: function   reads: author/project:Poly3a.evens   needs:    group: author/project:Poly3a.evens
+init: 18   id: author/project:Poly3a.none   kind: value   reads:    needs:    init-dep: no
+init: 19   id: author/project:Poly3a.noneInt   kind: value   reads: author/project:Poly3a.none   needs: author/project:Poly3a.none   init-dep: yes
+init: 20   id: author/project:Poly3a.noneString   kind: value   reads: author/project:Poly3a.none   needs: author/project:Poly3a.none   init-dep: yes
+init: 21   id: author/project:Poly3a.main   kind: value   reads: author/project:Poly3a.isNothing,author/project:Poly3a.localTwo,author/project:Poly3a.boxedPair,author/project:Poly3a.unbox,author/project:Poly3a.tally,author/project:Poly3a.emptyInt,author/project:Poly3a.emptyString,author/project:Poly3a.count,author/project:Poly3a.wrap,author/project:Poly3a.boxes,author/project:Poly3a.guarded,author/project:Poly3a.guardedString,author/project:Poly3a.evens,author/project:Poly3a.odds,author/project:Poly3a.noneInt,author/project:Poly3a.noneString   needs: author/project:Poly3a.localTwo,author/project:Poly3a.boxedPair,author/project:Poly3a.tally,author/project:Poly3a.empty,author/project:Poly3a.emptyInt,author/project:Poly3a.emptyString,author/project:Poly3a.boxes,author/project:Poly3a.guarded,author/project:Poly3a.guardedString,author/project:Poly3a.none,author/project:Poly3a.noneInt,author/project:Poly3a.noneString   init-dep: yes

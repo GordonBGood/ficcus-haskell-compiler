@@ -1,0 +1,5 @@
+evens int: 3
+odds string: 2
+evens float: 1
+chase: "end"
+stop: 9

@@ -1,0 +1,532 @@
+-- mono: stage (iii) slice 2, modules=21
+-- module author/project:Poly3a (project)
+mark author/project:Poly3a.p@176:9   v0=number v1=number
+mark author/project:Poly3a.pong@147:9   v0=any v1=number
+mark author/project:Poly3a.ping@139:9   v0=any v1=number
+clone c0   def: author/project:Poly3a.localTwo   key: ()   kind: value   init: 1   needs: 
+clone c1   def: author/project:Poly3a.boxedPair   key: ()   kind: value   init: 3   needs: 
+clone c2   def: author/project:Poly3a.tally   key: ()   kind: value   init: 5   needs: 
+clone c3   def: author/project:Poly3a.emptyInt   key: ()   kind: value   init: 7   needs: 
+clone c4   def: author/project:Poly3a.emptyString   key: ()   kind: value   init: 8   needs: 
+clone c5   def: author/project:Poly3a.boxes   key: ()   kind: value   init: 11   needs: 
+clone c6   def: author/project:Poly3a.guarded   key: ()   kind: value   init: 14   needs: 
+clone c7   def: author/project:Poly3a.guardedString   key: ()   kind: value   init: 15   needs: c2
+clone c8   def: author/project:Poly3a.noneInt   key: ()   kind: value   init: 19   needs: 
+clone c9   def: author/project:Poly3a.noneString   key: ()   kind: value   init: 20   needs: 
+clone c10   def: author/project:Poly3a.main   key: ()   kind: value   init: 21   needs: c0,c1,c2,c3,c4,c5,c6,c7,c8,c9
+-- program: 42 clones, reachable from main, dependencies first
+clone c2   def: author/project:Poly3a.unbox   key: (v0=i64)   name: unbox__i64   kind: function   params: _p0:ref   result: i64
+  Case :: i64
+    Local _p0 :: ref
+    branch Box #0 v :: i64 :: ref
+      Local v :: i64
+clone c3   def: author/project:Poly3a.wrap   key: (v0=i64)   name: wrap__i64   kind: function   params: x:i64   result: ref
+  Call :: ref
+    Ctor Box tag 0 (v0=i64) :: ref
+    Local x :: i64
+clone c4   def: author/project:Poly3a.unbox   key: (v0=f64)   name: unbox__f64   kind: function   params: _p0:ref   result: f64
+  Case :: f64
+    Local _p0 :: ref
+    branch Box #0 v :: f64 :: ref
+      Local v :: f64
+clone c5   def: author/project:Poly3a.wrap   key: (v0=f64)   name: wrap__f64   kind: function   params: x:f64   result: ref
+  Call :: ref
+    Ctor Box tag 0 (v0=f64) :: ref
+    Local x :: f64
+clone c6   def: author/project:Poly3a.unbox   key: (v0=ref)   name: unbox__ref   kind: function   params: _p0:ref   result: ref
+  Case :: ref
+    Local _p0 :: ref
+    branch Box #0 v :: ref :: ref
+      Local v :: ref
+clone c7   def: author/project:Poly3a.wrap   key: (v0=ref)   name: wrap__ref   kind: function   params: x:ref   result: ref
+  Call :: ref
+    Ctor Box tag 0 (v0=ref) :: ref
+    Local x :: ref
+clone c8   def: author/project:Poly3a.count   key: (v0=i64)   name: count__i64   kind: function   params: xs:ref   result: i64
+  Case :: i64
+    Local xs :: ref
+    branch [] :: ref
+      Lit 0 :: i64
+    branch _ :: i64 :: rest :: ref :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Lit 1 :: i64
+        Call :: i64
+          Global c8 :: ref
+          Local rest :: ref
+clone c9   def: author/project:Poly3a.count   key: (v0=ref)   name: count__ref   kind: function   params: xs:ref   result: i64
+  Case :: i64
+    Local xs :: ref
+    branch [] :: ref
+      Lit 0 :: i64
+    branch _ :: ref :: rest :: ref :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Lit 1 :: i64
+        Call :: i64
+          Global c9 :: ref
+          Local rest :: ref
+clone c10   def: author/project:Poly3a.count   key: (v0=f64)   name: count__f64   kind: function   params: xs:ref   result: i64
+  Case :: i64
+    Local xs :: ref
+    branch [] :: ref
+      Lit 0 :: i64
+    branch _ :: f64 :: rest :: ref :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Lit 1 :: i64
+        Call :: i64
+          Global c10 :: ref
+          Local rest :: ref
+clone c12   def: author/project:Poly3a.odds   key: (v0=i64)   name: odds__i64   kind: function   params: xs:ref   result: ref
+  Case :: ref
+    Local xs :: ref
+    branch [] :: ref
+      List :: ref
+    branch _ :: i64 :: rest :: ref :: ref
+      Call :: ref
+        Global c11 :: ref
+        Local rest :: ref
+clone c11   def: author/project:Poly3a.evens   key: (v0=i64)   name: evens__i64   kind: function   params: xs:ref   result: ref
+  Case :: ref
+    Local xs :: ref
+    branch [] :: ref
+      List :: ref
+    branch x :: i64 :: rest :: ref :: ref
+      Call :: ref
+        Kernel elm/core:List.cons (v0=i64) :: ref
+        Local x :: i64
+        Call :: ref
+          Global c12 :: ref
+          Local rest :: ref
+clone c39   def: author/project:Poly3a.chase   key: (v0=ref; v1=ref; v2=ref)   name: chase__ref__ref__ref   kind: function   params: xs:ref y:ref   result: ref
+  Case :: ref
+    Local xs :: ref
+    branch [] :: ref
+      Call :: ref
+        Global c26 :: ref
+        Local y :: ref
+    branch _ :: ref :: rest :: ref :: ref
+      Call :: ref
+        Global c39 :: ref
+        Local rest :: ref
+        Local y :: ref
+clone c26   def: author/project:Poly3a.stop   key: (v0=ref; v1=ref)   name: stop__ref__ref   kind: function   params: z:ref   result: ref
+  Call :: ref
+    Global c39 :: ref
+    List :: ref
+    Local z :: ref
+clone c25   def: author/project:Poly3a.chase   key: (v0=i64; v1=ref; v2=ref)   name: chase__i64__ref__ref   kind: function   params: xs:ref y:ref   result: ref
+  Case :: ref
+    Local xs :: ref
+    branch [] :: ref
+      Call :: ref
+        Global c26 :: ref
+        Local y :: ref
+    branch _ :: i64 :: rest :: ref :: ref
+      Call :: ref
+        Global c25 :: ref
+        Local rest :: ref
+        Local y :: ref
+clone c13   def: author/project:Poly3a.guarded   key: ()   kind: value   params:    result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+      Call :: i64
+        Global c9 :: ref
+        List :: ref
+      Lit 0 :: i64
+    Call :: ref
+      Global c25 :: ref
+      List :: ref
+        Lit 1 :: i64
+        Lit 2 :: i64
+        Lit 3 :: i64
+      Lit "end" :: ref
+    Lit "skipped" :: ref
+clone c40   def: author/project:Poly3a.pong@147:9   key: (v0=i64; v1=type elm/core:Basics.Int)   name: pong@147:9__i64__i64   kind: function   params: xs:ref   result: i64   lifted-from: c21
+  Case :: i64
+    Local xs :: ref
+    branch [] :: ref
+      Lit 0 :: i64
+    branch _ :: i64 :: r :: ref :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Lit 2 :: i64
+        Call :: i64
+          Global c31 :: ref
+          Local r :: ref
+clone c31   def: author/project:Poly3a.ping@139:9   key: (v0=i64; v1=type elm/core:Basics.Int)   name: ping@139:9__i64__i64   kind: function   params: xs:ref   result: i64   lifted-from: c21
+  Case :: i64
+    Local xs :: ref
+    branch [] :: ref
+      Lit 0 :: i64
+    branch _ :: i64 :: r :: ref :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Lit 1 :: i64
+        Call :: i64
+          Global c40 :: ref
+          Local r :: ref
+clone c21   def: author/project:Poly3a.tally   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Global c31 :: ref
+    List :: ref
+      Lit 10 :: i64
+      Lit 20 :: i64
+      Lit 30 :: i64
+      Lit 40 :: i64
+      Lit 50 :: i64
+clone c14   def: author/project:Poly3a.guardedString   key: ()   kind: value   params:    result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+      Global c21 :: i64
+      Lit 0 :: i64
+    Call :: ref
+      Global c26 :: ref
+      Lit "x" :: ref
+    Lit "five" :: ref
+clone c15   def: author/project:Poly3a.isNothing   key: (v0=i64)   name: isNothing__i64   kind: function   params: m:ref   result: i64
+  Case :: i64
+    Local m :: ref
+    branch Nothing #1 :: ref
+      Lit 1 :: i64
+    branch Just #0 _ :: i64 :: ref
+      Lit 0 :: i64
+clone c27   def: author/project:Poly3a.none   key: (v0=i64)   name: none__i64   kind: value   params:    result: ref
+  Ctor Nothing tag 1 () :: ref
+clone c16   def: author/project:Poly3a.noneInt   key: ()   kind: value   params:    result: ref
+  Global c27 :: ref
+clone c17   def: author/project:Poly3a.isNothing   key: (v0=ref)   name: isNothing__ref   kind: function   params: m:ref   result: i64
+  Case :: i64
+    Local m :: ref
+    branch Nothing #1 :: ref
+      Lit 1 :: i64
+    branch Just #0 _ :: ref :: ref
+      Lit 0 :: i64
+clone c28   def: author/project:Poly3a.none   key: (v0=ref)   name: none__ref   kind: value   params:    result: ref
+  Ctor Nothing tag 1 () :: ref
+clone c18   def: author/project:Poly3a.noneString   key: ()   kind: value   params:    result: ref
+  Global c28 :: ref
+clone c29   def: author/project:Poly3a.empty   key: (v0=i64)   name: empty__i64   kind: value   params:    result: ref
+  List :: ref
+clone c19   def: author/project:Poly3a.emptyInt   key: ()   kind: value   params:    result: ref
+  Global c29 :: ref
+clone c30   def: author/project:Poly3a.empty   key: (v0=ref)   name: empty__ref   kind: value   params:    result: ref
+  List :: ref
+clone c20   def: author/project:Poly3a.emptyString   key: ()   kind: value   params:    result: ref
+  Global c30 :: ref
+clone c32   def: author/project:Poly3a.first@165:9   key: (v0=i64; v1=i64)   name: first@165:9__i64__i64   kind: function   params: p:struct(i64,i64)   result: i64   lifted-from: c22
+  Case :: i64
+    Local p :: struct(i64,i64)
+    branch (a :: i64, _ :: i64) :: struct(i64,i64)
+      Local a :: i64
+clone c33   def: author/project:Poly3a.dup@162:9   key: (v0=i64)   name: dup@162:9__i64   kind: function   params: x:i64   result: struct(i64,i64)   lifted-from: c22
+  Tuple :: struct(i64,i64)
+    Local x :: i64
+    Local x :: i64
+clone c34   def: author/project:Poly3a.first@165:9   key: (v0=ref; v1=ref)   name: first@165:9__ref__ref   kind: function   params: p:struct(ref,ref)   result: ref   lifted-from: c22
+  Case :: ref
+    Local p :: struct(ref,ref)
+    branch (a :: ref, _ :: ref) :: struct(ref,ref)
+      Local a :: ref
+clone c35   def: author/project:Poly3a.dup@162:9   key: (v0=ref)   name: dup@162:9__ref   kind: function   params: x:ref   result: struct(ref,ref)   lifted-from: c22
+  Tuple :: struct(ref,ref)
+    Local x :: ref
+    Local x :: ref
+clone c36   def: author/project:Poly3a.first@165:9   key: (v0=f64; v1=f64)   name: first@165:9__f64__f64   kind: function   params: p:struct(f64,f64)   result: f64   lifted-from: c22
+  Case :: f64
+    Local p :: struct(f64,f64)
+    branch (a :: f64, _ :: f64) :: struct(f64,f64)
+      Local a :: f64
+clone c37   def: author/project:Poly3a.dup@162:9   key: (v0=f64)   name: dup@162:9__f64   kind: function   params: x:f64   result: struct(f64,f64)   lifted-from: c22
+  Tuple :: struct(f64,f64)
+    Local x :: f64
+    Local x :: f64
+clone c22   def: author/project:Poly3a.localTwo   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Kernel elm/core:Basics.append (v0=app string) :: ref
+    Call :: ref
+      Kernel elm/core:String.fromInt () :: ref
+      Call :: i64
+        Global c32 :: ref
+        Call :: struct(i64,i64)
+          Global c33 :: ref
+          Lit 3 :: i64
+    Call :: ref
+      Kernel elm/core:Basics.append (v0=app string) :: ref
+      Call :: ref
+        Global c34 :: ref
+        Call :: struct(ref,ref)
+          Global c35 :: ref
+          Lit "s" :: ref
+      Call :: ref
+        Kernel elm/core:String.fromFloat () :: ref
+        Call :: f64
+          Global c36 :: ref
+          Call :: struct(f64,f64)
+            Global c37 :: ref
+            Lit 2.5 :: f64
+clone c41   def: author/project:Poly3a.pairUp   key: (v0=ref; v1=ref)   name: pairUp__ref__ref   kind: function   params: a:ref b:ref   result: struct(ref,ref)
+  Tuple :: struct(ref,ref)
+    Local a :: ref
+    Local b :: ref
+clone c38   def: author/project:Poly3a.p@176:9   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int)   name: p@176:9__i64__i64   kind: function   params:    result: struct(ref,ref)   lifted-from: c23
+  Call :: struct(ref,ref)
+    Global c41 :: ref
+    Tuple :: struct(i64,i64)
+      Lit 1 :: i64
+      Lit 2 :: i64
+    Record x y :: struct(f64,f64)
+      Lit 3.5 :: f64
+      Lit 4.25 :: f64
+clone c23   def: author/project:Poly3a.boxedPair   key: ()   kind: value   params:    result: ref
+  Case :: ref
+    Call :: struct(ref,ref)
+      Global c38 :: ref
+    branch ((a :: i64, b :: i64) :: struct(i64,i64), r :: struct(f64,f64)) :: struct(ref,ref)
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Call :: ref
+          Kernel elm/core:String.fromInt () :: ref
+          Call :: i64
+            Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+            Local a :: i64
+            Local b :: i64
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Lit " " :: ref
+          Call :: ref
+            Kernel elm/core:String.fromFloat () :: ref
+            Call :: f64
+              Kernel elm/core:Basics.add (v0=type elm/core:Basics.Float) :: ref
+              Access .x #0 :: f64
+                Local r :: struct(f64,f64)
+              Access .y #1 :: f64
+                Local r :: struct(f64,f64)
+clone c24   def: author/project:Poly3a.boxes   key: ()   kind: value   params:    result: ref
+  Case :: ref
+    Call :: struct(i64,i64)
+      Global c6 :: ref
+      Call :: ref
+        Global c7 :: ref
+        Tuple :: struct(i64,i64)
+          Lit 7 :: i64
+          Lit 8 :: i64
+    branch (n :: i64, m :: i64) :: struct(i64,i64)
+      Let r :: ref
+        Call :: struct(ref,f64)
+          Global c6 :: ref
+          Call :: ref
+            Global c7 :: ref
+            Record name size :: struct(ref,f64)
+              Lit "box" :: ref
+              Lit 2.5 :: f64
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Call :: ref
+            Kernel elm/core:String.fromInt () :: ref
+            Call :: i64
+              Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+              Local n :: i64
+              Local m :: i64
+          Call :: ref
+            Kernel elm/core:Basics.append (v0=app string) :: ref
+            Lit " " :: ref
+            Call :: ref
+              Kernel elm/core:Basics.append (v0=app string) :: ref
+              Access .name #0 :: ref
+                Local r :: struct(ref,f64)
+              Call :: ref
+                Kernel elm/core:Basics.append (v0=app string) :: ref
+                Lit " " :: ref
+                Call :: ref
+                  Kernel elm/core:String.fromFloat () :: ref
+                  Access .size #1 :: f64
+                    Local r :: struct(ref,f64)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Seq :: struct(unit,unit)
+    Call :: i64
+      Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+      Lit "unbox int" :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Global c2 :: ref
+          Call :: ref
+            Global c3 :: ref
+            Lit 41 :: i64
+        Lit 1 :: i64
+    Seq :: struct(unit,unit)
+      Call :: f64
+        Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
+        Lit "unbox float" :: ref
+        Call :: f64
+          Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Float) :: ref
+          Call :: f64
+            Global c4 :: ref
+            Call :: ref
+              Global c5 :: ref
+              Lit 1.5 :: f64
+          Lit 2.0 :: f64
+      Seq :: struct(unit,unit)
+        Call :: ref
+          Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+          Lit "unbox string" :: ref
+          Call :: ref
+            Kernel elm/core:Basics.append (v0=app string) :: ref
+            Call :: ref
+              Global c6 :: ref
+              Call :: ref
+                Global c7 :: ref
+                Lit "boxed" :: ref
+            Lit "!" :: ref
+        Seq :: struct(unit,unit)
+          Call :: i64
+            Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+            Lit "count int" :: ref
+            Call :: i64
+              Global c8 :: ref
+              List :: ref
+                Lit 1 :: i64
+                Lit 2 :: i64
+                Lit 3 :: i64
+          Seq :: struct(unit,unit)
+            Call :: i64
+              Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+              Lit "count string" :: ref
+              Call :: i64
+                Global c9 :: ref
+                List :: ref
+                  Lit "a" :: ref
+                  Lit "b" :: ref
+            Seq :: struct(unit,unit)
+              Call :: i64
+                Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                Lit "count float" :: ref
+                Call :: i64
+                  Global c10 :: ref
+                  List :: ref
+                    Lit 0.5 :: f64
+              Seq :: struct(unit,unit)
+                Call :: i64
+                  Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                  Lit "count pair" :: ref
+                  Call :: i64
+                    Global c9 :: ref
+                    List :: ref
+                      Tuple :: struct(i64,i64)
+                        Lit 1 :: i64
+                        Lit 2 :: i64
+                      Tuple :: struct(i64,i64)
+                        Lit 3 :: i64
+                        Lit 4 :: i64
+                Seq :: struct(unit,unit)
+                  Call :: i64
+                    Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                    Lit "evens" :: ref
+                    Call :: i64
+                      Global c8 :: ref
+                      Call :: ref
+                        Global c11 :: ref
+                        List :: ref
+                          Lit 1 :: i64
+                          Lit 2 :: i64
+                          Lit 3 :: i64
+                          Lit 4 :: i64
+                          Lit 5 :: i64
+                  Seq :: struct(unit,unit)
+                    Call :: i64
+                      Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                      Lit "odds" :: ref
+                      Call :: i64
+                        Global c8 :: ref
+                        Call :: ref
+                          Global c12 :: ref
+                          List :: ref
+                            Lit 6 :: i64
+                            Lit 7 :: i64
+                            Lit 8 :: i64
+                            Lit 9 :: i64
+                    Seq :: struct(unit,unit)
+                      Call :: ref
+                        Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                        Lit "chase" :: ref
+                        Global c13 :: ref
+                      Seq :: struct(unit,unit)
+                        Call :: ref
+                          Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                          Lit "stop" :: ref
+                          Global c14 :: ref
+                        Seq :: struct(unit,unit)
+                          Call :: i64
+                            Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                            Lit "none int" :: ref
+                            Call :: i64
+                              Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                              Call :: i64
+                                Global c15 :: ref
+                                Global c16 :: ref
+                              Call :: i64
+                                Global c15 :: ref
+                                Call :: ref
+                                  Ctor Just tag 0 (v0=i64) :: ref
+                                  Lit 2 :: i64
+                          Seq :: struct(unit,unit)
+                            Call :: i64
+                              Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                              Lit "none string" :: ref
+                              Call :: i64
+                                Global c17 :: ref
+                                Global c18 :: ref
+                            Seq :: struct(unit,unit)
+                              Call :: i64
+                                Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                Lit "empty int" :: ref
+                                Call :: i64
+                                  Global c8 :: ref
+                                  Call :: ref
+                                    Kernel elm/core:List.cons (v0=i64) :: ref
+                                    Lit 1 :: i64
+                                    Global c19 :: ref
+                              Seq :: struct(unit,unit)
+                                Call :: i64
+                                  Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                  Lit "empty string" :: ref
+                                  Call :: i64
+                                    Global c9 :: ref
+                                    Call :: ref
+                                      Kernel elm/core:List.cons (v0=ref) :: ref
+                                      Lit "x" :: ref
+                                      Call :: ref
+                                        Kernel elm/core:List.cons (v0=ref) :: ref
+                                        Lit "y" :: ref
+                                        Global c20 :: ref
+                                Seq :: struct(unit,unit)
+                                  Call :: i64
+                                    Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                    Lit "tally" :: ref
+                                    Global c21 :: i64
+                                  Seq :: struct(unit,unit)
+                                    Call :: ref
+                                      Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                                      Lit "local" :: ref
+                                      Global c22 :: ref
+                                    Seq :: struct(unit,unit)
+                                      Call :: ref
+                                        Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                                        Lit "pair" :: ref
+                                        Global c23 :: ref
+                                      Seq :: struct(unit,unit)
+                                        Call :: ref
+                                          Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                                          Lit "boxes" :: ref
+                                          Global c24 :: ref
+                                        Tuple :: struct(unit,unit)
+                                          Lit () :: unit
+                                          Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Poly3a.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

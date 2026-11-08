@@ -11,8 +11,8 @@ Exit status 1 on any difference.
 import argparse, os, shutil, subprocess, sys, tempfile, difflib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num"]
-RUN = ["fib", "log", "num"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
+NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups"]
+RUN = ["fib", "log", "num", "poly3a", "groups"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
 
 
 def project_part(text, kind):
@@ -25,6 +25,19 @@ def project_part(text, kind):
             if skipping: continue
         out.append(line)
     return "\n".join(out).rstrip("\n") + "\n"
+
+
+def clone_counts(mono_text):
+    """plan risk R1: the number of clones of each definition in the `-- program` section (lifted local functions count
+    by their definition id, which includes the source position)"""
+    counts, inside = {}, False
+    for line in mono_text.split("\n"):
+        if line.startswith("-- program"): inside = True; continue
+        if line.startswith("-- module "): inside = False
+        if inside and line.startswith("clone c"):
+            d = line.split("   def: ", 1)[1].split("   key: ", 1)[0]
+            counts[d] = counts.get(d, 0) + 1
+    return counts
 
 
 def run_c(a, dst, name, mod):
@@ -58,6 +71,7 @@ def main():
     ap.add_argument("--update", action="store_true"); ap.add_argument("--only")
     a = ap.parse_args()
     bad = 0
+    R1.clear()
     for name in (a.only.split(",") if a.only else NAMES):
         src = os.path.join(HERE, name)
         mod = [f for f in os.listdir(os.path.join(src, "src")) if f.endswith(".fic")][0]
@@ -68,6 +82,14 @@ def main():
                            env=dict(os.environ, ELM_HOME=a.elm_home), capture_output=True)
         if p.returncode != 0:
             print("FAIL %s: compiler exit %d\n%s" % (name, p.returncode, (p.stdout + p.stderr).decode()[-400:])); bad += 1; continue
+        counts = clone_counts(open(os.path.join(dst, "x.mono"), encoding="utf-8").read())
+        if counts:
+            top = max(counts.values())
+            many = sorted([(n, d) for d, n in counts.items() if n > 1], reverse=True)
+            print("R1   %s: %d clones of %d definitions, most clones of one definition: %d (%s)%s" % (
+                name, sum(counts.values()), len(counts), top, ", ".join(d.split(":", 1)[-1] for n, d in many if n == top),
+                "; " + ", ".join("%s %d" % (d.split(":", 1)[-1], n) for n, d in many) if many else ""))
+            R1[name] = top
         for kind in ("types", "mono"):
             got = project_part(open(os.path.join(dst, "x." + kind), encoding="utf-8").read(), kind)
             path = os.path.join(HERE, "expected", name + "." + kind)
@@ -84,7 +106,13 @@ def main():
                 f = subprocess.run([sys.executable, os.path.join(HERE, "float_format.py"), "--c", os.path.join(dst, "x.c"), "--n", "20000"], capture_output=True, text=True)
                 print(("ok   float format: " if f.returncode == 0 else "FAIL float format: ") + f.stdout.strip()); bad += 1 if f.returncode else 0
         shutil.rmtree(work, ignore_errors=True)
+    if R1:
+        worst = max(R1, key=R1.get)
+        print("R1   largest number of clones of one definition in any project: %d (%s)" % (R1[worst], worst))
     return 1 if bad else 0
+
+
+R1 = {}
 
 
 if __name__ == "__main__":

@@ -54,7 +54,7 @@ data MNode
   | MLetVal String MExpr MExpr             -- let name = value in body (a local value; local functions are lifted clones)
   | MSeq MExpr MExpr                       -- evaluate the first for its effect, then the second
   | MCase MExpr [(MPat, MExpr)]
-  | MAccess MExpr String
+  | MAccess MExpr String Int               -- record, field name, position of the field (fields are in alphabetical order)
   | MUpdate MExpr [(String, MExpr)]
   | MRecord [(String, MExpr)]
   | MTuple [MExpr]
@@ -71,7 +71,7 @@ data MPatNode
   | PVar String
   | PLit MLit
   | PCtor String Int [MPat]                -- name, tag, arguments
-  | PRecord [String]
+  | PRecord [(Int, String, Class)]         -- position, name and class of each field bound
   | PTuple [MPat]
   | PCons MPat MPat
   | PNil
@@ -125,7 +125,7 @@ children (MExpr _ node) =
     MLetVal _ v b -> [v, b]
     MSeq a b -> [a, b]
     MCase s bs -> s : map snd bs
-    MAccess x _ -> [x]
+    MAccess x _ _ -> [x]
     MUpdate x fs -> x : map snd fs
     MRecord fs -> map snd fs
     MTuple xs -> xs

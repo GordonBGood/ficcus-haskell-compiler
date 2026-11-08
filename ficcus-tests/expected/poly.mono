@@ -5,4 +5,17 @@ mark author/project:Poly.getX   v0=row
 clone c0   def: author/project:Poly.results   key: ()   kind: value   init: 4   needs: 
 clone c1   def: author/project:Poly.main   key: ()   kind: value   init: 5   needs: c0
 -- program: not specialized
-!! expression LetDestruct is not supported yet at 34:5-51:6
+!! expression Lambda is not supported yet at 44:30-44:41
+!! expression Lambda is not supported yet at 45:14-45:28
+!! row polymorphism is not supported yet (slice 5): author/project:Poly.getX
+!! a partial or over-applied call (closure) is not supported yet at 10:8-10:11
+!! a partial or over-applied call (closure) is not supported yet at 10:5-10:11
+!! a partial or over-applied call (closure) is not supported yet at 10:8-10:11
+!! a partial or over-applied call (closure) is not supported yet at 10:5-10:11
+!! a field access on an extensible record (row polymorphism: slice 5) is not supported yet at 24:5-24:8
+!! expression Lambda is not supported yet at 252:10-252:23
+!! a function used as a value (closure) is not supported yet at 315:19-315:22
+!! a function used as a value (closure) is not supported yet at 315:19-315:22
+!! a partial or over-applied call (closure) is not supported yet at 157:19-157:29
+!! a partial or over-applied call (closure) is not supported yet at 157:19-157:29
+!! a partial or over-applied call (closure) is not supported yet at 157:19-157:29

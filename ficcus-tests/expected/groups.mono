@@ -1,0 +1,231 @@
+-- mono: stage (iii) slice 2, modules=21
+-- module author/project:Groups (project)
+clone c0   def: author/project:Groups.main   key: ()   kind: value   init: 5   needs: 
+-- program: 16 clones, reachable from main, dependencies first
+clone c2   def: author/project:Groups.count   key: (v0=i64)   name: count__i64   kind: function   params: xs:ref   result: i64
+  Case :: i64
+    Local xs :: ref
+    branch [] :: ref
+      Lit 0 :: i64
+    branch _ :: i64 :: rest :: ref :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Lit 1 :: i64
+        Call :: i64
+          Global c2 :: ref
+          Local rest :: ref
+clone c10   def: author/project:Groups.odds   key: (v0=i64)   name: odds__i64   kind: function   params: xs:ref   result: ref
+  Case :: ref
+    Local xs :: ref
+    branch [] :: ref
+      List :: ref
+    branch _ :: i64 :: rest :: ref :: ref
+      Call :: ref
+        Global c3 :: ref
+        Local rest :: ref
+clone c3   def: author/project:Groups.evens   key: (v0=i64)   name: evens__i64   kind: function   params: xs:ref   result: ref
+  Case :: ref
+    Local xs :: ref
+    branch [] :: ref
+      List :: ref
+    branch x :: i64 :: rest :: ref :: ref
+      Call :: ref
+        Kernel elm/core:List.cons (v0=i64) :: ref
+        Local x :: i64
+        Call :: ref
+          Global c10 :: ref
+          Local rest :: ref
+clone c4   def: author/project:Groups.count   key: (v0=ref)   name: count__ref   kind: function   params: xs:ref   result: i64
+  Case :: i64
+    Local xs :: ref
+    branch [] :: ref
+      Lit 0 :: i64
+    branch _ :: ref :: rest :: ref :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Lit 1 :: i64
+        Call :: i64
+          Global c4 :: ref
+          Local rest :: ref
+clone c11   def: author/project:Groups.evens   key: (v0=ref)   name: evens__ref   kind: function   params: xs:ref   result: ref
+  Case :: ref
+    Local xs :: ref
+    branch [] :: ref
+      List :: ref
+    branch x :: ref :: rest :: ref :: ref
+      Call :: ref
+        Kernel elm/core:List.cons (v0=ref) :: ref
+        Local x :: ref
+        Call :: ref
+          Global c5 :: ref
+          Local rest :: ref
+clone c5   def: author/project:Groups.odds   key: (v0=ref)   name: odds__ref   kind: function   params: xs:ref   result: ref
+  Case :: ref
+    Local xs :: ref
+    branch [] :: ref
+      List :: ref
+    branch _ :: ref :: rest :: ref :: ref
+      Call :: ref
+        Global c11 :: ref
+        Local rest :: ref
+clone c6   def: author/project:Groups.count   key: (v0=f64)   name: count__f64   kind: function   params: xs:ref   result: i64
+  Case :: i64
+    Local xs :: ref
+    branch [] :: ref
+      Lit 0 :: i64
+    branch _ :: f64 :: rest :: ref :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Lit 1 :: i64
+        Call :: i64
+          Global c6 :: ref
+          Local rest :: ref
+clone c12   def: author/project:Groups.odds   key: (v0=f64)   name: odds__f64   kind: function   params: xs:ref   result: ref
+  Case :: ref
+    Local xs :: ref
+    branch [] :: ref
+      List :: ref
+    branch _ :: f64 :: rest :: ref :: ref
+      Call :: ref
+        Global c7 :: ref
+        Local rest :: ref
+clone c7   def: author/project:Groups.evens   key: (v0=f64)   name: evens__f64   kind: function   params: xs:ref   result: ref
+  Case :: ref
+    Local xs :: ref
+    branch [] :: ref
+      List :: ref
+    branch x :: f64 :: rest :: ref :: ref
+      Call :: ref
+        Kernel elm/core:List.cons (v0=f64) :: ref
+        Local x :: f64
+        Call :: ref
+          Global c12 :: ref
+          Local rest :: ref
+clone c15   def: author/project:Groups.chase   key: (v0=ref; v1=ref)   name: chase__ref__ref   kind: function   params: xs:ref y:ref   result: ref
+  Case :: ref
+    Local xs :: ref
+    branch [] :: ref
+      Call :: ref
+        Global c13 :: ref
+        Local y :: ref
+    branch _ :: ref :: rest :: ref :: ref
+      Call :: ref
+        Global c15 :: ref
+        Local rest :: ref
+        Local y :: ref
+clone c13   def: author/project:Groups.stop   key: (v0=ref)   name: stop__ref   kind: function   params: z:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+      Call :: i64
+        Global c4 :: ref
+        List :: ref
+          Local z :: ref
+      Lit 1 :: i64
+    Call :: ref
+      Global c15 :: ref
+      List :: ref
+      Local z :: ref
+    Local z :: ref
+clone c8   def: author/project:Groups.chase   key: (v0=i64; v1=ref)   name: chase__i64__ref   kind: function   params: xs:ref y:ref   result: ref
+  Case :: ref
+    Local xs :: ref
+    branch [] :: ref
+      Call :: ref
+        Global c13 :: ref
+        Local y :: ref
+    branch _ :: i64 :: rest :: ref :: ref
+      Call :: ref
+        Global c8 :: ref
+        Local rest :: ref
+        Local y :: ref
+clone c14   def: author/project:Groups.chase   key: (v0=ref; v1=i64)   name: chase__ref__i64   kind: function   params: xs:ref y:i64   result: i64
+  Case :: i64
+    Local xs :: ref
+    branch [] :: ref
+      Call :: i64
+        Global c9 :: ref
+        Local y :: i64
+    branch _ :: ref :: rest :: ref :: ref
+      Call :: i64
+        Global c14 :: ref
+        Local rest :: ref
+        Local y :: i64
+clone c9   def: author/project:Groups.stop   key: (v0=i64)   name: stop__i64   kind: function   params: z:i64   result: i64
+  If :: i64
+    Call :: enum
+      Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+      Call :: i64
+        Global c2 :: ref
+        List :: ref
+          Local z :: i64
+      Lit 1 :: i64
+    Call :: i64
+      Global c14 :: ref
+      List :: ref
+      Local z :: i64
+    Local z :: i64
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Seq :: struct(unit,unit)
+    Call :: i64
+      Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+      Lit "evens int" :: ref
+      Call :: i64
+        Global c2 :: ref
+        Call :: ref
+          Global c3 :: ref
+          List :: ref
+            Lit 1 :: i64
+            Lit 2 :: i64
+            Lit 3 :: i64
+            Lit 4 :: i64
+            Lit 5 :: i64
+    Seq :: struct(unit,unit)
+      Call :: i64
+        Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+        Lit "odds string" :: ref
+        Call :: i64
+          Global c4 :: ref
+          Call :: ref
+            Global c5 :: ref
+            List :: ref
+              Lit "a" :: ref
+              Lit "b" :: ref
+              Lit "c" :: ref
+              Lit "d" :: ref
+      Seq :: struct(unit,unit)
+        Call :: i64
+          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+          Lit "evens float" :: ref
+          Call :: i64
+            Global c6 :: ref
+            Call :: ref
+              Global c7 :: ref
+              List :: ref
+                Lit 0.5 :: f64
+                Lit 1.5 :: f64
+        Seq :: struct(unit,unit)
+          Call :: ref
+            Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+            Lit "chase" :: ref
+            Call :: ref
+              Global c8 :: ref
+              List :: ref
+                Lit 1 :: i64
+                Lit 2 :: i64
+                Lit 3 :: i64
+              Lit "end" :: ref
+          Seq :: struct(unit,unit)
+            Call :: i64
+              Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+              Lit "stop" :: ref
+              Call :: i64
+                Global c9 :: ref
+                Lit 9 :: i64
+            Tuple :: struct(unit,unit)
+              Lit () :: unit
+              Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Groups.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

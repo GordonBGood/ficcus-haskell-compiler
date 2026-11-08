@@ -26,7 +26,7 @@ kernelArity cid =
     , ("elm/core:Basics.gt", 2), ("elm/core:Basics.ge", 2), ("elm/core:Basics.lt", 2), ("elm/core:Basics.le", 2)
     , ("elm/core:Basics.eq", 2), ("elm/core:Basics.neq", 2)
     , ("elm/core:Basics.and", 2), ("elm/core:Basics.or", 2), ("elm/core:Basics.not", 1)
-    , ("elm/core:Basics.append", 2)
+    , ("elm/core:Basics.append", 2), ("elm/core:List.cons", 2)
     , ("elm/core:String.fromInt", 1), ("elm/core:String.fromFloat", 1)
     , ("elm/core:Debug.log", 2), ("elm/core:Debug.toString", 1)
     , ("elm/core:Platform.worker", 1)
