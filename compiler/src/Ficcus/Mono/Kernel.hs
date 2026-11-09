@@ -29,6 +29,8 @@ kernelArity cid =
     , ("elm/core:Basics.compare", 2)
     , ("elm/core:Bitwise.and", 2), ("elm/core:Bitwise.or", 2), ("elm/core:Bitwise.xor", 2), ("elm/core:Bitwise.complement", 1)
     , ("elm/core:Bitwise.shiftLeftBy", 2), ("elm/core:Bitwise.shiftRightBy", 2), ("elm/core:Bitwise.shiftRightZfBy", 2)
+    , ("elm/core:Bitwise64.and", 2), ("elm/core:Bitwise64.or", 2), ("elm/core:Bitwise64.xor", 2), ("elm/core:Bitwise64.complement", 1)
+    , ("elm/core:Bitwise64.shiftLeftBy", 2), ("elm/core:Bitwise64.shiftRightBy", 2), ("elm/core:Bitwise64.shiftRightZfBy", 2)
     , ("elm/core:Basics.append", 2), ("elm/core:List.cons", 2)
     , ("elm/core:String.fromInt", 1), ("elm/core:String.fromFloat", 1)
     , ("elm/core:Debug.log", 2), ("elm/core:Debug.toString", 1)

@@ -1,0 +1,77 @@
+module Bits exposing (main)
+
+-- Bitwise exactly as Elm: operands truncated to signed 32 bit, result signed 32 bit, shift count & 31,
+-- shiftRightZfBy unsigned. Output compared with Elm under node (expected/bits.out).
+
+import Bitwise
+
+
+values : List Int
+values =
+    [ 0, 1, -1, 5, -5, 255, 2147483647, 2147483648, -2147483648, 4294967295, 4294967296, 4294967297, 123456789, -123456789 ]
+
+
+counts : List Int
+counts =
+    [ 0, 1, 2, 31, 32, 33, -1 ]
+
+
+tag : String -> Int -> Int -> String
+tag op a b =
+    op ++ " " ++ String.fromInt a ++ " " ++ String.fromInt b
+
+
+pairOps : Int -> () -> ()
+pairOps a () =
+    List.foldl
+        (\b () ->
+            let
+                _ =
+                    Debug.log (tag "and" a b) (Bitwise.and a b)
+
+                _ =
+                    Debug.log (tag "or" a b) (Bitwise.or a b)
+
+                _ =
+                    Debug.log (tag "xor" a b) (Bitwise.xor a b)
+            in
+            ()
+        )
+        ()
+        values
+
+
+shiftOps : Int -> () -> ()
+shiftOps a () =
+    List.foldl
+        (\n () ->
+            let
+                _ =
+                    Debug.log (tag "shl" n a) (Bitwise.shiftLeftBy n a)
+
+                _ =
+                    Debug.log (tag "shr" n a) (Bitwise.shiftRightBy n a)
+
+                _ =
+                    Debug.log (tag "shrz" n a) (Bitwise.shiftRightZfBy n a)
+
+                _ =
+                    Debug.log (tag "not" a 0) (Bitwise.complement a)
+            in
+            ()
+        )
+        ()
+        counts
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( List.foldl (\a () -> pairOps a (shiftOps a ())) () values
+                , Cmd.none
+                )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

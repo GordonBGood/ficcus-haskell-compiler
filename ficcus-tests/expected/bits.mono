@@ -1,0 +1,210 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:Bits (project)
+clone c0   def: author/project:Bits.values   key: ()   kind: value   init: 0   needs: 
+clone c1   def: author/project:Bits.counts   key: ()   kind: value   init: 1   needs: 
+clone c2   def: author/project:Bits.tag   key: ()   kind: function   init: 2   needs: 
+clone c3   def: author/project:Bits.pairOps   key: ()   kind: function   init: 3   needs: c0
+clone c4   def: author/project:Bits.shiftOps   key: ()   kind: function   init: 4   needs: c1
+clone c5   def: author/project:Bits.main   key: ()   kind: value   init: 5   needs: c0,c1
+-- program: 11 clones, reachable from main, dependencies first
+clone c2   def: elm/core:List.foldl   key: (v0=i64; v1=unit)   name: foldl__i64__unit   kind: function   params: func:ref acc:unit list:ref   result: unit
+  Case :: unit
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: unit
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: unit
+        Global c2 :: ref
+        Local func :: ref
+        Call :: unit
+          Local func :: ref
+          Local x :: i64
+          Local acc :: unit
+        Local xs :: ref
+clone c8   def: author/project:Bits.tag   key: ()   kind: function   params: op:ref a:i64 b:i64   result: ref
+  Call :: ref
+    Kernel elm/core:Basics.append (v0=app string) :: ref
+    Local op :: ref
+    Call :: ref
+      Kernel elm/core:Basics.append (v0=app string) :: ref
+      Lit " " :: ref
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Call :: ref
+          Kernel elm/core:String.fromInt () :: ref
+          Local a :: i64
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Lit " " :: ref
+          Call :: ref
+            Kernel elm/core:String.fromInt () :: ref
+            Local b :: i64
+clone c7   def: author/project:Bits.lambda@27:10   key: ()   kind: function   params: b:i64 _p1:unit   result: unit   lifted-from: c4
+  Case :: unit
+    Local _p1 :: unit
+    branch _ :: unit
+      Seq :: unit
+        Call :: i64
+          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+          Call :: ref
+            Global c8 :: ref
+            Lit "and" :: ref
+            Local a :: i64
+            Local b :: i64
+          Call :: i64
+            Kernel elm/core:Bitwise.and () :: ref
+            Local a :: i64
+            Local b :: i64
+        Seq :: unit
+          Call :: i64
+            Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+            Call :: ref
+              Global c8 :: ref
+              Lit "or" :: ref
+              Local a :: i64
+              Local b :: i64
+            Call :: i64
+              Kernel elm/core:Bitwise.or () :: ref
+              Local a :: i64
+              Local b :: i64
+          Seq :: unit
+            Call :: i64
+              Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+              Call :: ref
+                Global c8 :: ref
+                Lit "xor" :: ref
+                Local a :: i64
+                Local b :: i64
+              Call :: i64
+                Kernel elm/core:Bitwise.xor () :: ref
+                Local a :: i64
+                Local b :: i64
+            Lit () :: unit
+clone c6   def: author/project:Bits.values   key: ()   kind: value   params:    result: ref
+  List :: ref
+    Lit 0 :: i64
+    Lit 1 :: i64
+    Call :: i64
+      Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+      Lit 1 :: i64
+    Lit 5 :: i64
+    Call :: i64
+      Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+      Lit 5 :: i64
+    Lit 255 :: i64
+    Lit 2147483647 :: i64
+    Lit 2147483648 :: i64
+    Call :: i64
+      Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+      Lit 2147483648 :: i64
+    Lit 4294967295 :: i64
+    Lit 4294967296 :: i64
+    Lit 4294967297 :: i64
+    Lit 123456789 :: i64
+    Call :: i64
+      Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+      Lit 123456789 :: i64
+clone c4   def: author/project:Bits.pairOps   key: ()   kind: function   params: a:i64 _p1:unit   result: unit
+  Case :: unit
+    Local _p1 :: unit
+    branch _ :: unit
+      Call :: unit
+        Global c2 :: ref
+        Global c7 :: ref
+        Lit () :: unit
+        Global c6 :: ref
+clone c9   def: author/project:Bits.lambda@47:10   key: ()   kind: function   params: n:i64 _p1:unit   result: unit   lifted-from: c5
+  Case :: unit
+    Local _p1 :: unit
+    branch _ :: unit
+      Seq :: unit
+        Call :: i64
+          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+          Call :: ref
+            Global c8 :: ref
+            Lit "shl" :: ref
+            Local n :: i64
+            Local a :: i64
+          Call :: i64
+            Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+            Local n :: i64
+            Local a :: i64
+        Seq :: unit
+          Call :: i64
+            Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+            Call :: ref
+              Global c8 :: ref
+              Lit "shr" :: ref
+              Local n :: i64
+              Local a :: i64
+            Call :: i64
+              Kernel elm/core:Bitwise.shiftRightBy () :: ref
+              Local n :: i64
+              Local a :: i64
+          Seq :: unit
+            Call :: i64
+              Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+              Call :: ref
+                Global c8 :: ref
+                Lit "shrz" :: ref
+                Local n :: i64
+                Local a :: i64
+              Call :: i64
+                Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+                Local n :: i64
+                Local a :: i64
+            Seq :: unit
+              Call :: i64
+                Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                Call :: ref
+                  Global c8 :: ref
+                  Lit "not" :: ref
+                  Local a :: i64
+                  Lit 0 :: i64
+                Call :: i64
+                  Kernel elm/core:Bitwise.complement () :: ref
+                  Local a :: i64
+              Lit () :: unit
+clone c10   def: author/project:Bits.counts   key: ()   kind: value   params:    result: ref
+  List :: ref
+    Lit 0 :: i64
+    Lit 1 :: i64
+    Lit 2 :: i64
+    Lit 31 :: i64
+    Lit 32 :: i64
+    Lit 33 :: i64
+    Call :: i64
+      Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+      Lit 1 :: i64
+clone c5   def: author/project:Bits.shiftOps   key: ()   kind: function   params: a:i64 _p1:unit   result: unit
+  Case :: unit
+    Local _p1 :: unit
+    branch _ :: unit
+      Call :: unit
+        Global c2 :: ref
+        Global c9 :: ref
+        Lit () :: unit
+        Global c10 :: ref
+clone c3   def: author/project:Bits.lambda@72:31   key: ()   kind: function   params: a:i64 _p1:unit   result: unit   lifted-from: c1
+  Case :: unit
+    Local _p1 :: unit
+    branch _ :: unit
+      Call :: unit
+        Global c4 :: ref
+        Local a :: i64
+        Call :: unit
+          Global c5 :: ref
+          Local a :: i64
+          Lit () :: unit
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Tuple :: struct(unit,unit)
+    Call :: unit
+      Global c2 :: ref
+      Global c3 :: ref
+      Lit () :: unit
+      Global c6 :: ref
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Bits.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref
