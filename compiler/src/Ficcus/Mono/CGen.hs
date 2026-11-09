@@ -1425,6 +1425,8 @@ genHelper info k name =
           do  emit "if (a == b) return 1;"
               emit "fic_panic_eq_fun();"
               emit "return 0;"
+        -- a type variable that no use fixes (`[] == []`, `List.maximum []`): no value of this type can exist at run time
+        TyCon "ref" [] -> emit "(void)a; (void)b;" >> emit "return 1;"
         TyCon "elm/core:List.List" [e] -> listEq e
         TyCon "elm/core:Elm.JsArray.JsArray" [e] -> jsArrayEq e
         TyCon "elm/core:Dict.Dict" [kt, vt] -> dictEq kt vt
@@ -1533,6 +1535,7 @@ genHelper info k name =
     cmpBody t =
       case t of
         TyTuple ts -> structCmp t ts
+        TyCon "ref" [] -> emit "(void)a; (void)b;" >> emit "return 0;"
         TyCon "elm/core:List.List" [e] -> listCmp e
         _ -> failUnit ("comparison at " ++ mtypeText t ++ " is not supported by the C generator yet") >> emit "return 0;"
 

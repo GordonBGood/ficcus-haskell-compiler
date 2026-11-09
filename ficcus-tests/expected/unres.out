@@ -1,0 +1,8 @@
+max-empty: Nothing
+min-empty: Nothing
+eq-lists: True
+eq-nothing: True
+ne-nothing: False
+cmp-lists: EQ
+member: False
+head: Nothing

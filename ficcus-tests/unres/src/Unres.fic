@@ -1,0 +1,26 @@
+module Unres exposing (main)
+
+-- type variables that nothing fixes: equality and comparison at an unresolved type (library cases E-list-docs, H-structural-equality)
+
+
+main : Program () Int ()
+main =
+    Platform.worker
+        { init = \_ -> ( run (), Cmd.none )
+        , update = \_ model -> ( model, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : () -> Int
+run _ =
+    List.length
+        [ Debug.log "max-empty" (List.maximum []) |> always ()
+        , Debug.log "min-empty" (List.minimum []) |> always ()
+        , Debug.log "eq-lists" ([] == []) |> always ()
+        , Debug.log "eq-nothing" (Nothing == Nothing) |> always ()
+        , Debug.log "ne-nothing" (Nothing /= Nothing) |> always ()
+        , Debug.log "cmp-lists" (compare [] []) |> always ()
+        , Debug.log "member" (List.member 9 []) |> always ()
+        , Debug.log "head" (List.head []) |> always ()
+        ]

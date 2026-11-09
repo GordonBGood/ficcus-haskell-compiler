@@ -1,0 +1,215 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:Unres (project)
+clone c0   def: author/project:Unres.run   key: ()   kind: function   init: 0   needs: 
+clone c1   def: author/project:Unres.main   key: ()   kind: value   init: 1   needs: 
+-- program: 17 clones, reachable from main, dependencies first
+clone c10   def: elm/core:List.foldl   key: (v0=unit; v1=i64)   name: foldl__unit__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: unit :: xs :: ref :: ref
+      Call :: i64
+        Global c10 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: unit
+          Local acc :: i64
+        Local xs :: ref
+clone c11   def: elm/core:List.lambda@252:10   key: ()   outer: c3 (v0=unit)   kind: function   params: _a0:unit i:i64   result: i64   lifted-from: c3
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local i :: i64
+    Lit 1 :: i64
+clone c3   def: elm/core:List.length   key: (v0=unit)   name: length__unit   kind: function   params: xs:ref   result: i64
+  Call :: i64
+    Global c10 :: ref
+    Global c11 :: ref
+    Lit 0 :: i64
+    Local xs :: ref
+clone c4   def: elm/core:Basics.always   key: (v0=unit; v1=ref)   name: always__unit__ref   kind: function   params: a:unit _a1:ref   result: unit
+  Local a :: unit
+clone c12   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: ref :: xs :: ref :: ref
+      Call :: ref
+        Global c12 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: ref
+          Local acc :: ref
+        Local xs :: ref
+clone c13   def: elm/core:Basics.max   key: (v0=type ref)   name: max__t   kind: function   params: x:ref y:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.gt (v0=type ref) :: ref
+      Local x :: ref
+      Local y :: ref
+    Local x :: ref
+    Local y :: ref
+clone c5   def: elm/core:List.maximum   key: (v0=type ref)   name: maximum__t   kind: function   params: list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch x :: ref :: xs :: ref :: ref
+      Call :: ref
+        Ctor Just tag 0 (v0=ref) :: ref
+        Call :: ref
+          Global c12 :: ref
+          Global c13 :: ref
+          Local x :: ref
+          Local xs :: ref
+    branch _ :: ref
+      Ctor Nothing tag 1 () :: ref
+clone c14   def: elm/core:Basics.min   key: (v0=type ref)   name: min__t   kind: function   params: x:ref y:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.lt (v0=type ref) :: ref
+      Local x :: ref
+      Local y :: ref
+    Local x :: ref
+    Local y :: ref
+clone c6   def: elm/core:List.minimum   key: (v0=type ref)   name: minimum__t   kind: function   params: list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch x :: ref :: xs :: ref :: ref
+      Call :: ref
+        Ctor Just tag 0 (v0=ref) :: ref
+        Call :: ref
+          Global c12 :: ref
+          Global c14 :: ref
+          Local x :: ref
+          Local xs :: ref
+    branch _ :: ref
+      Ctor Nothing tag 1 () :: ref
+clone c7   def: elm/core:Basics.always   key: (v0=unit; v1=enum)   name: always__unit__enum   kind: function   params: a:unit _a1:enum   result: unit
+  Local a :: unit
+clone c15   def: elm/core:List.any   key: (v0=i64)   name: any__i64   kind: function   params: isOkay:ref list:ref   result: enum
+  Case :: enum
+    Local list :: ref
+    branch [] :: ref
+      Lit 0 :: enum
+    branch x :: i64 :: xs :: ref :: ref
+      If :: enum
+        Call :: enum
+          Local isOkay :: ref
+          Local x :: i64
+        Lit 1 :: enum
+        Call :: enum
+          Global c15 :: ref
+          Local isOkay :: ref
+          Local xs :: ref
+clone c16   def: elm/core:List.lambda@271:8   key: ()   outer: c8 (v0=type elm/core:Basics.Int)   kind: function   params: a:i64   result: enum   lifted-from: c8
+  Call :: enum
+    Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
+    Local a :: i64
+    Local x :: i64
+clone c8   def: elm/core:List.member   key: (v0=type elm/core:Basics.Int)   name: member__i64   kind: function   params: x:i64 xs:ref   result: enum
+  Call :: enum
+    Global c15 :: ref
+    Global c16 :: ref
+    Local xs :: ref
+clone c9   def: elm/core:List.head   key: (v0=ref)   name: head__ref   kind: function   params: list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch x :: ref :: xs :: ref :: ref
+      Call :: ref
+        Ctor Just tag 0 (v0=ref) :: ref
+        Local x :: ref
+    branch [] :: ref
+      Ctor Nothing tag 1 () :: ref
+clone c2   def: author/project:Unres.run   key: ()   kind: function   params: _a0:unit   result: i64
+  Call :: i64
+    Global c3 :: ref
+    List :: ref
+      Call :: unit
+        Global c4 :: ref
+        Lit () :: unit
+        Call :: ref
+          Kernel elm/core:Debug.log (v0=type (elm/core:Maybe.Maybe ref)) :: ref
+          Lit "max-empty" :: ref
+          Call :: ref
+            Global c5 :: ref
+            List :: ref
+      Call :: unit
+        Global c4 :: ref
+        Lit () :: unit
+        Call :: ref
+          Kernel elm/core:Debug.log (v0=type (elm/core:Maybe.Maybe ref)) :: ref
+          Lit "min-empty" :: ref
+          Call :: ref
+            Global c6 :: ref
+            List :: ref
+      Call :: unit
+        Global c7 :: ref
+        Lit () :: unit
+        Call :: enum
+          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Bool) :: ref
+          Lit "eq-lists" :: ref
+          Call :: enum
+            Kernel elm/core:Basics.eq (v0=type (elm/core:List.List ref)) :: ref
+            List :: ref
+            List :: ref
+      Call :: unit
+        Global c7 :: ref
+        Lit () :: unit
+        Call :: enum
+          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Bool) :: ref
+          Lit "eq-nothing" :: ref
+          Call :: enum
+            Kernel elm/core:Basics.eq (v0=type (elm/core:Maybe.Maybe ref)) :: ref
+            Ctor Nothing tag 1 () :: ref
+            Ctor Nothing tag 1 () :: ref
+      Call :: unit
+        Global c7 :: ref
+        Lit () :: unit
+        Call :: enum
+          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Bool) :: ref
+          Lit "ne-nothing" :: ref
+          Call :: enum
+            Kernel elm/core:Basics.neq (v0=type (elm/core:Maybe.Maybe ref)) :: ref
+            Ctor Nothing tag 1 () :: ref
+            Ctor Nothing tag 1 () :: ref
+      Call :: unit
+        Global c7 :: ref
+        Lit () :: unit
+        Call :: enum
+          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Order) :: ref
+          Lit "cmp-lists" :: ref
+          Call :: enum
+            Kernel elm/core:Basics.compare (v0=type (elm/core:List.List ref)) :: ref
+            List :: ref
+            List :: ref
+      Call :: unit
+        Global c7 :: ref
+        Lit () :: unit
+        Call :: enum
+          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Bool) :: ref
+          Lit "member" :: ref
+          Call :: enum
+            Global c8 :: ref
+            Lit 9 :: i64
+            List :: ref
+      Call :: unit
+        Global c4 :: ref
+        Lit () :: unit
+        Call :: ref
+          Kernel elm/core:Debug.log (v0=type (elm/core:Maybe.Maybe ref)) :: ref
+          Lit "head" :: ref
+          Call :: ref
+            Global c9 :: ref
+            List :: ref
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(i64,unit)   lifted-from: c0
+  Tuple :: struct(i64,unit)
+    Call :: i64
+      Global c2 :: ref
+      Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Unres.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=i64; v2=unit) :: ref
+    Global c1 :: ref
