@@ -1,0 +1,122 @@
+module DictTest exposing (main)
+
+-- Slice 4: Dict and Set from elm/core's own source at Int, String and tuple keys (compare at the exact key type),
+-- `==` on dictionaries and sets, foldl/foldr/map/filter/union/diff/intersect. Output equal to Elm's (expected/dict.out).
+
+import Dict exposing (Dict)
+import Set exposing (Set)
+
+
+showInts : List Int -> String
+showInts xs =
+    "[" ++ List.foldl (\x acc -> acc ++ String.fromInt x ++ ",") "" xs ++ "]"
+
+
+showPairs : List ( Int, String ) -> String
+showPairs xs =
+    "[" ++ List.foldl (\( n, s ) acc -> acc ++ "(" ++ String.fromInt n ++ "," ++ s ++ ")") "" xs ++ "]"
+
+
+showSI : List ( String, Int ) -> String
+showSI xs =
+    "[" ++ List.foldl (\( s, n ) acc -> acc ++ "(" ++ s ++ "," ++ String.fromInt n ++ ")") "" xs ++ "]"
+
+
+showStrings : List String -> String
+showStrings xs =
+    "[" ++ List.foldl (\x acc -> acc ++ x ++ ",") "" xs ++ "]"
+
+
+b2i : Bool -> Int
+b2i x =
+    if x then
+        1
+
+    else
+        0
+
+
+maybeInt : Maybe Int -> Int
+maybeInt m =
+    Maybe.withDefault -1 m
+
+
+maybeStr : Maybe String -> String
+maybeStr m =
+    Maybe.withDefault "none" m
+
+
+intDict : Dict Int String
+intDict =
+    Dict.fromList [ ( 5, "five" ), ( 3, "three" ), ( 8, "eight" ), ( 1, "one" ), ( 4, "four" ), ( 7, "seven" ), ( 9, "nine" ), ( 2, "two" ), ( 6, "six" ) ]
+
+
+strDict : Dict String Int
+strDict =
+    Dict.fromList [ ( "pear", 3 ), ( "apple", 1 ), ( "fig", 2 ), ( "kiwi", 5 ), ( "banana", 4 ) ]
+
+
+pairDict : Dict ( Int, Int ) Int
+pairDict =
+    Dict.fromList [ ( ( 1, 2 ), 10 ), ( ( 1, 1 ), 20 ), ( ( 0, 5 ), 30 ), ( ( 2, 0 ), 40 ) ]
+
+
+emptyDict : Dict Int String
+emptyDict =
+    Dict.remove 1 (Dict.singleton 1 "x")
+
+
+counts : List String -> Dict String Int
+counts words =
+    List.foldl (\w d -> Dict.update w (\m -> Just (Maybe.withDefault 0 m + 1)) d) Dict.empty words
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ = Debug.log "int toList" (showPairs (Dict.toList intDict))
+                    _ = Debug.log "int get 4" (maybeStr (Dict.get 4 intDict))
+                    _ = Debug.log "int get 10" (maybeStr (Dict.get 10 intDict))
+                    _ = Debug.log "int member" (b2i (Dict.member 7 intDict))
+                    _ = Debug.log "int size" (Dict.size intDict)
+                    _ = Debug.log "int keys" (showInts (Dict.keys intDict))
+                    _ = Debug.log "int values" (showStrings (Dict.values intDict))
+                    _ = Debug.log "int remove" (showInts (Dict.keys (Dict.remove 5 (Dict.remove 1 intDict))))
+                    _ = Debug.log "int insert" (showPairs (Dict.toList (Dict.insert 5 "FIVE" (Dict.insert 0 "zero" intDict))))
+                    _ = Debug.log "int foldl" (Dict.foldl (\k _ acc -> acc * 10 + k) 0 intDict)
+                    _ = Debug.log "int foldr" (Dict.foldr (\k _ acc -> acc * 10 + k) 0 intDict)
+                    _ = Debug.log "int map" (showPairs (Dict.toList (Dict.map (\k v -> v ++ String.fromInt k) intDict)))
+                    _ = Debug.log "int filter" (showInts (Dict.keys (Dict.filter (\k _ -> modBy 2 k == 0) intDict)))
+                    _ = Debug.log "int partition" (showInts (Dict.keys (Tuple.first (Dict.partition (\k _ -> k > 5) intDict))))
+                    _ = Debug.log "str toList" (showSI (Dict.toList strDict))
+                    _ = Debug.log "str get" (maybeInt (Dict.get "kiwi" strDict))
+                    _ = Debug.log "str get none" (maybeInt (Dict.get "plum" strDict))
+                    _ = Debug.log "str union" (showSI (Dict.toList (Dict.union strDict (Dict.fromList [ ( "plum", 9 ), ( "fig", 99 ) ]))))
+                    _ = Debug.log "str intersect" (showSI (Dict.toList (Dict.intersect strDict (Dict.fromList [ ( "fig", 0 ), ( "kiwi", 0 ), ( "zzz", 0 ) ]))))
+                    _ = Debug.log "str diff" (showSI (Dict.toList (Dict.diff strDict (Dict.fromList [ ( "fig", 0 ), ( "kiwi", 0 ) ]))))
+                    _ = Debug.log "pair keys" (showInts (List.map (\( a, b ) -> a * 10 + b) (Dict.keys pairDict)))
+                    _ = Debug.log "pair get" (maybeInt (Dict.get ( 1, 1 ) pairDict))
+                    _ = Debug.log "count" (showSI (Dict.toList (counts [ "the", "cat", "and", "the", "dog", "and", "the", "bird" ]))) 
+                    _ = Debug.log "dict eq" (b2i (intDict == Dict.fromList (List.reverse (Dict.toList intDict))))
+                    _ = Debug.log "dict ne" (b2i (intDict == Dict.remove 3 intDict))
+                    _ = Debug.log "dict eq built differently" (b2i (Dict.fromList [ ( 1, "a" ), ( 2, "b" ), ( 3, "c" ) ] == Dict.insert 1 "a" (Dict.insert 3 "c" (Dict.singleton 2 "b"))))
+                    _ = Debug.log "empty eq" (b2i (Dict.empty == emptyDict))
+                    _ = Debug.log "big" (Dict.size (List.foldl (\i d -> Dict.insert (modBy 5003 (i * 7919)) i d) Dict.empty (List.range 1 20000)))
+                    _ = Debug.log "set" (showInts (Set.toList (Set.fromList [ 5, 3, 8, 3, 1, 5 ])))
+                    _ = Debug.log "set member" (b2i (Set.member 8 (Set.fromList [ 5, 3, 8 ])))
+                    _ = Debug.log "set union" (showInts (Set.toList (Set.union (Set.fromList [ 1, 2, 3 ]) (Set.fromList [ 3, 4 ]))))
+                    _ = Debug.log "set diff" (showInts (Set.toList (Set.diff (Set.fromList [ 1, 2, 3 ]) (Set.fromList [ 2 ]))))
+                    _ = Debug.log "set intersect" (showInts (Set.toList (Set.intersect (Set.fromList [ 1, 2, 3 ]) (Set.fromList [ 2, 3, 4 ]))))
+                    _ = Debug.log "set size" (Set.size (Set.fromList [ 1, 1, 2 ]))
+                    _ = Debug.log "set strings" (showStrings (Set.toList (Set.fromList [ "b", "a", "c", "a" ])))
+                    _ = Debug.log "set eq" (b2i (Set.fromList [ 1, 2, 3 ] == Set.fromList [ 3, 2, 1 ]))
+                    _ = Debug.log "set ne" (b2i (Set.fromList [ 1, 2, 3 ] == Set.fromList [ 3, 2 ]))
+                    _ = Debug.log "set tuples" (showInts (List.map Tuple.second (Set.toList (Set.fromList [ ( 2, 20 ), ( 1, 10 ), ( 2, 20 ) ]))))
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

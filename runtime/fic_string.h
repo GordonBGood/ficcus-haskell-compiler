@@ -20,3 +20,12 @@ static uint8_t fic_str_eq(fic_ref a, fic_ref b) {
   return FIC_STR(a)->len == FIC_STR(b)->len && memcmp(FIC_STR(a)->data, FIC_STR(b)->data, (size_t)FIC_STR(a)->len) == 0;
 }
 
+
+/* order of two strings: -1, 0, 1 by code point (a byte comparison of UTF-8 gives the same order) */
+static int fic_str_cmp(fic_ref a, fic_ref b) {
+  int64_t la = FIC_STR(a)->len, lb = FIC_STR(b)->len;
+  int64_t n = la < lb ? la : lb;
+  int c = memcmp(FIC_STR(a)->data, FIC_STR(b)->data, (size_t)n);
+  if (c != 0) return c < 0 ? -1 : 1;
+  return la < lb ? -1 : la > lb ? 1 : 0;
+}

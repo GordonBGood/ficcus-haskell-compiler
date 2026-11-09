@@ -38,3 +38,25 @@ static int64_t fic_bw64_not(int64_t a) { return (int64_t)(~(uint64_t)a); }
 static int64_t fic_bw64_shl(int64_t n, int64_t a) { return (int64_t)((uint64_t)a << (n & 63)); }
 static int64_t fic_bw64_shr(int64_t n, int64_t a) { int s = (int)(n & 63); return a < 0 ? (int64_t)~(~(uint64_t)a >> s) : (int64_t)((uint64_t)a >> s); }
 static int64_t fic_bw64_shrz(int64_t n, int64_t a) { return (int64_t)((uint64_t)a >> (n & 63)); }
+
+/* compare as Elm's kernel: cmp(x, y) = x === y ? 0 : x < y ? -1 : 1 (a NaN gives 1); Int and Char never need the NaN case */
+static int fic_f_cmp(double a, double b) { return a == b ? 0 : a < b ? -1 : 1; }
+static int fic_i_cmp(int64_t a, int64_t b) { return a < b ? -1 : a > b ? 1 : 0; }
+
+/* `==` on two different functions: Elm's runtime error (`_Debug_crash(5)`, the text of a development build) */
+static void fic_panic_eq_fun(void) {
+  fputs("Trying to use `(==)` on functions.\nThere is no way to know if functions are \"the same\" in the Elm sense.\nRead more about this at https://package.elm-lang.org/packages/elm/core/latest/Basics#== which describes why it is this way and what the better version will look like.\n", stderr);
+  exit(1);
+}
+
+/* modBy and remainderBy: floored and truncated remainders; a zero divisor gives 0 (decision L1, Elm crashes or gives NaN) */
+static int64_t fic_modby(int64_t m, int64_t x) {
+  int64_t r;
+  if (m == 0 || m == -1) return 0;
+  r = x % m;
+  return ((r > 0 && m < 0) || (r < 0 && m > 0)) ? r + m : r;
+}
+static int64_t fic_remby(int64_t m, int64_t x) {
+  if (m == 0 || m == -1) return 0;
+  return x % m;
+}

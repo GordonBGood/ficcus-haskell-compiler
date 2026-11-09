@@ -1,0 +1,193 @@
+module EqCmp exposing (main)
+
+-- Slice 4: `==` and `/=` on compound types (generated per exact type), `compare`, `<` .. `>=` on strings, tuples and
+-- lists, `++` on lists, List.sort / sortBy / sortWith. Every result is printed with Debug.log; the output must equal
+-- Elm's (expected/eqcmp.out, from Elm 0.19.3 under node).
+
+
+type Tree
+    = Leaf
+    | Node Tree Int Tree
+
+
+type Color
+    = Red
+    | Green
+    | Blue
+
+
+type Shape
+    = Circle Float
+    | Rect Float Float
+    | Named String (List Int)
+    | Pt ( Int, Int )
+
+
+type alias Person =
+    { name : String, age : Int, score : Float }
+
+
+b2i : Bool -> Int
+b2i x =
+    if x then
+        1
+
+    else
+        0
+
+
+ord : Order -> Int
+ord o =
+    case o of
+        LT ->
+            -1
+
+        EQ ->
+            0
+
+        GT ->
+            1
+
+
+showInts : List Int -> String
+showInts xs =
+    "[" ++ List.foldl (\x acc -> acc ++ String.fromInt x ++ ",") "" xs ++ "]"
+
+
+showFloats : List Float -> String
+showFloats xs =
+    "[" ++ List.foldl (\x acc -> acc ++ String.fromFloat x ++ ",") "" xs ++ "]"
+
+
+showStrings : List String -> String
+showStrings xs =
+    "[" ++ List.foldl (\x acc -> acc ++ x ++ ",") "" xs ++ "]"
+
+
+showPairs : List ( Int, String ) -> String
+showPairs xs =
+    "[" ++ List.foldl (\( n, s ) acc -> acc ++ "(" ++ String.fromInt n ++ "," ++ s ++ ")") "" xs ++ "]"
+
+
+noInts : List Int
+noInts =
+    []
+
+
+okOne : Result String Int
+okOne =
+    Ok 1
+
+
+build : Int -> Tree
+build n =
+    if n <= 0 then
+        Leaf
+
+    else
+        Node (build (n - 1)) n (build (n - 2))
+
+
+tell : String -> a -> ()
+tell tag _ =
+    Debug.log tag ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    -- equality
+                    _ = Debug.log "tuple eq" (b2i ((1, "a") == (1, "a")))
+                    _ = Debug.log "tuple ne" (b2i ((1, "a") == (1, "b")))
+                    _ = Debug.log "triple eq" (b2i ((1, 2.5, 'x') == (1, 2.5, 'x')))
+                    _ = Debug.log "string eq" (b2i ("héllo" == "héllo"))
+                    _ = Debug.log "list eq" (b2i ([ 1, 2, 3 ] == [ 1, 2, 3 ]))
+                    _ = Debug.log "list ne len" (b2i ([ 1, 2, 3 ] == [ 1, 2 ]))
+                    _ = Debug.log "list ne elem" (b2i ([ 1, 2, 3 ] /= [ 1, 2, 4 ]))
+                    _ = Debug.log "empty eq" (b2i (noInts == []))
+                    _ = Debug.log "strings eq" (b2i ([ "a", "b" ] == [ "a", "b" ]))
+                    _ = Debug.log "nested eq" (b2i ([ [ 1, 2 ], [ 3 ] ] == [ [ 1, 2 ], [ 3 ] ]))
+                    _ = Debug.log "nested ne" (b2i ([ [ 1, 2 ], [ 3 ] ] == [ [ 1, 2 ], [ 4 ] ]))
+                    _ = Debug.log "tree eq" (b2i (build 8 == build 8))
+                    _ = Debug.log "tree ne" (b2i (build 8 == build 9))
+                    _ = Debug.log "maybe eq" (b2i (Just 3 == Just 3))
+                    _ = Debug.log "maybe ne" (b2i (Just 3 == Nothing))
+                    _ = Debug.log "maybe str" (b2i (Just "x" == Just "x"))
+                    _ = Debug.log "result" (b2i (okOne == Ok 1))
+                    _ = Debug.log "result ne" (b2i (okOne == Err "x"))
+                    _ = Debug.log "color" (b2i (Red == Red))
+                    _ = Debug.log "color ne" (b2i (Red == Blue))
+                    _ = Debug.log "color in tuple" (b2i ((Green, 1) == (Green, 1)))
+                    _ = Debug.log "shape circle" (b2i (Circle 1.5 == Circle 1.5))
+                    _ = Debug.log "shape rect" (b2i (Rect 1 2 == Rect 1 3))
+                    _ = Debug.log "shape named" (b2i (Named "a" [ 1, 2 ] == Named "a" [ 1, 2 ]))
+                    _ = Debug.log "shape pt" (b2i (Pt ( 1, 2 ) == Pt ( 1, 2 )))
+                    _ = Debug.log "shape mixed" (b2i (Circle 1 == Rect 1 1))
+                    _ = Debug.log "record eq" (b2i ({ name = "a", age = 3, score = 1.5 } == { name = "a", age = 3, score = 1.5 }))
+                    _ = Debug.log "record ne" (b2i ({ name = "a", age = 3, score = 1.5 } == { name = "a", age = 4, score = 1.5 }))
+                    _ = Debug.log "unit" (b2i (() == ()))
+                    _ = Debug.log "float -0" (b2i (0.0 == -0.0))
+                    _ = Debug.log "list of tuples" (b2i ([ (1, "a"), (2, "b") ] == [ (1, "a"), (2, "b") ]))
+                    _ = Debug.log "maybe list" (b2i (Just [ 1 ] == Just [ 1 ]))
+                    _ = Debug.log "list maybe" (b2i ([ Just 1, Nothing ] == [ Just 1, Nothing ]))
+
+                    -- comparison
+                    _ = Debug.log "cmp int" (ord (compare 1 2))
+                    _ = Debug.log "cmp string" (ord (compare "abc" "abd"))
+                    _ = Debug.log "cmp string eq" (ord (compare "abc" "abc"))
+                    _ = Debug.log "cmp string prefix" (ord (compare "ab" "abc"))
+                    _ = Debug.log "cmp string é z" (ord (compare "é" "z"))
+                    _ = Debug.log "cmp tuple" (ord (compare (1, "b") (1, "a")))
+                    _ = Debug.log "cmp tuple 2" (ord (compare (1, "b") (2, "a")))
+                    _ = Debug.log "cmp list" (ord (compare [ 1, 2 ] [ 1, 2, 3 ]))
+                    _ = Debug.log "cmp list 2" (ord (compare [ 1, 3 ] [ 1, 2, 3 ]))
+                    _ = Debug.log "cmp list empty" (ord (compare [] [ 0 ]))
+                    _ = Debug.log "cmp list eq" (ord (compare [ 4, 5 ] [ 4, 5 ]))
+                    _ = Debug.log "cmp char" (ord (compare 'a' 'b'))
+                    _ = Debug.log "cmp float tuple" (ord (compare (1.5, 2) (1.5, 3)))
+                    _ = Debug.log "lt string" (b2i ("a" < "b"))
+                    _ = Debug.log "gt string" (b2i ("a" > "b"))
+                    _ = Debug.log "le string" (b2i ("a" <= "a"))
+                    _ = Debug.log "ge string" (b2i ("a" >= "b"))
+                    _ = Debug.log "lt tuple" (b2i ((1, 2) < (1, 3)))
+                    _ = Debug.log "ge tuple" (b2i ((2, 2) >= (1, 3)))
+                    _ = Debug.log "lt list" (b2i ([ 1, 2 ] < [ 1, 2, 0 ]))
+                    _ = Debug.log "gt list" (b2i ([ 1, 2 ] > [ 1, 2, 0 ]))
+                    _ = Debug.log "max string" (max "pear" "apple")
+                    _ = Debug.log "min string" (min "pear" "apple")
+                    _ = Debug.log "max tuple" (Tuple.first (max (3, "x") (3, "y")))
+                    _ = Debug.log "max tuple 2" (Tuple.second (max (3, "x") (3, "y")))
+
+                    -- ++ on lists
+                    _ = Debug.log "append int" (showInts ([ 1, 2 ] ++ [ 3 ] ++ [] ++ [ 4, 5 ]))
+                    _ = Debug.log "append float" (showFloats ([ 1.5, 2 ] ++ [ 0.25 ]))
+                    _ = Debug.log "append string" (showStrings ([ "a" ] ++ [ "b", "c" ]))
+                    _ = Debug.log "append pairs" (showPairs ([ (1, "a") ] ++ [ (2, "b") ]))
+                    _ = Debug.log "append lists" (showInts (List.concat ([ [ 1 ] ] ++ [ [ 2, 3 ], [] ])))
+                    _ = Debug.log "append empty" (showInts ([] ++ []))
+                    _ = Debug.log "concat" (showInts (List.concat [ [ 1, 2 ], [ 3 ], [], [ 4 ] ]))
+                    _ = Debug.log "concatMap" (showInts (List.concatMap (\x -> [ x, x * 10 ]) [ 1, 2, 3 ]))
+                    _ = Debug.log "append long" (List.length (List.range 1 100000 ++ List.range 1 100000))
+
+                    -- sorting
+                    _ = Debug.log "sort int" (showInts (List.sort [ 5, 2, 9, 1, 5, 6, -3 ]))
+                    _ = Debug.log "sort string" (showStrings (List.sort [ "pear", "apple", "fig", "apple", "Zed", "é" ]))
+                    _ = Debug.log "sort float" (showFloats (List.sort [ 2.5, -1, 0, 1e10, 3.25 ]))
+                    _ = Debug.log "sort pairs" (showPairs (List.sort [ (2, "b"), (1, "z"), (2, "a"), (1, "a") ]))
+                    _ = Debug.log "sort empty" (showInts (List.sort []))
+                    _ = Debug.log "sort lists" (showInts (List.concat (List.sort [ [ 2, 1 ], [ 1, 5 ], [ 1 ], [] ])))
+                    _ = Debug.log "sortBy neg" (showInts (List.sortBy (\x -> -x) [ 3, 1, 2 ]))
+                    _ = Debug.log "sortBy stable" (showPairs (List.sortBy Tuple.first [ (2, "a"), (1, "b"), (2, "c"), (1, "d"), (0, "e") ]))
+                    _ = Debug.log "sortBy string" (showPairs (List.sortBy Tuple.second [ (1, "z"), (2, "y"), (3, "x") ]))
+                    _ = Debug.log "sortBy record" (showStrings (List.map (\p -> p.name) (List.sortBy (\p -> p.age) [ { name = "a", age = 30, score = 1 }, { name = "b", age = 20, score = 2 }, { name = "c", age = 25, score = 3 } ])))
+                    _ = Debug.log "sortWith desc" (showInts (List.sortWith (\x y -> compare y x) [ 3, 1, 4, 1, 5, 9, 2, 6 ]))
+                    _ = Debug.log "sortWith stable" (showPairs (List.sortWith (\(a, _) (c, _) -> compare a c) [ (2, "a"), (1, "b"), (2, "c"), (1, "d") ]))
+                    _ = Debug.log "sort big" (List.sum (List.take 10 (List.sort (List.map (\i -> modBy 1009 (i * 7919)) (List.range 1 20000)))))
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

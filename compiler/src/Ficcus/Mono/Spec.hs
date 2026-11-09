@@ -4,6 +4,8 @@ module Ficcus.Mono.Spec
   ( specialize
   , keyLimit
   , limitMessage
+  , classOfM
+  , boxed
   )
   where
 
@@ -148,7 +150,7 @@ specialize modules marks =
         root = Map.lookup (CKey mainId Nothing (Key [])) (sClones final)
       in
       case (reverse (sErrors final), root) of
-        ([], Just r) -> Right (MProgram (ordered (sDone final) r) (Just r))
+        ([], Just r) -> Right (MProgram (ordered (sDone final) r) (Just r) (Map.fromList (concatMap mmUnions modules)))
         ([], Nothing) -> Left [ "internal: main was not requested" ]
         (errs, _) -> Left errs
 

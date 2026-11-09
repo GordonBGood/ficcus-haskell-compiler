@@ -1,0 +1,858 @@
+-- module DictTest: problems=0 instances=244 instance-failures=0 defaulted=77
+-- equality-uses: total=7 at-function=0
+module author/project:DictTest
+def showStrings :: List String -> String    [26:1-26:12]   id: author/project:DictTest.showStrings   sig: List String -> String   kinds:    group: author/project:DictTest.showStrings nonrec ann
+  26:13-26:15 PVar xs :: List String
+  27:5-27:63 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    27:5-27:8 Str :: String
+    27:12-27:63 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      27:12-27:56 Call :: String
+        27:12-27:22 VarForeign :: (String -> String -> String) -> String -> List String -> String   callee: elm/core:List.foldl   instance: a := String, b := String   sig#: 8a8782c6   subst: v0 := String, v1 := String
+        27:24-27:49 Lambda :: String -> String -> String
+          27:25-27:26 PVar x :: String
+          27:27-27:30 PVar acc :: String
+          27:34-27:49 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            27:34-27:37 VarLocal :: String
+            27:41-27:49 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              27:41-27:42 VarLocal :: String
+              27:46-27:49 Str :: String
+        27:51-27:53 Str :: String
+        27:54-27:56 VarLocal :: List String
+      27:60-27:63 Str :: String
+def showPairs :: List ( Int, String ) -> String    [16:1-16:10]   id: author/project:DictTest.showPairs   sig: List ( Int, String ) -> String   kinds:    group: author/project:DictTest.showPairs nonrec ann
+  16:11-16:13 PVar xs :: List ( Int, String )
+  17:5-17:104 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    17:5-17:8 Str :: String
+    17:12-17:104 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      17:12-17:97 Call :: String
+        17:12-17:22 VarForeign :: (( Int, String ) -> String -> String) -> String -> List ( Int, String ) -> String   callee: elm/core:List.foldl   instance: a := ( Int, String ), b := String   sig#: 8a8782c6   subst: v0 := ( Int, String ), v1 := String
+        17:24-17:90 Lambda :: ( Int, String ) -> String -> String
+          17:25-17:33 PPair :: ( Int, String )
+            17:27-17:28 PVar n :: Int
+            17:30-17:31 PVar s :: String
+          17:34-17:37 PVar acc :: String
+          17:41-17:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            17:41-17:44 VarLocal :: String
+            17:48-17:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              17:48-17:51 Str :: String
+              17:55-17:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                17:55-17:71 Call :: String
+                  17:55-17:69 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                  17:70-17:71 VarLocal :: Int
+                17:75-17:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  17:75-17:78 Str :: String
+                  17:82-17:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                    17:82-17:83 VarLocal :: String
+                    17:87-17:90 Str :: String
+        17:92-17:94 Str :: String
+        17:95-17:97 VarLocal :: List ( Int, String )
+      17:101-17:104 Str :: String
+def emptyDict :: Dict Int String    [65:1-65:10]   id: author/project:DictTest.emptyDict   sig: Dict Int String   kinds:    group: author/project:DictTest.emptyDict nonrec ann
+  66:5-66:40 Call :: Dict Int String
+    66:5-66:16 VarForeign :: Int -> Dict Int String -> Dict Int String   callee: elm/core:Dict.remove   instance: comparable := Int, v := String   sig#: e595110e   subst: v0 := Int, v1 := String
+    66:17-66:18 Int :: Int
+    66:20-66:40 Call :: Dict Int String
+      66:20-66:34 VarForeign :: Int -> String -> Dict Int String   callee: elm/core:Dict.singleton   instance: comparable := Int, v := String   sig#: b18da2da   subst: v0 := Int, v1 := String
+      66:35-66:36 Int :: Int
+      66:37-66:40 Str :: String
+def showInts :: List Int -> String    [11:1-11:9]   id: author/project:DictTest.showInts   sig: List Int -> String   kinds:    group: author/project:DictTest.showInts nonrec ann
+  11:10-11:12 PVar xs :: List Int
+  12:5-12:78 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    12:5-12:8 Str :: String
+    12:12-12:78 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      12:12-12:71 Call :: String
+        12:12-12:22 VarForeign :: (Int -> String -> String) -> String -> List Int -> String   callee: elm/core:List.foldl   instance: a := Int, b := String   sig#: 8a8782c6   subst: v0 := Int, v1 := String
+        12:24-12:64 Lambda :: Int -> String -> String
+          12:25-12:26 PVar x :: Int
+          12:27-12:30 PVar acc :: String
+          12:34-12:64 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            12:34-12:37 VarLocal :: String
+            12:41-12:64 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              12:41-12:57 Call :: String
+                12:41-12:55 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                12:56-12:57 VarLocal :: Int
+              12:61-12:64 Str :: String
+        12:66-12:68 Str :: String
+        12:69-12:71 VarLocal :: List Int
+      12:75-12:78 Str :: String
+def pairDict :: Dict ( Int, Int ) Int    [60:1-60:9]   id: author/project:DictTest.pairDict   sig: Dict ( Int, Int ) Int   kinds:    group: author/project:DictTest.pairDict nonrec ann
+  61:5-61:93 Call :: Dict ( Int, Int ) Int
+    61:5-61:18 VarForeign :: List ( ( Int, Int ), Int ) -> Dict ( Int, Int ) Int   callee: elm/core:Dict.fromList   instance: comparable := ( Int, Int ), v := Int   sig#: 5fa92c5f   subst: v0 := ( Int, Int ), v1 := Int
+    61:19-61:93 List :: List ( ( Int, Int ), Int )
+      61:21-61:37 Pair :: ( ( Int, Int ), Int )
+        61:23-61:31 Pair :: ( Int, Int )
+          61:25-61:26 Int :: Int
+          61:28-61:29 Int :: Int
+        61:33-61:35 Int :: Int
+      61:39-61:55 Pair :: ( ( Int, Int ), Int )
+        61:41-61:49 Pair :: ( Int, Int )
+          61:43-61:44 Int :: Int
+          61:46-61:47 Int :: Int
+        61:51-61:53 Int :: Int
+      61:57-61:73 Pair :: ( ( Int, Int ), Int )
+        61:59-61:67 Pair :: ( Int, Int )
+          61:61-61:62 Int :: Int
+          61:64-61:65 Int :: Int
+        61:69-61:71 Int :: Int
+      61:75-61:91 Pair :: ( ( Int, Int ), Int )
+        61:77-61:85 Pair :: ( Int, Int )
+          61:79-61:80 Int :: Int
+          61:82-61:83 Int :: Int
+        61:87-61:89 Int :: Int
+def maybeStr :: Maybe String -> String    [45:1-45:9]   id: author/project:DictTest.maybeStr   sig: Maybe String -> String   kinds:    group: author/project:DictTest.maybeStr nonrec ann
+  45:10-45:11 PVar m :: Maybe String
+  46:5-46:31 Call :: String
+    46:5-46:22 VarForeign :: String -> Maybe String -> String   callee: elm/core:Maybe.withDefault   instance: a := String   sig#: be843909   subst: v0 := String
+    46:23-46:29 Str :: String
+    46:30-46:31 VarLocal :: Maybe String
+def maybeInt :: Maybe Int -> Int    [40:1-40:9]   id: author/project:DictTest.maybeInt   sig: Maybe Int -> Int   kinds:    group: author/project:DictTest.maybeInt nonrec ann
+  40:10-40:11 PVar m :: Maybe Int
+  41:5-41:27 Call :: Int
+    41:5-41:22 VarForeign :: Int -> Maybe Int -> Int   callee: elm/core:Maybe.withDefault   instance: a := Int   sig#: be843909   subst: v0 := Int
+    41:23-41:25 Negate :: Int
+      41:24-41:25 Int :: Int
+    41:26-41:27 VarLocal :: Maybe Int
+def strDict :: Dict String Int    [55:1-55:8]   id: author/project:DictTest.strDict   sig: Dict String Int   kinds:    group: author/project:DictTest.strDict nonrec ann
+  56:5-56:98 Call :: Dict String Int
+    56:5-56:18 VarForeign :: List ( String, Int ) -> Dict String Int   callee: elm/core:Dict.fromList   instance: comparable := String, v := Int   sig#: 5fa92c5f   subst: v0 := String, v1 := Int
+    56:19-56:98 List :: List ( String, Int )
+      56:21-56:34 Pair :: ( String, Int )
+        56:23-56:29 Str :: String
+        56:31-56:32 Int :: Int
+      56:36-56:50 Pair :: ( String, Int )
+        56:38-56:45 Str :: String
+        56:47-56:48 Int :: Int
+      56:52-56:64 Pair :: ( String, Int )
+        56:54-56:59 Str :: String
+        56:61-56:62 Int :: Int
+      56:66-56:79 Pair :: ( String, Int )
+        56:68-56:74 Str :: String
+        56:76-56:77 Int :: Int
+      56:81-56:96 Pair :: ( String, Int )
+        56:83-56:91 Str :: String
+        56:93-56:94 Int :: Int
+def intDict :: Dict Int String    [50:1-50:8]   id: author/project:DictTest.intDict   sig: Dict Int String   kinds:    group: author/project:DictTest.intDict nonrec ann
+  51:5-51:156 Call :: Dict Int String
+    51:5-51:18 VarForeign :: List ( Int, String ) -> Dict Int String   callee: elm/core:Dict.fromList   instance: comparable := Int, v := String   sig#: 5fa92c5f   subst: v0 := Int, v1 := String
+    51:19-51:156 List :: List ( Int, String )
+      51:21-51:34 Pair :: ( Int, String )
+        51:23-51:24 Int :: Int
+        51:26-51:32 Str :: String
+      51:36-51:50 Pair :: ( Int, String )
+        51:38-51:39 Int :: Int
+        51:41-51:48 Str :: String
+      51:52-51:66 Pair :: ( Int, String )
+        51:54-51:55 Int :: Int
+        51:57-51:64 Str :: String
+      51:68-51:80 Pair :: ( Int, String )
+        51:70-51:71 Int :: Int
+        51:73-51:78 Str :: String
+      51:82-51:95 Pair :: ( Int, String )
+        51:84-51:85 Int :: Int
+        51:87-51:93 Str :: String
+      51:97-51:111 Pair :: ( Int, String )
+        51:99-51:100 Int :: Int
+        51:102-51:109 Str :: String
+      51:113-51:126 Pair :: ( Int, String )
+        51:115-51:116 Int :: Int
+        51:118-51:124 Str :: String
+      51:128-51:140 Pair :: ( Int, String )
+        51:130-51:131 Int :: Int
+        51:133-51:138 Str :: String
+      51:142-51:154 Pair :: ( Int, String )
+        51:144-51:145 Int :: Int
+        51:147-51:152 Str :: String
+def showSI :: List ( String, Int ) -> String    [21:1-21:7]   id: author/project:DictTest.showSI   sig: List ( String, Int ) -> String   kinds:    group: author/project:DictTest.showSI nonrec ann
+  21:8-21:10 PVar xs :: List ( String, Int )
+  22:5-22:104 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    22:5-22:8 Str :: String
+    22:12-22:104 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      22:12-22:97 Call :: String
+        22:12-22:22 VarForeign :: (( String, Int ) -> String -> String) -> String -> List ( String, Int ) -> String   callee: elm/core:List.foldl   instance: a := ( String, Int ), b := String   sig#: 8a8782c6   subst: v0 := ( String, Int ), v1 := String
+        22:24-22:90 Lambda :: ( String, Int ) -> String -> String
+          22:25-22:33 PPair :: ( String, Int )
+            22:27-22:28 PVar s :: String
+            22:30-22:31 PVar n :: Int
+          22:34-22:37 PVar acc :: String
+          22:41-22:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            22:41-22:44 VarLocal :: String
+            22:48-22:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              22:48-22:51 Str :: String
+              22:55-22:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                22:55-22:56 VarLocal :: String
+                22:60-22:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  22:60-22:63 Str :: String
+                  22:67-22:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                    22:67-22:83 Call :: String
+                      22:67-22:81 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                      22:82-22:83 VarLocal :: Int
+                    22:87-22:90 Str :: String
+        22:92-22:94 Str :: String
+        22:95-22:97 VarLocal :: List ( String, Int )
+      22:101-22:104 Str :: String
+def counts :: List String -> Dict String Int    [70:1-70:7]   id: author/project:DictTest.counts   sig: List String -> Dict String Int   kinds:    group: author/project:DictTest.counts nonrec ann
+  70:8-70:13 PVar words :: List String
+  71:5-71:99 Call :: Dict String Int
+    71:5-71:15 VarForeign :: (String -> Dict String Int -> Dict String Int) -> Dict String Int -> List String -> Dict String Int   callee: elm/core:List.foldl   instance: a := String, b := Dict String Int   sig#: 8a8782c6   subst: v0 := String, v1 := Dict String Int
+    71:17-71:81 Lambda :: String -> Dict String Int -> Dict String Int
+      71:18-71:19 PVar w :: String
+      71:20-71:21 PVar d :: Dict String Int
+      71:25-71:81 Call :: Dict String Int
+        71:25-71:36 VarForeign :: String -> (Maybe Int -> Maybe Int) -> Dict String Int -> Dict String Int   callee: elm/core:Dict.update   instance: comparable := String, v := Int   sig#: 7f5c8ccc   subst: v0 := String, v1 := Int
+        71:37-71:38 VarLocal :: String
+        71:40-71:78 Lambda :: Maybe Int -> Maybe Int
+          71:41-71:42 PVar m :: Maybe Int
+          71:46-71:77 Call :: Maybe Int
+            71:46-71:50 VarCtor :: Int -> Maybe Int   callee: elm/core:Maybe.Just   instance: a := Int   sig#: c14b2381   subst: v0 := Int
+            71:52-71:77 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+              71:52-71:73 Call :: Int
+                71:52-71:69 VarForeign :: Int -> Maybe Int -> Int   callee: elm/core:Maybe.withDefault   instance: a := Int   sig#: be843909   subst: v0 := Int
+                71:70-71:71 Int :: Int
+                71:72-71:73 VarLocal :: Maybe Int
+              71:76-71:77 Int :: Int
+        71:80-71:81 VarLocal :: Dict String Int
+    71:83-71:93 VarForeign :: Dict String Int   callee: elm/core:Dict.empty   instance: k := String, v := Int   sig#: dd8ed12a   subst: v0 := String, v1 := Int
+    71:94-71:99 VarLocal :: List String
+def b2i :: Bool -> Int    [31:1-31:4]   id: author/project:DictTest.b2i   sig: Bool -> Int   kinds:    group: author/project:DictTest.b2i nonrec ann
+  31:5-31:6 PVar x :: Bool
+  32:5-36:10 If :: Int
+    32:8-32:9 VarLocal :: Bool
+    33:9-33:10 Int :: Int
+    36:9-36:10 Int :: Int
+def main :: Program () () ()    [75:1-75:5]   id: author/project:DictTest.main   sig: Program () () ()   kinds:    group: author/project:DictTest.main nonrec ann
+  76:5-122:10 Call :: Program () () ()
+    76:5-76:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    77:9-122:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      78:13-119:33 Lambda :: () -> ( (), Cmd () )
+        78:14-78:15 PAnything :: ()
+        80:21-80:22 PAnything :: String
+        80:25-80:79 Call :: String
+          80:25-80:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          80:35-80:47 Str :: String
+          80:49-80:79 Call :: String
+            80:49-80:58 VarTopLevel :: List ( Int, String ) -> String   callee: author/project:DictTest.showPairs   use: gen
+            80:60-80:79 Call :: List ( Int, String )
+              80:60-80:71 VarForeign :: Dict Int String -> List ( Int, String )   callee: elm/core:Dict.toList   instance: k := Int, v := String   sig#: 99c914ae   subst: v0 := Int, v1 := String
+              80:72-80:79 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        81:21-81:22 PAnything :: String
+        81:25-81:76 Call :: String
+          81:25-81:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          81:35-81:46 Str :: String
+          81:48-81:76 Call :: String
+            81:48-81:56 VarTopLevel :: Maybe String -> String   callee: author/project:DictTest.maybeStr   use: gen
+            81:58-81:76 Call :: Maybe String
+              81:58-81:66 VarForeign :: Int -> Dict Int String -> Maybe String   callee: elm/core:Dict.get   instance: comparable := Int, v := String   sig#: e8f00e9c   subst: v0 := Int, v1 := String
+              81:67-81:68 Int :: Int
+              81:69-81:76 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        82:21-82:22 PAnything :: String
+        82:25-82:78 Call :: String
+          82:25-82:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          82:35-82:47 Str :: String
+          82:49-82:78 Call :: String
+            82:49-82:57 VarTopLevel :: Maybe String -> String   callee: author/project:DictTest.maybeStr   use: gen
+            82:59-82:78 Call :: Maybe String
+              82:59-82:67 VarForeign :: Int -> Dict Int String -> Maybe String   callee: elm/core:Dict.get   instance: comparable := Int, v := String   sig#: e8f00e9c   subst: v0 := Int, v1 := String
+              82:68-82:70 Int :: Int
+              82:71-82:78 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        83:21-83:22 PAnything :: Int
+        83:25-83:75 Call :: Int
+          83:25-83:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          83:35-83:47 Str :: String
+          83:49-83:75 Call :: Int
+            83:49-83:52 VarTopLevel :: Bool -> Int   callee: author/project:DictTest.b2i   use: gen
+            83:54-83:75 Call :: Bool
+              83:54-83:65 VarForeign :: Int -> Dict Int String -> Bool   callee: elm/core:Dict.member   instance: comparable := Int, v := String   sig#: fd868749   subst: v0 := Int, v1 := String
+              83:66-83:67 Int :: Int
+              83:68-83:75 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        84:21-84:22 PAnything :: Int
+        84:25-84:64 Call :: Int
+          84:25-84:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          84:35-84:45 Str :: String
+          84:47-84:64 Call :: Int
+            84:47-84:56 VarForeign :: Dict Int String -> Int   callee: elm/core:Dict.size   instance: k := Int, v := String   sig#: d0910be5   subst: v0 := Int, v1 := String
+            84:57-84:64 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        85:21-85:22 PAnything :: String
+        85:25-85:74 Call :: String
+          85:25-85:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          85:35-85:45 Str :: String
+          85:47-85:74 Call :: String
+            85:47-85:55 VarTopLevel :: List Int -> String   callee: author/project:DictTest.showInts   use: gen
+            85:57-85:74 Call :: List Int
+              85:57-85:66 VarForeign :: Dict Int String -> List Int   callee: elm/core:Dict.keys   instance: k := Int, v := String   sig#: 640b334e   subst: v0 := Int, v1 := String
+              85:67-85:74 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        86:21-86:22 PAnything :: String
+        86:25-86:81 Call :: String
+          86:25-86:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          86:35-86:47 Str :: String
+          86:49-86:81 Call :: String
+            86:49-86:60 VarTopLevel :: List String -> String   callee: author/project:DictTest.showStrings   use: gen
+            86:62-86:81 Call :: List String
+              86:62-86:73 VarForeign :: Dict Int String -> List String   callee: elm/core:Dict.values   instance: k := Int, v := String   sig#: 640b334f   subst: v0 := Int, v1 := String
+              86:74-86:81 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        87:21-87:22 PAnything :: String
+        87:25-87:106 Call :: String
+          87:25-87:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          87:35-87:47 Str :: String
+          87:49-87:106 Call :: String
+            87:49-87:57 VarTopLevel :: List Int -> String   callee: author/project:DictTest.showInts   use: gen
+            87:59-87:106 Call :: List Int
+              87:59-87:68 VarForeign :: Dict Int String -> List Int   callee: elm/core:Dict.keys   instance: k := Int, v := String   sig#: 640b334e   subst: v0 := Int, v1 := String
+              87:70-87:106 Call :: Dict Int String
+                87:70-87:81 VarForeign :: Int -> Dict Int String -> Dict Int String   callee: elm/core:Dict.remove   instance: comparable := Int, v := String   sig#: e595110e   subst: v0 := Int, v1 := String
+                87:82-87:83 Int :: Int
+                87:85-87:106 Call :: Dict Int String
+                  87:85-87:96 VarForeign :: Int -> Dict Int String -> Dict Int String   callee: elm/core:Dict.remove   instance: comparable := Int, v := String   sig#: e595110e   subst: v0 := Int, v1 := String
+                  87:97-87:98 Int :: Int
+                  87:99-87:106 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        88:21-88:22 PAnything :: String
+        88:25-88:123 Call :: String
+          88:25-88:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          88:35-88:47 Str :: String
+          88:49-88:123 Call :: String
+            88:49-88:58 VarTopLevel :: List ( Int, String ) -> String   callee: author/project:DictTest.showPairs   use: gen
+            88:60-88:123 Call :: List ( Int, String )
+              88:60-88:71 VarForeign :: Dict Int String -> List ( Int, String )   callee: elm/core:Dict.toList   instance: k := Int, v := String   sig#: 99c914ae   subst: v0 := Int, v1 := String
+              88:73-88:123 Call :: Dict Int String
+                88:73-88:84 VarForeign :: Int -> String -> Dict Int String -> Dict Int String   callee: elm/core:Dict.insert   instance: comparable := Int, v := String   sig#: 256ddcb4   subst: v0 := Int, v1 := String
+                88:85-88:86 Int :: Int
+                88:87-88:93 Str :: String
+                88:95-88:123 Call :: Dict Int String
+                  88:95-88:106 VarForeign :: Int -> String -> Dict Int String -> Dict Int String   callee: elm/core:Dict.insert   instance: comparable := Int, v := String   sig#: 256ddcb4   subst: v0 := Int, v1 := String
+                  88:107-88:108 Int :: Int
+                  88:109-88:115 Str :: String
+                  88:116-88:123 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        89:21-89:22 PAnything :: Int
+        89:25-89:95 Call :: Int
+          89:25-89:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          89:35-89:46 Str :: String
+          89:48-89:95 Call :: Int
+            89:48-89:58 VarForeign :: (Int -> String -> Int -> Int) -> Int -> Dict Int String -> Int   callee: elm/core:Dict.foldl   instance: b := Int, k := Int, v := String   sig#: 55d94404   subst: v0 := Int, v1 := String, v2 := Int
+            89:60-89:84 Lambda :: Int -> String -> Int -> Int
+              89:61-89:62 PVar k :: Int
+              89:63-89:64 PAnything :: String
+              89:65-89:68 PVar acc :: Int
+              89:72-89:84 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                89:72-89:80 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  89:72-89:75 VarLocal :: Int
+                  89:78-89:80 Int :: Int
+                89:83-89:84 VarLocal :: Int
+            89:86-89:87 Int :: Int
+            89:88-89:95 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        90:21-90:22 PAnything :: Int
+        90:25-90:95 Call :: Int
+          90:25-90:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          90:35-90:46 Str :: String
+          90:48-90:95 Call :: Int
+            90:48-90:58 VarForeign :: (Int -> String -> Int -> Int) -> Int -> Dict Int String -> Int   callee: elm/core:Dict.foldr   instance: b := Int, k := Int, v := String   sig#: 55d94404   subst: v0 := Int, v1 := String, v2 := Int
+            90:60-90:84 Lambda :: Int -> String -> Int -> Int
+              90:61-90:62 PVar k :: Int
+              90:63-90:64 PAnything :: String
+              90:65-90:68 PVar acc :: Int
+              90:72-90:84 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                90:72-90:80 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  90:72-90:75 VarLocal :: Int
+                  90:78-90:80 Int :: Int
+                90:83-90:84 VarLocal :: Int
+            90:86-90:87 Int :: Int
+            90:88-90:95 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        91:21-91:22 PAnything :: String
+        91:25-91:118 Call :: String
+          91:25-91:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          91:35-91:44 Str :: String
+          91:46-91:118 Call :: String
+            91:46-91:55 VarTopLevel :: List ( Int, String ) -> String   callee: author/project:DictTest.showPairs   use: gen
+            91:57-91:118 Call :: List ( Int, String )
+              91:57-91:68 VarForeign :: Dict Int String -> List ( Int, String )   callee: elm/core:Dict.toList   instance: k := Int, v := String   sig#: 99c914ae   subst: v0 := Int, v1 := String
+              91:70-91:118 Call :: Dict Int String
+                91:70-91:78 VarForeign :: (Int -> String -> String) -> Dict Int String -> Dict Int String   callee: elm/core:Dict.map   instance: a := String, b := String, k := Int   sig#: be74c9f2   subst: v0 := Int, v1 := String, v2 := String
+                91:80-91:109 Lambda :: Int -> String -> String
+                  91:81-91:82 PVar k :: Int
+                  91:83-91:84 PVar v :: String
+                  91:88-91:109 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                    91:88-91:89 VarLocal :: String
+                    91:93-91:109 Call :: String
+                      91:93-91:107 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                      91:108-91:109 VarLocal :: Int
+                91:111-91:118 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        92:21-92:22 PAnything :: String
+        92:25-92:114 Call :: String
+          92:25-92:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          92:35-92:47 Str :: String
+          92:49-92:114 Call :: String
+            92:49-92:57 VarTopLevel :: List Int -> String   callee: author/project:DictTest.showInts   use: gen
+            92:59-92:114 Call :: List Int
+              92:59-92:68 VarForeign :: Dict Int String -> List Int   callee: elm/core:Dict.keys   instance: k := Int, v := String   sig#: 640b334e   subst: v0 := Int, v1 := String
+              92:70-92:114 Call :: Dict Int String
+                92:70-92:81 VarForeign :: (Int -> String -> Bool) -> Dict Int String -> Dict Int String   callee: elm/core:Dict.filter   instance: comparable := Int, v := String   sig#: 9e4275cd   subst: v0 := Int, v1 := String
+                92:83-92:105 Lambda :: Int -> String -> Bool
+                  92:84-92:85 PVar k :: Int
+                  92:86-92:87 PAnything :: String
+                  92:91-92:105 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Int   sig#: 2cdc0786   subst: v0 := Int
+                    92:91-92:100 Call :: Int
+                      92:91-92:96 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+                      92:97-92:98 Int :: Int
+                      92:99-92:100 VarLocal :: Int
+                    92:104-92:105 Int :: Int
+                92:107-92:114 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        93:21-93:22 PAnything :: String
+        93:25-93:124 Call :: String
+          93:25-93:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          93:35-93:50 Str :: String
+          93:52-93:124 Call :: String
+            93:52-93:60 VarTopLevel :: List Int -> String   callee: author/project:DictTest.showInts   use: gen
+            93:62-93:124 Call :: List Int
+              93:62-93:71 VarForeign :: Dict Int String -> List Int   callee: elm/core:Dict.keys   instance: k := Int, v := String   sig#: 640b334e   subst: v0 := Int, v1 := String
+              93:73-93:124 Call :: Dict Int String
+                93:73-93:84 VarForeign :: ( Dict Int String, Dict Int String ) -> Dict Int String   callee: elm/core:Tuple.first   instance: a := Dict Int String, b := Dict Int String   sig#: ee0f5e96   subst: v0 := Dict Int String, v1 := Dict Int String
+                93:86-93:124 Call :: ( Dict Int String, Dict Int String )
+                  93:86-93:100 VarForeign :: (Int -> String -> Bool) -> Dict Int String -> ( Dict Int String, Dict Int String )   callee: elm/core:Dict.partition   instance: comparable := Int, v := String   sig#: d57315a5   subst: v0 := Int, v1 := String
+                  93:102-93:115 Lambda :: Int -> String -> Bool
+                    93:103-93:104 PVar k :: Int
+                    93:105-93:106 PAnything :: String
+                    93:110-93:115 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+                      93:110-93:111 VarLocal :: Int
+                      93:114-93:115 Int :: Int
+                  93:117-93:124 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        94:21-94:22 PAnything :: String
+        94:25-94:76 Call :: String
+          94:25-94:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          94:35-94:47 Str :: String
+          94:49-94:76 Call :: String
+            94:49-94:55 VarTopLevel :: List ( String, Int ) -> String   callee: author/project:DictTest.showSI   use: gen
+            94:57-94:76 Call :: List ( String, Int )
+              94:57-94:68 VarForeign :: Dict String Int -> List ( String, Int )   callee: elm/core:Dict.toList   instance: k := String, v := Int   sig#: 99c914ae   subst: v0 := String, v1 := Int
+              94:69-94:76 VarTopLevel :: Dict String Int   callee: author/project:DictTest.strDict   use: gen
+        95:21-95:22 PAnything :: Int
+        95:25-95:79 Call :: Int
+          95:25-95:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          95:35-95:44 Str :: String
+          95:46-95:79 Call :: Int
+            95:46-95:54 VarTopLevel :: Maybe Int -> Int   callee: author/project:DictTest.maybeInt   use: gen
+            95:56-95:79 Call :: Maybe Int
+              95:56-95:64 VarForeign :: String -> Dict String Int -> Maybe Int   callee: elm/core:Dict.get   instance: comparable := String, v := Int   sig#: e8f00e9c   subst: v0 := String, v1 := Int
+              95:65-95:71 Str :: String
+              95:72-95:79 VarTopLevel :: Dict String Int   callee: author/project:DictTest.strDict   use: gen
+        96:21-96:22 PAnything :: Int
+        96:25-96:84 Call :: Int
+          96:25-96:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          96:35-96:49 Str :: String
+          96:51-96:84 Call :: Int
+            96:51-96:59 VarTopLevel :: Maybe Int -> Int   callee: author/project:DictTest.maybeInt   use: gen
+            96:61-96:84 Call :: Maybe Int
+              96:61-96:69 VarForeign :: String -> Dict String Int -> Maybe Int   callee: elm/core:Dict.get   instance: comparable := String, v := Int   sig#: e8f00e9c   subst: v0 := String, v1 := Int
+              96:70-96:76 Str :: String
+              96:77-96:84 VarTopLevel :: Dict String Int   callee: author/project:DictTest.strDict   use: gen
+        97:21-97:22 PAnything :: String
+        97:25-97:135 Call :: String
+          97:25-97:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          97:35-97:46 Str :: String
+          97:48-97:135 Call :: String
+            97:48-97:54 VarTopLevel :: List ( String, Int ) -> String   callee: author/project:DictTest.showSI   use: gen
+            97:56-97:135 Call :: List ( String, Int )
+              97:56-97:67 VarForeign :: Dict String Int -> List ( String, Int )   callee: elm/core:Dict.toList   instance: k := String, v := Int   sig#: 99c914ae   subst: v0 := String, v1 := Int
+              97:69-97:135 Call :: Dict String Int
+                97:69-97:79 VarForeign :: Dict String Int -> Dict String Int -> Dict String Int   callee: elm/core:Dict.union   instance: comparable := String, v := Int   sig#: dffb77c9   subst: v0 := String, v1 := Int
+                97:80-97:87 VarTopLevel :: Dict String Int   callee: author/project:DictTest.strDict   use: gen
+                97:89-97:135 Call :: Dict String Int
+                  97:89-97:102 VarForeign :: List ( String, Int ) -> Dict String Int   callee: elm/core:Dict.fromList   instance: comparable := String, v := Int   sig#: 5fa92c5f   subst: v0 := String, v1 := Int
+                  97:103-97:135 List :: List ( String, Int )
+                    97:105-97:118 Pair :: ( String, Int )
+                      97:107-97:113 Str :: String
+                      97:115-97:116 Int :: Int
+                    97:120-97:133 Pair :: ( String, Int )
+                      97:122-97:127 Str :: String
+                      97:129-97:131 Int :: Int
+        98:21-98:22 PAnything :: String
+        98:25-98:156 Call :: String
+          98:25-98:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          98:35-98:50 Str :: String
+          98:52-98:156 Call :: String
+            98:52-98:58 VarTopLevel :: List ( String, Int ) -> String   callee: author/project:DictTest.showSI   use: gen
+            98:60-98:156 Call :: List ( String, Int )
+              98:60-98:71 VarForeign :: Dict String Int -> List ( String, Int )   callee: elm/core:Dict.toList   instance: k := String, v := Int   sig#: 99c914ae   subst: v0 := String, v1 := Int
+              98:73-98:156 Call :: Dict String Int
+                98:73-98:87 VarForeign :: Dict String Int -> Dict String Int -> Dict String Int   callee: elm/core:Dict.intersect   instance: comparable := String, v := Int   sig#: dffb77c9   subst: v0 := String, v1 := Int
+                98:88-98:95 VarTopLevel :: Dict String Int   callee: author/project:DictTest.strDict   use: gen
+                98:97-98:156 Call :: Dict String Int
+                  98:97-98:110 VarForeign :: List ( String, Int ) -> Dict String Int   callee: elm/core:Dict.fromList   instance: comparable := String, v := Int   sig#: 5fa92c5f   subst: v0 := String, v1 := Int
+                  98:111-98:156 List :: List ( String, Int )
+                    98:113-98:125 Pair :: ( String, Int )
+                      98:115-98:120 Str :: String
+                      98:122-98:123 Int :: Int
+                    98:127-98:140 Pair :: ( String, Int )
+                      98:129-98:135 Str :: String
+                      98:137-98:138 Int :: Int
+                    98:142-98:154 Pair :: ( String, Int )
+                      98:144-98:149 Str :: String
+                      98:151-98:152 Int :: Int
+        99:21-99:22 PAnything :: String
+        99:25-99:132 Call :: String
+          99:25-99:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          99:35-99:45 Str :: String
+          99:47-99:132 Call :: String
+            99:47-99:53 VarTopLevel :: List ( String, Int ) -> String   callee: author/project:DictTest.showSI   use: gen
+            99:55-99:132 Call :: List ( String, Int )
+              99:55-99:66 VarForeign :: Dict String Int -> List ( String, Int )   callee: elm/core:Dict.toList   instance: k := String, v := Int   sig#: 99c914ae   subst: v0 := String, v1 := Int
+              99:68-99:132 Call :: Dict String Int
+                99:68-99:77 VarForeign :: Dict String Int -> Dict String Int -> Dict String Int   <= Dict String Int -> Dict String number -> Dict String Int   callee: elm/core:Dict.diff   instance: a := Int, b := Int (defaulted), comparable := String   sig#: d496fd61   subst: v0 := String, v1 := Int, v2 := Int
+                99:78-99:85 VarTopLevel :: Dict String Int   callee: author/project:DictTest.strDict   use: gen
+                99:87-99:132 Call :: Dict String Int   <= Dict String number
+                  99:87-99:100 VarForeign :: List ( String, Int ) -> Dict String Int   <= List ( String, number ) -> Dict String number   callee: elm/core:Dict.fromList   instance: comparable := String, v := Int (defaulted)   sig#: 5fa92c5f   subst: v0 := String, v1 := Int
+                  99:101-99:132 List :: List ( String, Int )   <= List ( String, number )
+                    99:103-99:115 Pair :: ( String, Int )   <= ( String, number )
+                      99:105-99:110 Str :: String
+                      99:112-99:113 Int :: Int   <= number
+                    99:117-99:130 Pair :: ( String, Int )   <= ( String, number )
+                      99:119-99:125 Str :: String
+                      99:127-99:128 Int :: Int   <= number
+        100:21-100:22 PAnything :: String
+        100:25-100:112 Call :: String
+          100:25-100:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          100:35-100:46 Str :: String
+          100:48-100:112 Call :: String
+            100:48-100:56 VarTopLevel :: List Int -> String   callee: author/project:DictTest.showInts   use: gen
+            100:58-100:112 Call :: List Int
+              100:58-100:66 VarForeign :: (( Int, Int ) -> Int) -> List ( Int, Int ) -> List Int   callee: elm/core:List.map   instance: a := ( Int, Int ), b := Int   sig#: 6a702f63   subst: v0 := ( Int, Int ), v1 := Int
+              100:68-100:91 Lambda :: ( Int, Int ) -> Int
+                100:69-100:77 PPair :: ( Int, Int )
+                  100:71-100:72 PVar a :: Int
+                  100:74-100:75 PVar b :: Int
+                100:81-100:91 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  100:81-100:87 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                    100:81-100:82 VarLocal :: Int
+                    100:85-100:87 Int :: Int
+                  100:90-100:91 VarLocal :: Int
+              100:94-100:112 Call :: List ( Int, Int )
+                100:94-100:103 VarForeign :: Dict ( Int, Int ) Int -> List ( Int, Int )   callee: elm/core:Dict.keys   instance: k := ( Int, Int ), v := Int   sig#: 640b334e   subst: v0 := ( Int, Int ), v1 := Int
+                100:104-100:112 VarTopLevel :: Dict ( Int, Int ) Int   callee: author/project:DictTest.pairDict   use: gen
+        101:21-101:22 PAnything :: Int
+        101:25-101:83 Call :: Int
+          101:25-101:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          101:35-101:45 Str :: String
+          101:47-101:83 Call :: Int
+            101:47-101:55 VarTopLevel :: Maybe Int -> Int   callee: author/project:DictTest.maybeInt   use: gen
+            101:57-101:83 Call :: Maybe Int
+              101:57-101:65 VarForeign :: ( Int, Int ) -> Dict ( Int, Int ) Int -> Maybe Int   callee: elm/core:Dict.get   instance: comparable := ( Int, Int ), v := Int   sig#: e8f00e9c   subst: v0 := ( Int, Int ), v1 := Int
+              101:66-101:74 Pair :: ( Int, Int )
+                101:68-101:69 Int :: Int
+                101:71-101:72 Int :: Int
+              101:75-101:83 VarTopLevel :: Dict ( Int, Int ) Int   callee: author/project:DictTest.pairDict   use: gen
+        102:21-102:22 PAnything :: String
+        102:25-102:131 Call :: String
+          102:25-102:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          102:35-102:42 Str :: String
+          102:44-102:131 Call :: String
+            102:44-102:50 VarTopLevel :: List ( String, Int ) -> String   callee: author/project:DictTest.showSI   use: gen
+            102:52-102:131 Call :: List ( String, Int )
+              102:52-102:63 VarForeign :: Dict String Int -> List ( String, Int )   callee: elm/core:Dict.toList   instance: k := String, v := Int   sig#: 99c914ae   subst: v0 := String, v1 := Int
+              102:65-102:131 Call :: Dict String Int
+                102:65-102:71 VarTopLevel :: List String -> Dict String Int   callee: author/project:DictTest.counts   use: gen
+                102:72-102:131 List :: List String
+                  102:74-102:79 Str :: String
+                  102:81-102:86 Str :: String
+                  102:88-102:93 Str :: String
+                  102:95-102:100 Str :: String
+                  102:102-102:107 Str :: String
+                  102:109-102:114 Str :: String
+                  102:116-102:121 Str :: String
+                  102:123-102:129 Str :: String
+        103:21-103:22 PAnything :: Int
+        103:25-103:112 Call :: Int
+          103:25-103:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          103:35-103:44 Str :: String
+          103:46-103:112 Call :: Int
+            103:46-103:49 VarTopLevel :: Bool -> Int   callee: author/project:DictTest.b2i   use: gen
+            103:51-103:112 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Dict Int String   sig#: 2cdc0786   subst: v0 := Dict Int String
+              103:51-103:58 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+              103:62-103:110 Call :: Dict Int String
+                103:62-103:75 VarForeign :: List ( Int, String ) -> Dict Int String   callee: elm/core:Dict.fromList   instance: comparable := Int, v := String   sig#: 5fa92c5f   subst: v0 := Int, v1 := String
+                103:77-103:110 Call :: List ( Int, String )
+                  103:77-103:89 VarForeign :: List ( Int, String ) -> List ( Int, String )   callee: elm/core:List.reverse   instance: a := ( Int, String )   sig#: c2fcf511   subst: v0 := ( Int, String )
+                  103:91-103:110 Call :: List ( Int, String )
+                    103:91-103:102 VarForeign :: Dict Int String -> List ( Int, String )   callee: elm/core:Dict.toList   instance: k := Int, v := String   sig#: 99c914ae   subst: v0 := Int, v1 := String
+                    103:103-103:110 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        104:21-104:22 PAnything :: Int
+        104:25-104:83 Call :: Int
+          104:25-104:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          104:35-104:44 Str :: String
+          104:46-104:83 Call :: Int
+            104:46-104:49 VarTopLevel :: Bool -> Int   callee: author/project:DictTest.b2i   use: gen
+            104:51-104:83 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Dict Int String   sig#: 2cdc0786   subst: v0 := Dict Int String
+              104:51-104:58 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+              104:62-104:83 Call :: Dict Int String
+                104:62-104:73 VarForeign :: Int -> Dict Int String -> Dict Int String   callee: elm/core:Dict.remove   instance: comparable := Int, v := String   sig#: e595110e   subst: v0 := Int, v1 := String
+                104:74-104:75 Int :: Int
+                104:76-104:83 VarTopLevel :: Dict Int String   callee: author/project:DictTest.intDict   use: gen
+        105:21-105:22 PAnything :: Int
+        105:25-105:185 Call :: Int
+          105:25-105:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          105:35-105:62 Str :: String
+          105:64-105:185 Call :: Int
+            105:64-105:67 VarTopLevel :: Bool -> Int   callee: author/project:DictTest.b2i   use: gen
+            105:69-105:185 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Dict Int String (defaulted)   sig#: 2cdc0786   subst: v0 := Dict Int String
+              105:69-105:121 Call :: Dict Int String   <= Dict number1 String
+                105:69-105:82 VarForeign :: List ( Int, String ) -> Dict Int String   <= List ( number1, String ) -> Dict number1 String   callee: elm/core:Dict.fromList   instance: comparable := Int (defaulted), v := String   sig#: 5fa92c5f   subst: v0 := Int, v1 := String
+                105:83-105:121 List :: List ( Int, String )   <= List ( number1, String )
+                  105:85-105:95 Pair :: ( Int, String )   <= ( number1, String )
+                    105:87-105:88 Int :: Int   <= number1
+                    105:90-105:93 Str :: String
+                  105:97-105:107 Pair :: ( Int, String )   <= ( number1, String )
+                    105:99-105:100 Int :: Int   <= number1
+                    105:102-105:105 Str :: String
+                  105:109-105:119 Pair :: ( Int, String )   <= ( number1, String )
+                    105:111-105:112 Int :: Int   <= number1
+                    105:114-105:117 Str :: String
+              105:125-105:183 Call :: Dict Int String   <= Dict number1 String
+                105:125-105:136 VarForeign :: Int -> String -> Dict Int String -> Dict Int String   <= number1 -> String -> Dict number1 String -> Dict number1 String   callee: elm/core:Dict.insert   instance: comparable := Int (defaulted), v := String   sig#: 256ddcb4   subst: v0 := Int, v1 := String
+                105:137-105:138 Int :: Int   <= number1
+                105:139-105:142 Str :: String
+                105:144-105:183 Call :: Dict Int String   <= Dict number1 String
+                  105:144-105:155 VarForeign :: Int -> String -> Dict Int String -> Dict Int String   <= number1 -> String -> Dict number1 String -> Dict number1 String   callee: elm/core:Dict.insert   instance: comparable := Int (defaulted), v := String   sig#: 256ddcb4   subst: v0 := Int, v1 := String
+                  105:156-105:157 Int :: Int   <= number1
+                  105:158-105:161 Str :: String
+                  105:163-105:183 Call :: Dict Int String   <= Dict number1 String
+                    105:163-105:177 VarForeign :: Int -> String -> Dict Int String   <= number1 -> String -> Dict number1 String   callee: elm/core:Dict.singleton   instance: comparable := Int (defaulted), v := String   sig#: b18da2da   subst: v0 := Int, v1 := String
+                    105:178-105:179 Int :: Int   <= number1
+                    105:180-105:183 Str :: String
+        106:21-106:22 PAnything :: Int
+        106:25-106:75 Call :: Int
+          106:25-106:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          106:35-106:45 Str :: String
+          106:47-106:75 Call :: Int
+            106:47-106:50 VarTopLevel :: Bool -> Int   callee: author/project:DictTest.b2i   use: gen
+            106:52-106:75 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Dict Int String   sig#: 2cdc0786   subst: v0 := Dict Int String
+              106:52-106:62 VarForeign :: Dict Int String   callee: elm/core:Dict.empty   instance: k := Int, v := String   sig#: dd8ed12a   subst: v0 := Int, v1 := String
+              106:66-106:75 VarTopLevel :: Dict Int String   callee: author/project:DictTest.emptyDict   use: gen
+        107:21-107:22 PAnything :: Int
+        107:25-107:144 Call :: Int
+          107:25-107:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          107:35-107:40 Str :: String
+          107:42-107:144 Call :: Int
+            107:42-107:51 VarForeign :: Dict Int Int -> Int   callee: elm/core:Dict.size   instance: k := Int, v := Int   sig#: d0910be5   subst: v0 := Int, v1 := Int
+            107:53-107:144 Call :: Dict Int Int
+              107:53-107:63 VarForeign :: (Int -> Dict Int Int -> Dict Int Int) -> Dict Int Int -> List Int -> Dict Int Int   callee: elm/core:List.foldl   instance: a := Int, b := Dict Int Int   sig#: 8a8782c6   subst: v0 := Int, v1 := Dict Int Int
+              107:65-107:112 Lambda :: Int -> Dict Int Int -> Dict Int Int
+                107:66-107:67 PVar i :: Int
+                107:68-107:69 PVar d :: Dict Int Int
+                107:73-107:112 Call :: Dict Int Int
+                  107:73-107:84 VarForeign :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: elm/core:Dict.insert   instance: comparable := Int, v := Int   sig#: 256ddcb4   subst: v0 := Int, v1 := Int
+                  107:86-107:106 Call :: Int
+                    107:86-107:91 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+                    107:92-107:96 Int :: Int
+                    107:98-107:106 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                      107:98-107:99 VarLocal :: Int
+                      107:102-107:106 Int :: Int
+                  107:109-107:110 VarLocal :: Int
+                  107:111-107:112 VarLocal :: Dict Int Int
+              107:114-107:124 VarForeign :: Dict Int Int   callee: elm/core:Dict.empty   instance: k := Int, v := Int   sig#: dd8ed12a   subst: v0 := Int, v1 := Int
+              107:126-107:144 Call :: List Int
+                107:126-107:136 VarForeign :: Int -> Int -> List Int   callee: elm/core:List.range
+                107:137-107:138 Int :: Int
+                107:139-107:144 Int :: Int
+        108:21-108:22 PAnything :: String
+        108:25-108:97 Call :: String
+          108:25-108:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          108:35-108:40 Str :: String
+          108:42-108:97 Call :: String
+            108:42-108:50 VarTopLevel :: List Int -> String   callee: author/project:DictTest.showInts   use: gen
+            108:52-108:97 Call :: List Int
+              108:52-108:62 VarForeign :: Set Int -> List Int   callee: elm/core:Set.toList   instance: a := Int   sig#: 1075e718   subst: v0 := Int
+              108:64-108:97 Call :: Set Int
+                108:64-108:76 VarForeign :: List Int -> Set Int   callee: elm/core:Set.fromList   instance: comparable := Int   sig#: 8a50a616   subst: v0 := Int
+                108:77-108:97 List :: List Int
+                  108:79-108:80 Int :: Int
+                  108:82-108:83 Int :: Int
+                  108:85-108:86 Int :: Int
+                  108:88-108:89 Int :: Int
+                  108:91-108:92 Int :: Int
+                  108:94-108:95 Int :: Int
+        109:21-109:22 PAnything :: Int
+        109:25-109:92 Call :: Int
+          109:25-109:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          109:35-109:47 Str :: String
+          109:49-109:92 Call :: Int
+            109:49-109:52 VarTopLevel :: Bool -> Int   callee: author/project:DictTest.b2i   use: gen
+            109:54-109:92 Call :: Bool
+              109:54-109:64 VarForeign :: Int -> Set Int -> Bool   <= number2 -> Set number2 -> Bool   callee: elm/core:Set.member   instance: comparable := Int (defaulted)   sig#: cef298b2   subst: v0 := Int
+              109:65-109:66 Int :: Int   <= number2
+              109:68-109:92 Call :: Set Int   <= Set number2
+                109:68-109:80 VarForeign :: List Int -> Set Int   <= List number2 -> Set number2   callee: elm/core:Set.fromList   instance: comparable := Int (defaulted)   sig#: 8a50a616   subst: v0 := Int
+                109:81-109:92 List :: List Int   <= List number2
+                  109:83-109:84 Int :: Int   <= number2
+                  109:86-109:87 Int :: Int   <= number2
+                  109:89-109:90 Int :: Int   <= number2
+        110:21-110:22 PAnything :: String
+        110:25-110:129 Call :: String
+          110:25-110:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          110:35-110:46 Str :: String
+          110:48-110:129 Call :: String
+            110:48-110:56 VarTopLevel :: List Int -> String   callee: author/project:DictTest.showInts   use: gen
+            110:58-110:129 Call :: List Int
+              110:58-110:68 VarForeign :: Set Int -> List Int   callee: elm/core:Set.toList   instance: a := Int   sig#: 1075e718   subst: v0 := Int
+              110:70-110:129 Call :: Set Int
+                110:70-110:79 VarForeign :: Set Int -> Set Int -> Set Int   callee: elm/core:Set.union   instance: comparable := Int   sig#: 64cbee9c   subst: v0 := Int
+                110:81-110:105 Call :: Set Int
+                  110:81-110:93 VarForeign :: List Int -> Set Int   callee: elm/core:Set.fromList   instance: comparable := Int   sig#: 8a50a616   subst: v0 := Int
+                  110:94-110:105 List :: List Int
+                    110:96-110:97 Int :: Int
+                    110:99-110:100 Int :: Int
+                    110:102-110:103 Int :: Int
+                110:108-110:129 Call :: Set Int
+                  110:108-110:120 VarForeign :: List Int -> Set Int   callee: elm/core:Set.fromList   instance: comparable := Int   sig#: 8a50a616   subst: v0 := Int
+                  110:121-110:129 List :: List Int
+                    110:123-110:124 Int :: Int
+                    110:126-110:127 Int :: Int
+        111:21-111:22 PAnything :: String
+        111:25-111:124 Call :: String
+          111:25-111:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          111:35-111:45 Str :: String
+          111:47-111:124 Call :: String
+            111:47-111:55 VarTopLevel :: List Int -> String   callee: author/project:DictTest.showInts   use: gen
+            111:57-111:124 Call :: List Int
+              111:57-111:67 VarForeign :: Set Int -> List Int   callee: elm/core:Set.toList   instance: a := Int   sig#: 1075e718   subst: v0 := Int
+              111:69-111:124 Call :: Set Int
+                111:69-111:77 VarForeign :: Set Int -> Set Int -> Set Int   callee: elm/core:Set.diff   instance: comparable := Int   sig#: 64cbee9c   subst: v0 := Int
+                111:79-111:103 Call :: Set Int
+                  111:79-111:91 VarForeign :: List Int -> Set Int   callee: elm/core:Set.fromList   instance: comparable := Int   sig#: 8a50a616   subst: v0 := Int
+                  111:92-111:103 List :: List Int
+                    111:94-111:95 Int :: Int
+                    111:97-111:98 Int :: Int
+                    111:100-111:101 Int :: Int
+                111:106-111:124 Call :: Set Int
+                  111:106-111:118 VarForeign :: List Int -> Set Int   callee: elm/core:Set.fromList   instance: comparable := Int   sig#: 8a50a616   subst: v0 := Int
+                  111:119-111:124 List :: List Int
+                    111:121-111:122 Int :: Int
+        112:21-112:22 PAnything :: String
+        112:25-112:140 Call :: String
+          112:25-112:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          112:35-112:50 Str :: String
+          112:52-112:140 Call :: String
+            112:52-112:60 VarTopLevel :: List Int -> String   callee: author/project:DictTest.showInts   use: gen
+            112:62-112:140 Call :: List Int
+              112:62-112:72 VarForeign :: Set Int -> List Int   callee: elm/core:Set.toList   instance: a := Int   sig#: 1075e718   subst: v0 := Int
+              112:74-112:140 Call :: Set Int
+                112:74-112:87 VarForeign :: Set Int -> Set Int -> Set Int   callee: elm/core:Set.intersect   instance: comparable := Int   sig#: 64cbee9c   subst: v0 := Int
+                112:89-112:113 Call :: Set Int
+                  112:89-112:101 VarForeign :: List Int -> Set Int   callee: elm/core:Set.fromList   instance: comparable := Int   sig#: 8a50a616   subst: v0 := Int
+                  112:102-112:113 List :: List Int
+                    112:104-112:105 Int :: Int
+                    112:107-112:108 Int :: Int
+                    112:110-112:111 Int :: Int
+                112:116-112:140 Call :: Set Int
+                  112:116-112:128 VarForeign :: List Int -> Set Int   callee: elm/core:Set.fromList   instance: comparable := Int   sig#: 8a50a616   subst: v0 := Int
+                  112:129-112:140 List :: List Int
+                    112:131-112:132 Int :: Int
+                    112:134-112:135 Int :: Int
+                    112:137-112:138 Int :: Int
+        113:21-113:22 PAnything :: Int
+        113:25-113:81 Call :: Int
+          113:25-113:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          113:35-113:45 Str :: String
+          113:47-113:81 Call :: Int
+            113:47-113:55 VarForeign :: Set Int -> Int   <= Set number3 -> Int   callee: elm/core:Set.size   instance: a := Int (defaulted)   sig#: 05f9e048   subst: v0 := Int
+            113:57-113:81 Call :: Set Int   <= Set number3
+              113:57-113:69 VarForeign :: List Int -> Set Int   <= List number3 -> Set number3   callee: elm/core:Set.fromList   instance: comparable := Int (defaulted)   sig#: 8a50a616   subst: v0 := Int
+              113:70-113:81 List :: List Int   <= List number3
+                113:72-113:73 Int :: Int   <= number3
+                113:75-113:76 Int :: Int   <= number3
+                113:78-113:79 Int :: Int   <= number3
+        114:21-114:22 PAnything :: String
+        114:25-114:110 Call :: String
+          114:25-114:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          114:35-114:48 Str :: String
+          114:50-114:110 Call :: String
+            114:50-114:61 VarTopLevel :: List String -> String   callee: author/project:DictTest.showStrings   use: gen
+            114:63-114:110 Call :: List String
+              114:63-114:73 VarForeign :: Set String -> List String   callee: elm/core:Set.toList   instance: a := String   sig#: 1075e718   subst: v0 := String
+              114:75-114:110 Call :: Set String
+                114:75-114:87 VarForeign :: List String -> Set String   callee: elm/core:Set.fromList   instance: comparable := String   sig#: 8a50a616   subst: v0 := String
+                114:88-114:110 List :: List String
+                  114:90-114:93 Str :: String
+                  114:95-114:98 Str :: String
+                  114:100-114:103 Str :: String
+                  114:105-114:108 Str :: String
+        115:21-115:22 PAnything :: Int
+        115:25-115:102 Call :: Int
+          115:25-115:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          115:35-115:43 Str :: String
+          115:45-115:102 Call :: Int
+            115:45-115:48 VarTopLevel :: Bool -> Int   callee: author/project:DictTest.b2i   use: gen
+            115:50-115:102 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Set Int (defaulted)   sig#: 2cdc0786   subst: v0 := Set Int
+              115:50-115:74 Call :: Set Int   <= Set number4
+                115:50-115:62 VarForeign :: List Int -> Set Int   <= List number4 -> Set number4   callee: elm/core:Set.fromList   instance: comparable := Int (defaulted)   sig#: 8a50a616   subst: v0 := Int
+                115:63-115:74 List :: List Int   <= List number4
+                  115:65-115:66 Int :: Int   <= number4
+                  115:68-115:69 Int :: Int   <= number4
+                  115:71-115:72 Int :: Int   <= number4
+              115:78-115:102 Call :: Set Int   <= Set number4
+                115:78-115:90 VarForeign :: List Int -> Set Int   <= List number4 -> Set number4   callee: elm/core:Set.fromList   instance: comparable := Int (defaulted)   sig#: 8a50a616   subst: v0 := Int
+                115:91-115:102 List :: List Int   <= List number4
+                  115:93-115:94 Int :: Int   <= number4
+                  115:96-115:97 Int :: Int   <= number4
+                  115:99-115:100 Int :: Int   <= number4
+        116:21-116:22 PAnything :: Int
+        116:25-116:99 Call :: Int
+          116:25-116:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          116:35-116:43 Str :: String
+          116:45-116:99 Call :: Int
+            116:45-116:48 VarTopLevel :: Bool -> Int   callee: author/project:DictTest.b2i   use: gen
+            116:50-116:99 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Set Int (defaulted)   sig#: 2cdc0786   subst: v0 := Set Int
+              116:50-116:74 Call :: Set Int   <= Set number5
+                116:50-116:62 VarForeign :: List Int -> Set Int   <= List number5 -> Set number5   callee: elm/core:Set.fromList   instance: comparable := Int (defaulted)   sig#: 8a50a616   subst: v0 := Int
+                116:63-116:74 List :: List Int   <= List number5
+                  116:65-116:66 Int :: Int   <= number5
+                  116:68-116:69 Int :: Int   <= number5
+                  116:71-116:72 Int :: Int   <= number5
+              116:78-116:99 Call :: Set Int   <= Set number5
+                116:78-116:90 VarForeign :: List Int -> Set Int   <= List number5 -> Set number5   callee: elm/core:Set.fromList   instance: comparable := Int (defaulted)   sig#: 8a50a616   subst: v0 := Int
+                116:91-116:99 List :: List Int   <= List number5
+                  116:93-116:94 Int :: Int   <= number5
+                  116:96-116:97 Int :: Int   <= number5
+        117:21-117:22 PAnything :: String
+        117:25-117:142 Call :: String
+          117:25-117:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          117:35-117:47 Str :: String
+          117:49-117:142 Call :: String
+            117:49-117:57 VarTopLevel :: List Int -> String   callee: author/project:DictTest.showInts   use: gen
+            117:59-117:142 Call :: List Int
+              117:59-117:67 VarForeign :: (( Int, Int ) -> Int) -> List ( Int, Int ) -> List Int   <= (( number6, Int ) -> Int) -> List ( number6, Int ) -> List Int   callee: elm/core:List.map   instance: a := ( Int, Int ) (defaulted), b := Int   sig#: 6a702f63   subst: v0 := ( Int, Int ), v1 := Int
+              117:68-117:80 VarForeign :: ( Int, Int ) -> Int   <= ( number6, Int ) -> Int   callee: elm/core:Tuple.second   instance: a := Int (defaulted), b := Int   sig#: ee0f5e97   subst: v0 := Int, v1 := Int
+              117:82-117:142 Call :: List ( Int, Int )   <= List ( number6, Int )
+                117:82-117:92 VarForeign :: Set ( Int, Int ) -> List ( Int, Int )   <= Set ( number6, Int ) -> List ( number6, Int )   callee: elm/core:Set.toList   instance: a := ( Int, Int ) (defaulted)   sig#: 1075e718   subst: v0 := ( Int, Int )
+                117:94-117:142 Call :: Set ( Int, Int )   <= Set ( number6, Int )
+                  117:94-117:106 VarForeign :: List ( Int, Int ) -> Set ( Int, Int )   <= List ( number6, Int ) -> Set ( number6, Int )   callee: elm/core:Set.fromList   instance: comparable := ( Int, Int ) (defaulted)   sig#: 8a50a616   subst: v0 := ( Int, Int )
+                  117:107-117:142 List :: List ( Int, Int )   <= List ( number6, Int )
+                    117:109-117:118 Pair :: ( Int, Int )   <= ( number6, Int )
+                      117:111-117:112 Int :: Int   <= number6
+                      117:114-117:116 Int :: Int
+                    117:120-117:129 Pair :: ( Int, Int )   <= ( number6, Int )
+                      117:122-117:123 Int :: Int   <= number6
+                      117:125-117:127 Int :: Int
+                    117:131-117:140 Pair :: ( Int, Int )   <= ( number6, Int )
+                      117:133-117:134 Int :: Int   <= number6
+                      117:136-117:138 Int :: Int
+        119:17-119:33 Pair :: ( (), Cmd () )
+          119:19-119:21 Unit :: ()
+          119:23-119:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      120:20-120:44 Lambda :: () -> () -> ( (), Cmd () )
+        120:21-120:22 PAnything :: ()
+        120:23-120:24 PAnything :: ()
+        120:28-120:44 Pair :: ( (), Cmd () )
+          120:30-120:32 Unit :: ()
+          120:34-120:42 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      121:27-121:41 Lambda :: () -> Sub ()
+        121:28-121:29 PAnything :: ()
+        121:33-121:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:DictTest.showStrings   kind: function   reads:    needs: 
+init: 1   id: author/project:DictTest.showPairs   kind: function   reads:    needs: 
+init: 2   id: author/project:DictTest.emptyDict   kind: value   reads:    needs:    init-dep: no
+init: 3   id: author/project:DictTest.showInts   kind: function   reads:    needs: 
+init: 4   id: author/project:DictTest.pairDict   kind: value   reads:    needs:    init-dep: no
+init: 5   id: author/project:DictTest.maybeStr   kind: function   reads:    needs: 
+init: 6   id: author/project:DictTest.maybeInt   kind: function   reads:    needs: 
+init: 7   id: author/project:DictTest.strDict   kind: value   reads:    needs:    init-dep: no
+init: 8   id: author/project:DictTest.intDict   kind: value   reads:    needs:    init-dep: no
+init: 9   id: author/project:DictTest.showSI   kind: function   reads:    needs: 
+init: 10   id: author/project:DictTest.counts   kind: function   reads:    needs: 
+init: 11   id: author/project:DictTest.b2i   kind: function   reads:    needs: 
+init: 12   id: author/project:DictTest.main   kind: value   reads: author/project:DictTest.showStrings,author/project:DictTest.showPairs,author/project:DictTest.emptyDict,author/project:DictTest.showInts,author/project:DictTest.pairDict,author/project:DictTest.maybeStr,author/project:DictTest.maybeInt,author/project:DictTest.strDict,author/project:DictTest.intDict,author/project:DictTest.showSI,author/project:DictTest.counts,author/project:DictTest.b2i   needs: author/project:DictTest.emptyDict,author/project:DictTest.pairDict,author/project:DictTest.strDict,author/project:DictTest.intDict   init-dep: yes

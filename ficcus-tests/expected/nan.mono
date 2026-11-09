@@ -1,0 +1,677 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:Nan (project)
+clone c0   def: author/project:Nan.ord   key: ()   kind: function   init: 0   needs: 
+clone c1   def: author/project:Nan.one   key: ()   kind: value   init: 1   needs: 
+clone c2   def: author/project:Nan.nan   key: ()   kind: value   init: 2   needs: 
+clone c3   def: author/project:Nan.listOfNan   key: ()   kind: value   init: 3   needs: c2
+clone c4   def: author/project:Nan.b2i   key: ()   kind: function   init: 4   needs: 
+clone c5   def: author/project:Nan.six   key: ()   kind: function   init: 5   needs: 
+clone c6   def: author/project:Nan.main   key: ()   kind: value   init: 6   needs: c1,c2,c3
+-- program: 21 clones, reachable from main, dependencies first
+clone c5   def: author/project:Nan.b2i   key: ()   kind: function   params: x:enum   result: i64
+  If :: i64
+    Local x :: enum
+    Lit 1 :: i64
+    Lit 0 :: i64
+clone c8   def: author/project:Nan.ord   key: ()   kind: function   params: o:enum   result: i64
+  Case :: i64
+    Local o :: enum
+    branch LT #0 :: enum
+      Call :: i64
+        Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+        Lit 1 :: i64
+    branch EQ #1 :: enum
+      Lit 0 :: i64
+    branch GT #2 :: enum
+      Lit 1 :: i64
+clone c2   def: author/project:Nan.six   key: ()   kind: function   params: name:ref x:f64 y:f64   result: unit
+  Seq :: unit
+    Call :: i64
+      Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Local name :: ref
+        Lit " <" :: ref
+      Call :: i64
+        Global c5 :: ref
+        Call :: enum
+          Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Float) :: ref
+          Local x :: f64
+          Local y :: f64
+    Seq :: unit
+      Call :: i64
+        Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Local name :: ref
+          Lit " >" :: ref
+        Call :: i64
+          Global c5 :: ref
+          Call :: enum
+            Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Float) :: ref
+            Local x :: f64
+            Local y :: f64
+      Seq :: unit
+        Call :: i64
+          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+          Call :: ref
+            Kernel elm/core:Basics.append (v0=app string) :: ref
+            Local name :: ref
+            Lit " <=" :: ref
+          Call :: i64
+            Global c5 :: ref
+            Call :: enum
+              Kernel elm/core:Basics.le (v0=type elm/core:Basics.Float) :: ref
+              Local x :: f64
+              Local y :: f64
+        Seq :: unit
+          Call :: i64
+            Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+            Call :: ref
+              Kernel elm/core:Basics.append (v0=app string) :: ref
+              Local name :: ref
+              Lit " >=" :: ref
+            Call :: i64
+              Global c5 :: ref
+              Call :: enum
+                Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Float) :: ref
+                Local x :: f64
+                Local y :: f64
+          Seq :: unit
+            Call :: i64
+              Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+              Call :: ref
+                Kernel elm/core:Basics.append (v0=app string) :: ref
+                Local name :: ref
+                Lit " ==" :: ref
+              Call :: i64
+                Global c5 :: ref
+                Call :: enum
+                  Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Float) :: ref
+                  Local x :: f64
+                  Local y :: f64
+            Seq :: unit
+              Call :: i64
+                Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                Call :: ref
+                  Kernel elm/core:Basics.append (v0=app string) :: ref
+                  Local name :: ref
+                  Lit " /=" :: ref
+                Call :: i64
+                  Global c5 :: ref
+                  Call :: enum
+                    Kernel elm/core:Basics.neq (v0=type elm/core:Basics.Float) :: ref
+                    Local x :: f64
+                    Local y :: f64
+              Seq :: unit
+                Call :: i64
+                  Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                  Call :: ref
+                    Kernel elm/core:Basics.append (v0=app string) :: ref
+                    Local name :: ref
+                    Lit " compare" :: ref
+                  Call :: i64
+                    Global c8 :: ref
+                    Call :: enum
+                      Kernel elm/core:Basics.compare (v0=type elm/core:Basics.Float) :: ref
+                      Local x :: f64
+                      Local y :: f64
+                Lit () :: unit
+clone c3   def: author/project:Nan.nan   key: ()   kind: value   params:    result: f64
+  Call :: f64
+    Kernel elm/core:Basics.fdiv () :: ref
+    Lit 0.0 :: f64
+    Lit 0.0 :: f64
+clone c4   def: author/project:Nan.one   key: ()   kind: value   params:    result: f64
+  Lit 1.0 :: f64
+clone c6   def: elm/core:Basics.max   key: (v0=type elm/core:Basics.Float)   name: max__f64   kind: function   params: x:f64 y:f64   result: f64
+  If :: f64
+    Call :: enum
+      Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Float) :: ref
+      Local x :: f64
+      Local y :: f64
+    Local x :: f64
+    Local y :: f64
+clone c7   def: elm/core:Basics.min   key: (v0=type elm/core:Basics.Float)   name: min__f64   kind: function   params: x:f64 y:f64   result: f64
+  If :: f64
+    Call :: enum
+      Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Float) :: ref
+      Local x :: f64
+      Local y :: f64
+    Local x :: f64
+    Local y :: f64
+clone c9   def: author/project:Nan.listOfNan   key: ()   kind: value   params:    result: ref
+  List :: ref
+    Global c3 :: f64
+clone c20   def: elm/core:Dict.balance   key: (v0=f64; v1=ref)   name: balance__f64__ref   kind: function   params: color:enum key:f64 value:ref left:ref right:ref   result: ref
+  Case :: ref
+    Local right :: ref
+    branch RBNode_elm_builtin #0 Red #0 :: enum rK :: f64 rV :: ref rLeft :: ref rRight :: ref :: ref
+      Case :: ref
+        Local left :: ref
+        branch RBNode_elm_builtin #0 Red #0 :: enum lK :: f64 lV :: ref lLeft :: ref lRight :: ref :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=ref; v3=ref; v4=ref) :: ref
+            Ctor Red tag 0 () :: enum
+            Local key :: f64
+            Local value :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=ref; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local lK :: f64
+              Local lV :: ref
+              Local lLeft :: ref
+              Local lRight :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=ref; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local rK :: f64
+              Local rV :: ref
+              Local rLeft :: ref
+              Local rRight :: ref
+        branch _ :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=ref; v3=ref; v4=ref) :: ref
+            Local color :: enum
+            Local rK :: f64
+            Local rV :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=ref; v3=ref; v4=ref) :: ref
+              Ctor Red tag 0 () :: enum
+              Local key :: f64
+              Local value :: ref
+              Local left :: ref
+              Local rLeft :: ref
+            Local rRight :: ref
+    branch _ :: ref
+      Case :: ref
+        Local left :: ref
+        branch RBNode_elm_builtin #0 Red #0 :: enum lK :: f64 lV :: ref RBNode_elm_builtin #0 Red #0 :: enum llK :: f64 llV :: ref llLeft :: ref llRight :: ref :: ref lRight :: ref :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=ref; v3=ref; v4=ref) :: ref
+            Ctor Red tag 0 () :: enum
+            Local lK :: f64
+            Local lV :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=ref; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local llK :: f64
+              Local llV :: ref
+              Local llLeft :: ref
+              Local llRight :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=ref; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local key :: f64
+              Local value :: ref
+              Local lRight :: ref
+              Local right :: ref
+        branch _ :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=ref; v3=ref; v4=ref) :: ref
+            Local color :: enum
+            Local key :: f64
+            Local value :: ref
+            Local left :: ref
+            Local right :: ref
+clone c15   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:Basics.Float; v1=ref)   name: insertHelp__f64__ref   kind: function   params: key:f64 value:ref dict:ref   result: ref
+  Case :: ref
+    Local dict :: ref
+    branch RBEmpty_elm_builtin #1 :: ref
+      Call :: ref
+        Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=ref; v3=ref; v4=ref) :: ref
+        Ctor Red tag 0 () :: enum
+        Local key :: f64
+        Local value :: ref
+        Ctor RBEmpty_elm_builtin tag 1 () :: ref
+        Ctor RBEmpty_elm_builtin tag 1 () :: ref
+    branch RBNode_elm_builtin #0 nColor :: enum nKey :: f64 nValue :: ref nLeft :: ref nRight :: ref :: ref
+      Case :: ref
+        Call :: enum
+          Kernel elm/core:Basics.compare (v0=type elm/core:Basics.Float) :: ref
+          Local key :: f64
+          Local nKey :: f64
+        branch LT #0 :: enum
+          Call :: ref
+            Global c20 :: ref
+            Local nColor :: enum
+            Local nKey :: f64
+            Local nValue :: ref
+            Call :: ref
+              Global c15 :: ref
+              Local key :: f64
+              Local value :: ref
+              Local nLeft :: ref
+            Local nRight :: ref
+        branch EQ #1 :: enum
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=ref; v3=ref; v4=ref) :: ref
+            Local nColor :: enum
+            Local nKey :: f64
+            Local value :: ref
+            Local nLeft :: ref
+            Local nRight :: ref
+        branch GT #2 :: enum
+          Call :: ref
+            Global c20 :: ref
+            Local nColor :: enum
+            Local nKey :: f64
+            Local nValue :: ref
+            Local nLeft :: ref
+            Call :: ref
+              Global c15 :: ref
+              Local key :: f64
+              Local value :: ref
+              Local nRight :: ref
+clone c10   def: elm/core:Dict.insert   key: (v0=type elm/core:Basics.Float; v1=ref)   name: insert__f64__ref   kind: function   params: key:f64 value:ref dict:ref   result: ref
+  Case :: ref
+    Call :: ref
+      Global c15 :: ref
+      Local key :: f64
+      Local value :: ref
+      Local dict :: ref
+    branch RBNode_elm_builtin #0 Red #0 :: enum k :: f64 v :: ref l :: ref r :: ref :: ref
+      Call :: ref
+        Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=ref; v3=ref; v4=ref) :: ref
+        Ctor Black tag 1 () :: enum
+        Local k :: f64
+        Local v :: ref
+        Local l :: ref
+        Local r :: ref
+    branch x :: ref
+      Local x :: ref
+clone c16   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: ref :: xs :: ref :: ref
+      Call :: ref
+        Global c16 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: ref
+          Local acc :: ref
+        Local xs :: ref
+clone c17   def: elm/core:Dict.lambda@610:15   key: ()   outer: c11 (v0=type elm/core:Basics.Float; v1=ref)   kind: function   params: _p0:struct(f64,ref) dict:ref   result: ref   lifted-from: c11
+  Case :: ref
+    Local _p0 :: struct(f64,ref)
+    branch (key :: f64, value :: ref) :: struct(f64,ref)
+      Call :: ref
+        Global c10 :: ref
+        Local key :: f64
+        Local value :: ref
+        Local dict :: ref
+clone c18   def: elm/core:Dict.empty   key: (v0=f64; v1=ref)   name: empty__f64__ref   kind: value   params:    result: ref
+  Ctor RBEmpty_elm_builtin tag 1 () :: ref
+clone c11   def: elm/core:Dict.fromList   key: (v0=type elm/core:Basics.Float; v1=ref)   name: fromList__f64__ref   kind: function   params: assocs:ref   result: ref
+  Call :: ref
+    Global c16 :: ref
+    Global c17 :: ref
+    Global c18 :: ref
+    Local assocs :: ref
+clone c12   def: elm/core:Maybe.withDefault   key: (v0=ref)   name: withDefault__ref   kind: function   params: default:ref maybe:ref   result: ref
+  Case :: ref
+    Local maybe :: ref
+    branch Just #0 value :: ref :: ref
+      Local value :: ref
+    branch Nothing #1 :: ref
+      Local default :: ref
+clone c13   def: elm/core:Dict.get   key: (v0=type elm/core:Basics.Float; v1=ref)   name: get__f64__ref   kind: function   params: targetKey:f64 dict:ref   result: ref
+  Case :: ref
+    Local dict :: ref
+    branch RBEmpty_elm_builtin #1 :: ref
+      Ctor Nothing tag 1 () :: ref
+    branch RBNode_elm_builtin #0 _ :: enum key :: f64 value :: ref left :: ref right :: ref :: ref
+      Case :: ref
+        Call :: enum
+          Kernel elm/core:Basics.compare (v0=type elm/core:Basics.Float) :: ref
+          Local targetKey :: f64
+          Local key :: f64
+        branch LT #0 :: enum
+          Call :: ref
+            Global c13 :: ref
+            Local targetKey :: f64
+            Local left :: ref
+        branch EQ #1 :: enum
+          Call :: ref
+            Ctor Just tag 0 (v0=ref) :: ref
+            Local value :: ref
+        branch GT #2 :: enum
+          Call :: ref
+            Global c13 :: ref
+            Local targetKey :: f64
+            Local right :: ref
+clone c19   def: elm/core:Dict.sizeHelp   key: (v0=f64; v1=ref)   name: sizeHelp__f64__ref   kind: function   params: n:i64 dict:ref   result: i64
+  Case :: i64
+    Local dict :: ref
+    branch RBEmpty_elm_builtin #1 :: ref
+      Local n :: i64
+    branch RBNode_elm_builtin #0 _ :: enum _ :: f64 _ :: ref left :: ref right :: ref :: ref
+      Call :: i64
+        Global c19 :: ref
+        Call :: i64
+          Global c19 :: ref
+          Call :: i64
+            Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+            Local n :: i64
+            Lit 1 :: i64
+          Local right :: ref
+        Local left :: ref
+clone c14   def: elm/core:Dict.size   key: (v0=f64; v1=ref)   name: size__f64__ref   kind: function   params: dict:ref   result: i64
+  Call :: i64
+    Global c19 :: ref
+    Lit 0 :: i64
+    Local dict :: ref
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Seq :: struct(unit,unit)
+    Call :: unit
+      Global c2 :: ref
+      Lit "nan nan" :: ref
+      Global c3 :: f64
+      Global c3 :: f64
+    Seq :: struct(unit,unit)
+      Call :: unit
+        Global c2 :: ref
+        Lit "nan one" :: ref
+        Global c3 :: f64
+        Global c4 :: f64
+      Seq :: struct(unit,unit)
+        Call :: unit
+          Global c2 :: ref
+          Lit "one nan" :: ref
+          Global c4 :: f64
+          Global c3 :: f64
+        Seq :: struct(unit,unit)
+          Call :: unit
+            Global c2 :: ref
+            Lit "one one" :: ref
+            Global c4 :: f64
+            Global c4 :: f64
+          Seq :: struct(unit,unit)
+            Call :: unit
+              Global c2 :: ref
+              Lit "inf nan" :: ref
+              Call :: f64
+                Kernel elm/core:Basics.fdiv () :: ref
+                Lit 1.0 :: f64
+                Lit 0.0 :: f64
+              Global c3 :: f64
+            Seq :: struct(unit,unit)
+              Call :: i64
+                Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                Lit "nan < 1" :: ref
+                Call :: i64
+                  Global c5 :: ref
+                  Call :: enum
+                    Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Float) :: ref
+                    Global c3 :: f64
+                    Lit 1.0 :: f64
+              Seq :: struct(unit,unit)
+                Call :: i64
+                  Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                  Lit "nan > 1" :: ref
+                  Call :: i64
+                    Global c5 :: ref
+                    Call :: enum
+                      Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Float) :: ref
+                      Global c3 :: f64
+                      Lit 1.0 :: f64
+                Seq :: struct(unit,unit)
+                  Call :: i64
+                    Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                    Lit "nan <= 1" :: ref
+                    Call :: i64
+                      Global c5 :: ref
+                      Call :: enum
+                        Kernel elm/core:Basics.le (v0=type elm/core:Basics.Float) :: ref
+                        Global c3 :: f64
+                        Lit 1.0 :: f64
+                  Seq :: struct(unit,unit)
+                    Call :: i64
+                      Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                      Lit "nan >= 1" :: ref
+                      Call :: i64
+                        Global c5 :: ref
+                        Call :: enum
+                          Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Float) :: ref
+                          Global c3 :: f64
+                          Lit 1.0 :: f64
+                    Seq :: struct(unit,unit)
+                      Call :: i64
+                        Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                        Lit "1 < nan" :: ref
+                        Call :: i64
+                          Global c5 :: ref
+                          Call :: enum
+                            Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Float) :: ref
+                            Lit 1.0 :: f64
+                            Global c3 :: f64
+                      Seq :: struct(unit,unit)
+                        Call :: i64
+                          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                          Lit "1 > nan" :: ref
+                          Call :: i64
+                            Global c5 :: ref
+                            Call :: enum
+                              Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Float) :: ref
+                              Lit 1.0 :: f64
+                              Global c3 :: f64
+                        Seq :: struct(unit,unit)
+                          Call :: i64
+                            Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                            Lit "nan == nan" :: ref
+                            Call :: i64
+                              Global c5 :: ref
+                              Call :: enum
+                                Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Float) :: ref
+                                Global c3 :: f64
+                                Global c3 :: f64
+                          Seq :: struct(unit,unit)
+                            Call :: i64
+                              Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                              Lit "nan /= nan" :: ref
+                              Call :: i64
+                                Global c5 :: ref
+                                Call :: enum
+                                  Kernel elm/core:Basics.neq (v0=type elm/core:Basics.Float) :: ref
+                                  Global c3 :: f64
+                                  Global c3 :: f64
+                            Seq :: struct(unit,unit)
+                              Call :: f64
+                                Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
+                                Lit "max nan 1" :: ref
+                                Call :: f64
+                                  Global c6 :: ref
+                                  Global c3 :: f64
+                                  Global c4 :: f64
+                              Seq :: struct(unit,unit)
+                                Call :: f64
+                                  Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
+                                  Lit "max 1 nan" :: ref
+                                  Call :: f64
+                                    Global c6 :: ref
+                                    Global c4 :: f64
+                                    Global c3 :: f64
+                                Seq :: struct(unit,unit)
+                                  Call :: f64
+                                    Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
+                                    Lit "min nan 1" :: ref
+                                    Call :: f64
+                                      Global c7 :: ref
+                                      Global c3 :: f64
+                                      Global c4 :: f64
+                                  Seq :: struct(unit,unit)
+                                    Call :: f64
+                                      Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
+                                      Lit "min 1 nan" :: ref
+                                      Call :: f64
+                                        Global c7 :: ref
+                                        Global c4 :: f64
+                                        Global c3 :: f64
+                                    Seq :: struct(unit,unit)
+                                      Call :: i64
+                                        Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                        Lit "tuple eq" :: ref
+                                        Call :: i64
+                                          Global c5 :: ref
+                                          Call :: enum
+                                            Kernel elm/core:Basics.eq (v0=type (elm/core:Basics.Float, elm/core:Basics.Int)) :: ref
+                                            Tuple :: struct(f64,i64)
+                                              Global c3 :: f64
+                                              Lit 1 :: i64
+                                            Tuple :: struct(f64,i64)
+                                              Global c3 :: f64
+                                              Lit 1 :: i64
+                                      Seq :: struct(unit,unit)
+                                        Call :: i64
+                                          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                          Lit "tuple cmp" :: ref
+                                          Call :: i64
+                                            Global c8 :: ref
+                                            Call :: enum
+                                              Kernel elm/core:Basics.compare (v0=type (elm/core:Basics.Float, elm/core:Basics.Int)) :: ref
+                                              Tuple :: struct(f64,i64)
+                                                Global c3 :: f64
+                                                Lit 1 :: i64
+                                              Tuple :: struct(f64,i64)
+                                                Global c3 :: f64
+                                                Lit 2 :: i64
+                                        Seq :: struct(unit,unit)
+                                          Call :: i64
+                                            Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                            Lit "tuple cmp 2" :: ref
+                                            Call :: i64
+                                              Global c8 :: ref
+                                              Call :: enum
+                                                Kernel elm/core:Basics.compare (v0=type (elm/core:Basics.Int, elm/core:Basics.Float)) :: ref
+                                                Tuple :: struct(i64,f64)
+                                                  Lit 1 :: i64
+                                                  Global c3 :: f64
+                                                Tuple :: struct(i64,f64)
+                                                  Lit 2 :: i64
+                                                  Global c3 :: f64
+                                          Seq :: struct(unit,unit)
+                                            Call :: i64
+                                              Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                              Lit "tuple lt" :: ref
+                                              Call :: i64
+                                                Global c5 :: ref
+                                                Call :: enum
+                                                  Kernel elm/core:Basics.lt (v0=type (elm/core:Basics.Float, elm/core:Basics.Int)) :: ref
+                                                  Tuple :: struct(f64,i64)
+                                                    Global c3 :: f64
+                                                    Lit 1 :: i64
+                                                  Tuple :: struct(f64,i64)
+                                                    Global c3 :: f64
+                                                    Lit 2 :: i64
+                                            Seq :: struct(unit,unit)
+                                              Call :: i64
+                                                Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                Lit "list eq" :: ref
+                                                Call :: i64
+                                                  Global c5 :: ref
+                                                  Call :: enum
+                                                    Kernel elm/core:Basics.eq (v0=type (elm/core:List.List elm/core:Basics.Float)) :: ref
+                                                    List :: ref
+                                                      Global c3 :: f64
+                                                    List :: ref
+                                                      Global c3 :: f64
+                                              Seq :: struct(unit,unit)
+                                                Call :: i64
+                                                  Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                  Lit "list cmp" :: ref
+                                                  Call :: i64
+                                                    Global c8 :: ref
+                                                    Call :: enum
+                                                      Kernel elm/core:Basics.compare (v0=type (elm/core:List.List elm/core:Basics.Float)) :: ref
+                                                      List :: ref
+                                                        Global c3 :: f64
+                                                      List :: ref
+                                                        Global c3 :: f64
+                                                Seq :: struct(unit,unit)
+                                                  Call :: i64
+                                                    Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                    Lit "list cmp 2" :: ref
+                                                    Call :: i64
+                                                      Global c8 :: ref
+                                                      Call :: enum
+                                                        Kernel elm/core:Basics.compare (v0=type (elm/core:List.List elm/core:Basics.Float)) :: ref
+                                                        List :: ref
+                                                          Lit 1.0 :: f64
+                                                          Global c3 :: f64
+                                                        List :: ref
+                                                          Lit 1.0 :: f64
+                                                          Lit 2.0 :: f64
+                                                  Seq :: struct(unit,unit)
+                                                    Call :: i64
+                                                      Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                      Lit "same ref list" :: ref
+                                                      Call :: i64
+                                                        Global c5 :: ref
+                                                        Call :: enum
+                                                          Kernel elm/core:Basics.eq (v0=type (elm/core:List.List elm/core:Basics.Float)) :: ref
+                                                          Global c9 :: ref
+                                                          Global c9 :: ref
+                                                    Let d :: struct(unit,unit)
+                                                      Call :: ref
+                                                        Global c10 :: ref
+                                                        Global c3 :: f64
+                                                        Lit "x" :: ref
+                                                        Call :: ref
+                                                          Global c11 :: ref
+                                                          List :: ref
+                                                            Tuple :: struct(f64,ref)
+                                                              Lit 1.0 :: f64
+                                                              Lit "a" :: ref
+                                                            Tuple :: struct(f64,ref)
+                                                              Lit 2.0 :: f64
+                                                              Lit "b" :: ref
+                                                      Seq :: struct(unit,unit)
+                                                        Call :: ref
+                                                          Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                                                          Lit "dict get 2" :: ref
+                                                          Call :: ref
+                                                            Global c12 :: ref
+                                                            Lit "none" :: ref
+                                                            Call :: ref
+                                                              Global c13 :: ref
+                                                              Lit 2.0 :: f64
+                                                              Local d :: ref
+                                                        Seq :: struct(unit,unit)
+                                                          Call :: ref
+                                                            Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                                                            Lit "dict get 1" :: ref
+                                                            Call :: ref
+                                                              Global c12 :: ref
+                                                              Lit "none" :: ref
+                                                              Call :: ref
+                                                                Global c13 :: ref
+                                                                Lit 1.0 :: f64
+                                                                Local d :: ref
+                                                          Seq :: struct(unit,unit)
+                                                            Call :: ref
+                                                              Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                                                              Lit "dict get nan" :: ref
+                                                              Call :: ref
+                                                                Global c12 :: ref
+                                                                Lit "none" :: ref
+                                                                Call :: ref
+                                                                  Global c13 :: ref
+                                                                  Global c3 :: f64
+                                                                  Local d :: ref
+                                                            Seq :: struct(unit,unit)
+                                                              Call :: i64
+                                                                Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                                Lit "dict size" :: ref
+                                                                Call :: i64
+                                                                  Global c14 :: ref
+                                                                  Local d :: ref
+                                                              Tuple :: struct(unit,unit)
+                                                                Lit () :: unit
+                                                                Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Nan.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

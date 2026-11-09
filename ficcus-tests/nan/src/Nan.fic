@@ -1,0 +1,109 @@
+module Nan exposing (main)
+
+-- Slice 4 acceptance (STAGE3-PLAN addition 3): NaN against numbers through all six operators, compare, max, min,
+-- inside tuples and lists, and as a Dict key. Operands are variables and literals (Elm's JavaScript uses `<`
+-- directly for some literal operands and `_Utils_cmp` otherwise). Output equal to Elm's (expected/nan.out).
+
+import Dict exposing (Dict)
+
+
+nan : Float
+nan =
+    0 / 0
+
+
+one : Float
+one =
+    1
+
+
+b2i : Bool -> Int
+b2i x =
+    if x then
+        1
+
+    else
+        0
+
+
+ord : Order -> Int
+ord o =
+    case o of
+        LT ->
+            -1
+
+        EQ ->
+            0
+
+        GT ->
+            1
+
+
+six : String -> Float -> Float -> ()
+six name x y =
+    let
+        _ = Debug.log (name ++ " <") (b2i (x < y))
+        _ = Debug.log (name ++ " >") (b2i (x > y))
+        _ = Debug.log (name ++ " <=") (b2i (x <= y))
+        _ = Debug.log (name ++ " >=") (b2i (x >= y))
+        _ = Debug.log (name ++ " ==") (b2i (x == y))
+        _ = Debug.log (name ++ " /=") (b2i (x /= y))
+        _ = Debug.log (name ++ " compare") (ord (compare x y))
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ = six "nan nan" nan nan
+                    _ = six "nan one" nan one
+                    _ = six "one nan" one nan
+                    _ = six "one one" one one
+                    _ = six "inf nan" (1 / 0) nan
+
+                    -- literal operands
+                    _ = Debug.log "nan < 1" (b2i (nan < 1))
+                    _ = Debug.log "nan > 1" (b2i (nan > 1))
+                    _ = Debug.log "nan <= 1" (b2i (nan <= 1))
+                    _ = Debug.log "nan >= 1" (b2i (nan >= 1))
+                    _ = Debug.log "1 < nan" (b2i (1 < nan))
+                    _ = Debug.log "1 > nan" (b2i (1 > nan))
+                    _ = Debug.log "nan == nan" (b2i (nan == nan))
+                    _ = Debug.log "nan /= nan" (b2i (nan /= nan))
+
+                    -- max and min
+                    _ = Debug.log "max nan 1" (max nan one)
+                    _ = Debug.log "max 1 nan" (max one nan)
+                    _ = Debug.log "min nan 1" (min nan one)
+                    _ = Debug.log "min 1 nan" (min one nan)
+
+                    -- compound values
+                    _ = Debug.log "tuple eq" (b2i ((nan, 1) == (nan, 1)))
+                    _ = Debug.log "tuple cmp" (ord (compare (nan, 1) (nan, 2)))
+                    _ = Debug.log "tuple cmp 2" (ord (compare (1, nan) (2, nan)))
+                    _ = Debug.log "tuple lt" (b2i ((nan, 1) < (nan, 2)))
+                    _ = Debug.log "list eq" (b2i ([ nan ] == [ nan ]))
+                    _ = Debug.log "list cmp" (ord (compare [ nan ] [ nan ]))
+                    _ = Debug.log "list cmp 2" (ord (compare [ 1, nan ] [ 1, 2 ]))
+                    _ = Debug.log "same ref list" (b2i (listOfNan == listOfNan))
+
+                    -- a dictionary with a NaN key
+                    d = Dict.insert nan "x" (Dict.fromList [ ( 1, "a" ), ( 2, "b" ) ])
+                    _ = Debug.log "dict size" (Dict.size d)
+                    _ = Debug.log "dict get nan" (Maybe.withDefault "none" (Dict.get nan d))
+                    _ = Debug.log "dict get 1" (Maybe.withDefault "none" (Dict.get 1 d))
+                    _ = Debug.log "dict get 2" (Maybe.withDefault "none" (Dict.get 2 d))
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+listOfNan : List Float
+listOfNan =
+    [ nan ]

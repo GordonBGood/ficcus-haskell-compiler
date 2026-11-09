@@ -1,0 +1,90 @@
+-- module EqFun: problems=0 instances=23 instance-failures=0 defaulted=15
+-- equality-uses: total=3 at-function=3
+-- equality-at-function: == { a : number, f : Int -> Int }
+-- equality-at-function: == { a : number1, f : Int -> Int }
+-- equality-at-function: == { a : number4, f : Int -> Int }
+module author/project:EqFun
+def inc :: Int -> Int    [13:1-13:4]   id: author/project:EqFun.inc   sig: Int -> Int   kinds:    group: author/project:EqFun.inc nonrec ann
+  13:5-13:6 PVar x :: Int
+  14:5-14:10 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    14:5-14:6 VarLocal :: Int
+    14:9-14:10 Int :: Int
+def dec :: Int -> Int    [18:1-18:4]   id: author/project:EqFun.dec   sig: Int -> Int   kinds:    group: author/project:EqFun.dec nonrec ann
+  18:5-18:6 PVar x :: Int
+  19:5-19:10 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    19:5-19:6 VarLocal :: Int
+    19:9-19:10 Int :: Int
+def b2i :: Bool -> Int    [23:1-23:4]   id: author/project:EqFun.b2i   sig: Bool -> Int   kinds:    group: author/project:EqFun.b2i nonrec ann
+  23:5-23:6 PVar x :: Bool
+  24:5-28:10 If :: Int
+    24:8-24:9 VarLocal :: Bool
+    25:9-25:10 Int :: Int
+    28:9-28:10 Int :: Int
+def main :: Program () () ()    [32:1-32:5]   id: author/project:EqFun.main   sig: Program () () ()   kinds:    group: author/project:EqFun.main nonrec ann
+  33:5-46:10 Call :: Program () () ()
+    33:5-33:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    34:9-46:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      35:13-43:33 Lambda :: () -> ( (), Cmd () )
+        35:14-35:15 PAnything :: ()
+        39:21-39:22 PAnything :: Int
+        39:25-39:111 Call :: Int
+          39:25-39:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          39:35-39:64 Str :: String
+          39:66-39:111 Call :: Int
+            39:66-39:69 VarTopLevel :: Bool -> Int   callee: author/project:EqFun.b2i   use: gen
+            39:71-39:111 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := { a : Int, f : Int -> Int } (defaulted)   sig#: 2cdc0786   subst: v0 := { a : Int, f : Int -> Int }
+              39:71-39:89 Record :: { a : Int, f : Int -> Int }   <= { a : number, f : Int -> Int }
+                39:77-39:78 Int :: Int   <= number
+                39:84-39:87 VarTopLevel :: Int -> Int   callee: author/project:EqFun.inc   use: gen
+              39:93-39:111 Record :: { a : Int, f : Int -> Int }   <= { a : number, f : Int -> Int }
+                39:99-39:100 Int :: Int   <= number
+                39:106-39:109 VarTopLevel :: Int -> Int   callee: author/project:EqFun.dec   use: gen
+        40:21-40:22 PAnything :: Int
+        40:25-40:104 Call :: Int
+          40:25-40:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          40:35-40:57 Str :: String
+          40:59-40:104 Call :: Int
+            40:59-40:62 VarTopLevel :: Bool -> Int   callee: author/project:EqFun.b2i   use: gen
+            40:64-40:104 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := { a : Int, f : Int -> Int } (defaulted)   sig#: 2cdc0786   subst: v0 := { a : Int, f : Int -> Int }
+              40:64-40:82 Record :: { a : Int, f : Int -> Int }   <= { a : number1, f : Int -> Int }
+                40:70-40:71 Int :: Int   <= number1
+                40:77-40:80 VarTopLevel :: Int -> Int   callee: author/project:EqFun.inc   use: gen
+              40:86-40:104 Record :: { a : Int, f : Int -> Int }   <= { a : number1, f : Int -> Int }
+                40:92-40:93 Int :: Int   <= number1
+                40:99-40:102 VarTopLevel :: Int -> Int   callee: author/project:EqFun.dec   use: gen
+        41:21-41:22 PAnything :: Int   <= number2
+        41:25-41:50 Call :: Int   <= number2
+          41:25-41:34 VarDebug :: String -> Int -> Int   <= String -> number2 -> number2   callee: elm/core:Debug.log   instance: a := Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := Int
+          41:35-41:48 Str :: String
+          41:49-41:50 Int :: Int   <= number2
+        def a :: { a : number3, f : Int -> Int }    [37:21-37:22]   id: author/project:EqFun.a@37:21   sig: { a : v0, f : Int -> Int }   kinds: v0:number   group: author/project:EqFun.a@37:21 nonrec inferred
+          37:25-37:43 Record :: { a : number3, f : Int -> Int }
+            37:31-37:32 Int :: number3
+            37:38-37:41 VarTopLevel :: Int -> Int   callee: author/project:EqFun.inc   use: gen
+        38:21-38:22 PAnything :: Int
+        38:25-38:80 Call :: Int
+          38:25-38:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          38:35-38:50 Str :: String
+          38:52-38:80 Call :: Int
+            38:52-38:55 VarTopLevel :: Bool -> Int   callee: author/project:EqFun.b2i   use: gen
+            38:57-38:80 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := { a : Int, f : Int -> Int } (defaulted)   sig#: 2cdc0786   subst: v0 := { a : Int, f : Int -> Int }
+              38:57-38:58 VarLocal :: { a : Int, f : Int -> Int }   <= { a : number4, f : Int -> Int }   callee: author/project:EqFun.a@37:21   use: gen   instance: number3 := Int (defaulted)   sig#: 69673442   subst: v0 := Int
+              38:62-38:80 Record :: { a : Int, f : Int -> Int }   <= { a : number4, f : Int -> Int }
+                38:68-38:69 Int :: Int   <= number4
+                38:75-38:78 VarTopLevel :: Int -> Int   callee: author/project:EqFun.inc   use: gen
+        43:17-43:33 Pair :: ( (), Cmd () )
+          43:19-43:21 Unit :: ()
+          43:23-43:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      44:20-44:44 Lambda :: () -> () -> ( (), Cmd () )
+        44:21-44:22 PAnything :: ()
+        44:23-44:24 PAnything :: ()
+        44:28-44:44 Pair :: ( (), Cmd () )
+          44:30-44:32 Unit :: ()
+          44:34-44:42 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      45:27-45:41 Lambda :: () -> Sub ()
+        45:28-45:29 PAnything :: ()
+        45:33-45:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:EqFun.inc   kind: function   reads:    needs: 
+init: 1   id: author/project:EqFun.dec   kind: function   reads:    needs: 
+init: 2   id: author/project:EqFun.b2i   kind: function   reads:    needs: 
+init: 3   id: author/project:EqFun.main   kind: value   reads: author/project:EqFun.inc,author/project:EqFun.dec,author/project:EqFun.b2i   needs:    init-dep: no

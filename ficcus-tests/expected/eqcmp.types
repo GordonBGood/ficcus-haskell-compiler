@@ -1,0 +1,1324 @@
+-- module EqCmp: problems=0 instances=331 instance-failures=0 defaulted=218
+-- equality-uses: total=48 at-function=0
+module author/project:EqCmp
+type Tree   id: author/project:EqCmp.Tree   params: 0   ctors: 2   layout: normal
+  ctor Leaf   id: author/project:EqCmp.Leaf   tag: 0   arity: 0   fields:    sig: Tree   kinds: 
+  ctor Node   id: author/project:EqCmp.Node   tag: 1   arity: 3   fields: Tree ;; Int ;; Tree   sig: Tree -> Int -> Tree -> Tree   kinds: 
+type Color   id: author/project:EqCmp.Color   params: 0   ctors: 3   layout: enum
+  ctor Red   id: author/project:EqCmp.Red   tag: 0   arity: 0   fields:    sig: Color   kinds: 
+  ctor Green   id: author/project:EqCmp.Green   tag: 1   arity: 0   fields:    sig: Color   kinds: 
+  ctor Blue   id: author/project:EqCmp.Blue   tag: 2   arity: 0   fields:    sig: Color   kinds: 
+type Shape   id: author/project:EqCmp.Shape   params: 0   ctors: 4   layout: normal
+  ctor Circle   id: author/project:EqCmp.Circle   tag: 0   arity: 1   fields: Float   sig: Float -> Shape   kinds: 
+  ctor Rect   id: author/project:EqCmp.Rect   tag: 1   arity: 2   fields: Float ;; Float   sig: Float -> Float -> Shape   kinds: 
+  ctor Named   id: author/project:EqCmp.Named   tag: 2   arity: 2   fields: String ;; List Int   sig: String -> List Int -> Shape   kinds: 
+  ctor Pt   id: author/project:EqCmp.Pt   tag: 3   arity: 1   fields: ( Int, Int )   sig: ( Int, Int ) -> Shape   kinds: 
+def showStrings :: List String -> String    [63:1-63:12]   id: author/project:EqCmp.showStrings   sig: List String -> String   kinds:    group: author/project:EqCmp.showStrings nonrec ann
+  63:13-63:15 PVar xs :: List String
+  64:5-64:63 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    64:5-64:8 Str :: String
+    64:12-64:63 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      64:12-64:56 Call :: String
+        64:12-64:22 VarForeign :: (String -> String -> String) -> String -> List String -> String   callee: elm/core:List.foldl   instance: a := String, b := String   sig#: 8a8782c6   subst: v0 := String, v1 := String
+        64:24-64:49 Lambda :: String -> String -> String
+          64:25-64:26 PVar x :: String
+          64:27-64:30 PVar acc :: String
+          64:34-64:49 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            64:34-64:37 VarLocal :: String
+            64:41-64:49 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              64:41-64:42 VarLocal :: String
+              64:46-64:49 Str :: String
+        64:51-64:53 Str :: String
+        64:54-64:56 VarLocal :: List String
+      64:60-64:63 Str :: String
+def showFloats :: List Float -> String    [58:1-58:11]   id: author/project:EqCmp.showFloats   sig: List Float -> String   kinds:    group: author/project:EqCmp.showFloats nonrec ann
+  58:12-58:14 PVar xs :: List Float
+  59:5-59:80 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    59:5-59:8 Str :: String
+    59:12-59:80 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      59:12-59:73 Call :: String
+        59:12-59:22 VarForeign :: (Float -> String -> String) -> String -> List Float -> String   callee: elm/core:List.foldl   instance: a := Float, b := String   sig#: 8a8782c6   subst: v0 := Float, v1 := String
+        59:24-59:66 Lambda :: Float -> String -> String
+          59:25-59:26 PVar x :: Float
+          59:27-59:30 PVar acc :: String
+          59:34-59:66 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            59:34-59:37 VarLocal :: String
+            59:41-59:66 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              59:41-59:59 Call :: String
+                59:41-59:57 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+                59:58-59:59 VarLocal :: Float
+              59:63-59:66 Str :: String
+        59:68-59:70 Str :: String
+        59:71-59:73 VarLocal :: List Float
+      59:77-59:80 Str :: String
+def showPairs :: List ( Int, String ) -> String    [68:1-68:10]   id: author/project:EqCmp.showPairs   sig: List ( Int, String ) -> String   kinds:    group: author/project:EqCmp.showPairs nonrec ann
+  68:11-68:13 PVar xs :: List ( Int, String )
+  69:5-69:104 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    69:5-69:8 Str :: String
+    69:12-69:104 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      69:12-69:97 Call :: String
+        69:12-69:22 VarForeign :: (( Int, String ) -> String -> String) -> String -> List ( Int, String ) -> String   callee: elm/core:List.foldl   instance: a := ( Int, String ), b := String   sig#: 8a8782c6   subst: v0 := ( Int, String ), v1 := String
+        69:24-69:90 Lambda :: ( Int, String ) -> String -> String
+          69:25-69:33 PPair :: ( Int, String )
+            69:27-69:28 PVar n :: Int
+            69:30-69:31 PVar s :: String
+          69:34-69:37 PVar acc :: String
+          69:41-69:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            69:41-69:44 VarLocal :: String
+            69:48-69:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              69:48-69:51 Str :: String
+              69:55-69:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                69:55-69:71 Call :: String
+                  69:55-69:69 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                  69:70-69:71 VarLocal :: Int
+                69:75-69:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  69:75-69:78 Str :: String
+                  69:82-69:90 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                    69:82-69:83 VarLocal :: String
+                    69:87-69:90 Str :: String
+        69:92-69:94 Str :: String
+        69:95-69:97 VarLocal :: List ( Int, String )
+      69:101-69:104 Str :: String
+def showInts :: List Int -> String    [53:1-53:9]   id: author/project:EqCmp.showInts   sig: List Int -> String   kinds:    group: author/project:EqCmp.showInts nonrec ann
+  53:10-53:12 PVar xs :: List Int
+  54:5-54:78 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    54:5-54:8 Str :: String
+    54:12-54:78 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      54:12-54:71 Call :: String
+        54:12-54:22 VarForeign :: (Int -> String -> String) -> String -> List Int -> String   callee: elm/core:List.foldl   instance: a := Int, b := String   sig#: 8a8782c6   subst: v0 := Int, v1 := String
+        54:24-54:64 Lambda :: Int -> String -> String
+          54:25-54:26 PVar x :: Int
+          54:27-54:30 PVar acc :: String
+          54:34-54:64 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            54:34-54:37 VarLocal :: String
+            54:41-54:64 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              54:41-54:57 Call :: String
+                54:41-54:55 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                54:56-54:57 VarLocal :: Int
+              54:61-54:64 Str :: String
+        54:66-54:68 Str :: String
+        54:69-54:71 VarLocal :: List Int
+      54:75-54:78 Str :: String
+def noInts :: List Int    [73:1-73:7]   id: author/project:EqCmp.noInts   sig: List Int   kinds:    group: author/project:EqCmp.noInts nonrec ann
+  74:5-74:7 List :: List Int
+def okOne :: Result String Int    [78:1-78:6]   id: author/project:EqCmp.okOne   sig: Result String Int   kinds:    group: author/project:EqCmp.okOne nonrec ann
+  79:5-79:9 Call :: Result String Int
+    79:5-79:7 VarCtor :: Int -> Result String Int   callee: elm/core:Result.Ok   instance: error := String, value := Int   sig#: 8f049c9f   subst: v0 := Int, v1 := String
+    79:8-79:9 Int :: Int
+def build :: Int -> Tree    [83:1-83:6]   id: author/project:EqCmp.build   sig: Int -> Tree   kinds:    group: author/project:EqCmp.build rec ann
+  83:7-83:8 PVar n :: Int
+  84:5-88:47 If :: Tree
+    84:8-84:14 Binop :: Bool   callee: elm/core:Basics.le   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      84:8-84:9 VarLocal :: Int
+      84:13-84:14 Int :: Int
+    85:9-85:13 VarCtor :: Tree   callee: author/project:EqCmp.Leaf
+    88:9-88:45 Call :: Tree
+      88:9-88:13 VarCtor :: Tree -> Int -> Tree -> Tree   callee: author/project:EqCmp.Node
+      88:15-88:27 Call :: Tree
+        88:15-88:20 VarTopLevel :: Int -> Tree   callee: author/project:EqCmp.build   use: rec
+        88:22-88:27 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          88:22-88:23 VarLocal :: Int
+          88:26-88:27 Int :: Int
+      88:30-88:31 VarLocal :: Int
+      88:33-88:45 Call :: Tree
+        88:33-88:38 VarTopLevel :: Int -> Tree   callee: author/project:EqCmp.build   use: rec
+        88:40-88:45 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          88:40-88:41 VarLocal :: Int
+          88:44-88:45 Int :: Int
+def tell :: String -> a -> ()    [92:1-92:5]   id: author/project:EqCmp.tell   sig: String -> v0 -> ()   kinds: v0:any   group: author/project:EqCmp.tell nonrec ann
+  92:6-92:9 PVar tag :: String
+  92:10-92:11 PAnything :: a
+  93:5-93:21 Call :: ()
+    93:5-93:14 VarDebug :: String -> () -> ()   callee: elm/core:Debug.log   instance: a := ()   sig#: 6ecaa5dd   subst: v0 := ()
+    93:15-93:18 VarLocal :: String
+    93:19-93:21 Unit :: ()
+def ord :: Order -> Int    [40:1-40:4]   id: author/project:EqCmp.ord   sig: Order -> Int   kinds:    group: author/project:EqCmp.ord nonrec ann
+  40:5-40:6 PVar o :: Order
+  41:5-49:14 Case :: Int
+    41:10-41:11 VarLocal :: Order
+    42:9-42:11 PCtor LT :: Order
+    43:13-43:15 Negate :: Int
+      43:14-43:15 Int :: Int
+    45:9-45:11 PCtor EQ :: Order
+    46:13-46:14 Int :: Int
+    48:9-48:11 PCtor GT :: Order
+    49:13-49:14 Int :: Int
+def b2i :: Bool -> Int    [31:1-31:4]   id: author/project:EqCmp.b2i   sig: Bool -> Int   kinds:    group: author/project:EqCmp.b2i nonrec ann
+  31:5-31:6 PVar x :: Bool
+  32:5-36:10 If :: Int
+    32:8-32:9 VarLocal :: Bool
+    33:9-33:10 Int :: Int
+    36:9-36:10 Int :: Int
+def main :: Program () () ()    [97:1-97:5]   id: author/project:EqCmp.main   sig: Program () () ()   kinds:    group: author/project:EqCmp.main nonrec ann
+  98:5-193:10 Call :: Program () () ()
+    98:5-98:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    99:9-193:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      100:13-190:33 Lambda :: () -> ( (), Cmd () )
+        100:14-100:15 PAnything :: ()
+        103:21-103:22 PAnything :: Int
+        103:25-103:72 Call :: Int
+          103:25-103:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          103:35-103:45 Str :: String
+          103:47-103:72 Call :: Int
+            103:47-103:50 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            103:52-103:72 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := ( Int, String ) (defaulted)   sig#: 2cdc0786   subst: v0 := ( Int, String )
+              103:52-103:60 Pair :: ( Int, String )   <= ( number, String )
+                103:53-103:54 Int :: Int   <= number
+                103:56-103:59 Str :: String
+              103:64-103:72 Pair :: ( Int, String )   <= ( number, String )
+                103:65-103:66 Int :: Int   <= number
+                103:68-103:71 Str :: String
+        104:21-104:22 PAnything :: Int
+        104:25-104:72 Call :: Int
+          104:25-104:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          104:35-104:45 Str :: String
+          104:47-104:72 Call :: Int
+            104:47-104:50 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            104:52-104:72 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := ( Int, String ) (defaulted)   sig#: 2cdc0786   subst: v0 := ( Int, String )
+              104:52-104:60 Pair :: ( Int, String )   <= ( number1, String )
+                104:53-104:54 Int :: Int   <= number1
+                104:56-104:59 Str :: String
+              104:64-104:72 Pair :: ( Int, String )   <= ( number1, String )
+                104:65-104:66 Int :: Int   <= number1
+                104:68-104:71 Str :: String
+        105:21-105:22 PAnything :: Int
+        105:25-105:83 Call :: Int
+          105:25-105:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          105:35-105:46 Str :: String
+          105:48-105:83 Call :: Int
+            105:48-105:51 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            105:53-105:83 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := ( Int, Float, Char ) (defaulted)   sig#: 2cdc0786   subst: v0 := ( Int, Float, Char )
+              105:53-105:66 Triple :: ( Int, Float, Char )   <= ( number2, Float, Char )
+                105:54-105:55 Int :: Int   <= number2
+                105:57-105:60 Float :: Float
+                105:62-105:65 Chr :: Char
+              105:70-105:83 Triple :: ( Int, Float, Char )   <= ( number2, Float, Char )
+                105:71-105:72 Int :: Int   <= number2
+                105:74-105:77 Float :: Float
+                105:79-105:82 Chr :: Char
+        106:21-106:22 PAnything :: Int
+        106:25-106:71 Call :: Int
+          106:25-106:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          106:35-106:46 Str :: String
+          106:48-106:71 Call :: Int
+            106:48-106:51 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            106:53-106:71 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := String   sig#: 2cdc0786   subst: v0 := String
+              106:53-106:60 Str :: String
+              106:64-106:71 Str :: String
+        107:21-107:22 PAnything :: Int
+        107:25-107:77 Call :: Int
+          107:25-107:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          107:35-107:44 Str :: String
+          107:46-107:77 Call :: Int
+            107:46-107:49 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            107:51-107:77 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := List Int (defaulted)   sig#: 2cdc0786   subst: v0 := List Int
+              107:51-107:62 List :: List Int   <= List number3
+                107:53-107:54 Int :: Int   <= number3
+                107:56-107:57 Int :: Int   <= number3
+                107:59-107:60 Int :: Int   <= number3
+              107:66-107:77 List :: List Int   <= List number3
+                107:68-107:69 Int :: Int   <= number3
+                107:71-107:72 Int :: Int   <= number3
+                107:74-107:75 Int :: Int   <= number3
+        108:21-108:22 PAnything :: Int
+        108:25-108:78 Call :: Int
+          108:25-108:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          108:35-108:48 Str :: String
+          108:50-108:78 Call :: Int
+            108:50-108:53 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            108:55-108:78 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := List Int (defaulted)   sig#: 2cdc0786   subst: v0 := List Int
+              108:55-108:66 List :: List Int   <= List number4
+                108:57-108:58 Int :: Int   <= number4
+                108:60-108:61 Int :: Int   <= number4
+                108:63-108:64 Int :: Int   <= number4
+              108:70-108:78 List :: List Int   <= List number4
+                108:72-108:73 Int :: Int   <= number4
+                108:75-108:76 Int :: Int   <= number4
+        109:21-109:22 PAnything :: Int
+        109:25-109:82 Call :: Int
+          109:25-109:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          109:35-109:49 Str :: String
+          109:51-109:82 Call :: Int
+            109:51-109:54 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            109:56-109:82 Binop :: Bool   callee: elm/core:Basics.neq   instance: a := List Int (defaulted)   sig#: 2cdc0786   subst: v0 := List Int
+              109:56-109:67 List :: List Int   <= List number5
+                109:58-109:59 Int :: Int   <= number5
+                109:61-109:62 Int :: Int   <= number5
+                109:64-109:65 Int :: Int   <= number5
+              109:71-109:82 List :: List Int   <= List number5
+                109:73-109:74 Int :: Int   <= number5
+                109:76-109:77 Int :: Int   <= number5
+                109:79-109:80 Int :: Int   <= number5
+        110:21-110:22 PAnything :: Int
+        110:25-110:64 Call :: Int
+          110:25-110:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          110:35-110:45 Str :: String
+          110:47-110:64 Call :: Int
+            110:47-110:50 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            110:52-110:64 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := List Int   sig#: 2cdc0786   subst: v0 := List Int
+              110:52-110:58 VarTopLevel :: List Int   callee: author/project:EqCmp.noInts   use: gen
+              110:62-110:64 List :: List Int
+        111:21-111:22 PAnything :: Int
+        111:25-111:82 Call :: Int
+          111:25-111:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          111:35-111:47 Str :: String
+          111:49-111:82 Call :: Int
+            111:49-111:52 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            111:54-111:82 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := List String   sig#: 2cdc0786   subst: v0 := List String
+              111:54-111:66 List :: List String
+                111:56-111:59 Str :: String
+                111:61-111:64 Str :: String
+              111:70-111:82 List :: List String
+                111:72-111:75 Str :: String
+                111:77-111:80 Str :: String
+        112:21-112:22 PAnything :: Int
+        112:25-112:95 Call :: Int
+          112:25-112:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          112:35-112:46 Str :: String
+          112:48-112:95 Call :: Int
+            112:48-112:51 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            112:53-112:95 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := List (List Int) (defaulted)   sig#: 2cdc0786   subst: v0 := List (List Int)
+              112:53-112:72 List :: List (List Int)   <= List (List number6)
+                112:55-112:63 List :: List Int   <= List number6
+                  112:57-112:58 Int :: Int   <= number6
+                  112:60-112:61 Int :: Int   <= number6
+                112:65-112:70 List :: List Int   <= List number6
+                  112:67-112:68 Int :: Int   <= number6
+              112:76-112:95 List :: List (List Int)   <= List (List number6)
+                112:78-112:86 List :: List Int   <= List number6
+                  112:80-112:81 Int :: Int   <= number6
+                  112:83-112:84 Int :: Int   <= number6
+                112:88-112:93 List :: List Int   <= List number6
+                  112:90-112:91 Int :: Int   <= number6
+        113:21-113:22 PAnything :: Int
+        113:25-113:95 Call :: Int
+          113:25-113:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          113:35-113:46 Str :: String
+          113:48-113:95 Call :: Int
+            113:48-113:51 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            113:53-113:95 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := List (List Int) (defaulted)   sig#: 2cdc0786   subst: v0 := List (List Int)
+              113:53-113:72 List :: List (List Int)   <= List (List number7)
+                113:55-113:63 List :: List Int   <= List number7
+                  113:57-113:58 Int :: Int   <= number7
+                  113:60-113:61 Int :: Int   <= number7
+                113:65-113:70 List :: List Int   <= List number7
+                  113:67-113:68 Int :: Int   <= number7
+              113:76-113:95 List :: List (List Int)   <= List (List number7)
+                113:78-113:86 List :: List Int   <= List number7
+                  113:80-113:81 Int :: Int   <= number7
+                  113:83-113:84 Int :: Int   <= number7
+                113:88-113:93 List :: List Int   <= List number7
+                  113:90-113:91 Int :: Int   <= number7
+        114:21-114:22 PAnything :: Int
+        114:25-114:69 Call :: Int
+          114:25-114:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          114:35-114:44 Str :: String
+          114:46-114:69 Call :: Int
+            114:46-114:49 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            114:51-114:69 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Tree   sig#: 2cdc0786   subst: v0 := Tree
+              114:51-114:58 Call :: Tree
+                114:51-114:56 VarTopLevel :: Int -> Tree   callee: author/project:EqCmp.build   use: gen
+                114:57-114:58 Int :: Int
+              114:62-114:69 Call :: Tree
+                114:62-114:67 VarTopLevel :: Int -> Tree   callee: author/project:EqCmp.build   use: gen
+                114:68-114:69 Int :: Int
+        115:21-115:22 PAnything :: Int
+        115:25-115:69 Call :: Int
+          115:25-115:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          115:35-115:44 Str :: String
+          115:46-115:69 Call :: Int
+            115:46-115:49 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            115:51-115:69 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Tree   sig#: 2cdc0786   subst: v0 := Tree
+              115:51-115:58 Call :: Tree
+                115:51-115:56 VarTopLevel :: Int -> Tree   callee: author/project:EqCmp.build   use: gen
+                115:57-115:58 Int :: Int
+              115:62-115:69 Call :: Tree
+                115:62-115:67 VarTopLevel :: Int -> Tree   callee: author/project:EqCmp.build   use: gen
+                115:68-115:69 Int :: Int
+        116:21-116:22 PAnything :: Int
+        116:25-116:68 Call :: Int
+          116:25-116:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          116:35-116:45 Str :: String
+          116:47-116:68 Call :: Int
+            116:47-116:50 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            116:52-116:68 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Maybe Int (defaulted)   sig#: 2cdc0786   subst: v0 := Maybe Int
+              116:52-116:58 Call :: Maybe Int   <= Maybe number8
+                116:52-116:56 VarCtor :: Int -> Maybe Int   <= number8 -> Maybe number8   callee: elm/core:Maybe.Just   instance: a := Int (defaulted)   sig#: c14b2381   subst: v0 := Int
+                116:57-116:58 Int :: Int   <= number8
+              116:62-116:68 Call :: Maybe Int   <= Maybe number8
+                116:62-116:66 VarCtor :: Int -> Maybe Int   <= number8 -> Maybe number8   callee: elm/core:Maybe.Just   instance: a := Int (defaulted)   sig#: c14b2381   subst: v0 := Int
+                116:67-116:68 Int :: Int   <= number8
+        117:21-117:22 PAnything :: Int
+        117:25-117:69 Call :: Int
+          117:25-117:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          117:35-117:45 Str :: String
+          117:47-117:69 Call :: Int
+            117:47-117:50 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            117:52-117:69 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Maybe Int (defaulted)   sig#: 2cdc0786   subst: v0 := Maybe Int
+              117:52-117:58 Call :: Maybe Int   <= Maybe number9
+                117:52-117:56 VarCtor :: Int -> Maybe Int   <= number9 -> Maybe number9   callee: elm/core:Maybe.Just   instance: a := Int (defaulted)   sig#: c14b2381   subst: v0 := Int
+                117:57-117:58 Int :: Int   <= number9
+              117:62-117:69 VarCtor :: Maybe Int   <= Maybe number9   callee: elm/core:Maybe.Nothing   instance: a := Int (defaulted)   sig#: d83d645a   subst: v0 := Int
+        118:21-118:22 PAnything :: Int
+        118:25-118:73 Call :: Int
+          118:25-118:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          118:35-118:46 Str :: String
+          118:48-118:73 Call :: Int
+            118:48-118:51 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            118:53-118:73 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Maybe String   sig#: 2cdc0786   subst: v0 := Maybe String
+              118:53-118:61 Call :: Maybe String
+                118:53-118:57 VarCtor :: String -> Maybe String   callee: elm/core:Maybe.Just   instance: a := String   sig#: c14b2381   subst: v0 := String
+                118:58-118:61 Str :: String
+              118:65-118:73 Call :: Maybe String
+                118:65-118:69 VarCtor :: String -> Maybe String   callee: elm/core:Maybe.Just   instance: a := String   sig#: c14b2381   subst: v0 := String
+                118:70-118:73 Str :: String
+        119:21-119:22 PAnything :: Int
+        119:25-119:63 Call :: Int
+          119:25-119:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          119:35-119:43 Str :: String
+          119:45-119:63 Call :: Int
+            119:45-119:48 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            119:50-119:63 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Result String Int   sig#: 2cdc0786   subst: v0 := Result String Int
+              119:50-119:55 VarTopLevel :: Result String Int   callee: author/project:EqCmp.okOne   use: gen
+              119:59-119:63 Call :: Result String Int
+                119:59-119:61 VarCtor :: Int -> Result String Int   callee: elm/core:Result.Ok   instance: error := String, value := Int   sig#: 8f049c9f   subst: v0 := Int, v1 := String
+                119:62-119:63 Int :: Int
+        120:21-120:22 PAnything :: Int
+        120:25-120:69 Call :: Int
+          120:25-120:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          120:35-120:46 Str :: String
+          120:48-120:69 Call :: Int
+            120:48-120:51 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            120:53-120:69 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Result String Int   sig#: 2cdc0786   subst: v0 := Result String Int
+              120:53-120:58 VarTopLevel :: Result String Int   callee: author/project:EqCmp.okOne   use: gen
+              120:62-120:69 Call :: Result String Int
+                120:62-120:65 VarCtor :: String -> Result String Int   callee: elm/core:Result.Err   instance: error := String, value := Int   sig#: 8f04103f   subst: v0 := String, v1 := Int
+                120:66-120:69 Str :: String
+        121:21-121:22 PAnything :: Int
+        121:25-121:59 Call :: Int
+          121:25-121:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          121:35-121:42 Str :: String
+          121:44-121:59 Call :: Int
+            121:44-121:47 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            121:49-121:59 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Color   sig#: 2cdc0786   subst: v0 := Color
+              121:49-121:52 VarCtor :: Color   callee: author/project:EqCmp.Red
+              121:56-121:59 VarCtor :: Color   callee: author/project:EqCmp.Red
+        122:21-122:22 PAnything :: Int
+        122:25-122:63 Call :: Int
+          122:25-122:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          122:35-122:45 Str :: String
+          122:47-122:63 Call :: Int
+            122:47-122:50 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            122:52-122:63 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Color   sig#: 2cdc0786   subst: v0 := Color
+              122:52-122:55 VarCtor :: Color   callee: author/project:EqCmp.Red
+              122:59-122:63 VarCtor :: Color   callee: author/project:EqCmp.Blue
+        123:21-123:22 PAnything :: Int
+        123:25-123:82 Call :: Int
+          123:25-123:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          123:35-123:51 Str :: String
+          123:53-123:82 Call :: Int
+            123:53-123:56 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            123:58-123:82 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := ( Color, Int ) (defaulted)   sig#: 2cdc0786   subst: v0 := ( Color, Int )
+              123:58-123:68 Pair :: ( Color, Int )   <= ( Color, number10 )
+                123:59-123:64 VarCtor :: Color   callee: author/project:EqCmp.Green
+                123:66-123:67 Int :: Int   <= number10
+              123:72-123:82 Pair :: ( Color, Int )   <= ( Color, number10 )
+                123:73-123:78 VarCtor :: Color   callee: author/project:EqCmp.Green
+                123:80-123:81 Int :: Int   <= number10
+        124:21-124:22 PAnything :: Int
+        124:25-124:80 Call :: Int
+          124:25-124:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          124:35-124:49 Str :: String
+          124:51-124:80 Call :: Int
+            124:51-124:54 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            124:56-124:80 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Shape   sig#: 2cdc0786   subst: v0 := Shape
+              124:56-124:66 Call :: Shape
+                124:56-124:62 VarCtor :: Float -> Shape   callee: author/project:EqCmp.Circle
+                124:63-124:66 Float :: Float
+              124:70-124:80 Call :: Shape
+                124:70-124:76 VarCtor :: Float -> Shape   callee: author/project:EqCmp.Circle
+                124:77-124:80 Float :: Float
+        125:21-125:22 PAnything :: Int
+        125:25-125:74 Call :: Int
+          125:25-125:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          125:35-125:47 Str :: String
+          125:49-125:74 Call :: Int
+            125:49-125:52 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            125:54-125:74 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Shape   sig#: 2cdc0786   subst: v0 := Shape
+              125:54-125:62 Call :: Shape
+                125:54-125:58 VarCtor :: Float -> Float -> Shape   callee: author/project:EqCmp.Rect
+                125:59-125:60 Int :: Float
+                125:61-125:62 Int :: Float
+              125:66-125:74 Call :: Shape
+                125:66-125:70 VarCtor :: Float -> Float -> Shape   callee: author/project:EqCmp.Rect
+                125:71-125:72 Int :: Float
+                125:73-125:74 Int :: Float
+        126:21-126:22 PAnything :: Int
+        126:25-126:95 Call :: Int
+          126:25-126:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          126:35-126:48 Str :: String
+          126:50-126:95 Call :: Int
+            126:50-126:53 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            126:55-126:95 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Shape   sig#: 2cdc0786   subst: v0 := Shape
+              126:55-126:73 Call :: Shape
+                126:55-126:60 VarCtor :: String -> List Int -> Shape   callee: author/project:EqCmp.Named
+                126:61-126:64 Str :: String
+                126:65-126:73 List :: List Int
+                  126:67-126:68 Int :: Int
+                  126:70-126:71 Int :: Int
+              126:77-126:95 Call :: Shape
+                126:77-126:82 VarCtor :: String -> List Int -> Shape   callee: author/project:EqCmp.Named
+                126:83-126:86 Str :: String
+                126:87-126:95 List :: List Int
+                  126:89-126:90 Int :: Int
+                  126:92-126:93 Int :: Int
+        127:21-127:22 PAnything :: Int
+        127:25-127:78 Call :: Int
+          127:25-127:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          127:35-127:45 Str :: String
+          127:47-127:78 Call :: Int
+            127:47-127:50 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            127:52-127:78 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Shape   sig#: 2cdc0786   subst: v0 := Shape
+              127:52-127:63 Call :: Shape
+                127:52-127:54 VarCtor :: ( Int, Int ) -> Shape   callee: author/project:EqCmp.Pt
+                127:55-127:63 Pair :: ( Int, Int )
+                  127:57-127:58 Int :: Int
+                  127:60-127:61 Int :: Int
+              127:67-127:78 Call :: Shape
+                127:67-127:69 VarCtor :: ( Int, Int ) -> Shape   callee: author/project:EqCmp.Pt
+                127:70-127:78 Pair :: ( Int, Int )
+                  127:72-127:73 Int :: Int
+                  127:75-127:76 Int :: Int
+        128:21-128:22 PAnything :: Int
+        128:25-128:75 Call :: Int
+          128:25-128:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          128:35-128:48 Str :: String
+          128:50-128:75 Call :: Int
+            128:50-128:53 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            128:55-128:75 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Shape   sig#: 2cdc0786   subst: v0 := Shape
+              128:55-128:63 Call :: Shape
+                128:55-128:61 VarCtor :: Float -> Shape   callee: author/project:EqCmp.Circle
+                128:62-128:63 Int :: Float
+              128:67-128:75 Call :: Shape
+                128:67-128:71 VarCtor :: Float -> Float -> Shape   callee: author/project:EqCmp.Rect
+                128:72-128:73 Int :: Float
+                128:74-128:75 Int :: Float
+        129:21-129:22 PAnything :: Int
+        129:25-129:129 Call :: Int
+          129:25-129:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          129:35-129:46 Str :: String
+          129:48-129:129 Call :: Int
+            129:48-129:51 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            129:53-129:129 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := { age : Int, name : String, score : Float } (defaulted)   sig#: 2cdc0786   subst: v0 := { age : Int, name : String, score : Float }
+              129:53-129:89 Record :: { age : Int, name : String, score : Float }   <= { age : number11, name : String, score : Float }
+                129:73-129:74 Int :: Int   <= number11
+                129:62-129:65 Str :: String
+                129:84-129:87 Float :: Float
+              129:93-129:129 Record :: { age : Int, name : String, score : Float }   <= { age : number11, name : String, score : Float }
+                129:113-129:114 Int :: Int   <= number11
+                129:102-129:105 Str :: String
+                129:124-129:127 Float :: Float
+        130:21-130:22 PAnything :: Int
+        130:25-130:129 Call :: Int
+          130:25-130:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          130:35-130:46 Str :: String
+          130:48-130:129 Call :: Int
+            130:48-130:51 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            130:53-130:129 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := { age : Int, name : String, score : Float } (defaulted)   sig#: 2cdc0786   subst: v0 := { age : Int, name : String, score : Float }
+              130:53-130:89 Record :: { age : Int, name : String, score : Float }   <= { age : number12, name : String, score : Float }
+                130:73-130:74 Int :: Int   <= number12
+                130:62-130:65 Str :: String
+                130:84-130:87 Float :: Float
+              130:93-130:129 Record :: { age : Int, name : String, score : Float }   <= { age : number12, name : String, score : Float }
+                130:113-130:114 Int :: Int   <= number12
+                130:102-130:105 Str :: String
+                130:124-130:127 Float :: Float
+        131:21-131:22 PAnything :: Int
+        131:25-131:56 Call :: Int
+          131:25-131:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          131:35-131:41 Str :: String
+          131:43-131:56 Call :: Int
+            131:43-131:46 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            131:48-131:56 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := ()   sig#: 2cdc0786   subst: v0 := ()
+              131:48-131:50 Unit :: ()
+              131:54-131:56 Unit :: ()
+        132:21-132:22 PAnything :: Int
+        132:25-132:63 Call :: Int
+          132:25-132:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          132:35-132:45 Str :: String
+          132:47-132:63 Call :: Int
+            132:47-132:50 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            132:52-132:63 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Float   sig#: 2cdc0786   subst: v0 := Float
+              132:52-132:55 Float :: Float
+              132:59-132:63 Negate :: Float
+                132:60-132:63 Float :: Float
+        133:21-133:22 PAnything :: Int
+        133:25-133:106 Call :: Int
+          133:25-133:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          133:35-133:51 Str :: String
+          133:53-133:106 Call :: Int
+            133:53-133:56 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            133:58-133:106 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := List ( Int, String ) (defaulted)   sig#: 2cdc0786   subst: v0 := List ( Int, String )
+              133:58-133:80 List :: List ( Int, String )   <= List ( number13, String )
+                133:60-133:68 Pair :: ( Int, String )   <= ( number13, String )
+                  133:61-133:62 Int :: Int   <= number13
+                  133:64-133:67 Str :: String
+                133:70-133:78 Pair :: ( Int, String )   <= ( number13, String )
+                  133:71-133:72 Int :: Int   <= number13
+                  133:74-133:77 Str :: String
+              133:84-133:106 List :: List ( Int, String )   <= List ( number13, String )
+                133:86-133:94 Pair :: ( Int, String )   <= ( number13, String )
+                  133:87-133:88 Int :: Int   <= number13
+                  133:90-133:93 Str :: String
+                133:96-133:104 Pair :: ( Int, String )   <= ( number13, String )
+                  133:97-133:98 Int :: Int   <= number13
+                  133:100-133:103 Str :: String
+        134:21-134:22 PAnything :: Int
+        134:25-134:78 Call :: Int
+          134:25-134:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          134:35-134:47 Str :: String
+          134:49-134:78 Call :: Int
+            134:49-134:52 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            134:54-134:78 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Maybe (List Int) (defaulted)   sig#: 2cdc0786   subst: v0 := Maybe (List Int)
+              134:54-134:64 Call :: Maybe (List Int)   <= Maybe (List number14)
+                134:54-134:58 VarCtor :: List Int -> Maybe (List Int)   <= List number14 -> Maybe (List number14)   callee: elm/core:Maybe.Just   instance: a := List Int (defaulted)   sig#: c14b2381   subst: v0 := List Int
+                134:59-134:64 List :: List Int   <= List number14
+                  134:61-134:62 Int :: Int   <= number14
+              134:68-134:78 Call :: Maybe (List Int)   <= Maybe (List number14)
+                134:68-134:72 VarCtor :: List Int -> Maybe (List Int)   <= List number14 -> Maybe (List number14)   callee: elm/core:Maybe.Just   instance: a := List Int (defaulted)   sig#: c14b2381   subst: v0 := List Int
+                134:73-134:78 List :: List Int   <= List number14
+                  134:75-134:76 Int :: Int   <= number14
+        135:21-135:22 PAnything :: Int
+        135:25-135:96 Call :: Int
+          135:25-135:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          135:35-135:47 Str :: String
+          135:49-135:96 Call :: Int
+            135:49-135:52 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            135:54-135:96 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := List (Maybe Int) (defaulted)   sig#: 2cdc0786   subst: v0 := List (Maybe Int)
+              135:54-135:73 List :: List (Maybe Int)   <= List (Maybe number15)
+                135:56-135:62 Call :: Maybe Int   <= Maybe number15
+                  135:56-135:60 VarCtor :: Int -> Maybe Int   <= number15 -> Maybe number15   callee: elm/core:Maybe.Just   instance: a := Int (defaulted)   sig#: c14b2381   subst: v0 := Int
+                  135:61-135:62 Int :: Int   <= number15
+                135:64-135:71 VarCtor :: Maybe Int   <= Maybe number15   callee: elm/core:Maybe.Nothing   instance: a := Int (defaulted)   sig#: d83d645a   subst: v0 := Int
+              135:77-135:96 List :: List (Maybe Int)   <= List (Maybe number15)
+                135:79-135:85 Call :: Maybe Int   <= Maybe number15
+                  135:79-135:83 VarCtor :: Int -> Maybe Int   <= number15 -> Maybe number15   callee: elm/core:Maybe.Just   instance: a := Int (defaulted)   sig#: c14b2381   subst: v0 := Int
+                  135:84-135:85 Int :: Int   <= number15
+                135:87-135:94 VarCtor :: Maybe Int   <= Maybe number15   callee: elm/core:Maybe.Nothing   instance: a := Int (defaulted)   sig#: d83d645a   subst: v0 := Int
+        138:21-138:22 PAnything :: Int
+        138:25-138:62 Call :: Int
+          138:25-138:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          138:35-138:44 Str :: String
+          138:46-138:62 Call :: Int
+            138:46-138:49 VarTopLevel :: Order -> Int   callee: author/project:EqCmp.ord   use: gen
+            138:51-138:62 Call :: Order
+              138:51-138:58 VarForeign :: Int -> Int -> Order   <= number16 -> number16 -> Order   callee: elm/core:Basics.compare   instance: comparable := Int (defaulted)   sig#: c949accf   subst: v0 := Int
+              138:59-138:60 Int :: Int   <= number16
+              138:61-138:62 Int :: Int   <= number16
+        139:21-139:22 PAnything :: Int
+        139:25-139:73 Call :: Int
+          139:25-139:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          139:35-139:47 Str :: String
+          139:49-139:73 Call :: Int
+            139:49-139:52 VarTopLevel :: Order -> Int   callee: author/project:EqCmp.ord   use: gen
+            139:54-139:73 Call :: Order
+              139:54-139:61 VarForeign :: String -> String -> Order   callee: elm/core:Basics.compare   instance: comparable := String   sig#: c949accf   subst: v0 := String
+              139:62-139:67 Str :: String
+              139:68-139:73 Str :: String
+        140:21-140:22 PAnything :: Int
+        140:25-140:76 Call :: Int
+          140:25-140:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          140:35-140:50 Str :: String
+          140:52-140:76 Call :: Int
+            140:52-140:55 VarTopLevel :: Order -> Int   callee: author/project:EqCmp.ord   use: gen
+            140:57-140:76 Call :: Order
+              140:57-140:64 VarForeign :: String -> String -> Order   callee: elm/core:Basics.compare   instance: comparable := String   sig#: c949accf   subst: v0 := String
+              140:65-140:70 Str :: String
+              140:71-140:76 Str :: String
+        141:21-141:22 PAnything :: Int
+        141:25-141:79 Call :: Int
+          141:25-141:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          141:35-141:54 Str :: String
+          141:56-141:79 Call :: Int
+            141:56-141:59 VarTopLevel :: Order -> Int   callee: author/project:EqCmp.ord   use: gen
+            141:61-141:79 Call :: Order
+              141:61-141:68 VarForeign :: String -> String -> Order   callee: elm/core:Basics.compare   instance: comparable := String   sig#: c949accf   subst: v0 := String
+              141:69-141:73 Str :: String
+              141:74-141:79 Str :: String
+        142:21-142:22 PAnything :: Int
+        142:25-142:73 Call :: Int
+          142:25-142:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          142:35-142:51 Str :: String
+          142:53-142:73 Call :: Int
+            142:53-142:56 VarTopLevel :: Order -> Int   callee: author/project:EqCmp.ord   use: gen
+            142:58-142:73 Call :: Order
+              142:58-142:65 VarForeign :: String -> String -> Order   callee: elm/core:Basics.compare   instance: comparable := String   sig#: c949accf   subst: v0 := String
+              142:66-142:69 Str :: String
+              142:70-142:73 Str :: String
+        143:21-143:22 PAnything :: Int
+        143:25-143:78 Call :: Int
+          143:25-143:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          143:35-143:46 Str :: String
+          143:48-143:78 Call :: Int
+            143:48-143:51 VarTopLevel :: Order -> Int   callee: author/project:EqCmp.ord   use: gen
+            143:53-143:78 Call :: Order
+              143:53-143:60 VarForeign :: ( Int, String ) -> ( Int, String ) -> Order   <= ( number17, String ) -> ( number17, String ) -> Order   callee: elm/core:Basics.compare   instance: comparable := ( Int, String ) (defaulted)   sig#: c949accf   subst: v0 := ( Int, String )
+              143:61-143:69 Pair :: ( Int, String )   <= ( number17, String )
+                143:62-143:63 Int :: Int   <= number17
+                143:65-143:68 Str :: String
+              143:70-143:78 Pair :: ( Int, String )   <= ( number17, String )
+                143:71-143:72 Int :: Int   <= number17
+                143:74-143:77 Str :: String
+        144:21-144:22 PAnything :: Int
+        144:25-144:80 Call :: Int
+          144:25-144:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          144:35-144:48 Str :: String
+          144:50-144:80 Call :: Int
+            144:50-144:53 VarTopLevel :: Order -> Int   callee: author/project:EqCmp.ord   use: gen
+            144:55-144:80 Call :: Order
+              144:55-144:62 VarForeign :: ( Int, String ) -> ( Int, String ) -> Order   <= ( number18, String ) -> ( number18, String ) -> Order   callee: elm/core:Basics.compare   instance: comparable := ( Int, String ) (defaulted)   sig#: c949accf   subst: v0 := ( Int, String )
+              144:63-144:71 Pair :: ( Int, String )   <= ( number18, String )
+                144:64-144:65 Int :: Int   <= number18
+                144:67-144:70 Str :: String
+              144:72-144:80 Pair :: ( Int, String )   <= ( number18, String )
+                144:73-144:74 Int :: Int   <= number18
+                144:76-144:79 Str :: String
+        145:21-145:22 PAnything :: Int
+        145:25-145:80 Call :: Int
+          145:25-145:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          145:35-145:45 Str :: String
+          145:47-145:80 Call :: Int
+            145:47-145:50 VarTopLevel :: Order -> Int   callee: author/project:EqCmp.ord   use: gen
+            145:52-145:80 Call :: Order
+              145:52-145:59 VarForeign :: List Int -> List Int -> Order   <= List number19 -> List number19 -> Order   callee: elm/core:Basics.compare   instance: comparable := List Int (defaulted)   sig#: c949accf   subst: v0 := List Int
+              145:60-145:68 List :: List Int   <= List number19
+                145:62-145:63 Int :: Int   <= number19
+                145:65-145:66 Int :: Int   <= number19
+              145:69-145:80 List :: List Int   <= List number19
+                145:71-145:72 Int :: Int   <= number19
+                145:74-145:75 Int :: Int   <= number19
+                145:77-145:78 Int :: Int   <= number19
+        146:21-146:22 PAnything :: Int
+        146:25-146:82 Call :: Int
+          146:25-146:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          146:35-146:47 Str :: String
+          146:49-146:82 Call :: Int
+            146:49-146:52 VarTopLevel :: Order -> Int   callee: author/project:EqCmp.ord   use: gen
+            146:54-146:82 Call :: Order
+              146:54-146:61 VarForeign :: List Int -> List Int -> Order   <= List number20 -> List number20 -> Order   callee: elm/core:Basics.compare   instance: comparable := List Int (defaulted)   sig#: c949accf   subst: v0 := List Int
+              146:62-146:70 List :: List Int   <= List number20
+                146:64-146:65 Int :: Int   <= number20
+                146:67-146:68 Int :: Int   <= number20
+              146:71-146:82 List :: List Int   <= List number20
+                146:73-146:74 Int :: Int   <= number20
+                146:76-146:77 Int :: Int   <= number20
+                146:79-146:80 Int :: Int   <= number20
+        147:21-147:22 PAnything :: Int
+        147:25-147:74 Call :: Int
+          147:25-147:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          147:35-147:51 Str :: String
+          147:53-147:74 Call :: Int
+            147:53-147:56 VarTopLevel :: Order -> Int   callee: author/project:EqCmp.ord   use: gen
+            147:58-147:74 Call :: Order
+              147:58-147:65 VarForeign :: List Int -> List Int -> Order   <= List number21 -> List number21 -> Order   callee: elm/core:Basics.compare   instance: comparable := List Int (defaulted)   sig#: c949accf   subst: v0 := List Int
+              147:66-147:68 List :: List Int   <= List number21
+              147:69-147:74 List :: List Int   <= List number21
+                147:71-147:72 Int :: Int   <= number21
+        148:21-148:22 PAnything :: Int
+        148:25-148:80 Call :: Int
+          148:25-148:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          148:35-148:48 Str :: String
+          148:50-148:80 Call :: Int
+            148:50-148:53 VarTopLevel :: Order -> Int   callee: author/project:EqCmp.ord   use: gen
+            148:55-148:80 Call :: Order
+              148:55-148:62 VarForeign :: List Int -> List Int -> Order   <= List number22 -> List number22 -> Order   callee: elm/core:Basics.compare   instance: comparable := List Int (defaulted)   sig#: c949accf   subst: v0 := List Int
+              148:63-148:71 List :: List Int   <= List number22
+                148:65-148:66 Int :: Int   <= number22
+                148:68-148:69 Int :: Int   <= number22
+              148:72-148:80 List :: List Int   <= List number22
+                148:74-148:75 Int :: Int   <= number22
+                148:77-148:78 Int :: Int   <= number22
+        149:21-149:22 PAnything :: Int
+        149:25-149:67 Call :: Int
+          149:25-149:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          149:35-149:45 Str :: String
+          149:47-149:67 Call :: Int
+            149:47-149:50 VarTopLevel :: Order -> Int   callee: author/project:EqCmp.ord   use: gen
+            149:52-149:67 Call :: Order
+              149:52-149:59 VarForeign :: Char -> Char -> Order   callee: elm/core:Basics.compare   instance: comparable := Char   sig#: c949accf   subst: v0 := Char
+              149:60-149:63 Chr :: Char
+              149:64-149:67 Chr :: Char
+        150:21-150:22 PAnything :: Int
+        150:25-150:84 Call :: Int
+          150:25-150:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          150:35-150:52 Str :: String
+          150:54-150:84 Call :: Int
+            150:54-150:57 VarTopLevel :: Order -> Int   callee: author/project:EqCmp.ord   use: gen
+            150:59-150:84 Call :: Order
+              150:59-150:66 VarForeign :: ( Float, Int ) -> ( Float, Int ) -> Order   <= ( Float, number23 ) -> ( Float, number23 ) -> Order   callee: elm/core:Basics.compare   instance: comparable := ( Float, Int ) (defaulted)   sig#: c949accf   subst: v0 := ( Float, Int )
+              150:67-150:75 Pair :: ( Float, Int )   <= ( Float, number23 )
+                150:68-150:71 Float :: Float
+                150:73-150:74 Int :: Int   <= number23
+              150:76-150:84 Pair :: ( Float, Int )   <= ( Float, number23 )
+                150:77-150:80 Float :: Float
+                150:82-150:83 Int :: Int   <= number23
+        151:21-151:22 PAnything :: Int
+        151:25-151:62 Call :: Int
+          151:25-151:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          151:35-151:46 Str :: String
+          151:48-151:62 Call :: Int
+            151:48-151:51 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            151:53-151:62 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := String   sig#: 2cdc0786   subst: v0 := String
+              151:53-151:56 Str :: String
+              151:59-151:62 Str :: String
+        152:21-152:22 PAnything :: Int
+        152:25-152:62 Call :: Int
+          152:25-152:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          152:35-152:46 Str :: String
+          152:48-152:62 Call :: Int
+            152:48-152:51 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            152:53-152:62 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := String   sig#: 2cdc0786   subst: v0 := String
+              152:53-152:56 Str :: String
+              152:59-152:62 Str :: String
+        153:21-153:22 PAnything :: Int
+        153:25-153:63 Call :: Int
+          153:25-153:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          153:35-153:46 Str :: String
+          153:48-153:63 Call :: Int
+            153:48-153:51 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            153:53-153:63 Binop :: Bool   callee: elm/core:Basics.le   instance: comparable := String   sig#: 2cdc0786   subst: v0 := String
+              153:53-153:56 Str :: String
+              153:60-153:63 Str :: String
+        154:21-154:22 PAnything :: Int
+        154:25-154:63 Call :: Int
+          154:25-154:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          154:35-154:46 Str :: String
+          154:48-154:63 Call :: Int
+            154:48-154:51 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            154:53-154:63 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := String   sig#: 2cdc0786   subst: v0 := String
+              154:53-154:56 Str :: String
+              154:60-154:63 Str :: String
+        155:21-155:22 PAnything :: Int
+        155:25-155:67 Call :: Int
+          155:25-155:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          155:35-155:45 Str :: String
+          155:47-155:67 Call :: Int
+            155:47-155:50 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            155:52-155:67 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := ( Int, Int ) (defaulted)   sig#: 2cdc0786   subst: v0 := ( Int, Int )
+              155:52-155:58 Pair :: ( Int, Int )   <= ( number24, number25 )
+                155:53-155:54 Int :: Int   <= number24
+                155:56-155:57 Int :: Int   <= number25
+              155:61-155:67 Pair :: ( Int, Int )   <= ( number24, number25 )
+                155:62-155:63 Int :: Int   <= number24
+                155:65-155:66 Int :: Int   <= number25
+        156:21-156:22 PAnything :: Int
+        156:25-156:68 Call :: Int
+          156:25-156:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          156:35-156:45 Str :: String
+          156:47-156:68 Call :: Int
+            156:47-156:50 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            156:52-156:68 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := ( Int, Int ) (defaulted)   sig#: 2cdc0786   subst: v0 := ( Int, Int )
+              156:52-156:58 Pair :: ( Int, Int )   <= ( number26, number27 )
+                156:53-156:54 Int :: Int   <= number26
+                156:56-156:57 Int :: Int   <= number27
+              156:62-156:68 Pair :: ( Int, Int )   <= ( number26, number27 )
+                156:63-156:64 Int :: Int   <= number26
+                156:66-156:67 Int :: Int   <= number27
+        157:21-157:22 PAnything :: Int
+        157:25-157:73 Call :: Int
+          157:25-157:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          157:35-157:44 Str :: String
+          157:46-157:73 Call :: Int
+            157:46-157:49 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            157:51-157:73 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := List Int (defaulted)   sig#: 2cdc0786   subst: v0 := List Int
+              157:51-157:59 List :: List Int   <= List number28
+                157:53-157:54 Int :: Int   <= number28
+                157:56-157:57 Int :: Int   <= number28
+              157:62-157:73 List :: List Int   <= List number28
+                157:64-157:65 Int :: Int   <= number28
+                157:67-157:68 Int :: Int   <= number28
+                157:70-157:71 Int :: Int   <= number28
+        158:21-158:22 PAnything :: Int
+        158:25-158:73 Call :: Int
+          158:25-158:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          158:35-158:44 Str :: String
+          158:46-158:73 Call :: Int
+            158:46-158:49 VarTopLevel :: Bool -> Int   callee: author/project:EqCmp.b2i   use: gen
+            158:51-158:73 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := List Int (defaulted)   sig#: 2cdc0786   subst: v0 := List Int
+              158:51-158:59 List :: List Int   <= List number29
+                158:53-158:54 Int :: Int   <= number29
+                158:56-158:57 Int :: Int   <= number29
+              158:62-158:73 List :: List Int   <= List number29
+                158:64-158:65 Int :: Int   <= number29
+                158:67-158:68 Int :: Int   <= number29
+                158:70-158:71 Int :: Int   <= number29
+        159:21-159:22 PAnything :: String
+        159:25-159:67 Call :: String
+          159:25-159:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          159:35-159:47 Str :: String
+          159:49-159:67 Call :: String
+            159:49-159:52 VarForeign :: String -> String -> String   callee: elm/core:Basics.max   instance: comparable := String   sig#: 08810ccc   subst: v0 := String
+            159:53-159:59 Str :: String
+            159:60-159:67 Str :: String
+        160:21-160:22 PAnything :: String
+        160:25-160:67 Call :: String
+          160:25-160:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          160:35-160:47 Str :: String
+          160:49-160:67 Call :: String
+            160:49-160:52 VarForeign :: String -> String -> String   callee: elm/core:Basics.min   instance: comparable := String   sig#: 08810ccc   subst: v0 := String
+            160:53-160:59 Str :: String
+            160:60-160:67 Str :: String
+        161:21-161:22 PAnything :: Int   <= number30
+        161:25-161:82 Call :: Int   <= number30
+          161:25-161:34 VarDebug :: String -> Int -> Int   <= String -> number30 -> number30   callee: elm/core:Debug.log   instance: a := Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := Int
+          161:35-161:46 Str :: String
+          161:48-161:82 Call :: Int   <= number30
+            161:48-161:59 VarForeign :: ( Int, String ) -> Int   <= ( number30, String ) -> number30   callee: elm/core:Tuple.first   instance: a := Int (defaulted), b := String   sig#: ee0f5e96   subst: v0 := Int, v1 := String
+            161:61-161:82 Call :: ( Int, String )   <= ( number30, String )
+              161:61-161:64 VarForeign :: ( Int, String ) -> ( Int, String ) -> ( Int, String )   <= ( number30, String ) -> ( number30, String ) -> ( number30, String )   callee: elm/core:Basics.max   instance: comparable := ( Int, String ) (defaulted)   sig#: 08810ccc   subst: v0 := ( Int, String )
+              161:65-161:73 Pair :: ( Int, String )   <= ( number30, String )
+                161:66-161:67 Int :: Int   <= number30
+                161:69-161:72 Str :: String
+              161:74-161:82 Pair :: ( Int, String )   <= ( number30, String )
+                161:75-161:76 Int :: Int   <= number30
+                161:78-161:81 Str :: String
+        162:21-162:22 PAnything :: String
+        162:25-162:85 Call :: String
+          162:25-162:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          162:35-162:48 Str :: String
+          162:50-162:85 Call :: String
+            162:50-162:62 VarForeign :: ( Int, String ) -> String   <= ( number31, String ) -> String   callee: elm/core:Tuple.second   instance: a := Int (defaulted), b := String   sig#: ee0f5e97   subst: v0 := Int, v1 := String
+            162:64-162:85 Call :: ( Int, String )   <= ( number31, String )
+              162:64-162:67 VarForeign :: ( Int, String ) -> ( Int, String ) -> ( Int, String )   <= ( number31, String ) -> ( number31, String ) -> ( number31, String )   callee: elm/core:Basics.max   instance: comparable := ( Int, String ) (defaulted)   sig#: 08810ccc   subst: v0 := ( Int, String )
+              162:68-162:76 Pair :: ( Int, String )   <= ( number31, String )
+                162:69-162:70 Int :: Int   <= number31
+                162:72-162:75 Str :: String
+              162:77-162:85 Pair :: ( Int, String )   <= ( number31, String )
+                162:78-162:79 Int :: Int   <= number31
+                162:81-162:84 Str :: String
+        165:21-165:22 PAnything :: String
+        165:25-165:94 Call :: String
+          165:25-165:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          165:35-165:47 Str :: String
+          165:49-165:94 Call :: String
+            165:49-165:57 VarTopLevel :: List Int -> String   callee: author/project:EqCmp.showInts   use: gen
+            165:59-165:94 Binop :: List Int   callee: elm/core:Basics.append   instance: appendable := List Int   sig#: 08810ccc   subst: v0 := List Int
+              165:59-165:67 List :: List Int
+                165:61-165:62 Int :: Int
+                165:64-165:65 Int :: Int
+              165:71-165:94 Binop :: List Int   callee: elm/core:Basics.append   instance: appendable := List Int   sig#: 08810ccc   subst: v0 := List Int
+                165:71-165:76 List :: List Int
+                  165:73-165:74 Int :: Int
+                165:80-165:94 Binop :: List Int   callee: elm/core:Basics.append   instance: appendable := List Int   sig#: 08810ccc   subst: v0 := List Int
+                  165:80-165:82 List :: List Int
+                  165:86-165:94 List :: List Int
+                    165:88-165:89 Int :: Int
+                    165:91-165:92 Int :: Int
+        166:21-166:22 PAnything :: String
+        166:25-166:85 Call :: String
+          166:25-166:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          166:35-166:49 Str :: String
+          166:51-166:85 Call :: String
+            166:51-166:61 VarTopLevel :: List Float -> String   callee: author/project:EqCmp.showFloats   use: gen
+            166:63-166:85 Binop :: List Float   callee: elm/core:Basics.append   instance: appendable := List Float   sig#: 08810ccc   subst: v0 := List Float
+              166:63-166:73 List :: List Float
+                166:65-166:68 Float :: Float
+                166:70-166:71 Int :: Float
+              166:77-166:85 List :: List Float
+                166:79-166:83 Float :: Float
+        167:21-167:22 PAnything :: String
+        167:25-167:88 Call :: String
+          167:25-167:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          167:35-167:50 Str :: String
+          167:52-167:88 Call :: String
+            167:52-167:63 VarTopLevel :: List String -> String   callee: author/project:EqCmp.showStrings   use: gen
+            167:65-167:88 Binop :: List String   callee: elm/core:Basics.append   instance: appendable := List String   sig#: 08810ccc   subst: v0 := List String
+              167:65-167:72 List :: List String
+                167:67-167:70 Str :: String
+              167:76-167:88 List :: List String
+                167:78-167:81 Str :: String
+                167:83-167:86 Str :: String
+        168:21-168:22 PAnything :: String
+        168:25-168:90 Call :: String
+          168:25-168:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          168:35-168:49 Str :: String
+          168:51-168:90 Call :: String
+            168:51-168:60 VarTopLevel :: List ( Int, String ) -> String   callee: author/project:EqCmp.showPairs   use: gen
+            168:62-168:90 Binop :: List ( Int, String )   callee: elm/core:Basics.append   instance: appendable := List ( Int, String )   sig#: 08810ccc   subst: v0 := List ( Int, String )
+              168:62-168:74 List :: List ( Int, String )
+                168:64-168:72 Pair :: ( Int, String )
+                  168:65-168:66 Int :: Int
+                  168:68-168:71 Str :: String
+              168:78-168:90 List :: List ( Int, String )
+                168:80-168:88 Pair :: ( Int, String )
+                  168:81-168:82 Int :: Int
+                  168:84-168:87 Str :: String
+        169:21-169:22 PAnything :: String
+        169:25-169:103 Call :: String
+          169:25-169:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          169:35-169:49 Str :: String
+          169:51-169:103 Call :: String
+            169:51-169:59 VarTopLevel :: List Int -> String   callee: author/project:EqCmp.showInts   use: gen
+            169:61-169:103 Call :: List Int
+              169:61-169:72 VarForeign :: List (List Int) -> List Int   callee: elm/core:List.concat   instance: a := Int   sig#: c8708444   subst: v0 := Int
+              169:74-169:103 Binop :: List (List Int)   callee: elm/core:Basics.append   instance: appendable := List (List Int)   sig#: 08810ccc   subst: v0 := List (List Int)
+                169:74-169:83 List :: List (List Int)
+                  169:76-169:81 List :: List Int
+                    169:78-169:79 Int :: Int
+                169:87-169:103 List :: List (List Int)
+                  169:89-169:97 List :: List Int
+                    169:91-169:92 Int :: Int
+                    169:94-169:95 Int :: Int
+                  169:99-169:101 List :: List Int
+        170:21-170:22 PAnything :: String
+        170:25-170:69 Call :: String
+          170:25-170:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          170:35-170:49 Str :: String
+          170:51-170:69 Call :: String
+            170:51-170:59 VarTopLevel :: List Int -> String   callee: author/project:EqCmp.showInts   use: gen
+            170:61-170:69 Binop :: List Int   callee: elm/core:Basics.append   instance: appendable := List Int   sig#: 08810ccc   subst: v0 := List Int
+              170:61-170:63 List :: List Int
+              170:67-170:69 List :: List Int
+        171:21-171:22 PAnything :: String
+        171:25-171:97 Call :: String
+          171:25-171:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          171:35-171:43 Str :: String
+          171:45-171:97 Call :: String
+            171:45-171:53 VarTopLevel :: List Int -> String   callee: author/project:EqCmp.showInts   use: gen
+            171:55-171:97 Call :: List Int
+              171:55-171:66 VarForeign :: List (List Int) -> List Int   callee: elm/core:List.concat   instance: a := Int   sig#: c8708444   subst: v0 := Int
+              171:67-171:97 List :: List (List Int)
+                171:69-171:77 List :: List Int
+                  171:71-171:72 Int :: Int
+                  171:74-171:75 Int :: Int
+                171:79-171:84 List :: List Int
+                  171:81-171:82 Int :: Int
+                171:86-171:88 List :: List Int
+                171:90-171:95 List :: List Int
+                  171:92-171:93 Int :: Int
+        172:21-172:22 PAnything :: String
+        172:25-172:106 Call :: String
+          172:25-172:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          172:35-172:46 Str :: String
+          172:48-172:106 Call :: String
+            172:48-172:56 VarTopLevel :: List Int -> String   callee: author/project:EqCmp.showInts   use: gen
+            172:58-172:106 Call :: List Int
+              172:58-172:72 VarForeign :: (Int -> List Int) -> List Int -> List Int   callee: elm/core:List.concatMap   instance: a := Int, b := Int   sig#: 361a6f72   subst: v0 := Int, v1 := Int
+              172:74-172:93 Lambda :: Int -> List Int
+                172:75-172:76 PVar x :: Int
+                172:80-172:93 List :: List Int
+                  172:82-172:83 VarLocal :: Int
+                  172:85-172:91 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                    172:85-172:86 VarLocal :: Int
+                    172:89-172:91 Int :: Int
+              172:95-172:106 List :: List Int
+                172:97-172:98 Int :: Int
+                172:100-172:101 Int :: Int
+                172:103-172:104 Int :: Int
+        173:21-173:22 PAnything :: Int
+        173:25-173:105 Call :: Int
+          173:25-173:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          173:35-173:48 Str :: String
+          173:50-173:105 Call :: Int
+            173:50-173:61 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+            173:63-173:105 Binop :: List Int   callee: elm/core:Basics.append   instance: appendable := List Int   sig#: 08810ccc   subst: v0 := List Int
+              173:63-173:82 Call :: List Int
+                173:63-173:73 VarForeign :: Int -> Int -> List Int   callee: elm/core:List.range
+                173:74-173:75 Int :: Int
+                173:76-173:82 Int :: Int
+              173:86-173:105 Call :: List Int
+                173:86-173:96 VarForeign :: Int -> Int -> List Int   callee: elm/core:List.range
+                173:97-173:98 Int :: Int
+                173:99-173:105 Int :: Int
+        176:21-176:22 PAnything :: String
+        176:25-176:91 Call :: String
+          176:25-176:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          176:35-176:45 Str :: String
+          176:47-176:91 Call :: String
+            176:47-176:55 VarTopLevel :: List Int -> String   callee: author/project:EqCmp.showInts   use: gen
+            176:57-176:91 Call :: List Int
+              176:57-176:66 VarForeign :: List Int -> List Int   callee: elm/core:List.sort   instance: comparable := Int   sig#: c2fcf511   subst: v0 := Int
+              176:67-176:91 List :: List Int
+                176:69-176:70 Int :: Int
+                176:72-176:73 Int :: Int
+                176:75-176:76 Int :: Int
+                176:78-176:79 Int :: Int
+                176:81-176:82 Int :: Int
+                176:84-176:85 Int :: Int
+                176:87-176:89 Negate :: Int
+                  176:88-176:89 Int :: Int
+        177:21-177:22 PAnything :: String
+        177:25-177:120 Call :: String
+          177:25-177:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          177:35-177:48 Str :: String
+          177:50-177:120 Call :: String
+            177:50-177:61 VarTopLevel :: List String -> String   callee: author/project:EqCmp.showStrings   use: gen
+            177:63-177:120 Call :: List String
+              177:63-177:72 VarForeign :: List String -> List String   callee: elm/core:List.sort   instance: comparable := String   sig#: c2fcf511   subst: v0 := String
+              177:73-177:120 List :: List String
+                177:75-177:81 Str :: String
+                177:83-177:90 Str :: String
+                177:92-177:97 Str :: String
+                177:99-177:106 Str :: String
+                177:108-177:113 Str :: String
+                177:115-177:118 Str :: String
+        178:21-178:22 PAnything :: String
+        178:25-178:97 Call :: String
+          178:25-178:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          178:35-178:47 Str :: String
+          178:49-178:97 Call :: String
+            178:49-178:59 VarTopLevel :: List Float -> String   callee: author/project:EqCmp.showFloats   use: gen
+            178:61-178:97 Call :: List Float
+              178:61-178:70 VarForeign :: List Float -> List Float   callee: elm/core:List.sort   instance: comparable := Float   sig#: c2fcf511   subst: v0 := Float
+              178:71-178:97 List :: List Float
+                178:73-178:76 Float :: Float
+                178:78-178:80 Negate :: Float
+                  178:79-178:80 Int :: Float
+                178:82-178:83 Int :: Float
+                178:85-178:89 Float :: Float
+                178:91-178:95 Float :: Float
+        179:21-179:22 PAnything :: String
+        179:25-179:112 Call :: String
+          179:25-179:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          179:35-179:47 Str :: String
+          179:49-179:112 Call :: String
+            179:49-179:58 VarTopLevel :: List ( Int, String ) -> String   callee: author/project:EqCmp.showPairs   use: gen
+            179:60-179:112 Call :: List ( Int, String )
+              179:60-179:69 VarForeign :: List ( Int, String ) -> List ( Int, String )   callee: elm/core:List.sort   instance: comparable := ( Int, String )   sig#: c2fcf511   subst: v0 := ( Int, String )
+              179:70-179:112 List :: List ( Int, String )
+                179:72-179:80 Pair :: ( Int, String )
+                  179:73-179:74 Int :: Int
+                  179:76-179:79 Str :: String
+                179:82-179:90 Pair :: ( Int, String )
+                  179:83-179:84 Int :: Int
+                  179:86-179:89 Str :: String
+                179:92-179:100 Pair :: ( Int, String )
+                  179:93-179:94 Int :: Int
+                  179:96-179:99 Str :: String
+                179:102-179:110 Pair :: ( Int, String )
+                  179:103-179:104 Int :: Int
+                  179:106-179:109 Str :: String
+        180:21-180:22 PAnything :: String
+        180:25-180:71 Call :: String
+          180:25-180:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          180:35-180:47 Str :: String
+          180:49-180:71 Call :: String
+            180:49-180:57 VarTopLevel :: List Int -> String   callee: author/project:EqCmp.showInts   use: gen
+            180:59-180:71 Call :: List Int
+              180:59-180:68 VarForeign :: List Int -> List Int   callee: elm/core:List.sort   instance: comparable := Int   sig#: c2fcf511   subst: v0 := Int
+              180:69-180:71 List :: List Int
+        181:21-181:22 PAnything :: String
+        181:25-181:115 Call :: String
+          181:25-181:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          181:35-181:47 Str :: String
+          181:49-181:115 Call :: String
+            181:49-181:57 VarTopLevel :: List Int -> String   callee: author/project:EqCmp.showInts   use: gen
+            181:59-181:115 Call :: List Int
+              181:59-181:70 VarForeign :: List (List Int) -> List Int   callee: elm/core:List.concat   instance: a := Int   sig#: c8708444   subst: v0 := Int
+              181:72-181:115 Call :: List (List Int)
+                181:72-181:81 VarForeign :: List (List Int) -> List (List Int)   callee: elm/core:List.sort   instance: comparable := List Int   sig#: c2fcf511   subst: v0 := List Int
+                181:82-181:115 List :: List (List Int)
+                  181:84-181:92 List :: List Int
+                    181:86-181:87 Int :: Int
+                    181:89-181:90 Int :: Int
+                  181:94-181:102 List :: List Int
+                    181:96-181:97 Int :: Int
+                    181:99-181:100 Int :: Int
+                  181:104-181:109 List :: List Int
+                    181:106-181:107 Int :: Int
+                  181:111-181:113 List :: List Int
+        182:21-182:22 PAnything :: String
+        182:25-182:93 Call :: String
+          182:25-182:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          182:35-182:47 Str :: String
+          182:49-182:93 Call :: String
+            182:49-182:57 VarTopLevel :: List Int -> String   callee: author/project:EqCmp.showInts   use: gen
+            182:59-182:93 Call :: List Int
+              182:59-182:70 VarForeign :: (Int -> Int) -> List Int -> List Int   callee: elm/core:List.sortBy   instance: a := Int, comparable := Int   sig#: 6a702f62   subst: v0 := Int, v1 := Int
+              182:72-182:80 Lambda :: Int -> Int
+                182:73-182:74 PVar x :: Int
+                182:78-182:80 Negate :: Int
+                  182:79-182:80 VarLocal :: Int
+              182:82-182:93 List :: List Int
+                182:84-182:85 Int :: Int
+                182:87-182:88 Int :: Int
+                182:90-182:91 Int :: Int
+        183:21-183:22 PAnything :: String
+        183:25-183:139 Call :: String
+          183:25-183:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          183:35-183:50 Str :: String
+          183:52-183:139 Call :: String
+            183:52-183:61 VarTopLevel :: List ( Int, String ) -> String   callee: author/project:EqCmp.showPairs   use: gen
+            183:63-183:139 Call :: List ( Int, String )
+              183:63-183:74 VarForeign :: (( Int, String ) -> Int) -> List ( Int, String ) -> List ( Int, String )   callee: elm/core:List.sortBy   instance: a := ( Int, String ), comparable := Int   sig#: 6a702f62   subst: v0 := ( Int, String ), v1 := Int
+              183:75-183:86 VarForeign :: ( Int, String ) -> Int   callee: elm/core:Tuple.first   instance: a := Int, b := String   sig#: ee0f5e96   subst: v0 := Int, v1 := String
+              183:87-183:139 List :: List ( Int, String )
+                183:89-183:97 Pair :: ( Int, String )
+                  183:90-183:91 Int :: Int
+                  183:93-183:96 Str :: String
+                183:99-183:107 Pair :: ( Int, String )
+                  183:100-183:101 Int :: Int
+                  183:103-183:106 Str :: String
+                183:109-183:117 Pair :: ( Int, String )
+                  183:110-183:111 Int :: Int
+                  183:113-183:116 Str :: String
+                183:119-183:127 Pair :: ( Int, String )
+                  183:120-183:121 Int :: Int
+                  183:123-183:126 Str :: String
+                183:129-183:137 Pair :: ( Int, String )
+                  183:130-183:131 Int :: Int
+                  183:133-183:136 Str :: String
+        184:21-184:22 PAnything :: String
+        184:25-184:120 Call :: String
+          184:25-184:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          184:35-184:50 Str :: String
+          184:52-184:120 Call :: String
+            184:52-184:61 VarTopLevel :: List ( Int, String ) -> String   callee: author/project:EqCmp.showPairs   use: gen
+            184:63-184:120 Call :: List ( Int, String )
+              184:63-184:74 VarForeign :: (( Int, String ) -> String) -> List ( Int, String ) -> List ( Int, String )   callee: elm/core:List.sortBy   instance: a := ( Int, String ), comparable := String   sig#: 6a702f62   subst: v0 := ( Int, String ), v1 := String
+              184:75-184:87 VarForeign :: ( Int, String ) -> String   callee: elm/core:Tuple.second   instance: a := Int, b := String   sig#: ee0f5e97   subst: v0 := Int, v1 := String
+              184:88-184:120 List :: List ( Int, String )
+                184:90-184:98 Pair :: ( Int, String )
+                  184:91-184:92 Int :: Int
+                  184:94-184:97 Str :: String
+                184:100-184:108 Pair :: ( Int, String )
+                  184:101-184:102 Int :: Int
+                  184:104-184:107 Str :: String
+                184:110-184:118 Pair :: ( Int, String )
+                  184:111-184:112 Int :: Int
+                  184:114-184:117 Str :: String
+        185:21-185:22 PAnything :: String
+        185:25-185:229 Call :: String
+          185:25-185:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          185:35-185:50 Str :: String
+          185:52-185:229 Call :: String
+            185:52-185:63 VarTopLevel :: List String -> String   callee: author/project:EqCmp.showStrings   use: gen
+            185:65-185:229 Call :: List String
+              185:65-185:73 VarForeign :: ({ age : Int, name : String, score : Int } -> String) -> List { age : Int, name : String, score : Int } -> List String   <= ({ age : number32, name : String, score : number33 } -> String) -> List { age : number32, name : String, score : number33 } -> List String   callee: elm/core:List.map   instance: a := { age : Int, name : String, score : Int } (defaulted), b := String   sig#: 6a702f63   subst: v0 := { age : Int, name : String, score : Int }, v1 := String
+              185:75-185:87 Lambda :: { age : Int, name : String, score : Int } -> String   <= { age : number32, name : String, score : number33 } -> String
+                185:76-185:77 PVar p :: { age : Int, name : String, score : Int }   <= { age : number32, name : String, score : number33 }
+                185:81-185:87 Access :: String
+                  185:81-185:82 VarLocal :: { age : Int, name : String, score : Int }   <= { age : number32, name : String, score : number33 }
+              185:90-185:229 Call :: List { age : Int, name : String, score : Int }   <= List { age : number32, name : String, score : number33 }
+                185:90-185:101 VarForeign :: ({ age : Int, name : String, score : Int } -> Int) -> List { age : Int, name : String, score : Int } -> List { age : Int, name : String, score : Int }   <= ({ age : number32, name : String, score : number33 } -> number32) -> List { age : number32, name : String, score : number33 } -> List { age : number32, name : String, score : number33 }   callee: elm/core:List.sortBy   instance: a := { age : Int, name : String, score : Int } (defaulted), comparable := Int (defaulted)   sig#: 6a702f62   subst: v0 := { age : Int, name : String, score : Int }, v1 := Int
+                185:103-185:114 Lambda :: { age : Int, name : String, score : Int } -> Int   <= { age : number32, name : String, score : number33 } -> number32
+                  185:104-185:105 PVar p :: { age : Int, name : String, score : Int }   <= { age : number32, name : String, score : number33 }
+                  185:109-185:114 Access :: Int   <= number32
+                    185:109-185:110 VarLocal :: { age : Int, name : String, score : Int }   <= { age : number32, name : String, score : number33 }
+                185:116-185:229 List :: List { age : Int, name : String, score : Int }   <= List { age : number32, name : String, score : number33 }
+                  185:118-185:153 Record :: { age : Int, name : String, score : Int }   <= { age : number32, name : String, score : number33 }
+                    185:138-185:140 Int :: Int   <= number32
+                    185:127-185:130 Str :: String
+                    185:150-185:151 Int :: Int   <= number33
+                  185:155-185:190 Record :: { age : Int, name : String, score : Int }   <= { age : number32, name : String, score : number33 }
+                    185:175-185:177 Int :: Int   <= number32
+                    185:164-185:167 Str :: String
+                    185:187-185:188 Int :: Int   <= number33
+                  185:192-185:227 Record :: { age : Int, name : String, score : Int }   <= { age : number32, name : String, score : number33 }
+                    185:212-185:214 Int :: Int   <= number32
+                    185:201-185:204 Str :: String
+                    185:224-185:225 Int :: Int   <= number33
+        186:21-186:22 PAnything :: String
+        186:25-186:124 Call :: String
+          186:25-186:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          186:35-186:50 Str :: String
+          186:52-186:124 Call :: String
+            186:52-186:60 VarTopLevel :: List Int -> String   callee: author/project:EqCmp.showInts   use: gen
+            186:62-186:124 Call :: List Int
+              186:62-186:75 VarForeign :: (Int -> Int -> Order) -> List Int -> List Int   callee: elm/core:List.sortWith   instance: a := Int   sig#: e76a9150   subst: v0 := Int
+              186:77-186:96 Lambda :: Int -> Int -> Order
+                186:78-186:79 PVar x :: Int
+                186:80-186:81 PVar y :: Int
+                186:85-186:96 Call :: Order
+                  186:85-186:92 VarForeign :: Int -> Int -> Order   callee: elm/core:Basics.compare   instance: comparable := Int   sig#: c949accf   subst: v0 := Int
+                  186:93-186:94 VarLocal :: Int
+                  186:95-186:96 VarLocal :: Int
+              186:98-186:124 List :: List Int
+                186:100-186:101 Int :: Int
+                186:103-186:104 Int :: Int
+                186:106-186:107 Int :: Int
+                186:109-186:110 Int :: Int
+                186:112-186:113 Int :: Int
+                186:115-186:116 Int :: Int
+                186:118-186:119 Int :: Int
+                186:121-186:122 Int :: Int
+        187:21-187:22 PAnything :: String
+        187:25-187:153 Call :: String
+          187:25-187:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          187:35-187:52 Str :: String
+          187:54-187:153 Call :: String
+            187:54-187:63 VarTopLevel :: List ( Int, String ) -> String   callee: author/project:EqCmp.showPairs   use: gen
+            187:65-187:153 Call :: List ( Int, String )
+              187:65-187:78 VarForeign :: (( Int, String ) -> ( Int, String ) -> Order) -> List ( Int, String ) -> List ( Int, String )   callee: elm/core:List.sortWith   instance: a := ( Int, String )   sig#: e76a9150   subst: v0 := ( Int, String )
+              187:80-187:109 Lambda :: ( Int, String ) -> ( Int, String ) -> Order
+                187:81-187:87 PPair :: ( Int, String )
+                  187:82-187:83 PVar a :: Int
+                  187:85-187:86 PAnything :: String
+                187:88-187:94 PPair :: ( Int, String )
+                  187:89-187:90 PVar c :: Int
+                  187:92-187:93 PAnything :: String
+                187:98-187:109 Call :: Order
+                  187:98-187:105 VarForeign :: Int -> Int -> Order   callee: elm/core:Basics.compare   instance: comparable := Int   sig#: c949accf   subst: v0 := Int
+                  187:106-187:107 VarLocal :: Int
+                  187:108-187:109 VarLocal :: Int
+              187:111-187:153 List :: List ( Int, String )
+                187:113-187:121 Pair :: ( Int, String )
+                  187:114-187:115 Int :: Int
+                  187:117-187:120 Str :: String
+                187:123-187:131 Pair :: ( Int, String )
+                  187:124-187:125 Int :: Int
+                  187:127-187:130 Str :: String
+                187:133-187:141 Pair :: ( Int, String )
+                  187:134-187:135 Int :: Int
+                  187:137-187:140 Str :: String
+                187:143-187:151 Pair :: ( Int, String )
+                  187:144-187:145 Int :: Int
+                  187:147-187:150 Str :: String
+        188:21-188:22 PAnything :: Int
+        188:25-188:140 Call :: Int
+          188:25-188:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          188:35-188:45 Str :: String
+          188:47-188:140 Call :: Int
+            188:47-188:55 VarForeign :: List Int -> Int   callee: elm/core:List.sum   instance: number := Int   sig#: 78b59c50   subst: v0 := Int
+            188:57-188:140 Call :: List Int
+              188:57-188:66 VarForeign :: Int -> List Int -> List Int   callee: elm/core:List.take   instance: a := Int   sig#: 7b4b0ecd   subst: v0 := Int
+              188:67-188:69 Int :: Int
+              188:71-188:140 Call :: List Int
+                188:71-188:80 VarForeign :: List Int -> List Int   callee: elm/core:List.sort   instance: comparable := Int   sig#: c2fcf511   subst: v0 := Int
+                188:82-188:140 Call :: List Int
+                  188:82-188:90 VarForeign :: (Int -> Int) -> List Int -> List Int   callee: elm/core:List.map   instance: a := Int, b := Int   sig#: 6a702f63   subst: v0 := Int, v1 := Int
+                  188:92-188:119 Lambda :: Int -> Int
+                    188:93-188:94 PVar i :: Int
+                    188:98-188:118 Call :: Int
+                      188:98-188:103 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+                      188:104-188:108 Int :: Int
+                      188:110-188:118 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                        188:110-188:111 VarLocal :: Int
+                        188:114-188:118 Int :: Int
+                  188:122-188:140 Call :: List Int
+                    188:122-188:132 VarForeign :: Int -> Int -> List Int   callee: elm/core:List.range
+                    188:133-188:134 Int :: Int
+                    188:135-188:140 Int :: Int
+        190:17-190:33 Pair :: ( (), Cmd () )
+          190:19-190:21 Unit :: ()
+          190:23-190:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      191:20-191:44 Lambda :: () -> () -> ( (), Cmd () )
+        191:21-191:22 PAnything :: ()
+        191:23-191:24 PAnything :: ()
+        191:28-191:44 Pair :: ( (), Cmd () )
+          191:30-191:32 Unit :: ()
+          191:34-191:42 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      192:27-192:41 Lambda :: () -> Sub ()
+        192:28-192:29 PAnything :: ()
+        192:33-192:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:EqCmp.showStrings   kind: function   reads:    needs: 
+init: 1   id: author/project:EqCmp.showFloats   kind: function   reads:    needs: 
+init: 2   id: author/project:EqCmp.showPairs   kind: function   reads:    needs: 
+init: 3   id: author/project:EqCmp.showInts   kind: function   reads:    needs: 
+init: 4   id: author/project:EqCmp.noInts   kind: value   reads:    needs:    init-dep: no
+init: 5   id: author/project:EqCmp.okOne   kind: value   reads:    needs:    init-dep: no
+init: 6   id: author/project:EqCmp.build   kind: function   reads:    needs:    group: author/project:EqCmp.build
+init: 7   id: author/project:EqCmp.tell   kind: function   reads:    needs: 
+init: 8   id: author/project:EqCmp.ord   kind: function   reads:    needs: 
+init: 9   id: author/project:EqCmp.b2i   kind: function   reads:    needs: 
+init: 10   id: author/project:EqCmp.main   kind: value   reads: author/project:EqCmp.showStrings,author/project:EqCmp.showFloats,author/project:EqCmp.showPairs,author/project:EqCmp.showInts,author/project:EqCmp.noInts,author/project:EqCmp.okOne,author/project:EqCmp.build,author/project:EqCmp.ord,author/project:EqCmp.b2i   needs: author/project:EqCmp.noInts,author/project:EqCmp.okOne   init-dep: yes

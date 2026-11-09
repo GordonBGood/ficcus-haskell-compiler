@@ -1,0 +1,59 @@
+nan nan <: 0
+nan nan >: 1
+nan nan <=: 0
+nan nan >=: 1
+nan nan ==: 0
+nan nan /=: 1
+nan nan compare: 1
+nan one <: 0
+nan one >: 1
+nan one <=: 0
+nan one >=: 1
+nan one ==: 0
+nan one /=: 1
+nan one compare: 1
+one nan <: 0
+one nan >: 1
+one nan <=: 0
+one nan >=: 1
+one nan ==: 0
+one nan /=: 1
+one nan compare: 1
+one one <: 0
+one one >: 0
+one one <=: 1
+one one >=: 1
+one one ==: 1
+one one /=: 0
+one one compare: 0
+inf nan <: 0
+inf nan >: 1
+inf nan <=: 0
+inf nan >=: 1
+inf nan ==: 0
+inf nan /=: 1
+inf nan compare: 1
+nan < 1: 0
+nan > 1: 0
+nan <= 1: 0
+nan >= 1: 0
+1 < nan: 0
+1 > nan: 0
+nan == nan: 0
+nan /= nan: 1
+max nan 1: NaN
+max 1 nan: 1
+min nan 1: 1
+min 1 nan: NaN
+tuple eq: 0
+tuple cmp: 1
+tuple cmp 2: -1
+tuple lt: 0
+list eq: 0
+list cmp: 1
+list cmp 2: 1
+same ref list: 1
+dict get 2: "b"
+dict get 1: "a"
+dict get nan: "none"
+dict size: 3

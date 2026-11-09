@@ -1,0 +1,80 @@
+tuple eq: 1
+tuple ne: 0
+triple eq: 1
+string eq: 1
+list eq: 1
+list ne len: 0
+list ne elem: 1
+empty eq: 1
+strings eq: 1
+nested eq: 1
+nested ne: 0
+tree eq: 1
+tree ne: 0
+maybe eq: 1
+maybe ne: 0
+maybe str: 1
+result: 1
+result ne: 0
+color: 1
+color ne: 0
+color in tuple: 1
+shape circle: 1
+shape rect: 0
+shape named: 1
+shape pt: 1
+shape mixed: 0
+record eq: 1
+record ne: 0
+unit: 1
+float -0: 1
+list of tuples: 1
+maybe list: 1
+list maybe: 1
+cmp int: -1
+cmp string: -1
+cmp string eq: 0
+cmp string prefix: -1
+cmp string é z: 1
+cmp tuple: 1
+cmp tuple 2: -1
+cmp list: -1
+cmp list 2: 1
+cmp list empty: -1
+cmp list eq: 0
+cmp char: -1
+cmp float tuple: -1
+lt string: 1
+gt string: 0
+le string: 1
+ge string: 0
+lt tuple: 1
+ge tuple: 1
+lt list: 1
+gt list: 0
+max string: "pear"
+min string: "apple"
+max tuple: 3
+max tuple 2: "y"
+append int: "[1,2,3,4,5,]"
+append float: "[1.5,2,0.25,]"
+append string: "[a,b,c,]"
+append pairs: "[(1,a)(2,b)]"
+append lists: "[1,2,3,]"
+append empty: "[]"
+concat: "[1,2,3,4,]"
+concatMap: "[1,10,2,20,3,30,]"
+append long: 200000
+sort int: "[-3,1,2,5,5,6,9,]"
+sort string: "[Zed,apple,apple,fig,pear,é,]"
+sort float: "[-1,0,2.5,3.25,10000000000,]"
+sort pairs: "[(1,a)(1,z)(2,a)(2,b)]"
+sort empty: "[]"
+sort lists: "[1,1,5,2,1,]"
+sortBy neg: "[3,2,1,]"
+sortBy stable: "[(0,e)(1,b)(1,d)(2,a)(2,c)]"
+sortBy string: "[(3,x)(2,y)(1,z)]"
+sortBy record: "[b,c,a,]"
+sortWith desc: "[9,6,5,4,3,2,1,1,]"
+sortWith stable: "[(1,b)(1,d)(2,a)(2,c)]"
+sort big: 0

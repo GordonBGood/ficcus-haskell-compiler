@@ -28,10 +28,11 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
-import Ficcus.Mono.CRuntime (closureRuntime, prelude)
+import Ficcus.Mono.CRuntime (closureRuntime, prelude, sortRuntime)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Print (keyTextIx)
+import Ficcus.Mono.Spec (classOfM)
 
 
 
@@ -48,6 +49,11 @@ data G =
     , gSelfParams :: [String]
     , gLooped :: Bool                -- a self tail call was emitted
     , gWhere :: String               -- the clone being generated, for messages
+    , gHelpers :: Map.Map HKey String   -- generated helper functions (equality, comparison, list append, sorts) by what they do
+    , gPending :: [(HKey, String)]   -- helpers registered and not yet written
+    , gProtos :: [String]            -- their prototypes and the extra types they need (written at HELPER_MARK)
+    , gExtraObjs :: Set.Set [Class]  -- object layouts used only by helpers
+    , gExtraStructs :: Set.Set [Class]
     }
 
 
@@ -58,6 +64,9 @@ data Info =
   Info
     { iClones :: Map.Map CloneId MDef
     , iCaptured :: Map.Map CloneId [(String, Class)]
+    , iUnions :: Map.Map String UnionShape
+    , iObjs :: Set.Set [Class]       -- the object layouts and struct types the clones define
+    , iStructs :: Set.Set [Class]
     }
 
 
@@ -100,15 +109,19 @@ generate program =
     Just root ->
       let
         clones = mpClones program
-        info = Info (Map.fromList [ (mdClone d, d) | d <- clones ]) (captures clones)
-        g0 = G [] 0 0 [] Nothing [] False ""
+        info = Info (Map.fromList [ (mdClone d, d) | d <- clones ]) (captures clones) (mpUnions program)
+                    (Set.fromList (objectsOf clones)) (Set.fromList (structsOf clones))
+        g0 = G [] 0 0 [] Nothing [] False "" Map.empty [] [] Set.empty Set.empty
         final = execState (program' info root clones) g0
       in
       case reverse (gErrors final) of
         [] ->
-          let body = unlines (reverse (gOut final))
-              -- the closure runtime (words, apply functions) only for programs that use closures
-          in Right (prelude ++ "\n" ++ (if "fic_word" `List.isInfixOf` body then closureRuntime ++ "\n" else "") ++ "\n" ++ body)
+          let extra = concatMap structDef (Set.toList (gExtraStructs final)) ++ map boxDef (Set.toList (gExtraStructs final))
+                      ++ map objectDef (Set.toList (gExtraObjs final)) ++ reverse (gProtos final)
+              body = unlines (concatMap (\l -> if l == helperMark then extra else [l]) (reverse (gOut final)))
+              -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
+          in Right (prelude ++ "\n" ++ (if "fic_word" `List.isInfixOf` body then closureRuntime ++ "\n" else "")
+                    ++ (if "fic_sort_kv" `List.isInfixOf` body then sortRuntime ++ "\n" else "") ++ "\n" ++ body)
         errs -> Left errs
 
 
@@ -126,9 +139,11 @@ program' info root clones =
       forM_ values (\d -> emit ("static " ++ classType (mdResult d) ++ " " ++ globalName d ++ ";"))
       forM_ values (\d -> emit ("static " ++ classType (mdResult d) ++ " " ++ valueName d ++ "(void);"))
       emit ""
+      emit helperMark
       closureSection info (closureClones info clones)
       forM_ funs (genFunction info)
       forM_ values (genValue info)
+      genHelpers info
       emit "static void fic_init(void) {"
       indented (forM_ values (\d -> emit (globalName d ++ " = " ++ valueName d ++ "();")))
       emit "}"
@@ -451,7 +466,7 @@ genRet info e =
     genIfRet [] final = genRet info final
     genIfRet ((c, b) : rest) final =
       do  c' <- genExpr info c
-          emit ("if (" ++ c' ++ ") {")
+          emit ("if (" ++ condText c' ++ ") {")
           indented (genRet info b)
           emit "} else {"
           indented (genIfRet rest final)
@@ -537,7 +552,7 @@ genExpr info e =
           emit (t ++ " = " ++ v ++ ";")
     ifChain t ((c, b) : rest) final =
       do  c' <- genExpr info c
-          emit ("if (" ++ c' ++ ") {")
+          emit ("if (" ++ condText c' ++ ") {")
           indented (genExpr info b >>= \v -> emit (t ++ " = " ++ v ++ ";"))
           emit "} else {"
           indented (ifChain t rest final)
@@ -906,6 +921,8 @@ kernelCall info cls name key args =
                 NInt -> return ("fic_ipow(" ++ a ++ ", " ++ b ++ ")")
                 NFloat -> return ("pow(" ++ a ++ ", " ++ b ++ ")")
                 NOther t -> unsupported ("^ at " ++ t)
+            ("elm/core:Basics.modBy", [m, x]) -> return ("fic_modby(" ++ m ++ ", " ++ x ++ ")")
+            ("elm/core:Basics.remainderBy", [m, x]) -> return ("fic_remby(" ++ m ++ ", " ++ x ++ ")")
             ("elm/core:Basics.negate", [a]) ->
               case numberOf key of
                 NInt -> return ("FIC_NEG64(" ++ a ++ ")")
@@ -915,15 +932,19 @@ kernelCall info cls name key args =
             ("elm/core:Basics.ge", [a, b]) -> compare' ">=" "fic_f_ge" a b
             ("elm/core:Basics.lt", [a, b]) -> compare' "<" "fic_f_lt" a b
             ("elm/core:Basics.le", [a, b]) -> compare' "<=" "fic_f_le" a b
-            ("elm/core:Basics.eq", [a, b]) -> equality "==" a b
-            ("elm/core:Basics.neq", [a, b]) -> equality "!=" a b
+            ("elm/core:Basics.eq", [a, b]) -> equality False a b
+            ("elm/core:Basics.neq", [a, b]) -> equality True a b
             ("elm/core:Basics.not", [a]) -> return ("(!" ++ a ++ ")")
             -- Order: LT 0, EQ 1, GT 2 (a NaN compares as GT, as Elm's kernel does)
             ("elm/core:Basics.compare", [a, b]) ->
               case numberOf key of
                 NInt -> return ("(" ++ a ++ " < " ++ b ++ " ? 0 : " ++ a ++ " == " ++ b ++ " ? 1 : 2)")
                 NFloat -> return ("(" ++ a ++ " == " ++ b ++ " ? 1 : " ++ a ++ " < " ++ b ++ " ? 0 : 2)")
-                NOther t -> unsupported ("compare at " ++ t)
+                NOther _ ->
+                  do  c <- cmpOfKey a b
+                      t <- fresh "c"
+                      emit ("int " ++ t ++ " = " ++ c ++ ";")
+                      return ("(" ++ t ++ " < 0 ? 0 : " ++ t ++ " == 0 ? 1 : 2)")
             -- Bitwise exactly as Elm (32 bit, shift count & 31, shiftRightZfBy unsigned); Bitwise64 (name provisional) on 64 bit, count & 63
             ("elm/core:Bitwise.and", [a, b]) -> return ("fic_bw_and(" ++ a ++ ", " ++ b ++ ")")
             ("elm/core:Bitwise.or", [a, b]) -> return ("fic_bw_or(" ++ a ++ ", " ++ b ++ ")")
@@ -942,13 +963,23 @@ kernelCall info cls name key args =
             ("elm/core:Basics.append", [a, b]) ->
               case key of
                 Key [ByApp AStr] -> return ("fic_str_append(" ++ a ++ ", " ++ b ++ ")")
-                _ -> unsupported "++ on lists"
+                Key [ByApp (AList c)] -> do { h <- helper (HApp (boxedClass c)); needObj [boxedClass c, CRef]; return (h ++ "(" ++ a ++ ", " ++ b ++ ")") }
+                _ -> unsupported "++ at this key"
+            ("elm/core:List.sortBy", [f, xs]) ->
+              case key of
+                Key [ByClass c, ByType t] -> do { h <- helper (HSortBy (boxedClass c) t); needObj [boxedClass c, CRef]; return (h ++ "(" ++ f ++ ", " ++ xs ++ ")") }
+                _ -> unsupported "List.sortBy at this key"
+            ("elm/core:List.sortWith", [f, xs]) ->
+              case key of
+                Key [ByClass c] -> do { h <- helper (HSortWith (boxedClass c)); needObj [boxedClass c, CRef]; return (h ++ "(" ++ f ++ ", " ++ xs ++ ")") }
+                _ -> unsupported "List.sortWith at this key"
             ("elm/core:String.fromInt", [a]) -> return ("fic_str_from_int(" ++ a ++ ")")
             ("elm/core:String.fromFloat", [a]) -> return ("fic_str_from_float(" ++ a ++ ")")
             ("elm/core:Debug.log", [tag, v]) -> debugLog tag v
             _ -> unsupported ("the kernel function " ++ name ++ " (with " ++ show (length args) ++ " arguments)")
   where
     unsupported what = failWith (what ++ " is not supported by the C generator yet")
+    unsupported' = unsupported
 
     arith intMacro op a b =
       case numberOf key of
@@ -959,17 +990,22 @@ kernelCall info cls name key args =
     compare' op floatFn a b =
       case numberOf key of
         NInt -> return ("(" ++ a ++ " " ++ op ++ " " ++ b ++ ")")
-        NFloat -> return (floatFn ++ "(" ++ a ++ ", " ++ b ++ ")")
-        NOther t -> unsupported ("comparison at " ++ t)
+        -- Elm's JavaScript uses the operator itself when an operand is a literal, and `_Utils_cmp` otherwise: the two
+        -- differ for a NaN (`nan > 1` is False, `nan > x` is True)
+        NFloat | any isNumLit args -> return ("(" ++ a ++ " " ++ op ++ " " ++ b ++ ")")
+               | otherwise -> return (floatFn ++ "(" ++ a ++ ", " ++ b ++ ")")
+        NOther _ -> do { c <- cmpOfKey a b; return ("(" ++ c ++ " " ++ op ++ " 0)") }
 
-    equality op a b =
+    -- the sign of the comparison of two values of the exact type of the key (Elm's `_Utils_cmp`)
+    cmpOfKey a b =
       case key of
-        Key [ByType (TyCon "elm/core:String.String" [])] -> return ((if op == "==" then "" else "!") ++ "fic_str_eq(" ++ a ++ ", " ++ b ++ ")")
-        Key [ByType (TyCon n [])] | n `elem` ["elm/core:Basics.Int", "elm/core:Basics.Float", "elm/core:Char.Char", "elm/core:Basics.Bool"] ->
-          return ("(" ++ a ++ " " ++ op ++ " " ++ b ++ ")")
-        Key [ByType TyUnit] -> return (if op == "==" then "1" else "0")
-        Key [ByType t] -> unsupported ("equality at " ++ mtypeText t)
-        _ -> unsupported "equality at this key"
+        Key [ByType t] -> cmpExpr t a b
+        _ -> unsupported' "comparison at this key"
+
+    equality neg a b =
+      case key of
+        Key [ByType t] -> do { e <- eqExpr info t a b; return (if neg then "(!" ++ e ++ ")" else e) }
+        _ -> unsupported' "equality at this key"
 
     shortCircuit a b isAnd =
       do  t <- fresh "t"
@@ -999,7 +1035,390 @@ kernelCall info cls name key args =
       ]
 
 
+isNumLit :: MExpr -> Bool
+isNumLit e = case mNode e of { MLit (LInt _) -> True; MLit (LFloat _) -> True; _ -> False }
+
+
 -- the names of the local variables an expression reads
 usedLocals :: MExpr -> Set.Set String
 usedLocals e =
   Set.unions ((case mNode e of { MLocal n -> Set.singleton n; _ -> Set.empty }) : map usedLocals (children e))
+
+
+
+-- GENERATED HELPERS: equality, comparison, list append and sorting (STAGE3-PLAN slice 4)
+--
+-- `==` and `compare` at an exact type that is not a scalar or a string become one C function per type
+-- (`fic_eq_N`, `fic_cmp_N`), written after all clones; they call each other for the parts of the type (a recursive
+-- type calls its own function). `++` on lists is one function per element class, sorts one per (element class, key type).
+-- The functions are named when a clone uses them and written in `genHelpers`; their prototypes and the types only
+-- they need are put where the line `HELPER_MARK` stands.
+
+
+data HKey
+  = HEq MType
+  | HCmp MType
+  | HApp Class
+  | HSortBy Class MType
+  | HSortWith Class
+  deriving (Eq, Ord)
+
+
+failUnit :: String -> CG ()
+failUnit msg = failWith msg >> return ()
+
+
+helperMark :: String
+helperMark = "/* HELPER_MARK */"
+
+
+helper :: HKey -> CG String
+helper k =
+  do  known <- gets (Map.lookup k . gHelpers)
+      case known of
+        Just n -> return n
+        Nothing ->
+          do  i <- gets (Map.size . gHelpers)
+              let n = prefix ++ show i
+              modify' (\g -> g { gHelpers = Map.insert k n (gHelpers g), gPending = gPending g ++ [(k, n)] })
+              return n
+  where
+    prefix =
+      case k of
+        HEq _ -> "fic_eq_"
+        HCmp _ -> "fic_cmp_"
+        HApp _ -> "fic_app_"
+        HSortBy _ _ -> "fic_sortby_"
+        HSortWith _ -> "fic_sortwith_"
+
+
+-- the object layout / struct type a helper needs: defined at HELPER_MARK unless a clone defines it already
+needObj :: [Class] -> CG ()
+needObj cs =
+  modify' (\g -> g { gExtraObjs = Set.insert cs (gExtraObjs g) })
+
+
+needClass :: Info -> Class -> CG ()
+needClass info c =
+  case c of
+    CStruct fs -> do { mapM_ (needClass info) fs; modify' (\g -> g { gExtraStructs = Set.insert fs (gExtraStructs g) }) }
+    _ -> return ()
+
+
+-- keep only the layouts no clone defines (done when the extras are written)
+genHelpers :: Info -> CG ()
+genHelpers info =
+  do  pending <- gets gPending
+      case pending of
+        [] ->
+          modify' (\g -> g { gExtraObjs = Set.difference (gExtraObjs g) (iObjs info), gExtraStructs = Set.difference (gExtraStructs g) (iStructs info) })
+        (k, n) : rest ->
+          do  modify' (\g -> g { gPending = rest, gWhere = n })
+              genHelper info k n
+              genHelpers info
+
+
+clsOf :: Info -> MType -> Class
+clsOf info = classOfM (Map.map usEnum (iUnions info))
+
+
+-- the constructors of a custom type with the arguments of the exact type put in
+ctorsOf :: Info -> String -> [MType] -> Maybe [(String, Int, [MType])]
+ctorsOf info n args =
+  do  u <- Map.lookup n (iUnions info)
+      return [ (c, t, map substArgs fs) | (c, t, fs) <- usCtors u ]
+  where
+    substArgs ty =
+      case ty of
+        TyCon ('#' : ds) [] | [(i, "")] <- reads ds, i < length args -> args !! i
+        TyCon c xs -> TyCon c (map substArgs xs)
+        TyFun a b -> TyFun (substArgs a) (substArgs b)
+        TyRecord fs -> TyRecord [ (f, substArgs x) | (f, x) <- fs ]
+        TyTuple xs -> TyTuple (map substArgs xs)
+        TyUnit -> TyUnit
+
+
+isStringT :: MType -> Bool
+isStringT t = case t of { TyCon "elm/core:String.String" [] -> True; _ -> False }
+
+
+-- an expression for `a == b` at an exact type (a and b are atoms)
+eqExpr :: Info -> MType -> String -> String -> CG String
+eqExpr info t a b
+  | isStringT t = return ("fic_str_eq(" ++ a ++ ", " ++ b ++ ")")
+  | otherwise =
+      case clsOf info t of
+        CUnit -> return "1"
+        CRef -> call
+        CStruct _ -> call
+        _ -> return ("(" ++ a ++ " == " ++ b ++ ")")
+  where
+    call = do { h <- helper (HEq t); return (h ++ "(" ++ a ++ ", " ++ b ++ ")") }
+
+
+-- an expression for the sign of the comparison of two values at an exact type: Int, Char, Float, String, and
+-- tuples and lists of these (a and b are atoms)
+cmpExpr :: MType -> String -> String -> CG String
+cmpExpr t a b =
+  case t of
+    TyCon "elm/core:Basics.Int" [] -> return ("fic_i_cmp(" ++ a ++ ", " ++ b ++ ")")
+    TyCon "elm/core:Char.Char" [] -> return ("fic_i_cmp((int64_t)" ++ a ++ ", (int64_t)" ++ b ++ ")")
+    TyCon "elm/core:Basics.Float" [] -> return ("fic_f_cmp(" ++ a ++ ", " ++ b ++ ")")
+    _ | isStringT t -> return ("fic_str_cmp(" ++ a ++ ", " ++ b ++ ")")
+    _ -> do { h <- helper (HCmp t); return (h ++ "(" ++ a ++ ", " ++ b ++ ")") }
+
+
+-- the fields of a struct class (tuple or record), the value of field i of `v` at its own class
+structField :: Info -> Class -> MType -> Int -> String -> CG String
+structField info sc ty i v =
+  case sc of
+    CStruct fcs -> adapt (fcs !! i) (clsOf info ty) (v ++ ".f" ++ show i)
+    _ -> failWith "internal: a tuple or record that is not a struct"
+
+
+tagOf :: String -> String
+tagOf x = "((fic_hdr *)(" ++ x ++ "))->tag"
+
+
+genHelper :: Info -> HKey -> String -> CG ()
+genHelper info k name =
+  case k of
+    HEq t -> withProto ("static uint8_t " ++ name ++ "(" ++ classType (clsOf info t) ++ " a, " ++ classType (clsOf info t) ++ " b)") (needClass info (clsOf info t) >> eqBody t)
+    HCmp t -> withProto ("static int " ++ name ++ "(" ++ classType (clsOf info t) ++ " a, " ++ classType (clsOf info t) ++ " b)") (needClass info (clsOf info t) >> cmpBody t)
+    HApp c -> withProto ("static fic_ref " ++ name ++ "(fic_ref xs, fic_ref ys)") (appBody c)
+    HSortBy c t -> sortBy c t
+    HSortWith c -> sortWith c
+  where
+    withProto sig body =
+      do  modify' (\g -> g { gProtos = (sig ++ ";") : gProtos g })
+          emit (sig ++ " {")
+          _ <- indented body
+          emit "}"
+          emit ""
+
+    eqBody t =
+      case t of
+        TyTuple ts -> structEq t ts
+        TyRecord fs -> structEq t (map snd fs)
+        TyFun _ _ ->
+          do  emit "if (a == b) return 1;"
+              emit "fic_panic_eq_fun();"
+              emit "return 0;"
+        TyCon "elm/core:List.List" [e] -> listEq e
+        TyCon "elm/core:Dict.Dict" [kt, vt] -> dictEq kt vt
+        TyCon n args | Just ctors <- ctorsOf info n args, Map.member n (iUnions info) -> customEq n ctors
+        _ -> failUnit ("equality at " ++ mtypeText t ++ " is not supported by the C generator yet") >> emit "return 0;"
+
+    structEq t ts =
+      do  let sc = clsOf info t
+          forM_ (zip [0 :: Int ..] ts) $ \(i, ty) ->
+            do  x <- structField info sc ty i "a"
+                y <- structField info sc ty i "b"
+                e <- eqExpr info ty x y
+                emit ("if (!" ++ e ++ ") return 0;")
+          emit "return 1;"
+
+    listEq e =
+      do  let ec = clsOf info e
+          let fcs = [boxedClass ec, CRef]
+          needObj fcs
+          needClass info ec
+          emit "for (;;) {"
+          indented $
+            do  emit "if (a == b) return 1;"
+                emit ("if (" ++ tagOf "a" ++ " != " ++ tagOf "b" ++ ") return 0;")
+                emit ("if (" ++ tagOf "a" ++ " == 0u) return 1;")
+                emit (objType fcs ++ " *ca = (" ++ objType fcs ++ " *)a, *cb = (" ++ objType fcs ++ " *)b;")
+                x <- adapt (boxedClass ec) ec "ca->f0"
+                y <- adapt (boxedClass ec) ec "cb->f0"
+                en <- eqExpr info e x y
+                emit ("if (!" ++ en ++ ") return 0;")
+                emit "a = ca->f1; b = cb->f1;"
+          emit "}"
+
+    -- Elm compares two dictionaries as their association lists (`Dict.toList`), not as trees: the same entries in a
+    -- differently shaped tree are equal. The tree is walked in order with an explicit stack (a node is
+    -- RBNode_elm_builtin color key value left right, tag 0; the empty tree is tag 1).
+    dictEq kt vt =
+      do  let kc = clsOf info kt
+          let vc = clsOf info vt
+          let fcs = [CEnum, boxedClass kc, boxedClass vc, CRef, CRef]
+          needObj fcs
+          needClass info kc
+          needClass info vc
+          let cell = "(" ++ objType fcs ++ " *)"
+          emit "if (a == b) return 1;"
+          emit "fic_ref sa[128], sb[128];"
+          emit "int na = 0, nb = 0;"
+          emit "for (;;) {"
+          indented $
+            do  emit ("while (" ++ tagOf "a" ++ " == 0u) { sa[na++] = a; a = (" ++ cell ++ "a)->f3; }")
+                emit ("while (" ++ tagOf "b" ++ " == 0u) { sb[nb++] = b; b = (" ++ cell ++ "b)->f3; }")
+                emit "if (na == 0 || nb == 0) return na == nb;"
+                emit "a = sa[--na]; b = sb[--nb];"
+                ka <- adapt (boxedClass kc) kc ("(" ++ cell ++ "a)->f1")
+                kb <- adapt (boxedClass kc) kc ("(" ++ cell ++ "b)->f1")
+                ek <- eqExpr info kt ka kb
+                emit ("if (!" ++ ek ++ ") return 0;")
+                va <- adapt (boxedClass vc) vc ("(" ++ cell ++ "a)->f2")
+                vb <- adapt (boxedClass vc) vc ("(" ++ cell ++ "b)->f2")
+                ev <- eqExpr info vt va vb
+                emit ("if (!" ++ ev ++ ") return 0;")
+                emit ("a = (" ++ cell ++ "a)->f4; b = (" ++ cell ++ "b)->f4;")
+          emit "}"
+
+    customEq n ctors
+      | maybe False usEnum (Map.lookup n (iUnions info)) = emit "return a == b;"
+      | otherwise =
+          do  emit "if (a == b) return 1;"
+              emit ("if (" ++ tagOf "a" ++ " != " ++ tagOf "b" ++ ") return 0;")
+              emit ("switch (" ++ tagOf "a" ++ ") {")
+              forM_ ctors $ \(_, tag, fs) ->
+                when (not (null fs)) $
+                  do  let fcs = map (boxedClass . clsOf info) fs
+                      needObj fcs
+                      emit ("case " ++ show tag ++ "u: {")
+                      indented $
+                        do  emit (objType fcs ++ " *ca = (" ++ objType fcs ++ " *)a, *cb = (" ++ objType fcs ++ " *)b;")
+                            forM_ (zip3 [0 :: Int ..] fs fcs) $ \(i, ty, fc) ->
+                              do  needClass info (clsOf info ty)
+                                  x <- adapt fc (clsOf info ty) ("ca->f" ++ show i)
+                                  y <- adapt fc (clsOf info ty) ("cb->f" ++ show i)
+                                  en <- eqExpr info ty x y
+                                  emit ("if (!" ++ en ++ ") return 0;")
+                            emit "return 1;"
+                      emit "}"
+              emit "default: return 1;"
+              emit "}"
+
+    cmpBody t =
+      case t of
+        TyTuple ts -> structCmp t ts
+        TyCon "elm/core:List.List" [e] -> listCmp e
+        _ -> failUnit ("comparison at " ++ mtypeText t ++ " is not supported by the C generator yet") >> emit "return 0;"
+
+    structCmp t ts =
+      do  let sc = clsOf info t
+          forM_ (zip [0 :: Int ..] ts) $ \(i, ty) ->
+            do  x <- structField info sc ty i "a"
+                y <- structField info sc ty i "b"
+                c <- cmpExpr ty x y
+                emit ("{ int c = " ++ c ++ "; if (c != 0) return c; }")
+          emit "return 0;"
+
+    listCmp e =
+      do  let ec = clsOf info e
+          let fcs = [boxedClass ec, CRef]
+          needObj fcs
+          needClass info ec
+          emit "for (;;) {"
+          indented $
+            do  emit ("if (" ++ tagOf "a" ++ " == 0u) return " ++ tagOf "b" ++ " == 0u ? 0 : -1;")
+                emit ("if (" ++ tagOf "b" ++ " == 0u) return 1;")
+                emit (objType fcs ++ " *ca = (" ++ objType fcs ++ " *)a, *cb = (" ++ objType fcs ++ " *)b;")
+                x <- adapt (boxedClass ec) ec "ca->f0"
+                y <- adapt (boxedClass ec) ec "cb->f0"
+                c <- cmpExpr e x y
+                emit ("{ int c = " ++ c ++ "; if (c != 0) return c; }")
+                emit "a = ca->f1; b = cb->f1;"
+          emit "}"
+
+    appBody c =
+      do  let fcs = [c, CRef]
+          needObj fcs
+          emit "fic_ref res = ys;"
+          emit "fic_ref *link = &res;"
+          emit ("while (" ++ tagOf "xs" ++ " != 0u) {")
+          indented $
+            do  emit (objType fcs ++ " *c = (" ++ objType fcs ++ " *)xs;")
+                emit (objType fcs ++ " *n = (" ++ objType fcs ++ " *)fic_alloc(sizeof(" ++ objType fcs ++ "), 1u, 0);")
+                emit "n->f0 = c->f0; n->f1 = ys;"
+                emit "*link = &n->h; link = &n->f1; xs = c->f1;"
+          emit "}"
+          emit "return res;"
+
+    -- the list becomes an array of (element, key) words, the sort is the stable merge sort of runtime/fic_sort.h, the
+    -- result list is built from the back
+    sortCommon c sig keyOf cmpFn =
+      do  let fcs = [c, CRef]
+          needObj fcs
+          modify' (\g -> g { gProtos = (sig ++ ";") : gProtos g })
+          emit (sig ++ " {")
+          indented $
+            do  emit "int64_t n = 0, i = 0;"
+                emit "fic_ref p;"
+                emit "fic_kv *a;"
+                emit "fic_ref res;"
+                emit ("for (p = xs; " ++ tagOf "p" ++ " != 0u; p = ((" ++ objType fcs ++ " *)p)->f1) n++;")
+                emit "a = (fic_kv *)malloc((size_t)(n > 0 ? n : 1) * sizeof(fic_kv));"
+                emit "if (a == NULL) abort();"
+                emit ("for (p = xs; " ++ tagOf "p" ++ " != 0u; p = ((" ++ objType fcs ++ " *)p)->f1, i++) {")
+                indented $
+                  do  emit ("a[i].e = " ++ wordMk c ("((" ++ objType fcs ++ " *)p)->f0") ++ ";")
+                      emit ("a[i].k = " ++ keyOf "a[i].e" ++ ";")
+                emit "}"
+                _ <- cmpFn
+                emit "res = (fic_ref)fic_alloc(sizeof(fic_hdr), 0u, 0);"
+                emit "for (i = n - 1; i >= 0; i--) {"
+                indented $
+                  do  emit (objType fcs ++ " *cell = (" ++ objType fcs ++ " *)fic_alloc(sizeof(" ++ objType fcs ++ "), 1u, 0);")
+                      emit ("cell->f0 = a[i].e" ++ wordSel c ++ "; cell->f1 = res; res = &cell->h;")
+                emit "}"
+                emit "free(a);"
+                emit "return res;"
+          emit "}"
+          emit ""
+
+    sortBy c t =
+      do  let kc = clsOf info t
+          needClass info kc
+          let cmpName = name ++ "_cmp"
+          let cmpSig = "static int " ++ cmpName ++ "(void *ctx, fic_word x, fic_word y)"
+          modify' (\g -> g { gProtos = (cmpSig ++ ";") : gProtos g })
+          emit (cmpSig ++ " {")
+          indented $
+            do  emit "(void)ctx;"
+                x <- adapt (abiClass kc) kc ("x" ++ wordSel kc)
+                y <- adapt (abiClass kc) kc ("y" ++ wordSel kc)
+                cx <- cmpExpr t x y
+                emit ("return " ++ cx ++ ";")
+          emit "}"
+          emit ""
+          let mask = if c == CRef then "1u" else "0u"
+          sortCommon c ("static fic_ref " ++ name ++ "(fic_ref f, fic_ref xs)")
+            (\e -> wordMkOfAbi kc ("fic_ap1(f, " ++ mask ++ ", " ++ e ++ ")"))
+            (emit ("fic_sort_kv(a, n, " ++ cmpName ++ ", NULL);"))
+
+    sortWith c =
+      do  let cmpName = name ++ "_cmp"
+          let cmpSig = "static int " ++ cmpName ++ "(void *ctx, fic_word x, fic_word y)"
+          let mask = if c == CRef then "3u" else "0u"
+          modify' (\g -> g { gProtos = (cmpSig ++ ";") : gProtos g })
+          emit (cmpSig ++ " {")
+          indented $ emit ("return (int)fic_ap2((fic_ref)ctx, " ++ mask ++ ", x, y).b - 1;")
+          emit "}"
+          emit ""
+          sortCommon c ("static fic_ref " ++ name ++ "(fic_ref f, fic_ref xs)")
+            (\e -> e)
+            (emit ("fic_sort_kv(a, n, " ++ cmpName ++ ", f);"))
+
+    -- the word a call result already is (the call returns a fic_word): nothing to convert
+    wordMkOfAbi _ w = w
+
+
+-- a condition without a redundant outer pair of parentheses (`if ((a == b))` is a warning of clang)
+condText :: String -> String
+condText s =
+  case s of
+    '(' : rest | not (null rest), last rest == ')', balanced 1 (init rest) -> init rest
+    _ -> s
+  where
+    -- the opening parenthesis is closed only by the last character: the depth never reaches 0 inside
+    balanced :: Int -> String -> Bool
+    balanced d str =
+      case str of
+        [] -> d == 1
+        c : cs
+          | c == '(' -> balanced (d + 1) cs
+          | c == ')' -> d > 1 && balanced (d - 1) cs
+          | otherwise -> balanced d cs

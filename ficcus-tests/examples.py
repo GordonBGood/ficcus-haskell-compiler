@@ -11,8 +11,11 @@ Exit status 1 on any difference.
 import argparse, os, shutil, subprocess, sys, tempfile, difflib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order"]
-RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
+NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun"]
+RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
+
+
+CRASH = {"eqfun": "Trying to use `(==)` on functions."}      # programs that end with a run time error: exit status 1 and this text on stderr
 
 
 def project_part(text, kind):
@@ -62,7 +65,8 @@ def run_c(a, dst, name, mod):
             print("FAIL %s.c %s: %s" % (name, cc, b.stderr.decode()[-300:])); bad += 1; continue
         r = subprocess.run([exe], capture_output=True)
         got = r.stdout.decode("utf-8", "replace")
-        if r.returncode != 0 or got != want:
+        crash = CRASH.get(name)
+        if (r.returncode != (1 if crash else 0)) or got != want or (crash and crash not in r.stderr.decode("utf-8", "replace")):
             print("FAIL %s.c %s: exit %d, output differs" % (name, cc, r.returncode))
             sys.stdout.writelines(list(difflib.unified_diff(want.splitlines(True), got.splitlines(True), "expected", "got"))[:20]); bad += 1
         else: print("ok   %s.c (%s)" % (name, cc))

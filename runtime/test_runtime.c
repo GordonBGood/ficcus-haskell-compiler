@@ -21,6 +21,13 @@ int main(void) {
   CHECK(is_str(fic_str_append(a, b), "abcd"));
   CHECK(is_str(fic_str_append(e, b), "cd"));
   CHECK(fic_str_eq(a, fic_str_new("ab", 2)) && !fic_str_eq(a, b) && !fic_str_eq(a, e));
+  CHECK(fic_str_cmp(a, b) == -1 && fic_str_cmp(b, a) == 1 && fic_str_cmp(a, fic_str_new("ab", 2)) == 0);
+  CHECK(fic_str_cmp(e, a) == -1 && fic_str_cmp(a, e) == 1 && fic_str_cmp(a, fic_str_new("abc", 3)) == -1);
+  CHECK(fic_str_cmp(fic_str_new("\xc3\xa9", 2), fic_str_new("z", 1)) == 1);     /* e-acute (U+00E9) sorts after z, as the code points do */
+  CHECK(fic_f_cmp(1.0, 2.0) == -1 && fic_f_cmp(2.0, 2.0) == 0 && fic_f_cmp(NAN, 1.0) == 1 && fic_f_cmp(1.0, NAN) == 1 && fic_f_cmp(NAN, NAN) == 1);
+  CHECK(fic_modby(5, 12) == 2 && fic_modby(5, -12) == 3 && fic_modby(-5, 12) == -3 && fic_modby(-5, -12) == -2 && fic_modby(0, 7) == 0 && fic_modby(3, 0) == 0);
+  CHECK(fic_remby(5, 12) == 2 && fic_remby(5, -12) == -2 && fic_remby(-5, 12) == 2 && fic_remby(-5, -12) == -2 && fic_remby(0, 7) == 0 && fic_remby(-1, 9) == 0);
+  CHECK(fic_i_cmp(-5, 3) == -1 && fic_i_cmp(3, 3) == 0 && fic_i_cmp(4, 3) == 1);
   /* Int helpers */
   CHECK(fic_idiv(7, 2) == 3 && fic_idiv(-7, 2) == -3 && fic_idiv(5, 0) == 0);
   CHECK(fic_idiv(INT64_MIN, -1) == INT64_MIN);

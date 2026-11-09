@@ -3,6 +3,7 @@
 module Ficcus.Mono.CRuntime
   ( prelude
   , closureRuntime
+  , sortRuntime
   )
   where
 
@@ -33,3 +34,9 @@ prelude =
 closureRuntime :: String
 closureRuntime =
   $(embedFiles [ "runtime/fic_closure.h" ])
+
+
+-- the stable sort of List.sortBy and List.sortWith (needs the closure runtime): emitted only by programs that sort
+sortRuntime :: String
+sortRuntime =
+  $(embedFiles [ "runtime/fic_sort.h" ])

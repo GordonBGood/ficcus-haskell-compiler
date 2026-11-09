@@ -1,0 +1,427 @@
+-- module Nan: problems=0 instances=157 instance-failures=0 defaulted=18
+-- equality-uses: total=12 at-function=0
+module author/project:Nan
+def ord :: Order -> Int    [30:1-30:4]   id: author/project:Nan.ord   sig: Order -> Int   kinds:    group: author/project:Nan.ord nonrec ann
+  30:5-30:6 PVar o :: Order
+  31:5-39:14 Case :: Int
+    31:10-31:11 VarLocal :: Order
+    32:9-32:11 PCtor LT :: Order
+    33:13-33:15 Negate :: Int
+      33:14-33:15 Int :: Int
+    35:9-35:11 PCtor EQ :: Order
+    36:13-36:14 Int :: Int
+    38:9-38:11 PCtor GT :: Order
+    39:13-39:14 Int :: Int
+def one :: Float    [16:1-16:4]   id: author/project:Nan.one   sig: Float   kinds:    group: author/project:Nan.one nonrec ann
+  17:5-17:6 Int :: Float
+def nan :: Float    [11:1-11:4]   id: author/project:Nan.nan   sig: Float   kinds:    group: author/project:Nan.nan nonrec ann
+  12:5-12:10 Binop :: Float   callee: elm/core:Basics.fdiv
+    12:5-12:6 Int :: Float
+    12:9-12:10 Int :: Float
+def listOfNan :: List Float    [108:1-108:10]   id: author/project:Nan.listOfNan   sig: List Float   kinds:    group: author/project:Nan.listOfNan nonrec ann
+  109:5-109:12 List :: List Float
+    109:7-109:10 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+def b2i :: Bool -> Int    [21:1-21:4]   id: author/project:Nan.b2i   sig: Bool -> Int   kinds:    group: author/project:Nan.b2i nonrec ann
+  21:5-21:6 PVar x :: Bool
+  22:5-26:10 If :: Int
+    22:8-22:9 VarLocal :: Bool
+    23:9-23:10 Int :: Int
+    26:9-26:10 Int :: Int
+def six :: String -> Float -> Float -> ()    [43:1-43:4]   id: author/project:Nan.six   sig: String -> Float -> Float -> ()   kinds:    group: author/project:Nan.six nonrec ann
+  43:5-43:9 PVar name :: String
+  43:10-43:11 PVar x :: Float
+  43:12-43:13 PVar y :: Float
+  45:9-45:10 PAnything :: Int
+  45:13-45:49 Call :: Int
+    45:13-45:22 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+    45:24-45:36 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      45:24-45:28 VarLocal :: String
+      45:32-45:36 Str :: String
+    45:39-45:49 Call :: Int
+      45:39-45:42 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+      45:44-45:49 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := Float   sig#: 2cdc0786   subst: v0 := Float
+        45:44-45:45 VarLocal :: Float
+        45:48-45:49 VarLocal :: Float
+  46:9-46:10 PAnything :: Int
+  46:13-46:49 Call :: Int
+    46:13-46:22 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+    46:24-46:36 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      46:24-46:28 VarLocal :: String
+      46:32-46:36 Str :: String
+    46:39-46:49 Call :: Int
+      46:39-46:42 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+      46:44-46:49 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Float   sig#: 2cdc0786   subst: v0 := Float
+        46:44-46:45 VarLocal :: Float
+        46:48-46:49 VarLocal :: Float
+  47:9-47:10 PAnything :: Int
+  47:13-47:51 Call :: Int
+    47:13-47:22 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+    47:24-47:37 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      47:24-47:28 VarLocal :: String
+      47:32-47:37 Str :: String
+    47:40-47:51 Call :: Int
+      47:40-47:43 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+      47:45-47:51 Binop :: Bool   callee: elm/core:Basics.le   instance: comparable := Float   sig#: 2cdc0786   subst: v0 := Float
+        47:45-47:46 VarLocal :: Float
+        47:50-47:51 VarLocal :: Float
+  48:9-48:10 PAnything :: Int
+  48:13-48:51 Call :: Int
+    48:13-48:22 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+    48:24-48:37 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      48:24-48:28 VarLocal :: String
+      48:32-48:37 Str :: String
+    48:40-48:51 Call :: Int
+      48:40-48:43 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+      48:45-48:51 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Float   sig#: 2cdc0786   subst: v0 := Float
+        48:45-48:46 VarLocal :: Float
+        48:50-48:51 VarLocal :: Float
+  49:9-49:10 PAnything :: Int
+  49:13-49:51 Call :: Int
+    49:13-49:22 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+    49:24-49:37 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      49:24-49:28 VarLocal :: String
+      49:32-49:37 Str :: String
+    49:40-49:51 Call :: Int
+      49:40-49:43 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+      49:45-49:51 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Float   sig#: 2cdc0786   subst: v0 := Float
+        49:45-49:46 VarLocal :: Float
+        49:50-49:51 VarLocal :: Float
+  50:9-50:10 PAnything :: Int
+  50:13-50:51 Call :: Int
+    50:13-50:22 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+    50:24-50:37 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      50:24-50:28 VarLocal :: String
+      50:32-50:37 Str :: String
+    50:40-50:51 Call :: Int
+      50:40-50:43 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+      50:45-50:51 Binop :: Bool   callee: elm/core:Basics.neq   instance: a := Float   sig#: 2cdc0786   subst: v0 := Float
+        50:45-50:46 VarLocal :: Float
+        50:50-50:51 VarLocal :: Float
+  51:9-51:10 PAnything :: Int
+  51:13-51:61 Call :: Int
+    51:13-51:22 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+    51:24-51:42 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      51:24-51:28 VarLocal :: String
+      51:32-51:42 Str :: String
+    51:45-51:61 Call :: Int
+      51:45-51:48 VarTopLevel :: Order -> Int   callee: author/project:Nan.ord   use: gen
+      51:50-51:61 Call :: Order
+        51:50-51:57 VarForeign :: Float -> Float -> Order   callee: elm/core:Basics.compare   instance: comparable := Float   sig#: c949accf   subst: v0 := Float
+        51:58-51:59 VarLocal :: Float
+        51:60-51:61 VarLocal :: Float
+  53:5-53:7 Unit :: ()
+def main :: Program () () ()    [57:1-57:5]   id: author/project:Nan.main   sig: Program () () ()   kinds:    group: author/project:Nan.main nonrec ann
+  58:5-104:10 Call :: Program () () ()
+    58:5-58:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    59:9-104:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      60:13-101:33 Lambda :: () -> ( (), Cmd () )
+        60:14-60:15 PAnything :: ()
+        62:21-62:22 PAnything :: ()
+        62:25-62:46 Call :: ()
+          62:25-62:28 VarTopLevel :: String -> Float -> Float -> ()   callee: author/project:Nan.six   use: gen
+          62:29-62:38 Str :: String
+          62:39-62:42 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+          62:43-62:46 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+        63:21-63:22 PAnything :: ()
+        63:25-63:46 Call :: ()
+          63:25-63:28 VarTopLevel :: String -> Float -> Float -> ()   callee: author/project:Nan.six   use: gen
+          63:29-63:38 Str :: String
+          63:39-63:42 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+          63:43-63:46 VarTopLevel :: Float   callee: author/project:Nan.one   use: gen
+        64:21-64:22 PAnything :: ()
+        64:25-64:46 Call :: ()
+          64:25-64:28 VarTopLevel :: String -> Float -> Float -> ()   callee: author/project:Nan.six   use: gen
+          64:29-64:38 Str :: String
+          64:39-64:42 VarTopLevel :: Float   callee: author/project:Nan.one   use: gen
+          64:43-64:46 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+        65:21-65:22 PAnything :: ()
+        65:25-65:46 Call :: ()
+          65:25-65:28 VarTopLevel :: String -> Float -> Float -> ()   callee: author/project:Nan.six   use: gen
+          65:29-65:38 Str :: String
+          65:39-65:42 VarTopLevel :: Float   callee: author/project:Nan.one   use: gen
+          65:43-65:46 VarTopLevel :: Float   callee: author/project:Nan.one   use: gen
+        66:21-66:22 PAnything :: ()
+        66:25-66:50 Call :: ()
+          66:25-66:28 VarTopLevel :: String -> Float -> Float -> ()   callee: author/project:Nan.six   use: gen
+          66:29-66:38 Str :: String
+          66:40-66:45 Binop :: Float   callee: elm/core:Basics.fdiv
+            66:40-66:41 Int :: Float
+            66:44-66:45 Int :: Float
+          66:47-66:50 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+        69:21-69:22 PAnything :: Int
+        69:25-69:58 Call :: Int
+          69:25-69:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          69:35-69:44 Str :: String
+          69:46-69:58 Call :: Int
+            69:46-69:49 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+            69:51-69:58 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := Float   sig#: 2cdc0786   subst: v0 := Float
+              69:51-69:54 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+              69:57-69:58 Int :: Float
+        70:21-70:22 PAnything :: Int
+        70:25-70:58 Call :: Int
+          70:25-70:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          70:35-70:44 Str :: String
+          70:46-70:58 Call :: Int
+            70:46-70:49 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+            70:51-70:58 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Float   sig#: 2cdc0786   subst: v0 := Float
+              70:51-70:54 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+              70:57-70:58 Int :: Float
+        71:21-71:22 PAnything :: Int
+        71:25-71:60 Call :: Int
+          71:25-71:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          71:35-71:45 Str :: String
+          71:47-71:60 Call :: Int
+            71:47-71:50 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+            71:52-71:60 Binop :: Bool   callee: elm/core:Basics.le   instance: comparable := Float   sig#: 2cdc0786   subst: v0 := Float
+              71:52-71:55 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+              71:59-71:60 Int :: Float
+        72:21-72:22 PAnything :: Int
+        72:25-72:60 Call :: Int
+          72:25-72:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          72:35-72:45 Str :: String
+          72:47-72:60 Call :: Int
+            72:47-72:50 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+            72:52-72:60 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Float   sig#: 2cdc0786   subst: v0 := Float
+              72:52-72:55 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+              72:59-72:60 Int :: Float
+        73:21-73:22 PAnything :: Int
+        73:25-73:58 Call :: Int
+          73:25-73:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          73:35-73:44 Str :: String
+          73:46-73:58 Call :: Int
+            73:46-73:49 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+            73:51-73:58 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := Float   sig#: 2cdc0786   subst: v0 := Float
+              73:51-73:52 Int :: Float
+              73:55-73:58 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+        74:21-74:22 PAnything :: Int
+        74:25-74:58 Call :: Int
+          74:25-74:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          74:35-74:44 Str :: String
+          74:46-74:58 Call :: Int
+            74:46-74:49 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+            74:51-74:58 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Float   sig#: 2cdc0786   subst: v0 := Float
+              74:51-74:52 Int :: Float
+              74:55-74:58 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+        75:21-75:22 PAnything :: Int
+        75:25-75:64 Call :: Int
+          75:25-75:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          75:35-75:47 Str :: String
+          75:49-75:64 Call :: Int
+            75:49-75:52 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+            75:54-75:64 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Float   sig#: 2cdc0786   subst: v0 := Float
+              75:54-75:57 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+              75:61-75:64 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+        76:21-76:22 PAnything :: Int
+        76:25-76:64 Call :: Int
+          76:25-76:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          76:35-76:47 Str :: String
+          76:49-76:64 Call :: Int
+            76:49-76:52 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+            76:54-76:64 Binop :: Bool   callee: elm/core:Basics.neq   instance: a := Float   sig#: 2cdc0786   subst: v0 := Float
+              76:54-76:57 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+              76:61-76:64 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+        79:21-79:22 PAnything :: Float
+        79:25-79:59 Call :: Float
+          79:25-79:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          79:35-79:46 Str :: String
+          79:48-79:59 Call :: Float
+            79:48-79:51 VarForeign :: Float -> Float -> Float   callee: elm/core:Basics.max   instance: comparable := Float   sig#: 08810ccc   subst: v0 := Float
+            79:52-79:55 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+            79:56-79:59 VarTopLevel :: Float   callee: author/project:Nan.one   use: gen
+        80:21-80:22 PAnything :: Float
+        80:25-80:59 Call :: Float
+          80:25-80:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          80:35-80:46 Str :: String
+          80:48-80:59 Call :: Float
+            80:48-80:51 VarForeign :: Float -> Float -> Float   callee: elm/core:Basics.max   instance: comparable := Float   sig#: 08810ccc   subst: v0 := Float
+            80:52-80:55 VarTopLevel :: Float   callee: author/project:Nan.one   use: gen
+            80:56-80:59 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+        81:21-81:22 PAnything :: Float
+        81:25-81:59 Call :: Float
+          81:25-81:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          81:35-81:46 Str :: String
+          81:48-81:59 Call :: Float
+            81:48-81:51 VarForeign :: Float -> Float -> Float   callee: elm/core:Basics.min   instance: comparable := Float   sig#: 08810ccc   subst: v0 := Float
+            81:52-81:55 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+            81:56-81:59 VarTopLevel :: Float   callee: author/project:Nan.one   use: gen
+        82:21-82:22 PAnything :: Float
+        82:25-82:59 Call :: Float
+          82:25-82:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+          82:35-82:46 Str :: String
+          82:48-82:59 Call :: Float
+            82:48-82:51 VarForeign :: Float -> Float -> Float   callee: elm/core:Basics.min   instance: comparable := Float   sig#: 08810ccc   subst: v0 := Float
+            82:52-82:55 VarTopLevel :: Float   callee: author/project:Nan.one   use: gen
+            82:56-82:59 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+        85:21-85:22 PAnything :: Int
+        85:25-85:72 Call :: Int
+          85:25-85:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          85:35-85:45 Str :: String
+          85:47-85:72 Call :: Int
+            85:47-85:50 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+            85:52-85:72 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := ( Float, Int ) (defaulted)   sig#: 2cdc0786   subst: v0 := ( Float, Int )
+              85:52-85:60 Pair :: ( Float, Int )   <= ( Float, number )
+                85:53-85:56 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+                85:58-85:59 Int :: Int   <= number
+              85:64-85:72 Pair :: ( Float, Int )   <= ( Float, number )
+                85:65-85:68 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+                85:70-85:71 Int :: Int   <= number
+        86:21-86:22 PAnything :: Int
+        86:25-86:78 Call :: Int
+          86:25-86:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          86:35-86:46 Str :: String
+          86:48-86:78 Call :: Int
+            86:48-86:51 VarTopLevel :: Order -> Int   callee: author/project:Nan.ord   use: gen
+            86:53-86:78 Call :: Order
+              86:53-86:60 VarForeign :: ( Float, Int ) -> ( Float, Int ) -> Order   <= ( Float, number1 ) -> ( Float, number1 ) -> Order   callee: elm/core:Basics.compare   instance: comparable := ( Float, Int ) (defaulted)   sig#: c949accf   subst: v0 := ( Float, Int )
+              86:61-86:69 Pair :: ( Float, Int )   <= ( Float, number1 )
+                86:62-86:65 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+                86:67-86:68 Int :: Int   <= number1
+              86:70-86:78 Pair :: ( Float, Int )   <= ( Float, number1 )
+                86:71-86:74 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+                86:76-86:77 Int :: Int   <= number1
+        87:21-87:22 PAnything :: Int
+        87:25-87:80 Call :: Int
+          87:25-87:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          87:35-87:48 Str :: String
+          87:50-87:80 Call :: Int
+            87:50-87:53 VarTopLevel :: Order -> Int   callee: author/project:Nan.ord   use: gen
+            87:55-87:80 Call :: Order
+              87:55-87:62 VarForeign :: ( Int, Float ) -> ( Int, Float ) -> Order   <= ( number2, Float ) -> ( number2, Float ) -> Order   callee: elm/core:Basics.compare   instance: comparable := ( Int, Float ) (defaulted)   sig#: c949accf   subst: v0 := ( Int, Float )
+              87:63-87:71 Pair :: ( Int, Float )   <= ( number2, Float )
+                87:64-87:65 Int :: Int   <= number2
+                87:67-87:70 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+              87:72-87:80 Pair :: ( Int, Float )   <= ( number2, Float )
+                87:73-87:74 Int :: Int   <= number2
+                87:76-87:79 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+        88:21-88:22 PAnything :: Int
+        88:25-88:71 Call :: Int
+          88:25-88:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          88:35-88:45 Str :: String
+          88:47-88:71 Call :: Int
+            88:47-88:50 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+            88:52-88:71 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := ( Float, Int ) (defaulted)   sig#: 2cdc0786   subst: v0 := ( Float, Int )
+              88:52-88:60 Pair :: ( Float, Int )   <= ( Float, number3 )
+                88:53-88:56 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+                88:58-88:59 Int :: Int   <= number3
+              88:63-88:71 Pair :: ( Float, Int )   <= ( Float, number3 )
+                88:64-88:67 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+                88:69-88:70 Int :: Int   <= number3
+        89:21-89:22 PAnything :: Int
+        89:25-89:69 Call :: Int
+          89:25-89:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          89:35-89:44 Str :: String
+          89:46-89:69 Call :: Int
+            89:46-89:49 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+            89:51-89:69 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := List Float   sig#: 2cdc0786   subst: v0 := List Float
+              89:51-89:58 List :: List Float
+                89:53-89:56 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+              89:62-89:69 List :: List Float
+                89:64-89:67 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+        90:21-90:22 PAnything :: Int
+        90:25-90:75 Call :: Int
+          90:25-90:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          90:35-90:45 Str :: String
+          90:47-90:75 Call :: Int
+            90:47-90:50 VarTopLevel :: Order -> Int   callee: author/project:Nan.ord   use: gen
+            90:52-90:75 Call :: Order
+              90:52-90:59 VarForeign :: List Float -> List Float -> Order   callee: elm/core:Basics.compare   instance: comparable := List Float   sig#: c949accf   subst: v0 := List Float
+              90:60-90:67 List :: List Float
+                90:62-90:65 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+              90:68-90:75 List :: List Float
+                90:70-90:73 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+        91:21-91:22 PAnything :: Int
+        91:25-91:81 Call :: Int
+          91:25-91:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          91:35-91:47 Str :: String
+          91:49-91:81 Call :: Int
+            91:49-91:52 VarTopLevel :: Order -> Int   callee: author/project:Nan.ord   use: gen
+            91:54-91:81 Call :: Order
+              91:54-91:61 VarForeign :: List Float -> List Float -> Order   callee: elm/core:Basics.compare   instance: comparable := List Float   sig#: c949accf   subst: v0 := List Float
+              91:62-91:72 List :: List Float
+                91:64-91:65 Int :: Float
+                91:67-91:70 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+              91:73-91:81 List :: List Float
+                91:75-91:76 Int :: Float
+                91:78-91:79 Int :: Float
+        92:21-92:22 PAnything :: Int
+        92:25-92:79 Call :: Int
+          92:25-92:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          92:35-92:50 Str :: String
+          92:52-92:79 Call :: Int
+            92:52-92:55 VarTopLevel :: Bool -> Int   callee: author/project:Nan.b2i   use: gen
+            92:57-92:79 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := List Float   sig#: 2cdc0786   subst: v0 := List Float
+              92:57-92:66 VarTopLevel :: List Float   callee: author/project:Nan.listOfNan   use: gen
+              92:70-92:79 VarTopLevel :: List Float   callee: author/project:Nan.listOfNan   use: gen
+        def d :: Dict Float String    [95:21-95:22]   id: author/project:Nan.d@95:21   sig: Dict Float String   kinds:    group: author/project:Nan.d@95:21 nonrec inferred
+          95:25-95:86 Call :: Dict Float String
+            95:25-95:36 VarForeign :: Float -> String -> Dict Float String -> Dict Float String   callee: elm/core:Dict.insert   instance: comparable := Float, v := String   sig#: 256ddcb4   subst: v0 := Float, v1 := String
+            95:37-95:40 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+            95:41-95:44 Str :: String
+            95:46-95:86 Call :: Dict Float String
+              95:46-95:59 VarForeign :: List ( Float, String ) -> Dict Float String   callee: elm/core:Dict.fromList   instance: comparable := Float, v := String   sig#: 5fa92c5f   subst: v0 := Float, v1 := String
+              95:60-95:86 List :: List ( Float, String )
+                95:62-95:72 Pair :: ( Float, String )
+                  95:64-95:65 Int :: Float
+                  95:67-95:70 Str :: String
+                95:74-95:84 Pair :: ( Float, String )
+                  95:76-95:77 Int :: Float
+                  95:79-95:82 Str :: String
+        99:21-99:22 PAnything :: String
+        99:25-99:87 Call :: String
+          99:25-99:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          99:35-99:47 Str :: String
+          99:49-99:87 Call :: String
+            99:49-99:66 VarForeign :: String -> Maybe String -> String   callee: elm/core:Maybe.withDefault   instance: a := String   sig#: be843909   subst: v0 := String
+            99:67-99:73 Str :: String
+            99:75-99:87 Call :: Maybe String
+              99:75-99:83 VarForeign :: Float -> Dict Float String -> Maybe String   callee: elm/core:Dict.get   instance: comparable := Float, v := String   sig#: e8f00e9c   subst: v0 := Float, v1 := String
+              99:84-99:85 Int :: Float
+              99:86-99:87 VarLocal :: Dict Float String   callee: author/project:Nan.d@95:21   use: gen
+        98:21-98:22 PAnything :: String
+        98:25-98:87 Call :: String
+          98:25-98:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          98:35-98:47 Str :: String
+          98:49-98:87 Call :: String
+            98:49-98:66 VarForeign :: String -> Maybe String -> String   callee: elm/core:Maybe.withDefault   instance: a := String   sig#: be843909   subst: v0 := String
+            98:67-98:73 Str :: String
+            98:75-98:87 Call :: Maybe String
+              98:75-98:83 VarForeign :: Float -> Dict Float String -> Maybe String   callee: elm/core:Dict.get   instance: comparable := Float, v := String   sig#: e8f00e9c   subst: v0 := Float, v1 := String
+              98:84-98:85 Int :: Float
+              98:86-98:87 VarLocal :: Dict Float String   callee: author/project:Nan.d@95:21   use: gen
+        97:21-97:22 PAnything :: String
+        97:25-97:91 Call :: String
+          97:25-97:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          97:35-97:49 Str :: String
+          97:51-97:91 Call :: String
+            97:51-97:68 VarForeign :: String -> Maybe String -> String   callee: elm/core:Maybe.withDefault   instance: a := String   sig#: be843909   subst: v0 := String
+            97:69-97:75 Str :: String
+            97:77-97:91 Call :: Maybe String
+              97:77-97:85 VarForeign :: Float -> Dict Float String -> Maybe String   callee: elm/core:Dict.get   instance: comparable := Float, v := String   sig#: e8f00e9c   subst: v0 := Float, v1 := String
+              97:86-97:89 VarTopLevel :: Float   callee: author/project:Nan.nan   use: gen
+              97:90-97:91 VarLocal :: Dict Float String   callee: author/project:Nan.d@95:21   use: gen
+        96:21-96:22 PAnything :: Int
+        96:25-96:59 Call :: Int
+          96:25-96:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          96:35-96:46 Str :: String
+          96:48-96:59 Call :: Int
+            96:48-96:57 VarForeign :: Dict Float String -> Int   callee: elm/core:Dict.size   instance: k := Float, v := String   sig#: d0910be5   subst: v0 := Float, v1 := String
+            96:58-96:59 VarLocal :: Dict Float String   callee: author/project:Nan.d@95:21   use: gen
+        101:17-101:33 Pair :: ( (), Cmd () )
+          101:19-101:21 Unit :: ()
+          101:23-101:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      102:20-102:44 Lambda :: () -> () -> ( (), Cmd () )
+        102:21-102:22 PAnything :: ()
+        102:23-102:24 PAnything :: ()
+        102:28-102:44 Pair :: ( (), Cmd () )
+          102:30-102:32 Unit :: ()
+          102:34-102:42 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      103:27-103:41 Lambda :: () -> Sub ()
+        103:28-103:29 PAnything :: ()
+        103:33-103:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Nan.ord   kind: function   reads:    needs: 
+init: 1   id: author/project:Nan.one   kind: value   reads:    needs:    init-dep: no
+init: 2   id: author/project:Nan.nan   kind: value   reads:    needs:    init-dep: no
+init: 3   id: author/project:Nan.listOfNan   kind: value   reads: author/project:Nan.nan   needs: author/project:Nan.nan   init-dep: yes
+init: 4   id: author/project:Nan.b2i   kind: function   reads:    needs: 
+init: 5   id: author/project:Nan.six   kind: function   reads: author/project:Nan.ord,author/project:Nan.b2i   needs: 
+init: 6   id: author/project:Nan.main   kind: value   reads: author/project:Nan.ord,author/project:Nan.one,author/project:Nan.nan,author/project:Nan.listOfNan,author/project:Nan.b2i,author/project:Nan.six   needs: author/project:Nan.one,author/project:Nan.nan,author/project:Nan.listOfNan   init-dep: yes

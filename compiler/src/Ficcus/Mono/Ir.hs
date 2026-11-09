@@ -9,6 +9,7 @@ module Ficcus.Mono.Ir
   , DefKind(..)
   , MDef(..)
   , MProgram(..)
+  , UnionShape(..)
   , children
   , exprRefs
   )
@@ -21,6 +22,8 @@ module Ficcus.Mono.Ir
 -- no node has a type variable. Calls name a clone (`MGlobal`), not a definition. Slice 0 only defines the
 -- types and prints the clone table; slice 1 builds bodies.
 
+
+import qualified Data.Map.Strict as Map
 
 import Ficcus.Mono.Class
 
@@ -102,10 +105,22 @@ data MDef =
   deriving (Show)
 
 
+-- | a custom type as the generated `==` and `compare` need it: whether every constructor is nullary, and the
+-- constructors (name, tag, field types). A type parameter inside a field type is `TyCon "#<i>" []` (the i-th
+-- parameter); the generator substitutes the arguments of the exact type.
+data UnionShape =
+  UnionShape
+    { usEnum :: Bool
+    , usCtors :: [(String, Int, [MType])]
+    }
+  deriving (Show)
+
+
 data MProgram =
   MProgram
     { mpClones :: [MDef]                   -- in initialisation order, main last
     , mpMain :: Maybe CloneId
+    , mpUnions :: Map.Map String UnionShape  -- every custom type of every module, by `Module.Type`
     }
   deriving (Show)
 

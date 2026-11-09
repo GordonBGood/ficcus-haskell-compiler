@@ -1,0 +1,46 @@
+module EqFun exposing (main)
+
+-- `==` on functions (addition 6): the same function is equal to itself, a record is compared field by field in
+-- alphabetical order and the panic comes only when the comparison reaches two different functions. The run ends with Elm's
+-- message on stderr and a non zero exit status (expected/eqfun.out holds the output before it).
+
+
+type alias Op =
+    { a : Int, f : Int -> Int }
+
+
+inc : Int -> Int
+inc x =
+    x + 1
+
+
+dec : Int -> Int
+dec x =
+    x - 1
+
+
+b2i : Bool -> Int
+b2i x =
+    if x then
+        1
+
+    else
+        0
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    a = { a = 1, f = inc }
+                    _ = Debug.log "same function" (b2i (a == { a = 1, f = inc }))
+                    _ = Debug.log "differs before the function" (b2i ({ a = 1, f = inc } == { a = 2, f = dec }))
+                    _ = Debug.log "reaches the function" (b2i ({ a = 1, f = inc } == { a = 1, f = dec }))
+                    _ = Debug.log "not reached" 0
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

@@ -22,7 +22,7 @@ kernelArity cid =
   lookup cid
     [ ("elm/core:Basics.add", 2), ("elm/core:Basics.sub", 2), ("elm/core:Basics.mul", 2)
     , ("elm/core:Basics.fdiv", 2), ("elm/core:Basics.idiv", 2), ("elm/core:Basics.pow", 2)
-    , ("elm/core:Basics.negate", 1)
+    , ("elm/core:Basics.negate", 1), ("elm/core:Basics.modBy", 2), ("elm/core:Basics.remainderBy", 2)
     , ("elm/core:Basics.gt", 2), ("elm/core:Basics.ge", 2), ("elm/core:Basics.lt", 2), ("elm/core:Basics.le", 2)
     , ("elm/core:Basics.eq", 2), ("elm/core:Basics.neq", 2)
     , ("elm/core:Basics.and", 2), ("elm/core:Basics.or", 2), ("elm/core:Basics.not", 1)
@@ -32,6 +32,7 @@ kernelArity cid =
     , ("elm/core:Bitwise64.and", 2), ("elm/core:Bitwise64.or", 2), ("elm/core:Bitwise64.xor", 2), ("elm/core:Bitwise64.complement", 1)
     , ("elm/core:Bitwise64.shiftLeftBy", 2), ("elm/core:Bitwise64.shiftRightBy", 2), ("elm/core:Bitwise64.shiftRightZfBy", 2)
     , ("elm/core:Basics.append", 2), ("elm/core:List.cons", 2)
+    , ("elm/core:List.sortBy", 2), ("elm/core:List.sortWith", 2)
     , ("elm/core:String.fromInt", 1), ("elm/core:String.fromFloat", 1)
     , ("elm/core:Debug.log", 2), ("elm/core:Debug.toString", 1)
     , ("elm/core:Platform.worker", 1)

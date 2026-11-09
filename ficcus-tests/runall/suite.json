@@ -1,86 +1,98 @@
 {
- "description": "Ficcus acceptance subset: the tests of targets/suite.json that the Ficcus compiler can already compile (see docs/STAGE3-PLAN.md); run with run.sh",
- "c_flags": [
-  "-std=c99",
-  "-pedantic",
-  "-Wall",
-  "-Wextra",
-  "-Wno-unused-function",
-  "-ffp-contract=off",
-  "-O2"
- ],
- "tests": [
-  {
-   "name": "fibonacci",
-   "elm": {
-    "dir": "fib",
-    "main": "src/Fibonacci.elm",
-    "js": "fib.js"
-   },
-   "c": {
-    "file": "fibonacci.c"
-   },
-   "fic": "../fib/src/Fibonacci.fic"
-  },
-  {
-   "name": "sievestream",
-   "elm": {
-    "dir": "sievestream",
-    "main": "src/SieveStream.elm",
-    "js": "prm.js"
-   },
-   "c": {
-    "file": "sievestream.c"
-   },
-   "large": {
-    "elm_sub": [
-     [
-      "cLIMIT = 1000000",
-      "cLIMIT = 100000000"
-     ]
-    ],
-    "c_args": [
-     "100000000"
-    ],
-    "elm_timeout": 600
-   },
-   "fic": "../sievestream/src/SieveStream.fic"
-  },
-  {
-   "name": "sievepq",
-   "elm": {
-    "dir": "sievepq",
-    "main": "src/SievePQ.elm",
-    "js": "prmpq.js"
-   },
-   "c": {
-    "file": "sievepq.c"
-   },
-   "large": {
-    "elm_sub": [
-     [
-      "cLIMIT = 1000000",
-      "cLIMIT = 100000000"
-     ]
-    ],
-    "c_args": [
-     "100000000"
-    ],
-    "elm_timeout": 600
-   },
-   "fic": "../sievepq/src/SievePQ.fic"
-  },
-  {
-   "name": "hamheap",
-   "elm": {
-    "dir": "hamheap",
-    "main": "src/HammingHeap.elm",
-    "js": "hamheap.js"
-   },
-   "c": {
-    "file": "hamheap.c"
-   },
-   "fic": "../hamheap/src/HammingHeap.fic"
-  }
- ]
+  "description": "Ficcus acceptance subset: the tests of targets/suite.json that the Ficcus compiler can already compile (see docs/STAGE3-PLAN.md); run with run.sh",
+  "c_flags": [
+    "-std=c99",
+    "-pedantic",
+    "-Wall",
+    "-Wextra",
+    "-Wno-unused-function",
+    "-ffp-contract=off",
+    "-O2"
+  ],
+  "tests": [
+    {
+      "name": "fibonacci",
+      "elm": {
+        "dir": "fib",
+        "main": "src/Fibonacci.elm",
+        "js": "fib.js"
+      },
+      "c": {
+        "file": "fibonacci.c"
+      },
+      "fic": "../fib/src/Fibonacci.fic"
+    },
+    {
+      "name": "bintree",
+      "elm": {
+        "dir": "bintree",
+        "main": "src/BinaryTrees.elm",
+        "js": "bintree.js"
+      },
+      "c": {
+        "file": "bintree.c"
+      },
+      "fic": "../bintree/src/BinaryTrees.fic"
+    },
+    {
+      "name": "sievestream",
+      "elm": {
+        "dir": "sievestream",
+        "main": "src/SieveStream.elm",
+        "js": "prm.js"
+      },
+      "c": {
+        "file": "sievestream.c"
+      },
+      "large": {
+        "elm_sub": [
+          [
+            "cLIMIT = 1000000",
+            "cLIMIT = 100000000"
+          ]
+        ],
+        "c_args": [
+          "100000000"
+        ],
+        "elm_timeout": 600
+      },
+      "fic": "../sievestream/src/SieveStream.fic"
+    },
+    {
+      "name": "sievepq",
+      "elm": {
+        "dir": "sievepq",
+        "main": "src/SievePQ.elm",
+        "js": "prmpq.js"
+      },
+      "c": {
+        "file": "sievepq.c"
+      },
+      "large": {
+        "elm_sub": [
+          [
+            "cLIMIT = 1000000",
+            "cLIMIT = 100000000"
+          ]
+        ],
+        "c_args": [
+          "100000000"
+        ],
+        "elm_timeout": 600
+      },
+      "fic": "../sievepq/src/SievePQ.fic"
+    },
+    {
+      "name": "hamheap",
+      "elm": {
+        "dir": "hamheap",
+        "main": "src/HammingHeap.elm",
+        "js": "hamheap.js"
+      },
+      "c": {
+        "file": "hamheap.c"
+      },
+      "fic": "../hamheap/src/HammingHeap.fic"
+    }
+  ]
 }
