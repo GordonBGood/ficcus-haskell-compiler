@@ -66,7 +66,7 @@ clone c17   def: elm/core:List.foldrHelper   key: (v0=i64; v1=ref)   name: foldr
                         Local c :: i64
                         Local acc :: ref
                 branch d :: i64 :: r4 :: ref :: ref
-                  Let res :: ref
+                  Let res@200:41 :: ref
                     If :: ref
                       Call :: enum
                         Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
@@ -100,7 +100,7 @@ clone c17   def: elm/core:List.foldrHelper   key: (v0=i64; v1=ref)   name: foldr
                           Call :: ref
                             Local fn :: ref
                             Local d :: i64
-                            Local res :: ref
+                            Local res@200:41 :: ref
 clone c13   def: elm/core:List.foldr   key: (v0=i64; v1=ref)   name: foldr__i64__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
   Call :: ref
     Global c17 :: ref
@@ -189,7 +189,7 @@ clone c18   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldr
                         Local c :: ref
                         Local acc :: ref
                 branch d :: ref :: r4 :: ref :: ref
-                  Let res :: ref
+                  Let res@200:41 :: ref
                     If :: ref
                       Call :: enum
                         Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
@@ -223,7 +223,7 @@ clone c18   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldr
                           Call :: ref
                             Local fn :: ref
                             Local d :: ref
-                            Local res :: ref
+                            Local res@200:41 :: ref
 clone c15   def: elm/core:List.foldr   key: (v0=ref; v1=ref)   name: foldr__ref__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
   Call :: ref
     Global c18 :: ref
@@ -281,7 +281,7 @@ clone c2   def: author/project:Silly.silly   key: (v0=i64)   name: silly__i64   
 clone c3   def: author/project:Silly.silly2   key: (v0=i64)   name: silly2__i64   kind: value   params:    result: ref
   Global c2 :: ref
 clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let l2 :: struct(unit,unit)
+  Let l2@32:21 :: struct(unit,unit)
     Call :: ref
       Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
       Lit "ints" :: ref
@@ -300,7 +300,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
           Call :: ref
             Global c3 :: ref
             Local _oa4_0 :: ref
-    Let l1 :: struct(unit,unit)
+    Let l1@29:21 :: struct(unit,unit)
       Call :: ref
         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
         Lit "strings" :: ref
@@ -323,10 +323,10 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
             Call :: i64
               Kernel elm/core:String.length () :: ref
-              Local l1 :: ref
+              Local l1@29:21 :: ref
             Call :: i64
               Kernel elm/core:String.length () :: ref
-              Local l2 :: ref
+              Local l2@32:21 :: ref
           Lit 0 :: i64
         Tuple :: struct(unit,unit)
           Lit () :: unit

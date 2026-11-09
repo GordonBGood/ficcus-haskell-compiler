@@ -348,7 +348,7 @@ clone c42   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldr
                         Local c :: ref
                         Local acc :: ref
                 branch d :: ref :: r4 :: ref :: ref
-                  Let res :: ref
+                  Let res@200:41 :: ref
                     If :: ref
                       Call :: enum
                         Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
@@ -382,7 +382,7 @@ clone c42   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldr
                           Call :: ref
                             Local fn :: ref
                             Local d :: ref
-                            Local res :: ref
+                            Local res@200:41 :: ref
 clone c39   def: elm/core:List.foldr   key: (v0=ref; v1=ref)   name: foldr__ref__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
   Call :: ref
     Global c42 :: ref
@@ -430,7 +430,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
       Let _pv3 :: struct(unit,unit)
         Call :: struct(i64,enum,ref,ref,f64)
           Global c3 :: ref
-        Let l4 :: struct(unit,unit)
+        Let l4@91:21 :: struct(unit,unit)
           Call :: ref
             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
             Lit "heavy" :: ref
@@ -449,7 +449,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Call :: f64
                     Global c4 :: ref
                     Local _pv5 :: struct(ref,f64)
-          Let l5 :: struct(unit,unit)
+          Let l5@94:21 :: struct(unit,unit)
             Call :: ref
               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
               Lit "label" :: ref
@@ -468,7 +468,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                     Record name other :: struct(ref,i64)
                       Lit "n" :: ref
                       Lit 1 :: i64
-            Let l6 :: struct(unit,unit)
+            Let l6@97:21 :: struct(unit,unit)
               Call :: ref
                 Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                 Lit "rename" :: ref
@@ -501,7 +501,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
               Let _pv15 :: struct(unit,unit)
                 Call :: struct(i64,i64)
                   Global c15 :: ref
-                Let l1 :: struct(unit,unit)
+                Let l1@82:21 :: struct(unit,unit)
                   Call :: ref
                     Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                     Lit "getX" :: ref
@@ -520,7 +520,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                           Call :: i64
                             Global c16 :: ref
                             Local _pv3 :: struct(i64,enum,ref,ref,f64)
-                  Let l2 :: struct(unit,unit)
+                  Let l2@85:21 :: struct(unit,unit)
                     Call :: ref
                       Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                       Lit "bump" :: ref
@@ -551,7 +551,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                 Call :: struct(i64,enum,ref,ref,f64)
                                   Global c19 :: ref
                                   Local _pv3 :: struct(i64,enum,ref,ref,f64)
-                    Let l3 :: struct(unit,unit)
+                    Let l3@88:21 :: struct(unit,unit)
                       Call :: ref
                         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                         Lit "both" :: ref
@@ -574,7 +574,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                   Lit 1 :: i64
                                   Lit 2 :: i64
                                   Lit "zz" :: ref
-                      Let l7 :: struct(unit,unit)
+                      Let l7@100:21 :: struct(unit,unit)
                         Call :: ref
                           Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                           Lit "local" :: ref
@@ -614,7 +614,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                       Call :: f64
                                         Global c25 :: ref
                                         Local _pv5 :: struct(ref,f64)
-                        Let l8 :: struct(unit,unit)
+                        Let l8@103:21 :: struct(unit,unit)
                           Call :: ref
                             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                             Lit "map" :: ref
@@ -639,14 +639,14 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                               Call :: i64
                                 Global c28 :: ref
                                 List :: ref
-                                  Local l1 :: ref
-                                  Local l2 :: ref
-                                  Local l3 :: ref
-                                  Local l4 :: ref
-                                  Local l5 :: ref
-                                  Local l6 :: ref
-                                  Local l7 :: ref
-                                  Local l8 :: ref
+                                  Local l1@82:21 :: ref
+                                  Local l2@85:21 :: ref
+                                  Local l3@88:21 :: ref
+                                  Local l4@91:21 :: ref
+                                  Local l5@94:21 :: ref
+                                  Local l6@97:21 :: ref
+                                  Local l7@100:21 :: ref
+                                  Local l8@103:21 :: ref
                               Lit 0 :: i64
                             Tuple :: struct(unit,unit)
                               Lit () :: unit

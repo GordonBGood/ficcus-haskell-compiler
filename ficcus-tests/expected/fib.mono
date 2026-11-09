@@ -38,7 +38,7 @@ clone c3   def: author/project:Fibonacci.limit   key: (v0=type elm/core:Basics.I
       Lit 53 :: i64
     Lit 1 :: i64
 clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let answer :: struct(unit,unit)
+  Let answer@37:21 :: struct(unit,unit)
     Call :: ref
       Kernel elm/core:Basics.append (v0=app string) :: ref
       Lit "Found " :: ref
@@ -61,7 +61,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
     Seq :: struct(unit,unit)
       Call :: unit
         Kernel elm/core:Debug.log (v0=type ()) :: ref
-        Local answer :: ref
+        Local answer@37:21 :: ref
         Lit () :: unit
       Tuple :: struct(unit,unit)
         Lit () :: unit

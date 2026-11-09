@@ -97,7 +97,7 @@ clone c28   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldr
                         Local c :: ref
                         Local acc :: ref
                 branch d :: ref :: r4 :: ref :: ref
-                  Let res :: ref
+                  Let res@200:41 :: ref
                     If :: ref
                       Call :: enum
                         Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
@@ -131,7 +131,7 @@ clone c28   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldr
                           Call :: ref
                             Local fn :: ref
                             Local d :: ref
-                            Local res :: ref
+                            Local res@200:41 :: ref
 clone c22   def: elm/core:List.foldr   key: (v0=ref; v1=ref)   name: foldr__ref__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
   Call :: ref
     Global c28 :: ref
@@ -278,7 +278,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
   Let _pv11 :: struct(unit,unit)
     Call :: ref
       Global c11 :: ref
-    Let l5 :: struct(unit,unit)
+    Let l5@37:21 :: struct(unit,unit)
       Call :: ref
         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
         Lit "apply" :: ref
@@ -299,7 +299,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
               Global c5 :: ref
               Record y :: struct(f64)
                 Lit 0.5 :: f64
-      Let l4 :: struct(unit,unit)
+      Let l4@34:21 :: struct(unit,unit)
         Call :: ref
           Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
           Lit "pair" :: ref
@@ -313,7 +313,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Global c6 :: ref
                 Global c10 :: ref
                 Local _pv11 :: ref
-        Let l3 :: struct(unit,unit)
+        Let l3@31:21 :: struct(unit,unit)
           Call :: ref
             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
             Lit "name" :: ref
@@ -324,7 +324,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Global c6 :: ref
                 Global c12 :: ref
                 Local _pv11 :: ref
-          Let l2 :: struct(unit,unit)
+          Let l2@28:21 :: struct(unit,unit)
             Call :: ref
               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
               Lit "y" :: ref
@@ -338,7 +338,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                     Global c15 :: ref
                     Global c16 :: ref
                     Local _pv11 :: ref
-            Let l1 :: struct(unit,unit)
+            Let l1@25:21 :: struct(unit,unit)
               Call :: ref
                 Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                 Lit "x" :: ref
@@ -358,11 +358,11 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Call :: i64
                     Global c21 :: ref
                     List :: ref
-                      Local l1 :: ref
-                      Local l2 :: ref
-                      Local l3 :: ref
-                      Local l4 :: ref
-                      Local l5 :: ref
+                      Local l1@25:21 :: ref
+                      Local l2@28:21 :: ref
+                      Local l3@31:21 :: ref
+                      Local l4@34:21 :: ref
+                      Local l5@37:21 :: ref
                   Lit 0 :: i64
                 Tuple :: struct(unit,unit)
                   Lit () :: unit

@@ -112,7 +112,7 @@ clone c20   def: elm/core:List.foldrHelper   key: (v0=i64; v1=ref)   name: foldr
                         Local c :: i64
                         Local acc :: ref
                 branch d :: i64 :: r4 :: ref :: ref
-                  Let res :: ref
+                  Let res@200:41 :: ref
                     If :: ref
                       Call :: enum
                         Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
@@ -146,7 +146,7 @@ clone c20   def: elm/core:List.foldrHelper   key: (v0=i64; v1=ref)   name: foldr
                           Call :: ref
                             Local fn :: ref
                             Local d :: i64
-                            Local res :: ref
+                            Local res@200:41 :: ref
 clone c13   def: elm/core:List.foldr   key: (v0=i64; v1=ref)   name: foldr__i64__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
   Call :: ref
     Global c20 :: ref
@@ -240,7 +240,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
   Let _pv5 :: struct(unit,unit)
     Call :: i64
       Global c5 :: ref
-    Let l4 :: struct(unit,unit)
+    Let l4@44:21 :: struct(unit,unit)
       Call :: ref
         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
         Lit "l4" :: ref
@@ -254,17 +254,17 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
               List :: ref
                 Lit 1 :: i64
                 Lit 2 :: i64
-      Let d :: struct(unit,unit)
+      Let d@23:21 :: struct(unit,unit)
         Call :: ref
           Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
           Lit "d" :: ref
           Lit "str" :: ref
-        Let c :: struct(unit,unit)
+        Let c@20:21 :: struct(unit,unit)
           Call :: f64
             Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
             Lit "c" :: ref
             Lit 2.5 :: f64
-          Let l2 :: struct(unit,unit)
+          Let l2@38:21 :: struct(unit,unit)
             Call :: ref
               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
               Lit "l2" :: ref
@@ -272,7 +272,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Kernel elm/core:String.fromFloat () :: ref
                 Call :: f64
                   Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Float) :: ref
-                  Local c :: f64
+                  Local c@20:21 :: f64
                   Lit 2.0 :: f64
             Let _pv6 :: struct(unit,unit)
               Call :: i64
@@ -283,7 +283,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Let _pv9 :: struct(unit,unit)
                   Call :: i64
                     Global c9 :: ref
-                  Let l1 :: struct(unit,unit)
+                  Let l1@35:21 :: struct(unit,unit)
                     Call :: ref
                       Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                       Lit "l1" :: ref
@@ -299,13 +299,13 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                     Let _pv8 :: struct(unit,unit)
                       Call :: i64
                         Global c8 :: ref
-                      Let l3 :: struct(unit,unit)
+                      Let l3@41:21 :: struct(unit,unit)
                         Call :: ref
                           Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                           Lit "l3" :: ref
                           Call :: ref
                             Kernel elm/core:Basics.append (v0=app string) :: ref
-                            Local d :: ref
+                            Local d@23:21 :: ref
                             Call :: ref
                               Kernel elm/core:Basics.append (v0=app string) :: ref
                               Call :: ref
@@ -320,10 +320,10 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                             Call :: i64
                               Global c10 :: ref
                               List :: ref
-                                Local l1 :: ref
-                                Local l2 :: ref
-                                Local l3 :: ref
-                                Local l4 :: ref
+                                Local l1@35:21 :: ref
+                                Local l2@38:21 :: ref
+                                Local l3@41:21 :: ref
+                                Local l4@44:21 :: ref
                             Lit 0 :: i64
                           Tuple :: struct(unit,unit)
                             Lit () :: unit

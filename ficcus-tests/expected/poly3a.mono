@@ -317,7 +317,7 @@ clone c24   def: author/project:Poly3a.boxes   key: ()   kind: value   params:  
           Lit 7 :: i64
           Lit 8 :: i64
     branch (n :: i64, m :: i64) :: struct(i64,i64)
-      Let r :: ref
+      Let r@191:9 :: ref
         Call :: struct(ref,f64)
           Global c6 :: ref
           Call :: ref
@@ -339,14 +339,14 @@ clone c24   def: author/project:Poly3a.boxes   key: ()   kind: value   params:  
             Call :: ref
               Kernel elm/core:Basics.append (v0=app string) :: ref
               Access .name #0 :: ref
-                Local r :: struct(ref,f64)
+                Local r@191:9 :: struct(ref,f64)
               Call :: ref
                 Kernel elm/core:Basics.append (v0=app string) :: ref
                 Lit " " :: ref
                 Call :: ref
                   Kernel elm/core:String.fromFloat () :: ref
                   Access .size #1 :: f64
-                    Local r :: struct(ref,f64)
+                    Local r@191:9 :: struct(ref,f64)
 clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
   Seq :: struct(unit,unit)
     Call :: i64

@@ -1713,7 +1713,7 @@ clone c123   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: fold
                         Local c :: ref
                         Local acc :: ref
                 branch d :: ref :: r4 :: ref :: ref
-                  Let res :: ref
+                  Let res@200:41 :: ref
                     If :: ref
                       Call :: enum
                         Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
@@ -1747,7 +1747,7 @@ clone c123   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: fold
                           Call :: ref
                             Local fn :: ref
                             Local d :: ref
-                            Local res :: ref
+                            Local res@200:41 :: ref
 clone c92   def: elm/core:List.foldr   key: (v0=ref; v1=ref)   name: foldr__ref__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
   Call :: ref
     Global c123 :: ref

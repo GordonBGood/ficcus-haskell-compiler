@@ -694,7 +694,7 @@ specLet se defs isRec body@(A.At bregion _) =
       let se' = se { seCtx = ctx', seLocals = Map.union (Map.fromList [ (defIdOf ctx' (defKeyOf d), srcFor locals' d) | d <- defs, not (isFun d) ]) locals' }
       binds <- forM [ d | d <- defs, not (isFun d) ] $ \d ->
         do  v <- specExpr se' (defBody d)
-            return (defNameChars d, v)
+            return (uniqLocal (defNameChars d) (defIdOf ctx' (defKeyOf d)), v)
       -- a polymorphic value (`let a = Debug.log "a" 1` is generalized over `number`) is evaluated once, where it is bound,
       -- like Elm's JavaScript value: the clones of the instances that the body uses become variables bound here
       let CloneId meK = me
@@ -710,6 +710,15 @@ specLet se defs isRec body@(A.At bregion _) =
       let pvs = [ k | h <- hoistIds, k <- Set.toList (Map.findWithDefault Set.empty h (sHoisted st)) ]
           bind k acc = MExpr (mRep acc) (MLetVal ("_pv" ++ show k) (MExpr (Map.findWithDefault CRef ("_pv" ++ show k) (sPvClass st)) (MCall (MExpr CRef (MGlobal (CloneId k))) [])) acc)
       return (foldr bind (foldr (\(n, v) acc -> MExpr (mRep acc) (MLetVal n v acc)) b' binds) pvs)
+
+
+-- the C name of a let bound value: its source name and the position of its definition (`n@15:9`), so that two lets of the same
+-- name in one function (siblings, as in a list of `let n = .. in ..`) do not declare one variable twice
+uniqLocal :: String -> String -> String
+uniqLocal name did =
+  case break (== '@') did of
+    (_, '@' : pos) -> name ++ "@" ++ pos
+    _ -> name
 
 
 -- a local value with variables of its own (`let e = []` generalized): a lifted clone of no arguments per key,
@@ -895,7 +904,7 @@ resolve se region e =
         Just (Left key) ->
           let did = defIdOf ctx key
           in case Map.lookup did (seLocals se) of
-               Just src | null (defArgs (srcDef src)) && not (polyValue (srcCtx src) (srcOuter src) (srcDef src)) -> return (RLocal (N.toChars name))
+               Just src | null (defArgs (srcDef src)) && not (polyValue (srcCtx src) (srcOuter src) (srcDef src)) -> return (RLocal (uniqLocal (N.toChars name) did))
                Just src | null (defArgs (srcDef src)) ->
                  do  r <- viaClone src did
                      act <- gets sHoist

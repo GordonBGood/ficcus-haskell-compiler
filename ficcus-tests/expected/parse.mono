@@ -123,7 +123,7 @@ clone c117   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: fold
                         Local c :: ref
                         Local acc :: ref
                 branch d :: ref :: r4 :: ref :: ref
-                  Let res :: ref
+                  Let res@200:41 :: ref
                     If :: ref
                       Call :: enum
                         Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
@@ -157,7 +157,7 @@ clone c117   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: fold
                           Call :: ref
                             Local fn :: ref
                             Local d :: ref
-                            Local res :: ref
+                            Local res@200:41 :: ref
 clone c77   def: elm/core:List.foldr   key: (v0=ref; v1=ref)   name: foldr__ref__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
   Call :: ref
     Global c117 :: ref
@@ -303,7 +303,7 @@ clone c134   def: elm/parser:Parser.Advanced.lambda@535:13   key: ()   outer: c9
             Local expecting :: ref
         Call :: ref
           Ctor Good tag 0 (v0=enum; v1=unit; v2=ref) :: ref
-          Local progress :: enum
+          Local progress@532:5 :: enum
           Lit () :: unit
           Record col row src indent offset context :: struct(i64,i64,ref,i64,i64,ref)
             Local newCol :: i64
@@ -319,7 +319,7 @@ clone c91   def: elm/parser:Parser.Advanced.token   key: (v0=ref; v1=ref)   name
   Case :: ref
     Local _p0 :: ref
     branch Token #0 str :: ref expecting :: ref :: ref
-      Let progress :: ref
+      Let progress@532:5 :: ref
         Call :: enum
           Kernel elm/core:Basics.not () :: ref
           Call :: enum
@@ -1056,44 +1056,44 @@ clone c233   def: elm/parser:Parser.Advanced.consumeExp   key: ()   kind: functi
         Lit 69 :: i64
         Local offset :: i64
         Local src :: ref
-    Let eOffset :: i64
+    Let eOffset@736:7 :: i64
       Call :: i64
         Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
         Local offset :: i64
         Lit 1 :: i64
-      Let expOffset :: i64
+      Let expOffset@738:7 :: i64
         If :: i64
           Call :: enum
             Kernel elm/core:Basics.or () :: ref
             Call :: enum
               Kernel elm/parser:Parser.Advanced.isAsciiCode () :: ref
               Lit 43 :: i64
-              Local eOffset :: i64
+              Local eOffset@736:7 :: i64
               Local src :: ref
             Call :: enum
               Kernel elm/parser:Parser.Advanced.isAsciiCode () :: ref
               Lit 45 :: i64
-              Local eOffset :: i64
+              Local eOffset@736:7 :: i64
               Local src :: ref
           Call :: i64
             Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
-            Local eOffset :: i64
+            Local eOffset@736:7 :: i64
             Lit 1 :: i64
-          Local eOffset :: i64
-        Let newOffset :: i64
+          Local eOffset@736:7 :: i64
+        Let newOffset@744:7 :: i64
           Call :: i64
             Kernel elm/parser:Parser.Advanced.chompBase10 () :: ref
-            Local expOffset :: i64
+            Local expOffset@738:7 :: i64
             Local src :: ref
           If :: i64
             Call :: enum
               Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
-              Local expOffset :: i64
-              Local newOffset :: i64
+              Local expOffset@738:7 :: i64
+              Local newOffset@744:7 :: i64
             Call :: i64
               Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
-              Local newOffset :: i64
-            Local newOffset :: i64
+              Local newOffset@744:7 :: i64
+            Local newOffset@744:7 :: i64
     Local offset :: i64
 clone c193   def: elm/parser:Parser.Advanced.consumeDotAndExp   key: ()   kind: function   params: offset:i64 src:ref   result: i64
   If :: i64
@@ -1126,20 +1126,20 @@ clone c116   def: elm/parser:Parser.Advanced.fromInfo   key: (v0=ref; v1=ref)   
       Local x :: ref
       Local context :: ref
 clone c142   def: elm/parser:Parser.Advanced.finalizeFloat   key: (v0=ref; v1=i64; v2=ref)   name: finalizeFloat__ref__i64__ref   kind: function   params: invalid:ref expecting:ref intSettings:ref floatSettings:ref intPair:struct(i64,i64) s:struct(i64,i64,ref,i64,i64,ref)   result: ref
-  Let intOffset :: ref
+  Let intOffset@695:5 :: ref
     Call :: i64
       Global c192 :: ref
       Local intPair :: struct(i64,i64)
-    Let floatOffset :: ref
+    Let floatOffset@696:5 :: ref
       Call :: i64
         Global c193 :: ref
-        Local intOffset :: i64
+        Local intOffset@695:5 :: i64
         Access .src #2 :: ref
           Local s :: struct(i64,i64,ref,i64,i64,ref)
       If :: ref
         Call :: enum
           Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
-          Local floatOffset :: i64
+          Local floatOffset@696:5 :: i64
           Lit 0 :: i64
         Call :: ref
           Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
@@ -1154,7 +1154,7 @@ clone c142   def: elm/parser:Parser.Advanced.finalizeFloat   key: (v0=ref; v1=i6
                 Local s :: struct(i64,i64,ref,i64,i64,ref)
               Call :: i64
                 Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
-                Local floatOffset :: i64
+                Local floatOffset@696:5 :: i64
                 Access .offset #4 :: i64
                   Local s :: struct(i64,i64,ref,i64,i64,ref)
             Local invalid :: ref
@@ -1164,7 +1164,7 @@ clone c142   def: elm/parser:Parser.Advanced.finalizeFloat   key: (v0=ref; v1=i6
           Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
           Access .offset #4 :: i64
             Local s :: struct(i64,i64,ref,i64,i64,ref)
-          Local floatOffset :: i64
+          Local floatOffset@696:5 :: i64
         Call :: ref
           Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
           Lit 0 :: enum
@@ -1174,8 +1174,8 @@ clone c142   def: elm/parser:Parser.Advanced.finalizeFloat   key: (v0=ref; v1=i6
             Local expecting :: ref
         Call :: enum
           Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
-          Local intOffset :: i64
-          Local floatOffset :: i64
+          Local intOffset@695:5 :: i64
+          Local floatOffset@696:5 :: i64
         Call :: ref
           Global c141 :: ref
           Local invalid :: ref
@@ -1202,7 +1202,7 @@ clone c142   def: elm/parser:Parser.Advanced.finalizeFloat   key: (v0=ref; v1=i6
                   Kernel elm/core:String.slice () :: ref
                   Access .offset #4 :: i64
                     Local s :: struct(i64,i64,ref,i64,i64,ref)
-                  Local floatOffset :: i64
+                  Local floatOffset@696:5 :: i64
                   Access .src #2 :: ref
                     Local s :: struct(i64,i64,ref,i64,i64,ref)
               branch Nothing #1 :: ref
@@ -1222,7 +1222,7 @@ clone c142   def: elm/parser:Parser.Advanced.finalizeFloat   key: (v0=ref; v1=i6
                     Local n :: f64
                   Call :: struct(i64,i64,ref,i64,i64,ref)
                     Global c191 :: ref
-                    Local floatOffset :: i64
+                    Local floatOffset@696:5 :: i64
                     Local s :: struct(i64,i64,ref,i64,i64,ref)
 clone c140   def: elm/parser:Parser.Advanced.lambda@640:13   key: ()   outer: c93 (v0=ref; v1=i64; v2=ref)   kind: function   params: s:struct(i64,i64,ref,i64,i64,ref)   result: ref   lifted-from: c93
   If :: ref
@@ -1233,22 +1233,22 @@ clone c140   def: elm/parser:Parser.Advanced.lambda@640:13   key: ()   outer: c9
         Local s :: struct(i64,i64,ref,i64,i64,ref)
       Access .src #2 :: ref
         Local s :: struct(i64,i64,ref,i64,i64,ref)
-    Let zeroOffset :: ref
+    Let zeroOffset@643:9 :: ref
       Call :: i64
         Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
         Access .offset #4 :: i64
           Local s :: struct(i64,i64,ref,i64,i64,ref)
         Lit 1 :: i64
-      Let baseOffset :: ref
+      Let baseOffset@644:9 :: ref
         Call :: i64
           Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
-          Local zeroOffset :: i64
+          Local zeroOffset@643:9 :: i64
           Lit 1 :: i64
         If :: ref
           Call :: enum
             Kernel elm/parser:Parser.Advanced.isAsciiCode () :: ref
             Lit 120 :: i64
-            Local zeroOffset :: i64
+            Local zeroOffset@643:9 :: i64
             Access .src #2 :: ref
               Local s :: struct(i64,i64,ref,i64,i64,ref)
           Call :: ref
@@ -1257,17 +1257,17 @@ clone c140   def: elm/parser:Parser.Advanced.lambda@640:13   key: ()   outer: c9
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
             Access .hex #0 :: ref
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
-            Local baseOffset :: i64
+            Local baseOffset@644:9 :: i64
             Call :: struct(i64,i64)
               Kernel elm/parser:Parser.Advanced.consumeBase16 () :: ref
-              Local baseOffset :: i64
+              Local baseOffset@644:9 :: i64
               Access .src #2 :: ref
                 Local s :: struct(i64,i64,ref,i64,i64,ref)
             Local s :: struct(i64,i64,ref,i64,i64,ref)
           Call :: enum
             Kernel elm/parser:Parser.Advanced.isAsciiCode () :: ref
             Lit 111 :: i64
-            Local zeroOffset :: i64
+            Local zeroOffset@643:9 :: i64
             Access .src #2 :: ref
               Local s :: struct(i64,i64,ref,i64,i64,ref)
           Call :: ref
@@ -1276,18 +1276,18 @@ clone c140   def: elm/parser:Parser.Advanced.lambda@640:13   key: ()   outer: c9
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
             Access .octal #3 :: ref
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
-            Local baseOffset :: i64
+            Local baseOffset@644:9 :: i64
             Call :: struct(i64,i64)
               Kernel elm/parser:Parser.Advanced.consumeBase () :: ref
               Lit 8 :: i64
-              Local baseOffset :: i64
+              Local baseOffset@644:9 :: i64
               Access .src #2 :: ref
                 Local s :: struct(i64,i64,ref,i64,i64,ref)
             Local s :: struct(i64,i64,ref,i64,i64,ref)
           Call :: enum
             Kernel elm/parser:Parser.Advanced.isAsciiCode () :: ref
             Lit 98 :: i64
-            Local zeroOffset :: i64
+            Local zeroOffset@643:9 :: i64
             Access .src #2 :: ref
               Local s :: struct(i64,i64,ref,i64,i64,ref)
           Call :: ref
@@ -1296,11 +1296,11 @@ clone c140   def: elm/parser:Parser.Advanced.lambda@640:13   key: ()   outer: c9
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
             Access .binary #4 :: ref
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
-            Local baseOffset :: i64
+            Local baseOffset@644:9 :: i64
             Call :: struct(i64,i64)
               Kernel elm/parser:Parser.Advanced.consumeBase () :: ref
               Lit 2 :: i64
-              Local baseOffset :: i64
+              Local baseOffset@644:9 :: i64
               Access .src #2 :: ref
                 Local s :: struct(i64,i64,ref,i64,i64,ref)
             Local s :: struct(i64,i64,ref,i64,i64,ref)
@@ -1315,7 +1315,7 @@ clone c140   def: elm/parser:Parser.Advanced.lambda@640:13   key: ()   outer: c9
             Access .float #2 :: ref
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
             Tuple :: struct(i64,i64)
-              Local zeroOffset :: i64
+              Local zeroOffset@643:9 :: i64
               Lit 0 :: i64
             Local s :: struct(i64,i64,ref,i64,i64,ref)
     Call :: ref
@@ -1369,7 +1369,7 @@ clone c4   def: elm/parser:Parser.int   key: ()   kind: value   params:    resul
     Ctor ExpectingInt tag 1 () :: ref
     Ctor ExpectingInt tag 1 () :: ref
 clone c114   def: elm/parser:Parser.Advanced.chompWhileHelp   key: (v0=ref; v1=ref)   name: chompWhileHelp__ref__ref   kind: function   params: isGood:ref offset:i64 row:i64 col:i64 s0:struct(i64,i64,ref,i64,i64,ref)   result: ref
-  Let newOffset :: ref
+  Let newOffset@855:5 :: ref
     Call :: i64
       Kernel elm/parser:Parser.Advanced.isSubChar () :: ref
       Local isGood :: ref
@@ -1379,7 +1379,7 @@ clone c114   def: elm/parser:Parser.Advanced.chompWhileHelp   key: (v0=ref; v1=r
     If :: ref
       Call :: enum
         Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
-        Local newOffset :: i64
+        Local newOffset@855:5 :: i64
         Call :: i64
           Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
           Lit 1 :: i64
@@ -1403,7 +1403,7 @@ clone c114   def: elm/parser:Parser.Advanced.chompWhileHelp   key: (v0=ref; v1=r
             Local s0 :: struct(i64,i64,ref,i64,i64,ref)
       Call :: enum
         Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
-        Local newOffset :: i64
+        Local newOffset@855:5 :: i64
         Call :: i64
           Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
           Lit 2 :: i64
@@ -1423,7 +1423,7 @@ clone c114   def: elm/parser:Parser.Advanced.chompWhileHelp   key: (v0=ref; v1=r
       Call :: ref
         Global c114 :: ref
         Local isGood :: ref
-        Local newOffset :: i64
+        Local newOffset@855:5 :: i64
         Local row :: i64
         Call :: i64
           Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
@@ -1496,7 +1496,7 @@ clone c147   def: elm/parser:Parser.Advanced.lambda@910:13   key: ()   outer: c1
       Access .src #2 :: ref
         Local s :: struct(i64,i64,ref,i64,i64,ref)
     branch (newOffset :: i64, newRow :: i64, newCol :: i64) :: struct(i64,i64,i64)
-      Let adjustedOffset :: ref
+      Let adjustedOffset@915:7 :: ref
         If :: i64
           Call :: enum
             Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
@@ -1513,7 +1513,7 @@ clone c147   def: elm/parser:Parser.Advanced.lambda@910:13   key: ()   outer: c1
             Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
             Access .offset #4 :: i64
               Local s :: struct(i64,i64,ref,i64,i64,ref)
-            Local adjustedOffset :: i64
+            Local adjustedOffset@915:7 :: i64
           Lit () :: unit
           Record col row src indent offset context :: struct(i64,i64,ref,i64,i64,ref)
             Local newCol :: i64
@@ -1522,7 +1522,7 @@ clone c147   def: elm/parser:Parser.Advanced.lambda@910:13   key: ()   outer: c1
               Local s :: struct(i64,i64,ref,i64,i64,ref)
             Access .indent #3 :: i64
               Local s :: struct(i64,i64,ref,i64,i64,ref)
-            Local adjustedOffset :: i64
+            Local adjustedOffset@915:7 :: i64
             Access .context #5 :: ref
               Local s :: struct(i64,i64,ref,i64,i64,ref)
 clone c102   def: elm/parser:Parser.Advanced.chompUntilEndOr   key: (v0=ref; v1=ref)   name: chompUntilEndOr__ref__ref   kind: function   params: str:ref   result: ref
@@ -1722,7 +1722,7 @@ clone c17   def: author/project:Parse.lambda@143:89   key: ()   kind: function  
     Local a :: ref
     Local b :: i64
 clone c72   def: elm/core:Char.isLower   key: ()   kind: function   params: char:u32   result: enum
-  Let code :: enum
+  Let code@105:5 :: enum
     Call :: i64
       Kernel elm/core:Char.toCode () :: ref
       Local char :: u32
@@ -1731,13 +1731,13 @@ clone c72   def: elm/core:Char.isLower   key: ()   kind: function   params: char
       Call :: enum
         Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
         Lit 97 :: i64
-        Local code :: i64
+        Local code@105:5 :: i64
       Call :: enum
         Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
-        Local code :: i64
+        Local code@105:5 :: i64
         Lit 122 :: i64
 clone c73   def: elm/core:Char.isUpper   key: ()   kind: function   params: char:u32   result: enum
-  Let code :: enum
+  Let code@84:5 :: enum
     Call :: i64
       Kernel elm/core:Char.toCode () :: ref
       Local char :: u32
@@ -1745,14 +1745,14 @@ clone c73   def: elm/core:Char.isUpper   key: ()   kind: function   params: char
       Kernel elm/core:Basics.and () :: ref
       Call :: enum
         Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
-        Local code :: i64
+        Local code@84:5 :: i64
         Lit 90 :: i64
       Call :: enum
         Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
         Lit 65 :: i64
-        Local code :: i64
+        Local code@84:5 :: i64
 clone c151   def: elm/core:Char.isDigit   key: ()   kind: function   params: char:u32   result: enum
-  Let code :: enum
+  Let code@158:5 :: enum
     Call :: i64
       Kernel elm/core:Char.toCode () :: ref
       Local char :: u32
@@ -1760,12 +1760,12 @@ clone c151   def: elm/core:Char.isDigit   key: ()   kind: function   params: cha
       Kernel elm/core:Basics.and () :: ref
       Call :: enum
         Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
-        Local code :: i64
+        Local code@158:5 :: i64
         Lit 57 :: i64
       Call :: enum
         Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
         Lit 48 :: i64
-        Local code :: i64
+        Local code@158:5 :: i64
 clone c110   def: elm/core:Char.isAlphaNum   key: ()   kind: function   params: char:u32   result: enum
   Call :: enum
     Kernel elm/core:Basics.or () :: ref
@@ -1831,7 +1831,7 @@ clone c108   def: elm/parser:Parser.Advanced.lambda@479:13   key: ()   outer: c6
             Local expecting :: ref
         Call :: ref
           Ctor Good tag 0 (v0=enum; v1=unit; v2=ref) :: ref
-          Local progress :: enum
+          Local progress@476:5 :: enum
           Lit () :: unit
           Record col row src indent offset context :: struct(i64,i64,ref,i64,i64,ref)
             Local newCol :: i64
@@ -1847,7 +1847,7 @@ clone c69   def: elm/parser:Parser.Advanced.keyword   key: (v0=ref; v1=ref)   na
   Case :: ref
     Local _p0 :: ref
     branch Token #0 kwd :: ref expecting :: ref :: ref
-      Let progress :: ref
+      Let progress@476:5 :: ref
         Call :: enum
           Kernel elm/core:Basics.not () :: ref
           Call :: enum
@@ -2090,20 +2090,20 @@ clone c155   def: elm/parser:Parser.Advanced.finalizeInt   key: (v0=ref; v1=f64;
                 Local endOffset :: i64
                 Local s :: struct(i64,i64,ref,i64,i64,ref)
 clone c156   def: elm/parser:Parser.Advanced.finalizeFloat   key: (v0=ref; v1=f64; v2=ref)   name: finalizeFloat__ref__f64__ref   kind: function   params: invalid:ref expecting:ref intSettings:ref floatSettings:ref intPair:struct(i64,i64) s:struct(i64,i64,ref,i64,i64,ref)   result: ref
-  Let intOffset :: ref
+  Let intOffset@695:5 :: ref
     Call :: i64
       Global c192 :: ref
       Local intPair :: struct(i64,i64)
-    Let floatOffset :: ref
+    Let floatOffset@696:5 :: ref
       Call :: i64
         Global c193 :: ref
-        Local intOffset :: i64
+        Local intOffset@695:5 :: i64
         Access .src #2 :: ref
           Local s :: struct(i64,i64,ref,i64,i64,ref)
       If :: ref
         Call :: enum
           Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
-          Local floatOffset :: i64
+          Local floatOffset@696:5 :: i64
           Lit 0 :: i64
         Call :: ref
           Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
@@ -2118,7 +2118,7 @@ clone c156   def: elm/parser:Parser.Advanced.finalizeFloat   key: (v0=ref; v1=f6
                 Local s :: struct(i64,i64,ref,i64,i64,ref)
               Call :: i64
                 Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
-                Local floatOffset :: i64
+                Local floatOffset@696:5 :: i64
                 Access .offset #4 :: i64
                   Local s :: struct(i64,i64,ref,i64,i64,ref)
             Local invalid :: ref
@@ -2128,7 +2128,7 @@ clone c156   def: elm/parser:Parser.Advanced.finalizeFloat   key: (v0=ref; v1=f6
           Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
           Access .offset #4 :: i64
             Local s :: struct(i64,i64,ref,i64,i64,ref)
-          Local floatOffset :: i64
+          Local floatOffset@696:5 :: i64
         Call :: ref
           Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
           Lit 0 :: enum
@@ -2138,8 +2138,8 @@ clone c156   def: elm/parser:Parser.Advanced.finalizeFloat   key: (v0=ref; v1=f6
             Local expecting :: ref
         Call :: enum
           Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
-          Local intOffset :: i64
-          Local floatOffset :: i64
+          Local intOffset@695:5 :: i64
+          Local floatOffset@696:5 :: i64
         Call :: ref
           Global c155 :: ref
           Local invalid :: ref
@@ -2166,7 +2166,7 @@ clone c156   def: elm/parser:Parser.Advanced.finalizeFloat   key: (v0=ref; v1=f6
                   Kernel elm/core:String.slice () :: ref
                   Access .offset #4 :: i64
                     Local s :: struct(i64,i64,ref,i64,i64,ref)
-                  Local floatOffset :: i64
+                  Local floatOffset@696:5 :: i64
                   Access .src #2 :: ref
                     Local s :: struct(i64,i64,ref,i64,i64,ref)
               branch Nothing #1 :: ref
@@ -2186,7 +2186,7 @@ clone c156   def: elm/parser:Parser.Advanced.finalizeFloat   key: (v0=ref; v1=f6
                     Local n :: f64
                   Call :: struct(i64,i64,ref,i64,i64,ref)
                     Global c191 :: ref
-                    Local floatOffset :: i64
+                    Local floatOffset@696:5 :: i64
                     Local s :: struct(i64,i64,ref,i64,i64,ref)
 clone c154   def: elm/parser:Parser.Advanced.lambda@640:13   key: ()   outer: c118 (v0=ref; v1=f64; v2=ref)   kind: function   params: s:struct(i64,i64,ref,i64,i64,ref)   result: ref   lifted-from: c118
   If :: ref
@@ -2197,22 +2197,22 @@ clone c154   def: elm/parser:Parser.Advanced.lambda@640:13   key: ()   outer: c1
         Local s :: struct(i64,i64,ref,i64,i64,ref)
       Access .src #2 :: ref
         Local s :: struct(i64,i64,ref,i64,i64,ref)
-    Let zeroOffset :: ref
+    Let zeroOffset@643:9 :: ref
       Call :: i64
         Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
         Access .offset #4 :: i64
           Local s :: struct(i64,i64,ref,i64,i64,ref)
         Lit 1 :: i64
-      Let baseOffset :: ref
+      Let baseOffset@644:9 :: ref
         Call :: i64
           Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
-          Local zeroOffset :: i64
+          Local zeroOffset@643:9 :: i64
           Lit 1 :: i64
         If :: ref
           Call :: enum
             Kernel elm/parser:Parser.Advanced.isAsciiCode () :: ref
             Lit 120 :: i64
-            Local zeroOffset :: i64
+            Local zeroOffset@643:9 :: i64
             Access .src #2 :: ref
               Local s :: struct(i64,i64,ref,i64,i64,ref)
           Call :: ref
@@ -2221,17 +2221,17 @@ clone c154   def: elm/parser:Parser.Advanced.lambda@640:13   key: ()   outer: c1
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
             Access .hex #0 :: ref
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
-            Local baseOffset :: i64
+            Local baseOffset@644:9 :: i64
             Call :: struct(i64,i64)
               Kernel elm/parser:Parser.Advanced.consumeBase16 () :: ref
-              Local baseOffset :: i64
+              Local baseOffset@644:9 :: i64
               Access .src #2 :: ref
                 Local s :: struct(i64,i64,ref,i64,i64,ref)
             Local s :: struct(i64,i64,ref,i64,i64,ref)
           Call :: enum
             Kernel elm/parser:Parser.Advanced.isAsciiCode () :: ref
             Lit 111 :: i64
-            Local zeroOffset :: i64
+            Local zeroOffset@643:9 :: i64
             Access .src #2 :: ref
               Local s :: struct(i64,i64,ref,i64,i64,ref)
           Call :: ref
@@ -2240,18 +2240,18 @@ clone c154   def: elm/parser:Parser.Advanced.lambda@640:13   key: ()   outer: c1
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
             Access .octal #3 :: ref
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
-            Local baseOffset :: i64
+            Local baseOffset@644:9 :: i64
             Call :: struct(i64,i64)
               Kernel elm/parser:Parser.Advanced.consumeBase () :: ref
               Lit 8 :: i64
-              Local baseOffset :: i64
+              Local baseOffset@644:9 :: i64
               Access .src #2 :: ref
                 Local s :: struct(i64,i64,ref,i64,i64,ref)
             Local s :: struct(i64,i64,ref,i64,i64,ref)
           Call :: enum
             Kernel elm/parser:Parser.Advanced.isAsciiCode () :: ref
             Lit 98 :: i64
-            Local zeroOffset :: i64
+            Local zeroOffset@643:9 :: i64
             Access .src #2 :: ref
               Local s :: struct(i64,i64,ref,i64,i64,ref)
           Call :: ref
@@ -2260,11 +2260,11 @@ clone c154   def: elm/parser:Parser.Advanced.lambda@640:13   key: ()   outer: c1
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
             Access .binary #4 :: ref
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
-            Local baseOffset :: i64
+            Local baseOffset@644:9 :: i64
             Call :: struct(i64,i64)
               Kernel elm/parser:Parser.Advanced.consumeBase () :: ref
               Lit 2 :: i64
-              Local baseOffset :: i64
+              Local baseOffset@644:9 :: i64
               Access .src #2 :: ref
                 Local s :: struct(i64,i64,ref,i64,i64,ref)
             Local s :: struct(i64,i64,ref,i64,i64,ref)
@@ -2279,7 +2279,7 @@ clone c154   def: elm/parser:Parser.Advanced.lambda@640:13   key: ()   outer: c1
             Access .float #2 :: ref
               Local c :: struct(ref,ref,ref,ref,ref,ref,ref)
             Tuple :: struct(i64,i64)
-              Local zeroOffset :: i64
+              Local zeroOffset@643:9 :: i64
               Lit 0 :: i64
             Local s :: struct(i64,i64,ref,i64,i64,ref)
     Call :: ref
@@ -2450,7 +2450,7 @@ clone c199   def: author/project:Parse.lambda@62:22   key: ()   kind: function  
     Ctor Var tag 3 (v0=ref) :: ref
     Local _pb199_0 :: ref
 clone c249   def: elm/parser:Parser.Advanced.varHelp   key: (v0=ref)   name: varHelp__ref   kind: function   params: isGood:ref offset:i64 row:i64 col:i64 src:ref indent:i64 context:ref   result: struct(i64,i64,ref,i64,i64,ref)
-  Let newOffset :: struct(i64,i64,ref,i64,i64,ref)
+  Let newOffset@1178:5 :: struct(i64,i64,ref,i64,i64,ref)
     Call :: i64
       Kernel elm/parser:Parser.Advanced.isSubChar () :: ref
       Local isGood :: ref
@@ -2459,7 +2459,7 @@ clone c249   def: elm/parser:Parser.Advanced.varHelp   key: (v0=ref)   name: var
     If :: struct(i64,i64,ref,i64,i64,ref)
       Call :: enum
         Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
-        Local newOffset :: i64
+        Local newOffset@1178:5 :: i64
         Call :: i64
           Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
           Lit 1 :: i64
@@ -2472,7 +2472,7 @@ clone c249   def: elm/parser:Parser.Advanced.varHelp   key: (v0=ref)   name: var
         Local context :: ref
       Call :: enum
         Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
-        Local newOffset :: i64
+        Local newOffset@1178:5 :: i64
         Call :: i64
           Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
           Lit 2 :: i64
@@ -2494,7 +2494,7 @@ clone c249   def: elm/parser:Parser.Advanced.varHelp   key: (v0=ref)   name: var
       Call :: struct(i64,i64,ref,i64,i64,ref)
         Global c249 :: ref
         Local isGood :: ref
-        Local newOffset :: i64
+        Local newOffset@1178:5 :: i64
         Local row :: i64
         Call :: i64
           Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
@@ -2547,7 +2547,7 @@ clone c250   def: elm/core:Set.member   key: (v0=type elm/core:String.String)   
         Local key :: ref
         Local dict :: ref
 clone c248   def: elm/parser:Parser.Advanced.lambda@1151:13   key: ()   outer: c235 (v0=ref; v1=ref)   kind: function   params: s:struct(i64,i64,ref,i64,i64,ref)   result: ref   lifted-from: c235
-  Let firstOffset :: ref
+  Let firstOffset@1153:7 :: ref
     Call :: i64
       Kernel elm/parser:Parser.Advanced.isSubChar () :: ref
       Access .start #1 :: ref
@@ -2559,7 +2559,7 @@ clone c248   def: elm/parser:Parser.Advanced.lambda@1151:13   key: ()   outer: c
     If :: ref
       Call :: enum
         Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
-        Local firstOffset :: i64
+        Local firstOffset@1153:7 :: i64
         Call :: i64
           Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
           Lit 1 :: i64
@@ -2571,11 +2571,11 @@ clone c248   def: elm/parser:Parser.Advanced.lambda@1151:13   key: ()   outer: c
           Local s :: struct(i64,i64,ref,i64,i64,ref)
           Access .expecting #3 :: ref
             Local i :: struct(ref,ref,ref,ref)
-      Let s1 :: ref
+      Let s1@1160:9 :: ref
         If :: struct(i64,i64,ref,i64,i64,ref)
           Call :: enum
             Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
-            Local firstOffset :: i64
+            Local firstOffset@1153:7 :: i64
             Call :: i64
               Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
               Lit 2 :: i64
@@ -2604,7 +2604,7 @@ clone c248   def: elm/parser:Parser.Advanced.lambda@1151:13   key: ()   outer: c
             Global c249 :: ref
             Access .inner #0 :: ref
               Local i :: struct(ref,ref,ref,ref)
-            Local firstOffset :: i64
+            Local firstOffset@1153:7 :: i64
             Access .row #1 :: i64
               Local s :: struct(i64,i64,ref,i64,i64,ref)
             Call :: i64
@@ -2618,19 +2618,19 @@ clone c248   def: elm/parser:Parser.Advanced.lambda@1151:13   key: ()   outer: c
               Local s :: struct(i64,i64,ref,i64,i64,ref)
             Access .context #5 :: ref
               Local s :: struct(i64,i64,ref,i64,i64,ref)
-        Let name :: ref
+        Let name@1166:9 :: ref
           Call :: ref
             Kernel elm/core:String.slice () :: ref
             Access .offset #4 :: i64
               Local s :: struct(i64,i64,ref,i64,i64,ref)
             Access .offset #4 :: i64
-              Local s1 :: struct(i64,i64,ref,i64,i64,ref)
+              Local s1@1160:9 :: struct(i64,i64,ref,i64,i64,ref)
             Access .src #2 :: ref
               Local s :: struct(i64,i64,ref,i64,i64,ref)
           If :: ref
             Call :: enum
               Global c250 :: ref
-              Local name :: ref
+              Local name@1166:9 :: ref
               Access .reserved #2 :: ref
                 Local i :: struct(ref,ref,ref,ref)
             Call :: ref
@@ -2644,8 +2644,8 @@ clone c248   def: elm/parser:Parser.Advanced.lambda@1151:13   key: ()   outer: c
             Call :: ref
               Ctor Good tag 0 (v0=enum; v1=ref; v2=ref) :: ref
               Lit 1 :: enum
-              Local name :: ref
-              Local s1 :: struct(i64,i64,ref,i64,i64,ref)
+              Local name@1166:9 :: ref
+              Local s1@1160:9 :: struct(i64,i64,ref,i64,i64,ref)
 clone c235   def: elm/parser:Parser.Advanced.variable   key: (v0=ref; v1=ref)   name: variable__ref__ref   kind: function   params: i:struct(ref,ref,ref,ref)   result: ref
   Call :: ref
     Ctor Parser tag 0 (v0=ref) :: ref
@@ -3299,7 +3299,7 @@ clone c49   def: elm/core:List.length   key: (v0=ref)   name: length__ref   kind
 clone c50   def: author/project:Parse.lambda@151:48   key: ()   kind: function   params: s:ref   result: ref   lifted-from: c1
   Local s :: ref
 clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let l7 :: struct(unit,unit)
+  Let l7@148:21 :: struct(unit,unit)
     Call :: ref
       Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
       Lit "sequence" :: ref
@@ -3317,7 +3317,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
               Ctor Forbidden tag 0 () :: enum
               Lit "," :: ref
           Lit "[1, 2 ,3]" :: ref
-    Let l6 :: struct(unit,unit)
+    Let l6@145:21 :: struct(unit,unit)
       Call :: ref
         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
         Lit "comment" :: ref
@@ -3354,7 +3354,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Local _oa15_0 :: ref
                   Local _oa15_1 :: ref
             Lit "-- hello\n  x" :: ref
-      Let l5 :: struct(unit,unit)
+      Let l5@142:21 :: struct(unit,unit)
         Call :: ref
           Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
           Lit "tokens" :: ref
@@ -3429,7 +3429,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                     Local _oa32_0 :: ref
                     Local _oa32_1 :: ref
               Lit "let abc = 12" :: ref
-        Let l4 :: struct(unit,unit)
+        Let l4@139:21 :: struct(unit,unit)
           Call :: ref
             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
             Lit "position" :: ref
@@ -3477,7 +3477,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                       Local _oa41_0 :: ref
                       Local _oa41_1 :: ref
                 Lit "ab\nxx\ncd" :: ref
-          Let l3 :: struct(unit,unit)
+          Let l3@136:21 :: struct(unit,unit)
             Call :: ref
               Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:String.String)) :: ref
               Lit "floats" :: ref
@@ -3490,7 +3490,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Lit "12" :: ref
                   Lit "0.25e-2" :: ref
                   Lit "x" :: ref
-            Let l2 :: struct(unit,unit)
+            Let l2@133:21 :: struct(unit,unit)
               Call :: ref
                 Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:String.String)) :: ref
                 Lit "numbers" :: ref
@@ -3504,7 +3504,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                     Lit "-3" :: ref
                     Lit "12a" :: ref
                     Lit "" :: ref
-              Let l1 :: struct(unit,unit)
+              Let l1@130:21 :: struct(unit,unit)
                 Call :: ref
                   Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:String.String)) :: ref
                   Lit "arith" :: ref
@@ -3529,12 +3529,12 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                       Call :: i64
                         Global c49 :: ref
                         List :: ref
-                          Local l1 :: ref
+                          Local l1@130:21 :: ref
                           Call :: ref
                             Global c42 :: ref
                             Global c50 :: ref
-                            Local l2 :: ref
-                          Local l3 :: ref
+                            Local l2@133:21 :: ref
+                          Local l3@136:21 :: ref
                       Lit 0 :: i64
                     Call :: enum
                       Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
@@ -3546,16 +3546,16 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                             Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
                             Call :: i64
                               Kernel elm/core:String.length () :: ref
-                              Local l4 :: ref
+                              Local l4@139:21 :: ref
                             Call :: i64
                               Kernel elm/core:String.length () :: ref
-                              Local l5 :: ref
+                              Local l5@142:21 :: ref
                           Call :: i64
                             Kernel elm/core:String.length () :: ref
-                            Local l6 :: ref
+                            Local l6@145:21 :: ref
                         Call :: i64
                           Kernel elm/core:String.length () :: ref
-                          Local l7 :: ref
+                          Local l7@148:21 :: ref
                       Lit 0 :: i64
                   Tuple :: struct(unit,unit)
                     Lit () :: unit
