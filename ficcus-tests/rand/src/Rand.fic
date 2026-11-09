@@ -1,0 +1,40 @@
+module Rand exposing (main)
+
+-- elm/random with Elm's stream (decision L31: Random.peel rounds the product to a double) and Random.float with sorted bounds (L32)
+
+import Random
+
+
+main : Program () Int ()
+main =
+    Platform.worker
+        { init = \_ -> ( run (), Cmd.none )
+        , update = \_ model -> ( model, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+draws : Int -> Random.Generator a -> Random.Seed -> List a
+draws n gen seed =
+    if n <= 0 then
+        []
+
+    else
+        let
+            ( x, seed2 ) =
+                Random.step gen seed
+        in
+        x :: draws (n - 1) gen seed2
+
+
+run : () -> Int
+run _ =
+    List.length
+        [ Debug.log "int-seed0" (draws 6 (Random.int Random.minInt Random.maxInt) (Random.initialSeed 0)) |> always ()
+        , Debug.log "int-seed42" (draws 6 (Random.int 0 99) (Random.initialSeed 42)) |> always ()
+        , Debug.log "int-big" (draws 4 (Random.int Random.minInt Random.maxInt) (Random.initialSeed 9007199254740991)) |> always ()
+        , Debug.log "float-seed42" (draws 4 (Random.float 0 1) (Random.initialSeed 42)) |> always ()
+        , Debug.log "swapped-equals-ordered" (draws 8 (Random.float 100 -100) (Random.initialSeed 7) == draws 8 (Random.float -100 100) (Random.initialSeed 7)) |> always ()
+        , Debug.log "swapped-in-range" (List.all (\x -> x >= -100 && x <= 100) (draws 50 (Random.float 100 -100) (Random.initialSeed 7))) |> always ()
+        , Debug.log "uniform" (draws 6 (Random.uniform "a" [ "b", "c" ]) (Random.initialSeed 3)) |> always ()
+        ]

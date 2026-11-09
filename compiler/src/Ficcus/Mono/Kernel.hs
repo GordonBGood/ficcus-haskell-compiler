@@ -21,7 +21,7 @@ module Ficcus.Mono.Kernel
 kernelArity :: String -> Maybe Int
 kernelArity cid =
   lookup cid
-    [ ("elm/core:Basics.add", 2), ("elm/core:Basics.sub", 2), ("elm/core:Basics.mul", 2)
+    [ ("elm/core:Basics.add", 2), ("elm/core:Basics.sub", 2), ("elm/core:Basics.mul", 2), ("elm/core:Basics.mulRound53", 2)
     , ("elm/core:Basics.fdiv", 2), ("elm/core:Basics.idiv", 2), ("elm/core:Basics.pow", 2)
     , ("elm/core:Basics.negate", 1), ("elm/core:Basics.modBy", 2), ("elm/core:Basics.remainderBy", 2)
     , ("elm/core:Basics.gt", 2), ("elm/core:Basics.ge", 2), ("elm/core:Basics.lt", 2), ("elm/core:Basics.le", 2)

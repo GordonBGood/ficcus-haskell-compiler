@@ -999,6 +999,7 @@ kernelCall info cls name key args =
             ("elm/core:Basics.add", [a, b]) -> arith "FIC_ADD64" "+" a b
             ("elm/core:Basics.sub", [a, b]) -> arith "FIC_SUB64" "-" a b
             ("elm/core:Basics.mul", [a, b]) -> arith "FIC_MUL64" "*" a b
+            ("elm/core:Basics.mulRound53", [a, b]) -> arith "FIC_MUL53" "*" a b
             ("elm/parser:Parser.Advanced.isSubString", [small, off, row, col, big]) ->
               do  needClass info cls
                   r <- fresh "pr"; c <- fresh "pc"; o <- fresh "po"

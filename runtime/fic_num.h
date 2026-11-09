@@ -1,3 +1,7 @@
+/* Int multiplication rounded to a double, as Elm's (JavaScript's) `*` is: only for elm/random's Random.peel (decision L31, the
+   fork's roundTo53 n = truncate (toFloat n)); the product of the two operands is below 2^60, so the conversion back is exact */
+#define FIC_MUL53(a, b) ((int64_t)(double)FIC_MUL64(a, b))
+
 static int64_t fic_idiv(int64_t a, int64_t b) {         /* Elm: x // 0 is 0; wraps like every Int operation */
   if (b == 0) return 0;
   if (b == -1) return FIC_NEG64(a);

@@ -203,14 +203,19 @@ writeOverlay root =
       -- the elm/parser overlay is a root module of the projects that depend on elm/parser
       let elmJson = R.toAbsolutePath root (R.Relative "elm.json")
       hasJson <- Dir.doesFileExist elmJson
-      usesParser <- if hasJson then (\t -> "elm/parser" `List.isInfixOf` t) <$> readFileStrict elmJson else return False
-      let parserFile = dir FP.</> Overlay.parserFileName
-      if usesParser
-        then do  writeFile parserFile Overlay.parserSource
-                 return [file, parserFile]
-        else do  gone <- Dir.doesFileExist parserFile
-                 if gone then Dir.removeFile parserFile else return ()
-                 return [file]
+      jsonText <- if hasJson then readFileStrict elmJson else return ""
+      let usesParser = "elm/parser" `List.isInfixOf` jsonText
+      let usesRandom = "elm/random" `List.isInfixOf` jsonText
+      let optional used name source =
+            do  let f = dir FP.</> name
+                if used
+                  then writeFile f source >> return [f]
+                  else do  gone <- Dir.doesFileExist f
+                           if gone then Dir.removeFile f else return ()
+                           return []
+      parserFiles <- optional usesParser Overlay.parserFileName Overlay.parserSource
+      randomFiles <- optional usesRandom Overlay.randomFileName Overlay.randomSource
+      return (file : parserFiles ++ randomFiles)
 
 
 readFileStrict :: FilePath -> IO String

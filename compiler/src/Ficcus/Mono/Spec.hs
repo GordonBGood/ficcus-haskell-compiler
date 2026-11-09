@@ -49,7 +49,7 @@ import qualified Elm.String as ES
 import Ficcus.Mono.Class
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel
-import Ficcus.Mono.Overlay (overlayId)
+import Ficcus.Mono.Overlay (overlayId, randomOverlayPrefix)
 import Ficcus.Mono.Marks (Marks)
 import qualified Ficcus.Mono.Marks as Marks
 import Ficcus.Mono.Modules
@@ -151,6 +151,7 @@ data SEnv =
     , seEnv :: Env
     , seLocals :: Map.Map String Src
     , seClone :: CloneId
+    , seDid :: String        -- the id of the definition being specialized
     }
 
 
@@ -270,7 +271,7 @@ genClone cid (CKey did _ key@(Key parts)) src =
       when (length own /= length parts) $
         report ("internal: " ++ did ++ " has " ++ show (length own) ++ " own variables, the key has " ++ show (length parts))
       let env = Map.union (Map.fromList (zip own parts)) (srcOuter src)
-      let se = SEnv ctx env (srcLocals src) cid
+      let se = SEnv ctx env (srcLocals src) cid did
       params <- forM (zip [0 :: Int ..] args) (param se)
       body0 <- specExpr se body
       body' <- wrapParams se (zip args params) body0
@@ -958,10 +959,13 @@ resolve se region e =
 
     schemeInst = raw >>= schemeOf ctx e
 
-    foreignOrTop cid0 =
+    foreignOrTop cid00 =
       do  tops0 <- gets sTops
-          -- a kernel function written in Elm in the overlay (Ficcus.Mono.Overlay) is an ordinary definition
-          case overlayId cid0 >>= \o -> fmap (\src -> (o, src)) (Map.lookup o tops0) of
+          -- Random.peel (decision L31): the Int product is rounded to a double like Elm's (JavaScript's) `*`, the fork's roundTo53
+          let cid0 = if cid00 == "elm/core:Basics.mul" && "elm/random:Random.peel" `List.isPrefixOf` seDid se then "elm/core:Basics.mulRound53" else cid00
+          -- a kernel function written in Elm in the overlay (Ficcus.Mono.Overlay) is an ordinary definition (the overlay's own
+          -- calls of the function it replaces are not redirected)
+          case (if randomOverlayPrefix `List.isPrefixOf` seDid se then Nothing else overlayId cid0) >>= \o -> fmap (\src -> (o, src)) (Map.lookup o tops0) of
             Just (o, src) -> viaClone src o
             Nothing
               -- the Bitwise64 module of the overlay: its functions are the kernel functions of the same name

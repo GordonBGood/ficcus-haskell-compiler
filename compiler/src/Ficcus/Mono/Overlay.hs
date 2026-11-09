@@ -5,6 +5,7 @@ module Ficcus.Mono.Overlay
   , overlayModuleName
   , overlayFileName
   , overlayId
+  , randomSource, randomFileName, randomOverlayPrefix
   , bitwise64Source
   , bitwise64FileName
   , parserSource
@@ -47,6 +48,7 @@ overlayId cid =
     Nothing ->
       case cid of
         "elm/parser:Parser.Advanced.multiComment" -> Just "author/project:FicOverlayParser.multiComment"
+        "elm/random:Random.float" -> Just "author/project:FicOverlayRandom.float"
         _ -> Nothing
   where
     table =
@@ -76,3 +78,18 @@ parserSource =
 
 parserFileName :: FilePath
 parserFileName = "FicOverlayParser.elm"
+
+
+-- the elm/random overlay (overlay/FicOverlayRandom.elm): compiled only into projects that depend on elm/random
+randomSource :: String
+randomSource =
+  $(embedFiles [ "overlay/FicOverlayRandom.elm" ])
+
+
+randomFileName :: FilePath
+randomFileName = "FicOverlayRandom.elm"
+
+
+-- | the module whose own calls are not redirected (the overlay of `Random.float` calls `Random.float`)
+randomOverlayPrefix :: String
+randomOverlayPrefix = "author/project:FicOverlayRandom."
