@@ -3,7 +3,6 @@
    Build and run: runtime/test.sh */
 #include "fic_base.h"
 #include "fic_closure.h"
-#include "fic_sort.h"
 
 static int failures = 0;
 #define CHECK(c) do { if (!(c)) { printf("FAIL line %d: %s\n", __LINE__, #c); failures++; } } while (0)
@@ -48,7 +47,6 @@ static fic_word nine(fic_ref self, fic_word a, fic_word b, fic_word c, fic_word 
 static const fic_code nine_code = { (void (*)(void))nine, 9u };
 static fic_clo nine_clo = { { FIC_IMMORTAL, FIC_TAG_CLOSURE, 0, 0 }, &nine_code };
 
-static int cmp_mod3(void *ctx, fic_word x, fic_word y) { (void)ctx; return x.i % 3 < y.i % 3 ? -1 : x.i % 3 > y.i % 3 ? 1 : 0; }
 
 int main(void) {
   fic_ref f1 = &inc_clo.h, f2 = &add_clo.h, f3 = &sub3_clo.h, f4 = &mix4_clo.h, cu = &curry_clo.h;
@@ -86,12 +84,6 @@ int main(void) {
       CHECK(fic_ap1(p, 0, w9).i == 285); }
     { fic_ref p = fic_ap1(n, 0, w1).p; fic_ref q = fic_ap3(p, 0, w2, w3, w4).p;
       CHECK(fic_ap5(q, 0, w5, w6, w7, w8, w9).i == 285); } }
-  /* stable sort by key (value mod 3): equal keys keep their order */
-  { enum { N = 11 }; fic_kv a[N]; int64_t want[N] = { 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11 }; int i;
-    for (i = 0; i < N; i++) { a[i].e = fic_w_i(i + 1); a[i].k = a[i].e; }
-    fic_sort_kv(a, N, cmp_mod3, NULL);
-    for (i = 0; i < N; i++) CHECK(a[i].e.i == want[i]);
-    fic_sort_kv(a, 0, cmp_mod3, NULL); fic_sort_kv(a, 1, cmp_mod3, NULL); }
   if (failures) { printf("%d failure(s)\n", failures); return 1; }
   printf("closure tests ok\n");
   return 0;

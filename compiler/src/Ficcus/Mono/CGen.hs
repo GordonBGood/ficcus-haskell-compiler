@@ -28,7 +28,7 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
-import Ficcus.Mono.CRuntime (closureRuntime, jsArrayRuntime, prelude, sortRuntime, stringRuntime)
+import Ficcus.Mono.CRuntime (closureRuntime, jsArrayRuntime, prelude, stringRuntime)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Print (keyTextIx)
@@ -123,7 +123,7 @@ generate program =
           in Right (prelude ++ "\n" ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_"] then closureRuntime ++ "\n" else "")
                     ++ (if "fic_ja_" `List.isInfixOf` body then jsArrayRuntime ++ "\n" else "")
                     ++ (if "fic_us_" `List.isInfixOf` body then stringRuntime ++ "\n" else "")
-                    ++ (if "fic_sort_kv" `List.isInfixOf` body then sortRuntime ++ "\n" else "") ++ "\n" ++ body)
+                    ++ "\n" ++ body)
         errs -> Left errs
 
 
@@ -1080,14 +1080,6 @@ kernelCall info cls name key args =
                 Key [ByApp AStr] -> return ("fic_str_append(" ++ a ++ ", " ++ b ++ ")")
                 Key [ByApp (AList c)] -> do { h <- helper (HApp (boxedClass c)); needObj [boxedClass c, CRef]; return (h ++ "(" ++ a ++ ", " ++ b ++ ")") }
                 _ -> unsupported "++ at this key"
-            ("elm/core:List.sortBy", [f, xs]) ->
-              case key of
-                Key [ByClass c, ByType t] -> do { h <- helper (HSortBy (boxedClass c) t); needObj [boxedClass c, CRef]; return (h ++ "(" ++ f ++ ", " ++ xs ++ ")") }
-                _ -> unsupported "List.sortBy at this key"
-            ("elm/core:List.sortWith", [f, xs]) ->
-              case key of
-                Key [ByClass c] -> do { h <- helper (HSortWith (boxedClass c)); needObj [boxedClass c, CRef]; return (h ++ "(" ++ f ++ ", " ++ xs ++ ")") }
-                _ -> unsupported "List.sortWith at this key"
             ("elm/core:String.fromInt", [a]) -> return ("fic_str_from_int(" ++ a ++ ")")
             ("elm/core:String.fromFloat", [a]) -> return ("fic_str_from_float(" ++ a ++ ")")
             ("elm/core:Debug.log", [tag, v]) -> debugLog tag v
@@ -1174,8 +1166,6 @@ data HKey
   = HEq MType
   | HCmp MType
   | HApp Class
-  | HSortBy Class MType
-  | HSortWith Class
   | HFromList Class
   deriving (Eq, Ord)
 
@@ -1204,8 +1194,6 @@ helper k =
         HEq _ -> "fic_eq_"
         HCmp _ -> "fic_cmp_"
         HApp _ -> "fic_app_"
-        HSortBy _ _ -> "fic_sortby_"
-        HSortWith _ -> "fic_sortwith_"
         HFromList _ -> "fic_jafl_"
 
 
@@ -1303,8 +1291,6 @@ genHelper info k name =
     HEq t -> withProto ("static uint8_t " ++ name ++ "(" ++ classType (clsOf info t) ++ " a, " ++ classType (clsOf info t) ++ " b)") (needClass info (clsOf info t) >> eqBody t)
     HCmp t -> withProto ("static int " ++ name ++ "(" ++ classType (clsOf info t) ++ " a, " ++ classType (clsOf info t) ++ " b)") (needClass info (clsOf info t) >> cmpBody t)
     HApp c -> withProto ("static fic_ref " ++ name ++ "(fic_ref xs, fic_ref ys)") (appBody c)
-    HSortBy c t -> sortBy c t
-    HSortWith c -> sortWith c
     HFromList c -> withProto ("static fic_ref " ++ name ++ "(int64_t max, fic_ref xs, fic_ref *rest)") (fromListBody c)
   where
     withProto sig body =
@@ -1489,74 +1475,6 @@ genHelper info k name =
                 emit "*link = &n->h; link = &n->f1; xs = c->f1;"
           emit "}"
           emit "return res;"
-
-    -- the list becomes an array of (element, key) words, the sort is the stable merge sort of runtime/fic_sort.h, the
-    -- result list is built from the back
-    sortCommon c sig keyOf cmpFn =
-      do  let fcs = [c, CRef]
-          needObj fcs
-          modify' (\g -> g { gProtos = (sig ++ ";") : gProtos g })
-          emit (sig ++ " {")
-          indented $
-            do  emit "int64_t n = 0, i = 0;"
-                emit "fic_ref p;"
-                emit "fic_kv *a;"
-                emit "fic_ref res;"
-                emit ("for (p = xs; " ++ tagOf "p" ++ " != 0u; p = ((" ++ objType fcs ++ " *)p)->f1) n++;")
-                emit "a = (fic_kv *)malloc((size_t)(n > 0 ? n : 1) * sizeof(fic_kv));"
-                emit "if (a == NULL) abort();"
-                emit ("for (p = xs; " ++ tagOf "p" ++ " != 0u; p = ((" ++ objType fcs ++ " *)p)->f1, i++) {")
-                indented $
-                  do  emit ("a[i].e = " ++ wordMk c ("((" ++ objType fcs ++ " *)p)->f0") ++ ";")
-                      emit ("a[i].k = " ++ keyOf "a[i].e" ++ ";")
-                emit "}"
-                _ <- cmpFn
-                emit "res = (fic_ref)fic_alloc(sizeof(fic_hdr), 0u, 0);"
-                emit "for (i = n - 1; i >= 0; i--) {"
-                indented $
-                  do  emit (objType fcs ++ " *cell = (" ++ objType fcs ++ " *)fic_alloc(sizeof(" ++ objType fcs ++ "), 1u, 0);")
-                      emit ("cell->f0 = a[i].e" ++ wordSel c ++ "; cell->f1 = res; res = &cell->h;")
-                emit "}"
-                emit "free(a);"
-                emit "return res;"
-          emit "}"
-          emit ""
-
-    sortBy c t =
-      do  let kc = clsOf info t
-          needClass info kc
-          let cmpName = name ++ "_cmp"
-          let cmpSig = "static int " ++ cmpName ++ "(void *ctx, fic_word x, fic_word y)"
-          modify' (\g -> g { gProtos = (cmpSig ++ ";") : gProtos g })
-          emit (cmpSig ++ " {")
-          indented $
-            do  emit "(void)ctx;"
-                x <- adapt (abiClass kc) kc ("x" ++ wordSel kc)
-                y <- adapt (abiClass kc) kc ("y" ++ wordSel kc)
-                cx <- cmpExpr t x y
-                emit ("return " ++ cx ++ ";")
-          emit "}"
-          emit ""
-          let mask = if c == CRef then "1u" else "0u"
-          sortCommon c ("static fic_ref " ++ name ++ "(fic_ref f, fic_ref xs)")
-            (\e -> wordMkOfAbi kc ("fic_ap1(f, " ++ mask ++ ", " ++ e ++ ")"))
-            (emit ("fic_sort_kv(a, n, " ++ cmpName ++ ", NULL);"))
-
-    sortWith c =
-      do  let cmpName = name ++ "_cmp"
-          let cmpSig = "static int " ++ cmpName ++ "(void *ctx, fic_word x, fic_word y)"
-          let mask = if c == CRef then "3u" else "0u"
-          modify' (\g -> g { gProtos = (cmpSig ++ ";") : gProtos g })
-          emit (cmpSig ++ " {")
-          indented $ emit ("return (int)fic_ap2((fic_ref)ctx, " ++ mask ++ ", x, y).b - 1;")
-          emit "}"
-          emit ""
-          sortCommon c ("static fic_ref " ++ name ++ "(fic_ref f, fic_ref xs)")
-            (\e -> e)
-            (emit ("fic_sort_kv(a, n, " ++ cmpName ++ ", f);"))
-
-    -- the word a call result already is (the call returns a fic_word): nothing to convert
-    wordMkOfAbi _ w = w
 
 
 -- a condition without a redundant outer pair of parentheses (`if ((a == b))` is a warning of clang)
