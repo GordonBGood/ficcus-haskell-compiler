@@ -5,6 +5,7 @@ module Ficcus.Mono.CRuntime
   , closureRuntime
   , sortRuntime
   , jsArrayRuntime
+  , stringRuntime
   )
   where
 
@@ -47,3 +48,10 @@ sortRuntime =
 jsArrayRuntime :: String
 jsArrayRuntime =
   $(embedFiles [ "runtime/fic_jsarray.h" ])
+
+
+-- the String functions with code point semantics and the Unicode case tables (needs the closure runtime): emitted only by
+-- programs that use one of them
+stringRuntime :: String
+stringRuntime =
+  $(embedFiles [ "runtime/fic_case.h", "runtime/fic_ustring.h" ])

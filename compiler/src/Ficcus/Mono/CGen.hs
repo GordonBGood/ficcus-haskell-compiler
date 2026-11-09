@@ -28,7 +28,7 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
-import Ficcus.Mono.CRuntime (closureRuntime, jsArrayRuntime, prelude, sortRuntime)
+import Ficcus.Mono.CRuntime (closureRuntime, jsArrayRuntime, prelude, sortRuntime, stringRuntime)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Print (keyTextIx)
@@ -120,8 +120,9 @@ generate program =
                       ++ map objectDef (Set.toList (gExtraObjs final)) ++ reverse (gProtos final)
               body = unlines (concatMap (\l -> if l == helperMark then extra else [l]) (reverse (gOut final)))
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
-          in Right (prelude ++ "\n" ++ (if "fic_word" `List.isInfixOf` body then closureRuntime ++ "\n" else "")
+          in Right (prelude ++ "\n" ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_"] then closureRuntime ++ "\n" else "")
                     ++ (if "fic_ja_" `List.isInfixOf` body then jsArrayRuntime ++ "\n" else "")
+                    ++ (if "fic_us_" `List.isInfixOf` body then stringRuntime ++ "\n" else "")
                     ++ (if "fic_sort_kv" `List.isInfixOf` body then sortRuntime ++ "\n" else "") ++ "\n" ++ body)
         errs -> Left errs
 
@@ -986,12 +987,28 @@ kernelCall info cls name key args =
               allocObj [c, CRef] 1 vals
         _ -> failWith "internal: the key of (::) is not a class"
     _ | Just op <- List.stripPrefix "elm/core:Elm.JsArray." name -> jsArrayCall info cls op key args
+    _ | name `elem` ["elm/core:String.foldl", "elm/core:String.foldr"], Key [ByClass cb] <- key, [f, acc, s] <- args ->
+      do  avs <- atomsTo info [(f, CRef), (acc, cb), (s, CRef)]
+          let fn = if name == "elm/core:String.foldl" then "fic_us_foldl" else "fic_us_foldr"
+          adapt cb cls (fn ++ "(" ++ (avs !! 0) ++ ", " ++ (if boxedClass cb == CRef then "2u" else "0u") ++ ", " ++ wordMk cb (avs !! 1) ++ ", " ++ (avs !! 2) ++ ")" ++ wordSel cb)
     _ ->
       do  vals <- atoms info args
           case (name, vals) of
             ("elm/core:Basics.add", [a, b]) -> arith "FIC_ADD64" "+" a b
             ("elm/core:Basics.sub", [a, b]) -> arith "FIC_SUB64" "-" a b
             ("elm/core:Basics.mul", [a, b]) -> arith "FIC_MUL64" "*" a b
+            ("elm/core:String.length", [a]) -> return ("fic_us_length(" ++ a ++ ")")
+            ("elm/core:String.slice", [a, b, s]) -> return ("fic_us_slice(" ++ a ++ ", " ++ b ++ ", " ++ s ++ ")")
+            ("elm/core:String.cons", [c, s]) -> return ("fic_us_cons(" ++ c ++ ", " ++ s ++ ")")
+            ("elm/core:String.join", [sep, l]) -> return ("fic_us_join(" ++ sep ++ ", " ++ l ++ ")")
+            ("elm/core:String.words", [s]) -> return ("fic_us_words(" ++ s ++ ")")
+            ("elm/core:String.toUpper", [s]) -> return ("fic_us_upper(" ++ s ++ ")")
+            ("elm/core:String.toLower", [s]) -> return ("fic_us_lower(" ++ s ++ ")")
+            ("elm/core:String.map", [f, s]) -> return ("fic_us_map(" ++ f ++ ", " ++ s ++ ")")
+            ("elm/core:Char.toUpper", [c]) -> return ("fic_us_cupper(" ++ c ++ ")")
+            ("elm/core:Char.toLower", [c]) -> return ("fic_us_clower(" ++ c ++ ")")
+            ("elm/core:String.fromList", [l]) -> return ("fic_us_from_list(" ++ l ++ ")")
+            ("elm/core:Char.toCode", [c]) -> return ("((int64_t)" ++ c ++ ")")
             ("elm/core:Basics.toFloat", [a]) -> return ("((double)" ++ a ++ ")")
             ("elm/core:Basics.round", [a]) -> return ("fic_round(" ++ a ++ ")")
             ("elm/core:Basics.floor", [a]) -> return ("fic_floor(" ++ a ++ ")")

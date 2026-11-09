@@ -1,0 +1,78 @@
+module Str exposing (main)
+
+-- String kernels with the decisions L8 (full Unicode case mapping), L11 (length and slice count code points),
+-- L13 (words and the JavaScript white space set): length, slice, left/right/dropLeft/dropRight, cons, fromChar, join,
+-- concat, words, toUpper, toLower, map, foldl, foldr, padLeft, repeat, Char.toCode. Only BMP characters appear:
+-- for those Elm's UTF-16 counts equal the code point counts, so the output must equal Elm's
+-- (expected/str.out, from Elm 0.19.3 under node).
+
+
+q : String -> String
+q s =
+    "\"" ++ s ++ "\""
+
+
+showL : List String -> String
+showL xs =
+    "[" ++ String.join "|" xs ++ "]"
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    s1 =
+                        "Hello, World"
+
+                    greek =
+                        "ΑΣ ΟΔΥΣΣΕΥΣ ΧΑΟΣ"
+
+                    l1 =
+                        Debug.log "length" (String.fromInt (String.length "") ++ " " ++ String.fromInt (String.length s1) ++ " " ++ String.fromInt (String.length "héllo wörld ǆ ß ΑΣ"))
+
+                    l2 =
+                        Debug.log "slice" (showL [ String.slice 0 5 s1, String.slice 7 100 s1, String.slice -5 -1 s1, String.slice 3 3 s1, String.slice 5 2 s1, String.slice -100 3 s1, String.slice 1 -1 "héllo" ])
+
+                    l3 =
+                        Debug.log "left right" (showL [ String.left 3 s1, String.right 3 s1, String.dropLeft 3 s1, String.dropRight 3 s1, String.left 0 s1, String.left -1 s1, String.right 100 s1, String.dropLeft 100 s1 ])
+
+                    l4 =
+                        Debug.log "cons" (showL [ String.cons 'a' "bc", String.cons 'é' "", String.fromChar 'Z', String.cons '€' "x" ])
+
+                    l5 =
+                        Debug.log "join" (showL [ String.join ", " [ "a", "b", "c" ], String.join "" [ "x", "y" ], String.join "-" [], String.join "-" [ "solo" ], String.concat [ "ab", "", "cd" ] ])
+
+                    l6 =
+                        Debug.log "words" (showL (List.map q (String.words "  the quick\tbrown\nfox  jumps ") ++ List.map q (String.words "") ++ List.map q (String.words "   ") ++ List.map q (String.words "one") ++ List.map q (String.words "a\u{00A0}b\u{3000}c\u{FEFF}d")))
+
+                    l7 =
+                        Debug.log "upper" (showL [ String.toUpper "Hello, World ß ǆ ŉ é", String.toUpper greek, String.toUpper "" ])
+
+                    l8 =
+                        Debug.log "lower" (showL [ String.toLower "Hello, World İ É", String.toLower greek, String.toLower "ΑΣ", String.toLower "Σ", String.toLower "ΑΣ.Α" ])
+
+                    l9 =
+                        Debug.log "map" (showL [ String.map (\c -> if c == 'a' then 'A' else c) "banana", String.map Char.toUpper "abc", String.map identity "" ])
+
+                    l10 =
+                        Debug.log "folds" (String.fromInt (String.foldl (\c acc -> modBy 1000003 (acc * 31 + Char.toCode c)) 7 "hello world é") ++ " " ++ String.foldr (\c acc -> acc ++ String.fromChar c) "" "abc" ++ " " ++ String.foldl (\c acc -> String.cons c acc) "" "abc")
+
+                    l11 =
+                        Debug.log "pad repeat" (showL [ String.padLeft 6 '0' "42", String.padRight 6 '.' "42", String.padLeft 2 '0' "12345", String.repeat 3 "ab", String.repeat 0 "ab", String.pad 7 '*' "mid" ])
+
+                    l12 =
+                        Debug.log "toList" (String.fromInt (List.length (String.toList "héllo")) ++ String.fromList [ 'x', 'y', 'é' ])
+
+                    l13 =
+                        Debug.log "order" (showL (List.map (\b -> if b then "T" else "F") [ "abc" < "abd", "é" > "z", "" < "a", "ab" == "ab", "b" >= "a" ]))
+                in
+                if List.length [ l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13 ] > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
