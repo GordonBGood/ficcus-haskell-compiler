@@ -548,6 +548,20 @@ specExpr se (A.At region e) =
       | moduleChars h ++ "." ++ N.toChars n == "elm/core:Basics.apL" -> specCall se region e lregion l' [r]      -- f <| x is f x
     Can.Binop _ _ _ _ l r -> specCall' se region e region e [l, r]
     Can.Lambda pats body -> specLambda se region pats body
+    -- `.x` is the function \r -> r.x: a lifted lambda of its own, from the recorded type `{ a | x : t } -> t`
+    Can.Accessor fld ->
+      do  enums <- gets sEnums
+          case nodeType se (Recorder.exprKey region e) of
+            Just (TFun rt ft)
+              | Just fl <- rowFieldsT enums (seEnv se) rt
+              , Just i <- lookup (N.toChars fld) (zip (map fst fl) [0 :: Int ..]) ->
+                  do  lamId <- freshId
+                      fcls <- classOfTy se ft
+                      let rcls = CStruct (map snd fl)
+                          body = MExpr fcls (MAccess (MExpr rcls (MLocal "_r")) (N.toChars fld) i)
+                      modify' (\st -> st { sDone = Map.insert lamId (MDef lamId ("." ++ N.toChars fld) (Key []) Function [("_r", rcls)] fcls (Just body) Nothing [] (Just (seClone se)) []) (sDone st) })
+                      return (MExpr CRef (MGlobal lamId))
+            _ -> unsupported "a field accessor on a record whose layout is not known" region
     Can.VarLocal _ -> specRef se region e
     Can.VarTopLevel _ _ -> specRef se region e
     Can.VarForeign {} -> specRef se region e

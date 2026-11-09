@@ -1,0 +1,47 @@
+module Acc exposing (main)
+
+-- The field accessor `.x`: as a function value on records of known layout and through a row polymorphic function,
+-- fields of class Int, Float, String and tuple. The output must equal Elm's (expected/acc.out, Elm 0.19.3 under node).
+
+
+type alias P =
+    { x : Int, y : Float, name : String, pair : ( Int, Int ) }
+
+
+apply : (a -> b) -> a -> b
+apply f v =
+    f v
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    ps =
+                        [ { x = 1, y = 2.5, name = "a", pair = ( 1, 2 ) }, { x = 3, y = 4.5, name = "b", pair = ( 3, 4 ) } ]
+
+                    l1 =
+                        Debug.log "x" (String.fromInt (List.foldl (+) 0 (List.map .x ps)))
+
+                    l2 =
+                        Debug.log "y" (String.fromFloat (List.foldl (+) 0 (List.map .y ps)))
+
+                    l3 =
+                        Debug.log "name" (String.join "," (List.map .name ps))
+
+                    l4 =
+                        Debug.log "pair" (String.join "," (List.map (\p -> String.fromInt (Tuple.first p + Tuple.second p)) (List.map .pair ps)))
+
+                    l5 =
+                        Debug.log "apply" (String.fromInt (apply .x { x = 7, other = "z" }) ++ String.fromFloat (apply .y { y = 0.5 }))
+                in
+                if List.length [ l1, l2, l3, l4, l5 ] > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

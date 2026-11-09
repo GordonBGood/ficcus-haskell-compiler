@@ -1,0 +1,142 @@
+-- module Acc: problems=0 instances=43 instance-failures=0 defaulted=12
+-- equality-uses: total=0 at-function=0
+module author/project:Acc
+def apply :: (a -> b) -> a -> b    [12:1-12:6]   id: author/project:Acc.apply   sig: (v0 -> v1) -> v0 -> v1   kinds: v0:any,v1:any   group: author/project:Acc.apply nonrec ann
+  12:7-12:8 PVar f :: a -> b
+  12:9-12:10 PVar v :: a
+  13:5-13:8 Call :: b
+    13:5-13:6 VarLocal :: a -> b
+    13:7-13:8 VarLocal :: a
+def main :: Program () () ()    [17:1-17:5]   id: author/project:Acc.main   sig: Program () () ()   kinds:    group: author/project:Acc.main nonrec ann
+  18:5-47:10 Call :: Program () () ()
+    18:5-18:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    19:9-47:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      20:13-44:37 Lambda :: () -> ( (), Cmd () )
+        20:14-20:15 PAnything :: ()
+        def ps :: List { x : number, y : Float, name : String, pair : ( number1, number2 ) }    [22:21-22:23]   id: author/project:Acc.ps@22:21   sig: List { x : v0, y : Float, name : String, pair : ( v1, v2 ) }   kinds: v0:number,v1:number,v2:number   group: author/project:Acc.ps@22:21 nonrec inferred
+          23:25-23:125 List :: List { x : number, y : Float, name : String, pair : ( number1, number2 ) }
+            23:27-23:74 Record :: { x : number, y : Float, name : String, pair : ( number1, number2 ) }
+              23:33-23:34 Int :: number
+              23:40-23:43 Float :: Float
+              23:52-23:55 Str :: String
+              23:64-23:72 Pair :: ( number1, number2 )
+                23:66-23:67 Int :: number1
+                23:69-23:70 Int :: number2
+            23:76-23:123 Record :: { x : number, y : Float, name : String, pair : ( number1, number2 ) }
+              23:82-23:83 Int :: number
+              23:89-23:92 Float :: Float
+              23:101-23:104 Str :: String
+              23:113-23:121 Pair :: ( number1, number2 )
+                23:115-23:116 Int :: number1
+                23:118-23:119 Int :: number2
+        def l5 :: String    [37:21-37:23]   id: author/project:Acc.l5@37:21   sig: String   kinds:    group: author/project:Acc.l5@37:21 nonrec inferred
+          38:25-38:135 Call :: String
+            38:25-38:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            38:35-38:42 Str :: String
+            38:44-38:135 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              38:44-38:91 Call :: String
+                38:44-38:58 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                38:60-38:91 Call :: Int
+                  38:60-38:65 VarTopLevel :: ({ x : Int, other : String } -> Int) -> { x : Int, other : String } -> Int   callee: author/project:Acc.apply   use: gen   instance: a := { x : Int, other : String }, b := Int   sig#: fe268994   subst: v0 := { x : Int, other : String }, v1 := Int
+                  38:66-38:68 Accessor :: { x : Int, other : String } -> Int
+                  38:69-38:91 Record :: { x : Int, other : String }
+                    38:75-38:76 Int :: Int
+                    38:86-38:89 Str :: String
+              38:96-38:134 Call :: String
+                38:96-38:112 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+                38:114-38:134 Call :: Float
+                  38:114-38:119 VarTopLevel :: ({ y : Float } -> Float) -> { y : Float } -> Float   callee: author/project:Acc.apply   use: gen   instance: a := { y : Float }, b := Float   sig#: fe268994   subst: v0 := { y : Float }, v1 := Float
+                  38:120-38:122 Accessor :: { y : Float } -> Float
+                  38:123-38:134 Record :: { y : Float }
+                    38:129-38:132 Float :: Float
+        def l4 :: String    [34:21-34:23]   id: author/project:Acc.l4@34:21   sig: String   kinds:    group: author/project:Acc.l4@34:21 nonrec inferred
+          35:25-35:143 Call :: String
+            35:25-35:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            35:35-35:41 Str :: String
+            35:43-35:143 Call :: String
+              35:43-35:54 VarForeign :: String -> List String -> String   callee: elm/core:String.join
+              35:55-35:58 Str :: String
+              35:60-35:143 Call :: List String
+                35:60-35:68 VarForeign :: (( Int, Int ) -> String) -> List ( Int, Int ) -> List String   callee: elm/core:List.map   instance: a := ( Int, Int ), b := String   sig#: 6a702f63   subst: v0 := ( Int, Int ), v1 := String
+                35:70-35:123 Lambda :: ( Int, Int ) -> String
+                  35:71-35:72 PVar p :: ( Int, Int )
+                  35:76-35:122 Call :: String
+                    35:76-35:90 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                    35:92-35:122 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                      35:92-35:105 Call :: Int
+                        35:92-35:103 VarForeign :: ( Int, Int ) -> Int   callee: elm/core:Tuple.first   instance: a := Int, b := Int   sig#: ee0f5e96   subst: v0 := Int, v1 := Int
+                        35:104-35:105 VarLocal :: ( Int, Int )
+                      35:108-35:122 Call :: Int
+                        35:108-35:120 VarForeign :: ( Int, Int ) -> Int   callee: elm/core:Tuple.second   instance: a := Int, b := Int   sig#: ee0f5e97   subst: v0 := Int, v1 := Int
+                        35:121-35:122 VarLocal :: ( Int, Int )
+                35:126-35:143 Call :: List ( Int, Int )
+                  35:126-35:134 VarForeign :: ({ x : Int, y : Float, name : String, pair : ( Int, Int ) } -> ( Int, Int )) -> List { x : Int, y : Float, name : String, pair : ( Int, Int ) } -> List ( Int, Int )   <= ({ x : number3, y : Float, name : String, pair : ( Int, Int ) } -> ( Int, Int )) -> List { x : number3, y : Float, name : String, pair : ( Int, Int ) } -> List ( Int, Int )   callee: elm/core:List.map   instance: a := { x : Int, y : Float, name : String, pair : ( Int, Int ) } (defaulted), b := ( Int, Int )   sig#: 6a702f63   subst: v0 := { x : Int, y : Float, name : String, pair : ( Int, Int ) }, v1 := ( Int, Int )
+                  35:135-35:140 Accessor :: { x : Int, y : Float, name : String, pair : ( Int, Int ) } -> ( Int, Int )   <= { x : number3, y : Float, name : String, pair : ( Int, Int ) } -> ( Int, Int )
+                  35:141-35:143 VarLocal :: List { x : Int, y : Float, name : String, pair : ( Int, Int ) }   <= List { x : number3, y : Float, name : String, pair : ( Int, Int ) }   callee: author/project:Acc.ps@22:21   use: gen   instance: number := Int (defaulted), number1 := Int, number2 := Int   sig#: 9d1edbe5   subst: v0 := Int, v1 := Int, v2 := Int
+        def l3 :: String    [31:21-31:23]   id: author/project:Acc.l3@31:21   sig: String   kinds:    group: author/project:Acc.l3@31:21 nonrec inferred
+          32:25-32:77 Call :: String
+            32:25-32:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            32:35-32:41 Str :: String
+            32:43-32:77 Call :: String
+              32:43-32:54 VarForeign :: String -> List String -> String   callee: elm/core:String.join
+              32:55-32:58 Str :: String
+              32:60-32:77 Call :: List String
+                32:60-32:68 VarForeign :: ({ x : Int, y : Float, name : String, pair : ( Int, Int ) } -> String) -> List { x : Int, y : Float, name : String, pair : ( Int, Int ) } -> List String   <= ({ x : number4, y : Float, name : String, pair : ( number5, number6 ) } -> String) -> List { x : number4, y : Float, name : String, pair : ( number5, number6 ) } -> List String   callee: elm/core:List.map   instance: a := { x : Int, y : Float, name : String, pair : ( Int, Int ) } (defaulted), b := String   sig#: 6a702f63   subst: v0 := { x : Int, y : Float, name : String, pair : ( Int, Int ) }, v1 := String
+                32:69-32:74 Accessor :: { x : Int, y : Float, name : String, pair : ( Int, Int ) } -> String   <= { x : number4, y : Float, name : String, pair : ( number5, number6 ) } -> String
+                32:75-32:77 VarLocal :: List { x : Int, y : Float, name : String, pair : ( Int, Int ) }   <= List { x : number4, y : Float, name : String, pair : ( number5, number6 ) }   callee: author/project:Acc.ps@22:21   use: gen   instance: number := Int (defaulted), number1 := Int (defaulted), number2 := Int (defaulted)   sig#: 9d1edbe5   subst: v0 := Int, v1 := Int, v2 := Int
+        def l2 :: String    [28:21-28:23]   id: author/project:Acc.l2@28:21   sig: String   kinds:    group: author/project:Acc.l2@28:21 nonrec inferred
+          29:25-29:90 Call :: String
+            29:25-29:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            29:35-29:38 Str :: String
+            29:40-29:90 Call :: String
+              29:40-29:56 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+              29:58-29:90 Call :: Float
+                29:58-29:68 VarForeign :: (Float -> Float -> Float) -> Float -> List Float -> Float   callee: elm/core:List.foldl   instance: a := Float, b := Float   sig#: 8a8782c6   subst: v0 := Float, v1 := Float
+                29:69-29:72 VarOperator :: Float -> Float -> Float   callee: elm/core:Basics.add   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+                29:73-29:74 Int :: Float
+                29:76-29:90 Call :: List Float
+                  29:76-29:84 VarForeign :: ({ x : Int, y : Float, name : String, pair : ( Int, Int ) } -> Float) -> List { x : Int, y : Float, name : String, pair : ( Int, Int ) } -> List Float   <= ({ x : number7, y : Float, name : String, pair : ( number8, number9 ) } -> Float) -> List { x : number7, y : Float, name : String, pair : ( number8, number9 ) } -> List Float   callee: elm/core:List.map   instance: a := { x : Int, y : Float, name : String, pair : ( Int, Int ) } (defaulted), b := Float   sig#: 6a702f63   subst: v0 := { x : Int, y : Float, name : String, pair : ( Int, Int ) }, v1 := Float
+                  29:85-29:87 Accessor :: { x : Int, y : Float, name : String, pair : ( Int, Int ) } -> Float   <= { x : number7, y : Float, name : String, pair : ( number8, number9 ) } -> Float
+                  29:88-29:90 VarLocal :: List { x : Int, y : Float, name : String, pair : ( Int, Int ) }   <= List { x : number7, y : Float, name : String, pair : ( number8, number9 ) }   callee: author/project:Acc.ps@22:21   use: gen   instance: number := Int (defaulted), number1 := Int (defaulted), number2 := Int (defaulted)   sig#: 9d1edbe5   subst: v0 := Int, v1 := Int, v2 := Int
+        def l1 :: String    [25:21-25:23]   id: author/project:Acc.l1@25:21   sig: String   kinds:    group: author/project:Acc.l1@25:21 nonrec inferred
+          26:25-26:88 Call :: String
+            26:25-26:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            26:35-26:38 Str :: String
+            26:40-26:88 Call :: String
+              26:40-26:54 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+              26:56-26:88 Call :: Int
+                26:56-26:66 VarForeign :: (Int -> Int -> Int) -> Int -> List Int -> Int   callee: elm/core:List.foldl   instance: a := Int, b := Int   sig#: 8a8782c6   subst: v0 := Int, v1 := Int
+                26:67-26:70 VarOperator :: Int -> Int -> Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                26:71-26:72 Int :: Int
+                26:74-26:88 Call :: List Int
+                  26:74-26:82 VarForeign :: ({ x : Int, y : Float, name : String, pair : ( Int, Int ) } -> Int) -> List { x : Int, y : Float, name : String, pair : ( Int, Int ) } -> List Int   <= ({ x : Int, y : Float, name : String, pair : ( number10, number11 ) } -> Int) -> List { x : Int, y : Float, name : String, pair : ( number10, number11 ) } -> List Int   callee: elm/core:List.map   instance: a := { x : Int, y : Float, name : String, pair : ( Int, Int ) } (defaulted), b := Int   sig#: 6a702f63   subst: v0 := { x : Int, y : Float, name : String, pair : ( Int, Int ) }, v1 := Int
+                  26:83-26:85 Accessor :: { x : Int, y : Float, name : String, pair : ( Int, Int ) } -> Int   <= { x : Int, y : Float, name : String, pair : ( number10, number11 ) } -> Int
+                  26:86-26:88 VarLocal :: List { x : Int, y : Float, name : String, pair : ( Int, Int ) }   <= List { x : Int, y : Float, name : String, pair : ( number10, number11 ) }   callee: author/project:Acc.ps@22:21   use: gen   instance: number := Int, number1 := Int (defaulted), number2 := Int (defaulted)   sig#: 9d1edbe5   subst: v0 := Int, v1 := Int, v2 := Int
+        40:17-44:37 If :: ( (), Cmd () )
+          40:20-40:58 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            40:20-40:54 Call :: Int
+              40:20-40:31 VarForeign :: List String -> Int   callee: elm/core:List.length   instance: a := String   sig#: 8f686fa0   subst: v0 := String
+              40:32-40:54 List :: List String
+                40:34-40:36 VarLocal :: String   callee: author/project:Acc.l1@25:21   use: gen
+                40:38-40:40 VarLocal :: String   callee: author/project:Acc.l2@28:21   use: gen
+                40:42-40:44 VarLocal :: String   callee: author/project:Acc.l3@31:21   use: gen
+                40:46-40:48 VarLocal :: String   callee: author/project:Acc.l4@34:21   use: gen
+                40:50-40:52 VarLocal :: String   callee: author/project:Acc.l5@37:21   use: gen
+            40:57-40:58 Int :: Int
+          41:21-41:37 Pair :: ( (), Cmd () )
+            41:23-41:25 Unit :: ()
+            41:27-41:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          44:21-44:37 Pair :: ( (), Cmd () )
+            44:23-44:25 Unit :: ()
+            44:27-44:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      45:20-45:43 Lambda :: () -> () -> ( (), Cmd () )
+        45:21-45:22 PAnything :: ()
+        45:23-45:24 PVar m :: ()
+        45:28-45:43 Pair :: ( (), Cmd () )
+          45:30-45:31 VarLocal :: ()
+          45:33-45:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      46:27-46:41 Lambda :: () -> Sub ()
+        46:28-46:29 PAnything :: ()
+        46:33-46:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Acc.apply   kind: function   reads:    needs: 
+init: 1   id: author/project:Acc.main   kind: value   reads: author/project:Acc.apply   needs:    init-dep: no
