@@ -1,0 +1,385 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:Upd (project)
+mark author/project:Upd.tag   v0=any+printed
+mark author/project:Upd.b0@42:21   v0=number v1=number v2=number
+mark author/project:Upd.b1@45:21   v0=number v1=number v2=number
+mark author/project:Upd.b2@48:21   v0=number v1=number v2=number
+mark author/project:Upd.ord@57:21   v0=number v1=number v2=number+printed
+mark author/project:Upd.folded@60:21   v0=number v1=number
+clone c0   def: author/project:Upd.showPt   key: ()   kind: function   init: 0   needs: 
+clone c1   def: author/project:Upd.showB   key: ()   kind: function   init: 1   needs: 
+clone c2   def: author/project:Upd.bump   key: ()   kind: function   init: 2   needs: 
+clone c3   def: author/project:Upd.main   key: ()   kind: value   init: 4   needs: 
+-- program: 20 clones, reachable from main, dependencies first
+clone c2   def: author/project:Upd.bump   key: ()   kind: function   params: b:struct(ref,ref,ref,enum,i64)   result: struct(ref,ref,ref,enum,i64)
+  Let _up13 :: struct(ref,ref,ref,enum,i64)
+    Local b :: struct(ref,ref,ref,enum,i64)
+    Record pos name pair alive count :: struct(ref,ref,ref,enum,i64)
+      Record x y :: struct(f64,f64)
+        Call :: f64
+          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Float) :: ref
+          Access .x #0 :: f64
+            Access .pos #0 :: struct(f64,f64)
+              Local b :: struct(ref,ref,ref,enum,i64)
+          Lit 1.0 :: f64
+        Call :: f64
+          Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Float) :: ref
+          Access .y #1 :: f64
+            Access .pos #0 :: struct(f64,f64)
+              Local b :: struct(ref,ref,ref,enum,i64)
+          Lit 2.0 :: f64
+      Access .name #1 :: ref
+        Local _up13 :: struct(ref,ref,ref,enum,i64)
+      Access .pair #2 :: ref
+        Local _up13 :: struct(ref,ref,ref,enum,i64)
+      Access .alive #3 :: enum
+        Local _up13 :: struct(ref,ref,ref,enum,i64)
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Access .count #4 :: i64
+          Local b :: struct(ref,ref,ref,enum,i64)
+        Lit 1 :: i64
+clone c7   def: author/project:Upd.b0@42:21   key: (v0=type elm/core:Basics.Float; v1=type elm/core:Basics.Int; v2=type elm/core:Basics.Int)   name: b0@42:21__f64__i64__i64   kind: function   params:    result: struct(ref,ref,ref,enum,i64)   lifted-from: c1
+  Record pos name pair alive count :: struct(ref,ref,ref,enum,i64)
+    Record x y :: struct(f64,f64)
+      Lit 1.5 :: f64
+      Lit 2.0 :: f64
+    Lit "b" :: ref
+    Tuple :: struct(i64,ref)
+      Lit 1 :: i64
+      Lit "p" :: ref
+    Lit 1 :: enum
+    Lit 0 :: i64
+clone c6   def: author/project:Upd.b1@45:21   key: (v0=type elm/core:Basics.Float; v1=type elm/core:Basics.Int; v2=type elm/core:Basics.Int)   name: b1@45:21__f64__i64__i64   kind: function   params:    result: struct(ref,ref,ref,enum,i64)   lifted-from: c1
+  Let _up18 :: struct(ref,ref,ref,enum,i64)
+    Call :: struct(ref,ref,ref,enum,i64)
+      Global c7 :: ref
+    Record pos name pair alive count :: struct(ref,ref,ref,enum,i64)
+      Access .pos #0 :: ref
+        Local _up18 :: struct(ref,ref,ref,enum,i64)
+      Lit "c" :: ref
+      Access .pair #2 :: ref
+        Local _up18 :: struct(ref,ref,ref,enum,i64)
+      Access .alive #3 :: enum
+        Local _up18 :: struct(ref,ref,ref,enum,i64)
+      Access .count #4 :: i64
+        Local _up18 :: struct(ref,ref,ref,enum,i64)
+clone c3   def: author/project:Upd.b2@48:21   key: (v0=type elm/core:Basics.Float; v1=type elm/core:Basics.Int; v2=type elm/core:Basics.Int)   name: b2@48:21__f64__i64__i64   kind: function   params:    result: struct(ref,ref,ref,enum,i64)   lifted-from: c1
+  Let _up14 :: struct(ref,ref,ref,enum,i64)
+    Call :: struct(ref,ref,ref,enum,i64)
+      Global c6 :: ref
+    Record pos name pair alive count :: struct(ref,ref,ref,enum,i64)
+      Access .pos #0 :: ref
+        Local _up14 :: struct(ref,ref,ref,enum,i64)
+      Access .name #1 :: ref
+        Local _up14 :: struct(ref,ref,ref,enum,i64)
+      Tuple :: struct(i64,ref)
+        Lit 9 :: i64
+        Lit "q" :: ref
+      Lit 0 :: enum
+      Lit 5 :: i64
+clone c15   def: author/project:Upd.showPt   key: ()   kind: function   params: p:struct(f64,f64)   result: ref
+  Call :: ref
+    Kernel elm/core:Basics.append (v0=app string) :: ref
+    Lit "(" :: ref
+    Call :: ref
+      Kernel elm/core:Basics.append (v0=app string) :: ref
+      Call :: ref
+        Kernel elm/core:String.fromFloat () :: ref
+        Access .x #0 :: f64
+          Local p :: struct(f64,f64)
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Lit "," :: ref
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Call :: ref
+            Kernel elm/core:String.fromFloat () :: ref
+            Access .y #1 :: f64
+              Local p :: struct(f64,f64)
+          Lit ")" :: ref
+clone c16   def: elm/core:Tuple.second   key: (v0=i64; v1=ref)   name: second__i64__ref   kind: function   params: _p0:struct(i64,ref)   result: ref
+  Case :: ref
+    Local _p0 :: struct(i64,ref)
+    branch (_ :: i64, y :: ref) :: struct(i64,ref)
+      Local y :: ref
+clone c17   def: elm/core:Tuple.first   key: (v0=i64; v1=ref)   name: first__i64__ref   kind: function   params: _p0:struct(i64,ref)   result: i64
+  Case :: i64
+    Local _p0 :: struct(i64,ref)
+    branch (x :: i64, _ :: ref) :: struct(i64,ref)
+      Local x :: i64
+clone c5   def: author/project:Upd.showB   key: ()   kind: function   params: b:struct(ref,ref,ref,enum,i64)   result: ref
+  Call :: ref
+    Kernel elm/core:Basics.append (v0=app string) :: ref
+    Access .name #1 :: ref
+      Local b :: struct(ref,ref,ref,enum,i64)
+    Call :: ref
+      Kernel elm/core:Basics.append (v0=app string) :: ref
+      Call :: ref
+        Global c15 :: ref
+        Access .pos #0 :: struct(f64,f64)
+          Local b :: struct(ref,ref,ref,enum,i64)
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Call :: ref
+          Kernel elm/core:String.fromInt () :: ref
+          Access .count #4 :: i64
+            Local b :: struct(ref,ref,ref,enum,i64)
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Call :: ref
+            Global c16 :: ref
+            Access .pair #2 :: struct(i64,ref)
+              Local b :: struct(ref,ref,ref,enum,i64)
+          Call :: ref
+            Kernel elm/core:Basics.append (v0=app string) :: ref
+            Call :: ref
+              Kernel elm/core:String.fromInt () :: ref
+              Call :: i64
+                Global c17 :: ref
+                Access .pair #2 :: struct(i64,ref)
+                  Local b :: struct(ref,ref,ref,enum,i64)
+            If :: ref
+              Access .alive #3 :: enum
+                Local b :: struct(ref,ref,ref,enum,i64)
+              Lit "T" :: ref
+              Lit "F" :: ref
+clone c9   def: author/project:Upd.b0@42:21   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int; v2=type elm/core:Basics.Int)   name: b0@42:21__i64__i64__i64   kind: function   params:    result: struct(ref,ref,ref,enum,i64)   lifted-from: c1
+  Record pos name pair alive count :: struct(ref,ref,ref,enum,i64)
+    Record x y :: struct(f64,i64)
+      Lit 1.5 :: f64
+      Lit 2 :: i64
+    Lit "b" :: ref
+    Tuple :: struct(i64,ref)
+      Lit 1 :: i64
+      Lit "p" :: ref
+    Lit 1 :: enum
+    Lit 0 :: i64
+clone c20   def: author/project:Upd.tag   key: (v0=type elm/core:String.String)   name: tag__t   kind: function   params: t:ref v:ref   result: ref
+  Call :: ref
+    Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+    Local t :: ref
+    Local v :: ref
+clone c21   def: author/project:Upd.tag   key: (v0=type elm/core:Basics.Int)   name: tag__i64   kind: function   params: t:ref v:i64   result: i64
+  Call :: i64
+    Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+    Local t :: ref
+    Local v :: i64
+clone c10   def: author/project:Upd.ord@57:21   key: (v0=type elm/core:Basics.Float; v1=type elm/core:Basics.Int; v2=type elm/core:Basics.Int)   name: ord@57:21__f64__i64__i64   kind: function   params:    result: struct(ref,ref,ref,enum,i64)   lifted-from: c1
+  Let _up19 :: struct(ref,ref,ref,enum,i64)
+    Call :: struct(ref,ref,ref,enum,i64)
+      Global c7 :: ref
+    Record pos name pair alive count :: struct(ref,ref,ref,enum,i64)
+      Access .pos #0 :: ref
+        Local _up19 :: struct(ref,ref,ref,enum,i64)
+      Call :: ref
+        Global c20 :: ref
+        Lit "name" :: ref
+        Lit "n" :: ref
+      Access .pair #2 :: ref
+        Local _up19 :: struct(ref,ref,ref,enum,i64)
+      Call :: enum
+        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Global c21 :: ref
+          Lit "alive" :: ref
+          Lit 0 :: i64
+        Lit 1 :: i64
+      Call :: i64
+        Global c21 :: ref
+        Lit "count" :: ref
+        Lit 7 :: i64
+clone c22   def: elm/core:List.foldl   key: (v0=i64; v1=ref)   name: foldl__i64__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: ref
+        Global c22 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: i64
+          Local acc :: ref
+        Local xs :: ref
+clone c23   def: author/project:Upd.lambda@61:37   key: ()   outer: c11 (v0=type elm/core:Basics.Float; v1=type elm/core:Basics.Int)   kind: function   params: i:i64 acc:struct(ref,ref,ref,enum,i64)   result: struct(ref,ref,ref,enum,i64)   lifted-from: c11
+  Let _up24 :: struct(ref,ref,ref,enum,i64)
+    Local acc :: struct(ref,ref,ref,enum,i64)
+    Record pos name pair alive count :: struct(ref,ref,ref,enum,i64)
+      Access .pos #0 :: ref
+        Local _up24 :: struct(ref,ref,ref,enum,i64)
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Access .name #1 :: ref
+          Local acc :: struct(ref,ref,ref,enum,i64)
+        Call :: ref
+          Kernel elm/core:String.fromInt () :: ref
+          Local i :: i64
+      Access .pair #2 :: ref
+        Local _up24 :: struct(ref,ref,ref,enum,i64)
+      Access .alive #3 :: enum
+        Local _up24 :: struct(ref,ref,ref,enum,i64)
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Access .count #4 :: i64
+          Local acc :: struct(ref,ref,ref,enum,i64)
+        Local i :: i64
+clone c11   def: author/project:Upd.folded@60:21   key: (v0=type elm/core:Basics.Float; v1=type elm/core:Basics.Int)   name: folded@60:21__f64__i64   kind: function   params:    result: struct(ref,ref,ref,enum,i64)   lifted-from: c1
+  Call :: struct(ref,ref,ref,enum,i64)
+    Global c22 :: ref
+    Global c23 :: ref
+    Call :: struct(ref,ref,ref,enum,i64)
+      Global c7 :: ref
+    List :: ref
+      Lit 1 :: i64
+      Lit 2 :: i64
+      Lit 3 :: i64
+clone c25   def: elm/core:List.foldl   key: (v0=ref; v1=i64)   name: foldl__ref__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: ref :: xs :: ref :: ref
+      Call :: i64
+        Global c25 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: ref
+          Local acc :: i64
+        Local xs :: ref
+clone c26   def: elm/core:List.lambda@252:10   key: ()   outer: c12 (v0=ref)   kind: function   params: _a0:ref i:i64   result: i64   lifted-from: c12
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local i :: i64
+    Lit 1 :: i64
+clone c12   def: elm/core:List.length   key: (v0=ref)   name: length__ref   kind: function   params: xs:ref   result: i64
+  Call :: i64
+    Global c25 :: ref
+    Global c26 :: ref
+    Lit 0 :: i64
+    Local xs :: ref
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Let b3 :: struct(unit,unit)
+    Call :: struct(ref,ref,ref,enum,i64)
+      Global c2 :: ref
+      Call :: struct(ref,ref,ref,enum,i64)
+        Global c2 :: ref
+        Call :: struct(ref,ref,ref,enum,i64)
+          Global c3 :: ref
+    Let b4 :: struct(unit,unit)
+      Let _up4 :: struct(ref,ref,ref,enum,i64)
+        Local b3 :: struct(ref,ref,ref,enum,i64)
+        Record pos name pair alive count :: struct(ref,ref,ref,enum,i64)
+          Record x y :: struct(f64,f64)
+            Lit 0.0 :: f64
+            Lit 0.0 :: f64
+          Access .name #1 :: ref
+            Local _up4 :: struct(ref,ref,ref,enum,i64)
+          Access .pair #2 :: ref
+            Local _up4 :: struct(ref,ref,ref,enum,i64)
+          Access .alive #3 :: enum
+            Local _up4 :: struct(ref,ref,ref,enum,i64)
+          Access .count #4 :: i64
+            Local _up4 :: struct(ref,ref,ref,enum,i64)
+      Let l5 :: struct(unit,unit)
+        Call :: ref
+          Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+          Lit "b4" :: ref
+          Call :: ref
+            Global c5 :: ref
+            Local b4 :: struct(ref,ref,ref,enum,i64)
+        Let l4 :: struct(unit,unit)
+          Call :: ref
+            Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+            Lit "b3" :: ref
+            Call :: ref
+              Global c5 :: ref
+              Local b3 :: struct(ref,ref,ref,enum,i64)
+          Let l3 :: struct(unit,unit)
+            Call :: ref
+              Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+              Lit "b2" :: ref
+              Call :: ref
+                Global c5 :: ref
+                Call :: struct(ref,ref,ref,enum,i64)
+                  Global c3 :: ref
+            Let l2 :: struct(unit,unit)
+              Call :: ref
+                Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                Lit "b1" :: ref
+                Call :: ref
+                  Global c5 :: ref
+                  Call :: struct(ref,ref,ref,enum,i64)
+                    Global c6 :: ref
+              Let l1 :: struct(unit,unit)
+                Call :: ref
+                  Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                  Lit "b0" :: ref
+                  Call :: ref
+                    Global c5 :: ref
+                    Call :: struct(ref,ref,ref,enum,i64)
+                      Global c7 :: ref
+                Let l8 :: struct(unit,unit)
+                  Call :: ref
+                    Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                    Lit "same" :: ref
+                    Call :: ref
+                      Global c5 :: ref
+                      Let _up8 :: struct(ref,ref,ref,enum,i64)
+                        Call :: struct(ref,ref,ref,enum,i64)
+                          Global c7 :: ref
+                        Record pos name pair alive count :: struct(ref,ref,ref,enum,i64)
+                          Access .pos #0 :: ref
+                            Local _up8 :: struct(ref,ref,ref,enum,i64)
+                          Access .name #1 :: ref
+                            Local _up8 :: struct(ref,ref,ref,enum,i64)
+                          Access .pair #2 :: ref
+                            Local _up8 :: struct(ref,ref,ref,enum,i64)
+                          Access .alive #3 :: enum
+                            Local _up8 :: struct(ref,ref,ref,enum,i64)
+                          Access .count #4 :: i64
+                            Call :: struct(ref,ref,ref,enum,i64)
+                              Global c9 :: ref
+                  Let l6 :: struct(unit,unit)
+                    Call :: ref
+                      Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                      Lit "ord" :: ref
+                      Call :: ref
+                        Global c5 :: ref
+                        Call :: struct(ref,ref,ref,enum,i64)
+                          Global c10 :: ref
+                    Let l7 :: struct(unit,unit)
+                      Call :: ref
+                        Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                        Lit "folded" :: ref
+                        Call :: ref
+                          Global c5 :: ref
+                          Call :: struct(ref,ref,ref,enum,i64)
+                            Global c11 :: ref
+                      If :: struct(unit,unit)
+                        Call :: enum
+                          Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                          Call :: i64
+                            Global c12 :: ref
+                            List :: ref
+                              Local l1 :: ref
+                              Local l2 :: ref
+                              Local l3 :: ref
+                              Local l4 :: ref
+                              Local l5 :: ref
+                              Local l6 :: ref
+                              Local l7 :: ref
+                              Local l8 :: ref
+                          Lit 0 :: i64
+                        Tuple :: struct(unit,unit)
+                          Lit () :: unit
+                          Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+                        Tuple :: struct(unit,unit)
+                          Lit () :: unit
+                          Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Upd.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

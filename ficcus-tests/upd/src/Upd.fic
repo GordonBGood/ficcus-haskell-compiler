@@ -1,0 +1,94 @@
+module Upd exposing (main)
+
+-- Record update { r | f = v }: values, several fields, nested records, a tuple field, evaluation order of the record
+-- and of the new values (Elm evaluates the record first, then the new values in the order of its Map of names: shorter names first),
+-- a record update inside a function and a fold. The output must equal Elm's (expected/upd.out, Elm 0.19.3 under node).
+
+
+type alias Pt =
+    { x : Float, y : Float }
+
+
+type alias Body =
+    { name : String, pos : Pt, count : Int, pair : ( Int, String ), alive : Bool }
+
+
+tag : String -> a -> a
+tag t v =
+    Debug.log t v
+
+
+showPt : Pt -> String
+showPt p =
+    "(" ++ String.fromFloat p.x ++ "," ++ String.fromFloat p.y ++ ")"
+
+
+showB : Body -> String
+showB b =
+    b.name ++ showPt b.pos ++ String.fromInt b.count ++ Tuple.second b.pair ++ String.fromInt (Tuple.first b.pair) ++ (if b.alive then "T" else "F")
+
+
+bump : Body -> Body
+bump b =
+    { b | count = b.count + 1, pos = { x = b.pos.x + 1, y = b.pos.y * 2 } }
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    b0 =
+                        { name = "b", pos = { x = 1.5, y = 2 }, count = 0, pair = ( 1, "p" ), alive = True }
+
+                    b1 =
+                        { b0 | name = "c" }
+
+                    b2 =
+                        { b1 | count = 5, alive = False, pair = ( 9, "q" ) }
+
+                    b3 =
+                        bump (bump b2)
+
+                    b4 =
+                        { b3 | pos = { x = 0, y = 0 } }
+
+                    ord =
+                        { b0 | name = tag "name" "n", count = tag "count" 7, alive = tag "alive" 0 > 1 }
+
+                    folded =
+                        List.foldl (\i acc -> { acc | count = acc.count + i, name = acc.name ++ String.fromInt i }) b0 [ 1, 2, 3 ]
+
+                    l1 =
+                        Debug.log "b0" (showB b0)
+
+                    l2 =
+                        Debug.log "b1" (showB b1)
+
+                    l3 =
+                        Debug.log "b2" (showB b2)
+
+                    l4 =
+                        Debug.log "b3" (showB b3)
+
+                    l5 =
+                        Debug.log "b4" (showB b4)
+
+                    l6 =
+                        Debug.log "ord" (showB ord)
+
+                    l7 =
+                        Debug.log "folded" (showB folded)
+
+                    l8 =
+                        Debug.log "same" (showB { b0 | count = b0.count })
+                in
+                if List.length [ l1, l2, l3, l4, l5, l6, l7, l8 ] > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

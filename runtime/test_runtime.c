@@ -49,6 +49,11 @@ int main(void) {
   /* Debug.toString of a String */
   CHECK(is_str(fic_show_string(fic_str_new("a\"b\\c\n\t", 7)), "\"a\\\"b\\\\c\\n\\t\""));
   CHECK(is_str(fic_show_string(e), "\"\""));
+  /* Float to Int: Math.round ties, saturation, NaN */
+  CHECK(fic_round(2.5) == 3 && fic_round(-2.5) == -2 && fic_round(-0.5) == 0 && fic_round(0.49999999999999994) == 0 && fic_round(1.5) == 2);
+  CHECK(fic_round(-1.5) == -1 && fic_round(4503599627370497.0) == 4503599627370497LL);
+  CHECK(fic_floor(-0.5) == -1 && fic_ceiling(-0.5) == 0 && fic_truncate(-2.7) == -2 && fic_truncate(3.9e9) == 3900000000LL);
+  CHECK(fic_floor(NAN) == 0 && fic_round(INFINITY) == INT64_MAX && fic_truncate(-INFINITY) == INT64_MIN && fic_ceiling(1e30) == INT64_MAX);
   /* Debug.log (the output is checked by test.sh against runtime/test_runtime.expected) */
   fic_log(fic_str_new("tag", 3), fic_str_from_int(7));
   fic_log_unit(fic_str_new("u", 1));

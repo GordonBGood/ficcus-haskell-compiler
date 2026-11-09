@@ -1,0 +1,252 @@
+-- module Upd: problems=0 instances=78 instance-failures=0 defaulted=5
+-- equality-uses: total=0 at-function=0
+module author/project:Upd
+def showPt :: Pt -> String    [22:1-22:7]   id: author/project:Upd.showPt   sig: Pt -> String   kinds:    group: author/project:Upd.showPt nonrec ann
+  22:8-22:9 PVar p :: Pt
+  23:5-23:70 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    23:5-23:8 Str :: String
+    23:12-23:70 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      23:12-23:32 Call :: String
+        23:12-23:28 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+        23:29-23:32 Access :: Float
+          23:29-23:30 VarLocal :: { x : Float, y : Float }
+      23:36-23:70 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        23:36-23:39 Str :: String
+        23:43-23:70 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+          23:43-23:63 Call :: String
+            23:43-23:59 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+            23:60-23:63 Access :: Float
+              23:60-23:61 VarLocal :: { x : Float, y : Float }
+          23:67-23:70 Str :: String
+def showB :: Body -> String    [27:1-27:6]   id: author/project:Upd.showB   sig: Body -> String   kinds:    group: author/project:Upd.showB nonrec ann
+  27:7-27:8 PVar b :: Body
+  28:5-28:149 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    28:5-28:11 Access :: String
+      28:5-28:6 VarLocal :: { pos : Pt, name : String, pair : ( Int, String ), alive : Bool, count : Int }
+    28:15-28:148 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      28:15-28:27 Call :: String
+        28:15-28:21 VarTopLevel :: Pt -> String   callee: author/project:Upd.showPt   use: gen
+        28:22-28:27 Access :: Pt
+          28:22-28:23 VarLocal :: { pos : Pt, name : String, pair : ( Int, String ), alive : Bool, count : Int }
+      28:31-28:148 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        28:31-28:53 Call :: String
+          28:31-28:45 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+          28:46-28:53 Access :: Int
+            28:46-28:47 VarLocal :: { pos : Pt, name : String, pair : ( Int, String ), alive : Bool, count : Int }
+        28:57-28:148 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+          28:57-28:76 Call :: String
+            28:57-28:69 VarForeign :: ( Int, String ) -> String   callee: elm/core:Tuple.second   instance: a := Int, b := String   sig#: ee0f5e97   subst: v0 := Int, v1 := String
+            28:70-28:76 Access :: ( Int, String )
+              28:70-28:71 VarLocal :: { pos : Pt, name : String, pair : ( Int, String ), alive : Bool, count : Int }
+          28:80-28:148 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            28:80-28:114 Call :: String
+              28:80-28:94 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+              28:96-28:114 Call :: Int
+                28:96-28:107 VarForeign :: ( Int, String ) -> Int   callee: elm/core:Tuple.first   instance: a := Int, b := String   sig#: ee0f5e96   subst: v0 := Int, v1 := String
+                28:108-28:114 Access :: ( Int, String )
+                  28:108-28:109 VarLocal :: { pos : Pt, name : String, pair : ( Int, String ), alive : Bool, count : Int }
+            28:120-28:148 If :: String
+              28:123-28:130 Access :: Bool
+                28:123-28:124 VarLocal :: { pos : Pt, name : String, pair : ( Int, String ), alive : Bool, count : Int }
+              28:136-28:139 Str :: String
+              28:145-28:148 Str :: String
+def bump :: Body -> Body    [32:1-32:5]   id: author/project:Upd.bump   sig: Body -> Body   kinds:    group: author/project:Upd.bump nonrec ann
+  32:6-32:7 PVar b :: Body
+  33:5-33:76 Update :: Body
+    33:7-33:8 VarLocal :: { pos : Pt, name : String, pair : ( Int, String ), alive : Bool, count : Int }
+    33:38-33:74 Record :: Pt
+      33:44-33:55 Binop :: Float   callee: elm/core:Basics.add   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+        33:44-33:51 Access :: Float
+          33:44-33:49 Access :: { x : Float, y : Float }
+            33:44-33:45 VarLocal :: { pos : Pt, name : String, pair : ( Int, String ), alive : Bool, count : Int }
+        33:54-33:55 Int :: Float
+      33:61-33:72 Binop :: Float   callee: elm/core:Basics.mul   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+        33:61-33:68 Access :: Float
+          33:61-33:66 Access :: { x : Float, y : Float }
+            33:61-33:62 VarLocal :: { pos : Pt, name : String, pair : ( Int, String ), alive : Bool, count : Int }
+        33:71-33:72 Int :: Float
+    33:19-33:30 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      33:19-33:26 Access :: Int
+        33:19-33:20 VarLocal :: { pos : Pt, name : String, pair : ( Int, String ), alive : Bool, count : Int }
+      33:29-33:30 Int :: Int
+def tag :: String -> a -> a    [17:1-17:4]   id: author/project:Upd.tag   sig: String -> v0 -> v0   kinds: v0:any   group: author/project:Upd.tag nonrec ann
+  17:5-17:6 PVar t :: String
+  17:7-17:8 PVar v :: a
+  18:5-18:18 Call :: a
+    18:5-18:14 VarDebug :: String -> a -> a   callee: elm/core:Debug.log   instance: a := a   sig#: 6ecaa5dd   subst: v0 := <<author/project:Upd.tag|v0>>
+    18:15-18:16 VarLocal :: String
+    18:17-18:18 VarLocal :: a
+def main :: Program () () ()    [37:1-37:5]   id: author/project:Upd.main   sig: Program () () ()   kinds:    group: author/project:Upd.main nonrec ann
+  38:5-94:10 Call :: Program () () ()
+    38:5-38:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    39:9-94:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      40:13-91:37 Lambda :: () -> ( (), Cmd () )
+        40:14-40:15 PAnything :: ()
+        def b0 :: { pos : { x : Float, y : number }, name : String, pair : ( number1, String ), alive : Bool, count : number2 }    [42:21-42:23]   id: author/project:Upd.b0@42:21   sig: { pos : { x : Float, y : v0 }, name : String, pair : ( v1, String ), alive : Bool, count : v2 }   kinds: v0:number,v1:number,v2:number   group: author/project:Upd.b0@42:21 nonrec inferred
+          43:25-43:109 Record :: { pos : { x : Float, y : number }, name : String, pair : ( number1, String ), alive : Bool, count : number2 }
+            43:45-43:63 Record :: { x : Float, y : number }
+              43:51-43:54 Float :: Float
+              43:60-43:61 Int :: number
+            43:34-43:37 Str :: String
+            43:83-43:93 Pair :: ( number1, String )
+              43:85-43:86 Int :: number1
+              43:88-43:91 Str :: String
+            43:103-43:107 VarCtor :: Bool   callee: elm/core:Basics.True
+            43:73-43:74 Int :: number2
+        def b1 :: { pos : { x : Float, y : number3 }, name : String, pair : ( number4, String ), alive : Bool, count : number5 }    [45:21-45:23]   id: author/project:Upd.b1@45:21   sig: { pos : { x : Float, y : v0 }, name : String, pair : ( v1, String ), alive : Bool, count : v2 }   kinds: v0:number,v1:number,v2:number   group: author/project:Upd.b1@45:21 nonrec inferred
+          46:25-46:44 Update :: { pos : { x : Float, y : number3 }, name : String, pair : ( number4, String ), alive : Bool, count : number5 }
+            46:27-46:29 VarLocal :: { pos : { x : Float, y : number3 }, name : String, pair : ( number4, String ), alive : Bool, count : number5 }   callee: author/project:Upd.b0@42:21   use: gen   instance: number := number3, number1 := number4, number2 := number5   sig#: 881f6604   subst: v0 := <<author/project:Upd.b1@45:21|v0>>, v1 := <<author/project:Upd.b1@45:21|v1>>, v2 := <<author/project:Upd.b1@45:21|v2>>
+            46:39-46:42 Str :: String
+        def b2 :: { pos : { x : Float, y : number6 }, name : String, pair : ( number7, String ), alive : Bool, count : number8 }    [48:21-48:23]   id: author/project:Upd.b2@48:21   sig: { pos : { x : Float, y : v0 }, name : String, pair : ( v1, String ), alive : Bool, count : v2 }   kinds: v0:number,v1:number,v2:number   group: author/project:Upd.b2@48:21 nonrec inferred
+          49:25-49:77 Update :: { pos : { x : Float, y : number6 }, name : String, pair : ( number7, String ), alive : Bool, count : number8 }
+            49:27-49:29 VarLocal :: { pos : { x : Float, y : number6 }, name : String, pair : ( number7, String ), alive : Bool, count : number8 }   callee: author/project:Upd.b1@45:21   use: gen   instance: number3 := number6, number4 := number7, number5 := number8   sig#: 881f6604   subst: v0 := <<author/project:Upd.b2@48:21|v0>>, v1 := <<author/project:Upd.b2@48:21|v1>>, v2 := <<author/project:Upd.b2@48:21|v2>>
+            49:65-49:75 Pair :: ( number7, String )
+              49:67-49:68 Int :: number7
+              49:70-49:73 Str :: String
+            49:51-49:56 VarCtor :: Bool   callee: elm/core:Basics.False
+            49:40-49:41 Int :: number8
+        def b3 :: Body    [51:21-51:23]   id: author/project:Upd.b3@51:21   sig: Body   kinds:    group: author/project:Upd.b3@51:21 nonrec inferred
+          52:25-52:38 Call :: Body
+            52:25-52:29 VarTopLevel :: Body -> Body   callee: author/project:Upd.bump   use: gen
+            52:31-52:38 Call :: Body
+              52:31-52:35 VarTopLevel :: Body -> Body   callee: author/project:Upd.bump   use: gen
+              52:36-52:38 VarLocal :: Body   callee: author/project:Upd.b2@48:21   use: gen   instance: number7 := Int, number8 := Int, number6 := Float   sig#: 881f6604   subst: v0 := Float, v1 := Int, v2 := Int
+        def b4 :: { pos : { x : Float, y : Float }, name : String, pair : ( Int, String ), alive : Bool, count : Int }    [54:21-54:23]   id: author/project:Upd.b4@54:21   sig: { pos : { x : Float, y : Float }, name : String, pair : ( Int, String ), alive : Bool, count : Int }   kinds:    group: author/project:Upd.b4@54:21 nonrec inferred
+          55:25-55:56 Update :: { pos : { x : Float, y : Float }, name : String, pair : ( Int, String ), alive : Bool, count : Int }
+            55:27-55:29 VarLocal :: { pos : { x : Float, y : Float }, name : String, pair : ( Int, String ), alive : Bool, count : Int }   callee: author/project:Upd.b3@51:21   use: gen
+            55:38-55:54 Record :: { x : Float, y : Float }
+              55:44-55:45 Int :: Float
+              55:51-55:52 Int :: Float
+        def l5 :: String    [75:21-75:23]   id: author/project:Upd.l5@75:21   sig: String   kinds:    group: author/project:Upd.l5@75:21 nonrec inferred
+          76:25-76:49 Call :: String
+            76:25-76:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            76:35-76:39 Str :: String
+            76:41-76:49 Call :: String
+              76:41-76:46 VarTopLevel :: Body -> String   callee: author/project:Upd.showB   use: gen
+              76:47-76:49 VarLocal :: Body   callee: author/project:Upd.b4@54:21   use: gen
+        def l4 :: String    [72:21-72:23]   id: author/project:Upd.l4@72:21   sig: String   kinds:    group: author/project:Upd.l4@72:21 nonrec inferred
+          73:25-73:49 Call :: String
+            73:25-73:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            73:35-73:39 Str :: String
+            73:41-73:49 Call :: String
+              73:41-73:46 VarTopLevel :: Body -> String   callee: author/project:Upd.showB   use: gen
+              73:47-73:49 VarLocal :: Body   callee: author/project:Upd.b3@51:21   use: gen
+        def l3 :: String    [69:21-69:23]   id: author/project:Upd.l3@69:21   sig: String   kinds:    group: author/project:Upd.l3@69:21 nonrec inferred
+          70:25-70:49 Call :: String
+            70:25-70:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            70:35-70:39 Str :: String
+            70:41-70:49 Call :: String
+              70:41-70:46 VarTopLevel :: Body -> String   callee: author/project:Upd.showB   use: gen
+              70:47-70:49 VarLocal :: Body   callee: author/project:Upd.b2@48:21   use: gen   instance: number7 := Int, number8 := Int, number6 := Float   sig#: 881f6604   subst: v0 := Float, v1 := Int, v2 := Int
+        def l2 :: String    [66:21-66:23]   id: author/project:Upd.l2@66:21   sig: String   kinds:    group: author/project:Upd.l2@66:21 nonrec inferred
+          67:25-67:49 Call :: String
+            67:25-67:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            67:35-67:39 Str :: String
+            67:41-67:49 Call :: String
+              67:41-67:46 VarTopLevel :: Body -> String   callee: author/project:Upd.showB   use: gen
+              67:47-67:49 VarLocal :: Body   callee: author/project:Upd.b1@45:21   use: gen   instance: number3 := Float, number4 := Int, number5 := Int   sig#: 881f6604   subst: v0 := Float, v1 := Int, v2 := Int
+        def l1 :: String    [63:21-63:23]   id: author/project:Upd.l1@63:21   sig: String   kinds:    group: author/project:Upd.l1@63:21 nonrec inferred
+          64:25-64:49 Call :: String
+            64:25-64:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            64:35-64:39 Str :: String
+            64:41-64:49 Call :: String
+              64:41-64:46 VarTopLevel :: Body -> String   callee: author/project:Upd.showB   use: gen
+              64:47-64:49 VarLocal :: Body   callee: author/project:Upd.b0@42:21   use: gen   instance: number := Float, number1 := Int, number2 := Int   sig#: 881f6604   subst: v0 := Float, v1 := Int, v2 := Int
+        def l8 :: String    [84:21-84:23]   id: author/project:Upd.l8@84:21   sig: String   kinds:    group: author/project:Upd.l8@84:21 nonrec inferred
+          85:25-85:74 Call :: String
+            85:25-85:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            85:35-85:41 Str :: String
+            85:43-85:74 Call :: String
+              85:43-85:48 VarTopLevel :: Body -> String   callee: author/project:Upd.showB   use: gen
+              85:49-85:74 Update :: Body
+                85:51-85:53 VarLocal :: { pos : { x : Float, y : Float }, name : String, pair : ( Int, String ), alive : Bool, count : Int }   callee: author/project:Upd.b0@42:21   use: gen   instance: number := Float, number1 := Int, number2 := Int   sig#: 881f6604   subst: v0 := Float, v1 := Int, v2 := Int
+                85:64-85:72 Access :: Int
+                  85:64-85:66 VarLocal :: { pos : { x : Float, y : Int }, name : String, pair : ( Int, String ), alive : Bool, count : Int }   <= { pos : { x : Float, y : number9 }, name : String, pair : ( number10, String ), alive : Bool, count : Int }   callee: author/project:Upd.b0@42:21   use: gen   instance: number := Int (defaulted), number1 := Int (defaulted), number2 := Int   sig#: 881f6604   subst: v0 := Int, v1 := Int, v2 := Int
+        def ord :: { pos : { x : Float, y : number11 }, name : String, pair : ( number12, String ), alive : Bool, count : number13 }    [57:21-57:24]   id: author/project:Upd.ord@57:21   sig: { pos : { x : Float, y : v0 }, name : String, pair : ( v1, String ), alive : Bool, count : v2 }   kinds: v0:number,v1:number,v2:number   group: author/project:Upd.ord@57:21 nonrec inferred
+          58:25-58:105 Update :: { pos : { x : Float, y : number11 }, name : String, pair : ( number12, String ), alive : Bool, count : number13 }
+            58:27-58:29 VarLocal :: { pos : { x : Float, y : number11 }, name : String, pair : ( number12, String ), alive : Bool, count : number13 }   callee: author/project:Upd.b0@42:21   use: gen   instance: number := number11, number1 := number12, number2 := number13   sig#: 881f6604   subst: v0 := <<author/project:Upd.ord@57:21|v0>>, v1 := <<author/project:Upd.ord@57:21|v1>>, v2 := <<author/project:Upd.ord@57:21|v2>>
+            58:39-58:53 Call :: String
+              58:39-58:42 VarTopLevel :: String -> String -> String   callee: author/project:Upd.tag   use: gen   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+              58:43-58:49 Str :: String
+              58:50-58:53 Str :: String
+            58:86-58:103 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int (defaulted)   sig#: 2cdc0786   subst: v0 := Int
+              58:86-58:99 Call :: Int   <= number14
+                58:86-58:89 VarTopLevel :: String -> Int -> Int   <= String -> number14 -> number14   callee: author/project:Upd.tag   use: gen   instance: a := Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := Int
+                58:90-58:97 Str :: String
+                58:98-58:99 Int :: Int   <= number14
+              58:102-58:103 Int :: Int   <= number14
+            58:63-58:76 Call :: number13
+              58:63-58:66 VarTopLevel :: String -> number13 -> number13   callee: author/project:Upd.tag   use: gen   instance: a := number13   sig#: 6ecaa5dd   subst: v0 := <<author/project:Upd.ord@57:21|v2>>
+              58:67-58:74 Str :: String
+              58:75-58:76 Int :: number13
+        def l6 :: String    [78:21-78:23]   id: author/project:Upd.l6@78:21   sig: String   kinds:    group: author/project:Upd.l6@78:21 nonrec inferred
+          79:25-79:51 Call :: String
+            79:25-79:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            79:35-79:40 Str :: String
+            79:42-79:51 Call :: String
+              79:42-79:47 VarTopLevel :: Body -> String   callee: author/project:Upd.showB   use: gen
+              79:48-79:51 VarLocal :: Body   callee: author/project:Upd.ord@57:21   use: gen   instance: number13 := Int, number11 := Float, number12 := Int   sig#: 881f6604   subst: v0 := Float, v1 := Int, v2 := Int
+        def folded :: { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int }    [60:21-60:27]   id: author/project:Upd.folded@60:21   sig: { pos : { x : Float, y : v0 }, name : String, pair : ( v1, String ), alive : Bool, count : Int }   kinds: v0:number,v1:number   group: author/project:Upd.folded@60:21 nonrec inferred
+          61:25-61:131 Call :: { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int }
+            61:25-61:35 VarForeign :: (Int -> { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int } -> { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int }) -> { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int } -> List Int -> { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int }   callee: elm/core:List.foldl   instance: a := Int, b := { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int }   sig#: 8a8782c6   subst: v0 := Int, v1 := { pos : { x : Float, y : <<author/project:Upd.folded@60:21|v0>> }, name : String, pair : ( <<author/project:Upd.folded@60:21|v1>>, String ), alive : Bool, count : Int }
+            61:37-61:115 Lambda :: Int -> { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int } -> { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int }
+              61:38-61:39 PVar i :: Int
+              61:40-61:43 PVar acc :: { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int }
+              61:47-61:115 Update :: { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int }
+                61:49-61:52 VarLocal :: { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int }
+                61:85-61:113 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  61:85-61:93 Access :: String
+                    61:85-61:88 VarLocal :: { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int }
+                  61:97-61:113 Call :: String
+                    61:97-61:111 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                    61:112-61:113 VarLocal :: Int
+                61:63-61:76 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  61:63-61:72 Access :: Int
+                    61:63-61:66 VarLocal :: { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int }
+                  61:75-61:76 VarLocal :: Int
+            61:117-61:119 VarLocal :: { pos : { x : Float, y : number15 }, name : String, pair : ( number16, String ), alive : Bool, count : Int }   callee: author/project:Upd.b0@42:21   use: gen   instance: number := number15, number1 := number16, number2 := Int   sig#: 881f6604   subst: v0 := <<author/project:Upd.folded@60:21|v0>>, v1 := <<author/project:Upd.folded@60:21|v1>>, v2 := Int
+            61:120-61:131 List :: List Int
+              61:122-61:123 Int :: Int
+              61:125-61:126 Int :: Int
+              61:128-61:129 Int :: Int
+        def l7 :: String    [81:21-81:23]   id: author/project:Upd.l7@81:21   sig: String   kinds:    group: author/project:Upd.l7@81:21 nonrec inferred
+          82:25-82:57 Call :: String
+            82:25-82:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            82:35-82:43 Str :: String
+            82:45-82:57 Call :: String
+              82:45-82:50 VarTopLevel :: Body -> String   callee: author/project:Upd.showB   use: gen
+              82:51-82:57 VarLocal :: Body   callee: author/project:Upd.folded@60:21   use: gen   instance: number15 := Float, number16 := Int   sig#: 890018bc   subst: v0 := Float, v1 := Int
+        87:17-91:37 If :: ( (), Cmd () )
+          87:20-87:70 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            87:20-87:66 Call :: Int
+              87:20-87:31 VarForeign :: List String -> Int   callee: elm/core:List.length   instance: a := String   sig#: 8f686fa0   subst: v0 := String
+              87:32-87:66 List :: List String
+                87:34-87:36 VarLocal :: String   callee: author/project:Upd.l1@63:21   use: gen
+                87:38-87:40 VarLocal :: String   callee: author/project:Upd.l2@66:21   use: gen
+                87:42-87:44 VarLocal :: String   callee: author/project:Upd.l3@69:21   use: gen
+                87:46-87:48 VarLocal :: String   callee: author/project:Upd.l4@72:21   use: gen
+                87:50-87:52 VarLocal :: String   callee: author/project:Upd.l5@75:21   use: gen
+                87:54-87:56 VarLocal :: String   callee: author/project:Upd.l6@78:21   use: gen
+                87:58-87:60 VarLocal :: String   callee: author/project:Upd.l7@81:21   use: gen
+                87:62-87:64 VarLocal :: String   callee: author/project:Upd.l8@84:21   use: gen
+            87:69-87:70 Int :: Int
+          88:21-88:37 Pair :: ( (), Cmd () )
+            88:23-88:25 Unit :: ()
+            88:27-88:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          91:21-91:37 Pair :: ( (), Cmd () )
+            91:23-91:25 Unit :: ()
+            91:27-91:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      92:20-92:43 Lambda :: () -> () -> ( (), Cmd () )
+        92:21-92:22 PAnything :: ()
+        92:23-92:24 PVar m :: ()
+        92:28-92:43 Pair :: ( (), Cmd () )
+          92:30-92:31 VarLocal :: ()
+          92:33-92:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      93:27-93:41 Lambda :: () -> Sub ()
+        93:28-93:29 PAnything :: ()
+        93:33-93:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Upd.showPt   kind: function   reads:    needs: 
+init: 1   id: author/project:Upd.showB   kind: function   reads: author/project:Upd.showPt   needs: 
+init: 2   id: author/project:Upd.bump   kind: function   reads:    needs: 
+init: 3   id: author/project:Upd.tag   kind: function   reads:    needs: 
+init: 4   id: author/project:Upd.main   kind: value   reads: author/project:Upd.showB,author/project:Upd.bump,author/project:Upd.tag   needs:    init-dep: no

@@ -93,6 +93,172 @@
         "file": "hamheap.c"
       },
       "fic": "../hamheap/src/HammingHeap.fic"
+    },
+    {
+      "name": "hamming",
+      "elm": {
+        "dir": "ham",
+        "main": "src/Hamming.elm",
+        "js": "ham.js"
+      },
+      "c": {
+        "file": "hamming.c"
+      },
+      "fic": "../ham/src/Hamming.fic"
+    },
+    {
+      "name": "hamming_heap_records",
+      "elm": {
+        "dir": "ham",
+        "main": "src/Hamming.elm",
+        "js": "ham.js"
+      },
+      "c": {
+        "file": "hamming_heap.c"
+      },
+      "fic": "../ham/src/Hamming.fic"
+    },
+    {
+      "name": "hamvec",
+      "elm": {
+        "dir": "hamvec",
+        "main": "src/HammingVec.elm",
+        "js": "hamvec.js"
+      },
+      "c": {
+        "file": "hamvec.c"
+      },
+      "fic": "../hamvec/src/HammingVec.fic"
+    },
+    {
+      "name": "sieve_user",
+      "elm": {
+        "dir": "sieve",
+        "main": "src/Sieve.elm",
+        "js": "sieve.js"
+      },
+      "c": {
+        "file": "primebench.c",
+        "flags": [
+          "-DNUMLOOPS=1000"
+        ],
+        "sub": [
+          [
+            "\\s*for \\d+ loops in \\d+ milliseconds[^.]*\\.?",
+            "."
+          ]
+        ]
+      },
+      "fic": "../sieve/src/Sieve.fic"
+    },
+    {
+      "name": "sieve_plain",
+      "elm": {
+        "dir": "sieve",
+        "main": "src/Sieve.elm",
+        "js": "sieve.js"
+      },
+      "c": {
+        "file": "sieve_plain.c",
+        "flags": [
+          "-DNUMLOOPS=1000"
+        ],
+        "sub": [
+          [
+            "\\s*for \\d+ loops in \\d+ milliseconds[^.]*\\.?",
+            "."
+          ]
+        ]
+      },
+      "fic": "../sieve/src/Sieve.fic"
+    },
+    {
+      "name": "sieve_plain_hoist",
+      "elm": {
+        "dir": "sieve",
+        "main": "src/Sieve.elm",
+        "js": "sieve.js"
+      },
+      "c": {
+        "file": "sieve_plain.c",
+        "flags": [
+          "-DNUMLOOPS=1000",
+          "-DHOIST"
+        ],
+        "sub": [
+          [
+            "\\s*for \\d+ loops in \\d+ milliseconds[^.]*\\.?",
+            "."
+          ]
+        ]
+      },
+      "fic": "../sieve/src/Sieve.fic"
+    },
+    {
+      "name": "wordfreq",
+      "elm": {
+        "dir": "wordfreq",
+        "main": "src/WordFreq.elm",
+        "js": "wordfreq.js"
+      },
+      "c": {
+        "file": "wordfreq.c"
+      },
+      "fic": "../wordfreq/src/WordFreq.fic"
+    },
+    {
+      "name": "mandel",
+      "elm": {
+        "dir": "mandel",
+        "main": "src/Mandelbrot.elm",
+        "js": "mandel.js"
+      },
+      "c": {
+        "file": "mandel.c"
+      },
+      "fic": "../mandel/src/Mandelbrot.fic"
+    },
+    {
+      "name": "nbody",
+      "elm": {
+        "dir": "nbody",
+        "main": "src/NBody.elm",
+        "js": "nbody.js"
+      },
+      "c": {
+        "file": "nbody.c"
+      },
+      "san": {
+        "flags": [
+          "-DSTEPS=20000"
+        ],
+        "compare": false
+      },
+      "fic": "../nbody/src/NBody.fic"
+    },
+    {
+      "name": "fannkuch",
+      "elm": {
+        "dir": "fannkuch",
+        "main": "src/Fannkuch.elm",
+        "js": "fannkuch.js"
+      },
+      "c": {
+        "file": "fannkuch.c"
+      },
+      "fic": "../fannkuch/src/Fannkuch.fic"
+    },
+    {
+      "name": "spectral",
+      "elm": {
+        "dir": "spectral",
+        "main": "src/Spectral.elm",
+        "js": "spectral.js"
+      },
+      "c": {
+        "file": "spectral.c"
+      },
+      "fic": "../spectral/src/Spectral.fic"
     }
   ]
 }

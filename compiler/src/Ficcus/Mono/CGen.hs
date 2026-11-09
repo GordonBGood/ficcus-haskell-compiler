@@ -28,7 +28,7 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
-import Ficcus.Mono.CRuntime (closureRuntime, prelude, sortRuntime)
+import Ficcus.Mono.CRuntime (closureRuntime, jsArrayRuntime, prelude, sortRuntime)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Print (keyTextIx)
@@ -121,6 +121,7 @@ generate program =
               body = unlines (concatMap (\l -> if l == helperMark then extra else [l]) (reverse (gOut final)))
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
           in Right (prelude ++ "\n" ++ (if "fic_word" `List.isInfixOf` body then closureRuntime ++ "\n" else "")
+                    ++ (if "fic_ja_" `List.isInfixOf` body then jsArrayRuntime ++ "\n" else "")
                     ++ (if "fic_sort_kv" `List.isInfixOf` body then sortRuntime ++ "\n" else "") ++ "\n" ++ body)
         errs -> Left errs
 
@@ -497,7 +498,7 @@ genExpr info e =
         Just d | not (isFunction d) -> adapt (mdResult d) (mRep e) (globalName d)
         Just d -> closureValue info d
         Nothing -> failWith "internal: a reference to an unknown clone"
-    MKernel name _ -> kernelValue name
+    MKernel name key -> kernelValue name key
     MCall (MExpr _ (MKernel name key)) args -> kernelCall info (mRep e) name key args
     MCall (MExpr _ (MGlobal c)) args | Just d <- Map.lookup c (iClones info), isFunction d, length args == length (mdParams d) ->
       do  vals <- atomsTo info (zip args (map snd (mdParams d)))
@@ -875,9 +876,85 @@ cString s =
 -- KERNEL FUNCTIONS
 
 
-kernelValue :: String -> CG String
-kernelValue name =
+-- the tag of a JsArray (a vector of words) by the class of its elements
+vecTag :: Class -> String
+vecTag c = if boxedClass c == CRef then "FIC_TAG_VEC_REF" else "FIC_TAG_VEC_RAW"
+
+
+-- the primitives of Elm.Kernel.JsArray (runtime/fic_jsarray.h): the elements are words of the key's class (a struct is boxed
+-- there: `atomsTo` converts the arguments, `adapt` the results)
+jsArrayCall :: Info -> Class -> String -> Key -> [MExpr] -> CG String
+jsArrayCall info cls op key args =
+  case (op, key, args) of
+    ("singleton", Key [ByClass c], [x]) ->
+      do  avs <- atomsTo info [(x, c)]
+          let x' = avs !! 0
+          return ("fic_ja_singleton(" ++ vecTag c ++ ", " ++ wordMk c x' ++ ")")
+    ("length", _, [a]) -> do { avs <- atomsTo info [(a, CRef)]; return ("fic_ja_length(" ++ (avs !! 0) ++ ")") }
+    ("initialize", Key [ByClass c], [n, off, f]) ->
+      do  vs <- atomsTo info [(n, CI64), (off, CI64), (f, CRef)]
+          return ("fic_ja_initialize(" ++ vecTag c ++ ", " ++ List.intercalate ", " vs ++ ")")
+    ("initializeFromList", Key [ByClass c], [mx, ls]) ->
+      do  avs <- atomsTo info [(mx, CI64), (ls, CRef)]
+          let mx' = avs !! 0
+              ls' = avs !! 1
+          h <- helper (HFromList c)
+          needObj [c, CRef]
+          needClass info cls
+          rest <- fresh "rest"
+          arr <- fresh "arr"
+          emit ("fic_ref " ++ rest ++ ";")
+          emit ("fic_ref " ++ arr ++ " = " ++ h ++ "(" ++ mx' ++ ", " ++ ls' ++ ", &" ++ rest ++ ");")
+          return ("(" ++ classType cls ++ "){ " ++ arr ++ ", " ++ rest ++ " }")
+    ("unsafeGet", Key [ByClass c], [i, a]) ->
+      do  vs <- atomsTo info [(i, CI64), (a, CRef)]
+          adapt c cls ("fic_ja_get(" ++ List.intercalate ", " vs ++ ")" ++ wordSel c)
+    ("unsafeSet", Key [ByClass c], [i, x, a]) ->
+      do  avs <- atomsTo info [(i, CI64), (x, c), (a, CRef)]
+          let i' = avs !! 0
+              x' = avs !! 1
+              a' = avs !! 2
+          return ("fic_ja_set(" ++ i' ++ ", " ++ wordMk c x' ++ ", " ++ a' ++ ")")
+    ("push", Key [ByClass c], [x, a]) ->
+      do  avs <- atomsTo info [(x, c), (a, CRef)]
+          let x' = avs !! 0
+              a' = avs !! 1
+          return ("fic_ja_push(" ++ wordMk c x' ++ ", " ++ a' ++ ")")
+    (fold, Key [ByClass ca, ByClass cb], [f, acc, a]) | fold `elem` ["foldl", "foldr"] ->
+      do  avs <- atomsTo info [(f, CRef), (acc, cb), (a, CRef)]
+          let f' = avs !! 0
+              acc' = avs !! 1
+              a' = avs !! 2
+          adapt cb cls ("fic_ja_" ++ fold ++ "(" ++ f' ++ ", " ++ maskOf [ca, cb] ++ ", " ++ wordMk cb acc' ++ ", " ++ a' ++ ")" ++ wordSel cb)
+    ("map", Key [ByClass ca, ByClass cb], [f, a]) ->
+      do  avs <- atomsTo info [(f, CRef), (a, CRef)]
+          let f' = avs !! 0
+              a' = avs !! 1
+          return ("fic_ja_map(" ++ vecTag cb ++ ", " ++ f' ++ ", " ++ maskOf [ca] ++ ", " ++ a' ++ ")")
+    ("indexedMap", Key [ByClass ca, ByClass cb], [f, off, a]) ->
+      do  avs <- atomsTo info [(f, CRef), (off, CI64), (a, CRef)]
+          let f' = avs !! 0
+              off' = avs !! 1
+              a' = avs !! 2
+          return ("fic_ja_indexedmap(" ++ vecTag cb ++ ", " ++ f' ++ ", " ++ maskOf [CI64, ca] ++ ", " ++ off' ++ ", " ++ a' ++ ")")
+    ("slice", _, [from, to, a]) ->
+      do  vs <- atomsTo info [(from, CI64), (to, CI64), (a, CRef)]
+          return ("fic_ja_slice(" ++ List.intercalate ", " vs ++ ")")
+    ("appendN", _, [n, d, s]) ->
+      do  vs <- atomsTo info [(n, CI64), (d, CRef), (s, CRef)]
+          return ("fic_ja_appendn(" ++ List.intercalate ", " vs ++ ")")
+    _ -> failWith ("the kernel function Elm.JsArray." ++ op ++ " (with " ++ show (length args) ++ " arguments) is not supported by the C generator yet")
+  where
+    -- bit i set when argument i of the closure is a reference
+    maskOf cs = show (sum [ 2 ^ i | (i, c) <- zip [0 :: Int ..] cs, boxedClass c == CRef ] :: Int) ++ "u"
+
+
+kernelValue :: String -> Key -> CG String
+kernelValue name key =
   case name of
+    "elm/core:Elm.JsArray.empty" | Key [ByClass c] <- key -> return ("fic_ja_empty(" ++ vecTag c ++ ")")
+    "elm/core:Basics.e" -> return "2.718281828459045"
+    "elm/core:Basics.pi" -> return "3.141592653589793"
     "elm/core:Platform.Cmd.none" -> return "0"
     "elm/core:Platform.Sub.none" -> return "0"
     _ -> failWith ("kernel value `" ++ name ++ "` is not supported by the C generator yet")
@@ -908,12 +985,31 @@ kernelCall info cls name key args =
           do  vals <- atomsTo info [(h, c), (t, CRef)]
               allocObj [c, CRef] 1 vals
         _ -> failWith "internal: the key of (::) is not a class"
+    _ | Just op <- List.stripPrefix "elm/core:Elm.JsArray." name -> jsArrayCall info cls op key args
     _ ->
       do  vals <- atoms info args
           case (name, vals) of
             ("elm/core:Basics.add", [a, b]) -> arith "FIC_ADD64" "+" a b
             ("elm/core:Basics.sub", [a, b]) -> arith "FIC_SUB64" "-" a b
             ("elm/core:Basics.mul", [a, b]) -> arith "FIC_MUL64" "*" a b
+            ("elm/core:Basics.toFloat", [a]) -> return ("((double)" ++ a ++ ")")
+            ("elm/core:Basics.round", [a]) -> return ("fic_round(" ++ a ++ ")")
+            ("elm/core:Basics.floor", [a]) -> return ("fic_floor(" ++ a ++ ")")
+            ("elm/core:Basics.ceiling", [a]) -> return ("fic_ceiling(" ++ a ++ ")")
+            ("elm/core:Basics.truncate", [a]) -> return ("fic_truncate(" ++ a ++ ")")
+            -- libm for now (decision L18: V8's own routines are ported in slice 8, the last digit of sin, cos, log may differ until then)
+            ("elm/core:Basics.sqrt", [a]) -> return ("sqrt(" ++ a ++ ")")
+            ("elm/core:Basics.log", [a]) -> return ("log(" ++ a ++ ")")
+            ("elm/core:Basics.sin", [a]) -> return ("sin(" ++ a ++ ")")
+            ("elm/core:Basics.cos", [a]) -> return ("cos(" ++ a ++ ")")
+            ("elm/core:Basics.tan", [a]) -> return ("tan(" ++ a ++ ")")
+            ("elm/core:Basics.asin", [a]) -> return ("asin(" ++ a ++ ")")
+            ("elm/core:Basics.acos", [a]) -> return ("acos(" ++ a ++ ")")
+            ("elm/core:Basics.atan", [a]) -> return ("atan(" ++ a ++ ")")
+            ("elm/core:Basics.atan2", [a, b]) -> return ("atan2(" ++ a ++ ", " ++ b ++ ")")
+            ("elm/core:Basics.isNaN", [a]) -> return ("(uint8_t)(" ++ a ++ " != " ++ a ++ ")")
+            ("elm/core:Basics.isInfinite", [a]) -> return ("(uint8_t)(isinf(" ++ a ++ ") != 0)")
+            ("elm/core:Basics.xor", [a, b]) -> return ("(uint8_t)(" ++ a ++ " != " ++ b ++ ")")
             ("elm/core:Basics.fdiv", [a, b]) -> return ("(" ++ a ++ " / " ++ b ++ ")")
             ("elm/core:Basics.idiv", [a, b]) -> return ("fic_idiv(" ++ a ++ ", " ++ b ++ ")")
             ("elm/core:Basics.pow", [a, b]) ->
@@ -1061,6 +1157,7 @@ data HKey
   | HApp Class
   | HSortBy Class MType
   | HSortWith Class
+  | HFromList Class
   deriving (Eq, Ord)
 
 
@@ -1090,6 +1187,7 @@ helper k =
         HApp _ -> "fic_app_"
         HSortBy _ _ -> "fic_sortby_"
         HSortWith _ -> "fic_sortwith_"
+        HFromList _ -> "fic_jafl_"
 
 
 -- the object layout / struct type a helper needs: defined at HELPER_MARK unless a clone defines it already
@@ -1188,6 +1286,7 @@ genHelper info k name =
     HApp c -> withProto ("static fic_ref " ++ name ++ "(fic_ref xs, fic_ref ys)") (appBody c)
     HSortBy c t -> sortBy c t
     HSortWith c -> sortWith c
+    HFromList c -> withProto ("static fic_ref " ++ name ++ "(int64_t max, fic_ref xs, fic_ref *rest)") (fromListBody c)
   where
     withProto sig body =
       do  modify' (\g -> g { gProtos = (sig ++ ";") : gProtos g })
@@ -1205,6 +1304,7 @@ genHelper info k name =
               emit "fic_panic_eq_fun();"
               emit "return 0;"
         TyCon "elm/core:List.List" [e] -> listEq e
+        TyCon "elm/core:Elm.JsArray.JsArray" [e] -> jsArrayEq e
         TyCon "elm/core:Dict.Dict" [kt, vt] -> dictEq kt vt
         TyCon n args | Just ctors <- ctorsOf info n args, Map.member n (iUnions info) -> customEq n ctors
         _ -> failUnit ("equality at " ++ mtypeText t ++ " is not supported by the C generator yet") >> emit "return 0;"
@@ -1216,6 +1316,23 @@ genHelper info k name =
                 y <- structField info sc ty i "b"
                 e <- eqExpr info ty x y
                 emit ("if (!" ++ e ++ ") return 0;")
+          emit "return 1;"
+
+    -- two JsArrays are equal when they have the same length and equal elements (Elm: `_Utils_eq` on JavaScript arrays)
+    jsArrayEq e =
+      do  let ec = clsOf info e
+          needClass info ec
+          emit "int64_t i, n;"
+          emit "if (a == b) return 1;"
+          emit "n = fic_ja_length(a);"
+          emit "if (n != fic_ja_length(b)) return 0;"
+          emit "for (i = 0; i < n; i++) {"
+          indented $
+            do  x <- adapt (boxedClass ec) ec ("fic_ja_data(a)[i]" ++ wordSel ec)
+                y <- adapt (boxedClass ec) ec ("fic_ja_data(b)[i]" ++ wordSel ec)
+                en <- eqExpr info e x y
+                emit ("if (!" ++ en ++ ") return 0;")
+          emit "}"
           emit "return 1;"
 
     listEq e =
@@ -1322,6 +1439,23 @@ genHelper info k name =
                 emit ("{ int c = " ++ c ++ "; if (c != 0) return c; }")
                 emit "a = ca->f1; b = cb->f1;"
           emit "}"
+
+    -- List.take-like copy of the first `max` elements of a list into a JsArray; the rest of the list is stored in *rest
+    fromListBody c =
+      do  let fcs = [c, CRef]
+          needObj fcs
+          emit "int64_t n = 0, i;"
+          emit "fic_ref p = xs, r;"
+          emit ("while (n < max && " ++ tagOf "p" ++ " != 0u) { n++; p = ((" ++ objType fcs ++ " *)p)->f1; }")
+          emit ("r = fic_ja_new(n, " ++ vecTag c ++ ");")
+          emit "p = xs;"
+          emit "for (i = 0; i < n; i++) {"
+          indented $
+            do  emit ("fic_ja_data(r)[i] = " ++ wordMk c ("((" ++ objType fcs ++ " *)p)->f0") ++ ";")
+                emit ("p = ((" ++ objType fcs ++ " *)p)->f1;")
+          emit "}"
+          emit "*rest = p;"
+          emit "return r;"
 
     appBody c =
       do  let fcs = [c, CRef]

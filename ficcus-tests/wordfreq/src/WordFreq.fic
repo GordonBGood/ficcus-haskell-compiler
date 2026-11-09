@@ -1,0 +1,223 @@
+-- Word frequency: Strings (UTF-8), Dict (persistent red-black tree), sorting.
+-- compile with elm make src/WordFreq.elm --output=wordfreq.js
+{-
+   There is no input file in a worker program, so the text is generated: 200000 tokens drawn
+   from a 5000 word vocabulary with a skewed, deterministic distribution (Park-Miller
+   generator, exact in Elm's 2^53 Ints). Words are built from syllables that contain the
+   accented letters e-acute, u-diaeresis and o-diaeresis (2 byte UTF-8 sequences), some
+   tokens are Capitalized or UPPER CASE, separated by space, comma, full stop or newline.
+   The program lower-cases the text, replaces the separators by spaces, splits it into
+   words, counts them with Dict.update, sorts the entries by (count descending, word
+   ascending) and reports. Only characters of the Basic Multilingual Plane are used, so
+   String.length, Char codes and the order of `compare` on Strings (UTF-16 code units in
+   JavaScript) agree with what a UTF-8, code point based Ficcus gives.
+-}
+
+
+module WordFreq exposing (main)
+
+import Array exposing (Array)
+import Dict exposing (Dict)
+
+
+vocabSize : Int
+vocabSize =
+    5000
+
+
+tokenCount : Int
+tokenCount =
+    200000
+
+
+syllables : Array String
+syllables =
+    Array.fromList
+        [ "ka", "ké", "kü", "kö", "sa", "sé", "sü", "sö", "ma", "mé", "mü", "mö", "ta", "té", "tü", "tö" ]
+
+
+syllable : Int -> String
+syllable i =
+    Maybe.withDefault "" (Array.get i syllables)
+
+
+wordOf : Int -> String
+wordOf k =
+    let
+        go n acc =
+            if n == 0 then
+                acc
+
+            else
+                go (n // 16) (syllable (modBy 16 n) ++ acc)
+    in
+    go (k + 256) ""
+
+
+vocab : Array String
+vocab =
+    Array.initialize vocabSize wordOf
+
+
+nextSeed : Int -> Int
+nextSeed s =
+    modBy 2147483647 (s * 48271)
+
+
+capitalize : String -> String
+capitalize w =
+    String.toUpper (String.left 1 w) ++ String.dropLeft 1 w
+
+
+generate : Int -> Int -> List String -> List String
+generate count seed acc =
+    if count == 0 then
+        List.reverse acc
+
+    else
+        let
+            s1 =
+                nextSeed seed
+
+            s2 =
+                nextSeed s1
+
+            s3 =
+                nextSeed s2
+
+            x =
+                modBy vocabSize s1
+
+            w =
+                Maybe.withDefault "" (Array.get (x * x // vocabSize) vocab)
+
+            cased =
+                case modBy 8 s2 of
+                    0 ->
+                        capitalize w
+
+                    1 ->
+                        String.toUpper w
+
+                    _ ->
+                        w
+
+            sep =
+                case modBy 16 s3 of
+                    0 ->
+                        ", "
+
+                    1 ->
+                        ". "
+
+                    2 ->
+                        "\n"
+
+                    _ ->
+                        " "
+        in
+        generate (count - 1) s3 (sep :: cased :: acc)
+
+
+isSep : Char -> Bool
+isSep c =
+    c == ' ' || c == ',' || c == '.' || c == '\n'
+
+
+wordsOf : String -> List String
+wordsOf text =
+    text
+        |> String.toLower
+        |> String.map
+            (\c ->
+                if isSep c then
+                    ' '
+
+                else
+                    c
+            )
+        |> String.words
+
+
+bump : Maybe Int -> Maybe Int
+bump m =
+    case m of
+        Just n ->
+            Just (n + 1)
+
+        Nothing ->
+            Just 1
+
+
+countWords : List String -> Dict String Int
+countWords ws =
+    List.foldl (\w d -> Dict.update w bump d) Dict.empty ws
+
+
+byCountThenWord : ( String, Int ) -> ( String, Int ) -> Order
+byCountThenWord ( a, na ) ( b, nb ) =
+    case compare nb na of
+        EQ ->
+            compare a b
+
+        other ->
+            other
+
+
+wordHash : String -> Int
+wordHash w =
+    String.foldl (\c h -> modBy 1000003 (h * 31 + Char.toCode c)) 7 w
+
+
+checksum : List ( String, Int ) -> Int
+checksum entries =
+    let
+        step ( w, n ) ( i, acc ) =
+            ( i + 1, modBy 1000000007 (acc + (i + 1) * n + wordHash w) )
+    in
+    Tuple.second (List.foldl step ( 0, 0 ) entries)
+
+
+tell : String -> ()
+tell s =
+    Debug.log s ()
+
+
+report : () -> List String
+report () =
+    let
+        text =
+            String.concat (generate tokenCount 20251105 [])
+
+        ws =
+            wordsOf text
+
+        dict =
+            countWords ws
+
+        sorted =
+            List.sortWith byCountThenWord (Dict.toList dict)
+
+        top =
+            List.indexedMap
+                (\i ( w, n ) -> "  " ++ String.fromInt (i + 1) ++ ". " ++ w ++ " " ++ String.fromInt n)
+                (List.take 10 sorted)
+    in
+    [ "text length: " ++ String.fromInt (String.length text)
+    , "words: " ++ String.fromInt (List.length ws)
+    , "distinct: " ++ String.fromInt (Dict.size dict)
+    ]
+        ++ top
+        ++ [ "checksum: " ++ String.fromInt (checksum sorted)
+           , "least frequent: "
+                ++ (sorted |> List.reverse |> List.take 3 |> List.map (\( w, n ) -> w ++ " " ++ String.fromInt n) |> String.join ", ")
+           ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( List.foldl (\s () -> tell s) () (report ()), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

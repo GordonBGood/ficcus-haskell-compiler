@@ -4,6 +4,7 @@ module Ficcus.Mono.CRuntime
   ( prelude
   , closureRuntime
   , sortRuntime
+  , jsArrayRuntime
   )
   where
 
@@ -40,3 +41,9 @@ closureRuntime =
 sortRuntime :: String
 sortRuntime =
   $(embedFiles [ "runtime/fic_sort.h" ])
+
+
+-- the primitives of Elm.JsArray (needs the closure runtime): emitted only by programs that use arrays
+jsArrayRuntime :: String
+jsArrayRuntime =
+  $(embedFiles [ "runtime/fic_jsarray.h" ])

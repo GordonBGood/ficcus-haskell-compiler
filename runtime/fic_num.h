@@ -60,3 +60,19 @@ static int64_t fic_remby(int64_t m, int64_t x) {
   if (m == 0 || m == -1) return 0;
   return x % m;
 }
+
+/* Float to Int (decisions L2, 5 Nov): NaN gives 0, values out of range saturate; `round` is JavaScript's Math.round
+   (ties toward positive infinity: round -2.5 is -2, round -0.5 is 0), floor, ceiling and truncate as named. */
+static int64_t fic_f2i(double d) {
+  if (d != d) return 0;
+  if (d >= 9223372036854775808.0) return INT64_MAX;
+  if (d <= -9223372036854775808.0) return INT64_MIN;
+  return (int64_t)d;
+}
+static int64_t fic_round(double x) {
+  double f = floor(x);
+  return fic_f2i(x - f >= 0.5 ? f + 1.0 : f);
+}
+static int64_t fic_floor(double x) { return fic_f2i(floor(x)); }
+static int64_t fic_ceiling(double x) { return fic_f2i(ceil(x)); }
+static int64_t fic_truncate(double x) { return fic_f2i(trunc(x)); }

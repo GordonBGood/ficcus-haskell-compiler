@@ -1,0 +1,249 @@
+-- Mandelbrot: Float records, nested Arrays (Vectors), Bitwise, Float printing.
+-- compile with elm make src/Mandelbrot.elm --output=mandel.js
+{-
+   Escape counts of the Mandelbrot iteration z <- z*z + c on a size x size grid over the
+   window re in [-1.5, 0.5), im in [-1, 1) (the Computer Language Benchmarks Game window),
+   at most maxIter iterations per point.
+
+   Complex numbers are records of two Floats (value semantics: no allocation in C). The
+   grid is an Array (Array Int), a vector of vectors. The statistics are folded into a record
+   of ten fields (a big value record). The bitmap of the points that never escape is packed
+   8 pixels to a byte with Bitwise and hashed. A thumbnail is printed as text.
+
+   The last part prints Floats with String.fromFloat and checks round, floor, ceiling and
+   truncate: Float printing and rounding are open design items for Ficcus, so the expected
+   (JavaScript) results are pinned here. Only + - * / and sqrt are used on Floats: these
+   are exactly rounded IEEE operations, so Elm and C agree bit for bit (C must be built
+   with -ffp-contract=off so that no fused multiply-add is used).
+-}
+
+
+module Mandelbrot exposing (main)
+
+import Array exposing (Array)
+import Bitwise
+
+
+size : Int
+size =
+    600
+
+
+maxIter : Int
+maxIter =
+    200
+
+
+type alias Complex =
+    { re : Float, im : Float }
+
+
+mul : Complex -> Complex -> Complex
+mul a b =
+    { re = a.re * b.re - a.im * b.im, im = a.re * b.im + a.im * b.re }
+
+
+add : Complex -> Complex -> Complex
+add a b =
+    { re = a.re + b.re, im = a.im + b.im }
+
+
+norm2 : Complex -> Float
+norm2 z =
+    z.re * z.re + z.im * z.im
+
+
+escape : Complex -> Int
+escape c =
+    let
+        go z n =
+            if n >= maxIter || norm2 z > 4.0 then
+                n
+
+            else
+                go (add (mul z z) c) (n + 1)
+    in
+    go { re = 0.0, im = 0.0 } 0
+
+
+pointAt : Int -> Int -> Complex
+pointAt x y =
+    { re = 2.0 * toFloat x / toFloat size - 1.5
+    , im = 2.0 * toFloat y / toFloat size - 1.0
+    }
+
+
+grid : Array (Array Int)
+grid =
+    Array.initialize size
+        (\y -> Array.initialize size (\x -> escape (pointAt x y)))
+
+
+type alias Stats =
+    { x : Int
+    , y : Int
+    , inside : Int
+    , total : Int
+    , ck : Int
+    , minRe : Float
+    , maxRe : Float
+    , minIm : Float
+    , maxIm : Float
+    , sumRe : Float
+    , sumIm : Float
+    }
+
+
+emptyStats : Stats
+emptyStats =
+    { x = 0
+    , y = 0
+    , inside = 0
+    , total = 0
+    , ck = 0
+    , minRe = 1.0e10
+    , maxRe = -1.0e10
+    , minIm = 1.0e10
+    , maxIm = -1.0e10
+    , sumRe = 0.0
+    , sumIm = 0.0
+    }
+
+
+step : Int -> Stats -> Stats
+step n s =
+    let
+        s1 =
+            { s
+                | x = s.x + 1
+                , total = s.total + n
+                , ck = modBy 1000000007 (s.ck + n * (modBy 101 (s.x * 7 + s.y * 13) + 1))
+            }
+    in
+    if n == maxIter then
+        let
+            p =
+                pointAt s.x s.y
+        in
+        { s1
+            | inside = s1.inside + 1
+            , minRe = min s1.minRe p.re
+            , maxRe = max s1.maxRe p.re
+            , minIm = min s1.minIm p.im
+            , maxIm = max s1.maxIm p.im
+            , sumRe = s1.sumRe + p.re
+            , sumIm = s1.sumIm + p.im
+        }
+
+    else
+        s1
+
+
+rowStep : Array Int -> Stats -> Stats
+rowStep row s =
+    let
+        r =
+            Array.foldl step { s | x = 0 } row
+    in
+    { r | y = r.y + 1 }
+
+
+stats : Stats
+stats =
+    Array.foldl rowStep emptyStats grid
+
+
+packByte : Array Int -> Int -> Int
+packByte row b =
+    let
+        bit i =
+            if Array.get (b * 8 + i) row == Just maxIter then
+                1
+
+            else
+                0
+    in
+    List.foldl (\i acc -> Bitwise.or (Bitwise.shiftLeftBy 1 acc) (bit i)) 0 (List.range 0 7)
+
+
+bitmapHash : Int
+bitmapHash =
+    let
+        rowHash row h =
+            List.foldl (\b acc -> modBy 1000000007 (acc * 257 + packByte row b)) h (List.range 0 (size // 8 - 1))
+    in
+    Array.foldl rowHash 7 grid
+
+
+thumbnail : List String
+thumbnail =
+    let
+        palette =
+            " .:-=+*#%@"
+
+        charAt x y =
+            let
+                n =
+                    grid |> Array.get (y * 25 + 12) |> Maybe.andThen (Array.get (x * 10 + 5)) |> Maybe.withDefault 0
+
+                idx =
+                    if n >= maxIter then
+                        9
+
+                    else
+                        min 8 (n // 3)
+            in
+            String.slice idx (idx + 1) palette
+    in
+    List.map (\y -> String.concat (List.map (\x -> charAt x y) (List.range 0 59))) (List.range 0 23)
+
+
+tell : String -> ()
+tell s =
+    Debug.log s ()
+
+
+report : () -> List String
+report () =
+    let
+        total =
+            toFloat (size * size)
+
+        zero =
+            0.0
+
+        floats =
+            [ 0.1 + 0.2, 1 / 3, 2 / 3, 100, 1.0e21, 1.0e-7, 123456789.125, 1.5e300, 5.0e-324
+            , 1.7976931348623157e308, -2.5, 0 / zero, 1 / zero, -1 / zero, 4.35, 0.000001, 1.0e20
+            , 1.2345678901234567e19, sqrt 2, 2 ^ 53, 0.5e-6, negate zero, 1.0e-6, 1.2345678901234568e20
+            , 1.0e22, 0.1, 4.9406564584124654e-324, 2.2250738585072014e-308
+            ]
+    in
+    [ "grid: " ++ String.fromInt size ++ " x " ++ String.fromInt size ++ ", max " ++ String.fromInt maxIter ++ " iterations"
+    , "inside: " ++ String.fromInt stats.inside
+    , "total iterations: " ++ String.fromInt stats.total
+    , "count checksum: " ++ String.fromInt stats.ck
+    , "bitmap hash: " ++ String.fromInt bitmapHash
+    ]
+        ++ thumbnail
+        ++ [ "area estimate: " ++ String.fromFloat (4.0 * toFloat stats.inside / total)
+           , "mean iterations: " ++ String.fromFloat (toFloat stats.total / total)
+           , "re range of inside points: " ++ String.fromFloat stats.minRe ++ " to " ++ String.fromFloat stats.maxRe
+           , "im range of inside points: " ++ String.fromFloat stats.minIm ++ " to " ++ String.fromFloat stats.maxIm
+           , "centroid: " ++ String.fromFloat (stats.sumRe / toFloat stats.inside) ++ ", " ++ String.fromFloat (stats.sumIm / toFloat stats.inside)
+           , "floats: " ++ String.join " " (List.map String.fromFloat floats)
+           , "isNaN: " ++ (if isNaN (0 / zero) then "yes" else "no") ++ ", isInfinite: " ++ (if isInfinite (1 / zero) then "yes" else "no")
+           , "round: " ++ String.join " " (List.map (\x -> String.fromInt (round x)) [ -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 0.49999999999999994, 2.4999999999999996 ])
+           , "floor ceiling truncate: "
+                ++ String.join " "
+                    (List.map String.fromInt [ floor -1.5, ceiling -1.5, truncate -1.5, floor 1.5, ceiling 1.5, truncate 1.9, truncate -1.9, floor 3.0, ceiling 3.0 ])
+           ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( List.foldl (\s () -> tell s) () (report ()), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

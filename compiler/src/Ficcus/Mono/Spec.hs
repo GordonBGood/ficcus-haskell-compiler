@@ -328,6 +328,7 @@ classOfName enums name _ =
     "elm/core:Basics.Bool" -> CEnum
     "elm/core:String.String" -> CRef         -- declared as a one constructor type in elm/core, but a built-in
     "elm/core:List.List" -> CRef
+    "elm/core:Elm.JsArray.JsArray" -> CRef   -- declared without constructors, a built-in (runtime/fic_jsarray.h)
     "elm/core:Platform.Cmd.Cmd" -> CUnit       -- commands are ignored by Platform.worker (STAGE3-PLAN R9)
     "elm/core:Platform.Sub.Sub" -> CUnit
     "elm/core:Platform.Program" -> CUnit
@@ -476,6 +477,23 @@ specExpr se (A.At region e) =
       do  cls <- exprClass se region e
           xs' <- mapM (specExpr se) xs
           return (MExpr cls (MList xs'))
+    -- { r | a = x, b = y }: r is evaluated first, then the new values in the order of Elm's Map of field names (shorter names first, then alphabetical; Elm's
+    -- `_Utils_update(r, {a: x, b: y})`); a new record of the same layout takes the other fields from r
+    Can.Update _ r@(A.At rregion r') updates ->
+      do  cls <- exprClass se region e
+          r'' <- specExpr se r
+          let fields = case nodeType se (Recorder.exprKey rregion r') of
+                Just t -> recordFields t
+                Nothing -> Nothing
+          case (fields, cls) of
+            (Just names, CStruct fcs) | length names == length fcs ->
+              do  CloneId k <- freshId
+                  let tmp = "_up" ++ show k
+                  news <- forM (Map.toList updates) (\(n, Can.FieldUpdate _ v) -> (,) (N.toChars n) <$> specExpr se v)
+                  let old' = MExpr (mRep r'') (MLocal tmp)
+                  let field (i, (n, c)) = (n, case lookup n news of { Just v -> v; Nothing -> MExpr c (MAccess old' n i) })
+                  return (MExpr (mRep r'') (MLetVal tmp r'' (MExpr cls (MRecord (map field (zip [0 ..] (zip names fcs)))))))
+            _ -> unsupported "a record update on an extensible record (row polymorphism: slice 5)" region
     Can.Access r@(A.At rregion r') (A.At _ fld) ->
       do  cls <- exprClass se region e
           r'' <- specExpr se r
@@ -652,6 +670,7 @@ isVarLike e =
     Can.VarTopLevel _ _ -> True
     Can.VarForeign {} -> True
     Can.VarDebug {} -> True
+    Can.VarKernel {} -> True
     Can.VarOperator {} -> True
     Can.VarCtor {} -> True
     _ -> False                                      -- (a Binop is an expression of its own: `(f << g) x` is a computed call)
@@ -783,6 +802,12 @@ resolve se region e =
     Can.VarOperator _ h n _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.Binop _ h n _ _ _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.VarDebug _ n _ -> foreignOrTop ("elm/core:Debug." ++ N.toChars n)
+    -- `Elm.Kernel.Basics.log x` written directly in an elm/core body (logBase): a kernel function without variables
+    Can.VarKernel home name ->
+      let cid = "elm/core:" ++ String.toChars (Module.kernelToString home) ++ "." ++ N.toChars name
+      in case kernelArity cid of
+           Just arity -> return (RKernel cid (Key []) arity)
+           Nothing -> return RNone
     Can.VarCtor _ _ name idx (Can.Forall _ tipe) ->
       return (case recordCtor tipe of
                 Just names -> RRec names

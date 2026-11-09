@@ -1,0 +1,179 @@
+module Arr exposing (main)
+
+import Array exposing (Array)
+
+-- Array (elm/core's Array.elm over the Elm.JsArray primitives): fromList, get, set, push, slice, append, foldl, foldr,
+-- indexedMap, map, toList, repeat, initialize, empty, length, out of range, element classes Int, Float, String,
+-- Bool, tuples and custom types, sizes across the tree levels (32, 1024 and more elements). The output must equal
+-- Elm's (expected/arr.out, from Elm 0.19.3 under node).
+
+
+type Shape
+    = Dot
+    | Line Int
+    | Box Int Int
+
+
+showL : (a -> String) -> List a -> String
+showL conv xs =
+    "[" ++ List.foldl (\x acc -> acc ++ conv x ++ ",") "" xs ++ "]"
+
+
+showA : (a -> String) -> Array a -> String
+showA conv a =
+    "L" ++ String.fromInt (Array.length a) ++ showL conv (Array.toList a)
+
+
+showI : Array Int -> String
+showI =
+    showA String.fromInt
+
+
+-- a summary of a big array: length, sum, the first and last elements
+sumary : Array Int -> String
+sumary a =
+    String.fromInt (Array.length a) ++ " sum " ++ String.fromInt (Array.foldl (+) 0 a) ++ " rsum " ++ String.fromInt (Array.foldr (\x acc -> modBy 1000003 (acc * 3 + x)) 0 a)
+
+
+shape : Shape -> String
+shape s =
+    case s of
+        Dot ->
+            "."
+
+        Line n ->
+            "-" ++ String.fromInt n
+
+        Box w h ->
+            "#" ++ String.fromInt w ++ "x" ++ String.fromInt h
+
+
+maybeInt : Maybe Int -> String
+maybeInt m =
+    case m of
+        Just v ->
+            "J" ++ String.fromInt v
+
+        Nothing ->
+            "N"
+
+
+b2s : Bool -> String
+b2s b =
+    if b then
+        "T"
+
+    else
+        "F"
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    small =
+                        Array.fromList [ 10, 20, 30, 40, 50 ]
+
+                    big =
+                        Array.initialize 5000 (\i -> i * i - 7 * i)
+
+                    huge =
+                        Array.fromList (List.range 1 40000)
+
+                    l1 =
+                        Debug.log "small" (showI small)
+
+                    l2 =
+                        Debug.log "get" (showL maybeInt [ Array.get 0 small, Array.get 4 small, Array.get 5 small, Array.get -1 small, Array.get -5 small, Array.get -6 small ])
+
+                    l3 =
+                        Debug.log "set" (showI (Array.set 2 99 small) ++ showI (Array.set 5 99 small) ++ showI (Array.set -1 99 small) ++ showI small)
+
+                    l4 =
+                        Debug.log "push" (showI (Array.push 60 small) ++ showI (Array.push 1 Array.empty))
+
+                    l5 =
+                        Debug.log "slice" (showL showI [ Array.slice 1 3 small, Array.slice 0 100 small, Array.slice -2 5 small, Array.slice 2 -1 small, Array.slice 4 2 small, Array.slice -100 2 small, Array.slice 3 3 small ])
+
+                    l6 =
+                        Debug.log "append" (showI (Array.append small (Array.fromList [ 1, 2, 3 ])) ++ showI (Array.append Array.empty small) ++ showI (Array.append small Array.empty))
+
+                    l7 =
+                        Debug.log "fold" (showL String.fromInt [ Array.foldl (\x acc -> acc * 2 + x) 0 small, Array.foldr (\x acc -> acc * 2 + x) 0 small ])
+
+                    l8 =
+                        Debug.log "foldl order" (Array.foldl (\x acc -> acc ++ String.fromInt x ++ " ") "" small ++ Array.foldr (\x acc -> acc ++ String.fromInt x ++ " ") "" small)
+
+                    l9 =
+                        Debug.log "indexedMap" (showI (Array.indexedMap (\i x -> i * 1000 + x) small))
+
+                    l10 =
+                        Debug.log "map" (showI (Array.map (\x -> x // 3) small) ++ showA String.fromFloat (Array.map (\x -> toFloat x / 4) small))
+
+                    l11 =
+                        Debug.log "repeat" (showI (Array.repeat 4 7) ++ showI (Array.repeat 0 7) ++ showI (Array.repeat -3 7) ++ showA identity (Array.repeat 3 "ab"))
+
+                    l12 =
+                        Debug.log "initialize" (showI (Array.initialize 6 (\i -> i * i)) ++ showI (Array.initialize 0 identity) ++ showI (Array.initialize -2 identity))
+
+                    l13 =
+                        Debug.log "empty" (showI Array.empty ++ b2s (Array.isEmpty Array.empty) ++ b2s (Array.isEmpty small))
+
+                    l14 =
+                        Debug.log "big" (sumary big ++ " " ++ maybeInt (Array.get 4999 big) ++ maybeInt (Array.get 5000 big) ++ maybeInt (Array.get 1234 big))
+
+                    l15 =
+                        Debug.log "huge" (sumary huge ++ " " ++ maybeInt (Array.get 39999 huge) ++ maybeInt (Array.get 32 huge) ++ maybeInt (Array.get 1023 huge) ++ maybeInt (Array.get 1024 huge))
+
+                    l16 =
+                        Debug.log "huge set/push" (sumary (Array.push 5 (Array.set 33333 0 huge)) ++ " " ++ sumary huge)
+
+                    l17 =
+                        Debug.log "huge slice" (sumary (Array.slice 100 30000 huge) ++ " " ++ sumary (Array.slice -50 40000 huge) ++ " " ++ sumary (Array.slice 31 1057 huge))
+
+                    l18 =
+                        Debug.log "huge append" (sumary (Array.append huge big) ++ " " ++ sumary (Array.append big huge) ++ " " ++ sumary (Array.append small big))
+
+                    l19 =
+                        Debug.log "pushes" (sumary (List.foldl (\i a -> Array.push i a) Array.empty (List.range 1 3000)))
+
+                    l20 =
+                        Debug.log "strings" (showA identity (Array.fromList [ "a", "bc", "" ]) ++ showA identity (Array.push "z" (Array.fromList [ "a", "bc", "" ])))
+
+                    l21 =
+                        Debug.log "tuples" (showA (\( a, b ) -> String.fromInt a ++ ":" ++ b) (Array.fromList [ ( 1, "x" ), ( 2, "y" ) ]) ++ showA (\( a, b ) -> String.fromInt a ++ ":" ++ b) (Array.set 1 ( 9, "q" ) (Array.fromList [ ( 1, "x" ), ( 2, "y" ) ])))
+
+                    l22 =
+                        Debug.log "shapes" (showA shape (Array.fromList [ Dot, Line 3, Box 2 5 ]) ++ showA shape (Array.indexedMap (\i s -> if i == 1 then Dot else s) (Array.fromList [ Dot, Line 3, Box 2 5 ])))
+
+                    l23 =
+                        Debug.log "bools" (showA b2s (Array.fromList [ True, False, True ]) ++ showA b2s (Array.map (\x -> x > 2) (Array.fromList [ 1, 2, 3, 4 ])))
+
+                    l24 =
+                        Debug.log "floats" (showA String.fromFloat (Array.fromList [ 1.5, -0.25, 1 / 0 ]) ++ showA String.fromFloat (Array.foldl (\x acc -> Array.push (x * 2) acc) Array.empty (Array.fromList [ 1.5, 2.5 ])))
+
+                    l25 =
+                        Debug.log "eq" (showL b2s [ Array.fromList [ 1, 2, 3 ] == Array.fromList [ 1, 2, 3 ], Array.fromList [ 1, 2, 3 ] == Array.fromList [ 1, 2 ], Array.fromList [ 1, 2, 3 ] == Array.fromList [ 1, 2, 4 ], Array.fromList [ 1, 2, 3 ] /= Array.push 3 (Array.fromList [ 1, 2 ]), Array.fromList [ "a" ] == Array.fromList [ "a" ], big == Array.initialize 5000 (\i -> i * i - 7 * i) ])
+
+                    l26 =
+                        Debug.log "map order" (showI (Array.indexedMap (\i x -> Debug.log "visit" (i + x)) (Array.fromList [ 5, 6, 7 ])))
+
+                    l27 =
+                        Debug.log "fold order" (String.fromInt (Array.foldr (\x acc -> Debug.log "r" x + acc) 0 (Array.fromList [ 1, 2, 3 ]) + Array.foldl (\x acc -> Debug.log "l" x + acc) 0 (Array.fromList [ 1, 2, 3 ])))
+
+                    l28 =
+                        Debug.log "filter" (showI (Array.filter (\x -> modBy 3 x == 0) (Array.fromList (List.range 1 20))))
+
+                    l29 =
+                        Debug.log "toIndexedList" (showL (\( i, x ) -> String.fromInt i ++ "=" ++ x) (Array.toIndexedList (Array.fromList [ "a", "b" ])))
+                in
+                if List.length [ l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15, l16, l17, l18, l19, l20, l21, l22, l23, l24, l25, l26, l27, l28, l29 ] > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
