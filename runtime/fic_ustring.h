@@ -263,3 +263,214 @@ static fic_ref fic_us_from_list(fic_ref list) {
   free(buf);
   return r;
 }
+
+/* ---- searching and splitting (UTF-8 byte comparison is the code point comparison; indexes count code points, L11/L22) ---- */
+
+typedef struct fic_us_icell { fic_hdr h; int64_t f0; fic_ref f1; } fic_us_icell;   /* a cons cell of a List Int */
+
+static const char *fic_us_memmem(const char *h, int64_t hl, const char *n, int64_t nl, int64_t from) {
+  int64_t i;
+  if (nl == 0) return from <= hl ? h + from : NULL;
+  for (i = from; i + nl <= hl; i++) if (h[i] == n[0] && memcmp(h + i, n, (size_t)nl) == 0) return h + i;
+  return NULL;
+}
+
+static uint8_t fic_us_contains(fic_ref sub, fic_ref s) {
+  return fic_us_memmem(FIC_STR(s)->data, FIC_STR(s)->len, FIC_STR(sub)->data, FIC_STR(sub)->len, 0) != NULL;
+}
+static uint8_t fic_us_starts_with(fic_ref sub, fic_ref s) {
+  return FIC_STR(sub)->len <= FIC_STR(s)->len && memcmp(FIC_STR(s)->data, FIC_STR(sub)->data, (size_t)FIC_STR(sub)->len) == 0;
+}
+static uint8_t fic_us_ends_with(fic_ref sub, fic_ref s) {
+  int64_t d = FIC_STR(s)->len - FIC_STR(sub)->len;
+  return d >= 0 && memcmp(FIC_STR(s)->data + d, FIC_STR(sub)->data, (size_t)FIC_STR(sub)->len) == 0;
+}
+
+/* the code point index of the byte offset b */
+static int64_t fic_us_cp_index(const char *d, int64_t b) {
+  int64_t i, n = 0;
+  for (i = 0; i < b; i++) if (((unsigned char)d[i] & 0xC0u) != 0x80u) n++;
+  return n;
+}
+
+/* Elm's indexes: the non overlapping matches from the left; no index for an empty pattern */
+static fic_ref fic_us_indexes(fic_ref sub, fic_ref s) {
+  int64_t sl = FIC_STR(sub)->len, hl = FIC_STR(s)->len, n = 0, i = 0, k;
+  int64_t *at;
+  fic_ref list = (fic_ref)fic_alloc(sizeof(fic_hdr), 0u, 0);
+  const char *p;
+  if (sl < 1) return list;
+  at = (int64_t *)malloc((size_t)(hl + 1) * sizeof(int64_t));
+  if (at == NULL) abort();
+  while ((p = fic_us_memmem(FIC_STR(s)->data, hl, FIC_STR(sub)->data, sl, i)) != NULL) { at[n++] = (int64_t)(p - FIC_STR(s)->data); i = at[n - 1] + sl; }
+  for (k = n - 1; k >= 0; k--) {
+    fic_us_icell *c = (fic_us_icell *)fic_alloc(sizeof(fic_us_icell), 1u, 0);
+    c->f0 = fic_us_cp_index(FIC_STR(s)->data, at[k]); c->f1 = list; list = &c->h;
+  }
+  free(at);
+  return list;
+}
+
+/* a list of the pieces (start, length) of s in order */
+static fic_ref fic_us_pieces(fic_ref s, const int64_t *st, const int64_t *ln, int64_t n) {
+  fic_ref list = (fic_ref)fic_alloc(sizeof(fic_hdr), 0u, 0);
+  int64_t i;
+  for (i = n - 1; i >= 0; i--) list = fic_us_cons_cell(fic_str_new(FIC_STR(s)->data + st[i], ln[i]), list);
+  return list;
+}
+
+/* String.split: JavaScript's split; an empty separator gives the code points (the empty string gives []) */
+static fic_ref fic_us_split(fic_ref sep, fic_ref s) {
+  int64_t sl = FIC_STR(sep)->len, hl = FIC_STR(s)->len, n = 0, i = 0, cap = hl + 2;
+  int64_t *st = (int64_t *)malloc((size_t)cap * sizeof(int64_t)), *ln = (int64_t *)malloc((size_t)cap * sizeof(int64_t));
+  fic_ref r;
+  if (st == NULL || ln == NULL) abort();
+  if (sl == 0) {
+    while (i < hl) { int64_t b = i + 1; while (b < hl && ((unsigned char)FIC_STR(s)->data[b] & 0xC0u) == 0x80u) b++; st[n] = i; ln[n] = b - i; n++; i = b; }
+  } else {
+    int64_t from = 0;
+    const char *p;
+    while ((p = fic_us_memmem(FIC_STR(s)->data, hl, FIC_STR(sep)->data, sl, from)) != NULL) {
+      int64_t at = (int64_t)(p - FIC_STR(s)->data);
+      st[n] = from; ln[n] = at - from; n++; from = at + sl;
+    }
+    st[n] = from; ln[n] = hl - from; n++;
+  }
+  r = fic_us_pieces(s, st, ln, n);
+  free(st); free(ln);
+  return r;
+}
+
+/* String.lines: split at \r\n, \r or \n */
+static fic_ref fic_us_lines(fic_ref s) {
+  int64_t hl = FIC_STR(s)->len, n = 0, i, from = 0;
+  int64_t *st = (int64_t *)malloc((size_t)(hl + 2) * sizeof(int64_t)), *ln = (int64_t *)malloc((size_t)(hl + 2) * sizeof(int64_t));
+  const char *d = FIC_STR(s)->data;
+  fic_ref r;
+  if (st == NULL || ln == NULL) abort();
+  for (i = 0; i < hl; i++) {
+    if (d[i] == '\n' || d[i] == '\r') {
+      st[n] = from; ln[n] = i - from; n++;
+      if (d[i] == '\r' && i + 1 < hl && d[i + 1] == '\n') i++;
+      from = i + 1;
+    }
+  }
+  st[n] = from; ln[n] = hl - from; n++;
+  r = fic_us_pieces(s, st, ln, n);
+  free(st); free(ln);
+  return r;
+}
+
+static fic_ref fic_us_reverse(fic_ref s) {
+  int64_t hl = FIC_STR(s)->len, i = hl, o = 0;
+  fic_string *r = (fic_string *)fic_alloc(sizeof(fic_string) + (size_t)hl + 1, FIC_TAG_STRING, 0);
+  while (i > 0) {
+    int64_t b = i - 1, k;
+    while (b > 0 && ((unsigned char)FIC_STR(s)->data[b] & 0xC0u) == 0x80u) b--;
+    for (k = b; k < i; k++) r->data[o++] = FIC_STR(s)->data[k];
+    i = b;
+  }
+  r->len = hl; r->data[hl] = 0;
+  return &r->h;
+}
+
+/* trim (both, left, right): JavaScript's white space */
+static fic_ref fic_us_trim_gen(fic_ref s, int left, int right) {
+  const unsigned char *d = (const unsigned char *)FIC_STR(s)->data, *end = d + FIC_STR(s)->len, *a = d, *b = end, *q;
+  uint32_t c;
+  if (left) for (;;) { q = a; if (a >= end) break; c = fic_us_get(&q); if (!fic_us_ws(c)) break; a = q; }
+  if (right) for (;;) { q = b; if (b <= a) break; c = fic_us_prev(a, &q); if (!fic_us_ws(c)) break; b = q; }
+  return fic_str_new((const char *)a, (int64_t)(b - a));
+}
+static fic_ref fic_us_trim(fic_ref s) { return fic_us_trim_gen(s, 1, 1); }
+static fic_ref fic_us_trim_left(fic_ref s) { return fic_us_trim_gen(s, 1, 0); }
+static fic_ref fic_us_trim_right(fic_ref s) { return fic_us_trim_gen(s, 0, 1); }
+
+/* uncons: 0 for the empty string, else the first code point and the rest */
+static int fic_us_uncons(fic_ref s, uint32_t *c, fic_ref *rest) {
+  const unsigned char *d = (const unsigned char *)FIC_STR(s)->data, *p = d;
+  if (FIC_STR(s)->len == 0) return 0;
+  *c = fic_us_get(&p);
+  *rest = fic_str_new((const char *)p, FIC_STR(s)->len - (int64_t)(p - d));
+  return 1;
+}
+
+/* filter, any, all: f is Char -> Bool */
+static fic_ref fic_us_filter(fic_ref f, fic_ref s) {
+  const unsigned char *p = (const unsigned char *)FIC_STR(s)->data, *end = p + FIC_STR(s)->len;
+  char *buf = (char *)malloc((size_t)FIC_STR(s)->len + 1u), *o = buf;
+  fic_ref r;
+  if (buf == NULL) abort();
+  while (p < end) { uint32_t c = fic_us_get(&p); if (fic_ap1(f, 0u, fic_w_c(c)).b) o += fic_us_put(o, c); }
+  r = fic_str_new(buf, (int64_t)(o - buf));
+  free(buf);
+  return r;
+}
+static uint8_t fic_us_any(fic_ref f, fic_ref s) {
+  const unsigned char *p = (const unsigned char *)FIC_STR(s)->data, *end = p + FIC_STR(s)->len;
+  while (p < end) { uint32_t c = fic_us_get(&p); if (fic_ap1(f, 0u, fic_w_c(c)).b) return 1; }
+  return 0;
+}
+static uint8_t fic_us_all(fic_ref f, fic_ref s) {
+  const unsigned char *p = (const unsigned char *)FIC_STR(s)->data, *end = p + FIC_STR(s)->len;
+  while (p < end) { uint32_t c = fic_us_get(&p); if (!fic_ap1(f, 0u, fic_w_c(c)).b) return 0; }
+  return 1;
+}
+
+/* toInt: Elm's grammar (an optional + or -, then digits only; nothing else, no digits is Nothing) read in 64 bits:
+   a value that does not fit gives Nothing (decision L14; Elm's JavaScript loses precision beyond 2^53) */
+static int fic_us_to_int(fic_ref s, int64_t *out) {
+  const char *d = FIC_STR(s)->data;
+  int64_t n = FIC_STR(s)->len, i = 0;
+  int neg = 0;
+  uint64_t total = 0, limit;
+  if (n > 0 && (d[0] == '+' || d[0] == '-')) { neg = d[0] == '-'; i = 1; }
+  if (i == n) return 0;
+  limit = neg ? (uint64_t)INT64_MAX + 1u : (uint64_t)INT64_MAX;
+  for (; i < n; i++) {
+    unsigned dig;
+    if (d[i] < '0' || d[i] > '9') return 0;
+    dig = (unsigned)(d[i] - '0');
+    if (total > (limit - dig) / 10u) return 0;
+    total = total * 10u + dig;
+  }
+  *out = neg ? (int64_t)(0u - total) : (int64_t)total;
+  return 1;
+}
+
+/* toFloat: Elm accepts what JavaScript's +s reads as a decimal number, except the empty string and anything with white
+   space or an x, b or o in it: [+-] (Infinity | digits [. [digits]] [e [+-] digits] | . digits [e [+-] digits]) */
+static int fic_us_to_float(fic_ref s, double *out) {
+  const char *d = FIC_STR(s)->data;
+  int64_t n = FIC_STR(s)->len, i = 0, k;
+  int digits = 0, neg = 0;
+  char *tmp, *endp;
+  for (k = 0; k < n; k++) { unsigned char c = (unsigned char)d[k]; if (c == 'x' || c == 'b' || c == 'o' || fic_us_ws(c) || c >= 0x80u) return 0; }
+  if (n == 0) return 0;
+  if (d[i] == '+' || d[i] == '-') { neg = d[i] == '-'; i++; }
+  if (n - i == 8 && memcmp(d + i, "Infinity", 8) == 0) { *out = neg ? -INFINITY : INFINITY; return 1; }
+  while (i < n && d[i] >= '0' && d[i] <= '9') { i++; digits++; }
+  if (i < n && d[i] == '.') { i++; while (i < n && d[i] >= '0' && d[i] <= '9') { i++; digits++; } }
+  if (digits == 0) return 0;
+  if (i < n && (d[i] == 'e' || d[i] == 'E')) {
+    int64_t j = i + 1;
+    int ed = 0;
+    if (j < n && (d[j] == '+' || d[j] == '-')) j++;
+    while (j < n && d[j] >= '0' && d[j] <= '9') { j++; ed++; }
+    if (ed == 0) return 0;
+    i = j;
+  }
+  if (i != n) return 0;
+  tmp = (char *)malloc((size_t)n + 1u);
+  if (tmp == NULL) abort();
+  memcpy(tmp, d, (size_t)n); tmp[n] = 0;
+  *out = strtod(tmp, &endp);
+  free(tmp);
+  return 1;
+}
+
+/* Char.fromCode: a surrogate, a negative number or a value above 0x10FFFF gives U+FFFD (decision L9) */
+static uint32_t fic_us_from_code(int64_t n) {
+  if (n < 0 || n > 0x10FFFF || (n >= 0xD800 && n <= 0xDFFF)) return 0xFFFDu;
+  return (uint32_t)n;
+}

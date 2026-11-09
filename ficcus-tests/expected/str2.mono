@@ -1,0 +1,986 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:Str2 (project)
+clone c0   def: author/project:Str2.showL   key: ()   kind: function   init: 0   needs: 
+clone c1   def: author/project:Str2.showI   key: ()   kind: function   init: 1   needs: 
+clone c2   def: author/project:Str2.b2s   key: ()   kind: function   init: 2   needs: 
+clone c3   def: author/project:Str2.mu   key: ()   kind: function   init: 3   needs: 
+clone c4   def: author/project:Str2.mi   key: ()   kind: function   init: 4   needs: 
+clone c5   def: author/project:Str2.mf   key: ()   kind: function   init: 5   needs: 
+clone c6   def: author/project:Str2.main   key: ()   kind: value   init: 6   needs: 
+-- program: 43 clones, reachable from main, dependencies first
+clone c2   def: author/project:Str2.showL   key: ()   kind: function   params: xs:ref   result: ref
+  Call :: ref
+    Kernel elm/core:Basics.append (v0=app string) :: ref
+    Lit "[" :: ref
+    Call :: ref
+      Kernel elm/core:Basics.append (v0=app string) :: ref
+      Call :: ref
+        Kernel elm/core:String.join () :: ref
+        Lit "|" :: ref
+        Local xs :: ref
+      Lit "]" :: ref
+clone c3   def: elm/core:String.fromChar   key: ()   kind: function   params: char:u32   result: ref
+  Call :: ref
+    Kernel elm/core:String.cons () :: ref
+    Local char :: u32
+    Lit "" :: ref
+clone c33   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: ref :: xs :: ref :: ref
+      Call :: ref
+        Global c33 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: ref
+          Local acc :: ref
+        Local xs :: ref
+clone c38   def: elm/core:List.lambda@261:9   key: ()   outer: c34 (v0=ref)   kind: function   params: _pb38_0:ref _pb38_1:ref   result: ref   lifted-from: c34
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Local _pb38_0 :: ref
+    Local _pb38_1 :: ref
+clone c34   def: elm/core:List.reverse   key: (v0=ref)   name: reverse__ref   kind: function   params: list:ref   result: ref
+  Call :: ref
+    Global c33 :: ref
+    Global c38 :: ref
+    List :: ref
+    Local list :: ref
+clone c29   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldrHelper__ref__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
+  Case :: ref
+    Local ls :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch a :: ref :: r1 :: ref :: ref
+      Case :: ref
+        Local r1 :: ref
+        branch [] :: ref
+          Call :: ref
+            Local fn :: ref
+            Local a :: ref
+            Local acc :: ref
+        branch b :: ref :: r2 :: ref :: ref
+          Case :: ref
+            Local r2 :: ref
+            branch [] :: ref
+              Call :: ref
+                Local fn :: ref
+                Local a :: ref
+                Call :: ref
+                  Local fn :: ref
+                  Local b :: ref
+                  Local acc :: ref
+            branch c :: ref :: r3 :: ref :: ref
+              Case :: ref
+                Local r3 :: ref
+                branch [] :: ref
+                  Call :: ref
+                    Local fn :: ref
+                    Local a :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local b :: ref
+                      Call :: ref
+                        Local fn :: ref
+                        Local c :: ref
+                        Local acc :: ref
+                branch d :: ref :: r4 :: ref :: ref
+                  Let res :: ref
+                    If :: ref
+                      Call :: enum
+                        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                        Local ctr :: i64
+                        Lit 500 :: i64
+                      Call :: ref
+                        Global c33 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: ref
+                          Global c34 :: ref
+                          Local r4 :: ref
+                      Call :: ref
+                        Global c29 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: i64
+                          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                          Local ctr :: i64
+                          Lit 1 :: i64
+                        Local r4 :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local a :: ref
+                      Call :: ref
+                        Local fn :: ref
+                        Local b :: ref
+                        Call :: ref
+                          Local fn :: ref
+                          Local c :: ref
+                          Call :: ref
+                            Local fn :: ref
+                            Local d :: ref
+                            Local res :: ref
+clone c20   def: elm/core:List.foldr   key: (v0=ref; v1=ref)   name: foldr__ref__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
+  Call :: ref
+    Global c29 :: ref
+    Local fn :: ref
+    Local acc :: ref
+    Lit 0 :: i64
+    Local ls :: ref
+clone c21   def: elm/core:List.lambda@125:10   key: ()   outer: c4 (v0=ref; v1=ref)   kind: function   params: x:ref acc:ref   result: ref   lifted-from: c4
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Call :: ref
+      Local f :: ref
+      Local x :: ref
+    Local acc :: ref
+clone c4   def: elm/core:List.map   key: (v0=ref; v1=ref)   name: map__ref__ref   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Global c20 :: ref
+    Global c21 :: ref
+    List :: ref
+    Local xs :: ref
+clone c6   def: author/project:Str2.mf   key: ()   kind: function   params: m:ref   result: ref
+  Case :: ref
+    Local m :: ref
+    branch Just #0 v :: f64 :: ref
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Lit "J" :: ref
+        Call :: ref
+          Kernel elm/core:String.fromFloat () :: ref
+          Local v :: f64
+    branch Nothing #1 :: ref
+      Lit "N" :: ref
+clone c5   def: author/project:Str2.lambda@91:63   key: ()   kind: function   params: s:ref   result: ref   lifted-from: c1
+  Call :: ref
+    Global c6 :: ref
+    Call :: ref
+      Kernel elm/core:String.toFloat () :: ref
+      Local s :: ref
+clone c8   def: author/project:Str2.mi   key: ()   kind: function   params: m:ref   result: ref
+  Case :: ref
+    Local m :: ref
+    branch Just #0 v :: i64 :: ref
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Lit "J" :: ref
+        Call :: ref
+          Kernel elm/core:String.fromInt () :: ref
+          Local v :: i64
+    branch Nothing #1 :: ref
+      Lit "N" :: ref
+clone c7   def: author/project:Str2.lambda@88:61   key: ()   kind: function   params: s:ref   result: ref   lifted-from: c1
+  Call :: ref
+    Global c8 :: ref
+    Call :: ref
+      Kernel elm/core:String.toInt () :: ref
+      Local s :: ref
+clone c22   def: elm/core:String.repeatHelp   key: ()   kind: function   params: n:i64 chunk:ref result:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+      Local n :: i64
+      Lit 0 :: i64
+    Local result :: ref
+    Call :: ref
+      Global c22 :: ref
+      Call :: i64
+        Kernel elm/core:Bitwise.shiftRightBy () :: ref
+        Lit 1 :: i64
+        Local n :: i64
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Local chunk :: ref
+        Local chunk :: ref
+      If :: ref
+        Call :: enum
+          Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
+          Call :: i64
+            Kernel elm/core:Bitwise.and () :: ref
+            Local n :: i64
+            Lit 1 :: i64
+          Lit 0 :: i64
+        Local result :: ref
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Local result :: ref
+          Local chunk :: ref
+clone c9   def: elm/core:String.repeat   key: ()   kind: function   params: n:i64 chunk:ref   result: ref
+  Call :: ref
+    Global c22 :: ref
+    Local n :: i64
+    Local chunk :: ref
+    Lit "" :: ref
+clone c10   def: elm/core:String.replace   key: ()   kind: function   params: before:ref after:ref string:ref   result: ref
+  Call :: ref
+    Kernel elm/core:String.join () :: ref
+    Local after :: ref
+    Call :: ref
+      Kernel elm/core:String.split () :: ref
+      Local before :: ref
+      Local string :: ref
+clone c11   def: elm/core:Char.isDigit   key: ()   kind: function   params: char:u32   result: enum
+  Let code :: enum
+    Call :: i64
+      Kernel elm/core:Char.toCode () :: ref
+      Local char :: u32
+    Call :: enum
+      Kernel elm/core:Basics.and () :: ref
+      Call :: enum
+        Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+        Local code :: i64
+        Lit 57 :: i64
+      Call :: enum
+        Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+        Lit 48 :: i64
+        Local code :: i64
+clone c12   def: author/project:Str2.lambda@82:113   key: ()   kind: function   params: c:u32   result: enum   lifted-from: c1
+  Call :: enum
+    Kernel elm/core:Basics.neq (v0=type elm/core:Char.Char) :: ref
+    Local c :: u32
+    Lit '233' :: u32
+clone c13   def: author/project:Str2.b2s   key: ()   kind: function   params: b:enum   result: ref
+  If :: ref
+    Local b :: enum
+    Lit "T" :: ref
+    Lit "F" :: ref
+clone c14   def: elm/core:Char.isUpper   key: ()   kind: function   params: char:u32   result: enum
+  Let code :: enum
+    Call :: i64
+      Kernel elm/core:Char.toCode () :: ref
+      Local char :: u32
+    Call :: enum
+      Kernel elm/core:Basics.and () :: ref
+      Call :: enum
+        Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+        Local code :: i64
+        Lit 90 :: i64
+      Call :: enum
+        Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+        Lit 65 :: i64
+        Local code :: i64
+clone c15   def: elm/core:Char.isLower   key: ()   kind: function   params: char:u32   result: enum
+  Let code :: enum
+    Call :: i64
+      Kernel elm/core:Char.toCode () :: ref
+      Local char :: u32
+    Call :: enum
+      Kernel elm/core:Basics.and () :: ref
+      Call :: enum
+        Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+        Lit 97 :: i64
+        Local code :: i64
+      Call :: enum
+        Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+        Local code :: i64
+        Lit 122 :: i64
+clone c39   def: elm/core:List.foldl   key: (v0=i64; v1=ref)   name: foldl__i64__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: ref
+        Global c39 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: i64
+          Local acc :: ref
+        Local xs :: ref
+clone c42   def: elm/core:List.lambda@261:9   key: ()   outer: c40 (v0=i64)   kind: function   params: _pb42_0:i64 _pb42_1:ref   result: ref   lifted-from: c40
+  Call :: ref
+    Kernel elm/core:List.cons (v0=i64) :: ref
+    Local _pb42_0 :: i64
+    Local _pb42_1 :: ref
+clone c40   def: elm/core:List.reverse   key: (v0=i64)   name: reverse__i64   kind: function   params: list:ref   result: ref
+  Call :: ref
+    Global c39 :: ref
+    Global c42 :: ref
+    List :: ref
+    Local list :: ref
+clone c35   def: elm/core:List.foldrHelper   key: (v0=i64; v1=ref)   name: foldrHelper__i64__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
+  Case :: ref
+    Local ls :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch a :: i64 :: r1 :: ref :: ref
+      Case :: ref
+        Local r1 :: ref
+        branch [] :: ref
+          Call :: ref
+            Local fn :: ref
+            Local a :: i64
+            Local acc :: ref
+        branch b :: i64 :: r2 :: ref :: ref
+          Case :: ref
+            Local r2 :: ref
+            branch [] :: ref
+              Call :: ref
+                Local fn :: ref
+                Local a :: i64
+                Call :: ref
+                  Local fn :: ref
+                  Local b :: i64
+                  Local acc :: ref
+            branch c :: i64 :: r3 :: ref :: ref
+              Case :: ref
+                Local r3 :: ref
+                branch [] :: ref
+                  Call :: ref
+                    Local fn :: ref
+                    Local a :: i64
+                    Call :: ref
+                      Local fn :: ref
+                      Local b :: i64
+                      Call :: ref
+                        Local fn :: ref
+                        Local c :: i64
+                        Local acc :: ref
+                branch d :: i64 :: r4 :: ref :: ref
+                  Let res :: ref
+                    If :: ref
+                      Call :: enum
+                        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                        Local ctr :: i64
+                        Lit 500 :: i64
+                      Call :: ref
+                        Global c39 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: ref
+                          Global c40 :: ref
+                          Local r4 :: ref
+                      Call :: ref
+                        Global c35 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: i64
+                          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                          Local ctr :: i64
+                          Lit 1 :: i64
+                        Local r4 :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local a :: i64
+                      Call :: ref
+                        Local fn :: ref
+                        Local b :: i64
+                        Call :: ref
+                          Local fn :: ref
+                          Local c :: i64
+                          Call :: ref
+                            Local fn :: ref
+                            Local d :: i64
+                            Local res :: ref
+clone c30   def: elm/core:List.foldr   key: (v0=i64; v1=ref)   name: foldr__i64__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
+  Call :: ref
+    Global c35 :: ref
+    Local fn :: ref
+    Local acc :: ref
+    Lit 0 :: i64
+    Local ls :: ref
+clone c31   def: elm/core:List.lambda@125:10   key: ()   outer: c23 (v0=i64; v1=ref)   kind: function   params: x:i64 acc:ref   result: ref   lifted-from: c23
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Call :: ref
+      Local f :: ref
+      Local x :: i64
+    Local acc :: ref
+clone c23   def: elm/core:List.map   key: (v0=i64; v1=ref)   name: map__i64__ref   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Global c30 :: ref
+    Global c31 :: ref
+    List :: ref
+    Local xs :: ref
+clone c24   def: author/project:Str2.lambda@15:38   key: ()   kind: function   params: _pb24_0:i64   result: ref   lifted-from: c16
+  Call :: ref
+    Kernel elm/core:String.fromInt () :: ref
+    Local _pb24_0 :: i64
+clone c16   def: author/project:Str2.showI   key: ()   kind: function   params: xs:ref   result: ref
+  Call :: ref
+    Kernel elm/core:Basics.append (v0=app string) :: ref
+    Lit "[" :: ref
+    Call :: ref
+      Kernel elm/core:Basics.append (v0=app string) :: ref
+      Call :: ref
+        Kernel elm/core:String.join () :: ref
+        Lit "," :: ref
+        Call :: ref
+          Global c23 :: ref
+          Global c24 :: ref
+          Local xs :: ref
+      Lit "]" :: ref
+clone c36   def: elm/core:List.foldl   key: (v0=enum; v1=ref)   name: foldl__enum__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: enum :: xs :: ref :: ref
+      Call :: ref
+        Global c36 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: enum
+          Local acc :: ref
+        Local xs :: ref
+clone c41   def: elm/core:List.lambda@261:9   key: ()   outer: c37 (v0=enum)   kind: function   params: _pb41_0:enum _pb41_1:ref   result: ref   lifted-from: c37
+  Call :: ref
+    Kernel elm/core:List.cons (v0=enum) :: ref
+    Local _pb41_0 :: enum
+    Local _pb41_1 :: ref
+clone c37   def: elm/core:List.reverse   key: (v0=enum)   name: reverse__enum   kind: function   params: list:ref   result: ref
+  Call :: ref
+    Global c36 :: ref
+    Global c41 :: ref
+    List :: ref
+    Local list :: ref
+clone c32   def: elm/core:List.foldrHelper   key: (v0=enum; v1=ref)   name: foldrHelper__enum__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
+  Case :: ref
+    Local ls :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch a :: enum :: r1 :: ref :: ref
+      Case :: ref
+        Local r1 :: ref
+        branch [] :: ref
+          Call :: ref
+            Local fn :: ref
+            Local a :: enum
+            Local acc :: ref
+        branch b :: enum :: r2 :: ref :: ref
+          Case :: ref
+            Local r2 :: ref
+            branch [] :: ref
+              Call :: ref
+                Local fn :: ref
+                Local a :: enum
+                Call :: ref
+                  Local fn :: ref
+                  Local b :: enum
+                  Local acc :: ref
+            branch c :: enum :: r3 :: ref :: ref
+              Case :: ref
+                Local r3 :: ref
+                branch [] :: ref
+                  Call :: ref
+                    Local fn :: ref
+                    Local a :: enum
+                    Call :: ref
+                      Local fn :: ref
+                      Local b :: enum
+                      Call :: ref
+                        Local fn :: ref
+                        Local c :: enum
+                        Local acc :: ref
+                branch d :: enum :: r4 :: ref :: ref
+                  Let res :: ref
+                    If :: ref
+                      Call :: enum
+                        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                        Local ctr :: i64
+                        Lit 500 :: i64
+                      Call :: ref
+                        Global c36 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: ref
+                          Global c37 :: ref
+                          Local r4 :: ref
+                      Call :: ref
+                        Global c32 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: i64
+                          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                          Local ctr :: i64
+                          Lit 1 :: i64
+                        Local r4 :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local a :: enum
+                      Call :: ref
+                        Local fn :: ref
+                        Local b :: enum
+                        Call :: ref
+                          Local fn :: ref
+                          Local c :: enum
+                          Call :: ref
+                            Local fn :: ref
+                            Local d :: enum
+                            Local res :: ref
+clone c25   def: elm/core:List.foldr   key: (v0=enum; v1=ref)   name: foldr__enum__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
+  Call :: ref
+    Global c32 :: ref
+    Local fn :: ref
+    Local acc :: ref
+    Lit 0 :: i64
+    Local ls :: ref
+clone c26   def: elm/core:List.lambda@125:10   key: ()   outer: c17 (v0=enum; v1=ref)   kind: function   params: x:enum acc:ref   result: ref   lifted-from: c17
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Call :: ref
+      Local f :: ref
+      Local x :: enum
+    Local acc :: ref
+clone c17   def: elm/core:List.map   key: (v0=enum; v1=ref)   name: map__enum__ref   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Global c25 :: ref
+    Global c26 :: ref
+    List :: ref
+    Local xs :: ref
+clone c18   def: author/project:Str2.mu   key: ()   kind: function   params: m:ref   result: ref
+  Case :: ref
+    Local m :: ref
+    branch Just #0 (c :: u32, rest :: ref) :: struct(u32,ref) :: ref
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Lit "J" :: ref
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Call :: ref
+            Global c3 :: ref
+            Local c :: u32
+          Call :: ref
+            Kernel elm/core:Basics.append (v0=app string) :: ref
+            Lit "+" :: ref
+            Local rest :: ref
+    branch Nothing #1 :: ref
+      Lit "N" :: ref
+clone c27   def: elm/core:List.foldl   key: (v0=ref; v1=i64)   name: foldl__ref__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: ref :: xs :: ref :: ref
+      Call :: i64
+        Global c27 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: ref
+          Local acc :: i64
+        Local xs :: ref
+clone c28   def: elm/core:List.lambda@252:10   key: ()   outer: c19 (v0=ref)   kind: function   params: _a0:ref i:i64   result: i64   lifted-from: c19
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local i :: i64
+    Lit 1 :: i64
+clone c19   def: elm/core:List.length   key: (v0=ref)   name: length__ref   kind: function   params: xs:ref   result: i64
+  Call :: i64
+    Global c27 :: ref
+    Global c28 :: ref
+    Lit 0 :: i64
+    Local xs :: ref
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Let l11 :: struct(unit,unit)
+    Call :: ref
+      Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+      Lit "chars" :: ref
+      Call :: ref
+        Global c2 :: ref
+        List :: ref
+          Call :: ref
+            Global c3 :: ref
+            Call :: u32
+              Kernel elm/core:Char.fromCode () :: ref
+              Lit 233 :: i64
+          Call :: ref
+            Global c3 :: ref
+            Call :: u32
+              Kernel elm/core:Char.fromCode () :: ref
+              Lit 65 :: i64
+          Call :: ref
+            Global c3 :: ref
+            Call :: u32
+              Kernel elm/core:Char.toLocaleUpper () :: ref
+              Lit '113' :: u32
+          Call :: ref
+            Kernel elm/core:String.fromInt () :: ref
+            Call :: i64
+              Kernel elm/core:Char.toCode () :: ref
+              Call :: u32
+                Kernel elm/core:Char.fromCode () :: ref
+                Lit 8364 :: i64
+          Call :: ref
+            Kernel elm/core:String.append () :: ref
+            Lit "ab" :: ref
+            Lit "cd" :: ref
+    Let l10 :: struct(unit,unit)
+      Call :: ref
+        Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+        Lit "toFloat" :: ref
+        Call :: ref
+          Global c2 :: ref
+          Call :: ref
+            Global c4 :: ref
+            Global c5 :: ref
+            List :: ref
+              Lit "1.5" :: ref
+              Lit "-2" :: ref
+              Lit ".5" :: ref
+              Lit "5." :: ref
+              Lit "1e3" :: ref
+              Lit "1E-2" :: ref
+              Lit "+3" :: ref
+              Lit "" :: ref
+              Lit "." :: ref
+              Lit "1e" :: ref
+              Lit "abc" :: ref
+              Lit "0x10" :: ref
+              Lit " 1" :: ref
+              Lit "1 " :: ref
+              Lit "Infinity" :: ref
+              Lit "-Infinity" :: ref
+              Lit "NaN" :: ref
+              Lit "0.1" :: ref
+              Lit "123456.789" :: ref
+              Lit "1e21" :: ref
+              Lit "2.5e-7" :: ref
+      Let l9 :: struct(unit,unit)
+        Call :: ref
+          Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+          Lit "toInt" :: ref
+          Call :: ref
+            Global c2 :: ref
+            Call :: ref
+              Global c4 :: ref
+              Global c7 :: ref
+              List :: ref
+                Lit "12" :: ref
+                Lit "-12" :: ref
+                Lit "+5" :: ref
+                Lit "" :: ref
+                Lit "-" :: ref
+                Lit "+" :: ref
+                Lit "007" :: ref
+                Lit "12a" :: ref
+                Lit " 1" :: ref
+                Lit "1.5" :: ref
+                Lit "0x10" :: ref
+                Lit "1e3" :: ref
+                Lit "999999999" :: ref
+                Lit "-0" :: ref
+        Let l8 :: struct(unit,unit)
+          Call :: ref
+            Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+            Lit "reverse repeat" :: ref
+            Call :: ref
+              Global c2 :: ref
+              List :: ref
+                Call :: ref
+                  Kernel elm/core:String.reverse () :: ref
+                  Lit "hello" :: ref
+                Call :: ref
+                  Kernel elm/core:String.reverse () :: ref
+                  Lit "" :: ref
+                Call :: ref
+                  Kernel elm/core:String.reverse () :: ref
+                  Lit "h\233\233" :: ref
+                Call :: ref
+                  Global c9 :: ref
+                  Lit 3 :: i64
+                  Lit "ab" :: ref
+                Call :: ref
+                  Global c9 :: ref
+                  Lit 0 :: i64
+                  Lit "x" :: ref
+                Call :: ref
+                  Global c9 :: ref
+                  Call :: i64
+                    Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+                    Lit 1 :: i64
+                  Lit "x" :: ref
+                Call :: ref
+                  Global c10 :: ref
+                  Lit "a" :: ref
+                  Lit "oo" :: ref
+                  Lit "banana" :: ref
+                Call :: ref
+                  Global c10 :: ref
+                  Lit "" :: ref
+                  Lit "-" :: ref
+                  Lit "ab" :: ref
+          Let l7 :: struct(unit,unit)
+            Call :: ref
+              Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+              Lit "filter any all" :: ref
+              Call :: ref
+                Global c2 :: ref
+                List :: ref
+                  Call :: ref
+                    Kernel elm/core:String.filter () :: ref
+                    Global c11 :: ref
+                    Lit "a1b22c" :: ref
+                  Call :: ref
+                    Kernel elm/core:String.filter () :: ref
+                    Global c12 :: ref
+                    Lit "caf\233" :: ref
+                  Call :: ref
+                    Global c13 :: ref
+                    Call :: enum
+                      Kernel elm/core:String.any () :: ref
+                      Global c14 :: ref
+                      Lit "abC" :: ref
+                  Call :: ref
+                    Global c13 :: ref
+                    Call :: enum
+                      Kernel elm/core:String.any () :: ref
+                      Global c14 :: ref
+                      Lit "abc" :: ref
+                  Call :: ref
+                    Global c13 :: ref
+                    Call :: enum
+                      Kernel elm/core:String.all () :: ref
+                      Global c15 :: ref
+                      Lit "abc" :: ref
+                  Call :: ref
+                    Global c13 :: ref
+                    Call :: enum
+                      Kernel elm/core:String.all () :: ref
+                      Global c15 :: ref
+                      Lit "aBc" :: ref
+                  Call :: ref
+                    Global c13 :: ref
+                    Call :: enum
+                      Kernel elm/core:String.all () :: ref
+                      Global c15 :: ref
+                      Lit "" :: ref
+            Let l6 :: struct(unit,unit)
+              Call :: ref
+                Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                Lit "split" :: ref
+                Call :: ref
+                  Kernel elm/core:Basics.append (v0=app string) :: ref
+                  Call :: ref
+                    Global c2 :: ref
+                    Call :: ref
+                      Kernel elm/core:String.split () :: ref
+                      Lit "," :: ref
+                      Lit "a,b,,c," :: ref
+                  Call :: ref
+                    Kernel elm/core:Basics.append (v0=app string) :: ref
+                    Call :: ref
+                      Global c2 :: ref
+                      Call :: ref
+                        Kernel elm/core:String.split () :: ref
+                        Lit "," :: ref
+                        Lit "" :: ref
+                    Call :: ref
+                      Kernel elm/core:Basics.append (v0=app string) :: ref
+                      Call :: ref
+                        Global c2 :: ref
+                        Call :: ref
+                          Kernel elm/core:String.split () :: ref
+                          Lit "" :: ref
+                          Lit "h\233y" :: ref
+                      Call :: ref
+                        Kernel elm/core:Basics.append (v0=app string) :: ref
+                        Call :: ref
+                          Global c2 :: ref
+                          Call :: ref
+                            Kernel elm/core:String.split () :: ref
+                            Lit "ab" :: ref
+                            Lit "xabyabz" :: ref
+                        Call :: ref
+                          Global c2 :: ref
+                          Call :: ref
+                            Kernel elm/core:String.split () :: ref
+                            Lit "," :: ref
+                            Lit "," :: ref
+              Let l5 :: struct(unit,unit)
+                Call :: ref
+                  Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                  Lit "indexes" :: ref
+                  Call :: ref
+                    Global c2 :: ref
+                    List :: ref
+                      Call :: ref
+                        Global c16 :: ref
+                        Call :: ref
+                          Kernel elm/core:String.indexes () :: ref
+                          Lit "a" :: ref
+                          Lit "banana" :: ref
+                      Call :: ref
+                        Global c16 :: ref
+                        Call :: ref
+                          Kernel elm/core:String.indexes () :: ref
+                          Lit "ana" :: ref
+                          Lit "banana" :: ref
+                      Call :: ref
+                        Global c16 :: ref
+                        Call :: ref
+                          Kernel elm/core:String.indexes () :: ref
+                          Lit "" :: ref
+                          Lit "abc" :: ref
+                      Call :: ref
+                        Global c16 :: ref
+                        Call :: ref
+                          Kernel elm/core:String.indexes () :: ref
+                          Lit "x" :: ref
+                          Lit "abc" :: ref
+                      Call :: ref
+                        Global c16 :: ref
+                        Call :: ref
+                          Kernel elm/core:String.indexes () :: ref
+                          Lit "\233" :: ref
+                          Lit "\233a\233" :: ref
+                      Call :: ref
+                        Global c16 :: ref
+                        Call :: ref
+                          Kernel elm/core:String.indices () :: ref
+                          Lit "an" :: ref
+                          Lit "banana" :: ref
+                Let l4 :: struct(unit,unit)
+                  Call :: ref
+                    Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                    Lit "contains" :: ref
+                    Call :: ref
+                      Global c2 :: ref
+                      Call :: ref
+                        Global c17 :: ref
+                        Global c13 :: ref
+                        List :: ref
+                          Call :: enum
+                            Kernel elm/core:String.contains () :: ref
+                            Lit "ell" :: ref
+                            Lit "hello" :: ref
+                          Call :: enum
+                            Kernel elm/core:String.contains () :: ref
+                            Lit "" :: ref
+                            Lit "hello" :: ref
+                          Call :: enum
+                            Kernel elm/core:String.contains () :: ref
+                            Lit "z" :: ref
+                            Lit "hello" :: ref
+                          Call :: enum
+                            Kernel elm/core:String.contains () :: ref
+                            Lit "\233" :: ref
+                            Lit "caf\233" :: ref
+                          Call :: enum
+                            Kernel elm/core:String.startsWith () :: ref
+                            Lit "he" :: ref
+                            Lit "hello" :: ref
+                          Call :: enum
+                            Kernel elm/core:String.startsWith () :: ref
+                            Lit "" :: ref
+                            Lit "x" :: ref
+                          Call :: enum
+                            Kernel elm/core:String.startsWith () :: ref
+                            Lit "hello!" :: ref
+                            Lit "hello" :: ref
+                          Call :: enum
+                            Kernel elm/core:String.endsWith () :: ref
+                            Lit "llo" :: ref
+                            Lit "hello" :: ref
+                          Call :: enum
+                            Kernel elm/core:String.endsWith () :: ref
+                            Lit "" :: ref
+                            Lit "" :: ref
+                          Call :: enum
+                            Kernel elm/core:String.endsWith () :: ref
+                            Lit "x" :: ref
+                            Lit "hello" :: ref
+                  Let l3 :: struct(unit,unit)
+                    Call :: ref
+                      Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                      Lit "trim" :: ref
+                      Call :: ref
+                        Global c2 :: ref
+                        List :: ref
+                          Call :: ref
+                            Kernel elm/core:String.trim () :: ref
+                            Lit "  a b \t\n" :: ref
+                          Call :: ref
+                            Kernel elm/core:String.trimLeft () :: ref
+                            Lit "  a b  " :: ref
+                          Call :: ref
+                            Kernel elm/core:String.trimRight () :: ref
+                            Lit "  a b  " :: ref
+                          Call :: ref
+                            Kernel elm/core:String.trim () :: ref
+                            Lit "" :: ref
+                          Call :: ref
+                            Kernel elm/core:String.trim () :: ref
+                            Lit "   " :: ref
+                          Call :: ref
+                            Kernel elm/core:String.trim () :: ref
+                            Lit "\160x\12288" :: ref
+                    Let l2 :: struct(unit,unit)
+                      Call :: ref
+                        Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                        Lit "lines" :: ref
+                        Call :: ref
+                          Kernel elm/core:Basics.append (v0=app string) :: ref
+                          Call :: ref
+                            Global c2 :: ref
+                            Call :: ref
+                              Kernel elm/core:String.lines () :: ref
+                              Lit "a\nb\r\nc\rd\n\ne" :: ref
+                          Call :: ref
+                            Kernel elm/core:Basics.append (v0=app string) :: ref
+                            Call :: ref
+                              Global c2 :: ref
+                              Call :: ref
+                                Kernel elm/core:String.lines () :: ref
+                                Lit "" :: ref
+                            Call :: ref
+                              Global c2 :: ref
+                              Call :: ref
+                                Kernel elm/core:String.lines () :: ref
+                                Lit "\n" :: ref
+                      Let l1 :: struct(unit,unit)
+                        Call :: ref
+                          Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                          Lit "uncons" :: ref
+                          Call :: ref
+                            Global c2 :: ref
+                            List :: ref
+                              Call :: ref
+                                Global c18 :: ref
+                                Call :: ref
+                                  Kernel elm/core:String.uncons () :: ref
+                                  Lit "abc" :: ref
+                              Call :: ref
+                                Global c18 :: ref
+                                Call :: ref
+                                  Kernel elm/core:String.uncons () :: ref
+                                  Lit "\233" :: ref
+                              Call :: ref
+                                Global c18 :: ref
+                                Call :: ref
+                                  Kernel elm/core:String.uncons () :: ref
+                                  Lit "" :: ref
+                        If :: struct(unit,unit)
+                          Call :: enum
+                            Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                            Call :: i64
+                              Global c19 :: ref
+                              List :: ref
+                                Local l1 :: ref
+                                Local l2 :: ref
+                                Local l3 :: ref
+                                Local l4 :: ref
+                                Local l5 :: ref
+                                Local l6 :: ref
+                                Local l7 :: ref
+                                Local l8 :: ref
+                                Local l9 :: ref
+                                Local l10 :: ref
+                                Local l11 :: ref
+                            Lit 0 :: i64
+                          Tuple :: struct(unit,unit)
+                            Lit () :: unit
+                            Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+                          Tuple :: struct(unit,unit)
+                            Lit () :: unit
+                            Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Str2.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

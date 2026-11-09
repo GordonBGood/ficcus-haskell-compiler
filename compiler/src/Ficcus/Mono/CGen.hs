@@ -999,6 +999,39 @@ kernelCall info cls name key args =
             ("elm/core:Basics.add", [a, b]) -> arith "FIC_ADD64" "+" a b
             ("elm/core:Basics.sub", [a, b]) -> arith "FIC_SUB64" "-" a b
             ("elm/core:Basics.mul", [a, b]) -> arith "FIC_MUL64" "*" a b
+            ("elm/core:String.append", [a, b]) -> return ("fic_str_append(" ++ a ++ ", " ++ b ++ ")")
+            ("elm/core:String.contains", [a, b]) -> return ("fic_us_contains(" ++ a ++ ", " ++ b ++ ")")
+            ("elm/core:String.startsWith", [a, b]) -> return ("fic_us_starts_with(" ++ a ++ ", " ++ b ++ ")")
+            ("elm/core:String.endsWith", [a, b]) -> return ("fic_us_ends_with(" ++ a ++ ", " ++ b ++ ")")
+            ("elm/core:String.indices", [a, b]) -> return ("fic_us_indexes(" ++ a ++ ", " ++ b ++ ")")
+            ("elm/core:String.indexes", [a, b]) -> return ("fic_us_indexes(" ++ a ++ ", " ++ b ++ ")")
+            ("elm/core:String.split", [a, b]) -> return ("fic_us_split(" ++ a ++ ", " ++ b ++ ")")
+            ("elm/core:String.lines", [a]) -> return ("fic_us_lines(" ++ a ++ ")")
+            ("elm/core:String.reverse", [a]) -> return ("fic_us_reverse(" ++ a ++ ")")
+            ("elm/core:String.trim", [a]) -> return ("fic_us_trim(" ++ a ++ ")")
+            ("elm/core:String.trimLeft", [a]) -> return ("fic_us_trim_left(" ++ a ++ ")")
+            ("elm/core:String.trimRight", [a]) -> return ("fic_us_trim_right(" ++ a ++ ")")
+            ("elm/core:String.filter", [f, s]) -> return ("fic_us_filter(" ++ f ++ ", " ++ s ++ ")")
+            ("elm/core:String.any", [f, s]) -> return ("fic_us_any(" ++ f ++ ", " ++ s ++ ")")
+            ("elm/core:String.all", [f, s]) -> return ("fic_us_all(" ++ f ++ ", " ++ s ++ ")")
+            ("elm/core:Char.fromCode", [n]) -> return ("fic_us_from_code(" ++ n ++ ")")
+            ("elm/core:Char.toLocaleUpper", [c]) -> return ("fic_us_cupper(" ++ c ++ ")")
+            ("elm/core:Char.toLocaleLower", [c]) -> return ("fic_us_clower(" ++ c ++ ")")
+            ("elm/core:String.toInt", [s]) -> maybeOf CI64 (\ok -> do { v <- fresh "iv"; emit ("int64_t " ++ v ++ " = 0;"); emit ("uint8_t " ++ ok ++ " = (uint8_t)fic_us_to_int(" ++ s ++ ", &" ++ v ++ ");"); return v })
+            ("elm/core:String.toFloat", [s]) -> maybeOf CF64 (\ok -> do { v <- fresh "fv"; emit ("double " ++ v ++ " = 0;"); emit ("uint8_t " ++ ok ++ " = (uint8_t)fic_us_to_float(" ++ s ++ ", &" ++ v ++ ");"); return v })
+            ("elm/core:String.uncons", [s]) ->
+              do  let tupleC = CStruct [CU32, CRef]
+                  needClass info tupleC
+                  maybeOf CRef (\ok ->
+                    do  c <- fresh "uc"; r <- fresh "ur"; v <- fresh "uv"
+                        emit ("uint32_t " ++ c ++ " = 0;")
+                        emit ("fic_ref " ++ r ++ " = NULL;")
+                        emit ("uint8_t " ++ ok ++ " = (uint8_t)fic_us_uncons(" ++ s ++ ", &" ++ c ++ ", &" ++ r ++ ");")
+                        emit ("fic_ref " ++ v ++ " = NULL;")
+                        emit ("if (" ++ ok ++ ") {")
+                        indented (do { b <- adapt tupleC CRef ("(" ++ classType tupleC ++ "){ " ++ c ++ ", " ++ r ++ " }"); emit (v ++ " = " ++ b ++ ";") })
+                        emit "}"
+                        return v)
             ("elm/core:String.length", [a]) -> return ("fic_us_length(" ++ a ++ ")")
             ("elm/core:String.slice", [a, b, s]) -> return ("fic_us_slice(" ++ a ++ ", " ++ b ++ ", " ++ s ++ ")")
             ("elm/core:String.cons", [c, s]) -> return ("fic_us_cons(" ++ c ++ ", " ++ s ++ ")")
@@ -1087,6 +1120,21 @@ kernelCall info cls name key args =
   where
     unsupported what = failWith (what ++ " is not supported by the C generator yet")
     unsupported' = unsupported
+
+    -- a `Maybe` of a value of class c (Just is constructor 0, Nothing 1); `make` emits the statements that compute the
+    -- flag (the name it is given) and the value
+    maybeOf c make =
+      do  ok <- fresh "ok"
+          t <- fresh "m"
+          v <- make ok
+          needObj [c]
+          emit ("fic_ref " ++ t ++ ";")
+          emit ("if (" ++ ok ++ ") {")
+          indented (do { o <- allocObj [c] 0 [v]; emit (t ++ " = " ++ o ++ ";") })
+          emit "} else {"
+          indented (do { o <- allocObj [] 1 []; emit (t ++ " = " ++ o ++ ";") })
+          emit "}"
+          return t
 
     arith intMacro op a b =
       case numberOf key of

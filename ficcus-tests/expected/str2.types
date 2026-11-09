@@ -1,0 +1,509 @@
+-- module Str2: problems=0 instances=155 instance-failures=0 defaulted=0
+-- equality-uses: total=1 at-function=0
+module author/project:Str2
+def showL :: List String -> String    [9:1-9:6]   id: author/project:Str2.showL   sig: List String -> String   kinds:    group: author/project:Str2.showL nonrec ann
+  9:7-9:9 PVar xs :: List String
+  10:5-10:37 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    10:5-10:8 Str :: String
+    10:12-10:37 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      10:12-10:30 Call :: String
+        10:12-10:23 VarForeign :: String -> List String -> String   callee: elm/core:String.join
+        10:24-10:27 Str :: String
+        10:28-10:30 VarLocal :: List String
+      10:34-10:37 Str :: String
+def showI :: List Int -> String    [14:1-14:6]   id: author/project:Str2.showI   sig: List Int -> String   kinds:    group: author/project:Str2.showI nonrec ann
+  14:7-14:9 PVar xs :: List Int
+  15:5-15:63 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    15:5-15:8 Str :: String
+    15:12-15:63 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      15:12-15:55 Call :: String
+        15:12-15:23 VarForeign :: String -> List String -> String   callee: elm/core:String.join
+        15:24-15:27 Str :: String
+        15:29-15:55 Call :: List String
+          15:29-15:37 VarForeign :: (Int -> String) -> List Int -> List String   callee: elm/core:List.map   instance: a := Int, b := String   sig#: 6a702f63   subst: v0 := Int, v1 := String
+          15:38-15:52 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+          15:53-15:55 VarLocal :: List Int
+      15:60-15:63 Str :: String
+def b2s :: Bool -> String    [49:1-49:4]   id: author/project:Str2.b2s   sig: Bool -> String   kinds:    group: author/project:Str2.b2s nonrec ann
+  49:5-49:6 PVar b :: Bool
+  50:5-54:12 If :: String
+    50:8-50:9 VarLocal :: Bool
+    51:9-51:12 Str :: String
+    54:9-54:12 Str :: String
+def mu :: Maybe ( Char, String ) -> String    [39:1-39:3]   id: author/project:Str2.mu   sig: Maybe ( Char, String ) -> String   kinds:    group: author/project:Str2.mu nonrec ann
+  39:4-39:5 PVar m :: Maybe ( Char, String )
+  40:5-45:16 Case :: String
+    40:10-40:11 VarLocal :: Maybe ( Char, String )
+    41:9-41:25 PCtor Just :: Maybe ( Char, String )
+      41:14-41:25 PPair :: ( Char, String )
+        41:16-41:17 PVar c :: Char
+        41:19-41:23 PVar rest :: String
+    42:13-42:52 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      42:13-42:16 Str :: String
+      42:20-42:52 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        42:20-42:37 Call :: String
+          42:20-42:35 VarForeign :: Char -> String   callee: elm/core:String.fromChar
+          42:36-42:37 VarLocal :: Char
+        42:41-42:52 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+          42:41-42:44 Str :: String
+          42:48-42:52 VarLocal :: String
+    44:9-44:16 PCtor Nothing :: Maybe ( Char, String )
+    45:13-45:16 Str :: String
+def mi :: Maybe Int -> String    [19:1-19:3]   id: author/project:Str2.mi   sig: Maybe Int -> String   kinds:    group: author/project:Str2.mi nonrec ann
+  19:4-19:5 PVar m :: Maybe Int
+  20:5-25:16 Case :: String
+    20:10-20:11 VarLocal :: Maybe Int
+    21:9-21:15 PCtor Just :: Maybe Int
+      21:14-21:15 PVar v :: Int
+    22:13-22:36 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      22:13-22:16 Str :: String
+      22:20-22:36 Call :: String
+        22:20-22:34 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+        22:35-22:36 VarLocal :: Int
+    24:9-24:16 PCtor Nothing :: Maybe Int
+    25:13-25:16 Str :: String
+def mf :: Maybe Float -> String    [29:1-29:3]   id: author/project:Str2.mf   sig: Maybe Float -> String   kinds:    group: author/project:Str2.mf nonrec ann
+  29:4-29:5 PVar m :: Maybe Float
+  30:5-35:16 Case :: String
+    30:10-30:11 VarLocal :: Maybe Float
+    31:9-31:15 PCtor Just :: Maybe Float
+      31:14-31:15 PVar v :: Float
+    32:13-32:38 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      32:13-32:16 Str :: String
+      32:20-32:38 Call :: String
+        32:20-32:36 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+        32:37-32:38 VarLocal :: Float
+    34:9-34:16 PCtor Nothing :: Maybe Float
+    35:13-35:16 Str :: String
+def main :: Program () () ()    [58:1-58:5]   id: author/project:Str2.main   sig: Program () () ()   kinds:    group: author/project:Str2.main nonrec ann
+  59:5-103:10 Call :: Program () () ()
+    59:5-59:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    60:9-103:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      61:13-100:37 Lambda :: () -> ( (), Cmd () )
+        61:14-61:15 PAnything :: ()
+        def l11 :: String    [93:21-93:24]   id: author/project:Str2.l11@93:21   sig: String   kinds:    group: author/project:Str2.l11@93:21 nonrec inferred
+          94:25-94:243 Call :: String
+            94:25-94:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            94:35-94:42 Str :: String
+            94:44-94:243 Call :: String
+              94:44-94:49 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+              94:50-94:243 List :: List String
+                94:52-94:86 Call :: String
+                  94:52-94:67 VarForeign :: Char -> String   callee: elm/core:String.fromChar
+                  94:69-94:86 Call :: Char
+                    94:69-94:82 VarForeign :: Int -> Char   callee: elm/core:Char.fromCode
+                    94:83-94:86 Int :: Int
+                94:89-94:122 Call :: String
+                  94:89-94:104 VarForeign :: Char -> String   callee: elm/core:String.fromChar
+                  94:106-94:122 Call :: Char
+                    94:106-94:119 VarForeign :: Int -> Char   callee: elm/core:Char.fromCode
+                    94:120-94:122 Int :: Int
+                94:125-94:164 Call :: String
+                  94:125-94:140 VarForeign :: Char -> String   callee: elm/core:String.fromChar
+                  94:142-94:164 Call :: Char
+                    94:142-94:160 VarForeign :: Char -> Char   callee: elm/core:Char.toLocaleUpper
+                    94:161-94:164 Chr :: Char
+                94:167-94:214 Call :: String
+                  94:167-94:181 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                  94:183-94:214 Call :: Int
+                    94:183-94:194 VarForeign :: Char -> Int   callee: elm/core:Char.toCode
+                    94:196-94:214 Call :: Char
+                      94:196-94:209 VarForeign :: Int -> Char   callee: elm/core:Char.fromCode
+                      94:210-94:214 Int :: Int
+                94:218-94:241 Call :: String
+                  94:218-94:231 VarForeign :: String -> String -> String   callee: elm/core:String.append
+                  94:232-94:236 Str :: String
+                  94:237-94:241 Str :: String
+        def l10 :: String    [90:21-90:24]   id: author/project:Str2.l10@90:21   sig: String   kinds:    group: author/project:Str2.l10@90:21 nonrec inferred
+          91:25-91:253 Call :: String
+            91:25-91:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            91:35-91:44 Str :: String
+            91:46-91:253 Call :: String
+              91:46-91:51 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+              91:53-91:253 Call :: List String
+                91:53-91:61 VarForeign :: (String -> String) -> List String -> List String   callee: elm/core:List.map   instance: a := String, b := String   sig#: 6a702f63   subst: v0 := String, v1 := String
+                91:63-91:90 Lambda :: String -> String
+                  91:64-91:65 PVar s :: String
+                  91:69-91:89 Call :: String
+                    91:69-91:71 VarTopLevel :: Maybe Float -> String   callee: author/project:Str2.mf   use: gen
+                    91:73-91:89 Call :: Maybe Float
+                      91:73-91:87 VarForeign :: String -> Maybe Float   callee: elm/core:String.toFloat
+                      91:88-91:89 VarLocal :: String
+                91:92-91:253 List :: List String
+                  91:94-91:99 Str :: String
+                  91:101-91:105 Str :: String
+                  91:107-91:111 Str :: String
+                  91:113-91:117 Str :: String
+                  91:119-91:124 Str :: String
+                  91:126-91:132 Str :: String
+                  91:134-91:138 Str :: String
+                  91:140-91:142 Str :: String
+                  91:144-91:147 Str :: String
+                  91:149-91:153 Str :: String
+                  91:155-91:160 Str :: String
+                  91:162-91:168 Str :: String
+                  91:170-91:174 Str :: String
+                  91:176-91:180 Str :: String
+                  91:182-91:192 Str :: String
+                  91:194-91:205 Str :: String
+                  91:207-91:212 Str :: String
+                  91:214-91:219 Str :: String
+                  91:221-91:233 Str :: String
+                  91:235-91:241 Str :: String
+                  91:243-91:251 Str :: String
+        def l9 :: String    [87:21-87:23]   id: author/project:Str2.l9@87:21   sig: String   kinds:    group: author/project:Str2.l9@87:21 nonrec inferred
+          88:25-88:184 Call :: String
+            88:25-88:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            88:35-88:42 Str :: String
+            88:44-88:184 Call :: String
+              88:44-88:49 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+              88:51-88:184 Call :: List String
+                88:51-88:59 VarForeign :: (String -> String) -> List String -> List String   callee: elm/core:List.map   instance: a := String, b := String   sig#: 6a702f63   subst: v0 := String, v1 := String
+                88:61-88:86 Lambda :: String -> String
+                  88:62-88:63 PVar s :: String
+                  88:67-88:85 Call :: String
+                    88:67-88:69 VarTopLevel :: Maybe Int -> String   callee: author/project:Str2.mi   use: gen
+                    88:71-88:85 Call :: Maybe Int
+                      88:71-88:83 VarForeign :: String -> Maybe Int   callee: elm/core:String.toInt
+                      88:84-88:85 VarLocal :: String
+                88:88-88:184 List :: List String
+                  88:90-88:94 Str :: String
+                  88:96-88:101 Str :: String
+                  88:103-88:107 Str :: String
+                  88:109-88:111 Str :: String
+                  88:113-88:116 Str :: String
+                  88:118-88:121 Str :: String
+                  88:123-88:128 Str :: String
+                  88:130-88:135 Str :: String
+                  88:137-88:141 Str :: String
+                  88:143-88:148 Str :: String
+                  88:150-88:156 Str :: String
+                  88:158-88:163 Str :: String
+                  88:165-88:176 Str :: String
+                  88:178-88:182 Str :: String
+        def l8 :: String    [84:21-84:23]   id: author/project:Str2.l8@84:21   sig: String   kinds:    group: author/project:Str2.l8@84:21 nonrec inferred
+          85:25-85:253 Call :: String
+            85:25-85:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            85:35-85:51 Str :: String
+            85:53-85:253 Call :: String
+              85:53-85:58 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+              85:59-85:253 List :: List String
+                85:61-85:83 Call :: String
+                  85:61-85:75 VarForeign :: String -> String   callee: elm/core:String.reverse
+                  85:76-85:83 Str :: String
+                85:85-85:102 Call :: String
+                  85:85-85:99 VarForeign :: String -> String   callee: elm/core:String.reverse
+                  85:100-85:102 Str :: String
+                85:104-85:124 Call :: String
+                  85:104-85:118 VarForeign :: String -> String   callee: elm/core:String.reverse
+                  85:119-85:124 Str :: String
+                85:126-85:146 Call :: String
+                  85:126-85:139 VarForeign :: Int -> String -> String   callee: elm/core:String.repeat
+                  85:140-85:141 Int :: Int
+                  85:142-85:146 Str :: String
+                85:148-85:167 Call :: String
+                  85:148-85:161 VarForeign :: Int -> String -> String   callee: elm/core:String.repeat
+                  85:162-85:163 Int :: Int
+                  85:164-85:167 Str :: String
+                85:169-85:189 Call :: String
+                  85:169-85:182 VarForeign :: Int -> String -> String   callee: elm/core:String.repeat
+                  85:183-85:185 Negate :: Int
+                    85:184-85:185 Int :: Int
+                  85:186-85:189 Str :: String
+                85:191-85:223 Call :: String
+                  85:191-85:205 VarForeign :: String -> String -> String -> String   callee: elm/core:String.replace
+                  85:206-85:209 Str :: String
+                  85:210-85:214 Str :: String
+                  85:215-85:223 Str :: String
+                85:225-85:251 Call :: String
+                  85:225-85:239 VarForeign :: String -> String -> String -> String   callee: elm/core:String.replace
+                  85:240-85:242 Str :: String
+                  85:243-85:246 Str :: String
+                  85:247-85:251 Str :: String
+        def l7 :: String    [81:21-81:23]   id: author/project:Str2.l7@81:21   sig: String   kinds:    group: author/project:Str2.l7@81:21 nonrec inferred
+          82:25-82:319 Call :: String
+            82:25-82:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            82:35-82:51 Str :: String
+            82:53-82:319 Call :: String
+              82:53-82:58 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+              82:59-82:319 List :: List String
+                82:61-82:96 Call :: String
+                  82:61-82:74 VarForeign :: (Char -> Bool) -> String -> String   callee: elm/core:String.filter
+                  82:75-82:87 VarForeign :: Char -> Bool   callee: elm/core:Char.isDigit
+                  82:88-82:96 Str :: String
+                82:98-82:135 Call :: String
+                  82:98-82:111 VarForeign :: (Char -> Bool) -> String -> String   callee: elm/core:String.filter
+                  82:113-82:127 Lambda :: Char -> Bool
+                    82:114-82:115 PVar c :: Char
+                    82:119-82:127 Binop :: Bool   callee: elm/core:Basics.neq   instance: a := Char   sig#: 2cdc0786   subst: v0 := Char
+                      82:119-82:120 VarLocal :: Char
+                      82:124-82:127 Chr :: Char
+                  82:129-82:135 Str :: String
+                82:137-82:171 Call :: String
+                  82:137-82:140 VarTopLevel :: Bool -> String   callee: author/project:Str2.b2s   use: gen
+                  82:142-82:171 Call :: Bool
+                    82:142-82:152 VarForeign :: (Char -> Bool) -> String -> Bool   callee: elm/core:String.any
+                    82:153-82:165 VarForeign :: Char -> Bool   callee: elm/core:Char.isUpper
+                    82:166-82:171 Str :: String
+                82:174-82:208 Call :: String
+                  82:174-82:177 VarTopLevel :: Bool -> String   callee: author/project:Str2.b2s   use: gen
+                  82:179-82:208 Call :: Bool
+                    82:179-82:189 VarForeign :: (Char -> Bool) -> String -> Bool   callee: elm/core:String.any
+                    82:190-82:202 VarForeign :: Char -> Bool   callee: elm/core:Char.isUpper
+                    82:203-82:208 Str :: String
+                82:211-82:245 Call :: String
+                  82:211-82:214 VarTopLevel :: Bool -> String   callee: author/project:Str2.b2s   use: gen
+                  82:216-82:245 Call :: Bool
+                    82:216-82:226 VarForeign :: (Char -> Bool) -> String -> Bool   callee: elm/core:String.all
+                    82:227-82:239 VarForeign :: Char -> Bool   callee: elm/core:Char.isLower
+                    82:240-82:245 Str :: String
+                82:248-82:282 Call :: String
+                  82:248-82:251 VarTopLevel :: Bool -> String   callee: author/project:Str2.b2s   use: gen
+                  82:253-82:282 Call :: Bool
+                    82:253-82:263 VarForeign :: (Char -> Bool) -> String -> Bool   callee: elm/core:String.all
+                    82:264-82:276 VarForeign :: Char -> Bool   callee: elm/core:Char.isLower
+                    82:277-82:282 Str :: String
+                82:285-82:316 Call :: String
+                  82:285-82:288 VarTopLevel :: Bool -> String   callee: author/project:Str2.b2s   use: gen
+                  82:290-82:316 Call :: Bool
+                    82:290-82:300 VarForeign :: (Char -> Bool) -> String -> Bool   callee: elm/core:String.all
+                    82:301-82:313 VarForeign :: Char -> Bool   callee: elm/core:Char.isLower
+                    82:314-82:316 Str :: String
+        def l6 :: String    [78:21-78:23]   id: author/project:Str2.l6@78:21   sig: String   kinds:    group: author/project:Str2.l6@78:21 nonrec inferred
+          79:25-79:213 Call :: String
+            79:25-79:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            79:35-79:42 Str :: String
+            79:44-79:213 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              79:44-79:77 Call :: String
+                79:44-79:49 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+                79:51-79:77 Call :: List String
+                  79:51-79:63 VarForeign :: String -> String -> List String   callee: elm/core:String.split
+                  79:64-79:67 Str :: String
+                  79:68-79:77 Str :: String
+              79:82-79:212 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                79:82-79:108 Call :: String
+                  79:82-79:87 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+                  79:89-79:108 Call :: List String
+                    79:89-79:101 VarForeign :: String -> String -> List String   callee: elm/core:String.split
+                    79:102-79:105 Str :: String
+                    79:106-79:108 Str :: String
+                79:113-79:212 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  79:113-79:141 Call :: String
+                    79:113-79:118 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+                    79:120-79:141 Call :: List String
+                      79:120-79:132 VarForeign :: String -> String -> List String   callee: elm/core:String.split
+                      79:133-79:135 Str :: String
+                      79:136-79:141 Str :: String
+                  79:146-79:212 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                    79:146-79:180 Call :: String
+                      79:146-79:151 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+                      79:153-79:180 Call :: List String
+                        79:153-79:165 VarForeign :: String -> String -> List String   callee: elm/core:String.split
+                        79:166-79:170 Str :: String
+                        79:171-79:180 Str :: String
+                    79:185-79:212 Call :: String
+                      79:185-79:190 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+                      79:192-79:212 Call :: List String
+                        79:192-79:204 VarForeign :: String -> String -> List String   callee: elm/core:String.split
+                        79:205-79:208 Str :: String
+                        79:209-79:212 Str :: String
+        def l5 :: String    [75:21-75:23]   id: author/project:Str2.l5@75:21   sig: String   kinds:    group: author/project:Str2.l5@75:21 nonrec inferred
+          76:25-76:269 Call :: String
+            76:25-76:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            76:35-76:44 Str :: String
+            76:46-76:269 Call :: String
+              76:46-76:51 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+              76:52-76:269 List :: List String
+                76:54-76:88 Call :: String
+                  76:54-76:59 VarTopLevel :: List Int -> String   callee: author/project:Str2.showI   use: gen
+                  76:61-76:88 Call :: List Int
+                    76:61-76:75 VarForeign :: String -> String -> List Int   callee: elm/core:String.indexes
+                    76:76-76:79 Str :: String
+                    76:80-76:88 Str :: String
+                76:91-76:127 Call :: String
+                  76:91-76:96 VarTopLevel :: List Int -> String   callee: author/project:Str2.showI   use: gen
+                  76:98-76:127 Call :: List Int
+                    76:98-76:112 VarForeign :: String -> String -> List Int   callee: elm/core:String.indexes
+                    76:113-76:118 Str :: String
+                    76:119-76:127 Str :: String
+                76:130-76:160 Call :: String
+                  76:130-76:135 VarTopLevel :: List Int -> String   callee: author/project:Str2.showI   use: gen
+                  76:137-76:160 Call :: List Int
+                    76:137-76:151 VarForeign :: String -> String -> List Int   callee: elm/core:String.indexes
+                    76:152-76:154 Str :: String
+                    76:155-76:160 Str :: String
+                76:163-76:194 Call :: String
+                  76:163-76:168 VarTopLevel :: List Int -> String   callee: author/project:Str2.showI   use: gen
+                  76:170-76:194 Call :: List Int
+                    76:170-76:184 VarForeign :: String -> String -> List Int   callee: elm/core:String.indexes
+                    76:185-76:188 Str :: String
+                    76:189-76:194 Str :: String
+                76:197-76:228 Call :: String
+                  76:197-76:202 VarTopLevel :: List Int -> String   callee: author/project:Str2.showI   use: gen
+                  76:204-76:228 Call :: List Int
+                    76:204-76:218 VarForeign :: String -> String -> List Int   callee: elm/core:String.indexes
+                    76:219-76:222 Str :: String
+                    76:223-76:228 Str :: String
+                76:231-76:266 Call :: String
+                  76:231-76:236 VarTopLevel :: List Int -> String   callee: author/project:Str2.showI   use: gen
+                  76:238-76:266 Call :: List Int
+                    76:238-76:252 VarForeign :: String -> String -> List Int   callee: elm/core:String.indices
+                    76:253-76:257 Str :: String
+                    76:258-76:266 Str :: String
+        def l4 :: String    [72:21-72:23]   id: author/project:Str2.l4@72:21   sig: String   kinds:    group: author/project:Str2.l4@72:21 nonrec inferred
+          73:25-73:362 Call :: String
+            73:25-73:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            73:35-73:45 Str :: String
+            73:47-73:362 Call :: String
+              73:47-73:52 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+              73:54-73:362 Call :: List String
+                73:54-73:62 VarForeign :: (Bool -> String) -> List Bool -> List String   callee: elm/core:List.map   instance: a := Bool, b := String   sig#: 6a702f63   subst: v0 := Bool, v1 := String
+                73:63-73:66 VarTopLevel :: Bool -> String   callee: author/project:Str2.b2s   use: gen
+                73:67-73:362 List :: List Bool
+                  73:69-73:98 Call :: Bool
+                    73:69-73:84 VarForeign :: String -> String -> Bool   callee: elm/core:String.contains
+                    73:85-73:90 Str :: String
+                    73:91-73:98 Str :: String
+                  73:100-73:126 Call :: Bool
+                    73:100-73:115 VarForeign :: String -> String -> Bool   callee: elm/core:String.contains
+                    73:116-73:118 Str :: String
+                    73:119-73:126 Str :: String
+                  73:128-73:155 Call :: Bool
+                    73:128-73:143 VarForeign :: String -> String -> Bool   callee: elm/core:String.contains
+                    73:144-73:147 Str :: String
+                    73:148-73:155 Str :: String
+                  73:157-73:183 Call :: Bool
+                    73:157-73:172 VarForeign :: String -> String -> Bool   callee: elm/core:String.contains
+                    73:173-73:176 Str :: String
+                    73:177-73:183 Str :: String
+                  73:185-73:215 Call :: Bool
+                    73:185-73:202 VarForeign :: String -> String -> Bool   callee: elm/core:String.startsWith
+                    73:203-73:207 Str :: String
+                    73:208-73:215 Str :: String
+                  73:217-73:241 Call :: Bool
+                    73:217-73:234 VarForeign :: String -> String -> Bool   callee: elm/core:String.startsWith
+                    73:235-73:237 Str :: String
+                    73:238-73:241 Str :: String
+                  73:243-73:277 Call :: Bool
+                    73:243-73:260 VarForeign :: String -> String -> Bool   callee: elm/core:String.startsWith
+                    73:261-73:269 Str :: String
+                    73:270-73:277 Str :: String
+                  73:279-73:308 Call :: Bool
+                    73:279-73:294 VarForeign :: String -> String -> Bool   callee: elm/core:String.endsWith
+                    73:295-73:300 Str :: String
+                    73:301-73:308 Str :: String
+                  73:310-73:331 Call :: Bool
+                    73:310-73:325 VarForeign :: String -> String -> Bool   callee: elm/core:String.endsWith
+                    73:326-73:328 Str :: String
+                    73:329-73:331 Str :: String
+                  73:333-73:360 Call :: Bool
+                    73:333-73:348 VarForeign :: String -> String -> Bool   callee: elm/core:String.endsWith
+                    73:349-73:352 Str :: String
+                    73:353-73:360 Str :: String
+        def l3 :: String    [69:21-69:23]   id: author/project:Str2.l3@69:21   sig: String   kinds:    group: author/project:Str2.l3@69:21 nonrec inferred
+          70:25-70:200 Call :: String
+            70:25-70:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            70:35-70:41 Str :: String
+            70:43-70:200 Call :: String
+              70:43-70:48 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+              70:49-70:200 List :: List String
+                70:51-70:75 Call :: String
+                  70:51-70:62 VarForeign :: String -> String   callee: elm/core:String.trim
+                  70:63-70:75 Str :: String
+                70:77-70:102 Call :: String
+                  70:77-70:92 VarForeign :: String -> String   callee: elm/core:String.trimLeft
+                  70:93-70:102 Str :: String
+                70:104-70:130 Call :: String
+                  70:104-70:120 VarForeign :: String -> String   callee: elm/core:String.trimRight
+                  70:121-70:130 Str :: String
+                70:132-70:146 Call :: String
+                  70:132-70:143 VarForeign :: String -> String   callee: elm/core:String.trim
+                  70:144-70:146 Str :: String
+                70:148-70:165 Call :: String
+                  70:148-70:159 VarForeign :: String -> String   callee: elm/core:String.trim
+                  70:160-70:165 Str :: String
+                70:167-70:198 Call :: String
+                  70:167-70:178 VarForeign :: String -> String   callee: elm/core:String.trim
+                  70:179-70:198 Str :: String
+        def l2 :: String    [66:21-66:23]   id: author/project:Str2.l2@66:21   sig: String   kinds:    group: author/project:Str2.l2@66:21 nonrec inferred
+          67:25-67:140 Call :: String
+            67:25-67:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            67:35-67:42 Str :: String
+            67:44-67:140 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              67:44-67:83 Call :: String
+                67:44-67:49 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+                67:51-67:83 Call :: List String
+                  67:51-67:63 VarForeign :: String -> List String   callee: elm/core:String.lines
+                  67:64-67:83 Str :: String
+              67:88-67:139 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                67:88-67:110 Call :: String
+                  67:88-67:93 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+                  67:95-67:110 Call :: List String
+                    67:95-67:107 VarForeign :: String -> List String   callee: elm/core:String.lines
+                    67:108-67:110 Str :: String
+                67:115-67:139 Call :: String
+                  67:115-67:120 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+                  67:122-67:139 Call :: List String
+                    67:122-67:134 VarForeign :: String -> List String   callee: elm/core:String.lines
+                    67:135-67:139 Str :: String
+        def l1 :: String    [63:21-63:23]   id: author/project:Str2.l1@63:21   sig: String   kinds:    group: author/project:Str2.l1@63:21 nonrec inferred
+          64:25-64:126 Call :: String
+            64:25-64:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            64:35-64:43 Str :: String
+            64:45-64:126 Call :: String
+              64:45-64:50 VarTopLevel :: List String -> String   callee: author/project:Str2.showL   use: gen
+              64:51-64:126 List :: List String
+                64:53-64:76 Call :: String
+                  64:53-64:55 VarTopLevel :: Maybe ( Char, String ) -> String   callee: author/project:Str2.mu   use: gen
+                  64:57-64:76 Call :: Maybe ( Char, String )
+                    64:57-64:70 VarForeign :: String -> Maybe ( Char, String )   callee: elm/core:String.uncons
+                    64:71-64:76 Str :: String
+                64:79-64:100 Call :: String
+                  64:79-64:81 VarTopLevel :: Maybe ( Char, String ) -> String   callee: author/project:Str2.mu   use: gen
+                  64:83-64:100 Call :: Maybe ( Char, String )
+                    64:83-64:96 VarForeign :: String -> Maybe ( Char, String )   callee: elm/core:String.uncons
+                    64:97-64:100 Str :: String
+                64:103-64:123 Call :: String
+                  64:103-64:105 VarTopLevel :: Maybe ( Char, String ) -> String   callee: author/project:Str2.mu   use: gen
+                  64:107-64:123 Call :: Maybe ( Char, String )
+                    64:107-64:120 VarForeign :: String -> Maybe ( Char, String )   callee: elm/core:String.uncons
+                    64:121-64:123 Str :: String
+        96:17-100:37 If :: ( (), Cmd () )
+          96:20-96:84 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            96:20-96:80 Call :: Int
+              96:20-96:31 VarForeign :: List String -> Int   callee: elm/core:List.length   instance: a := String   sig#: 8f686fa0   subst: v0 := String
+              96:32-96:80 List :: List String
+                96:34-96:36 VarLocal :: String   callee: author/project:Str2.l1@63:21   use: gen
+                96:38-96:40 VarLocal :: String   callee: author/project:Str2.l2@66:21   use: gen
+                96:42-96:44 VarLocal :: String   callee: author/project:Str2.l3@69:21   use: gen
+                96:46-96:48 VarLocal :: String   callee: author/project:Str2.l4@72:21   use: gen
+                96:50-96:52 VarLocal :: String   callee: author/project:Str2.l5@75:21   use: gen
+                96:54-96:56 VarLocal :: String   callee: author/project:Str2.l6@78:21   use: gen
+                96:58-96:60 VarLocal :: String   callee: author/project:Str2.l7@81:21   use: gen
+                96:62-96:64 VarLocal :: String   callee: author/project:Str2.l8@84:21   use: gen
+                96:66-96:68 VarLocal :: String   callee: author/project:Str2.l9@87:21   use: gen
+                96:70-96:73 VarLocal :: String   callee: author/project:Str2.l10@90:21   use: gen
+                96:75-96:78 VarLocal :: String   callee: author/project:Str2.l11@93:21   use: gen
+            96:83-96:84 Int :: Int
+          97:21-97:37 Pair :: ( (), Cmd () )
+            97:23-97:25 Unit :: ()
+            97:27-97:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          100:21-100:37 Pair :: ( (), Cmd () )
+            100:23-100:25 Unit :: ()
+            100:27-100:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      101:20-101:43 Lambda :: () -> () -> ( (), Cmd () )
+        101:21-101:22 PAnything :: ()
+        101:23-101:24 PVar m :: ()
+        101:28-101:43 Pair :: ( (), Cmd () )
+          101:30-101:31 VarLocal :: ()
+          101:33-101:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      102:27-102:41 Lambda :: () -> Sub ()
+        102:28-102:29 PAnything :: ()
+        102:33-102:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Str2.showL   kind: function   reads:    needs: 
+init: 1   id: author/project:Str2.showI   kind: function   reads:    needs: 
+init: 2   id: author/project:Str2.b2s   kind: function   reads:    needs: 
+init: 3   id: author/project:Str2.mu   kind: function   reads:    needs: 
+init: 4   id: author/project:Str2.mi   kind: function   reads:    needs: 
+init: 5   id: author/project:Str2.mf   kind: function   reads:    needs: 
+init: 6   id: author/project:Str2.main   kind: value   reads: author/project:Str2.showL,author/project:Str2.showI,author/project:Str2.b2s,author/project:Str2.mu,author/project:Str2.mi,author/project:Str2.mf   needs:    init-dep: no

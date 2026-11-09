@@ -1,0 +1,103 @@
+module Str2 exposing (main)
+
+-- The String functions of the second batch: uncons, lines, trim*, contains, startsWith, endsWith, indexes, split, filter,
+-- any, all, reverse, repeat, replace, toInt, toFloat, append, Char.fromCode, toLocaleUpper. BMP characters only (Elm counts
+-- UTF-16 units, Ficcus code points: decision L11). The output must equal Elm's (expected/str2.out, Elm 0.19.3, node).
+
+
+showL : List String -> String
+showL xs =
+    "[" ++ String.join "|" xs ++ "]"
+
+
+showI : List Int -> String
+showI xs =
+    "[" ++ String.join "," (List.map String.fromInt xs) ++ "]"
+
+
+mi : Maybe Int -> String
+mi m =
+    case m of
+        Just v ->
+            "J" ++ String.fromInt v
+
+        Nothing ->
+            "N"
+
+
+mf : Maybe Float -> String
+mf m =
+    case m of
+        Just v ->
+            "J" ++ String.fromFloat v
+
+        Nothing ->
+            "N"
+
+
+mu : Maybe ( Char, String ) -> String
+mu m =
+    case m of
+        Just ( c, rest ) ->
+            "J" ++ String.fromChar c ++ "+" ++ rest
+
+        Nothing ->
+            "N"
+
+
+b2s : Bool -> String
+b2s b =
+    if b then
+        "T"
+
+    else
+        "F"
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    l1 =
+                        Debug.log "uncons" (showL [ mu (String.uncons "abc"), mu (String.uncons "é"), mu (String.uncons "") ])
+
+                    l2 =
+                        Debug.log "lines" (showL (String.lines "a\nb\r\nc\rd\n\ne") ++ showL (String.lines "") ++ showL (String.lines "\n"))
+
+                    l3 =
+                        Debug.log "trim" (showL [ String.trim "  a b \t\n", String.trimLeft "  a b  ", String.trimRight "  a b  ", String.trim "", String.trim "   ", String.trim "\u{00A0}x\u{3000}" ])
+
+                    l4 =
+                        Debug.log "contains" (showL (List.map b2s [ String.contains "ell" "hello", String.contains "" "hello", String.contains "z" "hello", String.contains "é" "café", String.startsWith "he" "hello", String.startsWith "" "x", String.startsWith "hello!" "hello", String.endsWith "llo" "hello", String.endsWith "" "", String.endsWith "x" "hello" ]))
+
+                    l5 =
+                        Debug.log "indexes" (showL [ showI (String.indexes "a" "banana"), showI (String.indexes "ana" "banana"), showI (String.indexes "" "abc"), showI (String.indexes "x" "abc"), showI (String.indexes "é" "éaé"), showI (String.indices "an" "banana") ])
+
+                    l6 =
+                        Debug.log "split" (showL (String.split "," "a,b,,c,") ++ showL (String.split "," "") ++ showL (String.split "" "héy") ++ showL (String.split "ab" "xabyabz") ++ showL (String.split "," ","))
+
+                    l7 =
+                        Debug.log "filter any all" (showL [ String.filter Char.isDigit "a1b22c", String.filter (\c -> c /= 'é') "café", b2s (String.any Char.isUpper "abC"), b2s (String.any Char.isUpper "abc"), b2s (String.all Char.isLower "abc"), b2s (String.all Char.isLower "aBc"), b2s (String.all Char.isLower "") ])
+
+                    l8 =
+                        Debug.log "reverse repeat" (showL [ String.reverse "hello", String.reverse "", String.reverse "héé", String.repeat 3 "ab", String.repeat 0 "x", String.repeat -1 "x", String.replace "a" "oo" "banana", String.replace "" "-" "ab" ])
+
+                    l9 =
+                        Debug.log "toInt" (showL (List.map (\s -> mi (String.toInt s)) [ "12", "-12", "+5", "", "-", "+", "007", "12a", " 1", "1.5", "0x10", "1e3", "999999999", "-0" ]))
+
+                    l10 =
+                        Debug.log "toFloat" (showL (List.map (\s -> mf (String.toFloat s)) [ "1.5", "-2", ".5", "5.", "1e3", "1E-2", "+3", "", ".", "1e", "abc", "0x10", " 1", "1 ", "Infinity", "-Infinity", "NaN", "0.1", "123456.789", "1e21", "2.5e-7" ]))
+
+                    l11 =
+                        Debug.log "chars" (showL [ String.fromChar (Char.fromCode 233), String.fromChar (Char.fromCode 65), String.fromChar (Char.toLocaleUpper 'q'), String.fromInt (Char.toCode (Char.fromCode 8364)), String.append "ab" "cd" ])
+                in
+                if List.length [ l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11 ] > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
