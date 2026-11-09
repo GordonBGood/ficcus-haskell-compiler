@@ -40,6 +40,13 @@ static fic_word pair_entry(fic_ref self, fic_word a, fic_word b) { (void)self; r
 static const fic_code pair_code = { (void (*)(void))pair_entry, 2u };
 static fic_clo pair_clo = { { FIC_IMMORTAL, FIC_TAG_CLOSURE, 0, 0 }, &pair_code };
 
+/* arity 9 (Elm's F9/A9): a1 + 2 a2 + ... + 9 a9 */
+static fic_word nine(fic_ref self, fic_word a, fic_word b, fic_word c, fic_word d, fic_word e, fic_word f, fic_word g, fic_word h, fic_word i) {
+  (void)self; return fic_w_i(a.i + 2 * b.i + 3 * c.i + 4 * d.i + 5 * e.i + 6 * f.i + 7 * g.i + 8 * h.i + 9 * i.i);
+}
+static const fic_code nine_code = { (void (*)(void))nine, 9u };
+static fic_clo nine_clo = { { FIC_IMMORTAL, FIC_TAG_CLOSURE, 0, 0 }, &nine_code };
+
 int main(void) {
   fic_ref f1 = &inc_clo.h, f2 = &add_clo.h, f3 = &sub3_clo.h, f4 = &mix4_clo.h, cu = &curry_clo.h;
   /* arity equals the number of arguments */
@@ -67,6 +74,15 @@ int main(void) {
   /* a partial application of a closure with a captured value, applied through a different number of arguments */
   { fic_ref a = make_adder(40);
     CHECK(fic_ap1(a, 0, fic_w_i(2)).i == 42); }
+  { fic_word w1 = fic_w_i(1), w2 = fic_w_i(2), w3 = fic_w_i(3), w4 = fic_w_i(4), w5 = fic_w_i(5), w6 = fic_w_i(6), w7 = fic_w_i(7), w8 = fic_w_i(8), w9 = fic_w_i(9);
+    fic_ref n = &nine_clo.h;                                         /* 1 + 4 + 9 + 16 + 25 + 36 + 49 + 64 + 81 = 285 */
+    CHECK(fic_ap9(n, 0, w1, w2, w3, w4, w5, w6, w7, w8, w9).i == 285);
+    { fic_ref p = fic_ap4(n, 0, w1, w2, w3, w4).p;
+      CHECK(FIC_CLO(p)->code->arity == 5u && fic_ap5(p, 0, w5, w6, w7, w8, w9).i == 285); }
+    { fic_ref p = fic_ap8(n, 0, w1, w2, w3, w4, w5, w6, w7, w8).p;
+      CHECK(fic_ap1(p, 0, w9).i == 285); }
+    { fic_ref p = fic_ap1(n, 0, w1).p; fic_ref q = fic_ap3(p, 0, w2, w3, w4).p;
+      CHECK(fic_ap5(q, 0, w5, w6, w7, w8, w9).i == 285); } }
   if (failures) { printf("%d failure(s)\n", failures); return 1; }
   printf("closure tests ok\n");
   return 0;

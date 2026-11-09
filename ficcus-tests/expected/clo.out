@@ -27,5 +27,7 @@ filter: 4
 reverse: 654321
 foldr: "654321"
 unboxed: 6
+nine direct: 285
+nine partial: 570
 capture float: 2.5
 capture: 117

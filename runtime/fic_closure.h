@@ -34,6 +34,7 @@ typedef fic_word (*fic_fn5)(fic_ref, fic_word, fic_word, fic_word, fic_word, fic
 typedef fic_word (*fic_fn6)(fic_ref, fic_word, fic_word, fic_word, fic_word, fic_word, fic_word);
 typedef fic_word (*fic_fn7)(fic_ref, fic_word, fic_word, fic_word, fic_word, fic_word, fic_word, fic_word);
 typedef fic_word (*fic_fn8)(fic_ref, fic_word, fic_word, fic_word, fic_word, fic_word, fic_word, fic_word, fic_word);
+typedef fic_word (*fic_fn9)(fic_ref, fic_word, fic_word, fic_word, fic_word, fic_word, fic_word, fic_word, fic_word, fic_word);
 
 static fic_word fic_pap_2_1(fic_ref self, fic_word b0) {
   fic_pap *p = (fic_pap *)self;
@@ -175,17 +176,58 @@ static fic_word fic_pap_8_7(fic_ref self, fic_word b0) {
   fic_ref f = p->fun;
   return ((fic_fn8)FIC_CLO(f)->code->fn)(f, p->args[0], p->args[1], p->args[2], p->args[3], p->args[4], p->args[5], p->args[6], b0);
 }
+static fic_word fic_pap_9_1(fic_ref self, fic_word b0, fic_word b1, fic_word b2, fic_word b3, fic_word b4, fic_word b5, fic_word b6, fic_word b7) {
+  fic_pap *p = (fic_pap *)self;
+  fic_ref f = p->fun;
+  return ((fic_fn9)FIC_CLO(f)->code->fn)(f, p->args[0], b0, b1, b2, b3, b4, b5, b6, b7);
+}
+static fic_word fic_pap_9_2(fic_ref self, fic_word b0, fic_word b1, fic_word b2, fic_word b3, fic_word b4, fic_word b5, fic_word b6) {
+  fic_pap *p = (fic_pap *)self;
+  fic_ref f = p->fun;
+  return ((fic_fn9)FIC_CLO(f)->code->fn)(f, p->args[0], p->args[1], b0, b1, b2, b3, b4, b5, b6);
+}
+static fic_word fic_pap_9_3(fic_ref self, fic_word b0, fic_word b1, fic_word b2, fic_word b3, fic_word b4, fic_word b5) {
+  fic_pap *p = (fic_pap *)self;
+  fic_ref f = p->fun;
+  return ((fic_fn9)FIC_CLO(f)->code->fn)(f, p->args[0], p->args[1], p->args[2], b0, b1, b2, b3, b4, b5);
+}
+static fic_word fic_pap_9_4(fic_ref self, fic_word b0, fic_word b1, fic_word b2, fic_word b3, fic_word b4) {
+  fic_pap *p = (fic_pap *)self;
+  fic_ref f = p->fun;
+  return ((fic_fn9)FIC_CLO(f)->code->fn)(f, p->args[0], p->args[1], p->args[2], p->args[3], b0, b1, b2, b3, b4);
+}
+static fic_word fic_pap_9_5(fic_ref self, fic_word b0, fic_word b1, fic_word b2, fic_word b3) {
+  fic_pap *p = (fic_pap *)self;
+  fic_ref f = p->fun;
+  return ((fic_fn9)FIC_CLO(f)->code->fn)(f, p->args[0], p->args[1], p->args[2], p->args[3], p->args[4], b0, b1, b2, b3);
+}
+static fic_word fic_pap_9_6(fic_ref self, fic_word b0, fic_word b1, fic_word b2) {
+  fic_pap *p = (fic_pap *)self;
+  fic_ref f = p->fun;
+  return ((fic_fn9)FIC_CLO(f)->code->fn)(f, p->args[0], p->args[1], p->args[2], p->args[3], p->args[4], p->args[5], b0, b1, b2);
+}
+static fic_word fic_pap_9_7(fic_ref self, fic_word b0, fic_word b1) {
+  fic_pap *p = (fic_pap *)self;
+  fic_ref f = p->fun;
+  return ((fic_fn9)FIC_CLO(f)->code->fn)(f, p->args[0], p->args[1], p->args[2], p->args[3], p->args[4], p->args[5], p->args[6], b0, b1);
+}
+static fic_word fic_pap_9_8(fic_ref self, fic_word b0) {
+  fic_pap *p = (fic_pap *)self;
+  fic_ref f = p->fun;
+  return ((fic_fn9)FIC_CLO(f)->code->fn)(f, p->args[0], p->args[1], p->args[2], p->args[3], p->args[4], p->args[5], p->args[6], p->args[7], b0);
+}
 
-static const fic_code fic_pap_code[9][9] = {
-  { { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_2_1, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_3_1, 2u }, { (void (*)(void))fic_pap_3_2, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_4_1, 3u }, { (void (*)(void))fic_pap_4_2, 2u }, { (void (*)(void))fic_pap_4_3, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_5_1, 4u }, { (void (*)(void))fic_pap_5_2, 3u }, { (void (*)(void))fic_pap_5_3, 2u }, { (void (*)(void))fic_pap_5_4, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_6_1, 5u }, { (void (*)(void))fic_pap_6_2, 4u }, { (void (*)(void))fic_pap_6_3, 3u }, { (void (*)(void))fic_pap_6_4, 2u }, { (void (*)(void))fic_pap_6_5, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_7_1, 6u }, { (void (*)(void))fic_pap_7_2, 5u }, { (void (*)(void))fic_pap_7_3, 4u }, { (void (*)(void))fic_pap_7_4, 3u }, { (void (*)(void))fic_pap_7_5, 2u }, { (void (*)(void))fic_pap_7_6, 1u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_8_1, 7u }, { (void (*)(void))fic_pap_8_2, 6u }, { (void (*)(void))fic_pap_8_3, 5u }, { (void (*)(void))fic_pap_8_4, 4u }, { (void (*)(void))fic_pap_8_5, 3u }, { (void (*)(void))fic_pap_8_6, 2u }, { (void (*)(void))fic_pap_8_7, 1u }, { 0, 0u } },
+static const fic_code fic_pap_code[10][10] = {
+  { { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
+  { { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
+  { { 0, 0u }, { (void (*)(void))fic_pap_2_1, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
+  { { 0, 0u }, { (void (*)(void))fic_pap_3_1, 2u }, { (void (*)(void))fic_pap_3_2, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
+  { { 0, 0u }, { (void (*)(void))fic_pap_4_1, 3u }, { (void (*)(void))fic_pap_4_2, 2u }, { (void (*)(void))fic_pap_4_3, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
+  { { 0, 0u }, { (void (*)(void))fic_pap_5_1, 4u }, { (void (*)(void))fic_pap_5_2, 3u }, { (void (*)(void))fic_pap_5_3, 2u }, { (void (*)(void))fic_pap_5_4, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
+  { { 0, 0u }, { (void (*)(void))fic_pap_6_1, 5u }, { (void (*)(void))fic_pap_6_2, 4u }, { (void (*)(void))fic_pap_6_3, 3u }, { (void (*)(void))fic_pap_6_4, 2u }, { (void (*)(void))fic_pap_6_5, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
+  { { 0, 0u }, { (void (*)(void))fic_pap_7_1, 6u }, { (void (*)(void))fic_pap_7_2, 5u }, { (void (*)(void))fic_pap_7_3, 4u }, { (void (*)(void))fic_pap_7_4, 3u }, { (void (*)(void))fic_pap_7_5, 2u }, { (void (*)(void))fic_pap_7_6, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
+  { { 0, 0u }, { (void (*)(void))fic_pap_8_1, 7u }, { (void (*)(void))fic_pap_8_2, 6u }, { (void (*)(void))fic_pap_8_3, 5u }, { (void (*)(void))fic_pap_8_4, 4u }, { (void (*)(void))fic_pap_8_5, 3u }, { (void (*)(void))fic_pap_8_6, 2u }, { (void (*)(void))fic_pap_8_7, 1u }, { 0, 0u }, { 0, 0u } },
+  { { 0, 0u }, { (void (*)(void))fic_pap_9_1, 8u }, { (void (*)(void))fic_pap_9_2, 7u }, { (void (*)(void))fic_pap_9_3, 6u }, { (void (*)(void))fic_pap_9_4, 5u }, { (void (*)(void))fic_pap_9_5, 4u }, { (void (*)(void))fic_pap_9_6, 3u }, { (void (*)(void))fic_pap_9_7, 2u }, { (void (*)(void))fic_pap_9_8, 1u }, { 0, 0u } },
 };
 
 static fic_ref fic_mkpap(fic_ref f, unsigned k, unsigned j, uint32_t mask, const fic_word *a) {
@@ -307,6 +349,25 @@ static fic_word fic_ap8(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_
   case 5u: { fic_word r = ((fic_fn5)c->fn)(f, a0, a1, a2, a3, a4); return fic_ap3(r.p, mask >> 5, a5, a6, a7); }
   case 6u: { fic_word r = ((fic_fn6)c->fn)(f, a0, a1, a2, a3, a4, a5); return fic_ap2(r.p, mask >> 6, a6, a7); }
   case 7u: { fic_word r = ((fic_fn7)c->fn)(f, a0, a1, a2, a3, a4, a5, a6); return fic_ap1(r.p, mask >> 7, a7); }
+  default: break;
+  }
+  abort();
+}
+
+static fic_word fic_ap9(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4, fic_word a5, fic_word a6, fic_word a7, fic_word a8) {
+  const fic_code *c = FIC_CLO(f)->code;
+  unsigned k = c->arity;
+  if (k == 9u) return ((fic_fn9)c->fn)(f, a0, a1, a2, a3, a4, a5, a6, a7, a8);
+  if (k > 9u) { fic_word as[9]; as[0] = a0; as[1] = a1; as[2] = a2; as[3] = a3; as[4] = a4; as[5] = a5; as[6] = a6; as[7] = a7; as[8] = a8; return fic_w_p(fic_mkpap(f, k, 9u, mask, as)); }
+  switch (k) {
+  case 1u: { fic_word r = ((fic_fn1)c->fn)(f, a0); return fic_ap8(r.p, mask >> 1, a1, a2, a3, a4, a5, a6, a7, a8); }
+  case 2u: { fic_word r = ((fic_fn2)c->fn)(f, a0, a1); return fic_ap7(r.p, mask >> 2, a2, a3, a4, a5, a6, a7, a8); }
+  case 3u: { fic_word r = ((fic_fn3)c->fn)(f, a0, a1, a2); return fic_ap6(r.p, mask >> 3, a3, a4, a5, a6, a7, a8); }
+  case 4u: { fic_word r = ((fic_fn4)c->fn)(f, a0, a1, a2, a3); return fic_ap5(r.p, mask >> 4, a4, a5, a6, a7, a8); }
+  case 5u: { fic_word r = ((fic_fn5)c->fn)(f, a0, a1, a2, a3, a4); return fic_ap4(r.p, mask >> 5, a5, a6, a7, a8); }
+  case 6u: { fic_word r = ((fic_fn6)c->fn)(f, a0, a1, a2, a3, a4, a5); return fic_ap3(r.p, mask >> 6, a6, a7, a8); }
+  case 7u: { fic_word r = ((fic_fn7)c->fn)(f, a0, a1, a2, a3, a4, a5, a6); return fic_ap2(r.p, mask >> 7, a7, a8); }
+  case 8u: { fic_word r = ((fic_fn8)c->fn)(f, a0, a1, a2, a3, a4, a5, a6, a7); return fic_ap1(r.p, mask >> 8, a8); }
   default: break;
   }
   abort();

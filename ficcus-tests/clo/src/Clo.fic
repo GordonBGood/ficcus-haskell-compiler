@@ -81,6 +81,17 @@ type alias P =
     { x : Int, y : Float }
 
 
+-- Elm's F9: nine parameters, called saturated, partially applied and through a function value
+sum9 : Int -> Int -> Int -> Int -> Int -> Int -> Int -> Int -> Int -> Int
+sum9 a b c d e f g h i =
+    a + 2 * b + 3 * c + 4 * d + 5 * e + 6 * f + 7 * g + 8 * h + 9 * i
+
+
+applyNine : (Int -> Int -> Int -> Int -> Int -> Int -> Int -> Int -> Int -> Int) -> Int
+applyNine f =
+    f 1 2 3 4 5 6 7 8 9
+
+
 main : Program () () ()
 main =
     Platform.worker
@@ -226,6 +237,16 @@ main =
                     folded =
                         List.foldr (\n acc -> acc ++ String.fromInt n) "" ints
 
+                    nineDirect =
+                        sum9 1 2 3 4 5 6 7 8 9
+
+                    ninePartial =
+                        let
+                            p =
+                                sum9 1 2 3 4
+                        in
+                        p 5 6 7 8 9 + applyNine sum9
+
                     unboxed =
                         List.foldl add 0 (List.map unbox boxes)
 
@@ -321,6 +342,12 @@ main =
 
                     _ =
                         Debug.log "unboxed" unboxed
+
+                    _ =
+                        Debug.log "nine direct" nineDirect
+
+                    _ =
+                        Debug.log "nine partial" ninePartial
                 in
                 ( (), Cmd.none )
         , update = \_ _ -> ( (), Cmd.none )

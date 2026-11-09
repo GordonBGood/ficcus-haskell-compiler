@@ -554,7 +554,7 @@ genExpr info e =
 
 
 maxArity :: Int
-maxArity = 8
+maxArity = 9
 
 
 -- the function clones that are used as values, in order of first use

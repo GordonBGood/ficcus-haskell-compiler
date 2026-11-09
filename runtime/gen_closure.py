@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generates fic_closure.h: the closure runtime (uniform word ABI, arity checked at run time, like Elm's F2..F9/A2..A9).
 Usage: python3 runtime/gen_closure.py > runtime/fic_closure.h      (the output is committed; MAXA below is the limit)"""
-MAXA = 8
+MAXA = 9
 
 def args(n, p="a"): return ", ".join("fic_word %s%d" % (p, i) for i in range(n))
 def names(n, p="a"): return ", ".join("%s%d" % (p, i) for i in range(n))
