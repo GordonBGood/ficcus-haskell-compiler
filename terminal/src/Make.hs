@@ -197,6 +197,7 @@ writeOverlay root =
       old <- Dir.doesFileExist file
       same <- if old then (== Overlay.overlaySource) <$> readFileStrict file else return False
       if same then return () else writeFile file Overlay.overlaySource
+      writeFile (dir FP.</> Overlay.bitwise64FileName) Overlay.bitwise64Source
       Flags.setExtraSrcDir (Just dir)
       return [file]
 

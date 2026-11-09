@@ -5,6 +5,8 @@ module Ficcus.Mono.Overlay
   , overlayModuleName
   , overlayFileName
   , overlayId
+  , bitwise64Source
+  , bitwise64FileName
   )
   where
 
@@ -48,3 +50,13 @@ overlayId cid =
       , ("elm/core:List.indexedMap", "listIndexedMap")
       , ("elm/core:List.sortBy", "listSortBy"), ("elm/core:List.sortWith", "listSortWith")
       ]
+
+
+-- the 64 bit Bitwise module (overlay/Bitwise64.elm): written beside FicOverlay.elm, its functions are kernel functions
+bitwise64Source :: String
+bitwise64Source =
+  $(embedFiles [ "overlay/Bitwise64.elm" ])
+
+
+bitwise64FileName :: FilePath
+bitwise64FileName = "Bitwise64.elm"

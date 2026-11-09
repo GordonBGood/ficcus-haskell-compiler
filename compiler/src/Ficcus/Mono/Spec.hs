@@ -873,7 +873,10 @@ resolve se region e =
           -- a kernel function written in Elm in the overlay (Ficcus.Mono.Overlay) is an ordinary definition
           case overlayId cid0 >>= \o -> fmap (\src -> (o, src)) (Map.lookup o tops0) of
             Just (o, src) -> viaClone src o
-            Nothing -> foreignOrTop' cid0
+            Nothing
+              -- the Bitwise64 module of the overlay: its functions are the kernel functions of the same name
+              | Just n <- List.stripPrefix "author/project:Bitwise64." cid0 -> foreignOrTop' ("elm/core:Bitwise64." ++ n)
+              | otherwise -> foreignOrTop' cid0
 
     foreignOrTop' cid =
       case kernelArity cid of
