@@ -11,8 +11,8 @@ Exit status 1 on any difference.
 import argparse, os, shutil, subprocess, sys, tempfile, difflib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2"]
-RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
+NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2", "init2", "silly", "grow1", "grow2", "grow3"]
+RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2", "init2", "silly", "grow3"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
 
 
 CRASH = {"eqfun": "Trying to use `(==)` on functions."}      # programs that end with a run time error: exit status 1 and this text on stderr
@@ -85,7 +85,7 @@ def main():
         print(t.stdout.strip() if t.returncode == 0 else "FAIL runtime/test.sh\n" + t.stdout + t.stderr); bad += 1 if t.returncode else 0
     for name in (a.only.split(",") if a.only else NAMES):
         src = os.path.join(HERE, name)
-        mod = [f for f in os.listdir(os.path.join(src, "src")) if f.endswith(".fic")][0]
+        mod = sorted(f for f in os.listdir(os.path.join(src, "src")) if f.endswith(".fic"))[0]
         work = tempfile.mkdtemp()
         dst = os.path.join(work, name)
         shutil.copytree(src, dst, ignore=shutil.ignore_patterns("elm-stuff"))

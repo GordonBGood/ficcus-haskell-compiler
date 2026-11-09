@@ -1,0 +1,28 @@
+module Grow3 exposing (main)
+
+-- A record row that nests (rg calls rg2 with a record that has the argument as a field, rg2 is rg): the type grows, the
+-- layout does not (the field is a record, boxed: class ref), so the row is keyed by layout and finitely many copies exist
+-- (expected/grow3.mono: one rg and one rg2 per layout). Output equals Elm's (expected/grow3.out).
+
+
+rg : { a | x : Int } -> Int
+rg v =
+    if v.x > 3 then
+        v.x
+
+    else
+        rg2 { x = v.x + 1, inner = v }
+
+
+rg2 : { a | x : Int } -> Int
+rg2 =
+    rg
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> if String.length (Debug.log "rg" (String.fromInt (rg { x = 1 }) ++ String.fromInt (rg { x = 0, y = 2.5 }))) > 0 then ( (), Cmd.none ) else ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

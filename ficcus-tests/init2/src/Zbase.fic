@@ -1,0 +1,39 @@
+module Zbase exposing (base, empty, limit, offset, scaler, table, weights)
+
+import Dict exposing (Dict)
+
+
+-- the order in the file is not the order of initialisation; `limit` and `empty` are polymorphic values
+
+
+base : Int
+base =
+    offset * 2
+
+
+limit =
+    4
+
+
+empty =
+    Dict.empty
+
+
+offset : Int
+offset =
+    limit + 1
+
+
+table : List Int
+table =
+    List.range 1 base
+
+
+weights : List Float
+weights =
+    List.map (\x -> toFloat x * limit) [ 1, 2, 3 ]
+
+
+scaler : Int -> Int
+scaler x =
+    x * offset

@@ -1,0 +1,24 @@
+module Zcfg exposing (names, scaled, total, tree)
+
+import Dict exposing (Dict)
+import Zbase
+
+
+total : Int
+total =
+    List.sum scaled
+
+
+scaled : List Int
+scaled =
+    List.map Zbase.scaler Zbase.table
+
+
+names : Dict String Int
+names =
+    Dict.insert "total" total (Dict.insert "base" Zbase.base Zbase.empty)
+
+
+tree : Dict Int String
+tree =
+    Dict.insert Zbase.offset "offset" (Dict.insert (Zbase.limit + 1) "limit+1" Zbase.empty)

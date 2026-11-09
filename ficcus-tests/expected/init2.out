@@ -1,0 +1,5 @@
+table: "10 5,10,15,20"
+lookups: "275 10 offset offset"
+dicts: "0 1 2 1"
+floats: "6 24"
+ints: "10 5 275 284 5"

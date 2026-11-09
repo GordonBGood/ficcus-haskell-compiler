@@ -69,7 +69,39 @@ keyLimit = 64
 limitMessage :: String -> Key -> String
 limitMessage did key =
   "cannot specialize `" ++ did ++ "`: more than " ++ show keyLimit ++ " instances are needed (the last key: "
-  ++ keyText key ++ "). It is called at types that keep growing."
+  ++ shorten (keyText key) ++ "). It is called at types that keep growing: a polymorphic recursion through a `comparable` or `==` variable "
+  ++ "(give the function a fixed type or hide the growth in a custom type)."
+  where shorten t = if length t > 160 then take 160 t ++ " ..." else t
+
+
+-- the number of nodes of a type, counted up to a cap (a type that doubles at each step is a shared tree: counting it all would never end)
+typeSizeUpTo :: Int -> MType -> Int
+typeSizeUpTo cap t = max 0 (cap - go cap t)
+  where
+    -- the budget left after visiting t
+    go budget x
+      | budget <= 0 = 0
+      | otherwise =
+          let b = budget - 1
+              kids = case x of
+                TyCon _ as -> as
+                TyFun a r -> [a, r]
+                TyRecord fs -> map snd fs
+                TyTuple xs -> xs
+                TyUnit -> []
+          in foldl go b kids
+
+
+-- the size of an exact type that stops a specialization: the growth through `(x, x)` doubles the size at each instance
+typeSizeLimit :: Int
+typeSizeLimit = 4000
+
+
+growthMessage :: String -> String
+growthMessage did =
+  "cannot specialize `" ++ did ++ "`: the exact type of its `comparable` or `==` argument grows without end (a type of more than "
+  ++ show typeSizeLimit ++ " parts was needed). It is called at types that keep growing: a polymorphic recursion through a `comparable` or "
+  ++ "`==` variable (give the function a fixed type or hide the growth in a custom type)."
 
 
 
@@ -124,7 +156,7 @@ data SEnv =
 
 report :: String -> SM ()
 report msg =
-  modify' (\s -> s { sErrors = msg : sErrors s })
+  modify' (\s -> if msg `elem` sErrors s then s else s { sErrors = msg : sErrors s })
 
 
 freshId :: SM CloneId
@@ -435,6 +467,7 @@ keyFor se cid scheme subst isOuter =
                       Nothing -> report ("cannot key the row variable v" ++ show i ++ " of " ++ cid) >> return (ByLayout [])
                 | kind `elem` ["number", "comparable", "compappend"] || marked ->
                     case mtypeOf env t of
+                      Right m | typeSizeUpTo typeSizeLimit m >= typeSizeLimit -> report (growthMessage cid) >> return (ByType (TyCon "ref" []))
                       Right m -> return (ByType m)
                       Left why -> report ("cannot key " ++ cid ++ " v" ++ show i ++ ": " ++ why) >> return (ByClass CRef)
                 | kind == "appendable" -> return (ByApp (appClassOf enums env t))

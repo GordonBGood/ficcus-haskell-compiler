@@ -1,0 +1,287 @@
+-- module Zcfg: problems=0 instances=16 instance-failures=0 defaulted=0
+-- equality-uses: total=0 at-function=0
+module author/project:Zcfg
+def scaled :: List Int    [13:1-13:7]   id: author/project:Zcfg.scaled   sig: List Int   kinds:    group: author/project:Zcfg.scaled nonrec ann
+  14:5-14:38 Call :: List Int
+    14:5-14:13 VarForeign :: (Int -> Int) -> List Int -> List Int   callee: elm/core:List.map   instance: a := Int, b := Int   sig#: 6a702f63   subst: v0 := Int, v1 := Int
+    14:14-14:26 VarForeign :: Int -> Int   callee: author/project:Zbase.scaler
+    14:27-14:38 VarForeign :: List Int   callee: author/project:Zbase.table
+def total :: Int    [8:1-8:6]   id: author/project:Zcfg.total   sig: Int   kinds:    group: author/project:Zcfg.total nonrec ann
+  9:5-9:20 Call :: Int
+    9:5-9:13 VarForeign :: List Int -> Int   callee: elm/core:List.sum   instance: number := Int   sig#: 78b59c50   subst: v0 := Int
+    9:14-9:20 VarTopLevel :: List Int   callee: author/project:Zcfg.scaled   use: gen
+def names :: Dict String Int    [18:1-18:6]   id: author/project:Zcfg.names   sig: Dict String Int   kinds:    group: author/project:Zcfg.names nonrec ann
+  19:5-19:73 Call :: Dict String Int
+    19:5-19:16 VarForeign :: String -> Int -> Dict String Int -> Dict String Int   callee: elm/core:Dict.insert   instance: comparable := String, v := Int   sig#: 256ddcb4   subst: v0 := String, v1 := Int
+    19:17-19:24 Str :: String
+    19:25-19:30 VarTopLevel :: Int   callee: author/project:Zcfg.total   use: gen
+    19:32-19:73 Call :: Dict String Int
+      19:32-19:43 VarForeign :: String -> Int -> Dict String Int -> Dict String Int   callee: elm/core:Dict.insert   instance: comparable := String, v := Int   sig#: 256ddcb4   subst: v0 := String, v1 := Int
+      19:44-19:50 Str :: String
+      19:51-19:61 VarForeign :: Int   callee: author/project:Zbase.base
+      19:62-19:73 VarForeign :: Dict String Int   callee: author/project:Zbase.empty   instance: k := String, v := Int   sig#: dd8ed12a   subst: v0 := String, v1 := Int
+def tree :: Dict Int String    [23:1-23:5]   id: author/project:Zcfg.tree   sig: Dict Int String   kinds:    group: author/project:Zcfg.tree nonrec ann
+  24:5-24:91 Call :: Dict Int String
+    24:5-24:16 VarForeign :: Int -> String -> Dict Int String -> Dict Int String   callee: elm/core:Dict.insert   instance: comparable := Int, v := String   sig#: 256ddcb4   subst: v0 := Int, v1 := String
+    24:17-24:29 VarForeign :: Int   callee: author/project:Zbase.offset
+    24:30-24:38 Str :: String
+    24:40-24:91 Call :: Dict Int String
+      24:40-24:51 VarForeign :: Int -> String -> Dict Int String -> Dict Int String   callee: elm/core:Dict.insert   instance: comparable := Int, v := String   sig#: 256ddcb4   subst: v0 := Int, v1 := String
+      24:53-24:68 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        24:53-24:64 VarForeign :: Int   callee: author/project:Zbase.limit   instance: number := Int   sig#: 005979ab   subst: v0 := Int
+        24:67-24:68 Int :: Int
+      24:70-24:79 Str :: String
+      24:80-24:91 VarForeign :: Dict Int String   callee: author/project:Zbase.empty   instance: k := Int, v := String   sig#: dd8ed12a   subst: v0 := Int, v1 := String
+init: 0   id: author/project:Zcfg.scaled   kind: value   reads:    needs:    init-dep: no
+init: 1   id: author/project:Zcfg.total   kind: value   reads: author/project:Zcfg.scaled   needs: author/project:Zcfg.scaled   init-dep: yes
+init: 2   id: author/project:Zcfg.names   kind: value   reads: author/project:Zcfg.total   needs: author/project:Zcfg.scaled,author/project:Zcfg.total   init-dep: yes
+init: 3   id: author/project:Zcfg.tree   kind: value   reads:    needs:    init-dep: no
+
+-- module Init2: problems=0 instances=99 instance-failures=0 defaulted=2
+-- equality-uses: total=0 at-function=0
+module author/project:Init2
+def early :: Int    [18:1-18:6]   id: author/project:Init2.early   sig: Int   kinds:    group: author/project:Init2.early nonrec ann
+  19:5-19:19 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    19:5-19:15 VarForeign :: Int   callee: author/project:Zbase.base
+    19:18-19:19 Int :: Int
+def late :: Int    [13:1-13:5]   id: author/project:Init2.late   sig: Int   kinds:    group: author/project:Init2.late nonrec ann
+  14:5-14:23 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    14:5-14:15 VarForeign :: Int   callee: author/project:Zcfg.total
+    14:18-14:23 VarTopLevel :: Int   callee: author/project:Init2.early   use: gen
+def main :: Program () () ()    [23:1-23:5]   id: author/project:Init2.main   sig: Program () () ()   kinds:    group: author/project:Init2.main nonrec ann
+  24:5-50:10 Call :: Program () () ()
+    24:5-24:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    25:9-50:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      26:13-47:37 Lambda :: () -> ( (), Cmd () )
+        26:14-26:15 PAnything :: ()
+        def l5 :: String    [40:21-40:23]   id: author/project:Init2.l5@40:21   sig: String   kinds:    group: author/project:Init2.l5@40:21 nonrec inferred
+          41:25-41:162 Call :: String
+            41:25-41:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            41:35-41:42 Str :: String
+            41:44-41:162 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              41:44-41:83 Call :: String
+                41:44-41:58 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                41:60-41:83 Call :: Int
+                  41:60-41:71 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+                  41:72-41:83 VarForeign :: List Int   callee: author/project:Zbase.table
+              41:88-41:160 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                41:88-41:91 Str :: String
+                41:95-41:160 Call :: String
+                  41:95-41:106 VarForeign :: String -> List String -> String   callee: elm/core:String.join
+                  41:107-41:110 Str :: String
+                  41:112-41:160 Call :: List String
+                    41:112-41:120 VarForeign :: (Int -> String) -> List Int -> List String   callee: elm/core:List.map   instance: a := Int, b := String   sig#: 6a702f63   subst: v0 := Int, v1 := String
+                    41:121-41:135 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                    41:137-41:160 Call :: List Int
+                      41:137-41:146 VarForeign :: Int -> List Int -> List Int   callee: elm/core:List.take   instance: a := Int   sig#: 7b4b0ecd   subst: v0 := Int
+                      41:147-41:148 Int :: Int
+                      41:149-41:160 VarForeign :: List Int   callee: author/project:Zcfg.scaled
+        def l4 :: String    [37:21-37:23]   id: author/project:Init2.l4@37:21   sig: String   kinds:    group: author/project:Init2.l4@37:21 nonrec inferred
+          38:25-38:295 Call :: String
+            38:25-38:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            38:35-38:44 Str :: String
+            38:46-38:295 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              38:46-38:111 Call :: String
+                38:46-38:60 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                38:62-38:111 Call :: Int
+                  38:62-38:79 VarForeign :: Int -> Maybe Int -> Int   callee: elm/core:Maybe.withDefault   instance: a := Int   sig#: be843909   subst: v0 := Int
+                  38:80-38:82 Negate :: Int
+                    38:81-38:82 Int :: Int
+                  38:84-38:111 Call :: Maybe Int
+                    38:84-38:92 VarForeign :: String -> Dict String Int -> Maybe Int   callee: elm/core:Dict.get   instance: comparable := String, v := Int   sig#: e8f00e9c   subst: v0 := String, v1 := Int
+                    38:93-38:100 Str :: String
+                    38:101-38:111 VarForeign :: Dict String Int   callee: author/project:Zcfg.names
+              38:117-38:294 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                38:117-38:120 Str :: String
+                38:124-38:294 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  38:124-38:188 Call :: String
+                    38:124-38:138 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                    38:140-38:188 Call :: Int
+                      38:140-38:157 VarForeign :: Int -> Maybe Int -> Int   callee: elm/core:Maybe.withDefault   instance: a := Int   sig#: be843909   subst: v0 := Int
+                      38:158-38:160 Negate :: Int
+                        38:159-38:160 Int :: Int
+                      38:162-38:188 Call :: Maybe Int
+                        38:162-38:170 VarForeign :: String -> Dict String Int -> Maybe Int   callee: elm/core:Dict.get   instance: comparable := String, v := Int   sig#: e8f00e9c   subst: v0 := String, v1 := Int
+                        38:171-38:177 Str :: String
+                        38:178-38:188 VarForeign :: Dict String Int   callee: author/project:Zcfg.names
+                  38:194-38:294 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                    38:194-38:197 Str :: String
+                    38:201-38:294 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                      38:201-38:244 Call :: String
+                        38:201-38:218 VarForeign :: String -> Maybe String -> String   callee: elm/core:Maybe.withDefault   instance: a := String   sig#: be843909   subst: v0 := String
+                        38:219-38:222 Str :: String
+                        38:224-38:244 Call :: Maybe String
+                          38:224-38:232 VarForeign :: Int -> Dict Int String -> Maybe String   callee: elm/core:Dict.get   instance: comparable := Int, v := String   sig#: e8f00e9c   subst: v0 := Int, v1 := String
+                          38:233-38:234 Int :: Int
+                          38:235-38:244 VarForeign :: Dict Int String   callee: author/project:Zcfg.tree
+                      38:249-38:294 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                        38:249-38:252 Str :: String
+                        38:256-38:294 Call :: String
+                          38:256-38:267 VarForeign :: String -> List String -> String   callee: elm/core:String.join
+                          38:268-38:271 Str :: String
+                          38:273-38:294 Call :: List String
+                            38:273-38:284 VarForeign :: Dict Int String -> List String   callee: elm/core:Dict.values   instance: k := Int, v := String   sig#: 640b334f   subst: v0 := Int, v1 := String
+                            38:285-38:294 VarForeign :: Dict Int String   callee: author/project:Zcfg.tree
+        def l3 :: String    [34:21-34:23]   id: author/project:Init2.l3@34:21   sig: String   kinds:    group: author/project:Init2.l3@34:21 nonrec inferred
+          35:25-35:249 Call :: String
+            35:25-35:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            35:35-35:42 Str :: String
+            35:44-35:249 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              35:44-35:81 Call :: String
+                35:44-35:58 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                35:60-35:81 Call :: Int
+                  35:60-35:69 VarForeign :: Dict ref ref -> Int   <= Dict k v -> Int   callee: elm/core:Dict.size   instance: k := ref (defaulted), v := ref (defaulted)   sig#: d0910be5   subst: v0 := ref, v1 := ref
+                  35:70-35:81 VarForeign :: Dict ref ref   <= Dict k v   callee: author/project:Zbase.empty   instance: k := ref (defaulted), v := ref (defaulted)   sig#: dd8ed12a   subst: v0 := ref, v1 := ref
+              35:86-35:248 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                35:86-35:89 Str :: String
+                35:93-35:248 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  35:93-35:152 Call :: String
+                    35:93-35:107 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                    35:109-35:152 Call :: Int
+                      35:109-35:118 VarForeign :: Dict Float Bool -> Int   callee: elm/core:Dict.size   instance: k := Float, v := Bool   sig#: d0910be5   subst: v0 := Float, v1 := Bool
+                      35:120-35:152 Call :: Dict Float Bool
+                        35:120-35:131 VarForeign :: Float -> Bool -> Dict Float Bool -> Dict Float Bool   callee: elm/core:Dict.insert   instance: comparable := Float, v := Bool   sig#: 256ddcb4   subst: v0 := Float, v1 := Bool
+                        35:132-35:135 Float :: Float
+                        35:136-35:140 VarCtor :: Bool   callee: elm/core:Basics.True
+                        35:141-35:152 VarForeign :: Dict Float Bool   callee: author/project:Zbase.empty   instance: k := Float, v := Bool   sig#: dd8ed12a   subst: v0 := Float, v1 := Bool
+                  35:158-35:248 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                    35:158-35:161 Str :: String
+                    35:165-35:248 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                      35:165-35:201 Call :: String
+                        35:165-35:179 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                        35:181-35:201 Call :: Int
+                          35:181-35:190 VarForeign :: Dict String Int -> Int   callee: elm/core:Dict.size   instance: k := String, v := Int   sig#: d0910be5   subst: v0 := String, v1 := Int
+                          35:191-35:201 VarForeign :: Dict String Int   callee: author/project:Zcfg.names
+                      35:206-35:248 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                        35:206-35:209 Str :: String
+                        35:213-35:248 Call :: String
+                          35:213-35:227 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                          35:229-35:248 Call :: Int
+                            35:229-35:238 VarForeign :: Dict Int String -> Int   callee: elm/core:Dict.size   instance: k := Int, v := String   sig#: d0910be5   subst: v0 := Int, v1 := String
+                            35:239-35:248 VarForeign :: Dict Int String   callee: author/project:Zcfg.tree
+        def l2 :: String    [31:21-31:23]   id: author/project:Init2.l2@31:21   sig: String   kinds:    group: author/project:Init2.l2@31:21 nonrec inferred
+          32:25-32:133 Call :: String
+            32:25-32:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            32:35-32:43 Str :: String
+            32:45-32:133 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              32:45-32:80 Call :: String
+                32:45-32:61 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+                32:63-32:80 Binop :: Float   callee: elm/core:Basics.mul   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+                  32:63-32:74 VarForeign :: Float   callee: author/project:Zbase.limit   instance: number := Float   sig#: 005979ab   subst: v0 := Float
+                  32:77-32:80 Float :: Float
+              32:85-32:132 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                32:85-32:88 Str :: String
+                32:92-32:132 Call :: String
+                  32:92-32:108 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+                  32:110-32:132 Call :: Float
+                    32:110-32:118 VarForeign :: List Float -> Float   callee: elm/core:List.sum   instance: number := Float   sig#: 78b59c50   subst: v0 := Float
+                    32:119-32:132 VarForeign :: List Float   callee: author/project:Zbase.weights
+        def l1 :: String    [28:21-28:23]   id: author/project:Init2.l1@28:21   sig: String   kinds:    group: author/project:Init2.l1@28:21 nonrec inferred
+          29:25-29:215 Call :: String
+            29:25-29:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            29:35-29:41 Str :: String
+            29:43-29:215 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              29:43-29:68 Call :: String
+                29:43-29:57 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                29:58-29:68 VarForeign :: Int   callee: author/project:Zbase.base
+              29:72-29:214 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                29:72-29:75 Str :: String
+                29:79-29:214 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  29:79-29:106 Call :: String
+                    29:79-29:93 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                    29:94-29:106 VarForeign :: Int   callee: author/project:Zbase.offset
+                  29:110-29:214 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                    29:110-29:113 Str :: String
+                    29:117-29:214 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                      29:117-29:142 Call :: String
+                        29:117-29:131 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                        29:132-29:142 VarForeign :: Int   callee: author/project:Zcfg.total
+                      29:146-29:214 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                        29:146-29:149 Str :: String
+                        29:153-29:214 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                          29:153-29:172 Call :: String
+                            29:153-29:167 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                            29:168-29:172 VarTopLevel :: Int   callee: author/project:Init2.late   use: gen
+                          29:176-29:214 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                            29:176-29:179 Str :: String
+                            29:183-29:214 Call :: String
+                              29:183-29:197 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                              29:199-29:214 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                29:199-29:210 VarForeign :: Int   callee: author/project:Zbase.limit   instance: number := Int   sig#: 005979ab   subst: v0 := Int
+                                29:213-29:214 Int :: Int
+        43:17-47:37 If :: ( (), Cmd () )
+          43:20-43:58 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            43:20-43:54 Call :: Int
+              43:20-43:31 VarForeign :: List String -> Int   callee: elm/core:List.length   instance: a := String   sig#: 8f686fa0   subst: v0 := String
+              43:32-43:54 List :: List String
+                43:34-43:36 VarLocal :: String   callee: author/project:Init2.l1@28:21   use: gen
+                43:38-43:40 VarLocal :: String   callee: author/project:Init2.l2@31:21   use: gen
+                43:42-43:44 VarLocal :: String   callee: author/project:Init2.l3@34:21   use: gen
+                43:46-43:48 VarLocal :: String   callee: author/project:Init2.l4@37:21   use: gen
+                43:50-43:52 VarLocal :: String   callee: author/project:Init2.l5@40:21   use: gen
+            43:57-43:58 Int :: Int
+          44:21-44:37 Pair :: ( (), Cmd () )
+            44:23-44:25 Unit :: ()
+            44:27-44:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          47:21-47:37 Pair :: ( (), Cmd () )
+            47:23-47:25 Unit :: ()
+            47:27-47:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      48:20-48:43 Lambda :: () -> () -> ( (), Cmd () )
+        48:21-48:22 PAnything :: ()
+        48:23-48:24 PVar m :: ()
+        48:28-48:43 Pair :: ( (), Cmd () )
+          48:30-48:31 VarLocal :: ()
+          48:33-48:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      49:27-49:41 Lambda :: () -> Sub ()
+        49:28-49:29 PAnything :: ()
+        49:33-49:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Init2.early   kind: value   reads:    needs:    init-dep: no
+init: 1   id: author/project:Init2.late   kind: value   reads: author/project:Init2.early   needs: author/project:Init2.early   init-dep: yes
+init: 2   id: author/project:Init2.main   kind: value   reads: author/project:Init2.late   needs: author/project:Init2.early,author/project:Init2.late   init-dep: yes
+
+-- module Zbase: problems=0 instances=13 instance-failures=0 defaulted=0
+-- equality-uses: total=0 at-function=0
+module author/project:Zbase
+def limit :: number    [14:1-14:6]   id: author/project:Zbase.limit   sig: v0   kinds: v0:number   group: author/project:Zbase.limit nonrec inferred
+  15:5-15:6 Int :: number
+def offset :: Int    [23:1-23:7]   id: author/project:Zbase.offset   sig: Int   kinds:    group: author/project:Zbase.offset nonrec ann
+  24:5-24:14 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    24:5-24:10 VarTopLevel :: Int   callee: author/project:Zbase.limit   use: gen   instance: number := Int   sig#: 005979ab   subst: v0 := Int
+    24:13-24:14 Int :: Int
+def scaler :: Int -> Int    [38:1-38:7]   id: author/project:Zbase.scaler   sig: Int -> Int   kinds:    group: author/project:Zbase.scaler nonrec ann
+  38:8-38:9 PVar x :: Int
+  39:5-39:15 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    39:5-39:6 VarLocal :: Int
+    39:9-39:15 VarTopLevel :: Int   callee: author/project:Zbase.offset   use: gen
+def weights :: List Float    [33:1-33:8]   id: author/project:Zbase.weights   sig: List Float   kinds:    group: author/project:Zbase.weights nonrec ann
+  34:5-34:51 Call :: List Float
+    34:5-34:13 VarForeign :: (Int -> Float) -> List Int -> List Float   callee: elm/core:List.map   instance: a := Int, b := Float   sig#: 6a702f63   subst: v0 := Int, v1 := Float
+    34:15-34:38 Lambda :: Int -> Float
+      34:16-34:17 PVar x :: Int
+      34:21-34:38 Binop :: Float   callee: elm/core:Basics.mul   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+        34:21-34:30 Call :: Float
+          34:21-34:28 VarForeign :: Int -> Float   callee: elm/core:Basics.toFloat
+          34:29-34:30 VarLocal :: Int
+        34:33-34:38 VarTopLevel :: Float   callee: author/project:Zbase.limit   use: gen   instance: number := Float   sig#: 005979ab   subst: v0 := Float
+    34:40-34:51 List :: List Int
+      34:42-34:43 Int :: Int
+      34:45-34:46 Int :: Int
+      34:48-34:49 Int :: Int
+def empty :: Dict k v    [18:1-18:6]   id: author/project:Zbase.empty   sig: Dict v0 v1   kinds: v0:any,v1:any   group: author/project:Zbase.empty nonrec inferred
+  19:5-19:15 VarForeign :: Dict k v   callee: elm/core:Dict.empty   instance: k := k, v := v   sig#: dd8ed12a   subst: v0 := <<author/project:Zbase.empty|v0>>, v1 := <<author/project:Zbase.empty|v1>>
+def base :: Int    [10:1-10:5]   id: author/project:Zbase.base   sig: Int   kinds:    group: author/project:Zbase.base nonrec ann
+  11:5-11:15 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    11:5-11:11 VarTopLevel :: Int   callee: author/project:Zbase.offset   use: gen
+    11:14-11:15 Int :: Int
+def table :: List Int    [28:1-28:6]   id: author/project:Zbase.table   sig: List Int   kinds:    group: author/project:Zbase.table nonrec ann
+  29:5-29:22 Call :: List Int
+    29:5-29:15 VarForeign :: Int -> Int -> List Int   callee: elm/core:List.range
+    29:16-29:17 Int :: Int
+    29:18-29:22 VarTopLevel :: Int   callee: author/project:Zbase.base   use: gen
+init: 0   id: author/project:Zbase.limit   kind: value   reads:    needs:    init-dep: no
+init: 1   id: author/project:Zbase.offset   kind: value   reads: author/project:Zbase.limit   needs: author/project:Zbase.limit   init-dep: yes
+init: 2   id: author/project:Zbase.scaler   kind: function   reads: author/project:Zbase.offset   needs: author/project:Zbase.limit,author/project:Zbase.offset
+init: 3   id: author/project:Zbase.weights   kind: value   reads: author/project:Zbase.limit   needs: author/project:Zbase.limit   init-dep: yes
+init: 4   id: author/project:Zbase.empty   kind: value   reads:    needs:    init-dep: no
+init: 5   id: author/project:Zbase.base   kind: value   reads: author/project:Zbase.offset   needs: author/project:Zbase.limit,author/project:Zbase.offset   init-dep: yes
+init: 6   id: author/project:Zbase.table   kind: value   reads: author/project:Zbase.base   needs: author/project:Zbase.limit,author/project:Zbase.offset,author/project:Zbase.base   init-dep: yes

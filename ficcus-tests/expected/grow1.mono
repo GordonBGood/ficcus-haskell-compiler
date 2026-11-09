@@ -1,0 +1,7 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:Grow1 (project)
+mark author/project:Grow1.grow   v0=comparable
+mark author/project:Grow1.grow2   v0=comparable
+clone c0   def: author/project:Grow1.main   key: ()   kind: value   init: 2   needs: 
+-- program: not specialized
+!! cannot specialize `author/project:Grow1.grow2`: the exact type of its `comparable` or `==` argument grows without end (a type of more than 4000 parts was needed). It is called at types that keep growing: a polymorphic recursion through a `comparable` or `==` variable (give the function a fixed type or hide the growth in a custom type).

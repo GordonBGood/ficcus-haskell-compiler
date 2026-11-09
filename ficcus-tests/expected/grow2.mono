@@ -1,0 +1,7 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:Grow2 (project)
+mark author/project:Grow2.eg   v0=any+equatable
+mark author/project:Grow2.eg2   v0=any+equatable
+clone c0   def: author/project:Grow2.main   key: ()   kind: value   init: 2   needs: 
+-- program: not specialized
+!! cannot specialize `author/project:Grow2.eg`: more than 64 instances are needed (the last key: (v0=type (elm/core:Maybe.Maybe (elm/core:Maybe.Maybe (elm/core:Maybe.Maybe (elm/core:Maybe.Maybe (elm/core:Maybe.Maybe (elm/core:Maybe.Maybe (elm/core:Maybe.May ...). It is called at types that keep growing: a polymorphic recursion through a `comparable` or `==` variable (give the function a fixed type or hide the growth in a custom type).

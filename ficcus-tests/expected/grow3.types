@@ -1,0 +1,68 @@
+-- module Grow3: problems=0 instances=17 instance-failures=0 defaulted=0
+-- equality-uses: total=0 at-function=0
+module author/project:Grow3
+def rg :: { a | x : Int } -> Int    [9:1-9:3]   id: author/project:Grow3.rg   sig: { v0 | x : Int } -> Int   kinds: v0:row   group: author/project:Grow3.rg rec ann
+  9:4-9:5 PVar v :: { a | x : Int }
+  10:5-14:39 If :: Int
+    10:8-10:15 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      10:8-10:11 Access :: Int
+        10:8-10:9 VarLocal :: { a | x : Int }
+      10:14-10:15 Int :: Int
+    11:9-11:12 Access :: Int
+      11:9-11:10 VarLocal :: { a | x : Int }
+    14:9-14:39 Call :: Int
+      14:9-14:12 VarTopLevel :: { x : Int, inner : { a | x : Int } } -> Int   callee: author/project:Grow3.rg2   use: rec   instance: a1 := { inner : { a | x : Int } }   sig#: 63815287   subst: v0 := { inner : { <<author/project:Grow3.rg|v0>> | x : Int } }
+      14:13-14:39 Record :: { x : Int, inner : { a | x : Int } }
+        14:19-14:26 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          14:19-14:22 Access :: Int
+            14:19-14:20 VarLocal :: { a | x : Int }
+          14:25-14:26 Int :: Int
+        14:36-14:37 VarLocal :: { a | x : Int }
+def rg2 :: { a | x : Int } -> Int    [18:1-18:4]   id: author/project:Grow3.rg2   sig: { v0 | x : Int } -> Int   kinds: v0:row   group: author/project:Grow3.rg rec ann
+  19:5-19:7 VarTopLevel :: { a | x : Int } -> Int   callee: author/project:Grow3.rg   use: rec   instance: a1 := a   sig#: 63815287   subst: v0 := <<author/project:Grow3.rg2|v0>>
+def main :: Program () () ()    [23:1-23:5]   id: author/project:Grow3.main   sig: Program () () ()   kinds:    group: author/project:Grow3.main nonrec ann
+  24:5-28:10 Call :: Program () () ()
+    24:5-24:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    25:9-28:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      25:18-25:179 Lambda :: () -> ( (), Cmd () )
+        25:19-25:20 PAnything :: ()
+        25:24-25:179 If :: ( (), Cmd () )
+          25:27-25:135 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            25:27-25:129 Call :: Int
+              25:27-25:40 VarForeign :: String -> Int   callee: elm/core:String.length
+              25:42-25:129 Call :: String
+                25:42-25:51 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+                25:52-25:56 Str :: String
+                25:58-25:129 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  25:58-25:86 Call :: String
+                    25:58-25:72 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                    25:74-25:86 Call :: Int
+                      25:74-25:76 VarTopLevel :: { x : Int } -> Int   callee: author/project:Grow3.rg   use: gen   instance: a := {}   sig#: 63815287   subst: v0 := {}
+                      25:77-25:86 Record :: { x : Int }
+                        25:83-25:84 Int :: Int
+                  25:91-25:128 Call :: String
+                    25:91-25:105 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                    25:107-25:128 Call :: Int
+                      25:107-25:109 VarTopLevel :: { x : Int, y : Float } -> Int   callee: author/project:Grow3.rg   use: gen   instance: a := { y : Float }   sig#: 63815287   subst: v0 := { y : Float }
+                      25:110-25:128 Record :: { x : Int, y : Float }
+                        25:116-25:117 Int :: Int
+                        25:123-25:126 Float :: Float
+            25:134-25:135 Int :: Int
+          25:141-25:157 Pair :: ( (), Cmd () )
+            25:143-25:145 Unit :: ()
+            25:147-25:155 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          25:163-25:179 Pair :: ( (), Cmd () )
+            25:165-25:167 Unit :: ()
+            25:169-25:177 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      26:20-26:43 Lambda :: () -> () -> ( (), Cmd () )
+        26:21-26:22 PAnything :: ()
+        26:23-26:24 PVar m :: ()
+        26:28-26:43 Pair :: ( (), Cmd () )
+          26:30-26:31 VarLocal :: ()
+          26:33-26:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      27:27-27:41 Lambda :: () -> Sub ()
+        27:28-27:29 PAnything :: ()
+        27:33-27:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Grow3.rg   kind: function   reads: author/project:Grow3.rg2   needs: author/project:Grow3.rg2   group: author/project:Grow3.rg
+init: 1   id: author/project:Grow3.rg2   kind: value   reads: author/project:Grow3.rg   needs:    init-dep: no   group: author/project:Grow3.rg
+init: 2   id: author/project:Grow3.main   kind: value   reads: author/project:Grow3.rg   needs: author/project:Grow3.rg2   init-dep: yes

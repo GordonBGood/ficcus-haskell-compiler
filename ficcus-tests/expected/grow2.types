@@ -1,0 +1,44 @@
+-- module Grow2: problems=0 instances=11 instance-failures=0 defaulted=2
+-- equality-uses: total=1 at-function=0
+module author/project:Grow2
+def eg :: a -> Bool    [8:1-8:3]   id: author/project:Grow2.eg   sig: v0 -> Bool   kinds: v0:any   group: author/project:Grow2.eg rec ann
+  8:4-8:5 PVar x :: a
+  9:5-9:27 Binop :: Bool   callee: elm/core:Basics.or
+    9:5-9:11 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := a   sig#: 2cdc0786   subst: v0 := <<author/project:Grow2.eg|v0>>
+      9:5-9:6 VarLocal :: a
+      9:10-9:11 VarLocal :: a
+    9:15-9:26 Call :: Bool
+      9:15-9:18 VarTopLevel :: Maybe a -> Bool   callee: author/project:Grow2.eg2   use: rec   instance: a1 := Maybe a   sig#: c961e484   subst: v0 := Maybe <<author/project:Grow2.eg|v0>>
+      9:20-9:26 Call :: Maybe a
+        9:20-9:24 VarCtor :: a -> Maybe a   callee: elm/core:Maybe.Just   instance: a := a   sig#: c14b2381   subst: v0 := <<author/project:Grow2.eg|v0>>
+        9:25-9:26 VarLocal :: a
+def eg2 :: a -> Bool    [13:1-13:4]   id: author/project:Grow2.eg2   sig: v0 -> Bool   kinds: v0:any   group: author/project:Grow2.eg rec ann
+  14:5-14:7 VarTopLevel :: a -> Bool   callee: author/project:Grow2.eg   use: rec   instance: a1 := a   sig#: c961e484   subst: v0 := <<author/project:Grow2.eg2|v0>>
+def main :: Program () () ()    [18:1-18:5]   id: author/project:Grow2.main   sig: Program () () ()   kinds:    group: author/project:Grow2.main nonrec ann
+  19:5-23:10 Call :: Program () () ()
+    19:5-19:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    20:9-23:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      20:18-20:75 Lambda :: () -> ( (), Cmd () )
+        20:19-20:20 PAnything :: ()
+        20:24-20:75 If :: ( (), Cmd () )
+          20:27-20:31 Call :: Bool
+            20:27-20:29 VarTopLevel :: Int -> Bool   <= number -> Bool   callee: author/project:Grow2.eg   use: gen   instance: a := Int (defaulted)   sig#: c961e484   subst: v0 := Int
+            20:30-20:31 Int :: Int   <= number
+          20:37-20:53 Pair :: ( (), Cmd () )
+            20:39-20:41 Unit :: ()
+            20:43-20:51 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          20:59-20:75 Pair :: ( (), Cmd () )
+            20:61-20:63 Unit :: ()
+            20:65-20:73 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      21:20-21:43 Lambda :: () -> () -> ( (), Cmd () )
+        21:21-21:22 PAnything :: ()
+        21:23-21:24 PVar m :: ()
+        21:28-21:43 Pair :: ( (), Cmd () )
+          21:30-21:31 VarLocal :: ()
+          21:33-21:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      22:27-22:41 Lambda :: () -> Sub ()
+        22:28-22:29 PAnything :: ()
+        22:33-22:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Grow2.eg   kind: function   reads: author/project:Grow2.eg2   needs: author/project:Grow2.eg2   group: author/project:Grow2.eg
+init: 1   id: author/project:Grow2.eg2   kind: value   reads: author/project:Grow2.eg   needs:    init-dep: no   group: author/project:Grow2.eg
+init: 2   id: author/project:Grow2.main   kind: value   reads: author/project:Grow2.eg   needs: author/project:Grow2.eg2   init-dep: yes

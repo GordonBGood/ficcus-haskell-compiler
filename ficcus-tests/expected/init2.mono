@@ -1,0 +1,1281 @@
+-- mono: stage (iii) slice 3b, modules=23
+-- module author/project:Init2 (project)
+clone c0   def: author/project:Init2.early   key: ()   kind: value   init: 0   needs: 
+clone c1   def: author/project:Init2.late   key: ()   kind: value   init: 1   needs: c0
+clone c2   def: author/project:Init2.main   key: ()   kind: value   init: 2   needs: c0,c1
+-- module author/project:Zbase (project)
+mark author/project:Zbase.limit   v0=number
+clone c3   def: author/project:Zbase.offset   key: ()   kind: value   init: 1   needs: 
+clone c4   def: author/project:Zbase.scaler   key: ()   kind: function   init: 2   needs: c3
+clone c5   def: author/project:Zbase.weights   key: ()   kind: value   init: 3   needs: 
+clone c6   def: author/project:Zbase.base   key: ()   kind: value   init: 5   needs: c3
+clone c7   def: author/project:Zbase.table   key: ()   kind: value   init: 6   needs: c3,c6
+-- module author/project:Zcfg (project)
+clone c8   def: author/project:Zcfg.scaled   key: ()   kind: value   init: 0   needs: 
+clone c9   def: author/project:Zcfg.total   key: ()   kind: value   init: 1   needs: c8
+clone c10   def: author/project:Zcfg.names   key: ()   kind: value   init: 2   needs: c8,c9
+clone c11   def: author/project:Zcfg.tree   key: ()   kind: value   init: 3   needs: 
+-- program: 77 clones, reachable from main, dependencies first
+clone c31   def: elm/core:List.foldl   key: (v0=i64; v1=i64)   name: foldl__i64__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: i64
+        Global c31 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: i64
+          Local acc :: i64
+        Local xs :: ref
+clone c32   def: elm/core:List.lambda@252:10   key: ()   outer: c2 (v0=i64)   kind: function   params: _a0:i64 i:i64   result: i64   lifted-from: c2
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local i :: i64
+    Lit 1 :: i64
+clone c2   def: elm/core:List.length   key: (v0=i64)   name: length__i64   kind: function   params: xs:ref   result: i64
+  Call :: i64
+    Global c31 :: ref
+    Global c32 :: ref
+    Lit 0 :: i64
+    Local xs :: ref
+clone c60   def: elm/core:List.rangeHelp   key: ()   kind: function   params: lo:i64 hi:i64 list:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+      Local lo :: i64
+      Local hi :: i64
+    Call :: ref
+      Global c60 :: ref
+      Local lo :: i64
+      Call :: i64
+        Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+        Local hi :: i64
+        Lit 1 :: i64
+      Call :: ref
+        Kernel elm/core:List.cons (v0=i64) :: ref
+        Local hi :: i64
+        Local list :: ref
+    Local list :: ref
+clone c33   def: elm/core:List.range   key: ()   kind: function   params: lo:i64 hi:i64   result: ref
+  Call :: ref
+    Global c60 :: ref
+    Local lo :: i64
+    Local hi :: i64
+    List :: ref
+clone c29   def: author/project:Zbase.limit   key: (v0=type elm/core:Basics.Int)   name: limit__i64   kind: value   params:    result: i64
+  Lit 4 :: i64
+clone c26   def: author/project:Zbase.offset   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Global c29 :: i64
+    Lit 1 :: i64
+clone c25   def: author/project:Zbase.base   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+    Global c26 :: i64
+    Lit 2 :: i64
+clone c3   def: author/project:Zbase.table   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c33 :: ref
+    Lit 1 :: i64
+    Global c25 :: i64
+clone c71   def: elm/core:List.foldl   key: (v0=i64; v1=ref)   name: foldl__i64__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: ref
+        Global c71 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: i64
+          Local acc :: ref
+        Local xs :: ref
+clone c76   def: elm/core:List.lambda@261:9   key: ()   outer: c72 (v0=i64)   kind: function   params: _pb76_0:i64 _pb76_1:ref   result: ref   lifted-from: c72
+  Call :: ref
+    Kernel elm/core:List.cons (v0=i64) :: ref
+    Local _pb76_0 :: i64
+    Local _pb76_1 :: ref
+clone c72   def: elm/core:List.reverse   key: (v0=i64)   name: reverse__i64   kind: function   params: list:ref   result: ref
+  Call :: ref
+    Global c71 :: ref
+    Global c76 :: ref
+    List :: ref
+    Local list :: ref
+clone c61   def: elm/core:List.foldrHelper   key: (v0=i64; v1=ref)   name: foldrHelper__i64__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
+  Case :: ref
+    Local ls :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch a :: i64 :: r1 :: ref :: ref
+      Case :: ref
+        Local r1 :: ref
+        branch [] :: ref
+          Call :: ref
+            Local fn :: ref
+            Local a :: i64
+            Local acc :: ref
+        branch b :: i64 :: r2 :: ref :: ref
+          Case :: ref
+            Local r2 :: ref
+            branch [] :: ref
+              Call :: ref
+                Local fn :: ref
+                Local a :: i64
+                Call :: ref
+                  Local fn :: ref
+                  Local b :: i64
+                  Local acc :: ref
+            branch c :: i64 :: r3 :: ref :: ref
+              Case :: ref
+                Local r3 :: ref
+                branch [] :: ref
+                  Call :: ref
+                    Local fn :: ref
+                    Local a :: i64
+                    Call :: ref
+                      Local fn :: ref
+                      Local b :: i64
+                      Call :: ref
+                        Local fn :: ref
+                        Local c :: i64
+                        Local acc :: ref
+                branch d :: i64 :: r4 :: ref :: ref
+                  Let res :: ref
+                    If :: ref
+                      Call :: enum
+                        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                        Local ctr :: i64
+                        Lit 500 :: i64
+                      Call :: ref
+                        Global c71 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: ref
+                          Global c72 :: ref
+                          Local r4 :: ref
+                      Call :: ref
+                        Global c61 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: i64
+                          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                          Local ctr :: i64
+                          Lit 1 :: i64
+                        Local r4 :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local a :: i64
+                      Call :: ref
+                        Local fn :: ref
+                        Local b :: i64
+                        Call :: ref
+                          Local fn :: ref
+                          Local c :: i64
+                          Call :: ref
+                            Local fn :: ref
+                            Local d :: i64
+                            Local res :: ref
+clone c34   def: elm/core:List.foldr   key: (v0=i64; v1=ref)   name: foldr__i64__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
+  Call :: ref
+    Global c61 :: ref
+    Local fn :: ref
+    Local acc :: ref
+    Lit 0 :: i64
+    Local ls :: ref
+clone c35   def: elm/core:List.lambda@125:10   key: ()   outer: c4 (v0=i64; v1=ref)   kind: function   params: x:i64 acc:ref   result: ref   lifted-from: c4
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Call :: ref
+      Local f :: ref
+      Local x :: i64
+    Local acc :: ref
+clone c4   def: elm/core:List.map   key: (v0=i64; v1=ref)   name: map__i64__ref   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Global c34 :: ref
+    Global c35 :: ref
+    List :: ref
+    Local xs :: ref
+clone c5   def: author/project:Init2.lambda@41:121   key: ()   kind: function   params: _pb5_0:i64   result: ref   lifted-from: c1
+  Call :: ref
+    Kernel elm/core:String.fromInt () :: ref
+    Local _pb5_0 :: i64
+clone c73   def: elm/core:List.takeReverse   key: (v0=i64)   name: takeReverse__i64   kind: function   params: n:i64 list:ref kept:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+      Local n :: i64
+      Lit 0 :: i64
+    Local kept :: ref
+    Case :: ref
+      Local list :: ref
+      branch [] :: ref
+        Local kept :: ref
+      branch x :: i64 :: xs :: ref :: ref
+        Call :: ref
+          Global c73 :: ref
+          Call :: i64
+            Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+            Local n :: i64
+            Lit 1 :: i64
+          Local xs :: ref
+          Call :: ref
+            Kernel elm/core:List.cons (v0=i64) :: ref
+            Local x :: i64
+            Local kept :: ref
+clone c62   def: elm/core:List.takeTailRec   key: (v0=i64)   name: takeTailRec__i64   kind: function   params: n:i64 list:ref   result: ref
+  Call :: ref
+    Global c72 :: ref
+    Call :: ref
+      Global c73 :: ref
+      Local n :: i64
+      Local list :: ref
+      List :: ref
+clone c36   def: elm/core:List.takeFast   key: (v0=i64)   name: takeFast__i64   kind: function   params: ctr:i64 n:i64 list:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+      Local n :: i64
+      Lit 0 :: i64
+    List :: ref
+    Case :: ref
+      Tuple :: struct(i64,ref)
+        Local n :: i64
+        Local list :: ref
+      branch (_ :: i64, [] :: ref) :: struct(i64,ref)
+        Local list :: ref
+      branch (1 :: i64, x :: i64 :: _ :: ref :: ref) :: struct(i64,ref)
+        List :: ref
+          Local x :: i64
+      branch (2 :: i64, x :: i64 :: y :: i64 :: _ :: ref :: ref :: ref) :: struct(i64,ref)
+        List :: ref
+          Local x :: i64
+          Local y :: i64
+      branch (3 :: i64, x :: i64 :: y :: i64 :: z :: i64 :: _ :: ref :: ref :: ref :: ref) :: struct(i64,ref)
+        List :: ref
+          Local x :: i64
+          Local y :: i64
+          Local z :: i64
+      branch (_ :: i64, x :: i64 :: y :: i64 :: z :: i64 :: w :: i64 :: tl :: ref :: ref :: ref :: ref :: ref) :: struct(i64,ref)
+        If :: ref
+          Call :: enum
+            Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+            Local ctr :: i64
+            Lit 1000 :: i64
+          Call :: ref
+            Kernel elm/core:List.cons (v0=i64) :: ref
+            Local x :: i64
+            Call :: ref
+              Kernel elm/core:List.cons (v0=i64) :: ref
+              Local y :: i64
+              Call :: ref
+                Kernel elm/core:List.cons (v0=i64) :: ref
+                Local z :: i64
+                Call :: ref
+                  Kernel elm/core:List.cons (v0=i64) :: ref
+                  Local w :: i64
+                  Call :: ref
+                    Global c62 :: ref
+                    Call :: i64
+                      Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+                      Local n :: i64
+                      Lit 4 :: i64
+                    Local tl :: ref
+          Call :: ref
+            Kernel elm/core:List.cons (v0=i64) :: ref
+            Local x :: i64
+            Call :: ref
+              Kernel elm/core:List.cons (v0=i64) :: ref
+              Local y :: i64
+              Call :: ref
+                Kernel elm/core:List.cons (v0=i64) :: ref
+                Local z :: i64
+                Call :: ref
+                  Kernel elm/core:List.cons (v0=i64) :: ref
+                  Local w :: i64
+                  Call :: ref
+                    Global c36 :: ref
+                    Call :: i64
+                      Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                      Local ctr :: i64
+                      Lit 1 :: i64
+                    Call :: i64
+                      Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+                      Local n :: i64
+                      Lit 4 :: i64
+                    Local tl :: ref
+      branch _ :: struct(i64,ref)
+        Local list :: ref
+clone c6   def: elm/core:List.take   key: (v0=i64)   name: take__i64   kind: function   params: n:i64 list:ref   result: ref
+  Call :: ref
+    Global c36 :: ref
+    Lit 0 :: i64
+    Local n :: i64
+    Local list :: ref
+clone c63   def: elm/core:List.lambda@125:10   key: ()   outer: c37 (v0=i64; v1=i64)   kind: function   params: x:i64 acc:ref   result: ref   lifted-from: c37
+  Call :: ref
+    Kernel elm/core:List.cons (v0=i64) :: ref
+    Call :: i64
+      Local f :: ref
+      Local x :: i64
+    Local acc :: ref
+clone c37   def: elm/core:List.map   key: (v0=i64; v1=i64)   name: map__i64__i64   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Global c34 :: ref
+    Global c63 :: ref
+    List :: ref
+    Local xs :: ref
+clone c38   def: author/project:Zbase.scaler   key: ()   kind: function   params: x:i64   result: i64
+  Call :: i64
+    Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+    Local x :: i64
+    Global c26 :: i64
+clone c7   def: author/project:Zcfg.scaled   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c37 :: ref
+    Global c38 :: ref
+    Global c3 :: ref
+clone c8   def: elm/core:Maybe.withDefault   key: (v0=i64)   name: withDefault__i64   kind: function   params: default:i64 maybe:ref   result: i64
+  Case :: i64
+    Local maybe :: ref
+    branch Just #0 value :: i64 :: ref
+      Local value :: i64
+    branch Nothing #1 :: ref
+      Local default :: i64
+clone c9   def: elm/core:Dict.get   key: (v0=type elm/core:String.String; v1=i64)   name: get__t__i64   kind: function   params: targetKey:ref dict:ref   result: ref
+  Case :: ref
+    Local dict :: ref
+    branch RBEmpty_elm_builtin #1 :: ref
+      Ctor Nothing tag 1 () :: ref
+    branch RBNode_elm_builtin #0 _ :: enum key :: ref value :: i64 left :: ref right :: ref :: ref
+      Case :: ref
+        Call :: enum
+          Kernel elm/core:Basics.compare (v0=type elm/core:String.String) :: ref
+          Local targetKey :: ref
+          Local key :: ref
+        branch LT #0 :: enum
+          Call :: ref
+            Global c9 :: ref
+            Local targetKey :: ref
+            Local left :: ref
+        branch EQ #1 :: enum
+          Call :: ref
+            Ctor Just tag 0 (v0=i64) :: ref
+            Local value :: i64
+        branch GT #2 :: enum
+          Call :: ref
+            Global c9 :: ref
+            Local targetKey :: ref
+            Local right :: ref
+clone c74   def: elm/core:Dict.balance   key: (v0=ref; v1=i64)   name: balance__ref__i64   kind: function   params: color:enum key:ref value:i64 left:ref right:ref   result: ref
+  Case :: ref
+    Local right :: ref
+    branch RBNode_elm_builtin #0 Red #0 :: enum rK :: ref rV :: i64 rLeft :: ref rRight :: ref :: ref
+      Case :: ref
+        Local left :: ref
+        branch RBNode_elm_builtin #0 Red #0 :: enum lK :: ref lV :: i64 lLeft :: ref lRight :: ref :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=ref; v2=i64; v3=ref; v4=ref) :: ref
+            Ctor Red tag 0 () :: enum
+            Local key :: ref
+            Local value :: i64
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=ref; v2=i64; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local lK :: ref
+              Local lV :: i64
+              Local lLeft :: ref
+              Local lRight :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=ref; v2=i64; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local rK :: ref
+              Local rV :: i64
+              Local rLeft :: ref
+              Local rRight :: ref
+        branch _ :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=ref; v2=i64; v3=ref; v4=ref) :: ref
+            Local color :: enum
+            Local rK :: ref
+            Local rV :: i64
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=ref; v2=i64; v3=ref; v4=ref) :: ref
+              Ctor Red tag 0 () :: enum
+              Local key :: ref
+              Local value :: i64
+              Local left :: ref
+              Local rLeft :: ref
+            Local rRight :: ref
+    branch _ :: ref
+      Case :: ref
+        Local left :: ref
+        branch RBNode_elm_builtin #0 Red #0 :: enum lK :: ref lV :: i64 RBNode_elm_builtin #0 Red #0 :: enum llK :: ref llV :: i64 llLeft :: ref llRight :: ref :: ref lRight :: ref :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=ref; v2=i64; v3=ref; v4=ref) :: ref
+            Ctor Red tag 0 () :: enum
+            Local lK :: ref
+            Local lV :: i64
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=ref; v2=i64; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local llK :: ref
+              Local llV :: i64
+              Local llLeft :: ref
+              Local llRight :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=ref; v2=i64; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local key :: ref
+              Local value :: i64
+              Local lRight :: ref
+              Local right :: ref
+        branch _ :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=ref; v2=i64; v3=ref; v4=ref) :: ref
+            Local color :: enum
+            Local key :: ref
+            Local value :: i64
+            Local left :: ref
+            Local right :: ref
+clone c64   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:String.String; v1=i64)   name: insertHelp__t__i64   kind: function   params: key:ref value:i64 dict:ref   result: ref
+  Case :: ref
+    Local dict :: ref
+    branch RBEmpty_elm_builtin #1 :: ref
+      Call :: ref
+        Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=ref; v2=i64; v3=ref; v4=ref) :: ref
+        Ctor Red tag 0 () :: enum
+        Local key :: ref
+        Local value :: i64
+        Ctor RBEmpty_elm_builtin tag 1 () :: ref
+        Ctor RBEmpty_elm_builtin tag 1 () :: ref
+    branch RBNode_elm_builtin #0 nColor :: enum nKey :: ref nValue :: i64 nLeft :: ref nRight :: ref :: ref
+      Case :: ref
+        Call :: enum
+          Kernel elm/core:Basics.compare (v0=type elm/core:String.String) :: ref
+          Local key :: ref
+          Local nKey :: ref
+        branch LT #0 :: enum
+          Call :: ref
+            Global c74 :: ref
+            Local nColor :: enum
+            Local nKey :: ref
+            Local nValue :: i64
+            Call :: ref
+              Global c64 :: ref
+              Local key :: ref
+              Local value :: i64
+              Local nLeft :: ref
+            Local nRight :: ref
+        branch EQ #1 :: enum
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=ref; v2=i64; v3=ref; v4=ref) :: ref
+            Local nColor :: enum
+            Local nKey :: ref
+            Local value :: i64
+            Local nLeft :: ref
+            Local nRight :: ref
+        branch GT #2 :: enum
+          Call :: ref
+            Global c74 :: ref
+            Local nColor :: enum
+            Local nKey :: ref
+            Local nValue :: i64
+            Local nLeft :: ref
+            Call :: ref
+              Global c64 :: ref
+              Local key :: ref
+              Local value :: i64
+              Local nRight :: ref
+clone c39   def: elm/core:Dict.insert   key: (v0=type elm/core:String.String; v1=i64)   name: insert__t__i64   kind: function   params: key:ref value:i64 dict:ref   result: ref
+  Case :: ref
+    Call :: ref
+      Global c64 :: ref
+      Local key :: ref
+      Local value :: i64
+      Local dict :: ref
+    branch RBNode_elm_builtin #0 Red #0 :: enum k :: ref v :: i64 l :: ref r :: ref :: ref
+      Call :: ref
+        Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=ref; v2=i64; v3=ref; v4=ref) :: ref
+        Ctor Black tag 1 () :: enum
+        Local k :: ref
+        Local v :: i64
+        Local l :: ref
+        Local r :: ref
+    branch x :: ref
+      Local x :: ref
+clone c70   def: elm/core:List.lambda@345:9   key: ()   outer: c56 (v0=type elm/core:Basics.Int)   kind: function   params: _pb70_0:i64 _pb70_1:i64   result: i64   lifted-from: c56
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local _pb70_0 :: i64
+    Local _pb70_1 :: i64
+clone c56   def: elm/core:List.sum   key: (v0=type elm/core:Basics.Int)   name: sum__i64   kind: function   params: numbers:ref   result: i64
+  Call :: i64
+    Global c31 :: ref
+    Global c70 :: ref
+    Lit 0 :: i64
+    Local numbers :: ref
+clone c27   def: author/project:Zcfg.total   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Global c56 :: ref
+    Global c7 :: ref
+clone c65   def: elm/core:Dict.empty   key: (v0=ref; v1=i64)   name: empty__ref__i64   kind: value   params:    result: ref
+  Ctor RBEmpty_elm_builtin tag 1 () :: ref
+clone c40   def: author/project:Zbase.empty   key: (v0=ref; v1=i64)   name: empty__ref__i64   kind: value   params:    result: ref
+  Global c65 :: ref
+clone c10   def: author/project:Zcfg.names   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c39 :: ref
+    Lit "total" :: ref
+    Global c27 :: i64
+    Call :: ref
+      Global c39 :: ref
+      Lit "base" :: ref
+      Global c25 :: i64
+      Global c40 :: ref
+clone c11   def: elm/core:Maybe.withDefault   key: (v0=ref)   name: withDefault__ref   kind: function   params: default:ref maybe:ref   result: ref
+  Case :: ref
+    Local maybe :: ref
+    branch Just #0 value :: ref :: ref
+      Local value :: ref
+    branch Nothing #1 :: ref
+      Local default :: ref
+clone c12   def: elm/core:Dict.get   key: (v0=type elm/core:Basics.Int; v1=ref)   name: get__i64__ref   kind: function   params: targetKey:i64 dict:ref   result: ref
+  Case :: ref
+    Local dict :: ref
+    branch RBEmpty_elm_builtin #1 :: ref
+      Ctor Nothing tag 1 () :: ref
+    branch RBNode_elm_builtin #0 _ :: enum key :: i64 value :: ref left :: ref right :: ref :: ref
+      Case :: ref
+        Call :: enum
+          Kernel elm/core:Basics.compare (v0=type elm/core:Basics.Int) :: ref
+          Local targetKey :: i64
+          Local key :: i64
+        branch LT #0 :: enum
+          Call :: ref
+            Global c12 :: ref
+            Local targetKey :: i64
+            Local left :: ref
+        branch EQ #1 :: enum
+          Call :: ref
+            Ctor Just tag 0 (v0=ref) :: ref
+            Local value :: ref
+        branch GT #2 :: enum
+          Call :: ref
+            Global c12 :: ref
+            Local targetKey :: i64
+            Local right :: ref
+clone c75   def: elm/core:Dict.balance   key: (v0=i64; v1=ref)   name: balance__i64__ref   kind: function   params: color:enum key:i64 value:ref left:ref right:ref   result: ref
+  Case :: ref
+    Local right :: ref
+    branch RBNode_elm_builtin #0 Red #0 :: enum rK :: i64 rV :: ref rLeft :: ref rRight :: ref :: ref
+      Case :: ref
+        Local left :: ref
+        branch RBNode_elm_builtin #0 Red #0 :: enum lK :: i64 lV :: ref lLeft :: ref lRight :: ref :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=i64; v2=ref; v3=ref; v4=ref) :: ref
+            Ctor Red tag 0 () :: enum
+            Local key :: i64
+            Local value :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=i64; v2=ref; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local lK :: i64
+              Local lV :: ref
+              Local lLeft :: ref
+              Local lRight :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=i64; v2=ref; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local rK :: i64
+              Local rV :: ref
+              Local rLeft :: ref
+              Local rRight :: ref
+        branch _ :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=i64; v2=ref; v3=ref; v4=ref) :: ref
+            Local color :: enum
+            Local rK :: i64
+            Local rV :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=i64; v2=ref; v3=ref; v4=ref) :: ref
+              Ctor Red tag 0 () :: enum
+              Local key :: i64
+              Local value :: ref
+              Local left :: ref
+              Local rLeft :: ref
+            Local rRight :: ref
+    branch _ :: ref
+      Case :: ref
+        Local left :: ref
+        branch RBNode_elm_builtin #0 Red #0 :: enum lK :: i64 lV :: ref RBNode_elm_builtin #0 Red #0 :: enum llK :: i64 llV :: ref llLeft :: ref llRight :: ref :: ref lRight :: ref :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=i64; v2=ref; v3=ref; v4=ref) :: ref
+            Ctor Red tag 0 () :: enum
+            Local lK :: i64
+            Local lV :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=i64; v2=ref; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local llK :: i64
+              Local llV :: ref
+              Local llLeft :: ref
+              Local llRight :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=i64; v2=ref; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local key :: i64
+              Local value :: ref
+              Local lRight :: ref
+              Local right :: ref
+        branch _ :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=i64; v2=ref; v3=ref; v4=ref) :: ref
+            Local color :: enum
+            Local key :: i64
+            Local value :: ref
+            Local left :: ref
+            Local right :: ref
+clone c66   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:Basics.Int; v1=ref)   name: insertHelp__i64__ref   kind: function   params: key:i64 value:ref dict:ref   result: ref
+  Case :: ref
+    Local dict :: ref
+    branch RBEmpty_elm_builtin #1 :: ref
+      Call :: ref
+        Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=i64; v2=ref; v3=ref; v4=ref) :: ref
+        Ctor Red tag 0 () :: enum
+        Local key :: i64
+        Local value :: ref
+        Ctor RBEmpty_elm_builtin tag 1 () :: ref
+        Ctor RBEmpty_elm_builtin tag 1 () :: ref
+    branch RBNode_elm_builtin #0 nColor :: enum nKey :: i64 nValue :: ref nLeft :: ref nRight :: ref :: ref
+      Case :: ref
+        Call :: enum
+          Kernel elm/core:Basics.compare (v0=type elm/core:Basics.Int) :: ref
+          Local key :: i64
+          Local nKey :: i64
+        branch LT #0 :: enum
+          Call :: ref
+            Global c75 :: ref
+            Local nColor :: enum
+            Local nKey :: i64
+            Local nValue :: ref
+            Call :: ref
+              Global c66 :: ref
+              Local key :: i64
+              Local value :: ref
+              Local nLeft :: ref
+            Local nRight :: ref
+        branch EQ #1 :: enum
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=i64; v2=ref; v3=ref; v4=ref) :: ref
+            Local nColor :: enum
+            Local nKey :: i64
+            Local value :: ref
+            Local nLeft :: ref
+            Local nRight :: ref
+        branch GT #2 :: enum
+          Call :: ref
+            Global c75 :: ref
+            Local nColor :: enum
+            Local nKey :: i64
+            Local nValue :: ref
+            Local nLeft :: ref
+            Call :: ref
+              Global c66 :: ref
+              Local key :: i64
+              Local value :: ref
+              Local nRight :: ref
+clone c41   def: elm/core:Dict.insert   key: (v0=type elm/core:Basics.Int; v1=ref)   name: insert__i64__ref   kind: function   params: key:i64 value:ref dict:ref   result: ref
+  Case :: ref
+    Call :: ref
+      Global c66 :: ref
+      Local key :: i64
+      Local value :: ref
+      Local dict :: ref
+    branch RBNode_elm_builtin #0 Red #0 :: enum k :: i64 v :: ref l :: ref r :: ref :: ref
+      Call :: ref
+        Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=i64; v2=ref; v3=ref; v4=ref) :: ref
+        Ctor Black tag 1 () :: enum
+        Local k :: i64
+        Local v :: ref
+        Local l :: ref
+        Local r :: ref
+    branch x :: ref
+      Local x :: ref
+clone c67   def: elm/core:Dict.empty   key: (v0=i64; v1=ref)   name: empty__i64__ref   kind: value   params:    result: ref
+  Ctor RBEmpty_elm_builtin tag 1 () :: ref
+clone c42   def: author/project:Zbase.empty   key: (v0=i64; v1=ref)   name: empty__i64__ref   kind: value   params:    result: ref
+  Global c67 :: ref
+clone c13   def: author/project:Zcfg.tree   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c41 :: ref
+    Global c26 :: i64
+    Lit "offset" :: ref
+    Call :: ref
+      Global c41 :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Global c29 :: i64
+        Lit 1 :: i64
+      Lit "limit+1" :: ref
+      Global c42 :: ref
+clone c43   def: elm/core:Dict.foldr   key: (v0=i64; v1=ref; v2=ref)   name: foldr__i64__ref__ref   kind: function   params: func:ref acc:ref t:ref   result: ref
+  Case :: ref
+    Local t :: ref
+    branch RBEmpty_elm_builtin #1 :: ref
+      Local acc :: ref
+    branch RBNode_elm_builtin #0 _ :: enum key :: i64 value :: ref left :: ref right :: ref :: ref
+      Call :: ref
+        Global c43 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local key :: i64
+          Local value :: ref
+          Call :: ref
+            Global c43 :: ref
+            Local func :: ref
+            Local acc :: ref
+            Local right :: ref
+        Local left :: ref
+clone c44   def: elm/core:Dict.lambda@598:10   key: ()   outer: c14 (v0=i64; v1=ref)   kind: function   params: key:i64 value:ref valueList:ref   result: ref   lifted-from: c14
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Local value :: ref
+    Local valueList :: ref
+clone c14   def: elm/core:Dict.values   key: (v0=i64; v1=ref)   name: values__i64__ref   kind: function   params: dict:ref   result: ref
+  Call :: ref
+    Global c43 :: ref
+    Global c44 :: ref
+    List :: ref
+    Local dict :: ref
+clone c45   def: elm/core:Dict.sizeHelp   key: (v0=ref; v1=ref)   name: sizeHelp__ref__ref   kind: function   params: n:i64 dict:ref   result: i64
+  Case :: i64
+    Local dict :: ref
+    branch RBEmpty_elm_builtin #1 :: ref
+      Local n :: i64
+    branch RBNode_elm_builtin #0 _ :: enum _ :: ref _ :: ref left :: ref right :: ref :: ref
+      Call :: i64
+        Global c45 :: ref
+        Call :: i64
+          Global c45 :: ref
+          Call :: i64
+            Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+            Local n :: i64
+            Lit 1 :: i64
+          Local right :: ref
+        Local left :: ref
+clone c15   def: elm/core:Dict.size   key: (v0=ref; v1=ref)   name: size__ref__ref   kind: function   params: dict:ref   result: i64
+  Call :: i64
+    Global c45 :: ref
+    Lit 0 :: i64
+    Local dict :: ref
+clone c46   def: elm/core:Dict.empty   key: (v0=ref; v1=ref)   name: empty__ref__ref   kind: value   params:    result: ref
+  Ctor RBEmpty_elm_builtin tag 1 () :: ref
+clone c16   def: author/project:Zbase.empty   key: (v0=ref; v1=ref)   name: empty__ref__ref   kind: value   params:    result: ref
+  Global c46 :: ref
+clone c47   def: elm/core:Dict.sizeHelp   key: (v0=f64; v1=enum)   name: sizeHelp__f64__enum   kind: function   params: n:i64 dict:ref   result: i64
+  Case :: i64
+    Local dict :: ref
+    branch RBEmpty_elm_builtin #1 :: ref
+      Local n :: i64
+    branch RBNode_elm_builtin #0 _ :: enum _ :: f64 _ :: enum left :: ref right :: ref :: ref
+      Call :: i64
+        Global c47 :: ref
+        Call :: i64
+          Global c47 :: ref
+          Call :: i64
+            Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+            Local n :: i64
+            Lit 1 :: i64
+          Local right :: ref
+        Local left :: ref
+clone c17   def: elm/core:Dict.size   key: (v0=f64; v1=enum)   name: size__f64__enum   kind: function   params: dict:ref   result: i64
+  Call :: i64
+    Global c47 :: ref
+    Lit 0 :: i64
+    Local dict :: ref
+clone c68   def: elm/core:Dict.balance   key: (v0=f64; v1=enum)   name: balance__f64__enum   kind: function   params: color:enum key:f64 value:enum left:ref right:ref   result: ref
+  Case :: ref
+    Local right :: ref
+    branch RBNode_elm_builtin #0 Red #0 :: enum rK :: f64 rV :: enum rLeft :: ref rRight :: ref :: ref
+      Case :: ref
+        Local left :: ref
+        branch RBNode_elm_builtin #0 Red #0 :: enum lK :: f64 lV :: enum lLeft :: ref lRight :: ref :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=enum; v3=ref; v4=ref) :: ref
+            Ctor Red tag 0 () :: enum
+            Local key :: f64
+            Local value :: enum
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=enum; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local lK :: f64
+              Local lV :: enum
+              Local lLeft :: ref
+              Local lRight :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=enum; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local rK :: f64
+              Local rV :: enum
+              Local rLeft :: ref
+              Local rRight :: ref
+        branch _ :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=enum; v3=ref; v4=ref) :: ref
+            Local color :: enum
+            Local rK :: f64
+            Local rV :: enum
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=enum; v3=ref; v4=ref) :: ref
+              Ctor Red tag 0 () :: enum
+              Local key :: f64
+              Local value :: enum
+              Local left :: ref
+              Local rLeft :: ref
+            Local rRight :: ref
+    branch _ :: ref
+      Case :: ref
+        Local left :: ref
+        branch RBNode_elm_builtin #0 Red #0 :: enum lK :: f64 lV :: enum RBNode_elm_builtin #0 Red #0 :: enum llK :: f64 llV :: enum llLeft :: ref llRight :: ref :: ref lRight :: ref :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=enum; v3=ref; v4=ref) :: ref
+            Ctor Red tag 0 () :: enum
+            Local lK :: f64
+            Local lV :: enum
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=enum; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local llK :: f64
+              Local llV :: enum
+              Local llLeft :: ref
+              Local llRight :: ref
+            Call :: ref
+              Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=enum; v3=ref; v4=ref) :: ref
+              Ctor Black tag 1 () :: enum
+              Local key :: f64
+              Local value :: enum
+              Local lRight :: ref
+              Local right :: ref
+        branch _ :: ref
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=enum; v3=ref; v4=ref) :: ref
+            Local color :: enum
+            Local key :: f64
+            Local value :: enum
+            Local left :: ref
+            Local right :: ref
+clone c48   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:Basics.Float; v1=enum)   name: insertHelp__f64__enum   kind: function   params: key:f64 value:enum dict:ref   result: ref
+  Case :: ref
+    Local dict :: ref
+    branch RBEmpty_elm_builtin #1 :: ref
+      Call :: ref
+        Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=enum; v3=ref; v4=ref) :: ref
+        Ctor Red tag 0 () :: enum
+        Local key :: f64
+        Local value :: enum
+        Ctor RBEmpty_elm_builtin tag 1 () :: ref
+        Ctor RBEmpty_elm_builtin tag 1 () :: ref
+    branch RBNode_elm_builtin #0 nColor :: enum nKey :: f64 nValue :: enum nLeft :: ref nRight :: ref :: ref
+      Case :: ref
+        Call :: enum
+          Kernel elm/core:Basics.compare (v0=type elm/core:Basics.Float) :: ref
+          Local key :: f64
+          Local nKey :: f64
+        branch LT #0 :: enum
+          Call :: ref
+            Global c68 :: ref
+            Local nColor :: enum
+            Local nKey :: f64
+            Local nValue :: enum
+            Call :: ref
+              Global c48 :: ref
+              Local key :: f64
+              Local value :: enum
+              Local nLeft :: ref
+            Local nRight :: ref
+        branch EQ #1 :: enum
+          Call :: ref
+            Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=enum; v3=ref; v4=ref) :: ref
+            Local nColor :: enum
+            Local nKey :: f64
+            Local value :: enum
+            Local nLeft :: ref
+            Local nRight :: ref
+        branch GT #2 :: enum
+          Call :: ref
+            Global c68 :: ref
+            Local nColor :: enum
+            Local nKey :: f64
+            Local nValue :: enum
+            Local nLeft :: ref
+            Call :: ref
+              Global c48 :: ref
+              Local key :: f64
+              Local value :: enum
+              Local nRight :: ref
+clone c18   def: elm/core:Dict.insert   key: (v0=type elm/core:Basics.Float; v1=enum)   name: insert__f64__enum   kind: function   params: key:f64 value:enum dict:ref   result: ref
+  Case :: ref
+    Call :: ref
+      Global c48 :: ref
+      Local key :: f64
+      Local value :: enum
+      Local dict :: ref
+    branch RBNode_elm_builtin #0 Red #0 :: enum k :: f64 v :: enum l :: ref r :: ref :: ref
+      Call :: ref
+        Ctor RBNode_elm_builtin tag 0 (v0=enum; v1=f64; v2=enum; v3=ref; v4=ref) :: ref
+        Ctor Black tag 1 () :: enum
+        Local k :: f64
+        Local v :: enum
+        Local l :: ref
+        Local r :: ref
+    branch x :: ref
+      Local x :: ref
+clone c49   def: elm/core:Dict.empty   key: (v0=f64; v1=enum)   name: empty__f64__enum   kind: value   params:    result: ref
+  Ctor RBEmpty_elm_builtin tag 1 () :: ref
+clone c19   def: author/project:Zbase.empty   key: (v0=f64; v1=enum)   name: empty__f64__enum   kind: value   params:    result: ref
+  Global c49 :: ref
+clone c50   def: elm/core:Dict.sizeHelp   key: (v0=ref; v1=i64)   name: sizeHelp__ref__i64   kind: function   params: n:i64 dict:ref   result: i64
+  Case :: i64
+    Local dict :: ref
+    branch RBEmpty_elm_builtin #1 :: ref
+      Local n :: i64
+    branch RBNode_elm_builtin #0 _ :: enum _ :: ref _ :: i64 left :: ref right :: ref :: ref
+      Call :: i64
+        Global c50 :: ref
+        Call :: i64
+          Global c50 :: ref
+          Call :: i64
+            Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+            Local n :: i64
+            Lit 1 :: i64
+          Local right :: ref
+        Local left :: ref
+clone c20   def: elm/core:Dict.size   key: (v0=ref; v1=i64)   name: size__ref__i64   kind: function   params: dict:ref   result: i64
+  Call :: i64
+    Global c50 :: ref
+    Lit 0 :: i64
+    Local dict :: ref
+clone c51   def: elm/core:Dict.sizeHelp   key: (v0=i64; v1=ref)   name: sizeHelp__i64__ref   kind: function   params: n:i64 dict:ref   result: i64
+  Case :: i64
+    Local dict :: ref
+    branch RBEmpty_elm_builtin #1 :: ref
+      Local n :: i64
+    branch RBNode_elm_builtin #0 _ :: enum _ :: i64 _ :: ref left :: ref right :: ref :: ref
+      Call :: i64
+        Global c51 :: ref
+        Call :: i64
+          Global c51 :: ref
+          Call :: i64
+            Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+            Local n :: i64
+            Lit 1 :: i64
+          Local right :: ref
+        Local left :: ref
+clone c21   def: elm/core:Dict.size   key: (v0=i64; v1=ref)   name: size__i64__ref   kind: function   params: dict:ref   result: i64
+  Call :: i64
+    Global c51 :: ref
+    Lit 0 :: i64
+    Local dict :: ref
+clone c22   def: author/project:Zbase.limit   key: (v0=type elm/core:Basics.Float)   name: limit__f64   kind: value   params:    result: f64
+  Lit 4.0 :: f64
+clone c52   def: elm/core:List.foldl   key: (v0=f64; v1=f64)   name: foldl__f64__f64   kind: function   params: func:ref acc:f64 list:ref   result: f64
+  Case :: f64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: f64
+    branch x :: f64 :: xs :: ref :: ref
+      Call :: f64
+        Global c52 :: ref
+        Local func :: ref
+        Call :: f64
+          Local func :: ref
+          Local x :: f64
+          Local acc :: f64
+        Local xs :: ref
+clone c53   def: elm/core:List.lambda@345:9   key: ()   outer: c23 (v0=type elm/core:Basics.Float)   kind: function   params: _pb53_0:f64 _pb53_1:f64   result: f64   lifted-from: c23
+  Call :: f64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Float) :: ref
+    Local _pb53_0 :: f64
+    Local _pb53_1 :: f64
+clone c23   def: elm/core:List.sum   key: (v0=type elm/core:Basics.Float)   name: sum__f64   kind: function   params: numbers:ref   result: f64
+  Call :: f64
+    Global c52 :: ref
+    Global c53 :: ref
+    Lit 0.0 :: f64
+    Local numbers :: ref
+clone c69   def: elm/core:List.lambda@125:10   key: ()   outer: c54 (v0=i64; v1=f64)   kind: function   params: x:i64 acc:ref   result: ref   lifted-from: c54
+  Call :: ref
+    Kernel elm/core:List.cons (v0=f64) :: ref
+    Call :: f64
+      Local f :: ref
+      Local x :: i64
+    Local acc :: ref
+clone c54   def: elm/core:List.map   key: (v0=i64; v1=f64)   name: map__i64__f64   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Global c34 :: ref
+    Global c69 :: ref
+    List :: ref
+    Local xs :: ref
+clone c55   def: author/project:Zbase.lambda@34:15   key: ()   kind: function   params: x:i64   result: f64   lifted-from: c24
+  Call :: f64
+    Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Float) :: ref
+    Call :: f64
+      Kernel elm/core:Basics.toFloat () :: ref
+      Local x :: i64
+    Global c22 :: f64
+clone c24   def: author/project:Zbase.weights   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c54 :: ref
+    Global c55 :: ref
+    List :: ref
+      Lit 1 :: i64
+      Lit 2 :: i64
+      Lit 3 :: i64
+clone c57   def: author/project:Init2.early   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+    Global c25 :: i64
+    Lit 1 :: i64
+clone c28   def: author/project:Init2.late   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Global c27 :: i64
+    Global c57 :: i64
+clone c58   def: elm/core:List.foldl   key: (v0=ref; v1=i64)   name: foldl__ref__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: ref :: xs :: ref :: ref
+      Call :: i64
+        Global c58 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: ref
+          Local acc :: i64
+        Local xs :: ref
+clone c59   def: elm/core:List.lambda@252:10   key: ()   outer: c30 (v0=ref)   kind: function   params: _a0:ref i:i64   result: i64   lifted-from: c30
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local i :: i64
+    Lit 1 :: i64
+clone c30   def: elm/core:List.length   key: (v0=ref)   name: length__ref   kind: function   params: xs:ref   result: i64
+  Call :: i64
+    Global c58 :: ref
+    Global c59 :: ref
+    Lit 0 :: i64
+    Local xs :: ref
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Let l5 :: struct(unit,unit)
+    Call :: ref
+      Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+      Lit "table" :: ref
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Call :: ref
+          Kernel elm/core:String.fromInt () :: ref
+          Call :: i64
+            Global c2 :: ref
+            Global c3 :: ref
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Lit " " :: ref
+          Call :: ref
+            Kernel elm/core:String.join () :: ref
+            Lit "," :: ref
+            Call :: ref
+              Global c4 :: ref
+              Global c5 :: ref
+              Call :: ref
+                Global c6 :: ref
+                Lit 4 :: i64
+                Global c7 :: ref
+    Let l4 :: struct(unit,unit)
+      Call :: ref
+        Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+        Lit "lookups" :: ref
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Call :: ref
+            Kernel elm/core:String.fromInt () :: ref
+            Call :: i64
+              Global c8 :: ref
+              Call :: i64
+                Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+                Lit 1 :: i64
+              Call :: ref
+                Global c9 :: ref
+                Lit "total" :: ref
+                Global c10 :: ref
+          Call :: ref
+            Kernel elm/core:Basics.append (v0=app string) :: ref
+            Lit " " :: ref
+            Call :: ref
+              Kernel elm/core:Basics.append (v0=app string) :: ref
+              Call :: ref
+                Kernel elm/core:String.fromInt () :: ref
+                Call :: i64
+                  Global c8 :: ref
+                  Call :: i64
+                    Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+                    Lit 1 :: i64
+                  Call :: ref
+                    Global c9 :: ref
+                    Lit "base" :: ref
+                    Global c10 :: ref
+              Call :: ref
+                Kernel elm/core:Basics.append (v0=app string) :: ref
+                Lit " " :: ref
+                Call :: ref
+                  Kernel elm/core:Basics.append (v0=app string) :: ref
+                  Call :: ref
+                    Global c11 :: ref
+                    Lit "?" :: ref
+                    Call :: ref
+                      Global c12 :: ref
+                      Lit 5 :: i64
+                      Global c13 :: ref
+                  Call :: ref
+                    Kernel elm/core:Basics.append (v0=app string) :: ref
+                    Lit " " :: ref
+                    Call :: ref
+                      Kernel elm/core:String.join () :: ref
+                      Lit "," :: ref
+                      Call :: ref
+                        Global c14 :: ref
+                        Global c13 :: ref
+      Let l3 :: struct(unit,unit)
+        Call :: ref
+          Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+          Lit "dicts" :: ref
+          Call :: ref
+            Kernel elm/core:Basics.append (v0=app string) :: ref
+            Call :: ref
+              Kernel elm/core:String.fromInt () :: ref
+              Call :: i64
+                Global c15 :: ref
+                Global c16 :: ref
+            Call :: ref
+              Kernel elm/core:Basics.append (v0=app string) :: ref
+              Lit " " :: ref
+              Call :: ref
+                Kernel elm/core:Basics.append (v0=app string) :: ref
+                Call :: ref
+                  Kernel elm/core:String.fromInt () :: ref
+                  Call :: i64
+                    Global c17 :: ref
+                    Call :: ref
+                      Global c18 :: ref
+                      Lit 1.5 :: f64
+                      Lit 1 :: enum
+                      Global c19 :: ref
+                Call :: ref
+                  Kernel elm/core:Basics.append (v0=app string) :: ref
+                  Lit " " :: ref
+                  Call :: ref
+                    Kernel elm/core:Basics.append (v0=app string) :: ref
+                    Call :: ref
+                      Kernel elm/core:String.fromInt () :: ref
+                      Call :: i64
+                        Global c20 :: ref
+                        Global c10 :: ref
+                    Call :: ref
+                      Kernel elm/core:Basics.append (v0=app string) :: ref
+                      Lit " " :: ref
+                      Call :: ref
+                        Kernel elm/core:String.fromInt () :: ref
+                        Call :: i64
+                          Global c21 :: ref
+                          Global c13 :: ref
+        Let l2 :: struct(unit,unit)
+          Call :: ref
+            Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+            Lit "floats" :: ref
+            Call :: ref
+              Kernel elm/core:Basics.append (v0=app string) :: ref
+              Call :: ref
+                Kernel elm/core:String.fromFloat () :: ref
+                Call :: f64
+                  Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Float) :: ref
+                  Global c22 :: f64
+                  Lit 1.5 :: f64
+              Call :: ref
+                Kernel elm/core:Basics.append (v0=app string) :: ref
+                Lit " " :: ref
+                Call :: ref
+                  Kernel elm/core:String.fromFloat () :: ref
+                  Call :: f64
+                    Global c23 :: ref
+                    Global c24 :: ref
+          Let l1 :: struct(unit,unit)
+            Call :: ref
+              Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+              Lit "ints" :: ref
+              Call :: ref
+                Kernel elm/core:Basics.append (v0=app string) :: ref
+                Call :: ref
+                  Kernel elm/core:String.fromInt () :: ref
+                  Global c25 :: i64
+                Call :: ref
+                  Kernel elm/core:Basics.append (v0=app string) :: ref
+                  Lit " " :: ref
+                  Call :: ref
+                    Kernel elm/core:Basics.append (v0=app string) :: ref
+                    Call :: ref
+                      Kernel elm/core:String.fromInt () :: ref
+                      Global c26 :: i64
+                    Call :: ref
+                      Kernel elm/core:Basics.append (v0=app string) :: ref
+                      Lit " " :: ref
+                      Call :: ref
+                        Kernel elm/core:Basics.append (v0=app string) :: ref
+                        Call :: ref
+                          Kernel elm/core:String.fromInt () :: ref
+                          Global c27 :: i64
+                        Call :: ref
+                          Kernel elm/core:Basics.append (v0=app string) :: ref
+                          Lit " " :: ref
+                          Call :: ref
+                            Kernel elm/core:Basics.append (v0=app string) :: ref
+                            Call :: ref
+                              Kernel elm/core:String.fromInt () :: ref
+                              Global c28 :: i64
+                            Call :: ref
+                              Kernel elm/core:Basics.append (v0=app string) :: ref
+                              Lit " " :: ref
+                              Call :: ref
+                                Kernel elm/core:String.fromInt () :: ref
+                                Call :: i64
+                                  Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                  Global c29 :: i64
+                                  Lit 1 :: i64
+            If :: struct(unit,unit)
+              Call :: enum
+                Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                Call :: i64
+                  Global c30 :: ref
+                  List :: ref
+                    Local l1 :: ref
+                    Local l2 :: ref
+                    Local l3 :: ref
+                    Local l4 :: ref
+                    Local l5 :: ref
+                Lit 0 :: i64
+              Tuple :: struct(unit,unit)
+                Lit () :: unit
+                Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+              Tuple :: struct(unit,unit)
+                Lit () :: unit
+                Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Init2.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

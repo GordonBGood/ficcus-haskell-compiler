@@ -1,0 +1,85 @@
+-- module Silly: problems=0 instances=23 instance-failures=0 defaulted=9
+-- equality-uses: total=0 at-function=0
+module author/project:Silly
+def silly :: List a -> String    [9:1-9:6]   id: author/project:Silly.silly   sig: List v0 -> String   kinds: v0:any   group: author/project:Silly.silly rec ann
+  9:7-9:9 PVar xs :: List a
+  10:5-15:40 Case :: String
+    10:10-10:12 VarLocal :: List a
+    11:9-11:11 PList :: List a
+    12:13-12:28 Str :: String
+    14:9-14:18 PCons :: List a
+      14:9-14:10 PVar x :: a
+      14:14-14:18 PVar rest :: List a
+    15:13-15:39 Call :: String
+      15:13-15:19 VarTopLevel :: List (Maybe a) -> String   callee: author/project:Silly.silly2   use: rec   instance: a1 := Maybe a   sig#: 8b60329b   subst: v0 := Maybe <<author/project:Silly.silly|v0>>
+      15:21-15:39 Call :: List (Maybe a)
+        15:21-15:29 VarForeign :: (a -> Maybe a) -> List a -> List (Maybe a)   callee: elm/core:List.map   instance: a := a, b := Maybe a   sig#: 6a702f63   subst: v0 := <<author/project:Silly.silly|v0>>, v1 := Maybe <<author/project:Silly.silly|v0>>
+        15:30-15:34 VarCtor :: a -> Maybe a   callee: elm/core:Maybe.Just   instance: a := a   sig#: c14b2381   subst: v0 := <<author/project:Silly.silly|v0>>
+        15:35-15:39 VarLocal :: List a
+def silly2 :: List a -> String    [19:1-19:7]   id: author/project:Silly.silly2   sig: List v0 -> String   kinds: v0:any   group: author/project:Silly.silly rec ann
+  20:5-20:10 VarTopLevel :: List a -> String   callee: author/project:Silly.silly   use: rec   instance: a1 := a   sig#: 8b60329b   subst: v0 := <<author/project:Silly.silly2|v0>>
+def main :: Program () () ()    [24:1-24:5]   id: author/project:Silly.main   sig: Program () () ()   kinds:    group: author/project:Silly.main nonrec ann
+  25:5-42:10 Call :: Program () () ()
+    25:5-25:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    26:9-42:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      27:13-39:37 Lambda :: () -> ( (), Cmd () )
+        27:14-27:15 PAnything :: ()
+        def l2 :: String    [32:21-32:23]   id: author/project:Silly.l2@32:21   sig: String   kinds:    group: author/project:Silly.l2@32:21 nonrec inferred
+          33:25-33:79 Call :: String
+            33:25-33:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            33:35-33:41 Str :: String
+            33:43-33:79 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              33:43-33:63 Call :: String
+                33:43-33:48 VarTopLevel :: List Int -> String   <= List number -> String   callee: author/project:Silly.silly   use: gen   instance: a := Int (defaulted)   sig#: 8b60329b   subst: v0 := Int
+                33:49-33:63 List :: List Int   <= List number
+                  33:51-33:52 Int :: Int   <= number
+                  33:54-33:55 Int :: Int   <= number
+                  33:57-33:58 Int :: Int   <= number
+                  33:60-33:61 Int :: Int   <= number
+              33:67-33:79 Call :: String
+                33:67-33:73 VarTopLevel :: List Int -> String   <= List number1 -> String   callee: author/project:Silly.silly2   use: gen   instance: a1 := Int (defaulted)   sig#: 8b60329b   subst: v0 := Int
+                33:74-33:79 List :: List Int   <= List number1
+                  33:76-33:77 Int :: Int   <= number1
+        def l1 :: String    [29:21-29:23]   id: author/project:Silly.l1@29:21   sig: String   kinds:    group: author/project:Silly.l1@29:21 nonrec inferred
+          30:25-30:86 Call :: String
+            30:25-30:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            30:35-30:44 Str :: String
+            30:46-30:86 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              30:46-30:69 Call :: String
+                30:46-30:51 VarTopLevel :: List String -> String   callee: author/project:Silly.silly   use: gen   instance: a := String   sig#: 8b60329b   subst: v0 := String
+                30:52-30:69 List :: List String
+                  30:54-30:57 Str :: String
+                  30:59-30:62 Str :: String
+                  30:64-30:67 Str :: String
+              30:73-30:86 Call :: String
+                30:73-30:78 VarTopLevel :: List String -> String   callee: author/project:Silly.silly   use: gen   instance: a := String   sig#: 8b60329b   subst: v0 := String
+                30:79-30:86 List :: List String
+                  30:81-30:84 Str :: String
+        35:17-39:37 If :: ( (), Cmd () )
+          35:20-35:59 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            35:20-35:55 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+              35:20-35:36 Call :: Int
+                35:20-35:33 VarForeign :: String -> Int   callee: elm/core:String.length
+                35:34-35:36 VarLocal :: String   callee: author/project:Silly.l1@29:21   use: gen
+              35:39-35:55 Call :: Int
+                35:39-35:52 VarForeign :: String -> Int   callee: elm/core:String.length
+                35:53-35:55 VarLocal :: String   callee: author/project:Silly.l2@32:21   use: gen
+            35:58-35:59 Int :: Int
+          36:21-36:37 Pair :: ( (), Cmd () )
+            36:23-36:25 Unit :: ()
+            36:27-36:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          39:21-39:37 Pair :: ( (), Cmd () )
+            39:23-39:25 Unit :: ()
+            39:27-39:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      40:20-40:43 Lambda :: () -> () -> ( (), Cmd () )
+        40:21-40:22 PAnything :: ()
+        40:23-40:24 PVar m :: ()
+        40:28-40:43 Pair :: ( (), Cmd () )
+          40:30-40:31 VarLocal :: ()
+          40:33-40:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      41:27-41:41 Lambda :: () -> Sub ()
+        41:28-41:29 PAnything :: ()
+        41:33-41:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Silly.silly   kind: function   reads: author/project:Silly.silly2   needs: author/project:Silly.silly2   group: author/project:Silly.silly
+init: 1   id: author/project:Silly.silly2   kind: value   reads: author/project:Silly.silly   needs:    init-dep: no   group: author/project:Silly.silly
+init: 2   id: author/project:Silly.main   kind: value   reads: author/project:Silly.silly,author/project:Silly.silly2   needs: author/project:Silly.silly2   init-dep: yes

@@ -1,0 +1,50 @@
+module Init2 exposing (main)
+
+-- Initialisation order across modules (values that depend on values defined later, in other modules, through
+-- functions) and polymorphic values at several keys (`limit` at Int and Float, `empty` at three Dict types). The output
+-- must equal Elm's (expected/init2.out, Elm 0.19.3 under node).
+
+import Dict exposing (Dict)
+import Zbase
+import Zcfg
+
+
+late : Int
+late =
+    Zcfg.total + early
+
+
+early : Int
+early =
+    Zbase.base - 1
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    l1 =
+                        Debug.log "ints" (String.fromInt Zbase.base ++ " " ++ String.fromInt Zbase.offset ++ " " ++ String.fromInt Zcfg.total ++ " " ++ String.fromInt late ++ " " ++ String.fromInt (Zbase.limit + 1))
+
+                    l2 =
+                        Debug.log "floats" (String.fromFloat (Zbase.limit * 1.5) ++ " " ++ String.fromFloat (List.sum Zbase.weights))
+
+                    l3 =
+                        Debug.log "dicts" (String.fromInt (Dict.size Zbase.empty) ++ " " ++ String.fromInt (Dict.size (Dict.insert 1.5 True Zbase.empty)) ++ " " ++ String.fromInt (Dict.size Zcfg.names) ++ " " ++ String.fromInt (Dict.size Zcfg.tree))
+
+                    l4 =
+                        Debug.log "lookups" (String.fromInt (Maybe.withDefault -1 (Dict.get "total" Zcfg.names)) ++ " " ++ String.fromInt (Maybe.withDefault -1 (Dict.get "base" Zcfg.names)) ++ " " ++ Maybe.withDefault "?" (Dict.get 5 Zcfg.tree) ++ " " ++ String.join "," (Dict.values Zcfg.tree))
+
+                    l5 =
+                        Debug.log "table" (String.fromInt (List.length Zbase.table) ++ " " ++ String.join "," (List.map String.fromInt (List.take 4 Zcfg.scaled)))
+                in
+                if List.length [ l1, l2, l3, l4, l5 ] > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

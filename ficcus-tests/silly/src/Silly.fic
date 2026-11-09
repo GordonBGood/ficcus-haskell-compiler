@@ -1,0 +1,42 @@
+module Silly exposing (main)
+
+-- Issue 2275: indirect polymorphic recursion (silly calls silly2 at List (Maybe a), silly2 is silly again). Elm accepts it; the
+-- specializer keys by representation class, so the instances are finitely many: one copy of silly and one of silly2 for
+-- String elements, a second pair for Int elements. Output equals Elm's (expected/silly.out).
+
+
+silly : List a -> String
+silly xs =
+    case xs of
+        [] ->
+            "Hello, world!"
+
+        x :: rest ->
+            silly2 (List.map Just rest)
+
+
+silly2 : List a -> String
+silly2 =
+    silly
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    l1 =
+                        Debug.log "strings" (silly [ "a", "b", "c" ] ++ silly [ "x" ])
+
+                    l2 =
+                        Debug.log "ints" (silly [ 1, 2, 3, 4 ] ++ silly2 [ 5 ])
+                in
+                if String.length l1 + String.length l2 > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
