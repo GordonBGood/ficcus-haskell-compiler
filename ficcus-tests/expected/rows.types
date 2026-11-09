@@ -1,0 +1,362 @@
+-- module Rows: problems=0 instances=131 instance-failures=0 defaulted=41
+-- equality-uses: total=0 at-function=0
+module author/project:Rows
+def rename :: String -> { a | name : String, weight : Float } -> { a | name : String, weight : Float }    [47:1-47:7]   id: author/project:Rows.rename   sig: String -> { v0 | name : String, weight : Float } -> { v0 | name : String, weight : Float }   kinds: v0:row   group: author/project:Rows.rename nonrec ann
+  47:8-47:9 PVar n :: String
+  47:10-47:11 PVar r :: { a | name : String, weight : Float }
+  48:5-48:54 Update :: { a | name : String, weight : Float }
+    48:7-48:8 VarLocal :: { a | name : String, weight : Float }
+    48:18-48:29 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      48:18-48:19 VarLocal :: String
+      48:23-48:29 Access :: String
+        48:23-48:24 VarLocal :: { a | name : String, weight : Float }
+    48:40-48:52 Binop :: Float   callee: elm/core:Basics.fdiv
+      48:40-48:48 Access :: Float
+        48:40-48:41 VarLocal :: { a | name : String, weight : Float }
+      48:51-48:52 Int :: Float
+def showQ :: Q -> String    [57:1-57:6]   id: author/project:Rows.showQ   sig: Q -> String   kinds:    group: author/project:Rows.showQ nonrec ann
+  57:7-57:8 PVar q :: Q
+  58:5-58:176 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    58:5-58:11 Access :: String
+      58:5-58:6 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }
+    58:15-58:175 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      58:15-58:18 Str :: String
+      58:22-58:175 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        58:22-58:40 Call :: String
+          58:22-58:36 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+          58:37-58:40 Access :: Int
+            58:37-58:38 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }
+        58:44-58:175 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+          58:44-58:47 Str :: String
+          58:51-58:175 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            58:51-58:76 Call :: String
+              58:51-58:67 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+              58:68-58:76 Access :: Float
+                58:68-58:69 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }
+            58:80-58:175 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              58:80-58:83 Str :: String
+              58:87-58:175 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                58:87-58:121 Call :: String
+                  58:87-58:101 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                  58:103-58:121 Call :: Int
+                    58:103-58:114 VarForeign :: ( Int, String ) -> Int   callee: elm/core:Tuple.first   instance: a := Int, b := String   sig#: ee0f5e96   subst: v0 := Int, v1 := String
+                    58:115-58:121 Access :: ( Int, String )
+                      58:115-58:116 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }
+                58:126-58:175 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  58:126-58:145 Call :: String
+                    58:126-58:138 VarForeign :: ( Int, String ) -> String   callee: elm/core:Tuple.second   instance: a := Int, b := String   sig#: ee0f5e97   subst: v0 := Int, v1 := String
+                    58:139-58:145 Access :: ( Int, String )
+                      58:139-58:140 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }
+                  58:150-58:175 If :: String
+                    58:153-58:157 Access :: Bool
+                      58:153-58:154 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }
+                    58:163-58:166 Str :: String
+                    58:172-58:175 Str :: String
+def label :: { a | name : String } -> String    [42:1-42:6]   id: author/project:Rows.label   sig: { v0 | name : String } -> String   kinds: v0:row   group: author/project:Rows.label nonrec ann
+  42:7-42:8 PVar r :: { a | name : String }
+  43:5-43:25 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    43:5-43:8 Str :: String
+    43:12-43:25 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      43:12-43:18 Access :: String
+        43:12-43:13 VarLocal :: { a | name : String }
+      43:22-43:25 Str :: String
+def heavy :: { a | weight : Float } -> Float    [37:1-37:6]   id: author/project:Rows.heavy   sig: { v0 | weight : Float } -> Float   kinds: v0:row   group: author/project:Rows.heavy nonrec ann
+  37:7-37:8 PVar r :: { a | weight : Float }
+  38:5-38:17 Binop :: Float   callee: elm/core:Basics.mul   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+    38:5-38:13 Access :: Float
+      38:5-38:6 VarLocal :: { a | weight : Float }
+    38:16-38:17 Int :: Float
+def bumpX :: { a | x : Int } -> { a | x : Int }    [27:1-27:6]   id: author/project:Rows.bumpX   sig: { v0 | x : Int } -> { v0 | x : Int }   kinds: v0:row   group: author/project:Rows.bumpX nonrec ann
+  27:7-27:8 PVar r :: { a | x : Int }
+  28:5-28:24 Update :: { a | x : Int }
+    28:7-28:8 VarLocal :: { a | x : Int }
+    28:15-28:22 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      28:15-28:18 Access :: Int
+        28:15-28:16 VarLocal :: { a | x : Int }
+      28:21-28:22 Int :: Int
+def twice :: { a | x : Int } -> { a | x : Int }    [52:1-52:6]   id: author/project:Rows.twice   sig: { v0 | x : Int } -> { v0 | x : Int }   kinds: v0:row   group: author/project:Rows.twice nonrec ann
+  52:7-52:8 PVar r :: { a | x : Int }
+  53:5-53:19 Call :: { a | x : Int }
+    53:5-53:10 VarTopLevel :: { a | x : Int } -> { a | x : Int }   callee: author/project:Rows.bumpX   use: gen   instance: a1 := a   sig#: 01193789   subst: v0 := <<author/project:Rows.twice|v0>>
+    53:12-53:19 Call :: { a | x : Int }
+      53:12-53:17 VarTopLevel :: { a | x : Int } -> { a | x : Int }   callee: author/project:Rows.bumpX   use: gen   instance: a1 := a   sig#: 01193789   subst: v0 := <<author/project:Rows.twice|v0>>
+      53:18-53:19 VarLocal :: { a | x : Int }
+def getX :: { a | x : Int } -> Int    [22:1-22:5]   id: author/project:Rows.getX   sig: { v0 | x : Int } -> Int   kinds: v0:row   group: author/project:Rows.getX nonrec ann
+  22:6-22:7 PVar r :: { a | x : Int }
+  23:5-23:8 Access :: Int
+    23:5-23:6 VarLocal :: { a | x : Int }
+def both :: { a | x : Int, y : Int } -> Int    [32:1-32:5]   id: author/project:Rows.both   sig: { v0 | x : Int, y : Int } -> Int   kinds: v0:row   group: author/project:Rows.both nonrec ann
+  32:6-32:7 PVar r :: { a | x : Int, y : Int }
+  33:5-33:23 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    33:5-33:17 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      33:5-33:11 Call :: Int
+        33:5-33:9 VarTopLevel :: { a | x : Int, y : Int } -> Int   callee: author/project:Rows.getX   use: gen   instance: a1 := { a | y : Int }   sig#: 63815287   subst: v0 := { <<author/project:Rows.both|v0>> | y : Int }
+        33:10-33:11 VarLocal :: { a | x : Int, y : Int }
+      33:14-33:17 Int :: Int
+    33:20-33:23 Access :: Int
+      33:20-33:21 VarLocal :: { a | x : Int, y : Int }
+def main :: Program () () ()    [62:1-62:5]   id: author/project:Rows.main   sig: Program () () ()   kinds:    group: author/project:Rows.main nonrec ann
+  63:5-113:10 Call :: Program () () ()
+    63:5-63:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    64:9-113:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      65:13-110:37 Lambda :: () -> ( (), Cmd () )
+        65:14-65:15 PAnything :: ()
+        def total :: List { a | x : Int } -> Int    [76:21-76:26]   id: author/project:Rows.total@76:21   sig: List { v0 | x : Int } -> Int   kinds: v0:row   group: author/project:Rows.total@76:21 nonrec inferred
+          76:27-76:29 PVar xs :: List { a | x : Int }
+          77:25-77:65 Call :: Int
+            77:25-77:35 VarForeign :: ({ a | x : Int } -> Int -> Int) -> Int -> List { a | x : Int } -> Int   callee: elm/core:List.foldl   instance: a := { a | x : Int }, b := Int   sig#: 8a8782c6   subst: v0 := { <<author/project:Rows.total@76:21|v0>> | x : Int }, v1 := Int
+            77:37-77:59 Lambda :: { a | x : Int } -> Int -> Int
+              77:38-77:39 PVar v :: { a | x : Int }
+              77:40-77:43 PVar acc :: Int
+              77:47-77:59 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                77:47-77:50 VarLocal :: Int
+                77:53-77:59 Call :: Int
+                  77:53-77:57 VarTopLevel :: { a | x : Int } -> Int   callee: author/project:Rows.getX   use: gen   instance: a1 := a   sig#: 63815287   subst: v0 := <<author/project:Rows.total@76:21|v0>>
+                  77:58-77:59 VarLocal :: { a | x : Int }
+            77:61-77:62 Int :: Int
+            77:63-77:65 VarLocal :: List { a | x : Int }
+        def pick :: { t1 | weight : t } -> t    [79:21-79:25]   id: author/project:Rows.pick@79:21   sig: { v1 | weight : v0 } -> v0   kinds: v0:any,v1:row   group: author/project:Rows.pick@79:21 nonrec inferred
+          79:26-79:27 PVar v :: { t1 | weight : t }
+          80:25-80:33 Access :: t
+            80:25-80:26 VarLocal :: { t1 | weight : t }
+        def r :: { name : String, weight : number }    [73:21-73:22]   id: author/project:Rows.r@73:21   sig: { name : String, weight : v0 }   kinds: v0:number   group: author/project:Rows.r@73:21 nonrec inferred
+          74:25-74:51 Record :: { name : String, weight : number }
+            74:46-74:49 Str :: String
+            74:36-74:37 Int :: number
+        def q :: { x : number1, on : Bool, name : String, tags : ( number2, String ), weight : Float }    [70:21-70:22]   id: author/project:Rows.q@70:21   sig: { x : v0, on : Bool, name : String, tags : ( v1, String ), weight : Float }   kinds: v0:number,v1:number   group: author/project:Rows.q@70:21 nonrec inferred
+          71:25-71:91 Record :: { x : number1, on : Bool, name : String, tags : ( number2, String ), weight : Float }
+            71:43-71:45 Int :: number1
+            71:85-71:89 VarCtor :: Bool   callee: elm/core:Basics.True
+            71:34-71:37 Str :: String
+            71:68-71:78 Pair :: ( number2, String )
+              71:70-71:71 Int :: number2
+              71:73-71:76 Str :: String
+            71:56-71:59 Float :: Float
+        def l4 :: String    [91:21-91:23]   id: author/project:Rows.l4@91:21   sig: String   kinds:    group: author/project:Rows.l4@91:21 nonrec inferred
+          92:25-92:107 Call :: String
+            92:25-92:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            92:35-92:42 Str :: String
+            92:44-92:107 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              92:44-92:69 Call :: String
+                92:44-92:60 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+                92:62-92:69 Call :: Float
+                  92:62-92:67 VarTopLevel :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float } -> Float   <= { x : number3, on : Bool, name : String, tags : ( number4, String ), weight : Float } -> Float   callee: author/project:Rows.heavy   use: gen   instance: a2 := { x : Int, on : Bool, name : String, tags : ( Int, String ) } (defaulted)   sig#: 68c180d0   subst: v0 := { x : Int, on : Bool, name : String, tags : ( Int, String ) }
+                  92:68-92:69 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }   <= { x : number3, on : Bool, name : String, tags : ( number4, String ), weight : Float }   callee: author/project:Rows.q@70:21   use: gen   instance: number2 := Int (defaulted), number1 := Int (defaulted)   sig#: 203519fc   subst: v0 := Int, v1 := Int
+              92:74-92:106 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                92:74-92:77 Str :: String
+                92:81-92:106 Call :: String
+                  92:81-92:97 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+                  92:99-92:106 Call :: Float
+                    92:99-92:104 VarTopLevel :: { name : String, weight : Float } -> Float   callee: author/project:Rows.heavy   use: gen   instance: a2 := { name : String }   sig#: 68c180d0   subst: v0 := { name : String }
+                    92:105-92:106 VarLocal :: { name : String, weight : Float }   callee: author/project:Rows.r@73:21   use: gen   instance: number := Float   sig#: 4e02dc9c   subst: v0 := Float
+        def l5 :: String    [94:21-94:23]   id: author/project:Rows.l5@94:21   sig: String   kinds:    group: author/project:Rows.l5@94:21 nonrec inferred
+          95:25-95:97 Call :: String
+            95:25-95:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            95:35-95:42 Str :: String
+            95:44-95:97 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              95:44-95:51 Call :: String
+                95:44-95:49 VarTopLevel :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float } -> String   <= { x : number5, on : Bool, name : String, tags : ( number6, String ), weight : Float } -> String   callee: author/project:Rows.label   use: gen   instance: a3 := { x : Int, on : Bool, tags : ( Int, String ), weight : Float } (defaulted)   sig#: dc41e2ca   subst: v0 := { x : Int, on : Bool, tags : ( Int, String ), weight : Float }
+                95:50-95:51 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }   <= { x : number5, on : Bool, name : String, tags : ( number6, String ), weight : Float }   callee: author/project:Rows.q@70:21   use: gen   instance: number2 := Int (defaulted), number1 := Int (defaulted)   sig#: 203519fc   subst: v0 := Int, v1 := Int
+              95:55-95:97 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                95:55-95:62 Call :: String
+                  95:55-95:60 VarTopLevel :: { name : String, weight : Int } -> String   <= { name : String, weight : number7 } -> String   callee: author/project:Rows.label   use: gen   instance: a3 := { weight : Int } (defaulted)   sig#: dc41e2ca   subst: v0 := { weight : Int }
+                  95:61-95:62 VarLocal :: { name : String, weight : Int }   <= { name : String, weight : number7 }   callee: author/project:Rows.r@73:21   use: gen   instance: number := Int (defaulted)   sig#: 4e02dc9c   subst: v0 := Int
+                95:66-95:97 Call :: String
+                  95:66-95:71 VarTopLevel :: { name : String, other : Int } -> String   <= { name : String, other : number8 } -> String   callee: author/project:Rows.label   use: gen   instance: a3 := { other : Int } (defaulted)   sig#: dc41e2ca   subst: v0 := { other : Int }
+                  95:72-95:97 Record :: { name : String, other : Int }   <= { name : String, other : number8 }
+                    95:81-95:84 Str :: String
+                    95:94-95:95 Int :: Int   <= number8
+        def l6 :: String    [97:21-97:23]   id: author/project:Rows.l6@97:21   sig: String   kinds:    group: author/project:Rows.l6@97:21 nonrec inferred
+          98:25-98:138 Call :: String
+            98:25-98:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            98:35-98:43 Str :: String
+            98:45-98:138 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              98:45-98:64 Call :: String
+                98:45-98:50 VarTopLevel :: Q -> String   callee: author/project:Rows.showQ   use: gen
+                98:52-98:64 Call :: Q
+                  98:52-98:58 VarTopLevel :: String -> { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float } -> { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }   callee: author/project:Rows.rename   use: gen   instance: a4 := { x : Int, on : Bool, tags : ( Int, String ) }   sig#: c4dbd253   subst: v0 := { x : Int, on : Bool, tags : ( Int, String ) }
+                  98:59-98:62 Str :: String
+                  98:63-98:64 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }   callee: author/project:Rows.q@70:21   use: gen   instance: number2 := Int, number1 := Int   sig#: 203519fc   subst: v0 := Int, v1 := Int
+              98:69-98:138 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                98:69-98:72 Str :: String
+                98:76-98:138 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  98:76-98:95 Call :: String
+                    98:76-98:81 VarTopLevel :: { name : String, weight : Float } -> String   callee: author/project:Rows.label   use: gen   instance: a3 := { weight : Float }   sig#: dc41e2ca   subst: v0 := { weight : Float }
+                    98:83-98:95 Call :: { name : String, weight : Float }
+                      98:83-98:89 VarTopLevel :: String -> { name : String, weight : Float } -> { name : String, weight : Float }   callee: author/project:Rows.rename   use: gen   instance: a4 := {}   sig#: c4dbd253   subst: v0 := {}
+                      98:90-98:93 Str :: String
+                      98:94-98:95 VarLocal :: { name : String, weight : Float }   callee: author/project:Rows.r@73:21   use: gen   instance: number := Float   sig#: 4e02dc9c   subst: v0 := Float
+                  98:100-98:138 Call :: String
+                    98:100-98:116 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+                    98:117-98:138 Access :: Float
+                      98:118-98:130 Call :: { name : String, weight : Float }
+                        98:118-98:124 VarTopLevel :: String -> { name : String, weight : Float } -> { name : String, weight : Float }   callee: author/project:Rows.rename   use: gen   instance: a4 := {}   sig#: c4dbd253   subst: v0 := {}
+                        98:125-98:128 Str :: String
+                        98:129-98:130 VarLocal :: { name : String, weight : Float }   callee: author/project:Rows.r@73:21   use: gen   instance: number := Float   sig#: 4e02dc9c   subst: v0 := Float
+        def p :: { x : number9, y : number10 }    [67:21-67:22]   id: author/project:Rows.p@67:21   sig: { x : v0, y : v1 }   kinds: v0:number,v1:number   group: author/project:Rows.p@67:21 nonrec inferred
+          68:25-68:41 Record :: { x : number9, y : number10 }
+            68:31-68:32 Int :: number9
+            68:38-68:39 Int :: number10
+        def l1 :: String    [82:21-82:23]   id: author/project:Rows.l1@82:21   sig: String   kinds:    group: author/project:Rows.l1@82:21 nonrec inferred
+          83:25-83:100 Call :: String
+            83:25-83:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            83:35-83:41 Str :: String
+            83:43-83:100 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              83:43-83:65 Call :: String
+                83:43-83:57 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                83:59-83:65 Call :: Int
+                  83:59-83:63 VarTopLevel :: { x : Int, y : Int } -> Int   <= { x : Int, y : number11 } -> Int   callee: author/project:Rows.getX   use: gen   instance: a1 := { y : Int } (defaulted)   sig#: 63815287   subst: v0 := { y : Int }
+                  83:64-83:65 VarLocal :: { x : Int, y : Int }   <= { x : Int, y : number11 }   callee: author/project:Rows.p@67:21   use: gen   instance: number9 := Int, number10 := Int (defaulted)   sig#: 4665a273   subst: v0 := Int, v1 := Int
+              83:70-83:99 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                83:70-83:73 Str :: String
+                83:77-83:99 Call :: String
+                  83:77-83:91 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                  83:93-83:99 Call :: Int
+                    83:93-83:97 VarTopLevel :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float } -> Int   <= { x : Int, on : Bool, name : String, tags : ( number12, String ), weight : Float } -> Int   callee: author/project:Rows.getX   use: gen   instance: a1 := { on : Bool, name : String, tags : ( Int, String ), weight : Float } (defaulted)   sig#: 63815287   subst: v0 := { on : Bool, name : String, tags : ( Int, String ), weight : Float }
+                    83:98-83:99 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }   <= { x : Int, on : Bool, name : String, tags : ( number12, String ), weight : Float }   callee: author/project:Rows.q@70:21   use: gen   instance: number2 := Int (defaulted), number1 := Int   sig#: 203519fc   subst: v0 := Int, v1 := Int
+        def l2 :: String    [85:21-85:23]   id: author/project:Rows.l2@85:21   sig: String   kinds:    group: author/project:Rows.l2@85:21 nonrec inferred
+          86:25-86:126 Call :: String
+            86:25-86:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            86:35-86:41 Str :: String
+            86:43-86:126 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              86:43-86:72 Call :: String
+                86:43-86:57 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                86:59-86:72 Call :: Int
+                  86:59-86:63 VarTopLevel :: { x : Int, y : Int } -> Int   <= { x : Int, y : number13 } -> Int   callee: author/project:Rows.getX   use: gen   instance: a1 := { y : Int } (defaulted)   sig#: 63815287   subst: v0 := { y : Int }
+                  86:65-86:72 Call :: { x : Int, y : Int }   <= { x : Int, y : number13 }
+                    86:65-86:70 VarTopLevel :: { x : Int, y : Int } -> { x : Int, y : Int }   <= { x : Int, y : number13 } -> { x : Int, y : number13 }   callee: author/project:Rows.bumpX   use: gen   instance: a5 := { y : Int } (defaulted)   sig#: 01193789   subst: v0 := { y : Int }
+                    86:71-86:72 VarLocal :: { x : Int, y : Int }   <= { x : Int, y : number13 }   callee: author/project:Rows.p@67:21   use: gen   instance: number9 := Int, number10 := Int (defaulted)   sig#: 4665a273   subst: v0 := Int, v1 := Int
+              86:78-86:125 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                86:78-86:81 Str :: String
+                86:85-86:125 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  86:85-86:99 Call :: String
+                    86:85-86:90 VarTopLevel :: Q -> String   callee: author/project:Rows.showQ   use: gen
+                    86:92-86:99 Call :: Q
+                      86:92-86:97 VarTopLevel :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float } -> { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }   callee: author/project:Rows.bumpX   use: gen   instance: a5 := { on : Bool, name : String, tags : ( Int, String ), weight : Float }   sig#: 01193789   subst: v0 := { on : Bool, name : String, tags : ( Int, String ), weight : Float }
+                      86:98-86:99 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }   callee: author/project:Rows.q@70:21   use: gen   instance: number2 := Int, number1 := Int   sig#: 203519fc   subst: v0 := Int, v1 := Int
+                  86:104-86:125 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                    86:104-86:107 Str :: String
+                    86:111-86:125 Call :: String
+                      86:111-86:116 VarTopLevel :: Q -> String   callee: author/project:Rows.showQ   use: gen
+                      86:118-86:125 Call :: Q
+                        86:118-86:123 VarTopLevel :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float } -> { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }   callee: author/project:Rows.twice   use: gen   instance: a6 := { on : Bool, name : String, tags : ( Int, String ), weight : Float }   sig#: 01193789   subst: v0 := { on : Bool, name : String, tags : ( Int, String ), weight : Float }
+                        86:124-86:125 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }   callee: author/project:Rows.q@70:21   use: gen   instance: number2 := Int, number1 := Int   sig#: 203519fc   subst: v0 := Int, v1 := Int
+        def l3 :: String    [88:21-88:23]   id: author/project:Rows.l3@88:21   sig: String   kinds:    group: author/project:Rows.l3@88:21 nonrec inferred
+          89:25-89:134 Call :: String
+            89:25-89:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            89:35-89:41 Str :: String
+            89:43-89:134 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              89:43-89:65 Call :: String
+                89:43-89:57 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                89:59-89:65 Call :: Int
+                  89:59-89:63 VarTopLevel :: { x : Int, y : Int } -> Int   callee: author/project:Rows.both   use: gen   instance: a7 := {}   sig#: 8cf689ef   subst: v0 := {}
+                  89:64-89:65 VarLocal :: { x : Int, y : Int }   callee: author/project:Rows.p@67:21   use: gen   instance: number9 := Int, number10 := Int   sig#: 4665a273   subst: v0 := Int, v1 := Int
+              89:70-89:133 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                89:70-89:73 Str :: String
+                89:77-89:133 Call :: String
+                  89:77-89:91 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                  89:93-89:133 Call :: Int
+                    89:93-89:97 VarTopLevel :: { w : Float, x : Int, y : Int, z : String } -> Int   callee: author/project:Rows.both   use: gen   instance: a7 := { w : Float, z : String }   sig#: 8cf689ef   subst: v0 := { w : Float, z : String }
+                    89:98-89:133 Record :: { w : Float, x : Int, y : Int, z : String }
+                      89:128-89:131 Float :: Float
+                      89:104-89:105 Int :: Int
+                      89:111-89:112 Int :: Int
+                      89:118-89:122 Str :: String
+        def l7 :: String    [100:21-100:23]   id: author/project:Rows.l7@100:21   sig: String   kinds:    group: author/project:Rows.l7@100:21 nonrec inferred
+          101:25-101:177 Call :: String
+            101:25-101:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            101:35-101:42 Str :: String
+            101:44-101:177 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              101:44-101:89 Call :: String
+                101:44-101:58 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                101:60-101:89 Call :: Int
+                  101:60-101:65 VarLocal :: List { x : Int, y : Int } -> Int   <= List { x : Int, y : number14 } -> Int   callee: author/project:Rows.total@76:21   use: gen   instance: a := { y : Int } (defaulted)   sig#: dcafcc7c   subst: v0 := { y : Int }
+                  101:66-101:89 List :: List { x : Int, y : Int }   <= List { x : Int, y : number14 }
+                    101:68-101:69 VarLocal :: { x : Int, y : Int }   <= { x : Int, y : number14 }   callee: author/project:Rows.p@67:21   use: gen   instance: number9 := Int, number10 := Int (defaulted)   sig#: 4665a273   subst: v0 := Int, v1 := Int
+                    101:71-101:87 Record :: { x : Int, y : Int }   <= { x : Int, y : number14 }
+                      101:77-101:78 Int :: Int
+                      101:84-101:85 Int :: Int   <= number14
+              101:94-101:176 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                101:94-101:97 Str :: String
+                101:101-101:176 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  101:101-101:131 Call :: String
+                    101:101-101:115 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                    101:117-101:131 Call :: Int
+                      101:117-101:122 VarLocal :: List { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float } -> Int   <= List { x : Int, on : Bool, name : String, tags : ( number15, String ), weight : Float } -> Int   callee: author/project:Rows.total@76:21   use: gen   instance: a := { on : Bool, name : String, tags : ( Int, String ), weight : Float } (defaulted)   sig#: dcafcc7c   subst: v0 := { on : Bool, name : String, tags : ( Int, String ), weight : Float }
+                      101:123-101:131 List :: List { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }   <= List { x : Int, on : Bool, name : String, tags : ( number15, String ), weight : Float }
+                        101:125-101:126 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }   <= { x : Int, on : Bool, name : String, tags : ( number15, String ), weight : Float }   callee: author/project:Rows.q@70:21   use: gen   instance: number2 := Int (defaulted), number1 := Int   sig#: 203519fc   subst: v0 := Int, v1 := Int
+                        101:128-101:129 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }   <= { x : Int, on : Bool, name : String, tags : ( number15, String ), weight : Float }   callee: author/project:Rows.q@70:21   use: gen   instance: number2 := Int (defaulted), number1 := Int   sig#: 203519fc   subst: v0 := Int, v1 := Int
+                  101:136-101:176 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                    101:136-101:139 Str :: String
+                    101:143-101:176 Call :: String
+                      101:143-101:159 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+                      101:161-101:176 Binop :: Float   callee: elm/core:Basics.add   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+                        101:161-101:167 Call :: Float
+                          101:161-101:165 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float } -> Float   <= { x : number16, on : Bool, name : String, tags : ( number17, String ), weight : Float } -> Float   callee: author/project:Rows.pick@79:21   use: gen   instance: t := Float, t1 := { x : Int, on : Bool, name : String, tags : ( Int, String ) } (defaulted)   sig#: 21d812e0   subst: v0 := Float, v1 := { x : Int, on : Bool, name : String, tags : ( Int, String ) }
+                          101:166-101:167 VarLocal :: { x : Int, on : Bool, name : String, tags : ( Int, String ), weight : Float }   <= { x : number16, on : Bool, name : String, tags : ( number17, String ), weight : Float }   callee: author/project:Rows.q@70:21   use: gen   instance: number2 := Int (defaulted), number1 := Int (defaulted)   sig#: 203519fc   subst: v0 := Int, v1 := Int
+                        101:170-101:176 Call :: Float
+                          101:170-101:174 VarLocal :: { name : String, weight : Float } -> Float   callee: author/project:Rows.pick@79:21   use: gen   instance: t := Float, t1 := { name : String }   sig#: 21d812e0   subst: v0 := Float, v1 := { name : String }
+                          101:175-101:176 VarLocal :: { name : String, weight : Float }   callee: author/project:Rows.r@73:21   use: gen   instance: number := Float   sig#: 4e02dc9c   subst: v0 := Float
+        def l8 :: String    [103:21-103:23]   id: author/project:Rows.l8@103:21   sig: String   kinds:    group: author/project:Rows.l8@103:21 nonrec inferred
+          104:25-104:135 Call :: String
+            104:25-104:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            104:35-104:40 Str :: String
+            104:42-104:135 Call :: String
+              104:42-104:53 VarForeign :: String -> List String -> String   callee: elm/core:String.join
+              104:54-104:57 Str :: String
+              104:59-104:135 Call :: List String
+                104:59-104:67 VarForeign :: ({ x : Int, y : Int } -> String) -> List { x : Int, y : Int } -> List String   <= ({ x : Int, y : number18 } -> String) -> List { x : Int, y : number18 } -> List String   callee: elm/core:List.map   instance: a := { x : Int, y : Int } (defaulted), b := String   sig#: 6a702f63   subst: v0 := { x : Int, y : Int }, v1 := String
+                104:69-104:98 Lambda :: { x : Int, y : Int } -> String   <= { x : Int, y : number18 } -> String
+                  104:70-104:71 PVar v :: { x : Int, y : Int }   <= { x : Int, y : number18 }
+                  104:75-104:97 Call :: String
+                    104:75-104:89 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                    104:91-104:97 Call :: Int
+                      104:91-104:95 VarTopLevel :: { x : Int, y : Int } -> Int   <= { x : Int, y : number18 } -> Int   callee: author/project:Rows.getX   use: gen   instance: a1 := { y : Int } (defaulted)   sig#: 63815287   subst: v0 := { y : Int }
+                      104:96-104:97 VarLocal :: { x : Int, y : Int }   <= { x : Int, y : number18 }
+                104:100-104:135 List :: List { x : Int, y : Int }   <= List { x : Int, y : number18 }
+                  104:102-104:109 Call :: { x : Int, y : Int }   <= { x : Int, y : number18 }
+                    104:102-104:107 VarTopLevel :: { x : Int, y : Int } -> { x : Int, y : Int }   <= { x : Int, y : number18 } -> { x : Int, y : number18 }   callee: author/project:Rows.bumpX   use: gen   instance: a5 := { y : Int } (defaulted)   sig#: 01193789   subst: v0 := { y : Int }
+                    104:108-104:109 VarLocal :: { x : Int, y : Int }   <= { x : Int, y : number18 }   callee: author/project:Rows.p@67:21   use: gen   instance: number9 := Int, number10 := Int (defaulted)   sig#: 4665a273   subst: v0 := Int, v1 := Int
+                  104:111-104:133 Call :: { x : Int, y : Int }   <= { x : Int, y : number18 }
+                    104:111-104:116 VarTopLevel :: { x : Int, y : Int } -> { x : Int, y : Int }   <= { x : Int, y : number18 } -> { x : Int, y : number18 }   callee: author/project:Rows.bumpX   use: gen   instance: a5 := { y : Int } (defaulted)   sig#: 01193789   subst: v0 := { y : Int }
+                    104:117-104:133 Record :: { x : Int, y : Int }   <= { x : Int, y : number18 }
+                      104:123-104:124 Int :: Int
+                      104:130-104:131 Int :: Int   <= number18
+        106:17-110:37 If :: ( (), Cmd () )
+          106:20-106:70 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            106:20-106:66 Call :: Int
+              106:20-106:31 VarForeign :: List String -> Int   callee: elm/core:List.length   instance: a := String   sig#: 8f686fa0   subst: v0 := String
+              106:32-106:66 List :: List String
+                106:34-106:36 VarLocal :: String   callee: author/project:Rows.l1@82:21   use: gen
+                106:38-106:40 VarLocal :: String   callee: author/project:Rows.l2@85:21   use: gen
+                106:42-106:44 VarLocal :: String   callee: author/project:Rows.l3@88:21   use: gen
+                106:46-106:48 VarLocal :: String   callee: author/project:Rows.l4@91:21   use: gen
+                106:50-106:52 VarLocal :: String   callee: author/project:Rows.l5@94:21   use: gen
+                106:54-106:56 VarLocal :: String   callee: author/project:Rows.l6@97:21   use: gen
+                106:58-106:60 VarLocal :: String   callee: author/project:Rows.l7@100:21   use: gen
+                106:62-106:64 VarLocal :: String   callee: author/project:Rows.l8@103:21   use: gen
+            106:69-106:70 Int :: Int
+          107:21-107:37 Pair :: ( (), Cmd () )
+            107:23-107:25 Unit :: ()
+            107:27-107:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          110:21-110:37 Pair :: ( (), Cmd () )
+            110:23-110:25 Unit :: ()
+            110:27-110:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      111:20-111:43 Lambda :: () -> () -> ( (), Cmd () )
+        111:21-111:22 PAnything :: ()
+        111:23-111:24 PVar m :: ()
+        111:28-111:43 Pair :: ( (), Cmd () )
+          111:30-111:31 VarLocal :: ()
+          111:33-111:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      112:27-112:41 Lambda :: () -> Sub ()
+        112:28-112:29 PAnything :: ()
+        112:33-112:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Rows.rename   kind: function   reads:    needs: 
+init: 1   id: author/project:Rows.showQ   kind: function   reads:    needs: 
+init: 2   id: author/project:Rows.label   kind: function   reads:    needs: 
+init: 3   id: author/project:Rows.heavy   kind: function   reads:    needs: 
+init: 4   id: author/project:Rows.bumpX   kind: function   reads:    needs: 
+init: 5   id: author/project:Rows.twice   kind: function   reads: author/project:Rows.bumpX   needs: 
+init: 6   id: author/project:Rows.getX   kind: function   reads:    needs: 
+init: 7   id: author/project:Rows.both   kind: function   reads: author/project:Rows.getX   needs: 
+init: 8   id: author/project:Rows.main   kind: value   reads: author/project:Rows.rename,author/project:Rows.showQ,author/project:Rows.label,author/project:Rows.heavy,author/project:Rows.bumpX,author/project:Rows.twice,author/project:Rows.getX,author/project:Rows.both   needs:    init-dep: no

@@ -1,0 +1,113 @@
+module Rows exposing (main)
+
+-- Row polymorphism: functions on extensible records ({ a | x : Int }) used with records of different layouts (the
+-- class of the other fields differs: Int, Float, String, tuples, Bool), field access, record update, a row
+-- polymorphic function calling another, a local row polymorphic function, and maps over lists of records.
+-- The output must equal Elm's (expected/rows.out, from Elm 0.19.3 under node).
+
+
+type alias P =
+    { x : Int, y : Int }
+
+
+type alias Q =
+    { name : String, x : Int, weight : Float, tags : ( Int, String ), on : Bool }
+
+
+type alias R =
+    { weight : Float, name : String }
+
+
+getX : { a | x : Int } -> Int
+getX r =
+    r.x
+
+
+bumpX : { a | x : Int } -> { a | x : Int }
+bumpX r =
+    { r | x = r.x + 1 }
+
+
+both : { a | x : Int, y : Int } -> Int
+both r =
+    getX r * 100 + r.y
+
+
+heavy : { a | weight : Float } -> Float
+heavy r =
+    r.weight * 2
+
+
+label : { a | name : String } -> String
+label r =
+    "<" ++ r.name ++ ">"
+
+
+rename : String -> { a | name : String, weight : Float } -> { a | name : String, weight : Float }
+rename n r =
+    { r | name = n ++ r.name, weight = r.weight / 2 }
+
+
+twice : { a | x : Int } -> { a | x : Int }
+twice r =
+    bumpX (bumpX r)
+
+
+showQ : Q -> String
+showQ q =
+    q.name ++ "/" ++ String.fromInt q.x ++ "/" ++ String.fromFloat q.weight ++ "/" ++ String.fromInt (Tuple.first q.tags) ++ Tuple.second q.tags ++ (if q.on then "T" else "F")
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    p =
+                        { x = 3, y = 4 }
+
+                    q =
+                        { name = "q", x = 10, weight = 1.5, tags = ( 7, "t" ), on = True }
+
+                    r =
+                        { weight = 8, name = "r" }
+
+                    total xs =
+                        List.foldl (\v acc -> acc + getX v) 0 xs
+
+                    pick v =
+                        v.weight
+
+                    l1 =
+                        Debug.log "getX" (String.fromInt (getX p) ++ " " ++ String.fromInt (getX q))
+
+                    l2 =
+                        Debug.log "bump" (String.fromInt (getX (bumpX p)) ++ " " ++ showQ (bumpX q) ++ " " ++ showQ (twice q))
+
+                    l3 =
+                        Debug.log "both" (String.fromInt (both p) ++ " " ++ String.fromInt (both { x = 1, y = 2, z = "zz", w = 2.5 }))
+
+                    l4 =
+                        Debug.log "heavy" (String.fromFloat (heavy q) ++ " " ++ String.fromFloat (heavy r))
+
+                    l5 =
+                        Debug.log "label" (label q ++ label r ++ label { name = "n", other = 1 })
+
+                    l6 =
+                        Debug.log "rename" (showQ (rename "A" q) ++ " " ++ label (rename "B" r) ++ String.fromFloat (rename "B" r).weight)
+
+                    l7 =
+                        Debug.log "local" (String.fromInt (total [ p, { x = 5, y = 0 } ]) ++ " " ++ String.fromInt (total [ q, q ]) ++ " " ++ String.fromFloat (pick q + pick r))
+
+                    l8 =
+                        Debug.log "map" (String.join "," (List.map (\v -> String.fromInt (getX v)) [ bumpX p, bumpX { x = 0, y = 9 } ]))
+                in
+                if List.length [ l1, l2, l3, l4, l5, l6, l7, l8 ] > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

@@ -4,6 +4,215 @@ mark author/project:Poly.biggest   v0=comparable
 mark author/project:Poly.getX   v0=row
 clone c0   def: author/project:Poly.results   key: ()   kind: value   init: 4   needs: 
 clone c1   def: author/project:Poly.main   key: ()   kind: value   init: 5   needs: c0
--- program: not specialized
-!! row polymorphism is not supported yet (slice 5): author/project:Poly.getX
-!! a field access on an extensible record (row polymorphism: slice 5) is not supported yet at 24:5-24:8
+-- program: 23 clones, reachable from main, dependencies first
+clone c13   def: author/project:Poly.id2@35:9   key: (v0=i64)   name: id2@35:9__i64   kind: function   params: y:i64   result: i64   lifted-from: c2
+  Local y :: i64
+clone c14   def: author/project:Poly.id2@35:9   key: (v0=ref)   name: id2@35:9__ref   kind: function   params: y:ref   result: ref   lifted-from: c2
+  Local y :: ref
+clone c3   def: author/project:Poly.pairUp@38:9   key: (v0=i64; v1=ref)   name: pairUp@38:9__i64__ref   kind: function   params: a:i64 b:ref   result: struct(i64,ref)   lifted-from: c2
+  Tuple :: struct(i64,ref)
+    Call :: i64
+      Global c13 :: ref
+      Local a :: i64
+    Call :: ref
+      Global c14 :: ref
+      Local b :: ref
+clone c4   def: author/project:Poly.twice   key: (v0=i64)   name: twice__i64   kind: function   params: f:ref x:i64   result: i64
+  Call :: i64
+    Local f :: ref
+    Call :: i64
+      Local f :: ref
+      Local x :: i64
+clone c5   def: author/project:Poly.lambda@44:30   key: ()   kind: function   params: k:i64   result: i64   lifted-from: c2
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local k :: i64
+    Lit 1 :: i64
+clone c6   def: author/project:Poly.twice   key: (v0=ref)   name: twice__ref   kind: function   params: f:ref x:ref   result: ref
+  Call :: ref
+    Local f :: ref
+    Call :: ref
+      Local f :: ref
+      Local x :: ref
+clone c7   def: author/project:Poly.lambda@45:14   key: ()   kind: function   params: t:ref   result: ref   lifted-from: c2
+  Call :: ref
+    Kernel elm/core:Basics.append (v0=app string) :: ref
+    Local t :: ref
+    Lit "!" :: ref
+clone c8   def: author/project:Poly.unbox   key: (v0=i64)   name: unbox__i64   kind: function   params: _p0:ref   result: i64
+  Case :: i64
+    Local _p0 :: ref
+    branch Box #0 v :: i64 :: ref
+      Local v :: i64
+clone c9   def: author/project:Poly.getX   key: (v0=layout {y:f64})   name: getX__row   kind: function   params: r:struct(i64,f64)   result: i64
+  Access .x #0 :: i64
+    Local r :: struct(i64,f64)
+clone c19   def: elm/core:List.foldl   key: (v0=i64; v1=i64)   name: foldl__i64__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: i64
+        Global c19 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: i64
+          Local acc :: i64
+        Local xs :: ref
+clone c20   def: elm/core:Basics.max   key: (v0=type elm/core:Basics.Int)   name: max__i64   kind: function   params: x:i64 y:i64   result: i64
+  If :: i64
+    Call :: enum
+      Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+      Local x :: i64
+      Local y :: i64
+    Local x :: i64
+    Local y :: i64
+clone c15   def: elm/core:List.maximum   key: (v0=type elm/core:Basics.Int)   name: maximum__i64   kind: function   params: list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: ref
+        Ctor Just tag 0 (v0=i64) :: ref
+        Call :: i64
+          Global c19 :: ref
+          Global c20 :: ref
+          Local x :: i64
+          Local xs :: ref
+    branch _ :: ref
+      Ctor Nothing tag 1 () :: ref
+clone c10   def: author/project:Poly.biggest   key: (v0=type elm/core:Basics.Int)   name: biggest__i64   kind: function   params: xs:ref   result: ref
+  Call :: ref
+    Global c15 :: ref
+    Local xs :: ref
+clone c21   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: ref :: xs :: ref :: ref
+      Call :: ref
+        Global c21 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: ref
+          Local acc :: ref
+        Local xs :: ref
+clone c22   def: elm/core:Basics.max   key: (v0=type ref)   name: max__t   kind: function   params: x:ref y:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.gt (v0=type ref) :: ref
+      Local x :: ref
+      Local y :: ref
+    Local x :: ref
+    Local y :: ref
+clone c16   def: elm/core:List.maximum   key: (v0=type ref)   name: maximum__t   kind: function   params: list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch x :: ref :: xs :: ref :: ref
+      Call :: ref
+        Ctor Just tag 0 (v0=ref) :: ref
+        Call :: ref
+          Global c21 :: ref
+          Global c22 :: ref
+          Local x :: ref
+          Local xs :: ref
+    branch _ :: ref
+      Ctor Nothing tag 1 () :: ref
+clone c11   def: author/project:Poly.biggest   key: (v0=type ref)   name: biggest__t   kind: function   params: xs:ref   result: ref
+  Call :: ref
+    Global c16 :: ref
+    Local xs :: ref
+clone c17   def: elm/core:List.foldl   key: (v0=ref; v1=i64)   name: foldl__ref__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: ref :: xs :: ref :: ref
+      Call :: i64
+        Global c17 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: ref
+          Local acc :: i64
+        Local xs :: ref
+clone c18   def: elm/core:List.lambda@252:10   key: ()   outer: c12 (v0=ref)   kind: function   params: _a0:ref i:i64   result: i64   lifted-from: c12
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local i :: i64
+    Lit 1 :: i64
+clone c12   def: elm/core:List.length   key: (v0=ref)   name: length__ref   kind: function   params: xs:ref   result: i64
+  Call :: i64
+    Global c17 :: ref
+    Global c18 :: ref
+    Lit 0 :: i64
+    Local xs :: ref
+clone c2   def: author/project:Poly.results   key: ()   kind: value   params:    result: ref
+  Case :: ref
+    Call :: struct(i64,ref)
+      Global c3 :: ref
+      Lit 1 :: i64
+      Lit "one" :: ref
+    branch (n :: i64, s :: ref) :: struct(i64,ref)
+      List :: ref
+        Call :: ref
+          Kernel elm/core:String.fromInt () :: ref
+          Call :: i64
+            Global c4 :: ref
+            Global c5 :: ref
+            Lit 40 :: i64
+        Call :: ref
+          Global c6 :: ref
+          Global c7 :: ref
+          Lit "hi" :: ref
+        Call :: ref
+          Kernel elm/core:String.fromInt () :: ref
+          Call :: i64
+            Global c8 :: ref
+            Call :: ref
+              Ctor Box tag 0 (v0=i64) :: ref
+              Call :: i64
+                Global c9 :: ref
+                Record x y :: struct(i64,f64)
+                  Lit 7 :: i64
+                  Lit 2.5 :: f64
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Call :: ref
+            Kernel elm/core:String.fromInt () :: ref
+            Local n :: i64
+          Local s :: ref
+        Call :: ref
+          Kernel elm/core:Debug.toString (v0=type (elm/core:Maybe.Maybe elm/core:Basics.Int)) :: ref
+          Call :: ref
+            Global c10 :: ref
+            List :: ref
+              Lit 3 :: i64
+              Lit 1 :: i64
+              Lit 2 :: i64
+        Call :: ref
+          Kernel elm/core:Debug.toString (v0=type (elm/core:Maybe.Maybe ref)) :: ref
+          Call :: ref
+            Global c11 :: ref
+            List :: ref
+        Call :: ref
+          Kernel elm/core:String.fromInt () :: ref
+          Call :: i64
+            Global c12 :: ref
+            List :: ref
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Seq :: struct(unit,unit)
+    Call :: ref
+      Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:String.String)) :: ref
+      Lit "r" :: ref
+      Global c2 :: ref
+    Tuple :: struct(unit,unit)
+      Lit () :: unit
+      Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Poly.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

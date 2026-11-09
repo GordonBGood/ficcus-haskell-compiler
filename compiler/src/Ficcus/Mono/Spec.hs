@@ -304,7 +304,7 @@ classOfT enums env t =
     TPair a b -> CStruct [boxed (go a), boxed (go b)]
     TTriple a b c -> CStruct [boxed (go a), boxed (go b), boxed (go c)]
     TRecord fields Nothing -> CStruct (map (boxed . go) (Map.elems fields))
-    TRecord _ (Just _) -> CRef
+    TRecord _ (Just _) -> maybe CRef (CStruct . map snd) (rowFieldsT enums env t)
     TVar n _ _ ->
       case Map.lookup n env of
         Just (ByClass c) -> c
@@ -317,6 +317,25 @@ classOfT enums env t =
     TError -> CRef
   where
     go = classOfT enums env
+
+
+-- all the fields of a record type with their (boxed) classes, in the order of N.Name (shorter names first, then by
+-- characters; Elm's Map of fields) that is the order of the struct. An extensible record `{ a | x : Float }` is
+-- completed from the layout that its row variable has in the key (ByLayout: the fields the variable stands for)
+rowFieldsT :: Map.Map String Bool -> Env -> TType -> Maybe [(String, Class)]
+rowFieldsT enums env t =
+  case t of
+    TRecord fs Nothing -> Just (own fs)
+    TRecord fs (Just ext) ->
+      case strip ext of
+        TVar n _ _ | Just (ByLayout ls) <- Map.lookup n env -> Just (List.sortOn (\(k, _) -> (length k, k)) (own fs ++ ls))
+        TRecord fs2 e2 -> rowFieldsT enums env (TRecord (Map.union fs fs2) e2)
+        _ -> Nothing
+    TVar n _ _ | Just (ByLayout ls) <- Map.lookup n env -> Just ls
+    TAlias _ _ _ real -> rowFieldsT enums env real
+    _ -> Nothing
+  where
+    own fs = [ (N.toChars k, boxed (classOfT enums env v)) | (k, v) <- Map.toList fs ]
 
 
 classOfName :: Map.Map String Bool -> String -> Int -> Class
@@ -408,7 +427,9 @@ keyFor se cid scheme subst isOuter =
             let marked = not (Set.null (Marks.marksOf marks cid i)) || forcedExact cid i
             case () of
               _ | kind == "row" ->
-                    report ("row polymorphism is not supported yet (slice 5): " ++ cid) >> return (ByClass CRef)
+                    case rowFieldsT enums env t of
+                      Just fl -> return (ByLayout fl)
+                      Nothing -> report ("cannot key the row variable v" ++ show i ++ " of " ++ cid) >> return (ByLayout [])
                 | kind `elem` ["number", "comparable", "compappend"] || marked ->
                     case mtypeOf env t of
                       Right m -> return (ByType m)
@@ -482,8 +503,9 @@ specExpr se (A.At region e) =
     Can.Update _ r@(A.At rregion r') updates ->
       do  cls <- exprClass se region e
           r'' <- specExpr se r
+          enums <- gets sEnums
           let fields = case nodeType se (Recorder.exprKey rregion r') of
-                Just t -> recordFields t
+                Just t -> map fst <$> rowFieldsT enums (seEnv se) t
                 Nothing -> Nothing
           case (fields, cls) of
             (Just names, CStruct fcs) | length names == length fcs ->
@@ -492,13 +514,16 @@ specExpr se (A.At region e) =
                   news <- forM (Map.toList updates) (\(n, Can.FieldUpdate _ v) -> (,) (N.toChars n) <$> specExpr se v)
                   let old' = MExpr (mRep r'') (MLocal tmp)
                   let field (i, (n, c)) = (n, case lookup n news of { Just v -> v; Nothing -> MExpr c (MAccess old' n i) })
-                  return (MExpr (mRep r'') (MLetVal tmp r'' (MExpr cls (MRecord (map field (zip [0 ..] (zip names fcs)))))))
+                  let rec = MExpr cls (MRecord (map field (zip [0 ..] (zip names fcs))))
+                  -- every field replaced: the old record is only evaluated (it may have an effect)
+                  return (if length news == length names then MExpr cls (MSeq r'' rec) else MExpr (mRep r'') (MLetVal tmp r'' rec))
             _ -> unsupported "a record update on an extensible record (row polymorphism: slice 5)" region
     Can.Access r@(A.At rregion r') (A.At _ fld) ->
       do  cls <- exprClass se region e
           r'' <- specExpr se r
+          enums <- gets sEnums
           let fields = case nodeType se (Recorder.exprKey rregion r') of
-                Just t -> recordFields t
+                Just t -> map fst <$> rowFieldsT enums (seEnv se) t
                 Nothing -> Nothing
           case fields >>= \fs -> lookup (N.toChars fld) (zip fs [0 :: Int ..]) of
             Just i -> return (MExpr cls (MAccess r'' (N.toChars fld) i))
@@ -530,15 +555,6 @@ specExpr se (A.At region e) =
     Can.VarOperator {} -> specRef se region e
     Can.VarKernel home name -> unsupported ("the kernel function Elm.Kernel." ++ String.toChars (Module.kernelToString home) ++ "." ++ N.toChars name ++ " (it has no Elm body; the runtime table is Ficcus.Mono.Kernel)") region
     _ -> unsupported ("expression " ++ Recorder.exprKind e) region
-
-
--- the field names of a record type, in the order of the struct
-recordFields :: TType -> Maybe [String]
-recordFields t =
-  case t of
-    TRecord fs Nothing -> Just (map N.toChars (Map.keys fs))
-    TAlias _ _ _ real -> recordFields real
-    _ -> Nothing
 
 
 -- a pattern with the classes of its parts
