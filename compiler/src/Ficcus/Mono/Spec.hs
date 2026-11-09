@@ -49,6 +49,7 @@ import qualified Elm.String as ES
 import Ficcus.Mono.Class
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel
+import Ficcus.Mono.Overlay (overlayId)
 import Ficcus.Mono.Marks (Marks)
 import qualified Ficcus.Mono.Marks as Marks
 import Ficcus.Mono.Modules
@@ -812,7 +813,14 @@ resolve se region e =
 
     schemeInst = raw >>= schemeOf ctx e
 
-    foreignOrTop cid =
+    foreignOrTop cid0 =
+      do  tops0 <- gets sTops
+          -- a kernel function written in Elm in the overlay (Ficcus.Mono.Overlay) is an ordinary definition
+          case overlayId cid0 >>= \o -> fmap (\src -> (o, src)) (Map.lookup o tops0) of
+            Just (o, src) -> viaClone src o
+            Nothing -> foreignOrTop' cid0
+
+    foreignOrTop' cid =
       case kernelArity cid of
         Just arity ->
           do  ms <- subst cid

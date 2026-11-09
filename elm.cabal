@@ -170,6 +170,7 @@ executable elm
         Ficcus.Mono.Kernel
         Ficcus.Mono.Spec
         Ficcus.Mono.Embed
+        Ficcus.Mono.Overlay
         Ficcus.Mono.CRuntime
         Ficcus.Mono.CGen
         Ficcus.TypesFile

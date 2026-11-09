@@ -3,6 +3,8 @@ module Ficcus.Flags
   , getTypedOutput
   , setKeepModules
   , getKeepModules
+  , setExtraSrcDir
+  , getExtraSrcDir
   )
   where
 
@@ -50,3 +52,20 @@ setKeepModules =
 getKeepModules :: IO Bool
 getKeepModules =
   readIORef keepModulesRef
+
+
+-- the directory of the overlay module (Ficcus.Mono.Overlay), searched for modules after the project's source directories
+{-# NOINLINE extraSrcDirRef #-}
+extraSrcDirRef :: IORef (Maybe FilePath)
+extraSrcDirRef =
+  unsafePerformIO (newIORef Nothing)
+
+
+setExtraSrcDir :: Maybe FilePath -> IO ()
+setExtraSrcDir =
+  writeIORef extraSrcDirRef
+
+
+getExtraSrcDir :: IO (Maybe FilePath)
+getExtraSrcDir =
+  readIORef extraSrcDirRef

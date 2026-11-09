@@ -27,6 +27,7 @@ import qualified ThreadSafe.Fork as Fork
 import qualified AST.Optimized as Opt
 import qualified AST.Prim.Module as Module
 import qualified AST.Prim.Name as N
+import qualified Ficcus.Mono.Overlay as Overlay
 import qualified Build
 import qualified Elm.Compiler.Type.Extract as Extract
 import qualified Elm.Details as Details
@@ -89,7 +90,7 @@ prod stuff details (Build.Artifacts pkg _ roots modules) =
 -- Ficcus: `--output=x.types`: the type dumps that Build wrote for the project modules
 typeDumps :: R.Stuff -> Build.Artifacts -> IO B.Builder
 typeDumps stuff (Build.Artifacts _ _ _ modules) =
-  do  let names = List.sort (map moduleName modules)
+  do  let names = List.sort (filter (\n -> Module.toChars n /= Overlay.overlayModuleName) (map moduleName modules))
       parts <- traverse (readDump stuff) names
       packages <- packageDumps stuff
       return (mconcat parts <> packages)

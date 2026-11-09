@@ -20,6 +20,7 @@ module Ficcus.Mono.Print
 
 
 import qualified Data.List as List
+import Ficcus.Mono.Overlay (overlayModuleName)
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
@@ -30,9 +31,11 @@ import Ficcus.Mono.Marks
 
 
 renderProgram :: [ModuleFacts] -> Maybe (Either [String] MProgram) -> [String]
-renderProgram modules program =
+renderProgram allModules program =
   header ++ concat (snd (List.mapAccumL one 0 modules)) ++ programLines
   where
+    -- the overlay module (Ficcus.Mono.Overlay) is not part of the project: its marks and clones table stay out of the listing
+    modules = filter (\m -> mfName m /= "author/project:" ++ overlayModuleName) allModules
     programLines =
       case program of
         Nothing -> []
@@ -40,7 +43,7 @@ renderProgram modules program =
         Just (Right p) ->
           ("-- program: " ++ show (length (mpClones p)) ++ " clones, reachable from main, dependencies first") : concatMap (renderClone (Map.fromList [ (k, c) | c <- mpClones p, let CloneId k = mdClone c ])) (mpClones p)
 
-    marks = compute modules
+    marks = compute allModules
     header = [ "-- mono: stage (iii) " ++ stageLabel ++ ", modules=" ++ show (length modules) ]
 
     one :: Int -> ModuleFacts -> (Int, [String])

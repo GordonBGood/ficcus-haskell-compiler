@@ -11,8 +11,8 @@ Exit status 1 on any difference.
 import argparse, os, shutil, subprocess, sys, tempfile, difflib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun"]
-RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
+NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl"]
+RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
 
 
 CRASH = {"eqfun": "Trying to use `(==)` on functions."}      # programs that end with a run time error: exit status 1 and this text on stderr

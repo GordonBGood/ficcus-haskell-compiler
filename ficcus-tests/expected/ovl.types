@@ -1,0 +1,514 @@
+-- module Ovl: problems=0 instances=135 instance-failures=0 defaulted=0
+-- equality-uses: total=2 at-function=0
+module author/project:Ovl
+type Color   id: author/project:Ovl.Color   params: 0   ctors: 3   layout: enum
+  ctor Red   id: author/project:Ovl.Red   tag: 0   arity: 0   fields:    sig: Color   kinds: 
+  ctor Green   id: author/project:Ovl.Green   tag: 1   arity: 0   fields:    sig: Color   kinds: 
+  ctor Blue   id: author/project:Ovl.Blue   tag: 2   arity: 0   fields:    sig: Color   kinds: 
+def descending :: Int -> Int -> Order    [45:1-45:11]   id: author/project:Ovl.descending   sig: Int -> Int -> Order   kinds:    group: author/project:Ovl.descending nonrec ann
+  45:12-45:13 PVar a :: Int
+  45:14-45:15 PVar b :: Int
+  46:5-46:16 Call :: Order
+    46:5-46:12 VarForeign :: Int -> Int -> Order   callee: elm/core:Basics.compare   instance: comparable := Int   sig#: c949accf   subst: v0 := Int
+    46:13-46:14 VarLocal :: Int
+    46:15-46:16 VarLocal :: Int
+def colorRank :: Color -> Int    [50:1-50:10]   id: author/project:Ovl.colorRank   sig: Color -> Int   kinds:    group: author/project:Ovl.colorRank nonrec ann
+  50:11-50:12 PVar c :: Color
+  51:5-59:14 Case :: Int
+    51:10-51:11 VarLocal :: Color
+    52:9-52:12 PCtor Red :: Color
+    53:13-53:14 Int :: Int
+    55:9-55:14 PCtor Green :: Color
+    56:13-56:14 Int :: Int
+    58:9-58:13 PCtor Blue :: Color
+    59:13-59:14 Int :: Int
+def byLength :: List Int -> Int    [40:1-40:9]   id: author/project:Ovl.byLength   sig: List Int -> Int   kinds:    group: author/project:Ovl.byLength nonrec ann
+  40:10-40:11 PVar s :: List Int
+  41:5-41:18 Call :: Int
+    41:5-41:16 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+    41:17-41:18 VarLocal :: List Int
+def showL :: (a -> String) -> List a -> String    [63:1-63:6]   id: author/project:Ovl.showL   sig: (v0 -> String) -> List v0 -> String   kinds: v0:any   group: author/project:Ovl.showL nonrec ann
+  63:7-63:11 PVar conv :: a -> String
+  63:12-63:14 PVar xs :: List a
+  64:5-64:68 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    64:5-64:8 Str :: String
+    64:12-64:68 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      64:12-64:61 Call :: String
+        64:12-64:22 VarForeign :: (a -> String -> String) -> String -> List a -> String   callee: elm/core:List.foldl   instance: a := a, b := String   sig#: 8a8782c6   subst: v0 := <<author/project:Ovl.showL|v0>>, v1 := String
+        64:24-64:54 Lambda :: a -> String -> String
+          64:25-64:26 PVar x :: a
+          64:27-64:30 PVar acc :: String
+          64:34-64:54 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            64:34-64:37 VarLocal :: String
+            64:41-64:54 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              64:41-64:47 Call :: String
+                64:41-64:45 VarLocal :: a -> String
+                64:46-64:47 VarLocal :: a
+              64:51-64:54 Str :: String
+        64:56-64:58 Str :: String
+        64:59-64:61 VarLocal :: List a
+      64:65-64:68 Str :: String
+def showI :: List Int -> String    [68:1-68:6]   id: author/project:Ovl.showI   sig: List Int -> String   kinds:    group: author/project:Ovl.showI nonrec ann
+  69:5-69:25 Call :: List Int -> String
+    69:5-69:10 VarTopLevel :: (Int -> String) -> List Int -> String   callee: author/project:Ovl.showL   use: gen   instance: a := Int   sig#: c9331f4d   subst: v0 := Int
+    69:11-69:25 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+def key :: Int -> Int    [35:1-35:4]   id: author/project:Ovl.key   sig: Int -> Int   kinds:    group: author/project:Ovl.key nonrec ann
+  35:5-35:6 PVar x :: Int
+  36:5-36:14 Call :: Int
+    36:5-36:10 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+    36:11-36:12 Int :: Int
+    36:13-36:14 VarLocal :: Int
+def f5 :: Int -> Int -> Int -> Int -> Int -> Int    [30:1-30:3]   id: author/project:Ovl.f5   sig: Int -> Int -> Int -> Int -> Int -> Int   kinds:    group: author/project:Ovl.f5 nonrec ann
+  30:4-30:5 PVar a :: Int
+  30:6-30:7 PVar b :: Int
+  30:8-30:9 PVar c :: Int
+  30:10-30:11 PVar d :: Int
+  30:12-30:13 PVar e :: Int
+  31:5-31:38 Call :: Int
+    31:5-31:14 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+    31:15-31:19 Str :: String
+    31:21-31:38 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      31:21-31:34 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        31:21-31:30 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          31:21-31:26 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            31:21-31:22 VarLocal :: Int
+            31:25-31:26 VarLocal :: Int
+          31:29-31:30 VarLocal :: Int
+        31:33-31:34 VarLocal :: Int
+      31:37-31:38 VarLocal :: Int
+def f4 :: Int -> Int -> Int -> Int -> Int    [25:1-25:3]   id: author/project:Ovl.f4   sig: Int -> Int -> Int -> Int -> Int   kinds:    group: author/project:Ovl.f4 nonrec ann
+  25:4-25:5 PVar a :: Int
+  25:6-25:7 PVar b :: Int
+  25:8-25:9 PVar c :: Int
+  25:10-25:11 PVar d :: Int
+  26:5-26:46 Call :: Int
+    26:5-26:14 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+    26:15-26:19 Str :: String
+    26:21-26:46 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      26:21-26:38 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        26:21-26:30 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          26:21-26:22 VarLocal :: Int
+          26:25-26:30 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            26:25-26:26 VarLocal :: Int
+            26:29-26:30 Int :: Int
+        26:33-26:38 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          26:33-26:34 VarLocal :: Int
+          26:37-26:38 Int :: Int
+      26:41-26:46 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        26:41-26:42 VarLocal :: Int
+        26:45-26:46 Int :: Int
+def f3 :: Int -> Float -> String -> String    [20:1-20:3]   id: author/project:Ovl.f3   sig: Int -> Float -> String -> String   kinds:    group: author/project:Ovl.f3 nonrec ann
+  20:4-20:5 PVar a :: Int
+  20:6-20:7 PVar b :: Float
+  20:8-20:9 PVar c :: String
+  21:5-21:64 Call :: String
+    21:5-21:14 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+    21:15-21:19 Str :: String
+    21:21-21:64 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      21:21-21:22 VarLocal :: String
+      21:26-21:64 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        21:26-21:42 Call :: String
+          21:26-21:40 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+          21:41-21:42 VarLocal :: Int
+        21:46-21:64 Call :: String
+          21:46-21:62 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+          21:63-21:64 VarLocal :: Float
+def f2 :: Int -> Int -> Int    [15:1-15:3]   id: author/project:Ovl.f2   sig: Int -> Int -> Int   kinds:    group: author/project:Ovl.f2 nonrec ann
+  15:4-15:5 PVar a :: Int
+  15:6-15:7 PVar b :: Int
+  16:5-16:31 Call :: Int
+    16:5-16:14 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+    16:15-16:19 Str :: String
+    16:21-16:31 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      16:21-16:27 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        16:21-16:22 VarLocal :: Int
+        16:25-16:27 Int :: Int
+      16:30-16:31 VarLocal :: Int
+def main :: Program () () ()    [73:1-73:5]   id: author/project:Ovl.main   sig: Program () () ()   kinds:    group: author/project:Ovl.main nonrec ann
+  74:5-130:10 Call :: Program () () ()
+    74:5-74:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    75:9-130:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      76:13-127:37 Lambda :: () -> ( (), Cmd () )
+        76:14-76:15 PAnything :: ()
+        def s8 :: String    [120:25-120:27]   id: author/project:Ovl.s8@120:25   sig: String   kinds:    group: author/project:Ovl.s8@120:25 nonrec inferred
+          121:29-121:122 Call :: String
+            121:29-121:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            121:39-121:61 Str :: String
+            121:63-121:122 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              121:63-121:88 Call :: String
+                121:63-121:68 VarTopLevel :: List Int -> String   callee: author/project:Ovl.showI   use: gen
+                121:70-121:88 Call :: List Int
+                  121:70-121:81 VarForeign :: (Int -> Int) -> List Int -> List Int   callee: elm/core:List.sortBy   instance: a := Int, comparable := Int   sig#: 6a702f62   subst: v0 := Int, v1 := Int
+                  121:82-121:85 VarTopLevel :: Int -> Int   callee: author/project:Ovl.key   use: gen
+                  121:86-121:88 List :: List Int
+              121:93-121:121 Call :: String
+                121:93-121:98 VarTopLevel :: List Int -> String   callee: author/project:Ovl.showI   use: gen
+                121:100-121:121 Call :: List Int
+                  121:100-121:111 VarForeign :: (Int -> Int) -> List Int -> List Int   callee: elm/core:List.sortBy   instance: a := Int, comparable := Int   sig#: 6a702f62   subst: v0 := Int, v1 := Int
+                  121:112-121:115 VarTopLevel :: Int -> Int   callee: author/project:Ovl.key   use: gen
+                  121:116-121:121 List :: List Int
+                    121:118-121:119 Int :: Int
+        def s7 :: String    [117:25-117:27]   id: author/project:Ovl.s7@117:25   sig: String   kinds:    group: author/project:Ovl.s7@117:25 nonrec inferred
+          118:29-118:134 Call :: String
+            118:29-118:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            118:39-118:51 Str :: String
+            118:53-118:134 Call :: String
+              118:53-118:58 VarTopLevel :: List Int -> String   callee: author/project:Ovl.showI   use: gen
+              118:60-118:134 Call :: List Int
+                118:60-118:69 VarForeign :: Int -> List Int -> List Int   callee: elm/core:List.take   instance: a := Int   sig#: 7b4b0ecd   subst: v0 := Int
+                118:70-118:72 Int :: Int
+                118:74-118:134 Call :: List Int
+                  118:74-118:85 VarForeign :: (Int -> Int) -> List Int -> List Int   callee: elm/core:List.sortBy   instance: a := Int, comparable := Int   sig#: 6a702f62   subst: v0 := Int, v1 := Int
+                  118:87-118:114 Lambda :: Int -> Int
+                    118:88-118:89 PVar x :: Int
+                    118:93-118:113 Call :: Int
+                      118:93-118:98 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+                      118:99-118:103 Int :: Int
+                      118:105-118:113 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                        118:105-118:106 VarLocal :: Int
+                        118:109-118:113 Int :: Int
+                  118:117-118:134 Call :: List Int
+                    118:117-118:127 VarForeign :: Int -> Int -> List Int   callee: elm/core:List.range
+                    118:128-118:129 Int :: Int
+                    118:130-118:134 Int :: Int
+        def s6 :: String    [114:25-114:27]   id: author/project:Ovl.s6@114:25   sig: String   kinds:    group: author/project:Ovl.s6@114:25 nonrec inferred
+          115:29-115:128 Call :: String
+            115:29-115:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            115:39-115:53 Str :: String
+            115:55-115:128 Call :: String
+              115:55-115:60 VarTopLevel :: (Float -> String) -> List Float -> String   callee: author/project:Ovl.showL   use: gen   instance: a := Float   sig#: c9331f4d   subst: v0 := Float
+              115:61-115:77 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+              115:79-115:128 Call :: List Float
+                115:79-115:90 VarForeign :: (Float -> Float) -> List Float -> List Float   callee: elm/core:List.sortBy   instance: a := Float, comparable := Float   sig#: 6a702f62   subst: v0 := Float, v1 := Float
+                115:92-115:106 Lambda :: Float -> Float
+                  115:93-115:94 PVar x :: Float
+                  115:98-115:106 Binop :: Float   callee: elm/core:Basics.mul   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+                    115:98-115:99 VarLocal :: Float
+                    115:102-115:106 Negate :: Float
+                      115:103-115:106 Float :: Float
+                115:108-115:128 List :: List Float
+                  115:110-115:113 Float :: Float
+                  115:115-115:117 Negate :: Float
+                    115:116-115:117 Int :: Float
+                  115:119-115:120 Int :: Float
+                  115:122-115:126 Float :: Float
+        def s5 :: String    [111:25-111:27]   id: author/project:Ovl.s5@111:25   sig: String   kinds:    group: author/project:Ovl.s5@111:25 nonrec inferred
+          112:29-112:201 Call :: String
+            112:29-112:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            112:39-112:55 Str :: String
+            112:57-112:201 Call :: String
+              112:57-112:62 VarTopLevel :: (( Int, String ) -> String) -> List ( Int, String ) -> String   callee: author/project:Ovl.showL   use: gen   instance: a := ( Int, String )   sig#: c9331f4d   subst: v0 := ( Int, String )
+              112:64-112:98 Lambda :: ( Int, String ) -> String
+                112:65-112:73 PPair :: ( Int, String )
+                  112:67-112:68 PVar n :: Int
+                  112:70-112:71 PVar t :: String
+                112:77-112:98 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  112:77-112:93 Call :: String
+                    112:77-112:91 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                    112:92-112:93 VarLocal :: Int
+                  112:97-112:98 VarLocal :: String
+              112:101-112:201 Call :: List ( Int, String )
+                112:101-112:114 VarForeign :: (( Int, String ) -> ( Int, String ) -> Order) -> List ( Int, String ) -> List ( Int, String )   callee: elm/core:List.sortWith   instance: a := ( Int, String )   sig#: e76a9150   subst: v0 := ( Int, String )
+                112:116-112:149 Lambda :: ( Int, String ) -> ( Int, String ) -> Order
+                  112:117-112:125 PPair :: ( Int, String )
+                    112:119-112:120 PVar x :: Int
+                    112:122-112:123 PAnything :: String
+                  112:126-112:134 PPair :: ( Int, String )
+                    112:128-112:129 PVar y :: Int
+                    112:131-112:132 PAnything :: String
+                  112:138-112:149 Call :: Order
+                    112:138-112:145 VarForeign :: Int -> Int -> Order   callee: elm/core:Basics.compare   instance: comparable := Int   sig#: c949accf   subst: v0 := Int
+                    112:146-112:147 VarLocal :: Int
+                    112:148-112:149 VarLocal :: Int
+                112:151-112:201 List :: List ( Int, String )
+                  112:153-112:163 Pair :: ( Int, String )
+                    112:155-112:156 Int :: Int
+                    112:158-112:161 Str :: String
+                  112:165-112:175 Pair :: ( Int, String )
+                    112:167-112:168 Int :: Int
+                    112:170-112:173 Str :: String
+                  112:177-112:187 Pair :: ( Int, String )
+                    112:179-112:180 Int :: Int
+                    112:182-112:185 Str :: String
+                  112:189-112:199 Pair :: ( Int, String )
+                    112:191-112:192 Int :: Int
+                    112:194-112:197 Str :: String
+        def s4 :: String    [108:25-108:27]   id: author/project:Ovl.s4@108:25   sig: String   kinds:    group: author/project:Ovl.s4@108:25 nonrec inferred
+          109:29-109:118 Call :: String
+            109:29-109:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            109:39-109:49 Str :: String
+            109:51-109:118 Call :: String
+              109:51-109:56 VarTopLevel :: List Int -> String   callee: author/project:Ovl.showI   use: gen
+              109:58-109:118 Call :: List Int
+                109:58-109:71 VarForeign :: (Int -> Int -> Order) -> List Int -> List Int   callee: elm/core:List.sortWith   instance: a := Int   sig#: e76a9150   subst: v0 := Int
+                109:72-109:82 VarTopLevel :: Int -> Int -> Order   callee: author/project:Ovl.descending   use: gen
+                109:83-109:118 List :: List Int
+                  109:85-109:86 Int :: Int
+                  109:88-109:89 Int :: Int
+                  109:91-109:92 Int :: Int
+                  109:94-109:95 Int :: Int
+                  109:97-109:98 Int :: Int
+                  109:100-109:101 Int :: Int
+                  109:103-109:104 Int :: Int
+                  109:106-109:107 Int :: Int
+                  109:109-109:110 Int :: Int
+                  109:112-109:113 Int :: Int
+                  109:115-109:116 Int :: Int
+        def s3 :: String    [105:25-105:27]   id: author/project:Ovl.s3@105:25   sig: String   kinds:    group: author/project:Ovl.s3@105:25 nonrec inferred
+          106:29-106:134 Call :: String
+            106:29-106:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            106:39-106:52 Str :: String
+            106:54-106:134 Call :: String
+              106:54-106:59 VarTopLevel :: List Int -> String   callee: author/project:Ovl.showI   use: gen
+              106:61-106:134 Call :: List Int
+                106:61-106:69 VarForeign :: (Color -> Int) -> List Color -> List Int   callee: elm/core:List.map   instance: a := Color, b := Int   sig#: 6a702f63   subst: v0 := Color, v1 := Int
+                106:70-106:79 VarTopLevel :: Color -> Int   callee: author/project:Ovl.colorRank   use: gen
+                106:81-106:134 Call :: List Color
+                  106:81-106:92 VarForeign :: (Color -> Int) -> List Color -> List Color   callee: elm/core:List.sortBy   instance: a := Color, comparable := Int   sig#: 6a702f62   subst: v0 := Color, v1 := Int
+                  106:93-106:102 VarTopLevel :: Color -> Int   callee: author/project:Ovl.colorRank   use: gen
+                  106:103-106:134 List :: List Color
+                    106:105-106:109 VarCtor :: Color   callee: author/project:Ovl.Blue
+                    106:111-106:114 VarCtor :: Color   callee: author/project:Ovl.Red
+                    106:116-106:121 VarCtor :: Color   callee: author/project:Ovl.Green
+                    106:123-106:126 VarCtor :: Color   callee: author/project:Ovl.Red
+                    106:128-106:132 VarCtor :: Color   callee: author/project:Ovl.Blue
+        def s2 :: String    [102:25-102:27]   id: author/project:Ovl.s2@102:25   sig: String   kinds:    group: author/project:Ovl.s2@102:25 nonrec inferred
+          103:29-103:150 Call :: String
+            103:29-103:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            103:39-103:51 Str :: String
+            103:53-103:150 Call :: String
+              103:53-103:58 VarTopLevel :: (List Int -> String) -> List (List Int) -> String   callee: author/project:Ovl.showL   use: gen   instance: a := List Int   sig#: c9331f4d   subst: v0 := List Int
+              103:60-103:73 Lambda :: List Int -> String
+                103:61-103:62 PVar l :: List Int
+                103:66-103:73 Call :: String
+                  103:66-103:71 VarTopLevel :: List Int -> String   callee: author/project:Ovl.showI   use: gen
+                  103:72-103:73 VarLocal :: List Int
+              103:76-103:150 Call :: List (List Int)
+                103:76-103:87 VarForeign :: (List Int -> Int) -> List (List Int) -> List (List Int)   callee: elm/core:List.sortBy   instance: a := List Int, comparable := Int   sig#: 6a702f62   subst: v0 := List Int, v1 := Int
+                103:88-103:96 VarTopLevel :: List Int -> Int   callee: author/project:Ovl.byLength   use: gen
+                103:97-103:150 List :: List (List Int)
+                  103:99-103:110 List :: List Int
+                    103:101-103:102 Int :: Int
+                    103:104-103:105 Int :: Int
+                    103:107-103:108 Int :: Int
+                  103:112-103:117 List :: List Int
+                    103:114-103:115 Int :: Int
+                  103:119-103:127 List :: List Int
+                    103:121-103:122 Int :: Int
+                    103:124-103:125 Int :: Int
+                  103:129-103:137 List :: List Int
+                    103:131-103:132 Int :: Int
+                    103:134-103:135 Int :: Int
+                  103:139-103:144 List :: List Int
+                    103:141-103:142 Int :: Int
+                  103:146-103:148 List :: List Int
+        def s1 :: String    [99:25-99:27]   id: author/project:Ovl.s1@99:25   sig: String   kinds:    group: author/project:Ovl.s1@99:25 nonrec inferred
+          100:29-100:95 Call :: String
+            100:29-100:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            100:39-100:47 Str :: String
+            100:49-100:95 Call :: String
+              100:49-100:54 VarTopLevel :: List Int -> String   callee: author/project:Ovl.showI   use: gen
+              100:56-100:95 Call :: List Int
+                100:56-100:67 VarForeign :: (Int -> Int) -> List Int -> List Int   callee: elm/core:List.sortBy   instance: a := Int, comparable := Int   sig#: 6a702f62   subst: v0 := Int, v1 := Int
+                100:68-100:71 VarTopLevel :: Int -> Int   callee: author/project:Ovl.key   use: gen
+                100:72-100:95 List :: List Int
+                  100:74-100:75 Int :: Int
+                  100:77-100:78 Int :: Int
+                  100:80-100:81 Int :: Int
+                  100:83-100:84 Int :: Int
+                  100:86-100:87 Int :: Int
+                  100:89-100:90 Int :: Int
+                  100:92-100:93 Int :: Int
+        def h :: String    [96:25-96:26]   id: author/project:Ovl.h@96:25   sig: String   kinds:    group: author/project:Ovl.h@96:25 nonrec inferred
+          97:29-97:100 Call :: String
+            97:29-97:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            97:39-97:57 Str :: String
+            97:59-97:100 Call :: String
+              97:59-97:64 VarTopLevel :: List Int -> String   callee: author/project:Ovl.showI   use: gen
+              97:66-97:100 Call :: List Int
+                97:66-97:81 VarForeign :: (Int -> Int -> Int) -> List Int -> List Int   callee: elm/core:List.indexedMap   instance: a := Int, b := Int   sig#: a33100e5   subst: v0 := Int, v1 := Int
+                97:83-97:96 Lambda :: Int -> Int -> Int
+                  97:84-97:85 PVar i :: Int
+                  97:86-97:87 PVar x :: Int
+                  97:91-97:96 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                    97:91-97:92 VarLocal :: Int
+                    97:95-97:96 VarLocal :: Int
+                97:98-97:100 List :: List Int
+        def g :: String    [93:25-93:26]   id: author/project:Ovl.g@93:25   sig: String   kinds:    group: author/project:Ovl.g@93:25 nonrec inferred
+          94:29-94:126 Call :: String
+            94:29-94:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            94:39-94:51 Str :: String
+            94:53-94:126 Call :: String
+              94:53-94:58 VarTopLevel :: List Int -> String   callee: author/project:Ovl.showI   use: gen
+              94:60-94:126 Call :: List Int
+                94:60-94:75 VarForeign :: (Int -> Int -> Int) -> List Int -> List Int   callee: elm/core:List.indexedMap   instance: a := Int, b := Int   sig#: a33100e5   subst: v0 := Int, v1 := Int
+                94:77-94:113 Lambda :: Int -> Int -> Int
+                  94:78-94:79 PVar i :: Int
+                  94:80-94:81 PVar x :: Int
+                  94:85-94:112 Call :: Int
+                    94:85-94:94 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+                    94:95-94:99 Str :: String
+                    94:101-94:112 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                      94:101-94:108 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                        94:101-94:102 VarLocal :: Int
+                        94:105-94:108 Int :: Int
+                      94:111-94:112 VarLocal :: Int
+                94:115-94:126 List :: List Int
+                  94:117-94:118 Int :: Int
+                  94:120-94:121 Int :: Int
+                  94:123-94:124 Int :: Int
+        def e :: String    [90:25-90:26]   id: author/project:Ovl.e@90:25   sig: String   kinds:    group: author/project:Ovl.e@90:25 nonrec inferred
+          91:29-91:116 Call :: String
+            91:29-91:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            91:39-91:45 Str :: String
+            91:47-91:116 Call :: String
+              91:47-91:52 VarTopLevel :: List Int -> String   callee: author/project:Ovl.showI   use: gen
+              91:54-91:116 Call :: List Int
+                91:54-91:63 VarForeign :: (Int -> Int -> Int -> Int -> Int -> Int) -> List Int -> List Int -> List Int -> List Int -> List Int -> List Int   callee: elm/core:List.map5   instance: a := Int, b := Int, c := Int, d := Int, e := Int, result := Int   sig#: 43bd3b71   subst: v0 := Int, v1 := Int, v2 := Int, v3 := Int, v4 := Int, v5 := Int
+                91:64-91:66 VarTopLevel :: Int -> Int -> Int -> Int -> Int -> Int   callee: author/project:Ovl.f5   use: gen
+                91:67-91:75 List :: List Int
+                  91:69-91:70 Int :: Int
+                  91:72-91:73 Int :: Int
+                91:76-91:84 List :: List Int
+                  91:78-91:79 Int :: Int
+                  91:81-91:82 Int :: Int
+                91:85-91:93 List :: List Int
+                  91:87-91:88 Int :: Int
+                  91:90-91:91 Int :: Int
+                91:94-91:102 List :: List Int
+                  91:96-91:97 Int :: Int
+                  91:99-91:100 Int :: Int
+                91:103-91:116 List :: List Int
+                  91:105-91:106 Int :: Int
+                  91:108-91:110 Int :: Int
+                  91:112-91:114 Int :: Int
+        def d :: String    [87:25-87:26]   id: author/project:Ovl.d@87:25   sig: String   kinds:    group: author/project:Ovl.d@87:25 nonrec inferred
+          88:29-88:105 Call :: String
+            88:29-88:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            88:39-88:45 Str :: String
+            88:47-88:105 Call :: String
+              88:47-88:52 VarTopLevel :: List Int -> String   callee: author/project:Ovl.showI   use: gen
+              88:54-88:105 Call :: List Int
+                88:54-88:63 VarForeign :: (Int -> Int -> Int -> Int -> Int) -> List Int -> List Int -> List Int -> List Int -> List Int   callee: elm/core:List.map4   instance: a := Int, b := Int, c := Int, d := Int, result := Int   sig#: e2b69962   subst: v0 := Int, v1 := Int, v2 := Int, v3 := Int, v4 := Int
+                88:64-88:66 VarTopLevel :: Int -> Int -> Int -> Int -> Int   callee: author/project:Ovl.f4   use: gen
+                88:67-88:75 List :: List Int
+                  88:69-88:70 Int :: Int
+                  88:72-88:73 Int :: Int
+                88:76-88:84 List :: List Int
+                  88:78-88:79 Int :: Int
+                  88:81-88:82 Int :: Int
+                88:85-88:96 List :: List Int
+                  88:87-88:88 Int :: Int
+                  88:90-88:91 Int :: Int
+                  88:93-88:94 Int :: Int
+                88:97-88:105 List :: List Int
+                  88:99-88:100 Int :: Int
+                  88:102-88:103 Int :: Int
+        def c :: String    [84:25-84:26]   id: author/project:Ovl.c@84:25   sig: String   kinds:    group: author/project:Ovl.c@84:25 nonrec inferred
+          85:29-85:118 Call :: String
+            85:29-85:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            85:39-85:45 Str :: String
+            85:47-85:118 Call :: String
+              85:47-85:52 VarTopLevel :: (String -> String) -> List String -> String   callee: author/project:Ovl.showL   use: gen   instance: a := String   sig#: c9331f4d   subst: v0 := String
+              85:53-85:61 VarForeign :: String -> String   callee: elm/core:Basics.identity   instance: a := String   sig#: 1f734da5   subst: v0 := String
+              85:63-85:118 Call :: List String
+                85:63-85:72 VarForeign :: (Int -> Float -> String -> String) -> List Int -> List Float -> List String -> List String   callee: elm/core:List.map3   instance: a := Int, b := Float, c := String, result := String   sig#: 16c28ae4   subst: v0 := Int, v1 := Float, v2 := String, v3 := String
+                85:73-85:75 VarTopLevel :: Int -> Float -> String -> String   callee: author/project:Ovl.f3   use: gen
+                85:76-85:87 List :: List Int
+                  85:78-85:79 Int :: Int
+                  85:81-85:82 Int :: Int
+                  85:84-85:85 Int :: Int
+                85:88-85:100 List :: List Float
+                  85:90-85:93 Float :: Float
+                  85:95-85:98 Float :: Float
+                85:101-85:118 List :: List String
+                  85:103-85:106 Str :: String
+                  85:108-85:111 Str :: String
+                  85:113-85:116 Str :: String
+        def b :: String    [81:25-81:26]   id: author/project:Ovl.b@81:25   sig: String   kinds:    group: author/project:Ovl.b@81:25 nonrec inferred
+          82:29-82:143 Call :: String
+            82:29-82:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            82:39-82:51 Str :: String
+            82:53-82:143 Call :: String
+              82:53-82:58 VarTopLevel :: (String -> String) -> List String -> String   callee: author/project:Ovl.showL   use: gen   instance: a := String   sig#: c9331f4d   subst: v0 := String
+              82:59-82:67 VarForeign :: String -> String   callee: elm/core:Basics.identity   instance: a := String   sig#: 1f734da5   subst: v0 := String
+              82:69-82:143 Call :: List String
+                82:69-82:78 VarForeign :: (Float -> String -> String) -> List Float -> List String -> List String   callee: elm/core:List.map2   instance: a := Float, b := String, result := String   sig#: b204d9c1   subst: v0 := Float, v1 := String, v2 := String
+                82:80-82:111 Lambda :: Float -> String -> String
+                  82:81-82:82 PVar x :: Float
+                  82:83-82:84 PVar y :: String
+                  82:88-82:111 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                    82:88-82:106 Call :: String
+                      82:88-82:104 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+                      82:105-82:106 VarLocal :: Float
+                    82:110-82:111 VarLocal :: String
+                82:113-82:125 List :: List Float
+                  82:115-82:118 Float :: Float
+                  82:120-82:123 Float :: Float
+                82:126-82:143 List :: List String
+                  82:128-82:131 Str :: String
+                  82:133-82:136 Str :: String
+                  82:138-82:141 Str :: String
+        def a :: String    [78:25-78:26]   id: author/project:Ovl.a@78:25   sig: String   kinds:    group: author/project:Ovl.a@78:25 nonrec inferred
+          79:29-79:87 Call :: String
+            79:29-79:38 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            79:39-79:45 Str :: String
+            79:47-79:87 Call :: String
+              79:47-79:52 VarTopLevel :: List Int -> String   callee: author/project:Ovl.showI   use: gen
+              79:54-79:87 Call :: List Int
+                79:54-79:63 VarForeign :: (Int -> Int -> Int) -> List Int -> List Int -> List Int   callee: elm/core:List.map2   instance: a := Int, b := Int, result := Int   sig#: b204d9c1   subst: v0 := Int, v1 := Int, v2 := Int
+                79:64-79:66 VarTopLevel :: Int -> Int -> Int   callee: author/project:Ovl.f2   use: gen
+                79:67-79:78 List :: List Int
+                  79:69-79:70 Int :: Int
+                  79:72-79:73 Int :: Int
+                  79:75-79:76 Int :: Int
+                79:79-79:87 List :: List Int
+                  79:81-79:82 Int :: Int
+                  79:84-79:85 Int :: Int
+        123:17-127:37 If :: ( (), Cmd () )
+          123:20-123:91 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            123:20-123:87 Call :: Int
+              123:20-123:31 VarForeign :: List String -> Int   callee: elm/core:List.length   instance: a := String   sig#: 8f686fa0   subst: v0 := String
+              123:32-123:87 List :: List String
+                123:34-123:35 VarLocal :: String   callee: author/project:Ovl.a@78:25   use: gen
+                123:37-123:38 VarLocal :: String   callee: author/project:Ovl.b@81:25   use: gen
+                123:40-123:41 VarLocal :: String   callee: author/project:Ovl.c@84:25   use: gen
+                123:43-123:44 VarLocal :: String   callee: author/project:Ovl.d@87:25   use: gen
+                123:46-123:47 VarLocal :: String   callee: author/project:Ovl.e@90:25   use: gen
+                123:49-123:50 VarLocal :: String   callee: author/project:Ovl.g@93:25   use: gen
+                123:52-123:53 VarLocal :: String   callee: author/project:Ovl.h@96:25   use: gen
+                123:55-123:57 VarLocal :: String   callee: author/project:Ovl.s1@99:25   use: gen
+                123:59-123:61 VarLocal :: String   callee: author/project:Ovl.s2@102:25   use: gen
+                123:63-123:65 VarLocal :: String   callee: author/project:Ovl.s3@105:25   use: gen
+                123:67-123:69 VarLocal :: String   callee: author/project:Ovl.s4@108:25   use: gen
+                123:71-123:73 VarLocal :: String   callee: author/project:Ovl.s5@111:25   use: gen
+                123:75-123:77 VarLocal :: String   callee: author/project:Ovl.s6@114:25   use: gen
+                123:79-123:81 VarLocal :: String   callee: author/project:Ovl.s7@117:25   use: gen
+                123:83-123:85 VarLocal :: String   callee: author/project:Ovl.s8@120:25   use: gen
+            123:90-123:91 Int :: Int
+          124:21-124:37 Pair :: ( (), Cmd () )
+            124:23-124:25 Unit :: ()
+            124:27-124:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          127:21-127:37 Pair :: ( (), Cmd () )
+            127:23-127:25 Unit :: ()
+            127:27-127:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      128:20-128:43 Lambda :: () -> () -> ( (), Cmd () )
+        128:21-128:22 PAnything :: ()
+        128:23-128:24 PVar m :: ()
+        128:28-128:43 Pair :: ( (), Cmd () )
+          128:30-128:31 VarLocal :: ()
+          128:33-128:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      129:27-129:41 Lambda :: () -> Sub ()
+        129:28-129:29 PAnything :: ()
+        129:33-129:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Ovl.descending   kind: function   reads:    needs: 
+init: 1   id: author/project:Ovl.colorRank   kind: function   reads:    needs: 
+init: 2   id: author/project:Ovl.byLength   kind: function   reads:    needs: 
+init: 3   id: author/project:Ovl.showL   kind: function   reads:    needs: 
+init: 4   id: author/project:Ovl.showI   kind: value   reads: author/project:Ovl.showL   needs:    init-dep: no
+init: 5   id: author/project:Ovl.key   kind: function   reads:    needs: 
+init: 6   id: author/project:Ovl.f5   kind: function   reads:    needs: 
+init: 7   id: author/project:Ovl.f4   kind: function   reads:    needs: 
+init: 8   id: author/project:Ovl.f3   kind: function   reads:    needs: 
+init: 9   id: author/project:Ovl.f2   kind: function   reads:    needs: 
+init: 10   id: author/project:Ovl.main   kind: value   reads: author/project:Ovl.descending,author/project:Ovl.colorRank,author/project:Ovl.byLength,author/project:Ovl.showL,author/project:Ovl.showI,author/project:Ovl.key,author/project:Ovl.f5,author/project:Ovl.f4,author/project:Ovl.f3,author/project:Ovl.f2   needs: author/project:Ovl.showI   init-dep: yes

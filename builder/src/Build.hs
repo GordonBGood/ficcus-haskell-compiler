@@ -84,7 +84,9 @@ makeEnv :: Reporting.BKey -> R.Root -> R.Stuff -> Details.Details -> IO Env
 makeEnv key root stuff (Details.Details _ validOutline buildID locals foreigns _) =
   case validOutline of
     Details.ValidApp givenSrcDirs ->
-      do  srcDirs <- traverse (toAbsoluteSrcDir root) (NE.toList givenSrcDirs)
+      do  srcDirs0 <- traverse (toAbsoluteSrcDir root) (NE.toList givenSrcDirs)
+          extra <- Flags.getExtraSrcDir  -- Ficcus: the overlay module's directory
+          let srcDirs = srcDirs0 ++ maybe [] (\d -> [AbsoluteSrcDir d]) extra
           return $ Env key root stuff Parse.Application srcDirs buildID locals foreigns
 
     Details.ValidPkg pkg _ _ ->

@@ -28,6 +28,7 @@ import qualified Ficcus.Mono.CGen as CGen
 import qualified Ficcus.Mono.Facts as Facts
 import qualified Ficcus.Mono.Marks as Marks
 import qualified Ficcus.Mono.Modules as Modules
+import qualified Ficcus.Mono.Overlay as Overlay
 import qualified Ficcus.Mono.Print as Print
 import qualified Ficcus.Mono.Spec as Spec
 import qualified File
@@ -111,7 +112,13 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs) =
               buildExposed writer style root stuff details maybeDocs exposed
 
         p:ps ->
-          do  artifacts <- buildPaths writer style root stuff details (NE.List p ps)
+          do  -- Ficcus: the elm/core overlay is an extra root module of the `.c` and `.mono` builds
+              overlayPaths <-
+                case maybeOutput of
+                  Just (Mono _) -> Task.io (writeOverlay root)
+                  Just (FicC _) -> Task.io (writeOverlay root)
+                  _ -> return []
+              artifacts <- buildPaths writer style root stuff details (NE.List p (ps ++ overlayPaths))
               case maybeOutput of
                 Nothing ->
                   case getMains artifacts of
@@ -177,6 +184,27 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs) =
                   do  name <- hasOneMain artifacts
                       builder <- toBuilder stuff details desiredMode artifacts
                       generate writer style target (Html.sandwich name builder) (NE.List name [])
+
+
+
+-- Ficcus: write the overlay module (Ficcus.Mono.Overlay) into `elm-stuff/ficcus-overlay/` of the project and
+-- make that directory a source directory for this build; the result is the path to add to the root files
+writeOverlay :: R.Root -> IO [FilePath]
+writeOverlay root =
+  do  let dir = R.toAbsolutePath root (R.Relative "elm-stuff/ficcus-overlay")
+      let file = dir FP.</> Overlay.overlayFileName
+      Dir.createDirectoryIfMissing True dir
+      old <- Dir.doesFileExist file
+      same <- if old then (== Overlay.overlaySource) <$> readFileStrict file else return False
+      if same then return () else writeFile file Overlay.overlaySource
+      Flags.setExtraSrcDir (Just dir)
+      return [file]
+
+
+readFileStrict :: FilePath -> IO String
+readFileStrict path =
+  do  s <- readFile path
+      length s `seq` return s
 
 
 
