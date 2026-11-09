@@ -11,8 +11,8 @@ Exit status 1 on any difference.
 import argparse, os, shutil, subprocess, sys, tempfile, difflib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits"]
-RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
+NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order"]
+RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
 
 
 def project_part(text, kind):

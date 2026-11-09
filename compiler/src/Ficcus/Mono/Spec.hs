@@ -680,9 +680,14 @@ specCall' se region resNode fregion f args =
               return (MExpr cls (mk args'))
       | n < arity = partialApp se region resNode (arity - n) mk args'
       | otherwise =
+          -- an over-application is one call in Elm: every argument is evaluated, left to right, before the function runs
           do  cls <- exprClass se region resNode
-              let (first, rest) = splitAt arity args'
-              return (MExpr cls (MCall (MExpr CRef (mk first)) rest))
+              CloneId k <- freshId
+              let names = [ "_oa" ++ show k ++ "_" ++ show i | i <- [0 .. n - 1] ]
+                  locals = [ MExpr (mRep a) (MLocal t) | (t, a) <- zip names args' ]
+                  (first, rest) = splitAt arity locals
+                  call = MExpr cls (MCall (MExpr CRef (mk first)) rest)
+              return (foldr (\(t, a) acc -> MExpr cls (MLetVal t a acc)) call (zip names args'))
       where n = length args'
     cloneCall c isVal as
       | null as = if isVal then MGlobal c else MCall (MExpr CRef (MGlobal c)) []

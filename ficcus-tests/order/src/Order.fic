@@ -1,0 +1,225 @@
+module Order exposing (main)
+
+-- Evaluation order, observed with Debug.log: function arguments, |> and <| chains, record literals and updates,
+-- tuples, lists, constructors, operators, let, unknown calls, partial application. The output must equal Elm's
+-- (expected/order.out, from Elm 0.19.3 under node).
+
+
+type Pair
+    = Pair Int Int
+
+
+type alias R =
+    { a : Int, m : Int, z : Int }
+
+
+t : String -> Int -> Int
+t tag x =
+    Debug.log tag x
+
+
+ts : String -> String
+ts tag =
+    Debug.log tag tag
+
+
+add : Int -> Int -> Int
+add x y =
+    x + y
+
+
+mul : Int -> Int -> Int
+mul x y =
+    x * y
+
+
+f3 : Int -> Int -> Int -> Int
+f3 a b c =
+    a + b + c
+
+
+pick : Int -> (Int -> Int)
+pick n =
+    add n
+
+
+pickAt : String -> Int -> (Int -> Int -> Int)
+pickAt tag n =
+    let
+        _ =
+            Debug.log tag n
+    in
+    add
+
+
+unPair : Pair -> Int
+unPair (Pair x y) =
+    x - y
+
+
+sumR : R -> Int
+sumR r =
+    r.a + r.m + r.z
+
+
+sumL : List Int -> Int
+sumL xs =
+    List.foldl (+) 0 xs
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    -- function arguments
+                    args =
+                        f3 (t "a1" 1) (t "a2" 2) (t "a3" 3)
+
+                    -- |> chains
+                    chain =
+                        t "p1" 1 |> add (t "p2" 2) |> mul (t "p3" 3)
+
+                    chain2 =
+                        t "c1" 5
+                            |> (\x -> t "c2" x + 1)
+                            |> (\x -> t "c3" x * 2)
+
+                    -- <|
+                    back =
+                        add (t "q1" 1) <| t "q2" 2
+
+                    back2 =
+                        pick (t "f1" 1) <| t "f2" 2
+
+                    back3 =
+                        mul (t "b1" 2) <| add (t "b2" 3) <| t "b3" 4
+
+                    -- a function head with an effect
+                    headed =
+                        pickAt "h0" 1 (t "h1" 2) (t "h2" 3)
+
+                    -- record literal (record update is slice 5)
+                    rec =
+                        { z = t "rz" 1, a = t "ra" 2, m = t "rm" 3 }
+
+                    -- tuples, lists, constructors
+                    tup =
+                        ( t "t1" 1, t "t2" 2, t "t3" 3 )
+
+                    lst =
+                        [ t "l1" 1, t "l2" 2, t "l3" 3 ]
+
+                    ctor =
+                        Pair (t "k1" 1) (t "k2" 2)
+
+                    -- operators
+                    ops =
+                        t "o1" 1 + t "o2" 2 * t "o3" 3 - t "o4" 4
+
+                    cmp =
+                        t "e1" 1 < t "e2" 2 && t "e3" 3 > t "e4" 4 || t "e5" 5 == t "e6" 5
+
+                    cond =
+                        if t "i1" 1 > 0 then
+                            t "i2" 2
+
+                        else
+                            t "i3" 3
+
+                    -- case
+                    cased =
+                        case ( t "s1" 1, t "s2" 2 ) of
+                            ( 1, n ) ->
+                                t "s3" n
+
+                            _ ->
+                                0
+
+                    -- partial application, then the rest
+                    part =
+                        let
+                            g =
+                                f3 (t "pa1" 1) (t "pa2" 2)
+                        in
+                        g (t "pa3" 3)
+
+                    str =
+                        ts "s1" ++ ts "s2" ++ ts "s3"
+
+                    -- let: definitions in dependency order, not source order
+                    letted =
+                        let
+                            y =
+                                t "ly" (x + 1)
+
+                            x =
+                                t "lx" 1
+
+                            w =
+                                t "lw" 7
+                        in
+                        y + w
+
+                    _ =
+                        Debug.log "args" args
+
+                    _ =
+                        Debug.log "chain" chain
+
+                    _ =
+                        Debug.log "chain2" chain2
+
+                    _ =
+                        Debug.log "back" back
+
+                    _ =
+                        Debug.log "back2" back2
+
+                    _ =
+                        Debug.log "back3" back3
+
+                    _ =
+                        Debug.log "headed" headed
+
+                    _ =
+                        Debug.log "rec" (sumR rec)
+
+                    _ =
+                        Debug.log "tup" (case tup of
+                                            ( a, b, c ) ->
+                                                a + b + c
+                                        )
+
+                    _ =
+                        Debug.log "lst" (sumL lst)
+
+                    _ =
+                        Debug.log "ctor" (unPair ctor)
+
+                    _ =
+                        Debug.log "ops" ops
+
+                    _ =
+                        Debug.log "cmp" (if cmp then 1 else 0)
+
+                    _ =
+                        Debug.log "cond" cond
+
+                    _ =
+                        Debug.log "cased" cased
+
+                    _ =
+                        Debug.log "part" part
+
+                    _ =
+                        Debug.log "str" str
+
+                    _ =
+                        Debug.log "letted" letted
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

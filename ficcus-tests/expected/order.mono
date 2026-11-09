@@ -1,0 +1,549 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:Order (project)
+clone c0   def: author/project:Order.unPair   key: ()   kind: function   init: 0   needs: 
+clone c1   def: author/project:Order.sumR   key: ()   kind: function   init: 1   needs: 
+clone c2   def: author/project:Order.sumL   key: ()   kind: function   init: 2   needs: 
+clone c3   def: author/project:Order.mul   key: ()   kind: function   init: 3   needs: 
+clone c4   def: author/project:Order.add   key: ()   kind: function   init: 4   needs: 
+clone c5   def: author/project:Order.pick   key: ()   kind: function   init: 5   needs: 
+clone c6   def: author/project:Order.pickAt   key: ()   kind: function   init: 6   needs: 
+clone c7   def: author/project:Order.ts   key: ()   kind: function   init: 7   needs: 
+clone c8   def: author/project:Order.f3   key: ()   kind: function   init: 8   needs: 
+clone c9   def: author/project:Order.t   key: ()   kind: function   init: 9   needs: 
+clone c10   def: author/project:Order.main   key: ()   kind: value   init: 10   needs: 
+-- program: 18 clones, reachable from main, dependencies first
+clone c2   def: author/project:Order.t   key: ()   kind: function   params: tag:ref x:i64   result: i64
+  Call :: i64
+    Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+    Local tag :: ref
+    Local x :: i64
+clone c8   def: author/project:Order.add   key: ()   kind: function   params: x:i64 y:i64   result: i64
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local x :: i64
+    Local y :: i64
+clone c3   def: author/project:Order.pickAt   key: ()   kind: function   params: tag:ref n:i64   result: ref
+  Seq :: ref
+    Call :: i64
+      Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+      Local tag :: ref
+      Local n :: i64
+    Global c8 :: ref
+clone c5   def: author/project:Order.lambda@87:33   key: ()   kind: function   params: x:i64   result: i64   lifted-from: c1
+  Call :: i64
+    Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+    Call :: i64
+      Global c2 :: ref
+      Lit "c3" :: ref
+      Local x :: i64
+    Lit 2 :: i64
+clone c6   def: author/project:Order.lambda@86:33   key: ()   kind: function   params: x:i64   result: i64   lifted-from: c1
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Call :: i64
+      Global c2 :: ref
+      Lit "c2" :: ref
+      Local x :: i64
+    Lit 1 :: i64
+clone c7   def: author/project:Order.mul   key: ()   kind: function   params: x:i64 y:i64   result: i64
+  Call :: i64
+    Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+    Local x :: i64
+    Local y :: i64
+clone c17   def: author/project:Order.lambda@43:5   key: ()   kind: function   params: _pb17_0:i64   result: i64   lifted-from: c9
+  Call :: i64
+    Global c8 :: ref
+    Local _pa17_0 :: i64
+    Local _pb17_0 :: i64
+clone c9   def: author/project:Order.pick   key: ()   kind: function   params: n:i64   result: ref
+  Let _pa17_0 :: ref
+    Local n :: i64
+    Global c17 :: ref
+clone c11   def: author/project:Order.f3   key: ()   kind: function   params: a:i64 b:i64 c:i64   result: i64
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Call :: i64
+      Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+      Local a :: i64
+      Local b :: i64
+    Local c :: i64
+clone c12   def: author/project:Order.lambda@144:33   key: ()   kind: function   params: _pb12_0:i64   result: i64   lifted-from: c1
+  Call :: i64
+    Global c11 :: ref
+    Local _pa12_0 :: i64
+    Local _pa12_1 :: i64
+    Local _pb12_0 :: i64
+clone c13   def: author/project:Order.ts   key: ()   kind: function   params: tag:ref   result: ref
+  Call :: ref
+    Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+    Local tag :: ref
+    Local tag :: ref
+clone c14   def: author/project:Order.sumR   key: ()   kind: function   params: r:struct(i64,i64,i64)   result: i64
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Call :: i64
+      Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+      Access .a #0 :: i64
+        Local r :: struct(i64,i64,i64)
+      Access .m #1 :: i64
+        Local r :: struct(i64,i64,i64)
+    Access .z #2 :: i64
+      Local r :: struct(i64,i64,i64)
+clone c18   def: elm/core:List.foldl   key: (v0=i64; v1=i64)   name: foldl__i64__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: i64
+        Global c18 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: i64
+          Local acc :: i64
+        Local xs :: ref
+clone c19   def: author/project:Order.lambda@67:16   key: ()   kind: function   params: _pb19_0:i64 _pb19_1:i64   result: i64   lifted-from: c15
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local _pb19_0 :: i64
+    Local _pb19_1 :: i64
+clone c15   def: author/project:Order.sumL   key: ()   kind: function   params: xs:ref   result: i64
+  Call :: i64
+    Global c18 :: ref
+    Global c19 :: ref
+    Lit 0 :: i64
+    Local xs :: ref
+clone c16   def: author/project:Order.unPair   key: ()   kind: function   params: _p0:ref   result: i64
+  Case :: i64
+    Local _p0 :: ref
+    branch Pair #0 x :: i64 y :: i64 :: ref
+      Call :: i64
+        Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+        Local x :: i64
+        Local y :: i64
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Let letted :: struct(unit,unit)
+    Let x :: i64
+      Call :: i64
+        Global c2 :: ref
+        Lit "lx" :: ref
+        Lit 1 :: i64
+      Let y :: i64
+        Call :: i64
+          Global c2 :: ref
+          Lit "ly" :: ref
+          Call :: i64
+            Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+            Local x :: i64
+            Lit 1 :: i64
+        Let w :: i64
+          Call :: i64
+            Global c2 :: ref
+            Lit "lw" :: ref
+            Lit 7 :: i64
+          Call :: i64
+            Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+            Local y :: i64
+            Local w :: i64
+    Let headed :: struct(unit,unit)
+      Let _oa4_0 :: i64
+        Lit "h0" :: ref
+        Let _oa4_1 :: i64
+          Lit 1 :: i64
+          Let _oa4_2 :: i64
+            Call :: i64
+              Global c2 :: ref
+              Lit "h1" :: ref
+              Lit 2 :: i64
+            Let _oa4_3 :: i64
+              Call :: i64
+                Global c2 :: ref
+                Lit "h2" :: ref
+                Lit 3 :: i64
+              Call :: i64
+                Call :: ref
+                  Global c3 :: ref
+                  Local _oa4_0 :: ref
+                  Local _oa4_1 :: i64
+                Local _oa4_2 :: i64
+                Local _oa4_3 :: i64
+      Let chain2 :: struct(unit,unit)
+        Call :: i64
+          Global c5 :: ref
+          Call :: i64
+            Global c6 :: ref
+            Call :: i64
+              Global c2 :: ref
+              Lit "c1" :: ref
+              Lit 5 :: i64
+        Let chain :: struct(unit,unit)
+          Call :: i64
+            Global c7 :: ref
+            Call :: i64
+              Global c2 :: ref
+              Lit "p3" :: ref
+              Lit 3 :: i64
+            Call :: i64
+              Global c8 :: ref
+              Call :: i64
+                Global c2 :: ref
+                Lit "p2" :: ref
+                Lit 2 :: i64
+              Call :: i64
+                Global c2 :: ref
+                Lit "p1" :: ref
+                Lit 1 :: i64
+          Let cased :: struct(unit,unit)
+            Case :: i64
+              Tuple :: struct(i64,i64)
+                Call :: i64
+                  Global c2 :: ref
+                  Lit "s1" :: ref
+                  Lit 1 :: i64
+                Call :: i64
+                  Global c2 :: ref
+                  Lit "s2" :: ref
+                  Lit 2 :: i64
+              branch (1 :: i64, n :: i64) :: struct(i64,i64)
+                Call :: i64
+                  Global c2 :: ref
+                  Lit "s3" :: ref
+                  Local n :: i64
+              branch _ :: struct(i64,i64)
+                Lit 0 :: i64
+            Let back3 :: struct(unit,unit)
+              Call :: i64
+                Global c7 :: ref
+                Call :: i64
+                  Global c2 :: ref
+                  Lit "b1" :: ref
+                  Lit 2 :: i64
+                Call :: i64
+                  Global c8 :: ref
+                  Call :: i64
+                    Global c2 :: ref
+                    Lit "b2" :: ref
+                    Lit 3 :: i64
+                  Call :: i64
+                    Global c2 :: ref
+                    Lit "b3" :: ref
+                    Lit 4 :: i64
+              Let back2 :: struct(unit,unit)
+                Let _oa10_0 :: i64
+                  Call :: i64
+                    Global c2 :: ref
+                    Lit "f1" :: ref
+                    Lit 1 :: i64
+                  Let _oa10_1 :: i64
+                    Call :: i64
+                      Global c2 :: ref
+                      Lit "f2" :: ref
+                      Lit 2 :: i64
+                    Call :: i64
+                      Call :: ref
+                        Global c9 :: ref
+                        Local _oa10_0 :: i64
+                      Local _oa10_1 :: i64
+                Let part :: struct(unit,unit)
+                  Let g :: i64
+                    Let _pa12_0 :: ref
+                      Call :: i64
+                        Global c2 :: ref
+                        Lit "pa1" :: ref
+                        Lit 1 :: i64
+                      Let _pa12_1 :: ref
+                        Call :: i64
+                          Global c2 :: ref
+                          Lit "pa2" :: ref
+                          Lit 2 :: i64
+                        Global c12 :: ref
+                    Call :: i64
+                      Local g :: ref
+                      Call :: i64
+                        Global c2 :: ref
+                        Lit "pa3" :: ref
+                        Lit 3 :: i64
+                  Let ctor :: struct(unit,unit)
+                    Call :: ref
+                      Ctor Pair tag 0 (v0=i64; v1=i64) :: ref
+                      Call :: i64
+                        Global c2 :: ref
+                        Lit "k1" :: ref
+                        Lit 1 :: i64
+                      Call :: i64
+                        Global c2 :: ref
+                        Lit "k2" :: ref
+                        Lit 2 :: i64
+                    Let cond :: struct(unit,unit)
+                      If :: i64
+                        Call :: enum
+                          Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                          Call :: i64
+                            Global c2 :: ref
+                            Lit "i1" :: ref
+                            Lit 1 :: i64
+                          Lit 0 :: i64
+                        Call :: i64
+                          Global c2 :: ref
+                          Lit "i2" :: ref
+                          Lit 2 :: i64
+                        Call :: i64
+                          Global c2 :: ref
+                          Lit "i3" :: ref
+                          Lit 3 :: i64
+                      Let back :: struct(unit,unit)
+                        Call :: i64
+                          Global c8 :: ref
+                          Call :: i64
+                            Global c2 :: ref
+                            Lit "q1" :: ref
+                            Lit 1 :: i64
+                          Call :: i64
+                            Global c2 :: ref
+                            Lit "q2" :: ref
+                            Lit 2 :: i64
+                        Let args :: struct(unit,unit)
+                          Call :: i64
+                            Global c11 :: ref
+                            Call :: i64
+                              Global c2 :: ref
+                              Lit "a1" :: ref
+                              Lit 1 :: i64
+                            Call :: i64
+                              Global c2 :: ref
+                              Lit "a2" :: ref
+                              Lit 2 :: i64
+                            Call :: i64
+                              Global c2 :: ref
+                              Lit "a3" :: ref
+                              Lit 3 :: i64
+                          Let tup :: struct(unit,unit)
+                            Tuple :: struct(i64,i64,i64)
+                              Call :: i64
+                                Global c2 :: ref
+                                Lit "t1" :: ref
+                                Lit 1 :: i64
+                              Call :: i64
+                                Global c2 :: ref
+                                Lit "t2" :: ref
+                                Lit 2 :: i64
+                              Call :: i64
+                                Global c2 :: ref
+                                Lit "t3" :: ref
+                                Lit 3 :: i64
+                            Let str :: struct(unit,unit)
+                              Call :: ref
+                                Kernel elm/core:Basics.append (v0=app string) :: ref
+                                Call :: ref
+                                  Global c13 :: ref
+                                  Lit "s1" :: ref
+                                Call :: ref
+                                  Kernel elm/core:Basics.append (v0=app string) :: ref
+                                  Call :: ref
+                                    Global c13 :: ref
+                                    Lit "s2" :: ref
+                                  Call :: ref
+                                    Global c13 :: ref
+                                    Lit "s3" :: ref
+                              Let rec :: struct(unit,unit)
+                                Record a m z :: struct(i64,i64,i64)
+                                  Call :: i64
+                                    Global c2 :: ref
+                                    Lit "ra" :: ref
+                                    Lit 2 :: i64
+                                  Call :: i64
+                                    Global c2 :: ref
+                                    Lit "rm" :: ref
+                                    Lit 3 :: i64
+                                  Call :: i64
+                                    Global c2 :: ref
+                                    Lit "rz" :: ref
+                                    Lit 1 :: i64
+                                Let ops :: struct(unit,unit)
+                                  Call :: i64
+                                    Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+                                    Call :: i64
+                                      Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                      Call :: i64
+                                        Global c2 :: ref
+                                        Lit "o1" :: ref
+                                        Lit 1 :: i64
+                                      Call :: i64
+                                        Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+                                        Call :: i64
+                                          Global c2 :: ref
+                                          Lit "o2" :: ref
+                                          Lit 2 :: i64
+                                        Call :: i64
+                                          Global c2 :: ref
+                                          Lit "o3" :: ref
+                                          Lit 3 :: i64
+                                    Call :: i64
+                                      Global c2 :: ref
+                                      Lit "o4" :: ref
+                                      Lit 4 :: i64
+                                  Let lst :: struct(unit,unit)
+                                    List :: ref
+                                      Call :: i64
+                                        Global c2 :: ref
+                                        Lit "l1" :: ref
+                                        Lit 1 :: i64
+                                      Call :: i64
+                                        Global c2 :: ref
+                                        Lit "l2" :: ref
+                                        Lit 2 :: i64
+                                      Call :: i64
+                                        Global c2 :: ref
+                                        Lit "l3" :: ref
+                                        Lit 3 :: i64
+                                    Let cmp :: struct(unit,unit)
+                                      Call :: enum
+                                        Kernel elm/core:Basics.or () :: ref
+                                        Call :: enum
+                                          Kernel elm/core:Basics.and () :: ref
+                                          Call :: enum
+                                            Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+                                            Call :: i64
+                                              Global c2 :: ref
+                                              Lit "e1" :: ref
+                                              Lit 1 :: i64
+                                            Call :: i64
+                                              Global c2 :: ref
+                                              Lit "e2" :: ref
+                                              Lit 2 :: i64
+                                          Call :: enum
+                                            Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                                            Call :: i64
+                                              Global c2 :: ref
+                                              Lit "e3" :: ref
+                                              Lit 3 :: i64
+                                            Call :: i64
+                                              Global c2 :: ref
+                                              Lit "e4" :: ref
+                                              Lit 4 :: i64
+                                        Call :: enum
+                                          Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
+                                          Call :: i64
+                                            Global c2 :: ref
+                                            Lit "e5" :: ref
+                                            Lit 5 :: i64
+                                          Call :: i64
+                                            Global c2 :: ref
+                                            Lit "e6" :: ref
+                                            Lit 5 :: i64
+                                      Seq :: struct(unit,unit)
+                                        Call :: i64
+                                          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                          Lit "args" :: ref
+                                          Local args :: i64
+                                        Seq :: struct(unit,unit)
+                                          Call :: i64
+                                            Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                            Lit "chain" :: ref
+                                            Local chain :: i64
+                                          Seq :: struct(unit,unit)
+                                            Call :: i64
+                                              Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                              Lit "chain2" :: ref
+                                              Local chain2 :: i64
+                                            Seq :: struct(unit,unit)
+                                              Call :: i64
+                                                Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                Lit "back" :: ref
+                                                Local back :: i64
+                                              Seq :: struct(unit,unit)
+                                                Call :: i64
+                                                  Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                  Lit "back2" :: ref
+                                                  Local back2 :: i64
+                                                Seq :: struct(unit,unit)
+                                                  Call :: i64
+                                                    Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                    Lit "back3" :: ref
+                                                    Local back3 :: i64
+                                                  Seq :: struct(unit,unit)
+                                                    Call :: i64
+                                                      Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                      Lit "headed" :: ref
+                                                      Local headed :: i64
+                                                    Seq :: struct(unit,unit)
+                                                      Call :: i64
+                                                        Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                        Lit "rec" :: ref
+                                                        Call :: i64
+                                                          Global c14 :: ref
+                                                          Local rec :: struct(i64,i64,i64)
+                                                      Seq :: struct(unit,unit)
+                                                        Call :: i64
+                                                          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                          Lit "tup" :: ref
+                                                          Case :: i64
+                                                            Local tup :: struct(i64,i64,i64)
+                                                            branch (a :: i64, b :: i64, c :: i64) :: struct(i64,i64,i64)
+                                                              Call :: i64
+                                                                Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                                Call :: i64
+                                                                  Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                                  Local a :: i64
+                                                                  Local b :: i64
+                                                                Local c :: i64
+                                                        Seq :: struct(unit,unit)
+                                                          Call :: i64
+                                                            Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                            Lit "lst" :: ref
+                                                            Call :: i64
+                                                              Global c15 :: ref
+                                                              Local lst :: ref
+                                                          Seq :: struct(unit,unit)
+                                                            Call :: i64
+                                                              Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                              Lit "ctor" :: ref
+                                                              Call :: i64
+                                                                Global c16 :: ref
+                                                                Local ctor :: ref
+                                                            Seq :: struct(unit,unit)
+                                                              Call :: i64
+                                                                Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                                Lit "ops" :: ref
+                                                                Local ops :: i64
+                                                              Seq :: struct(unit,unit)
+                                                                Call :: i64
+                                                                  Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                                  Lit "cmp" :: ref
+                                                                  If :: i64
+                                                                    Local cmp :: enum
+                                                                    Lit 1 :: i64
+                                                                    Lit 0 :: i64
+                                                                Seq :: struct(unit,unit)
+                                                                  Call :: i64
+                                                                    Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                                    Lit "cond" :: ref
+                                                                    Local cond :: i64
+                                                                  Seq :: struct(unit,unit)
+                                                                    Call :: i64
+                                                                      Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                                      Lit "cased" :: ref
+                                                                      Local cased :: i64
+                                                                    Seq :: struct(unit,unit)
+                                                                      Call :: i64
+                                                                        Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                                        Lit "part" :: ref
+                                                                        Local part :: i64
+                                                                      Seq :: struct(unit,unit)
+                                                                        Call :: ref
+                                                                          Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                                                                          Lit "str" :: ref
+                                                                          Local str :: ref
+                                                                        Seq :: struct(unit,unit)
+                                                                          Call :: i64
+                                                                            Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                                                                            Lit "letted" :: ref
+                                                                            Local letted :: i64
+                                                                          Tuple :: struct(unit,unit)
+                                                                            Lit () :: unit
+                                                                            Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Order.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref
