@@ -47,4 +47,4 @@ jsArrayRuntime =
 -- programs that use one of them
 stringRuntime :: String
 stringRuntime =
-  $(embedFiles [ "runtime/fic_case.h", "runtime/fic_ustring.h" ])
+  $(embedFiles [ "runtime/fic_case.h", "runtime/fic_ustring.h", "runtime/fic_parser.h" ])

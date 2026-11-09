@@ -571,7 +571,7 @@ specExpr se (A.At region e) =
           return (MExpr cls (MCase s' bs))
     Can.LetDestruct pat x body ->
       do  x' <- specExpr se x
-          pat' <- specPat se pat
+          pat' <- fitPat (mRep x') <$> specPat se pat
           b' <- specExpr se body
           return (MExpr (mRep b') (MCase x' [(pat', b')]))
     Can.VarCtor _ h name _ _
@@ -608,6 +608,28 @@ specExpr se (A.At region e) =
 
 
 -- a pattern with the classes of its parts
+-- the result classes of kernel functions whose result type the recorder cannot give when the kernel is called directly in a package
+-- body (`let (a, b, c) = Elm.Kernel.Parser.findSubString ...`: the pattern variables are generalized variables there)
+overrideKernelClass :: String -> MExpr -> MExpr
+overrideKernelClass name (MExpr c node) =
+  MExpr (maybe c id (lookup name table)) node
+  where
+    table =
+      [ ("elm/parser:Parser.Advanced.findSubString", CStruct [CI64, CI64, CI64]), ("elm/parser:Parser.Advanced.isSubString", CStruct [CI64, CI64, CI64])
+      , ("elm/parser:Parser.Advanced.consumeBase", CStruct [CI64, CI64]), ("elm/parser:Parser.Advanced.consumeBase16", CStruct [CI64, CI64]) ]
+
+
+-- a tuple pattern takes the classes of the struct it is matched against (the recorded types of its variables may be generalized variables)
+fitPat :: Class -> MPat -> MPat
+fitPat c p =
+  case (c, mpNode p) of
+    (CStruct fs, PTuple ps) | length fs == length ps -> MPat c (PTuple (zipWith fitPat fs ps))
+    (_, PVar n) -> MPat c (PVar n)
+    (_, PWild) -> MPat c PWild
+    (_, PAlias q n) -> MPat c (PAlias (fitPat c q) n)
+    _ -> p
+
+
 specPat :: SEnv -> Can.Pattern -> SM MPat
 specPat se pat@(A.At region p) =
   do  cls <- patClass se pat
@@ -763,14 +785,14 @@ specCall' se region resNode fregion f args =
   do  ref <- resolve se fregion f
       args' <- mapM (specExpr se) args
       case ref of
-        RKernel name key arity -> known arity (\as -> MCall (MExpr CRef (MKernel name key)) as) args'
+        RKernel name key arity -> overrideKernelClass name <$> known arity (\as -> MCall (MExpr CRef (MKernel name key)) as) args'
         RClone c arity isVal -> known arity (cloneCall c isVal) args'
         RCtor name tag arity | arity > 0 -> known arity (\as -> MCall (MExpr CRef (MCtor name tag (Key [ ByClass (boxed (mRep a)) | a <- as ]))) as) args'
         RLocal n ->
           do  cls <- exprClass se region resNode
               hcls <- exprClass se fregion f
               return (MExpr cls (MCall (MExpr hcls (MLocal n)) args'))
-        RRec names -> known (length names) (\as -> MRecord (List.sortOn fst (zip names as))) args'
+        RRec names -> known (length names) (\as -> MRecord (List.sortOn (\(n, _) -> (length n, n)) (zip names as))) args'
         RNone -> return unitLit
         _ -> unsupported "a call of this kind of name" region
   where
@@ -811,7 +833,7 @@ specRef se region e =
         RCtor name tag 0 -> return (MExpr cls (MCtor name tag (Key [])))
         RCtor name tag arity -> partialApp se region e arity (\as -> MCall (MExpr CRef (MCtor name tag (Key [ ByClass (boxed (mRep a)) | a <- as ]))) as) []
         RRec [] -> return (MExpr cls (MRecord []))
-        RRec names -> partialApp se region e (length names) (\as -> MRecord (List.sortOn fst (zip names as))) []
+        RRec names -> partialApp se region e (length names) (\as -> MRecord (List.sortOn (\(n, _) -> (length n, n)) (zip names as))) []
         RNone -> return unitLit
 
 
@@ -893,10 +915,10 @@ resolve se region e =
     Can.VarDebug _ n _ -> foreignOrTop ("elm/core:Debug." ++ N.toChars n)
     -- `Elm.Kernel.Basics.log x` written directly in an elm/core body (logBase): a kernel function without variables
     Can.VarKernel home name ->
-      let cid = "elm/core:" ++ String.toChars (Module.kernelToString home) ++ "." ++ N.toChars name
-      in case kernelArity cid of
-           Just arity -> return (RKernel cid (Key []) arity)
-           Nothing -> return RNone
+      let kmod = String.toChars (Module.kernelToString home)
+      in case [ (cid, a) | cid <- directKernelIds kmod (N.toChars name), Just a <- [kernelArity cid] ] of
+           (cid, arity) : _ -> return (RKernel cid (Key []) arity)
+           [] -> report ("the kernel function Elm.Kernel." ++ kmod ++ "." ++ N.toChars name ++ " is not in the kernel table (Ficcus.Mono.Kernel), at " ++ regionText region) >> return RNone
     Can.VarCtor _ _ name idx (Can.Forall _ tipe) ->
       return (case recordCtor tipe of
                 Just names -> RRec names

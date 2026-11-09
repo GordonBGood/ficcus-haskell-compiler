@@ -17,7 +17,7 @@ mark author/project:Dbg.a7@64:21   v0=any+printed v1=number+printed v2=number+pr
 mark author/project:Dbg.a6@61:21   v0=number+printed v1=number+printed
 mark author/project:Dbg.a1@46:21   v0=number+printed
 clone c0   def: author/project:Dbg.main   key: ()   kind: value   init: 1   needs: 
--- program: 136 clones, reachable from main, dependencies first
+-- program: 135 clones, reachable from main, dependencies first
 clone c63   def: author/project:Dbg.show   key: (v0=type (elm/core:Set.Set (elm/core:Basics.Int, elm/core:String.String)))   name: show__t   kind: function   params: tag:ref v:ref   result: ref
   Call :: ref
     Kernel elm/core:Debug.log (v0=type (elm/core:Set.Set (elm/core:Basics.Int, elm/core:String.String))) :: ref
@@ -37,7 +37,7 @@ clone c68   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref_
           Local x :: ref
           Local acc :: ref
         Local xs :: ref
-clone c126   def: elm/core:Dict.balance   key: (v0=ref; v1=unit)   name: balance__ref__unit   kind: function   params: color:enum key:ref value:unit left:ref right:ref   result: ref
+clone c125   def: elm/core:Dict.balance   key: (v0=ref; v1=unit)   name: balance__ref__unit   kind: function   params: color:enum key:ref value:unit left:ref right:ref   result: ref
   Case :: ref
     Local right :: ref
     branch RBNode_elm_builtin #0 Red #0 :: enum rK :: ref rV :: unit rLeft :: ref rRight :: ref :: ref
@@ -108,7 +108,7 @@ clone c126   def: elm/core:Dict.balance   key: (v0=ref; v1=unit)   name: balance
             Local value :: unit
             Local left :: ref
             Local right :: ref
-clone c130   def: elm/core:Dict.insertHelp   key: (v0=type (elm/core:Basics.Int, elm/core:String.String); v1=unit)   name: insertHelp__t__unit   kind: function   params: key:struct(i64,ref) value:unit dict:ref   result: ref
+clone c129   def: elm/core:Dict.insertHelp   key: (v0=type (elm/core:Basics.Int, elm/core:String.String); v1=unit)   name: insertHelp__t__unit   kind: function   params: key:struct(i64,ref) value:unit dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBEmpty_elm_builtin #1 :: ref
@@ -127,12 +127,12 @@ clone c130   def: elm/core:Dict.insertHelp   key: (v0=type (elm/core:Basics.Int,
           Local nKey :: struct(i64,ref)
         branch LT #0 :: enum
           Call :: ref
-            Global c126 :: ref
+            Global c125 :: ref
             Local nColor :: enum
             Local nKey :: struct(i64,ref)
             Local nValue :: unit
             Call :: ref
-              Global c130 :: ref
+              Global c129 :: ref
               Local key :: struct(i64,ref)
               Local value :: unit
               Local nLeft :: ref
@@ -147,20 +147,20 @@ clone c130   def: elm/core:Dict.insertHelp   key: (v0=type (elm/core:Basics.Int,
             Local nRight :: ref
         branch GT #2 :: enum
           Call :: ref
-            Global c126 :: ref
+            Global c125 :: ref
             Local nColor :: enum
             Local nKey :: struct(i64,ref)
             Local nValue :: unit
             Local nLeft :: ref
             Call :: ref
-              Global c130 :: ref
+              Global c129 :: ref
               Local key :: struct(i64,ref)
               Local value :: unit
               Local nRight :: ref
-clone c115   def: elm/core:Dict.insert   key: (v0=type (elm/core:Basics.Int, elm/core:String.String); v1=unit)   name: insert__t__unit   kind: function   params: key:struct(i64,ref) value:unit dict:ref   result: ref
+clone c114   def: elm/core:Dict.insert   key: (v0=type (elm/core:Basics.Int, elm/core:String.String); v1=unit)   name: insert__t__unit   kind: function   params: key:struct(i64,ref) value:unit dict:ref   result: ref
   Case :: ref
     Call :: ref
-      Global c130 :: ref
+      Global c129 :: ref
       Local key :: struct(i64,ref)
       Local value :: unit
       Local dict :: ref
@@ -181,7 +181,7 @@ clone c89   def: elm/core:Set.insert   key: (v0=type (elm/core:Basics.Int, elm/c
       Call :: ref
         Ctor Set_elm_builtin tag 0 (v0=ref) :: ref
         Call :: ref
-          Global c115 :: ref
+          Global c114 :: ref
           Local key :: struct(i64,ref)
           Lit () :: unit
           Local dict :: ref
@@ -267,7 +267,7 @@ clone c57   def: author/project:Dbg.show   key: (v0=type (elm/core:Dict.Dict elm
     Kernel elm/core:Debug.log (v0=type (elm/core:Dict.Dict elm/core:Basics.Int (elm/core:Maybe.Maybe (elm/core:Array.Array (elm/core:Result.Result elm/core:String.String (elm/core:Basics.Int, elm/core:Basics.Int)))))) :: ref
     Local tag :: ref
     Local v :: ref
-clone c119   def: elm/core:Dict.balance   key: (v0=i64; v1=ref)   name: balance__i64__ref   kind: function   params: color:enum key:i64 value:ref left:ref right:ref   result: ref
+clone c118   def: elm/core:Dict.balance   key: (v0=i64; v1=ref)   name: balance__i64__ref   kind: function   params: color:enum key:i64 value:ref left:ref right:ref   result: ref
   Case :: ref
     Local right :: ref
     branch RBNode_elm_builtin #0 Red #0 :: enum rK :: i64 rV :: ref rLeft :: ref rRight :: ref :: ref
@@ -338,7 +338,7 @@ clone c119   def: elm/core:Dict.balance   key: (v0=i64; v1=ref)   name: balance_
             Local value :: ref
             Local left :: ref
             Local right :: ref
-clone c94   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:Basics.Int; v1=ref)   name: insertHelp__i64__ref   kind: function   params: key:i64 value:ref dict:ref   result: ref
+clone c93   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:Basics.Int; v1=ref)   name: insertHelp__i64__ref   kind: function   params: key:i64 value:ref dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBEmpty_elm_builtin #1 :: ref
@@ -357,12 +357,12 @@ clone c94   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:Basics.Int; v
           Local nKey :: i64
         branch LT #0 :: enum
           Call :: ref
-            Global c119 :: ref
+            Global c118 :: ref
             Local nColor :: enum
             Local nKey :: i64
             Local nValue :: ref
             Call :: ref
-              Global c94 :: ref
+              Global c93 :: ref
               Local key :: i64
               Local value :: ref
               Local nLeft :: ref
@@ -377,20 +377,20 @@ clone c94   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:Basics.Int; v
             Local nRight :: ref
         branch GT #2 :: enum
           Call :: ref
-            Global c119 :: ref
+            Global c118 :: ref
             Local nColor :: enum
             Local nKey :: i64
             Local nValue :: ref
             Local nLeft :: ref
             Call :: ref
-              Global c94 :: ref
+              Global c93 :: ref
               Local key :: i64
               Local value :: ref
               Local nRight :: ref
 clone c70   def: elm/core:Dict.insert   key: (v0=type elm/core:Basics.Int; v1=ref)   name: insert__i64__ref   kind: function   params: key:i64 value:ref dict:ref   result: ref
   Case :: ref
     Call :: ref
-      Global c94 :: ref
+      Global c93 :: ref
       Local key :: i64
       Local value :: ref
       Local dict :: ref
@@ -421,22 +421,13 @@ clone c43   def: elm/core:Dict.fromList   key: (v0=type elm/core:Basics.Int; v1=
     Global c69 :: ref
     Global c71 :: ref
     Local assocs :: ref
-clone c90   def: elm/core:Basics.logBase   key: ()   kind: function   params: base:f64 number:f64   result: f64
-  Call :: f64
-    Kernel elm/core:Basics.fdiv () :: ref
-    Call :: f64
-      Kernel elm/core:Basics.log () :: ref
-      Local number :: f64
-    Call :: f64
-      Kernel elm/core:Basics.log () :: ref
-      Local base :: f64
 clone c66   def: elm/core:Array.branchFactor   key: ()   kind: value   params:    result: i64
   Lit 32 :: i64
 clone c65   def: elm/core:Array.shiftStep   key: ()   kind: value   params:    result: i64
   Call :: i64
     Kernel elm/core:Basics.ceiling () :: ref
     Call :: f64
-      Global c90 :: ref
+      Kernel elm/core:Basics.logBase () :: ref
       Lit 2.0 :: f64
       Call :: f64
         Kernel elm/core:Basics.toFloat () :: ref
@@ -448,23 +439,23 @@ clone c87   def: elm/core:Array.empty   key: (v0=ref)   name: empty__ref   kind:
     Global c65 :: i64
     Kernel elm/core:Elm.JsArray.empty (v0=ref) :: ref
     Kernel elm/core:Elm.JsArray.empty (v0=ref) :: ref
-clone c116   def: elm/core:List.lambda@261:9   key: ()   outer: c91 (v0=ref)   kind: function   params: _pb116_0:ref _pb116_1:ref   result: ref   lifted-from: c91
+clone c115   def: elm/core:List.lambda@261:9   key: ()   outer: c90 (v0=ref)   kind: function   params: _pb115_0:ref _pb115_1:ref   result: ref   lifted-from: c90
   Call :: ref
     Kernel elm/core:List.cons (v0=ref) :: ref
-    Local _pb116_0 :: ref
-    Local _pb116_1 :: ref
-clone c91   def: elm/core:List.reverse   key: (v0=ref)   name: reverse__ref   kind: function   params: list:ref   result: ref
+    Local _pb115_0 :: ref
+    Local _pb115_1 :: ref
+clone c90   def: elm/core:List.reverse   key: (v0=ref)   name: reverse__ref   kind: function   params: list:ref   result: ref
   Call :: ref
     Global c68 :: ref
-    Global c116 :: ref
+    Global c115 :: ref
     List :: ref
     Local list :: ref
-clone c117   def: elm/core:Tuple.first   key: (v0=ref; v1=ref)   name: first__ref__ref   kind: function   params: _p0:struct(ref,ref)   result: ref
+clone c116   def: elm/core:Tuple.first   key: (v0=ref; v1=ref)   name: first__ref__ref   kind: function   params: _p0:struct(ref,ref)   result: ref
   Case :: ref
     Local _p0 :: struct(ref,ref)
     branch (x :: ref, _ :: ref) :: struct(ref,ref)
       Local x :: ref
-clone c135   def: elm/core:Array.compressNodes   key: (v0=ref)   name: compressNodes__ref   kind: function   params: nodes:ref acc:ref   result: ref
+clone c134   def: elm/core:Array.compressNodes   key: (v0=ref)   name: compressNodes__ref   kind: function   params: nodes:ref acc:ref   result: ref
   Case :: ref
     Call :: struct(ref,ref)
       Kernel elm/core:Elm.JsArray.initializeFromList (v0=ref) :: ref
@@ -482,14 +473,14 @@ clone c135   def: elm/core:Array.compressNodes   key: (v0=ref)   name: compressN
           Local remainingNodes :: ref
           branch [] :: ref
             Call :: ref
-              Global c91 :: ref
+              Global c90 :: ref
               Local newAcc :: ref
           branch _ :: ref
             Call :: ref
-              Global c135 :: ref
+              Global c134 :: ref
               Local remainingNodes :: ref
               Local newAcc :: ref
-clone c129   def: elm/core:Array.treeFromBuilder   key: (v0=ref)   name: treeFromBuilder__ref   kind: function   params: nodeList:ref nodeListSize:i64   result: ref
+clone c128   def: elm/core:Array.treeFromBuilder   key: (v0=ref)   name: treeFromBuilder__ref   kind: function   params: nodeList:ref nodeListSize:i64   result: ref
   Let newNodeSize :: ref
     Call :: i64
       Kernel elm/core:Basics.ceiling () :: ref
@@ -507,19 +498,19 @@ clone c129   def: elm/core:Array.treeFromBuilder   key: (v0=ref)   name: treeFro
         Local newNodeSize :: i64
         Lit 1 :: i64
       Call :: ref
-        Global c117 :: ref
+        Global c116 :: ref
         Call :: struct(ref,ref)
           Kernel elm/core:Elm.JsArray.initializeFromList (v0=ref) :: ref
           Global c66 :: i64
           Local nodeList :: ref
       Call :: ref
-        Global c129 :: ref
+        Global c128 :: ref
         Call :: ref
-          Global c135 :: ref
+          Global c134 :: ref
           Local nodeList :: ref
           List :: ref
         Local newNodeSize :: i64
-clone c93   def: elm/core:Basics.max   key: (v0=type elm/core:Basics.Int)   name: max__i64   kind: function   params: x:i64 y:i64   result: i64
+clone c92   def: elm/core:Basics.max   key: (v0=type elm/core:Basics.Int)   name: max__i64   kind: function   params: x:i64 y:i64   result: i64
   If :: i64
     Call :: enum
       Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
@@ -527,7 +518,7 @@ clone c93   def: elm/core:Basics.max   key: (v0=type elm/core:Basics.Int)   name
       Local y :: i64
     Local x :: i64
     Local y :: i64
-clone c114   def: elm/core:Array.builderToArray   key: (v0=ref)   name: builderToArray__ref   kind: function   params: reverseNodeList:enum builder:struct(ref,ref,i64)   result: ref
+clone c113   def: elm/core:Array.builderToArray   key: (v0=ref)   name: builderToArray__ref   kind: function   params: reverseNodeList:enum builder:struct(ref,ref,i64)   result: ref
   If :: ref
     Call :: enum
       Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
@@ -548,7 +539,7 @@ clone c114   def: elm/core:Array.builderToArray   key: (v0=ref)   name: builderT
       If :: ref
         Local reverseNodeList :: enum
         Call :: ref
-          Global c91 :: ref
+          Global c90 :: ref
           Access .nodeList #1 :: ref
             Local builder :: struct(ref,ref,i64)
         Access .nodeList #1 :: ref
@@ -563,7 +554,7 @@ clone c114   def: elm/core:Array.builderToArray   key: (v0=ref)   name: builderT
           Call :: i64
             Kernel elm/core:Basics.floor () :: ref
             Call :: f64
-              Global c90 :: ref
+              Kernel elm/core:Basics.logBase () :: ref
               Call :: f64
                 Kernel elm/core:Basics.toFloat () :: ref
                 Global c66 :: i64
@@ -575,7 +566,7 @@ clone c114   def: elm/core:Array.builderToArray   key: (v0=ref)   name: builderT
                   Lit 1 :: i64
           Let tree :: ref
             Call :: ref
-              Global c129 :: ref
+              Global c128 :: ref
               Local correctNodeList :: ref
               Access .nodeListSize #2 :: i64
                 Local builder :: struct(ref,ref,i64)
@@ -589,7 +580,7 @@ clone c114   def: elm/core:Array.builderToArray   key: (v0=ref)   name: builderT
                     Local builder :: struct(ref,ref,i64)
                 Local treeLen :: i64
               Call :: i64
-                Global c93 :: ref
+                Global c92 :: ref
                 Lit 5 :: i64
                 Call :: i64
                   Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
@@ -613,7 +604,7 @@ clone c88   def: elm/core:Array.fromListHelp   key: (v0=ref)   name: fromListHel
             Local jsArray :: ref
           Global c66 :: i64
         Call :: ref
-          Global c114 :: ref
+          Global c113 :: ref
           Lit 1 :: enum
           Record tail nodeList nodeListSize :: struct(ref,ref,i64)
             Local jsArray :: ref
@@ -673,7 +664,7 @@ clone c48   def: author/project:Dbg.show   key: (v0=type ((elm/core:Dict.Dict el
     Kernel elm/core:Debug.log (v0=type ((elm/core:Dict.Dict elm/core:Basics.Int elm/core:Char.Char), (elm/core:Set.Set elm/core:String.String), (elm/core:Array.Array elm/core:Basics.Int))) :: ref
     Local tag :: ref
     Local v :: struct(ref,ref,ref)
-clone c98   def: elm/core:Dict.moveRedLeft   key: (v0=i64; v1=u32)   name: moveRedLeft__i64__u32   kind: function   params: dict:ref   result: ref
+clone c97   def: elm/core:Dict.moveRedLeft   key: (v0=i64; v1=u32)   name: moveRedLeft__i64__u32   kind: function   params: dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBNode_elm_builtin #0 clr :: enum k :: i64 v :: u32 RBNode_elm_builtin #0 lClr :: enum lK :: i64 lV :: u32 lLeft :: ref lRight :: ref :: ref RBNode_elm_builtin #0 rClr :: enum rK :: i64 rV :: u32 RBNode_elm_builtin #0 Red #0 :: enum rlK :: i64 rlV :: u32 rlL :: ref rlR :: ref :: ref as rLeft :: ref rRight :: ref :: ref :: ref
@@ -747,7 +738,7 @@ clone c98   def: elm/core:Dict.moveRedLeft   key: (v0=i64; v1=u32)   name: moveR
               Local rRight :: ref
     branch _ :: ref
       Local dict :: ref
-clone c99   def: elm/core:Dict.balance   key: (v0=i64; v1=u32)   name: balance__i64__u32   kind: function   params: color:enum key:i64 value:u32 left:ref right:ref   result: ref
+clone c98   def: elm/core:Dict.balance   key: (v0=i64; v1=u32)   name: balance__i64__u32   kind: function   params: color:enum key:i64 value:u32 left:ref right:ref   result: ref
   Case :: ref
     Local right :: ref
     branch RBNode_elm_builtin #0 Red #0 :: enum rK :: i64 rV :: u32 rLeft :: ref rRight :: ref :: ref
@@ -818,16 +809,16 @@ clone c99   def: elm/core:Dict.balance   key: (v0=i64; v1=u32)   name: balance__
             Local value :: u32
             Local left :: ref
             Local right :: ref
-clone c122   def: elm/core:Dict.getMin   key: (v0=i64; v1=u32)   name: getMin__i64__u32   kind: function   params: dict:ref   result: ref
+clone c121   def: elm/core:Dict.getMin   key: (v0=i64; v1=u32)   name: getMin__i64__u32   kind: function   params: dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBNode_elm_builtin #0 _ :: enum _ :: i64 _ :: u32 RBNode_elm_builtin #0 _ :: enum _ :: i64 _ :: u32 _ :: ref _ :: ref :: ref as left :: ref _ :: ref :: ref
       Call :: ref
-        Global c122 :: ref
+        Global c121 :: ref
         Local left :: ref
     branch _ :: ref
       Local dict :: ref
-clone c123   def: elm/core:Dict.removeMin   key: (v0=i64; v1=u32)   name: removeMin__i64__u32   kind: function   params: dict:ref   result: ref
+clone c122   def: elm/core:Dict.removeMin   key: (v0=i64; v1=u32)   name: removeMin__i64__u32   kind: function   params: dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBNode_elm_builtin #0 color :: enum key :: i64 value :: u32 RBNode_elm_builtin #0 lColor :: enum _ :: i64 _ :: u32 lLeft :: ref _ :: ref :: ref as left :: ref right :: ref :: ref
@@ -843,22 +834,22 @@ clone c123   def: elm/core:Dict.removeMin   key: (v0=i64; v1=u32)   name: remove
                 Local key :: i64
                 Local value :: u32
                 Call :: ref
-                  Global c123 :: ref
+                  Global c122 :: ref
                   Local left :: ref
                 Local right :: ref
             branch _ :: ref
               Case :: ref
                 Call :: ref
-                  Global c98 :: ref
+                  Global c97 :: ref
                   Local dict :: ref
                 branch RBNode_elm_builtin #0 nColor :: enum nKey :: i64 nValue :: u32 nLeft :: ref nRight :: ref :: ref
                   Call :: ref
-                    Global c99 :: ref
+                    Global c98 :: ref
                     Local nColor :: enum
                     Local nKey :: i64
                     Local nValue :: u32
                     Call :: ref
-                      Global c123 :: ref
+                      Global c122 :: ref
                       Local nLeft :: ref
                     Local nRight :: ref
                 branch RBEmpty_elm_builtin #1 :: ref
@@ -870,12 +861,12 @@ clone c123   def: elm/core:Dict.removeMin   key: (v0=i64; v1=u32)   name: remove
             Local key :: i64
             Local value :: u32
             Call :: ref
-              Global c123 :: ref
+              Global c122 :: ref
               Local left :: ref
             Local right :: ref
     branch _ :: ref
       Ctor RBEmpty_elm_builtin tag 1 () :: ref
-clone c100   def: elm/core:Dict.removeHelpEQGT   key: (v0=type elm/core:Basics.Int; v1=u32)   name: removeHelpEQGT__i64__u32   kind: function   params: targetKey:i64 dict:ref   result: ref
+clone c99   def: elm/core:Dict.removeHelpEQGT   key: (v0=type elm/core:Basics.Int; v1=u32)   name: removeHelpEQGT__i64__u32   kind: function   params: targetKey:i64 dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBNode_elm_builtin #0 color :: enum key :: i64 value :: u32 left :: ref right :: ref :: ref
@@ -886,22 +877,22 @@ clone c100   def: elm/core:Dict.removeHelpEQGT   key: (v0=type elm/core:Basics.I
           Local key :: i64
         Case :: ref
           Call :: ref
-            Global c122 :: ref
+            Global c121 :: ref
             Local right :: ref
           branch RBNode_elm_builtin #0 _ :: enum minKey :: i64 minValue :: u32 _ :: ref _ :: ref :: ref
             Call :: ref
-              Global c99 :: ref
+              Global c98 :: ref
               Local color :: enum
               Local minKey :: i64
               Local minValue :: u32
               Local left :: ref
               Call :: ref
-                Global c123 :: ref
+                Global c122 :: ref
                 Local right :: ref
           branch RBEmpty_elm_builtin #1 :: ref
             Ctor RBEmpty_elm_builtin tag 1 () :: ref
         Call :: ref
-          Global c99 :: ref
+          Global c98 :: ref
           Local color :: enum
           Local key :: i64
           Local value :: u32
@@ -912,7 +903,7 @@ clone c100   def: elm/core:Dict.removeHelpEQGT   key: (v0=type elm/core:Basics.I
             Local right :: ref
     branch RBEmpty_elm_builtin #1 :: ref
       Ctor RBEmpty_elm_builtin tag 1 () :: ref
-clone c124   def: elm/core:Dict.moveRedRight   key: (v0=i64; v1=u32)   name: moveRedRight__i64__u32   kind: function   params: dict:ref   result: ref
+clone c123   def: elm/core:Dict.moveRedRight   key: (v0=i64; v1=u32)   name: moveRedRight__i64__u32   kind: function   params: dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBNode_elm_builtin #0 clr :: enum k :: i64 v :: u32 RBNode_elm_builtin #0 lClr :: enum lK :: i64 lV :: u32 RBNode_elm_builtin #0 Red #0 :: enum llK :: i64 llV :: u32 llLeft :: ref llRight :: ref :: ref lRight :: ref :: ref RBNode_elm_builtin #0 rClr :: enum rK :: i64 rV :: u32 rLeft :: ref rRight :: ref :: ref :: ref
@@ -986,7 +977,7 @@ clone c124   def: elm/core:Dict.moveRedRight   key: (v0=i64; v1=u32)   name: mov
               Local rRight :: ref
     branch _ :: ref
       Local dict :: ref
-clone c101   def: elm/core:Dict.removeHelpPrepEQGT   key: (v0=type elm/core:Basics.Int; v1=u32)   name: removeHelpPrepEQGT__i64__u32   kind: function   params: targetKey:i64 dict:ref color:enum key:i64 value:u32 left:ref right:ref   result: ref
+clone c100   def: elm/core:Dict.removeHelpPrepEQGT   key: (v0=type elm/core:Basics.Int; v1=u32)   name: removeHelpPrepEQGT__i64__u32   kind: function   params: targetKey:i64 dict:ref color:enum key:i64 value:u32 left:ref right:ref   result: ref
   Case :: ref
     Local left :: ref
     branch RBNode_elm_builtin #0 Red #0 :: enum lK :: i64 lV :: u32 lLeft :: ref lRight :: ref :: ref
@@ -1008,11 +999,11 @@ clone c101   def: elm/core:Dict.removeHelpPrepEQGT   key: (v0=type elm/core:Basi
         Local right :: ref
         branch RBNode_elm_builtin #0 Black #1 :: enum _ :: i64 _ :: u32 RBNode_elm_builtin #0 Black #1 :: enum _ :: i64 _ :: u32 _ :: ref _ :: ref :: ref _ :: ref :: ref
           Call :: ref
-            Global c124 :: ref
+            Global c123 :: ref
             Local dict :: ref
         branch RBNode_elm_builtin #0 Black #1 :: enum _ :: i64 _ :: u32 RBEmpty_elm_builtin #1 :: ref _ :: ref :: ref
           Call :: ref
-            Global c124 :: ref
+            Global c123 :: ref
             Local dict :: ref
         branch _ :: ref
           Local dict :: ref
@@ -1046,11 +1037,11 @@ clone c78   def: elm/core:Dict.removeHelp   key: (v0=type elm/core:Basics.Int; v
               branch _ :: ref
                 Case :: ref
                   Call :: ref
-                    Global c98 :: ref
+                    Global c97 :: ref
                     Local dict :: ref
                   branch RBNode_elm_builtin #0 nColor :: enum nKey :: i64 nValue :: u32 nLeft :: ref nRight :: ref :: ref
                     Call :: ref
-                      Global c99 :: ref
+                      Global c98 :: ref
                       Local nColor :: enum
                       Local nKey :: i64
                       Local nValue :: u32
@@ -1073,10 +1064,10 @@ clone c78   def: elm/core:Dict.removeHelp   key: (v0=type elm/core:Basics.Int; v
                 Local left :: ref
               Local right :: ref
         Call :: ref
-          Global c100 :: ref
+          Global c99 :: ref
           Local targetKey :: i64
           Call :: ref
-            Global c101 :: ref
+            Global c100 :: ref
             Local targetKey :: i64
             Local dict :: ref
             Local color :: enum
@@ -1119,7 +1110,7 @@ clone c79   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:Basics.Int; v
           Local nKey :: i64
         branch LT #0 :: enum
           Call :: ref
-            Global c99 :: ref
+            Global c98 :: ref
             Local nColor :: enum
             Local nKey :: i64
             Local nValue :: u32
@@ -1139,7 +1130,7 @@ clone c79   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:Basics.Int; v
             Local nRight :: ref
         branch GT #2 :: enum
           Call :: ref
-            Global c99 :: ref
+            Global c98 :: ref
             Local nColor :: enum
             Local nKey :: i64
             Local nValue :: u32
@@ -1168,7 +1159,7 @@ clone c50   def: elm/core:Dict.insert   key: (v0=type elm/core:Basics.Int; v1=u3
       Local x :: ref
 clone c51   def: elm/core:Dict.empty   key: (v0=i64; v1=u32)   name: empty__i64__u32   kind: value   params:    result: ref
   Ctor RBEmpty_elm_builtin tag 1 () :: ref
-clone c125   def: elm/core:Dict.moveRedLeft   key: (v0=ref; v1=unit)   name: moveRedLeft__ref__unit   kind: function   params: dict:ref   result: ref
+clone c124   def: elm/core:Dict.moveRedLeft   key: (v0=ref; v1=unit)   name: moveRedLeft__ref__unit   kind: function   params: dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBNode_elm_builtin #0 clr :: enum k :: ref v :: unit RBNode_elm_builtin #0 lClr :: enum lK :: ref lV :: unit lLeft :: ref lRight :: ref :: ref RBNode_elm_builtin #0 rClr :: enum rK :: ref rV :: unit RBNode_elm_builtin #0 Red #0 :: enum rlK :: ref rlV :: unit rlL :: ref rlR :: ref :: ref as rLeft :: ref rRight :: ref :: ref :: ref
@@ -1242,16 +1233,16 @@ clone c125   def: elm/core:Dict.moveRedLeft   key: (v0=ref; v1=unit)   name: mov
               Local rRight :: ref
     branch _ :: ref
       Local dict :: ref
-clone c132   def: elm/core:Dict.getMin   key: (v0=ref; v1=unit)   name: getMin__ref__unit   kind: function   params: dict:ref   result: ref
+clone c131   def: elm/core:Dict.getMin   key: (v0=ref; v1=unit)   name: getMin__ref__unit   kind: function   params: dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBNode_elm_builtin #0 _ :: enum _ :: ref _ :: unit RBNode_elm_builtin #0 _ :: enum _ :: ref _ :: unit _ :: ref _ :: ref :: ref as left :: ref _ :: ref :: ref
       Call :: ref
-        Global c132 :: ref
+        Global c131 :: ref
         Local left :: ref
     branch _ :: ref
       Local dict :: ref
-clone c133   def: elm/core:Dict.removeMin   key: (v0=ref; v1=unit)   name: removeMin__ref__unit   kind: function   params: dict:ref   result: ref
+clone c132   def: elm/core:Dict.removeMin   key: (v0=ref; v1=unit)   name: removeMin__ref__unit   kind: function   params: dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBNode_elm_builtin #0 color :: enum key :: ref value :: unit RBNode_elm_builtin #0 lColor :: enum _ :: ref _ :: unit lLeft :: ref _ :: ref :: ref as left :: ref right :: ref :: ref
@@ -1267,22 +1258,22 @@ clone c133   def: elm/core:Dict.removeMin   key: (v0=ref; v1=unit)   name: remov
                 Local key :: ref
                 Local value :: unit
                 Call :: ref
-                  Global c133 :: ref
+                  Global c132 :: ref
                   Local left :: ref
                 Local right :: ref
             branch _ :: ref
               Case :: ref
                 Call :: ref
-                  Global c125 :: ref
+                  Global c124 :: ref
                   Local dict :: ref
                 branch RBNode_elm_builtin #0 nColor :: enum nKey :: ref nValue :: unit nLeft :: ref nRight :: ref :: ref
                   Call :: ref
-                    Global c126 :: ref
+                    Global c125 :: ref
                     Local nColor :: enum
                     Local nKey :: ref
                     Local nValue :: unit
                     Call :: ref
-                      Global c133 :: ref
+                      Global c132 :: ref
                       Local nLeft :: ref
                     Local nRight :: ref
                 branch RBEmpty_elm_builtin #1 :: ref
@@ -1294,12 +1285,12 @@ clone c133   def: elm/core:Dict.removeMin   key: (v0=ref; v1=unit)   name: remov
             Local key :: ref
             Local value :: unit
             Call :: ref
-              Global c133 :: ref
+              Global c132 :: ref
               Local left :: ref
             Local right :: ref
     branch _ :: ref
       Ctor RBEmpty_elm_builtin tag 1 () :: ref
-clone c127   def: elm/core:Dict.removeHelpEQGT   key: (v0=type elm/core:String.String; v1=unit)   name: removeHelpEQGT__t__unit   kind: function   params: targetKey:ref dict:ref   result: ref
+clone c126   def: elm/core:Dict.removeHelpEQGT   key: (v0=type elm/core:String.String; v1=unit)   name: removeHelpEQGT__t__unit   kind: function   params: targetKey:ref dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBNode_elm_builtin #0 color :: enum key :: ref value :: unit left :: ref right :: ref :: ref
@@ -1310,33 +1301,33 @@ clone c127   def: elm/core:Dict.removeHelpEQGT   key: (v0=type elm/core:String.S
           Local key :: ref
         Case :: ref
           Call :: ref
-            Global c132 :: ref
+            Global c131 :: ref
             Local right :: ref
           branch RBNode_elm_builtin #0 _ :: enum minKey :: ref minValue :: unit _ :: ref _ :: ref :: ref
             Call :: ref
-              Global c126 :: ref
+              Global c125 :: ref
               Local color :: enum
               Local minKey :: ref
               Local minValue :: unit
               Local left :: ref
               Call :: ref
-                Global c133 :: ref
+                Global c132 :: ref
                 Local right :: ref
           branch RBEmpty_elm_builtin #1 :: ref
             Ctor RBEmpty_elm_builtin tag 1 () :: ref
         Call :: ref
-          Global c126 :: ref
+          Global c125 :: ref
           Local color :: enum
           Local key :: ref
           Local value :: unit
           Local left :: ref
           Call :: ref
-            Global c102 :: ref
+            Global c101 :: ref
             Local targetKey :: ref
             Local right :: ref
     branch RBEmpty_elm_builtin #1 :: ref
       Ctor RBEmpty_elm_builtin tag 1 () :: ref
-clone c134   def: elm/core:Dict.moveRedRight   key: (v0=ref; v1=unit)   name: moveRedRight__ref__unit   kind: function   params: dict:ref   result: ref
+clone c133   def: elm/core:Dict.moveRedRight   key: (v0=ref; v1=unit)   name: moveRedRight__ref__unit   kind: function   params: dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBNode_elm_builtin #0 clr :: enum k :: ref v :: unit RBNode_elm_builtin #0 lClr :: enum lK :: ref lV :: unit RBNode_elm_builtin #0 Red #0 :: enum llK :: ref llV :: unit llLeft :: ref llRight :: ref :: ref lRight :: ref :: ref RBNode_elm_builtin #0 rClr :: enum rK :: ref rV :: unit rLeft :: ref rRight :: ref :: ref :: ref
@@ -1410,7 +1401,7 @@ clone c134   def: elm/core:Dict.moveRedRight   key: (v0=ref; v1=unit)   name: mo
               Local rRight :: ref
     branch _ :: ref
       Local dict :: ref
-clone c128   def: elm/core:Dict.removeHelpPrepEQGT   key: (v0=type elm/core:String.String; v1=unit)   name: removeHelpPrepEQGT__t__unit   kind: function   params: targetKey:ref dict:ref color:enum key:ref value:unit left:ref right:ref   result: ref
+clone c127   def: elm/core:Dict.removeHelpPrepEQGT   key: (v0=type elm/core:String.String; v1=unit)   name: removeHelpPrepEQGT__t__unit   kind: function   params: targetKey:ref dict:ref color:enum key:ref value:unit left:ref right:ref   result: ref
   Case :: ref
     Local left :: ref
     branch RBNode_elm_builtin #0 Red #0 :: enum lK :: ref lV :: unit lLeft :: ref lRight :: ref :: ref
@@ -1432,15 +1423,15 @@ clone c128   def: elm/core:Dict.removeHelpPrepEQGT   key: (v0=type elm/core:Stri
         Local right :: ref
         branch RBNode_elm_builtin #0 Black #1 :: enum _ :: ref _ :: unit RBNode_elm_builtin #0 Black #1 :: enum _ :: ref _ :: unit _ :: ref _ :: ref :: ref _ :: ref :: ref
           Call :: ref
-            Global c134 :: ref
+            Global c133 :: ref
             Local dict :: ref
         branch RBNode_elm_builtin #0 Black #1 :: enum _ :: ref _ :: unit RBEmpty_elm_builtin #1 :: ref _ :: ref :: ref
           Call :: ref
-            Global c134 :: ref
+            Global c133 :: ref
             Local dict :: ref
         branch _ :: ref
           Local dict :: ref
-clone c102   def: elm/core:Dict.removeHelp   key: (v0=type elm/core:String.String; v1=unit)   name: removeHelp__t__unit   kind: function   params: targetKey:ref dict:ref   result: ref
+clone c101   def: elm/core:Dict.removeHelp   key: (v0=type elm/core:String.String; v1=unit)   name: removeHelp__t__unit   kind: function   params: targetKey:ref dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBEmpty_elm_builtin #1 :: ref
@@ -1463,23 +1454,23 @@ clone c102   def: elm/core:Dict.removeHelp   key: (v0=type elm/core:String.Strin
                   Local key :: ref
                   Local value :: unit
                   Call :: ref
-                    Global c102 :: ref
+                    Global c101 :: ref
                     Local targetKey :: ref
                     Local left :: ref
                   Local right :: ref
               branch _ :: ref
                 Case :: ref
                   Call :: ref
-                    Global c125 :: ref
+                    Global c124 :: ref
                     Local dict :: ref
                   branch RBNode_elm_builtin #0 nColor :: enum nKey :: ref nValue :: unit nLeft :: ref nRight :: ref :: ref
                     Call :: ref
-                      Global c126 :: ref
+                      Global c125 :: ref
                       Local nColor :: enum
                       Local nKey :: ref
                       Local nValue :: unit
                       Call :: ref
-                        Global c102 :: ref
+                        Global c101 :: ref
                         Local targetKey :: ref
                         Local nLeft :: ref
                       Local nRight :: ref
@@ -1492,15 +1483,15 @@ clone c102   def: elm/core:Dict.removeHelp   key: (v0=type elm/core:String.Strin
               Local key :: ref
               Local value :: unit
               Call :: ref
-                Global c102 :: ref
+                Global c101 :: ref
                 Local targetKey :: ref
                 Local left :: ref
               Local right :: ref
         Call :: ref
-          Global c127 :: ref
+          Global c126 :: ref
           Local targetKey :: ref
           Call :: ref
-            Global c128 :: ref
+            Global c127 :: ref
             Local targetKey :: ref
             Local dict :: ref
             Local color :: enum
@@ -1511,7 +1502,7 @@ clone c102   def: elm/core:Dict.removeHelp   key: (v0=type elm/core:String.Strin
 clone c80   def: elm/core:Dict.remove   key: (v0=type elm/core:String.String; v1=unit)   name: remove__t__unit   kind: function   params: key:ref dict:ref   result: ref
   Case :: ref
     Call :: ref
-      Global c102 :: ref
+      Global c101 :: ref
       Local key :: ref
       Local dict :: ref
     branch RBNode_elm_builtin #0 Red #0 :: enum k :: ref v :: unit l :: ref r :: ref :: ref
@@ -1534,7 +1525,7 @@ clone c52   def: elm/core:Set.remove   key: (v0=type elm/core:String.String)   n
           Global c80 :: ref
           Local key :: ref
           Local dict :: ref
-clone c103   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:String.String; v1=unit)   name: insertHelp__t__unit   kind: function   params: key:ref value:unit dict:ref   result: ref
+clone c102   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:String.String; v1=unit)   name: insertHelp__t__unit   kind: function   params: key:ref value:unit dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBEmpty_elm_builtin #1 :: ref
@@ -1553,12 +1544,12 @@ clone c103   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:String.Strin
           Local nKey :: ref
         branch LT #0 :: enum
           Call :: ref
-            Global c126 :: ref
+            Global c125 :: ref
             Local nColor :: enum
             Local nKey :: ref
             Local nValue :: unit
             Call :: ref
-              Global c103 :: ref
+              Global c102 :: ref
               Local key :: ref
               Local value :: unit
               Local nLeft :: ref
@@ -1573,20 +1564,20 @@ clone c103   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:String.Strin
             Local nRight :: ref
         branch GT #2 :: enum
           Call :: ref
-            Global c126 :: ref
+            Global c125 :: ref
             Local nColor :: enum
             Local nKey :: ref
             Local nValue :: unit
             Local nLeft :: ref
             Call :: ref
-              Global c103 :: ref
+              Global c102 :: ref
               Local key :: ref
               Local value :: unit
               Local nRight :: ref
 clone c81   def: elm/core:Dict.insert   key: (v0=type elm/core:String.String; v1=unit)   name: insert__t__unit   kind: function   params: key:ref value:unit dict:ref   result: ref
   Case :: ref
     Call :: ref
-      Global c103 :: ref
+      Global c102 :: ref
       Local key :: ref
       Local value :: unit
       Local dict :: ref
@@ -1645,7 +1636,7 @@ clone c32   def: elm/core:Array.empty   key: (v0=i64)   name: empty__i64   kind:
     Global c65 :: i64
     Kernel elm/core:Elm.JsArray.empty (v0=ref) :: ref
     Kernel elm/core:Elm.JsArray.empty (v0=i64) :: ref
-clone c104   def: elm/core:Array.tailIndex   key: ()   kind: function   params: len:i64   result: i64
+clone c103   def: elm/core:Array.tailIndex   key: ()   kind: function   params: len:i64   result: i64
   Call :: i64
     Kernel elm/core:Bitwise.shiftLeftBy () :: ref
     Lit 5 :: i64
@@ -1653,13 +1644,13 @@ clone c104   def: elm/core:Array.tailIndex   key: ()   kind: function   params: 
       Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
       Lit 5 :: i64
       Local len :: i64
-clone c105   def: elm/core:Array.helper@846:13   key: (v0=i64)   outer: c84 (v0=i64)   name: helper@846:13__i64   kind: function   params: node:ref acc:ref   result: ref   lifted-from: c84
+clone c104   def: elm/core:Array.helper@846:13   key: (v0=i64)   outer: c84 (v0=i64)   name: helper@846:13__i64   kind: function   params: node:ref acc:ref   result: ref   lifted-from: c84
   Case :: ref
     Local node :: ref
     branch SubTree #0 subTree :: ref :: ref
       Call :: ref
         Kernel elm/core:Elm.JsArray.foldr (v0=ref; v1=ref) :: ref
-        Global c105 :: ref
+        Global c104 :: ref
         Local acc :: ref
         Local subTree :: ref
     branch Leaf #1 leaf :: ref :: ref
@@ -1667,7 +1658,7 @@ clone c105   def: elm/core:Array.helper@846:13   key: (v0=i64)   outer: c84 (v0=
         Kernel elm/core:List.cons (v0=ref) :: ref
         Local leaf :: ref
         Local acc :: ref
-clone c106   def: elm/core:List.drop   key: (v0=ref)   name: drop__ref   kind: function   params: n:i64 list:ref   result: ref
+clone c105   def: elm/core:List.drop   key: (v0=ref)   name: drop__ref   kind: function   params: n:i64 list:ref   result: ref
   If :: ref
     Call :: enum
       Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
@@ -1680,13 +1671,13 @@ clone c106   def: elm/core:List.drop   key: (v0=ref)   name: drop__ref   kind: f
         Local list :: ref
       branch x :: ref :: xs :: ref :: ref
         Call :: ref
-          Global c106 :: ref
+          Global c105 :: ref
           Call :: i64
             Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
             Local n :: i64
             Lit 1 :: i64
           Local xs :: ref
-clone c108   def: elm/core:Array.initialBuilder@872:25   key: (v1=ref; v2=type elm/core:Basics.Int)   outer: c84 (v0=i64)   name: initialBuilder@872:25__ref__i64   kind: function   params:    result: struct(ref,ref,i64)   lifted-from: c84
+clone c107   def: elm/core:Array.initialBuilder@872:25   key: (v1=ref; v2=type elm/core:Basics.Int)   outer: c84 (v0=i64)   name: initialBuilder@872:25__ref__i64   kind: function   params:    result: struct(ref,ref,i64)   lifted-from: c84
   Record tail nodeList nodeListSize :: struct(ref,ref,i64)
     Call :: ref
       Kernel elm/core:Elm.JsArray.slice (v0=i64) :: ref
@@ -1697,7 +1688,7 @@ clone c108   def: elm/core:Array.initialBuilder@872:25   key: (v1=ref; v2=type e
       Local head :: ref
     List :: ref
     Lit 0 :: i64
-clone c118   def: elm/core:Array.compressNodes   key: (v0=i64)   name: compressNodes__i64   kind: function   params: nodes:ref acc:ref   result: ref
+clone c117   def: elm/core:Array.compressNodes   key: (v0=i64)   name: compressNodes__i64   kind: function   params: nodes:ref acc:ref   result: ref
   Case :: ref
     Call :: struct(ref,ref)
       Kernel elm/core:Elm.JsArray.initializeFromList (v0=ref) :: ref
@@ -1715,14 +1706,14 @@ clone c118   def: elm/core:Array.compressNodes   key: (v0=i64)   name: compressN
           Local remainingNodes :: ref
           branch [] :: ref
             Call :: ref
-              Global c91 :: ref
+              Global c90 :: ref
               Local newAcc :: ref
           branch _ :: ref
             Call :: ref
-              Global c118 :: ref
+              Global c117 :: ref
               Local remainingNodes :: ref
               Local newAcc :: ref
-clone c92   def: elm/core:Array.treeFromBuilder   key: (v0=i64)   name: treeFromBuilder__i64   kind: function   params: nodeList:ref nodeListSize:i64   result: ref
+clone c91   def: elm/core:Array.treeFromBuilder   key: (v0=i64)   name: treeFromBuilder__i64   kind: function   params: nodeList:ref nodeListSize:i64   result: ref
   Let newNodeSize :: ref
     Call :: i64
       Kernel elm/core:Basics.ceiling () :: ref
@@ -1740,15 +1731,15 @@ clone c92   def: elm/core:Array.treeFromBuilder   key: (v0=i64)   name: treeFrom
         Local newNodeSize :: i64
         Lit 1 :: i64
       Call :: ref
-        Global c117 :: ref
+        Global c116 :: ref
         Call :: struct(ref,ref)
           Kernel elm/core:Elm.JsArray.initializeFromList (v0=ref) :: ref
           Global c66 :: i64
           Local nodeList :: ref
       Call :: ref
-        Global c92 :: ref
+        Global c91 :: ref
         Call :: ref
-          Global c118 :: ref
+          Global c117 :: ref
           Local nodeList :: ref
           List :: ref
         Local newNodeSize :: i64
@@ -1773,7 +1764,7 @@ clone c67   def: elm/core:Array.builderToArray   key: (v0=i64)   name: builderTo
       If :: ref
         Local reverseNodeList :: enum
         Call :: ref
-          Global c91 :: ref
+          Global c90 :: ref
           Access .nodeList #1 :: ref
             Local builder :: struct(ref,ref,i64)
         Access .nodeList #1 :: ref
@@ -1788,7 +1779,7 @@ clone c67   def: elm/core:Array.builderToArray   key: (v0=i64)   name: builderTo
           Call :: i64
             Kernel elm/core:Basics.floor () :: ref
             Call :: f64
-              Global c90 :: ref
+              Kernel elm/core:Basics.logBase () :: ref
               Call :: f64
                 Kernel elm/core:Basics.toFloat () :: ref
                 Global c66 :: i64
@@ -1800,7 +1791,7 @@ clone c67   def: elm/core:Array.builderToArray   key: (v0=i64)   name: builderTo
                   Lit 1 :: i64
           Let tree :: ref
             Call :: ref
-              Global c92 :: ref
+              Global c91 :: ref
               Local correctNodeList :: ref
               Access .nodeListSize #2 :: i64
                 Local builder :: struct(ref,ref,i64)
@@ -1814,7 +1805,7 @@ clone c67   def: elm/core:Array.builderToArray   key: (v0=i64)   name: builderTo
                     Local builder :: struct(ref,ref,i64)
                 Local treeLen :: i64
               Call :: i64
-                Global c93 :: ref
+                Global c92 :: ref
                 Lit 5 :: i64
                 Call :: i64
                   Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
@@ -1823,7 +1814,7 @@ clone c67   def: elm/core:Array.builderToArray   key: (v0=i64)   name: builderTo
               Local tree :: ref
               Access .tail #0 :: ref
                 Local builder :: struct(ref,ref,i64)
-clone c107   def: elm/core:Array.appendHelpBuilder   key: (v0=i64)   name: appendHelpBuilder__i64   kind: function   params: tail:ref builder:struct(ref,ref,i64)   result: struct(ref,ref,i64)
+clone c106   def: elm/core:Array.appendHelpBuilder   key: (v0=i64)   name: appendHelpBuilder__i64   kind: function   params: tail:ref builder:struct(ref,ref,i64)   result: struct(ref,ref,i64)
   Let appended :: struct(ref,ref,i64)
     Call :: ref
       Kernel elm/core:Elm.JsArray.appendN (v0=i64) :: ref
@@ -1907,7 +1898,7 @@ clone c84   def: elm/core:Array.sliceLeft   key: (v0=i64)   name: sliceLeft__i64
           Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
           Local from :: i64
           Call :: i64
-            Global c104 :: ref
+            Global c103 :: ref
             Local len :: i64
         Call :: ref
           Ctor Array_elm_builtin tag 0 (v0=i64; v1=i64; v2=ref; v3=ref) :: ref
@@ -1923,7 +1914,7 @@ clone c84   def: elm/core:Array.sliceLeft   key: (v0=i64)   name: sliceLeft__i64
               Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
               Local from :: i64
               Call :: i64
-                Global c104 :: ref
+                Global c103 :: ref
                 Local len :: i64
             Call :: i64
               Kernel elm/core:Elm.JsArray.length (v0=i64) :: ref
@@ -1937,13 +1928,13 @@ clone c84   def: elm/core:Array.sliceLeft   key: (v0=i64)   name: sliceLeft__i64
           Let leafNodes :: ref
             Call :: ref
               Kernel elm/core:Elm.JsArray.foldr (v0=ref; v1=ref) :: ref
-              Global c105 :: ref
+              Global c104 :: ref
               List :: ref
                 Local tail :: ref
               Local tree :: ref
             Let nodesToInsert :: ref
               Call :: ref
-                Global c106 :: ref
+                Global c105 :: ref
                 Local skipNodes :: i64
                 Local leafNodes :: ref
               Case :: ref
@@ -1959,18 +1950,18 @@ clone c84   def: elm/core:Array.sliceLeft   key: (v0=i64)   name: sliceLeft__i64
                         Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
                         Local skipNodes :: i64
                         Global c66 :: i64
-                    Let _pv108 :: ref
+                    Let _pv107 :: ref
                       Call :: struct(ref,ref,i64)
-                        Global c108 :: ref
+                        Global c107 :: ref
                       Call :: ref
                         Global c67 :: ref
                         Lit 1 :: enum
                         Call :: struct(ref,ref,i64)
                           Global c68 :: ref
-                          Global c107 :: ref
-                          Local _pv108 :: struct(ref,ref,i64)
+                          Global c106 :: ref
+                          Local _pv107 :: struct(ref,ref,i64)
                           Local rest :: ref
-clone c109   def: elm/core:Array.bitMask   key: ()   kind: value   params:    result: i64
+clone c108   def: elm/core:Array.bitMask   key: ()   kind: value   params:    result: i64
   Call :: i64
     Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
     Call :: i64
@@ -1978,7 +1969,7 @@ clone c109   def: elm/core:Array.bitMask   key: ()   kind: value   params:    re
       Lit 32 :: i64
       Global c65 :: i64
     Lit 4294967295 :: i64
-clone c110   def: elm/core:Array.hoistTree   key: (v0=i64)   name: hoistTree__i64   kind: function   params: oldShift:i64 newShift:i64 tree:ref   result: ref
+clone c109   def: elm/core:Array.hoistTree   key: (v0=i64)   name: hoistTree__i64   kind: function   params: oldShift:i64 newShift:i64 tree:ref   result: ref
   If :: ref
     Call :: enum
       Kernel elm/core:Basics.or () :: ref
@@ -2000,7 +1991,7 @@ clone c110   def: elm/core:Array.hoistTree   key: (v0=i64)   name: hoistTree__i6
         Local tree :: ref
       branch SubTree #0 sub :: ref :: ref
         Call :: ref
-          Global c110 :: ref
+          Global c109 :: ref
           Call :: i64
             Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
             Local oldShift :: i64
@@ -2009,11 +2000,11 @@ clone c110   def: elm/core:Array.hoistTree   key: (v0=i64)   name: hoistTree__i6
           Local sub :: ref
       branch Leaf #1 _ :: ref :: ref
         Local tree :: ref
-clone c111   def: elm/core:Array.sliceTree   key: (v0=i64)   name: sliceTree__i64   kind: function   params: shift:i64 endIdx:i64 tree:ref   result: ref
+clone c110   def: elm/core:Array.sliceTree   key: (v0=i64)   name: sliceTree__i64   kind: function   params: shift:i64 endIdx:i64 tree:ref   result: ref
   Let lastPos :: ref
     Call :: i64
       Kernel elm/core:Bitwise.and () :: ref
-      Global c109 :: i64
+      Global c108 :: i64
       Call :: i64
         Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
         Local shift :: i64
@@ -2026,7 +2017,7 @@ clone c111   def: elm/core:Array.sliceTree   key: (v0=i64)   name: sliceTree__i6
       branch SubTree #0 sub :: ref :: ref
         Let newSub :: ref
           Call :: ref
-            Global c111 :: ref
+            Global c110 :: ref
             Call :: i64
               Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
               Local shift :: i64
@@ -2065,11 +2056,11 @@ clone c111   def: elm/core:Array.sliceTree   key: (v0=i64)   name: sliceTree__i6
           Lit 0 :: i64
           Local lastPos :: i64
           Local tree :: ref
-clone c112   def: elm/core:Array.fetchNewTail   key: (v0=i64)   name: fetchNewTail__i64   kind: function   params: shift:i64 end:i64 treeEnd:i64 tree:ref   result: ref
+clone c111   def: elm/core:Array.fetchNewTail   key: (v0=i64)   name: fetchNewTail__i64   kind: function   params: shift:i64 end:i64 treeEnd:i64 tree:ref   result: ref
   Let pos :: ref
     Call :: i64
       Kernel elm/core:Bitwise.and () :: ref
-      Global c109 :: i64
+      Global c108 :: i64
       Call :: i64
         Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
         Local shift :: i64
@@ -2081,7 +2072,7 @@ clone c112   def: elm/core:Array.fetchNewTail   key: (v0=i64)   name: fetchNewTa
         Local tree :: ref
       branch SubTree #0 sub :: ref :: ref
         Call :: ref
-          Global c112 :: ref
+          Global c111 :: ref
           Call :: i64
             Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
             Local shift :: i64
@@ -2095,7 +2086,7 @@ clone c112   def: elm/core:Array.fetchNewTail   key: (v0=i64)   name: fetchNewTa
           Lit 0 :: i64
           Call :: i64
             Kernel elm/core:Bitwise.and () :: ref
-            Global c109 :: i64
+            Global c108 :: i64
             Local end :: i64
           Local values :: ref
 clone c85   def: elm/core:Array.sliceRight   key: (v0=i64)   name: sliceRight__i64   kind: function   params: end:i64 _p1:ref   result: ref
@@ -2112,7 +2103,7 @@ clone c85   def: elm/core:Array.sliceRight   key: (v0=i64)   name: sliceRight__i
           Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
           Local end :: i64
           Call :: i64
-            Global c104 :: ref
+            Global c103 :: ref
             Local len :: i64
         Call :: ref
           Ctor Array_elm_builtin tag 0 (v0=i64; v1=i64; v2=ref; v3=ref) :: ref
@@ -2124,25 +2115,25 @@ clone c85   def: elm/core:Array.sliceRight   key: (v0=i64)   name: sliceRight__i
             Lit 0 :: i64
             Call :: i64
               Kernel elm/core:Bitwise.and () :: ref
-              Global c109 :: i64
+              Global c108 :: i64
               Local end :: i64
             Local tail :: ref
         Let endIdx :: ref
           Call :: i64
-            Global c104 :: ref
+            Global c103 :: ref
             Local end :: i64
           Let depth :: ref
             Call :: i64
               Kernel elm/core:Basics.floor () :: ref
               Call :: f64
-                Global c90 :: ref
+                Kernel elm/core:Basics.logBase () :: ref
                 Call :: f64
                   Kernel elm/core:Basics.toFloat () :: ref
                   Global c66 :: i64
                 Call :: f64
                   Kernel elm/core:Basics.toFloat () :: ref
                   Call :: i64
-                    Global c93 :: ref
+                    Global c92 :: ref
                     Lit 1 :: i64
                     Call :: i64
                       Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
@@ -2150,7 +2141,7 @@ clone c85   def: elm/core:Array.sliceRight   key: (v0=i64)   name: sliceRight__i
                       Lit 1 :: i64
             Let newShift :: ref
               Call :: i64
-                Global c93 :: ref
+                Global c92 :: ref
                 Lit 5 :: i64
                 Call :: i64
                   Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
@@ -2161,16 +2152,16 @@ clone c85   def: elm/core:Array.sliceRight   key: (v0=i64)   name: sliceRight__i
                 Local end :: i64
                 Local newShift :: i64
                 Call :: ref
-                  Global c110 :: ref
+                  Global c109 :: ref
                   Local startShift :: i64
                   Local newShift :: i64
                   Call :: ref
-                    Global c111 :: ref
+                    Global c110 :: ref
                     Local startShift :: i64
                     Local endIdx :: i64
                     Local tree :: ref
                 Call :: ref
-                  Global c112 :: ref
+                  Global c111 :: ref
                   Local startShift :: i64
                   Local end :: i64
                   Local endIdx :: i64
@@ -2199,11 +2190,11 @@ clone c55   def: elm/core:Array.slice   key: (v0=i64)   name: slice__i64   kind:
             Global c85 :: ref
             Local correctTo :: i64
             Local array :: ref
-clone c113   def: elm/core:Array.insertTailInTree   key: (v0=i64)   name: insertTailInTree__i64   kind: function   params: shift:i64 index:i64 tail:ref tree:ref   result: ref
+clone c112   def: elm/core:Array.insertTailInTree   key: (v0=i64)   name: insertTailInTree__i64   kind: function   params: shift:i64 index:i64 tail:ref tree:ref   result: ref
   Let pos :: ref
     Call :: i64
       Kernel elm/core:Bitwise.and () :: ref
-      Global c109 :: i64
+      Global c108 :: i64
       Call :: i64
         Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
         Local shift :: i64
@@ -2230,7 +2221,7 @@ clone c113   def: elm/core:Array.insertTailInTree   key: (v0=i64)   name: insert
           Call :: ref
             Ctor SubTree tag 0 (v0=ref) :: ref
             Call :: ref
-              Global c113 :: ref
+              Global c112 :: ref
               Call :: i64
                 Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
                 Local shift :: i64
@@ -2254,7 +2245,7 @@ clone c113   def: elm/core:Array.insertTailInTree   key: (v0=i64)   name: insert
               Call :: ref
                 Ctor SubTree tag 0 (v0=ref) :: ref
                 Call :: ref
-                  Global c113 :: ref
+                  Global c112 :: ref
                   Call :: i64
                     Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
                     Local shift :: i64
@@ -2272,7 +2263,7 @@ clone c113   def: elm/core:Array.insertTailInTree   key: (v0=i64)   name: insert
               Call :: ref
                 Ctor SubTree tag 0 (v0=ref) :: ref
                 Call :: ref
-                  Global c113 :: ref
+                  Global c112 :: ref
                   Call :: i64
                     Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
                     Local shift :: i64
@@ -2332,7 +2323,7 @@ clone c86   def: elm/core:Array.unsafeReplaceTail   key: (v0=i64)   name: unsafe
                       Global c65 :: i64
                     Let newTree :: ref
                       Call :: ref
-                        Global c113 :: ref
+                        Global c112 :: ref
                         Local newShift :: i64
                         Local len :: i64
                         Local newTail :: ref
@@ -2352,7 +2343,7 @@ clone c86   def: elm/core:Array.unsafeReplaceTail   key: (v0=i64)   name: unsafe
                     Local newArrayLen :: i64
                     Local startShift :: i64
                     Call :: ref
-                      Global c113 :: ref
+                      Global c112 :: ref
                       Local startShift :: i64
                       Local len :: i64
                       Local newTail :: ref
@@ -2544,7 +2535,7 @@ clone c75   def: elm/core:List.foldl   key: (v0=i64; v1=ref)   name: foldl__i64_
           Local x :: i64
           Local acc :: ref
         Local xs :: ref
-clone c131   def: elm/core:Dict.balance   key: (v0=i64; v1=unit)   name: balance__i64__unit   kind: function   params: color:enum key:i64 value:unit left:ref right:ref   result: ref
+clone c130   def: elm/core:Dict.balance   key: (v0=i64; v1=unit)   name: balance__i64__unit   kind: function   params: color:enum key:i64 value:unit left:ref right:ref   result: ref
   Case :: ref
     Local right :: ref
     branch RBNode_elm_builtin #0 Red #0 :: enum rK :: i64 rV :: unit rLeft :: ref rRight :: ref :: ref
@@ -2615,7 +2606,7 @@ clone c131   def: elm/core:Dict.balance   key: (v0=i64; v1=unit)   name: balance
             Local value :: unit
             Local left :: ref
             Local right :: ref
-clone c121   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:Basics.Int; v1=unit)   name: insertHelp__i64__unit   kind: function   params: key:i64 value:unit dict:ref   result: ref
+clone c120   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:Basics.Int; v1=unit)   name: insertHelp__i64__unit   kind: function   params: key:i64 value:unit dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBEmpty_elm_builtin #1 :: ref
@@ -2634,12 +2625,12 @@ clone c121   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:Basics.Int; 
           Local nKey :: i64
         branch LT #0 :: enum
           Call :: ref
-            Global c131 :: ref
+            Global c130 :: ref
             Local nColor :: enum
             Local nKey :: i64
             Local nValue :: unit
             Call :: ref
-              Global c121 :: ref
+              Global c120 :: ref
               Local key :: i64
               Local value :: unit
               Local nLeft :: ref
@@ -2654,20 +2645,20 @@ clone c121   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:Basics.Int; 
             Local nRight :: ref
         branch GT #2 :: enum
           Call :: ref
-            Global c131 :: ref
+            Global c130 :: ref
             Local nColor :: enum
             Local nKey :: i64
             Local nValue :: unit
             Local nLeft :: ref
             Call :: ref
-              Global c121 :: ref
+              Global c120 :: ref
               Local key :: i64
               Local value :: unit
               Local nRight :: ref
-clone c96   def: elm/core:Dict.insert   key: (v0=type elm/core:Basics.Int; v1=unit)   name: insert__i64__unit   kind: function   params: key:i64 value:unit dict:ref   result: ref
+clone c95   def: elm/core:Dict.insert   key: (v0=type elm/core:Basics.Int; v1=unit)   name: insert__i64__unit   kind: function   params: key:i64 value:unit dict:ref   result: ref
   Case :: ref
     Call :: ref
-      Global c121 :: ref
+      Global c120 :: ref
       Local key :: i64
       Local value :: unit
       Local dict :: ref
@@ -2688,16 +2679,16 @@ clone c76   def: elm/core:Set.insert   key: (v0=type elm/core:Basics.Int)   name
       Call :: ref
         Ctor Set_elm_builtin tag 0 (v0=ref) :: ref
         Call :: ref
-          Global c96 :: ref
+          Global c95 :: ref
           Local key :: i64
           Lit () :: unit
           Local dict :: ref
-clone c97   def: elm/core:Dict.empty   key: (v0=i64; v1=unit)   name: empty__i64__unit   kind: value   params:    result: ref
+clone c96   def: elm/core:Dict.empty   key: (v0=i64; v1=unit)   name: empty__i64__unit   kind: value   params:    result: ref
   Ctor RBEmpty_elm_builtin tag 1 () :: ref
 clone c77   def: elm/core:Set.empty   key: (v0=i64)   name: empty__i64   kind: value   params:    result: ref
   Call :: ref
     Ctor Set_elm_builtin tag 0 (v0=ref) :: ref
-    Global c97 :: ref
+    Global c96 :: ref
 clone c47   def: elm/core:Set.fromList   key: (v0=type elm/core:Basics.Int)   name: fromList__i64   kind: function   params: list:ref   result: ref
   Call :: ref
     Global c75 :: ref
@@ -2720,7 +2711,7 @@ clone c44   def: author/project:Dbg.show   key: (v0=type (elm/core:Dict.Dict elm
     Kernel elm/core:Debug.log (v0=type (elm/core:Dict.Dict elm/core:String.String (elm/core:List.List elm/core:Basics.Int))) :: ref
     Local tag :: ref
     Local v :: ref
-clone c120   def: elm/core:Dict.balance   key: (v0=ref; v1=ref)   name: balance__ref__ref   kind: function   params: color:enum key:ref value:ref left:ref right:ref   result: ref
+clone c119   def: elm/core:Dict.balance   key: (v0=ref; v1=ref)   name: balance__ref__ref   kind: function   params: color:enum key:ref value:ref left:ref right:ref   result: ref
   Case :: ref
     Local right :: ref
     branch RBNode_elm_builtin #0 Red #0 :: enum rK :: ref rV :: ref rLeft :: ref rRight :: ref :: ref
@@ -2791,7 +2782,7 @@ clone c120   def: elm/core:Dict.balance   key: (v0=ref; v1=ref)   name: balance_
             Local value :: ref
             Local left :: ref
             Local right :: ref
-clone c95   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:String.String; v1=ref)   name: insertHelp__t__ref   kind: function   params: key:ref value:ref dict:ref   result: ref
+clone c94   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:String.String; v1=ref)   name: insertHelp__t__ref   kind: function   params: key:ref value:ref dict:ref   result: ref
   Case :: ref
     Local dict :: ref
     branch RBEmpty_elm_builtin #1 :: ref
@@ -2810,12 +2801,12 @@ clone c95   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:String.String
           Local nKey :: ref
         branch LT #0 :: enum
           Call :: ref
-            Global c120 :: ref
+            Global c119 :: ref
             Local nColor :: enum
             Local nKey :: ref
             Local nValue :: ref
             Call :: ref
-              Global c95 :: ref
+              Global c94 :: ref
               Local key :: ref
               Local value :: ref
               Local nLeft :: ref
@@ -2830,20 +2821,20 @@ clone c95   def: elm/core:Dict.insertHelp   key: (v0=type elm/core:String.String
             Local nRight :: ref
         branch GT #2 :: enum
           Call :: ref
-            Global c120 :: ref
+            Global c119 :: ref
             Local nColor :: enum
             Local nKey :: ref
             Local nValue :: ref
             Local nLeft :: ref
             Call :: ref
-              Global c95 :: ref
+              Global c94 :: ref
               Local key :: ref
               Local value :: ref
               Local nRight :: ref
 clone c73   def: elm/core:Dict.insert   key: (v0=type elm/core:String.String; v1=ref)   name: insert__t__ref   kind: function   params: key:ref value:ref dict:ref   result: ref
   Case :: ref
     Call :: ref
-      Global c95 :: ref
+      Global c94 :: ref
       Local key :: ref
       Local value :: ref
       Local dict :: ref

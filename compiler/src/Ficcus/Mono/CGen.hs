@@ -120,9 +120,9 @@ generate program =
                       ++ map objectDef (Set.toList (gExtraObjs final)) ++ reverse (gProtos final)
               body = unlines (concatMap (\l -> if l == helperMark then extra else [l]) (reverse (gOut final)))
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
-          in Right (prelude ++ "\n" ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_"] then closureRuntime ++ "\n" else "")
+          in Right (prelude ++ "\n" ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_"] then closureRuntime ++ "\n" else "")
                     ++ (if "fic_ja_" `List.isInfixOf` body then jsArrayRuntime ++ "\n" else "")
-                    ++ (if "fic_us_" `List.isInfixOf` body then stringRuntime ++ "\n" else "")
+                    ++ (if any (`List.isInfixOf` body) ["fic_us_", "fic_pk_"] then stringRuntime ++ "\n" else "")
                     ++ "\n" ++ body)
         errs -> Left errs
 
@@ -999,6 +999,38 @@ kernelCall info cls name key args =
             ("elm/core:Basics.add", [a, b]) -> arith "FIC_ADD64" "+" a b
             ("elm/core:Basics.sub", [a, b]) -> arith "FIC_SUB64" "-" a b
             ("elm/core:Basics.mul", [a, b]) -> arith "FIC_MUL64" "*" a b
+            ("elm/parser:Parser.Advanced.isSubString", [small, off, row, col, big]) ->
+              do  needClass info cls
+                  r <- fresh "pr"; c <- fresh "pc"; o <- fresh "po"
+                  emit ("int64_t " ++ r ++ " = " ++ row ++ ", " ++ c ++ " = " ++ col ++ ";")
+                  emit ("int64_t " ++ o ++ " = fic_pk_is_sub(" ++ small ++ ", " ++ off ++ ", &" ++ r ++ ", &" ++ c ++ ", " ++ big ++ ");")
+                  return ("(" ++ classType cls ++ "){ " ++ o ++ ", " ++ r ++ ", " ++ c ++ " }")
+            ("elm/parser:Parser.Advanced.findSubString", [small, off, row, col, big]) ->
+              do  needClass info cls
+                  r <- fresh "pr"; c <- fresh "pc"; o <- fresh "po"
+                  emit ("int64_t " ++ r ++ " = " ++ row ++ ", " ++ c ++ " = " ++ col ++ ";")
+                  emit ("int64_t " ++ o ++ " = fic_pk_find(" ++ small ++ ", " ++ off ++ ", &" ++ r ++ ", &" ++ c ++ ", " ++ big ++ ");")
+                  return ("(" ++ classType cls ++ "){ " ++ o ++ ", " ++ r ++ ", " ++ c ++ " }")
+            ("elm/parser:Parser.Advanced.isSubChar", [p, off, s]) -> return ("fic_pk_is_sub_char(" ++ p ++ ", " ++ off ++ ", " ++ s ++ ")")
+            ("elm/parser:Parser.Advanced.isAsciiCode", [code, off, s]) -> return ("fic_pk_is_ascii(" ++ code ++ ", " ++ off ++ ", " ++ s ++ ")")
+            ("elm/parser:Parser.Advanced.chompBase10", [off, s]) -> return ("fic_pk_chomp10(" ++ off ++ ", " ++ s ++ ")")
+            ("elm/parser:Parser.Advanced.consumeBase", [base, off, s]) ->
+              do  needClass info cls
+                  t <- fresh "pt"; o <- fresh "po"
+                  emit ("int64_t " ++ t ++ " = 0;")
+                  emit ("int64_t " ++ o ++ " = fic_pk_consume(" ++ base ++ ", " ++ off ++ ", " ++ s ++ ", &" ++ t ++ ");")
+                  return ("(" ++ classType cls ++ "){ " ++ o ++ ", " ++ t ++ " }")
+            ("elm/parser:Parser.Advanced.consumeBase16", [off, s]) ->
+              do  needClass info cls
+                  t <- fresh "pt"; o <- fresh "po"
+                  emit ("int64_t " ++ t ++ " = 0;")
+                  emit ("int64_t " ++ o ++ " = fic_pk_consume16(" ++ off ++ ", " ++ s ++ ", &" ++ t ++ ");")
+                  return ("(" ++ classType cls ++ "){ " ++ o ++ ", " ++ t ++ " }")
+            ("elm/core:Debug.todo", [msg]) ->
+              do  t <- fresh "todo"
+                  emit (classType cls ++ " " ++ t ++ " = {0};")
+                  emit ("fic_todo(" ++ msg ++ ");")
+                  return t
             ("elm/core:String.append", [a, b]) -> return ("fic_str_append(" ++ a ++ ", " ++ b ++ ")")
             ("elm/core:String.contains", [a, b]) -> return ("fic_us_contains(" ++ a ++ ", " ++ b ++ ")")
             ("elm/core:String.startsWith", [a, b]) -> return ("fic_us_starts_with(" ++ a ++ ", " ++ b ++ ")")

@@ -86,3 +86,12 @@ static void fic_sb_wrap_arg(fic_sb *b, int64_t start) {
   memmove(b->p + start + 1, b->p + start, (size_t)(b->n - 2 - start));
   b->p[start] = '(';
 }
+
+/* Debug.todo: Elm's kernel throws an Error with the module, the region and the message; here the message on stderr and exit 1
+   (the module and the line are not known to the runtime yet) */
+static void fic_todo(fic_ref msg) {
+  fputs("TODO\n\n", stderr);
+  fwrite(FIC_STR(msg)->data, 1, (size_t)FIC_STR(msg)->len, stderr);
+  fputc('\n', stderr);
+  exit(1);
+}

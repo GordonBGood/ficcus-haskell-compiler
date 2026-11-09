@@ -1,0 +1,158 @@
+module Parse exposing (main)
+
+-- elm/parser through the kernels of Parser.Advanced (isSubString, isSubChar, chompBase10, consumeBase, findSubString):
+-- an arithmetic grammar, numbers (int, float, hex), keywords, variables, positions (row, column, offset), chompUntil,
+-- chompWhile, lineComment, backtracking and error reports (dead ends). Output equals Elm's (expected/parse.out).
+
+import Parser exposing ((|.), (|=), Parser, Trailing(..))
+import Set
+
+
+type Expr
+    = Num Float
+    | Add Expr Expr
+    | Mul Expr Expr
+    | Var String
+
+
+expr : Parser Expr
+expr =
+    Parser.succeed (\a rest -> List.foldl (\b acc -> Add acc b) a rest)
+        |= term
+        |. Parser.spaces
+        |= Parser.loop [] addTail
+
+
+addTail : List Expr -> Parser (Parser.Step (List Expr) (List Expr))
+addTail acc =
+    Parser.oneOf
+        [ Parser.succeed (\t -> Parser.Loop (t :: acc))
+            |. Parser.symbol "+"
+            |. Parser.spaces
+            |= term
+            |. Parser.spaces
+        , Parser.succeed (Parser.Done (List.reverse acc))
+        ]
+
+
+term : Parser Expr
+term =
+    Parser.succeed (\a b -> List.foldl (\x acc -> Mul acc x) a b)
+        |= factor
+        |. Parser.spaces
+        |= Parser.loop [] mulTail
+
+
+mulTail : List Expr -> Parser (Parser.Step (List Expr) (List Expr))
+mulTail acc =
+    Parser.oneOf
+        [ Parser.succeed (\f -> Parser.Loop (f :: acc))
+            |. Parser.symbol "*"
+            |. Parser.spaces
+            |= factor
+            |. Parser.spaces
+        , Parser.succeed (Parser.Done (List.reverse acc))
+        ]
+
+
+factor : Parser Expr
+factor =
+    Parser.oneOf
+        [ Parser.map Num Parser.float
+        , Parser.map Var (Parser.variable { start = Char.isLower, inner = Char.isAlphaNum, reserved = Set.fromList [ "let", "in" ] })
+        , Parser.succeed identity
+            |. Parser.symbol "("
+            |. Parser.spaces
+            |= Parser.lazy (\_ -> expr)
+            |. Parser.symbol ")"
+        ]
+
+
+eval : Expr -> Float
+eval e =
+    case e of
+        Num n ->
+            n
+
+        Add a b ->
+            eval a + eval b
+
+        Mul a b ->
+            eval a * eval b
+
+        Var _ ->
+            0
+
+
+show : Expr -> String
+show e =
+    case e of
+        Num n ->
+            String.fromFloat n
+
+        Add a b ->
+            "(" ++ show a ++ " + " ++ show b ++ ")"
+
+        Mul a b ->
+            "(" ++ show a ++ " * " ++ show b ++ ")"
+
+        Var v ->
+            v
+
+
+run : String -> String
+run src =
+    case Parser.run (expr |. Parser.end) src of
+        Ok e ->
+            show e ++ " = " ++ String.fromFloat (eval e)
+
+        Err errs ->
+            Debug.toString errs
+
+
+type alias Where =
+    { row : Int, col : Int, offset : Int }
+
+
+where_ : Parser Where
+where_ =
+    Parser.succeed (\( row, col ) offset -> { row = row, col = col, offset = offset })
+        |= Parser.getPosition
+        |= Parser.getOffset
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    l1 =
+                        Debug.log "arith" (List.map run [ "1 + 2 * 3", "(1 + 2) * 3", "2 * (3 + x1) * 4", "1.5 + 0x10", "1 +", "(1", "", "3 $ 4", "let" ])
+
+                    l2 =
+                        Debug.log "numbers" (List.map (\s -> Debug.toString (Parser.run Parser.int s)) [ "42", "0x1F", "007", "-3", "12a", "" ])
+
+                    l3 =
+                        Debug.log "floats" (List.map (\s -> Debug.toString (Parser.run Parser.float s)) [ "1.5", "1e3", "12", "0.25e-2", "x" ])
+
+                    l4 =
+                        Debug.log "position" (Debug.toString (Parser.run (Parser.succeed (\a b -> ( a, b )) |= where_ |. Parser.chompUntil "\n" |. Parser.chompWhile (\c -> c == '\n' || c == 'x') |= where_) "ab\nxx\ncd"))
+
+                    l5 =
+                        Debug.log "tokens" (Debug.toString (Parser.run (Parser.succeed (\a b -> ( a, b )) |. Parser.keyword "let" |. Parser.spaces |= Parser.getChompedString (Parser.chompWhile Char.isAlpha) |. Parser.spaces |. Parser.symbol "=" |. Parser.spaces |= Parser.int) "let abc = 12"))
+
+                    l6 =
+                        Debug.log "comment" (Debug.toString (Parser.run (Parser.succeed identity |. Parser.lineComment "--" |. Parser.spaces |= where_) "-- hello\n  x"))
+
+                    l7 =
+                        Debug.log "sequence" (Debug.toString (Parser.run (Parser.sequence { start = "[", separator = ",", end = "]", spaces = Parser.spaces, item = Parser.int, trailing = Forbidden }) "[1, 2 ,3]"))
+                in
+                if List.length [ l1, List.map (\s -> s) l2, l3 ] > 0 && String.length l4 + String.length l5 + String.length l6 + String.length l7 > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

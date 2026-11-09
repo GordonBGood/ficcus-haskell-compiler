@@ -14,6 +14,7 @@ module Make
 import qualified Data.ByteString.Builder as B
 import System.Exit (ExitCode(..), exitWith)
 import System.IO (hPutStrLn, stderr)
+import qualified Data.List as List
 import qualified Data.Maybe as Maybe
 import qualified Data.NonEmptyList as NE
 import qualified System.Directory as Dir
@@ -199,7 +200,17 @@ writeOverlay root =
       if same then return () else writeFile file Overlay.overlaySource
       writeFile (dir FP.</> Overlay.bitwise64FileName) Overlay.bitwise64Source
       Flags.setExtraSrcDir (Just dir)
-      return [file]
+      -- the elm/parser overlay is a root module of the projects that depend on elm/parser
+      let elmJson = R.toAbsolutePath root (R.Relative "elm.json")
+      hasJson <- Dir.doesFileExist elmJson
+      usesParser <- if hasJson then (\t -> "elm/parser" `List.isInfixOf` t) <$> readFileStrict elmJson else return False
+      let parserFile = dir FP.</> Overlay.parserFileName
+      if usesParser
+        then do  writeFile parserFile Overlay.parserSource
+                 return [file, parserFile]
+        else do  gone <- Dir.doesFileExist parserFile
+                 if gone then Dir.removeFile parserFile else return ()
+                 return [file]
 
 
 readFileStrict :: FilePath -> IO String

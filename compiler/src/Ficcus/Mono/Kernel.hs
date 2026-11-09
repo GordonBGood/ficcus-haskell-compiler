@@ -2,6 +2,7 @@
 module Ficcus.Mono.Kernel
   ( kernelArity
   , forcedExact
+  , directKernelIds
   )
   where
 
@@ -51,6 +52,10 @@ kernelArity cid =
     , ("elm/core:String.trim", 1), ("elm/core:String.trimLeft", 1), ("elm/core:String.trimRight", 1), ("elm/core:String.uncons", 1)
     , ("elm/core:String.filter", 2), ("elm/core:String.any", 2), ("elm/core:String.all", 2), ("elm/core:String.toInt", 1), ("elm/core:String.toFloat", 1)
     , ("elm/core:Char.fromCode", 1), ("elm/core:Char.toLocaleUpper", 1), ("elm/core:Char.toLocaleLower", 1)
+    , ("elm/parser:Parser.Advanced.isSubString", 5), ("elm/parser:Parser.Advanced.findSubString", 5), ("elm/parser:Parser.Advanced.isSubChar", 3)
+    , ("elm/parser:Parser.Advanced.isAsciiCode", 3), ("elm/parser:Parser.Advanced.chompBase10", 2)
+    , ("elm/parser:Parser.Advanced.consumeBase", 3), ("elm/parser:Parser.Advanced.consumeBase16", 2)
+    , ("elm/core:Debug.todo", 1)
     , ("elm/core:String.fromInt", 1), ("elm/core:String.fromFloat", 1)
     , ("elm/core:Debug.log", 2), ("elm/core:Debug.toString", 1)
     , ("elm/core:Platform.worker", 1)
@@ -63,3 +68,12 @@ kernelArity cid =
 forcedExact :: String -> Int -> Bool
 forcedExact cid ix =
   (cid, ix) `elem` [("elm/core:Debug.log", 0), ("elm/core:Debug.toString", 0)]
+
+
+-- | the table ids that `Elm.Kernel.<module>.<name>` written directly in a package body may stand for (the wrappers of elm/core
+-- are named `elm/core:<module>.<name>`; the kernels of other packages are called from the module that declares the wrapper)
+directKernelIds :: String -> String -> [String]
+directKernelIds m n =
+  case m of
+    "Parser" -> [ "elm/parser:Parser.Advanced." ++ n ]
+    _ -> [ "elm/core:" ++ m ++ "." ++ n ]

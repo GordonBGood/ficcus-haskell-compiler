@@ -7,6 +7,8 @@ module Ficcus.Mono.Overlay
   , overlayId
   , bitwise64Source
   , bitwise64FileName
+  , parserSource
+  , parserFileName
   )
   where
 
@@ -42,7 +44,10 @@ overlayId :: String -> Maybe String
 overlayId cid =
   case lookup cid table of
     Just name -> Just ("author/project:" ++ overlayModuleName ++ "." ++ name)
-    Nothing -> Nothing
+    Nothing ->
+      case cid of
+        "elm/parser:Parser.Advanced.multiComment" -> Just "author/project:FicOverlayParser.multiComment"
+        _ -> Nothing
   where
     table =
       [ ("elm/core:List.map2", "listMap2"), ("elm/core:List.map3", "listMap3")
@@ -50,6 +55,7 @@ overlayId cid =
       , ("elm/core:List.indexedMap", "listIndexedMap")
       , ("elm/core:List.sortBy", "listSortBy"), ("elm/core:List.sortWith", "listSortWith")
       ]
+    -- the module of the parser overlay is not the same: see below
 
 
 -- the 64 bit Bitwise module (overlay/Bitwise64.elm): written beside FicOverlay.elm, its functions are kernel functions
@@ -60,3 +66,13 @@ bitwise64Source =
 
 bitwise64FileName :: FilePath
 bitwise64FileName = "Bitwise64.elm"
+
+
+-- the elm/parser overlay (overlay/FicOverlayParser.elm): compiled only into projects that depend on elm/parser
+parserSource :: String
+parserSource =
+  $(embedFiles [ "overlay/FicOverlayParser.elm" ])
+
+
+parserFileName :: FilePath
+parserFileName = "FicOverlayParser.elm"

@@ -1,0 +1,726 @@
+-- module Parse: problems=0 instances=195 instance-failures=0 defaulted=0
+-- equality-uses: total=2 at-function=0
+module author/project:Parse
+type Expr   id: author/project:Parse.Expr   params: 0   ctors: 4   layout: normal
+  ctor Num   id: author/project:Parse.Num   tag: 0   arity: 1   fields: Float   sig: Float -> Expr   kinds: 
+  ctor Add   id: author/project:Parse.Add   tag: 1   arity: 2   fields: Expr ;; Expr   sig: Expr -> Expr -> Expr   kinds: 
+  ctor Mul   id: author/project:Parse.Mul   tag: 2   arity: 2   fields: Expr ;; Expr   sig: Expr -> Expr -> Expr   kinds: 
+  ctor Var   id: author/project:Parse.Var   tag: 3   arity: 1   fields: String   sig: String -> Expr   kinds: 
+def where_ :: Parser Where    [118:1-118:7]   id: author/project:Parse.where_   sig: Parser Where   kinds:    group: author/project:Parse.where_ nonrec ann
+  119:5-121:28 Binop :: Parser Where   callee: elm/parser:Parser.keeper   instance: a := Int, b := { col : Int, row : Int, offset : Int }   sig#: 4905d8ed   subst: v0 := Int, v1 := { col : Int, row : Int, offset : Int }
+    119:5-120:30 Binop :: Parser (Int -> { col : Int, row : Int, offset : Int })   callee: elm/parser:Parser.keeper   instance: a := ( Int, Int ), b := Int -> { col : Int, row : Int, offset : Int }   sig#: 4905d8ed   subst: v0 := ( Int, Int ), v1 := Int -> { col : Int, row : Int, offset : Int }
+      119:5-119:86 Call :: Parser (( Int, Int ) -> Int -> { col : Int, row : Int, offset : Int })
+        119:5-119:19 VarForeign :: (( Int, Int ) -> Int -> { col : Int, row : Int, offset : Int }) -> Parser (( Int, Int ) -> Int -> { col : Int, row : Int, offset : Int })   callee: elm/parser:Parser.succeed   instance: a := ( Int, Int ) -> Int -> { col : Int, row : Int, offset : Int }   sig#: 55209621   subst: v0 := ( Int, Int ) -> Int -> { col : Int, row : Int, offset : Int }
+        119:21-119:86 Lambda :: ( Int, Int ) -> Int -> { col : Int, row : Int, offset : Int }
+          119:22-119:34 PPair :: ( Int, Int )
+            119:24-119:27 PVar row :: Int
+            119:29-119:32 PVar col :: Int
+          119:35-119:41 PVar offset :: Int
+          119:45-119:86 Record :: { col : Int, row : Int, offset : Int }
+            119:64-119:67 VarLocal :: Int
+            119:53-119:56 VarLocal :: Int
+            119:78-119:84 VarLocal :: Int
+      120:12-120:30 VarForeign :: Parser ( Int, Int )   callee: elm/parser:Parser.getPosition
+    121:12-121:28 VarForeign :: Parser Int   callee: elm/parser:Parser.getOffset
+def show :: Expr -> String    [88:1-88:5]   id: author/project:Parse.show   sig: Expr -> String   kinds:    group: author/project:Parse.show rec ann
+  88:6-88:7 PVar e :: Expr
+  89:5-100:14 Case :: String
+    89:10-89:11 VarLocal :: Expr
+    90:9-90:14 PCtor Num :: Expr
+      90:13-90:14 PVar n :: Float
+    91:13-91:31 Call :: String
+      91:13-91:29 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+      91:30-91:31 VarLocal :: Float
+    93:9-93:16 PCtor Add :: Expr
+      93:13-93:14 PVar a :: Expr
+      93:15-93:16 PVar b :: Expr
+    94:13-94:52 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      94:13-94:16 Str :: String
+      94:20-94:52 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        94:20-94:26 Call :: String
+          94:20-94:24 VarTopLevel :: Expr -> String   callee: author/project:Parse.show   use: rec
+          94:25-94:26 VarLocal :: Expr
+        94:30-94:52 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+          94:30-94:35 Str :: String
+          94:39-94:52 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            94:39-94:45 Call :: String
+              94:39-94:43 VarTopLevel :: Expr -> String   callee: author/project:Parse.show   use: rec
+              94:44-94:45 VarLocal :: Expr
+            94:49-94:52 Str :: String
+    96:9-96:16 PCtor Mul :: Expr
+      96:13-96:14 PVar a :: Expr
+      96:15-96:16 PVar b :: Expr
+    97:13-97:52 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      97:13-97:16 Str :: String
+      97:20-97:52 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        97:20-97:26 Call :: String
+          97:20-97:24 VarTopLevel :: Expr -> String   callee: author/project:Parse.show   use: rec
+          97:25-97:26 VarLocal :: Expr
+        97:30-97:52 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+          97:30-97:35 Str :: String
+          97:39-97:52 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            97:39-97:45 Call :: String
+              97:39-97:43 VarTopLevel :: Expr -> String   callee: author/project:Parse.show   use: rec
+              97:44-97:45 VarLocal :: Expr
+            97:49-97:52 Str :: String
+    99:9-99:14 PCtor Var :: Expr
+      99:13-99:14 PVar v :: String
+    100:13-100:14 VarLocal :: String
+def mulTail :: List Expr -> Parser (Step (List Expr) (List Expr))    [47:1-47:8]   id: author/project:Parse.mulTail   sig: List Expr -> Parser (Step (List Expr) (List Expr))   kinds:    group: author/project:Parse.expr rec ann
+  47:9-47:12 PVar acc :: List Expr
+  48:5-55:10 Call :: Parser (Step (List Expr) (List Expr))
+    48:5-48:17 VarForeign :: List (Parser (Step (List Expr) (List Expr))) -> Parser (Step (List Expr) (List Expr))   callee: elm/parser:Parser.oneOf   instance: a := Step (List Expr) (List Expr)   sig#: d41aa24d   subst: v0 := Step (List Expr) (List Expr)
+    49:9-55:10 List :: List (Parser (Step (List Expr) (List Expr)))
+      49:11-53:29 Binop :: Parser (Step (List Expr) (List Expr))   callee: elm/parser:Parser.keeper   instance: a := Expr, b := Step (List Expr) (List Expr)   sig#: 4905d8ed   subst: v0 := Expr, v1 := Step (List Expr) (List Expr)
+        49:11-51:29 Binop :: Parser (Expr -> Step (List Expr) (List Expr))   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Expr -> Step (List Expr) (List Expr)   sig#: e5ded9e1   subst: v0 := Expr -> Step (List Expr) (List Expr), v1 := ()
+          49:11-50:33 Binop :: Parser (Expr -> Step (List Expr) (List Expr))   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Expr -> Step (List Expr) (List Expr)   sig#: e5ded9e1   subst: v0 := Expr -> Step (List Expr) (List Expr), v1 := ()
+            49:11-49:55 Call :: Parser (Expr -> Step (List Expr) (List Expr))
+              49:11-49:25 VarForeign :: (Expr -> Step (List Expr) (List Expr)) -> Parser (Expr -> Step (List Expr) (List Expr))   callee: elm/parser:Parser.succeed   instance: a := Expr -> Step (List Expr) (List Expr)   sig#: 55209621   subst: v0 := Expr -> Step (List Expr) (List Expr)
+              49:27-49:55 Lambda :: Expr -> Step (List Expr) (List Expr)
+                49:28-49:29 PVar f :: Expr
+                49:33-49:54 Call :: Step (List Expr) (List Expr)
+                  49:33-49:44 VarCtor :: List Expr -> Step (List Expr) (List Expr)   callee: elm/parser:Parser.Loop   instance: a := List Expr, state := List Expr   sig#: 23a7ab6f   subst: v0 := List Expr, v1 := List Expr
+                  49:46-49:54 Binop :: List Expr   callee: elm/core:List.cons   instance: a := Expr   sig#: ddd4c5f2   subst: v0 := Expr
+                    49:46-49:47 VarLocal :: Expr
+                    49:51-49:54 VarLocal :: List Expr
+            50:16-50:33 Call :: Parser ()
+              50:16-50:29 VarForeign :: String -> Parser ()   callee: elm/parser:Parser.symbol
+              50:30-50:33 Str :: String
+          51:16-51:29 VarForeign :: Parser ()   callee: elm/parser:Parser.spaces
+        52:16-53:29 Binop :: Parser Expr   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Expr   sig#: e5ded9e1   subst: v0 := Expr, v1 := ()
+          52:16-52:22 VarTopLevel :: Parser Expr   callee: author/project:Parse.factor   use: rec
+          53:16-53:29 VarForeign :: Parser ()   callee: elm/parser:Parser.spaces
+      54:11-54:56 Call :: Parser (Step (List Expr) (List Expr))
+        54:11-54:25 VarForeign :: Step (List Expr) (List Expr) -> Parser (Step (List Expr) (List Expr))   callee: elm/parser:Parser.succeed   instance: a := Step (List Expr) (List Expr)   sig#: 55209621   subst: v0 := Step (List Expr) (List Expr)
+        54:27-54:56 Call :: Step (List Expr) (List Expr)
+          54:27-54:38 VarCtor :: List Expr -> Step (List Expr) (List Expr)   callee: elm/parser:Parser.Done   instance: a := List Expr, state := List Expr   sig#: 23a837cf   subst: v0 := List Expr, v1 := List Expr
+          54:40-54:56 Call :: List Expr
+            54:40-54:52 VarForeign :: List Expr -> List Expr   callee: elm/core:List.reverse   instance: a := Expr   sig#: c2fcf511   subst: v0 := Expr
+            54:53-54:56 VarLocal :: List Expr
+def addTail :: List Expr -> Parser (Step (List Expr) (List Expr))    [27:1-27:8]   id: author/project:Parse.addTail   sig: List Expr -> Parser (Step (List Expr) (List Expr))   kinds:    group: author/project:Parse.expr rec ann
+  27:9-27:12 PVar acc :: List Expr
+  28:5-35:10 Call :: Parser (Step (List Expr) (List Expr))
+    28:5-28:17 VarForeign :: List (Parser (Step (List Expr) (List Expr))) -> Parser (Step (List Expr) (List Expr))   callee: elm/parser:Parser.oneOf   instance: a := Step (List Expr) (List Expr)   sig#: d41aa24d   subst: v0 := Step (List Expr) (List Expr)
+    29:9-35:10 List :: List (Parser (Step (List Expr) (List Expr)))
+      29:11-33:29 Binop :: Parser (Step (List Expr) (List Expr))   callee: elm/parser:Parser.keeper   instance: a := Expr, b := Step (List Expr) (List Expr)   sig#: 4905d8ed   subst: v0 := Expr, v1 := Step (List Expr) (List Expr)
+        29:11-31:29 Binop :: Parser (Expr -> Step (List Expr) (List Expr))   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Expr -> Step (List Expr) (List Expr)   sig#: e5ded9e1   subst: v0 := Expr -> Step (List Expr) (List Expr), v1 := ()
+          29:11-30:33 Binop :: Parser (Expr -> Step (List Expr) (List Expr))   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Expr -> Step (List Expr) (List Expr)   sig#: e5ded9e1   subst: v0 := Expr -> Step (List Expr) (List Expr), v1 := ()
+            29:11-29:55 Call :: Parser (Expr -> Step (List Expr) (List Expr))
+              29:11-29:25 VarForeign :: (Expr -> Step (List Expr) (List Expr)) -> Parser (Expr -> Step (List Expr) (List Expr))   callee: elm/parser:Parser.succeed   instance: a := Expr -> Step (List Expr) (List Expr)   sig#: 55209621   subst: v0 := Expr -> Step (List Expr) (List Expr)
+              29:27-29:55 Lambda :: Expr -> Step (List Expr) (List Expr)
+                29:28-29:29 PVar t :: Expr
+                29:33-29:54 Call :: Step (List Expr) (List Expr)
+                  29:33-29:44 VarCtor :: List Expr -> Step (List Expr) (List Expr)   callee: elm/parser:Parser.Loop   instance: a := List Expr, state := List Expr   sig#: 23a7ab6f   subst: v0 := List Expr, v1 := List Expr
+                  29:46-29:54 Binop :: List Expr   callee: elm/core:List.cons   instance: a := Expr   sig#: ddd4c5f2   subst: v0 := Expr
+                    29:46-29:47 VarLocal :: Expr
+                    29:51-29:54 VarLocal :: List Expr
+            30:16-30:33 Call :: Parser ()
+              30:16-30:29 VarForeign :: String -> Parser ()   callee: elm/parser:Parser.symbol
+              30:30-30:33 Str :: String
+          31:16-31:29 VarForeign :: Parser ()   callee: elm/parser:Parser.spaces
+        32:16-33:29 Binop :: Parser Expr   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Expr   sig#: e5ded9e1   subst: v0 := Expr, v1 := ()
+          32:16-32:20 VarTopLevel :: Parser Expr   callee: author/project:Parse.term   use: rec
+          33:16-33:29 VarForeign :: Parser ()   callee: elm/parser:Parser.spaces
+      34:11-34:56 Call :: Parser (Step (List Expr) (List Expr))
+        34:11-34:25 VarForeign :: Step (List Expr) (List Expr) -> Parser (Step (List Expr) (List Expr))   callee: elm/parser:Parser.succeed   instance: a := Step (List Expr) (List Expr)   sig#: 55209621   subst: v0 := Step (List Expr) (List Expr)
+        34:27-34:56 Call :: Step (List Expr) (List Expr)
+          34:27-34:38 VarCtor :: List Expr -> Step (List Expr) (List Expr)   callee: elm/parser:Parser.Done   instance: a := List Expr, state := List Expr   sig#: 23a837cf   subst: v0 := List Expr, v1 := List Expr
+          34:40-34:56 Call :: List Expr
+            34:40-34:52 VarForeign :: List Expr -> List Expr   callee: elm/core:List.reverse   instance: a := Expr   sig#: c2fcf511   subst: v0 := Expr
+            34:53-34:56 VarLocal :: List Expr
+def factor :: Parser Expr    [59:1-59:7]   id: author/project:Parse.factor   sig: Parser Expr   kinds:    group: author/project:Parse.expr rec ann
+  60:5-68:10 Call :: Parser Expr
+    60:5-60:17 VarForeign :: List (Parser Expr) -> Parser Expr   callee: elm/parser:Parser.oneOf   instance: a := Expr   sig#: d41aa24d   subst: v0 := Expr
+    61:9-68:10 List :: List (Parser Expr)
+      61:11-61:38 Call :: Parser Expr
+        61:11-61:21 VarForeign :: (Float -> Expr) -> Parser Float -> Parser Expr   callee: elm/parser:Parser.map   instance: a := Float, b := Expr   sig#: 2673dbff   subst: v0 := Float, v1 := Expr
+        61:22-61:25 VarCtor :: Float -> Expr   callee: author/project:Parse.Num
+        61:26-61:38 VarForeign :: Parser Float   callee: elm/parser:Parser.float
+      62:11-62:133 Call :: Parser Expr
+        62:11-62:21 VarForeign :: (String -> Expr) -> Parser String -> Parser Expr   callee: elm/parser:Parser.map   instance: a := String, b := Expr   sig#: 2673dbff   subst: v0 := String, v1 := Expr
+        62:22-62:25 VarCtor :: String -> Expr   callee: author/project:Parse.Var
+        62:27-62:133 Call :: Parser String
+          62:27-62:42 VarForeign :: { inner : Char -> Bool, start : Char -> Bool, reserved : Set String } -> Parser String   callee: elm/parser:Parser.variable
+          62:43-62:133 Record :: { inner : Char -> Bool, start : Char -> Bool, reserved : Set String }
+            62:75-62:90 VarForeign :: Char -> Bool   callee: elm/core:Char.isAlphaNum
+            62:53-62:65 VarForeign :: Char -> Bool   callee: elm/core:Char.isLower
+            62:103-62:131 Call :: Set String
+              62:103-62:115 VarForeign :: List String -> Set String   callee: elm/core:Set.fromList   instance: comparable := String   sig#: 8a50a616   subst: v0 := String
+              62:116-62:131 List :: List String
+                62:118-62:123 Str :: String
+                62:125-62:129 Str :: String
+      63:11-67:33 Binop :: Parser Expr   callee: elm/parser:Parser.keeper   instance: a := Expr, b := Expr   sig#: 4905d8ed   subst: v0 := Expr, v1 := Expr
+        63:11-65:29 Binop :: Parser (Expr -> Expr)   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Expr -> Expr   sig#: e5ded9e1   subst: v0 := Expr -> Expr, v1 := ()
+          63:11-64:33 Binop :: Parser (Expr -> Expr)   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Expr -> Expr   sig#: e5ded9e1   subst: v0 := Expr -> Expr, v1 := ()
+            63:11-63:34 Call :: Parser (Expr -> Expr)
+              63:11-63:25 VarForeign :: (Expr -> Expr) -> Parser (Expr -> Expr)   callee: elm/parser:Parser.succeed   instance: a := Expr -> Expr   sig#: 55209621   subst: v0 := Expr -> Expr
+              63:26-63:34 VarForeign :: Expr -> Expr   callee: elm/core:Basics.identity   instance: a := Expr   sig#: 1f734da5   subst: v0 := Expr
+            64:16-64:33 Call :: Parser ()
+              64:16-64:29 VarForeign :: String -> Parser ()   callee: elm/parser:Parser.symbol
+              64:30-64:33 Str :: String
+          65:16-65:29 VarForeign :: Parser ()   callee: elm/parser:Parser.spaces
+        66:16-67:33 Binop :: Parser Expr   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Expr   sig#: e5ded9e1   subst: v0 := Expr, v1 := ()
+          66:16-66:39 Call :: Parser Expr
+            66:16-66:27 VarForeign :: (() -> Parser Expr) -> Parser Expr   callee: elm/parser:Parser.lazy   instance: a := Expr   sig#: ae5705f2   subst: v0 := Expr
+            66:29-66:39 Lambda :: () -> Parser Expr
+              66:30-66:31 PAnything :: ()
+              66:35-66:39 VarTopLevel :: Parser Expr   callee: author/project:Parse.expr   use: rec
+          67:16-67:33 Call :: Parser ()
+            67:16-67:29 VarForeign :: String -> Parser ()   callee: elm/parser:Parser.symbol
+            67:30-67:33 Str :: String
+def term :: Parser Expr    [39:1-39:5]   id: author/project:Parse.term   sig: Parser Expr   kinds:    group: author/project:Parse.expr rec ann
+  40:5-43:34 Binop :: Parser Expr   callee: elm/parser:Parser.keeper   instance: a := List Expr, b := Expr   sig#: 4905d8ed   subst: v0 := List Expr, v1 := Expr
+    40:5-42:25 Binop :: Parser (List Expr -> Expr)   callee: elm/parser:Parser.keeper   instance: a := Expr, b := List Expr -> Expr   sig#: 4905d8ed   subst: v0 := Expr, v1 := List Expr -> Expr
+      40:5-40:65 Call :: Parser (Expr -> List Expr -> Expr)
+        40:5-40:19 VarForeign :: (Expr -> List Expr -> Expr) -> Parser (Expr -> List Expr -> Expr)   callee: elm/parser:Parser.succeed   instance: a := Expr -> List Expr -> Expr   sig#: 55209621   subst: v0 := Expr -> List Expr -> Expr
+        40:21-40:65 Lambda :: Expr -> List Expr -> Expr
+          40:22-40:23 PVar a :: Expr
+          40:24-40:25 PVar b :: List Expr
+          40:29-40:65 Call :: Expr
+            40:29-40:39 VarForeign :: (Expr -> Expr -> Expr) -> Expr -> List Expr -> Expr   callee: elm/core:List.foldl   instance: a := Expr, b := Expr   sig#: 8a8782c6   subst: v0 := Expr, v1 := Expr
+            40:41-40:60 Lambda :: Expr -> Expr -> Expr
+              40:42-40:43 PVar x :: Expr
+              40:44-40:47 PVar acc :: Expr
+              40:51-40:60 Call :: Expr
+                40:51-40:54 VarCtor :: Expr -> Expr -> Expr   callee: author/project:Parse.Mul
+                40:55-40:58 VarLocal :: Expr
+                40:59-40:60 VarLocal :: Expr
+            40:62-40:63 VarLocal :: Expr
+            40:64-40:65 VarLocal :: List Expr
+      41:12-42:25 Binop :: Parser Expr   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Expr   sig#: e5ded9e1   subst: v0 := Expr, v1 := ()
+        41:12-41:18 VarTopLevel :: Parser Expr   callee: author/project:Parse.factor   use: rec
+        42:12-42:25 VarForeign :: Parser ()   callee: elm/parser:Parser.spaces
+    43:12-43:34 Call :: Parser (List Expr)
+      43:12-43:23 VarForeign :: List Expr -> (List Expr -> Parser (Step (List Expr) (List Expr))) -> Parser (List Expr)   callee: elm/parser:Parser.loop   instance: a := List Expr, state := List Expr   sig#: df5e7798   subst: v0 := List Expr, v1 := List Expr
+      43:24-43:26 List :: List Expr
+      43:27-43:34 VarTopLevel :: List Expr -> Parser (Step (List Expr) (List Expr))   callee: author/project:Parse.mulTail   use: rec
+def expr :: Parser Expr    [19:1-19:5]   id: author/project:Parse.expr   sig: Parser Expr   kinds:    group: author/project:Parse.expr rec ann
+  20:5-23:34 Binop :: Parser Expr   callee: elm/parser:Parser.keeper   instance: a := List Expr, b := Expr   sig#: 4905d8ed   subst: v0 := List Expr, v1 := Expr
+    20:5-22:25 Binop :: Parser (List Expr -> Expr)   callee: elm/parser:Parser.keeper   instance: a := Expr, b := List Expr -> Expr   sig#: 4905d8ed   subst: v0 := Expr, v1 := List Expr -> Expr
+      20:5-20:71 Call :: Parser (Expr -> List Expr -> Expr)
+        20:5-20:19 VarForeign :: (Expr -> List Expr -> Expr) -> Parser (Expr -> List Expr -> Expr)   callee: elm/parser:Parser.succeed   instance: a := Expr -> List Expr -> Expr   sig#: 55209621   subst: v0 := Expr -> List Expr -> Expr
+        20:21-20:71 Lambda :: Expr -> List Expr -> Expr
+          20:22-20:23 PVar a :: Expr
+          20:24-20:28 PVar rest :: List Expr
+          20:32-20:71 Call :: Expr
+            20:32-20:42 VarForeign :: (Expr -> Expr -> Expr) -> Expr -> List Expr -> Expr   callee: elm/core:List.foldl   instance: a := Expr, b := Expr   sig#: 8a8782c6   subst: v0 := Expr, v1 := Expr
+            20:44-20:63 Lambda :: Expr -> Expr -> Expr
+              20:45-20:46 PVar b :: Expr
+              20:47-20:50 PVar acc :: Expr
+              20:54-20:63 Call :: Expr
+                20:54-20:57 VarCtor :: Expr -> Expr -> Expr   callee: author/project:Parse.Add
+                20:58-20:61 VarLocal :: Expr
+                20:62-20:63 VarLocal :: Expr
+            20:65-20:66 VarLocal :: Expr
+            20:67-20:71 VarLocal :: List Expr
+      21:12-22:25 Binop :: Parser Expr   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Expr   sig#: e5ded9e1   subst: v0 := Expr, v1 := ()
+        21:12-21:16 VarTopLevel :: Parser Expr   callee: author/project:Parse.term   use: rec
+        22:12-22:25 VarForeign :: Parser ()   callee: elm/parser:Parser.spaces
+    23:12-23:34 Call :: Parser (List Expr)
+      23:12-23:23 VarForeign :: List Expr -> (List Expr -> Parser (Step (List Expr) (List Expr))) -> Parser (List Expr)   callee: elm/parser:Parser.loop   instance: a := List Expr, state := List Expr   sig#: df5e7798   subst: v0 := List Expr, v1 := List Expr
+      23:24-23:26 List :: List Expr
+      23:27-23:34 VarTopLevel :: List Expr -> Parser (Step (List Expr) (List Expr))   callee: author/project:Parse.addTail   use: rec
+def eval :: Expr -> Float    [72:1-72:5]   id: author/project:Parse.eval   sig: Expr -> Float   kinds:    group: author/project:Parse.eval rec ann
+  72:6-72:7 PVar e :: Expr
+  73:5-84:14 Case :: Float
+    73:10-73:11 VarLocal :: Expr
+    74:9-74:14 PCtor Num :: Expr
+      74:13-74:14 PVar n :: Float
+    75:13-75:14 VarLocal :: Float
+    77:9-77:16 PCtor Add :: Expr
+      77:13-77:14 PVar a :: Expr
+      77:15-77:16 PVar b :: Expr
+    78:13-78:28 Binop :: Float   callee: elm/core:Basics.add   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+      78:13-78:19 Call :: Float
+        78:13-78:17 VarTopLevel :: Expr -> Float   callee: author/project:Parse.eval   use: rec
+        78:18-78:19 VarLocal :: Expr
+      78:22-78:28 Call :: Float
+        78:22-78:26 VarTopLevel :: Expr -> Float   callee: author/project:Parse.eval   use: rec
+        78:27-78:28 VarLocal :: Expr
+    80:9-80:16 PCtor Mul :: Expr
+      80:13-80:14 PVar a :: Expr
+      80:15-80:16 PVar b :: Expr
+    81:13-81:28 Binop :: Float   callee: elm/core:Basics.mul   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+      81:13-81:19 Call :: Float
+        81:13-81:17 VarTopLevel :: Expr -> Float   callee: author/project:Parse.eval   use: rec
+        81:18-81:19 VarLocal :: Expr
+      81:22-81:28 Call :: Float
+        81:22-81:26 VarTopLevel :: Expr -> Float   callee: author/project:Parse.eval   use: rec
+        81:27-81:28 VarLocal :: Expr
+    83:9-83:14 PCtor Var :: Expr
+      83:13-83:14 PAnything :: String
+    84:13-84:14 Int :: Float
+def run :: String -> String    [104:1-104:4]   id: author/project:Parse.run   sig: String -> String   kinds:    group: author/project:Parse.run nonrec ann
+  104:5-104:8 PVar src :: String
+  105:5-110:32 Case :: String
+    105:10-105:45 Call :: Result (List DeadEnd) Expr
+      105:10-105:20 VarForeign :: Parser Expr -> String -> Result (List DeadEnd) Expr   callee: elm/parser:Parser.run   instance: a := Expr   sig#: 7bd21c49   subst: v0 := Expr
+      105:22-105:40 Binop :: Parser Expr   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Expr   sig#: e5ded9e1   subst: v0 := Expr, v1 := ()
+        105:22-105:26 VarTopLevel :: Parser Expr   callee: author/project:Parse.expr   use: gen
+        105:30-105:40 VarForeign :: Parser ()   callee: elm/parser:Parser.end
+      105:42-105:45 VarLocal :: String
+    106:9-106:13 PCtor Ok :: Result (List DeadEnd) Expr
+      106:12-106:13 PVar e :: Expr
+    107:13-107:57 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      107:13-107:19 Call :: String
+        107:13-107:17 VarTopLevel :: Expr -> String   callee: author/project:Parse.show   use: gen
+        107:18-107:19 VarLocal :: Expr
+      107:23-107:56 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        107:23-107:28 Str :: String
+        107:32-107:56 Call :: String
+          107:32-107:48 VarForeign :: Float -> String   callee: elm/core:String.fromFloat
+          107:50-107:56 Call :: Float
+            107:50-107:54 VarTopLevel :: Expr -> Float   callee: author/project:Parse.eval   use: gen
+            107:55-107:56 VarLocal :: Expr
+    109:9-109:17 PCtor Err :: Result (List DeadEnd) Expr
+      109:13-109:17 PVar errs :: List DeadEnd
+    110:13-110:32 Call :: String
+      110:13-110:27 VarDebug :: List DeadEnd -> String   callee: elm/core:Debug.toString   instance: a := List DeadEnd   sig#: d170fa67   subst: v0 := List DeadEnd
+      110:28-110:32 VarLocal :: List DeadEnd
+def main :: Program () () ()    [125:1-125:5]   id: author/project:Parse.main   sig: Program () () ()   kinds:    group: author/project:Parse.main nonrec ann
+  126:5-158:10 Call :: Program () () ()
+    126:5-126:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    127:9-158:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      128:13-155:37 Lambda :: () -> ( (), Cmd () )
+        128:14-128:15 PAnything :: ()
+        def l7 :: String    [148:21-148:23]   id: author/project:Parse.l7@148:21   sig: String   kinds:    group: author/project:Parse.l7@148:21 nonrec inferred
+          149:25-149:212 Call :: String
+            149:25-149:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            149:35-149:45 Str :: String
+            149:47-149:212 Call :: String
+              149:47-149:61 VarDebug :: Result (List DeadEnd) (List Int) -> String   callee: elm/core:Debug.toString   instance: a := Result (List DeadEnd) (List Int)   sig#: d170fa67   subst: v0 := Result (List DeadEnd) (List Int)
+              149:63-149:212 Call :: Result (List DeadEnd) (List Int)
+                149:63-149:73 VarForeign :: Parser (List Int) -> String -> Result (List DeadEnd) (List Int)   callee: elm/parser:Parser.run   instance: a := List Int   sig#: 7bd21c49   subst: v0 := List Int
+                149:75-149:199 Call :: Parser (List Int)
+                  149:75-149:90 VarForeign :: { end : String, item : Parser Int, start : String, spaces : Parser (), trailing : Trailing, separator : String } -> Parser (List Int)   callee: elm/parser:Parser.sequence   instance: a := Int   sig#: 509021bf   subst: v0 := Int
+                  149:91-149:199 Record :: { end : String, item : Parser Int, start : String, spaces : Parser (), trailing : Trailing, separator : String }
+                    149:129-149:132 Str :: String
+                    149:165-149:175 VarForeign :: Parser Int   callee: elm/parser:Parser.int
+                    149:101-149:104 Str :: String
+                    149:143-149:156 VarForeign :: Parser ()   callee: elm/parser:Parser.spaces
+                    149:188-149:197 VarCtor :: Trailing   callee: elm/parser:Parser.Forbidden
+                    149:118-149:121 Str :: String
+                149:201-149:212 Str :: String
+        def l6 :: String    [145:21-145:23]   id: author/project:Parse.l6@145:21   sig: String   kinds:    group: author/project:Parse.l6@145:21 nonrec inferred
+          146:25-146:168 Call :: String
+            146:25-146:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            146:35-146:44 Str :: String
+            146:46-146:168 Call :: String
+              146:46-146:60 VarDebug :: Result (List DeadEnd) Where -> String   callee: elm/core:Debug.toString   instance: a := Result (List DeadEnd) Where   sig#: d170fa67   subst: v0 := Result (List DeadEnd) Where
+              146:62-146:168 Call :: Result (List DeadEnd) Where
+                146:62-146:72 VarForeign :: Parser Where -> String -> Result (List DeadEnd) Where   callee: elm/parser:Parser.run   instance: a := { col : Int, row : Int, offset : Int }   sig#: 7bd21c49   subst: v0 := { col : Int, row : Int, offset : Int }
+                146:74-146:151 Binop :: Parser Where   callee: elm/parser:Parser.keeper   instance: a := { col : Int, row : Int, offset : Int }, b := { col : Int, row : Int, offset : Int }   sig#: 4905d8ed   subst: v0 := { col : Int, row : Int, offset : Int }, v1 := { col : Int, row : Int, offset : Int }
+                  146:74-146:141 Binop :: Parser (Where -> Where)   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Where -> Where   sig#: e5ded9e1   subst: v0 := Where -> Where, v1 := ()
+                    146:74-146:124 Binop :: Parser (Where -> Where)   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := Where -> Where   sig#: e5ded9e1   subst: v0 := Where -> Where, v1 := ()
+                      146:74-146:97 Call :: Parser (Where -> Where)
+                        146:74-146:88 VarForeign :: (Where -> Where) -> Parser (Where -> Where)   callee: elm/parser:Parser.succeed   instance: a := Where -> Where   sig#: 55209621   subst: v0 := Where -> Where
+                        146:89-146:97 VarForeign :: Where -> Where   callee: elm/core:Basics.identity   instance: a := { col : Int, row : Int, offset : Int }   sig#: 1f734da5   subst: v0 := { col : Int, row : Int, offset : Int }
+                      146:101-146:124 Call :: Parser ()
+                        146:101-146:119 VarForeign :: String -> Parser ()   callee: elm/parser:Parser.lineComment
+                        146:120-146:124 Str :: String
+                    146:128-146:141 VarForeign :: Parser ()   callee: elm/parser:Parser.spaces
+                  146:145-146:151 VarTopLevel :: Parser Where   callee: author/project:Parse.where_   use: gen
+                146:153-146:168 Str :: String
+        def l5 :: String    [142:21-142:23]   id: author/project:Parse.l5@142:21   sig: String   kinds:    group: author/project:Parse.l5@142:21 nonrec inferred
+          143:25-143:292 Call :: String
+            143:25-143:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            143:35-143:43 Str :: String
+            143:45-143:292 Call :: String
+              143:45-143:59 VarDebug :: Result (List DeadEnd) ( String, Int ) -> String   callee: elm/core:Debug.toString   instance: a := Result (List DeadEnd) ( String, Int )   sig#: d170fa67   subst: v0 := Result (List DeadEnd) ( String, Int )
+              143:61-143:292 Call :: Result (List DeadEnd) ( String, Int )
+                143:61-143:71 VarForeign :: Parser ( String, Int ) -> String -> Result (List DeadEnd) ( String, Int )   callee: elm/parser:Parser.run   instance: a := ( String, Int )   sig#: 7bd21c49   subst: v0 := ( String, Int )
+                143:73-143:276 Binop :: Parser ( String, Int )   callee: elm/parser:Parser.keeper   instance: a := Int, b := ( String, Int )   sig#: 4905d8ed   subst: v0 := Int, v1 := ( String, Int )
+                  143:73-143:262 Binop :: Parser (Int -> ( String, Int ))   callee: elm/parser:Parser.keeper   instance: a := String, b := Int -> ( String, Int )   sig#: 4905d8ed   subst: v0 := String, v1 := Int -> ( String, Int )
+                    143:73-143:147 Binop :: Parser (String -> Int -> ( String, Int ))   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := String -> Int -> ( String, Int )   sig#: e5ded9e1   subst: v0 := String -> Int -> ( String, Int ), v1 := ()
+                      143:73-143:130 Binop :: Parser (String -> Int -> ( String, Int ))   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := String -> Int -> ( String, Int )   sig#: e5ded9e1   subst: v0 := String -> Int -> ( String, Int ), v1 := ()
+                        143:73-143:105 Call :: Parser (String -> Int -> ( String, Int ))
+                          143:73-143:87 VarForeign :: (String -> Int -> ( String, Int )) -> Parser (String -> Int -> ( String, Int ))   callee: elm/parser:Parser.succeed   instance: a := String -> Int -> ( String, Int )   sig#: 55209621   subst: v0 := String -> Int -> ( String, Int )
+                          143:89-143:105 Lambda :: String -> Int -> ( String, Int )
+                            143:90-143:91 PVar a :: String
+                            143:92-143:93 PVar b :: Int
+                            143:97-143:105 Pair :: ( String, Int )
+                              143:99-143:100 VarLocal :: String
+                              143:102-143:103 VarLocal :: Int
+                        143:110-143:130 Call :: Parser ()
+                          143:110-143:124 VarForeign :: String -> Parser ()   callee: elm/parser:Parser.keyword
+                          143:125-143:130 Str :: String
+                      143:134-143:147 VarForeign :: Parser ()   callee: elm/parser:Parser.spaces
+                    143:151-143:262 Binop :: Parser String   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := String   sig#: e5ded9e1   subst: v0 := String, v1 := ()
+                      143:151-143:245 Binop :: Parser String   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := String   sig#: e5ded9e1   subst: v0 := String, v1 := ()
+                        143:151-143:224 Binop :: Parser String   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := String   sig#: e5ded9e1   subst: v0 := String, v1 := ()
+                          143:151-143:206 Call :: Parser String
+                            143:151-143:174 VarForeign :: Parser () -> Parser String   callee: elm/parser:Parser.getChompedString   instance: a := ()   sig#: 45714b7a   subst: v0 := ()
+                            143:176-143:206 Call :: Parser ()
+                              143:176-143:193 VarForeign :: (Char -> Bool) -> Parser ()   callee: elm/parser:Parser.chompWhile
+                              143:194-143:206 VarForeign :: Char -> Bool   callee: elm/core:Char.isAlpha
+                          143:211-143:224 VarForeign :: Parser ()   callee: elm/parser:Parser.spaces
+                        143:228-143:245 Call :: Parser ()
+                          143:228-143:241 VarForeign :: String -> Parser ()   callee: elm/parser:Parser.symbol
+                          143:242-143:245 Str :: String
+                      143:249-143:262 VarForeign :: Parser ()   callee: elm/parser:Parser.spaces
+                  143:266-143:276 VarForeign :: Parser Int   callee: elm/parser:Parser.int
+                143:278-143:292 Str :: String
+        def l4 :: String    [139:21-139:23]   id: author/project:Parse.l4@139:21   sig: String   kinds:    group: author/project:Parse.l4@139:21 nonrec inferred
+          140:25-140:219 Call :: String
+            140:25-140:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            140:35-140:45 Str :: String
+            140:47-140:219 Call :: String
+              140:47-140:61 VarDebug :: Result (List DeadEnd) ( Where, Where ) -> String   callee: elm/core:Debug.toString   instance: a := Result (List DeadEnd) ( Where, Where )   sig#: d170fa67   subst: v0 := Result (List DeadEnd) ( Where, Where )
+              140:63-140:219 Call :: Result (List DeadEnd) ( Where, Where )
+                140:63-140:73 VarForeign :: Parser ( Where, Where ) -> String -> Result (List DeadEnd) ( Where, Where )   callee: elm/parser:Parser.run   instance: a := ( Where, Where )   sig#: 7bd21c49   subst: v0 := ( Where, Where )
+                140:75-140:205 Binop :: Parser ( Where, Where )   callee: elm/parser:Parser.keeper   instance: a := { col : Int, row : Int, offset : Int }, b := ( Where, Where )   sig#: 4905d8ed   subst: v0 := { col : Int, row : Int, offset : Int }, v1 := ( Where, Where )
+                  140:75-140:194 Binop :: Parser (Where -> ( Where, Where ))   callee: elm/parser:Parser.keeper   instance: a := { col : Int, row : Int, offset : Int }, b := Where -> ( Where, Where )   sig#: 4905d8ed   subst: v0 := { col : Int, row : Int, offset : Int }, v1 := Where -> ( Where, Where )
+                    140:75-140:107 Call :: Parser (Where -> Where -> ( Where, Where ))
+                      140:75-140:89 VarForeign :: (Where -> Where -> ( Where, Where )) -> Parser (Where -> Where -> ( Where, Where ))   callee: elm/parser:Parser.succeed   instance: a := Where -> Where -> ( Where, Where )   sig#: 55209621   subst: v0 := Where -> Where -> ( Where, Where )
+                      140:91-140:107 Lambda :: Where -> Where -> ( Where, Where )
+                        140:92-140:93 PVar a :: Where
+                        140:94-140:95 PVar b :: Where
+                        140:99-140:107 Pair :: ( Where, Where )
+                          140:101-140:102 VarLocal :: Where
+                          140:104-140:105 VarLocal :: Where
+                    140:112-140:194 Binop :: Parser Where   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := { col : Int, row : Int, offset : Int }   sig#: e5ded9e1   subst: v0 := { col : Int, row : Int, offset : Int }, v1 := ()
+                      140:112-140:144 Binop :: Parser Where   callee: elm/parser:Parser.ignorer   instance: ignore := (), keep := { col : Int, row : Int, offset : Int }   sig#: e5ded9e1   subst: v0 := { col : Int, row : Int, offset : Int }, v1 := ()
+                        140:112-140:118 VarTopLevel :: Parser Where   callee: author/project:Parse.where_   use: gen
+                        140:122-140:144 Call :: Parser ()
+                          140:122-140:139 VarForeign :: String -> Parser ()   callee: elm/parser:Parser.chompUntil
+                          140:140-140:144 Str :: String
+                      140:148-140:194 Call :: Parser ()
+                        140:148-140:165 VarForeign :: (Char -> Bool) -> Parser ()   callee: elm/parser:Parser.chompWhile
+                        140:167-140:194 Lambda :: Char -> Bool
+                          140:168-140:169 PVar c :: Char
+                          140:173-140:194 Binop :: Bool   callee: elm/core:Basics.or
+                            140:173-140:182 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Char   sig#: 2cdc0786   subst: v0 := Char
+                              140:173-140:174 VarLocal :: Char
+                              140:178-140:182 Chr :: Char
+                            140:186-140:194 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Char   sig#: 2cdc0786   subst: v0 := Char
+                              140:186-140:187 VarLocal :: Char
+                              140:191-140:194 Chr :: Char
+                  140:199-140:205 VarTopLevel :: Parser Where   callee: author/project:Parse.where_   use: gen
+                140:207-140:219 Str :: String
+        def l3 :: List String    [136:21-136:23]   id: author/project:Parse.l3@136:21   sig: List String   kinds:    group: author/project:Parse.l3@136:21 nonrec inferred
+          137:25-137:143 Call :: List String
+            137:25-137:34 VarDebug :: String -> List String -> List String   callee: elm/core:Debug.log   instance: a := List String   sig#: 6ecaa5dd   subst: v0 := List String
+            137:35-137:43 Str :: String
+            137:45-137:143 Call :: List String
+              137:45-137:53 VarForeign :: (String -> String) -> List String -> List String   callee: elm/core:List.map   instance: a := String, b := String   sig#: 6a702f63   subst: v0 := String, v1 := String
+              137:55-137:103 Lambda :: String -> String
+                137:56-137:57 PVar s :: String
+                137:61-137:102 Call :: String
+                  137:61-137:75 VarDebug :: Result (List DeadEnd) Float -> String   callee: elm/core:Debug.toString   instance: a := Result (List DeadEnd) Float   sig#: d170fa67   subst: v0 := Result (List DeadEnd) Float
+                  137:77-137:102 Call :: Result (List DeadEnd) Float
+                    137:77-137:87 VarForeign :: Parser Float -> String -> Result (List DeadEnd) Float   callee: elm/parser:Parser.run   instance: a := Float   sig#: 7bd21c49   subst: v0 := Float
+                    137:88-137:100 VarForeign :: Parser Float   callee: elm/parser:Parser.float
+                    137:101-137:102 VarLocal :: String
+              137:105-137:143 List :: List String
+                137:107-137:112 Str :: String
+                137:114-137:119 Str :: String
+                137:121-137:125 Str :: String
+                137:127-137:136 Str :: String
+                137:138-137:141 Str :: String
+        def l2 :: List String    [133:21-133:23]   id: author/project:Parse.l2@133:21   sig: List String   kinds:    group: author/project:Parse.l2@133:21 nonrec inferred
+          134:25-134:144 Call :: List String
+            134:25-134:34 VarDebug :: String -> List String -> List String   callee: elm/core:Debug.log   instance: a := List String   sig#: 6ecaa5dd   subst: v0 := List String
+            134:35-134:44 Str :: String
+            134:46-134:144 Call :: List String
+              134:46-134:54 VarForeign :: (String -> String) -> List String -> List String   callee: elm/core:List.map   instance: a := String, b := String   sig#: 6a702f63   subst: v0 := String, v1 := String
+              134:56-134:102 Lambda :: String -> String
+                134:57-134:58 PVar s :: String
+                134:62-134:101 Call :: String
+                  134:62-134:76 VarDebug :: Result (List DeadEnd) Int -> String   callee: elm/core:Debug.toString   instance: a := Result (List DeadEnd) Int   sig#: d170fa67   subst: v0 := Result (List DeadEnd) Int
+                  134:78-134:101 Call :: Result (List DeadEnd) Int
+                    134:78-134:88 VarForeign :: Parser Int -> String -> Result (List DeadEnd) Int   callee: elm/parser:Parser.run   instance: a := Int   sig#: 7bd21c49   subst: v0 := Int
+                    134:89-134:99 VarForeign :: Parser Int   callee: elm/parser:Parser.int
+                    134:100-134:101 VarLocal :: String
+              134:104-134:144 List :: List String
+                134:106-134:110 Str :: String
+                134:112-134:118 Str :: String
+                134:120-134:125 Str :: String
+                134:127-134:131 Str :: String
+                134:133-134:138 Str :: String
+                134:140-134:142 Str :: String
+        def l1 :: List String    [130:21-130:23]   id: author/project:Parse.l1@130:21   sig: List String   kinds:    group: author/project:Parse.l1@130:21 nonrec inferred
+          131:25-131:154 Call :: List String
+            131:25-131:34 VarDebug :: String -> List String -> List String   callee: elm/core:Debug.log   instance: a := List String   sig#: 6ecaa5dd   subst: v0 := List String
+            131:35-131:42 Str :: String
+            131:44-131:154 Call :: List String
+              131:44-131:52 VarForeign :: (String -> String) -> List String -> List String   callee: elm/core:List.map   instance: a := String, b := String   sig#: 6a702f63   subst: v0 := String, v1 := String
+              131:53-131:56 VarTopLevel :: String -> String   callee: author/project:Parse.run   use: gen
+              131:57-131:154 List :: List String
+                131:59-131:70 Str :: String
+                131:72-131:85 Str :: String
+                131:87-131:105 Str :: String
+                131:107-131:119 Str :: String
+                131:121-131:126 Str :: String
+                131:128-131:132 Str :: String
+                131:134-131:136 Str :: String
+                131:138-131:145 Str :: String
+                131:147-131:152 Str :: String
+        151:17-155:37 If :: ( (), Cmd () )
+          151:20-151:150 Binop :: Bool   callee: elm/core:Basics.and
+            151:20-151:69 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+              151:20-151:65 Call :: Int
+                151:20-151:31 VarForeign :: List (List String) -> Int   callee: elm/core:List.length   instance: a := List String   sig#: 8f686fa0   subst: v0 := List String
+                151:32-151:65 List :: List (List String)
+                  151:34-151:36 VarLocal :: List String   callee: author/project:Parse.l1@130:21   use: gen
+                  151:38-151:59 Call :: List String
+                    151:38-151:46 VarForeign :: (String -> String) -> List String -> List String   callee: elm/core:List.map   instance: a := String, b := String   sig#: 6a702f63   subst: v0 := String, v1 := String
+                    151:48-151:55 Lambda :: String -> String
+                      151:49-151:50 PVar s :: String
+                      151:54-151:55 VarLocal :: String
+                    151:57-151:59 VarLocal :: List String   callee: author/project:Parse.l2@133:21   use: gen
+                  151:61-151:63 VarLocal :: List String   callee: author/project:Parse.l3@136:21   use: gen
+              151:68-151:69 Int :: Int
+            151:73-151:150 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+              151:73-151:146 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                151:73-151:127 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  151:73-151:108 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                    151:73-151:89 Call :: Int
+                      151:73-151:86 VarForeign :: String -> Int   callee: elm/core:String.length
+                      151:87-151:89 VarLocal :: String   callee: author/project:Parse.l4@139:21   use: gen
+                    151:92-151:108 Call :: Int
+                      151:92-151:105 VarForeign :: String -> Int   callee: elm/core:String.length
+                      151:106-151:108 VarLocal :: String   callee: author/project:Parse.l5@142:21   use: gen
+                  151:111-151:127 Call :: Int
+                    151:111-151:124 VarForeign :: String -> Int   callee: elm/core:String.length
+                    151:125-151:127 VarLocal :: String   callee: author/project:Parse.l6@145:21   use: gen
+                151:130-151:146 Call :: Int
+                  151:130-151:143 VarForeign :: String -> Int   callee: elm/core:String.length
+                  151:144-151:146 VarLocal :: String   callee: author/project:Parse.l7@148:21   use: gen
+              151:149-151:150 Int :: Int
+          152:21-152:37 Pair :: ( (), Cmd () )
+            152:23-152:25 Unit :: ()
+            152:27-152:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          155:21-155:37 Pair :: ( (), Cmd () )
+            155:23-155:25 Unit :: ()
+            155:27-155:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      156:20-156:43 Lambda :: () -> () -> ( (), Cmd () )
+        156:21-156:22 PAnything :: ()
+        156:23-156:24 PVar m :: ()
+        156:28-156:43 Pair :: ( (), Cmd () )
+          156:30-156:31 VarLocal :: ()
+          156:33-156:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      157:27-157:41 Lambda :: () -> Sub ()
+        157:28-157:29 PAnything :: ()
+        157:33-157:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Parse.where_   kind: value   reads:    needs:    init-dep: no
+init: 1   id: author/project:Parse.show   kind: function   reads:    needs:    group: author/project:Parse.show
+init: 2   id: author/project:Parse.mulTail   kind: function   reads: author/project:Parse.factor   needs: author/project:Parse.factor,author/project:Parse.term,author/project:Parse.expr   group: author/project:Parse.expr
+init: 3   id: author/project:Parse.addTail   kind: function   reads: author/project:Parse.term   needs: author/project:Parse.factor,author/project:Parse.term,author/project:Parse.expr   group: author/project:Parse.expr
+init: 4   id: author/project:Parse.factor   kind: value   reads: author/project:Parse.expr   needs: author/project:Parse.term,author/project:Parse.expr   init-dep: yes   group: author/project:Parse.expr
+init: 5   id: author/project:Parse.term   kind: value   reads: author/project:Parse.mulTail,author/project:Parse.factor   needs: author/project:Parse.factor,author/project:Parse.expr   init-dep: yes   group: author/project:Parse.expr
+init: 6   id: author/project:Parse.expr   kind: value   reads: author/project:Parse.addTail,author/project:Parse.term   needs: author/project:Parse.factor,author/project:Parse.term   init-dep: yes   group: author/project:Parse.expr
+init: 7   id: author/project:Parse.eval   kind: function   reads:    needs:    group: author/project:Parse.eval
+init: 8   id: author/project:Parse.run   kind: function   reads: author/project:Parse.show,author/project:Parse.expr,author/project:Parse.eval   needs: author/project:Parse.factor,author/project:Parse.term,author/project:Parse.expr
+init: 9   id: author/project:Parse.main   kind: value   reads: author/project:Parse.where_,author/project:Parse.run   needs: author/project:Parse.where_,author/project:Parse.factor,author/project:Parse.term,author/project:Parse.expr   init-dep: yes
+
+-- module FicOverlayParser: problems=0 instances=49 instance-failures=0 defaulted=0
+-- equality-uses: total=4 at-function=0
+module author/project:FicOverlayParser
+def isChar :: Char -> Bool    [83:1-83:7]   id: author/project:FicOverlayParser.isChar   sig: Char -> Bool   kinds:    group: author/project:FicOverlayParser.isChar nonrec ann
+  83:8-83:9 PAnything :: Char
+  84:5-84:9 VarCtor :: Bool   callee: elm/core:Basics.True
+def nestableHelp :: (Char -> Bool) -> Parser c x () -> Parser c x () -> x -> Int -> Parser c x ()    [66:1-66:13]   id: author/project:FicOverlayParser.nestableHelp   sig: (Char -> Bool) -> Parser v0 v1 () -> Parser v0 v1 () -> v1 -> Int -> Parser v0 v1 ()   kinds: v0:any,v1:any   group: author/project:FicOverlayParser.nestableHelp rec ann
+  66:14-66:27 PVar isNotRelevant :: Char -> Bool
+  66:28-66:32 PVar open :: Parser c x ()
+  66:33-66:38 PVar close :: Parser c x ()
+  66:39-66:53 PVar expectingClose :: x
+  66:54-66:63 PVar nestLevel :: Int
+  67:5-79:14 Binop :: Parser c x ()   callee: elm/parser:Parser.Advanced.ignorer   instance: c := c, ignore := (), keep := (), x := x   sig#: 7b092515   subst: v0 := <<author/project:FicOverlayParser.nestableHelp|v0>>, v1 := <<author/project:FicOverlayParser.nestableHelp|v1>>, v2 := (), v3 := ()
+    67:5-67:29 Call :: Parser c x ()
+      67:5-67:15 VarForeign :: (Char -> Bool) -> Parser c x ()   callee: elm/parser:Parser.Advanced.chompWhile   instance: c := c, x := x   sig#: a99168e6   subst: v0 := <<author/project:FicOverlayParser.nestableHelp|v0>>, v1 := <<author/project:FicOverlayParser.nestableHelp|v1>>
+      67:16-67:29 VarLocal :: Char -> Bool
+    68:12-79:14 Call :: Parser c x ()
+      68:12-68:17 VarForeign :: List (Parser c x ()) -> Parser c x ()   callee: elm/parser:Parser.Advanced.oneOf   instance: a := (), c := c, x := x   sig#: 06ed7884   subst: v0 := <<author/project:FicOverlayParser.nestableHelp|v0>>, v1 := <<author/project:FicOverlayParser.nestableHelp|v1>>, v2 := ()
+      69:13-79:14 List :: List (Parser c x ())
+        69:15-74:108 If :: Parser c x ()
+          69:18-69:32 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Int   sig#: 2cdc0786   subst: v0 := Int
+            69:18-69:27 VarLocal :: Int
+            69:31-69:32 Int :: Int
+          70:17-70:22 VarLocal :: Parser c x ()
+          73:17-74:108 Binop :: Parser c x ()   callee: elm/core:Basics.apR   instance: a := Parser c x (), b := Parser c x ()   sig#: 742a0ff5   subst: v0 := Parser <<author/project:FicOverlayParser.nestableHelp|v0>> <<author/project:FicOverlayParser.nestableHelp|v1>> (), v1 := Parser <<author/project:FicOverlayParser.nestableHelp|v0>> <<author/project:FicOverlayParser.nestableHelp|v1>> ()
+            73:17-73:22 VarLocal :: Parser c x ()
+            74:24-74:107 Call :: Parser c x () -> Parser c x ()
+              74:24-74:31 VarForeign :: (() -> Parser c x ()) -> Parser c x () -> Parser c x ()   callee: elm/parser:Parser.Advanced.andThen   instance: a := (), b := (), c := c, x := x   sig#: e46c2bab   subst: v0 := (), v1 := <<author/project:FicOverlayParser.nestableHelp|v0>>, v2 := <<author/project:FicOverlayParser.nestableHelp|v1>>, v3 := ()
+              74:33-74:107 Lambda :: () -> Parser c x ()
+                74:34-74:35 PAnything :: ()
+                74:39-74:106 Call :: Parser c x ()
+                  74:39-74:51 VarTopLevel :: (Char -> Bool) -> Parser c x () -> Parser c x () -> x -> Int -> Parser c x ()   callee: author/project:FicOverlayParser.nestableHelp   use: rec   sig#: e1b047fb   subst: v0 := <<author/project:FicOverlayParser.nestableHelp|v0>>, v1 := <<author/project:FicOverlayParser.nestableHelp|v1>>
+                  74:52-74:65 VarLocal :: Char -> Bool
+                  74:66-74:70 VarLocal :: Parser c x ()
+                  74:71-74:76 VarLocal :: Parser c x ()
+                  74:77-74:91 VarLocal :: x
+                  74:93-74:106 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                    74:93-74:102 VarLocal :: Int
+                    74:105-74:106 Int :: Int
+        75:15-76:104 Binop :: Parser c x ()   callee: elm/core:Basics.apR   instance: a := Parser c x (), b := Parser c x ()   sig#: 742a0ff5   subst: v0 := Parser <<author/project:FicOverlayParser.nestableHelp|v0>> <<author/project:FicOverlayParser.nestableHelp|v1>> (), v1 := Parser <<author/project:FicOverlayParser.nestableHelp|v0>> <<author/project:FicOverlayParser.nestableHelp|v1>> ()
+          75:15-75:19 VarLocal :: Parser c x ()
+          76:20-76:103 Call :: Parser c x () -> Parser c x ()
+            76:20-76:27 VarForeign :: (() -> Parser c x ()) -> Parser c x () -> Parser c x ()   callee: elm/parser:Parser.Advanced.andThen   instance: a := (), b := (), c := c, x := x   sig#: e46c2bab   subst: v0 := (), v1 := <<author/project:FicOverlayParser.nestableHelp|v0>>, v2 := <<author/project:FicOverlayParser.nestableHelp|v1>>, v3 := ()
+            76:29-76:103 Lambda :: () -> Parser c x ()
+              76:30-76:31 PAnything :: ()
+              76:35-76:102 Call :: Parser c x ()
+                76:35-76:47 VarTopLevel :: (Char -> Bool) -> Parser c x () -> Parser c x () -> x -> Int -> Parser c x ()   callee: author/project:FicOverlayParser.nestableHelp   use: rec   sig#: e1b047fb   subst: v0 := <<author/project:FicOverlayParser.nestableHelp|v0>>, v1 := <<author/project:FicOverlayParser.nestableHelp|v1>>
+                76:48-76:61 VarLocal :: Char -> Bool
+                76:62-76:66 VarLocal :: Parser c x ()
+                76:67-76:72 VarLocal :: Parser c x ()
+                76:73-76:87 VarLocal :: x
+                76:89-76:102 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  76:89-76:98 VarLocal :: Int
+                  76:101-76:102 Int :: Int
+        77:15-78:98 Binop :: Parser c x ()   callee: elm/core:Basics.apR   instance: a := Parser c x (), b := Parser c x ()   sig#: 742a0ff5   subst: v0 := Parser <<author/project:FicOverlayParser.nestableHelp|v0>> <<author/project:FicOverlayParser.nestableHelp|v1>> (), v1 := Parser <<author/project:FicOverlayParser.nestableHelp|v0>> <<author/project:FicOverlayParser.nestableHelp|v1>> ()
+          77:15-77:44 Call :: Parser c x ()
+            77:15-77:22 VarForeign :: (Char -> Bool) -> x -> Parser c x ()   callee: elm/parser:Parser.Advanced.chompIf   instance: c := c, x := x   sig#: ceb61832   subst: v0 := <<author/project:FicOverlayParser.nestableHelp|v1>>, v1 := <<author/project:FicOverlayParser.nestableHelp|v0>>
+            77:23-77:29 VarTopLevel :: Char -> Bool   callee: author/project:FicOverlayParser.isChar   use: gen
+            77:30-77:44 VarLocal :: x
+          78:20-78:97 Call :: Parser c x () -> Parser c x ()
+            78:20-78:27 VarForeign :: (() -> Parser c x ()) -> Parser c x () -> Parser c x ()   callee: elm/parser:Parser.Advanced.andThen   instance: a := (), b := (), c := c, x := x   sig#: e46c2bab   subst: v0 := (), v1 := <<author/project:FicOverlayParser.nestableHelp|v0>>, v2 := <<author/project:FicOverlayParser.nestableHelp|v1>>, v3 := ()
+            78:29-78:97 Lambda :: () -> Parser c x ()
+              78:30-78:31 PAnything :: ()
+              78:35-78:97 Call :: Parser c x ()
+                78:35-78:47 VarTopLevel :: (Char -> Bool) -> Parser c x () -> Parser c x () -> x -> Int -> Parser c x ()   callee: author/project:FicOverlayParser.nestableHelp   use: rec   sig#: e1b047fb   subst: v0 := <<author/project:FicOverlayParser.nestableHelp|v0>>, v1 := <<author/project:FicOverlayParser.nestableHelp|v1>>
+                78:48-78:61 VarLocal :: Char -> Bool
+                78:62-78:66 VarLocal :: Parser c x ()
+                78:67-78:72 VarLocal :: Parser c x ()
+                78:73-78:87 VarLocal :: x
+                78:88-78:97 VarLocal :: Int
+def nestableComment :: Token x -> Token x -> Parser c x ()    [44:1-44:16]   id: author/project:FicOverlayParser.nestableComment   sig: Token v0 -> Token v0 -> Parser v1 v0 ()   kinds: v0:any,v1:any   group: author/project:FicOverlayParser.nestableComment nonrec ann
+  44:18-44:39 PAlias as open :: Token x
+    44:18-44:31 PCtor Token :: Token x
+      44:24-44:28 PVar oStr :: String
+      44:29-44:31 PVar oX :: x
+  44:42-44:64 PAlias as close :: Token x
+    44:42-44:55 PCtor Token :: Token x
+      44:48-44:52 PVar cStr :: String
+      44:53-44:55 PVar cX :: x
+  45:5-62:89 Case :: Parser c x ()
+    45:10-45:28 Call :: Maybe ( Char, String )
+      45:10-45:23 VarForeign :: String -> Maybe ( Char, String )   callee: elm/core:String.uncons
+      45:24-45:28 VarLocal :: String
+    46:9-46:16 PCtor Nothing :: Maybe ( Char, String )
+    47:13-47:23 Call :: Parser c x ()
+      47:13-47:20 VarForeign :: x -> Parser c x ()   callee: elm/parser:Parser.Advanced.problem   instance: a := (), c := c, x := x   sig#: 5908dded   subst: v0 := <<author/project:FicOverlayParser.nestableComment|v0>>, v1 := <<author/project:FicOverlayParser.nestableComment|v1>>, v2 := ()
+      47:21-47:23 VarLocal :: x
+    49:9-49:29 PCtor Just :: Maybe ( Char, String )
+      49:14-49:29 PPair :: ( Char, String )
+        49:16-49:24 PVar openChar :: Char
+        49:26-49:27 PAnything :: String
+    50:13-62:89 Case :: Parser c x ()
+      50:18-50:36 Call :: Maybe ( Char, String )
+        50:18-50:31 VarForeign :: String -> Maybe ( Char, String )   callee: elm/core:String.uncons
+        50:32-50:36 VarLocal :: String
+      51:17-51:24 PCtor Nothing :: Maybe ( Char, String )
+      52:21-52:31 Call :: Parser c x ()
+        52:21-52:28 VarForeign :: x -> Parser c x ()   callee: elm/parser:Parser.Advanced.problem   instance: a := (), c := c, x := x   sig#: 5908dded   subst: v0 := <<author/project:FicOverlayParser.nestableComment|v0>>, v1 := <<author/project:FicOverlayParser.nestableComment|v1>>, v2 := ()
+        52:29-52:31 VarLocal :: x
+      54:17-54:38 PCtor Just :: Maybe ( Char, String )
+        54:22-54:38 PPair :: ( Char, String )
+          54:24-54:33 PVar closeChar :: Char
+          54:35-54:36 PAnything :: String
+      def isNotRelevant :: Char -> Bool    [56:25-56:38]   id: author/project:FicOverlayParser.isNotRelevant@56:25   sig: Char -> Bool   kinds:    group: author/project:FicOverlayParser.isNotRelevant@56:25 nonrec inferred
+        56:39-56:43 PVar char :: Char
+        57:29-57:66 Binop :: Bool   callee: elm/core:Basics.and
+          57:29-57:45 Binop :: Bool   callee: elm/core:Basics.neq   instance: a := Char   sig#: 2cdc0786   subst: v0 := Char
+            57:29-57:33 VarLocal :: Char
+            57:37-57:45 VarLocal :: Char
+          57:49-57:66 Binop :: Bool   callee: elm/core:Basics.neq   instance: a := Char   sig#: 2cdc0786   subst: v0 := Char
+            57:49-57:53 VarLocal :: Char
+            57:57-57:66 VarLocal :: Char
+      def chompOpen :: Parser c1 x ()    [59:25-59:34]   id: author/project:FicOverlayParser.chompOpen@59:25   sig: Parser v0 <<author/project:FicOverlayParser.nestableComment|v0>> ()   kinds: v0:any,v1:any   group: author/project:FicOverlayParser.chompOpen@59:25 nonrec inferred
+        60:29-60:39 Call :: Parser c1 x ()
+          60:29-60:34 VarForeign :: Token x -> Parser c1 x ()   callee: elm/parser:Parser.Advanced.token   instance: c := c1, x := x   sig#: 9ddf688c   subst: v0 := <<author/project:FicOverlayParser.nestableComment|v0>>, v1 := <<author/project:FicOverlayParser.chompOpen@59:25|v0>>
+          60:35-60:39 VarLocal :: Token x
+      62:21-62:89 Binop :: Parser c x ()   callee: elm/parser:Parser.Advanced.ignorer   instance: c := c, ignore := (), keep := (), x := x   sig#: 7b092515   subst: v0 := <<author/project:FicOverlayParser.nestableComment|v1>>, v1 := <<author/project:FicOverlayParser.nestableComment|v0>>, v2 := (), v3 := ()
+        62:21-62:30 VarLocal :: Parser c x ()   callee: author/project:FicOverlayParser.chompOpen@59:25   use: gen   instance: c1 := c   sig#: b1c688ef   subst: v0 := <<author/project:FicOverlayParser.nestableComment|v1>>
+        62:34-62:89 Call :: Parser c x ()
+          62:34-62:46 VarTopLevel :: (Char -> Bool) -> Parser c x () -> Parser c x () -> x -> Int -> Parser c x ()   callee: author/project:FicOverlayParser.nestableHelp   use: gen   instance: c2 := c, x1 := x   sig#: e1b047fb   subst: v0 := <<author/project:FicOverlayParser.nestableComment|v1>>, v1 := <<author/project:FicOverlayParser.nestableComment|v0>>
+          62:47-62:60 VarLocal :: Char -> Bool   callee: author/project:FicOverlayParser.isNotRelevant@56:25   use: gen
+          62:61-62:70 VarLocal :: Parser c x ()   callee: author/project:FicOverlayParser.chompOpen@59:25   use: gen   instance: c1 := c   sig#: b1c688ef   subst: v0 := <<author/project:FicOverlayParser.nestableComment|v1>>
+          62:72-62:83 Call :: Parser c x ()
+            62:72-62:77 VarForeign :: Token x -> Parser c x ()   callee: elm/parser:Parser.Advanced.token   instance: c := c, x := x   sig#: 9ddf688c   subst: v0 := <<author/project:FicOverlayParser.nestableComment|v0>>, v1 := <<author/project:FicOverlayParser.nestableComment|v1>>
+            62:78-62:83 VarLocal :: Token x
+          62:85-62:87 VarLocal :: x
+          62:88-62:89 Int :: Int
+def notNestableHelp :: (Char -> Bool) -> Parser c x () -> x -> Parser c x ()    [34:1-34:16]   id: author/project:FicOverlayParser.notNestableHelp   sig: (Char -> Bool) -> Parser v0 v1 () -> v1 -> Parser v0 v1 ()   kinds: v0:any,v1:any   group: author/project:FicOverlayParser.notNestableHelp rec ann
+  34:17-34:27 PVar isNotClose :: Char -> Bool
+  34:28-34:33 PVar close :: Parser c x ()
+  34:34-34:48 PVar expectingClose :: x
+  35:5-40:14 Binop :: Parser c x ()   callee: elm/parser:Parser.Advanced.ignorer   instance: c := c, ignore := (), keep := (), x := x   sig#: 7b092515   subst: v0 := <<author/project:FicOverlayParser.notNestableHelp|v0>>, v1 := <<author/project:FicOverlayParser.notNestableHelp|v1>>, v2 := (), v3 := ()
+    35:5-35:26 Call :: Parser c x ()
+      35:5-35:15 VarForeign :: (Char -> Bool) -> Parser c x ()   callee: elm/parser:Parser.Advanced.chompWhile   instance: c := c, x := x   sig#: a99168e6   subst: v0 := <<author/project:FicOverlayParser.notNestableHelp|v0>>, v1 := <<author/project:FicOverlayParser.notNestableHelp|v1>>
+      35:16-35:26 VarLocal :: Char -> Bool
+    36:12-40:14 Call :: Parser c x ()
+      36:12-36:17 VarForeign :: List (Parser c x ()) -> Parser c x ()   callee: elm/parser:Parser.Advanced.oneOf   instance: a := (), c := c, x := x   sig#: 06ed7884   subst: v0 := <<author/project:FicOverlayParser.notNestableHelp|v0>>, v1 := <<author/project:FicOverlayParser.notNestableHelp|v1>>, v2 := ()
+      37:13-40:14 List :: List (Parser c x ())
+        37:15-37:20 VarLocal :: Parser c x ()
+        38:15-39:83 Binop :: Parser c x ()   callee: elm/core:Basics.apR   instance: a := Parser c x (), b := Parser c x ()   sig#: 742a0ff5   subst: v0 := Parser <<author/project:FicOverlayParser.notNestableHelp|v0>> <<author/project:FicOverlayParser.notNestableHelp|v1>> (), v1 := Parser <<author/project:FicOverlayParser.notNestableHelp|v0>> <<author/project:FicOverlayParser.notNestableHelp|v1>> ()
+          38:15-38:44 Call :: Parser c x ()
+            38:15-38:22 VarForeign :: (Char -> Bool) -> x -> Parser c x ()   callee: elm/parser:Parser.Advanced.chompIf   instance: c := c, x := x   sig#: ceb61832   subst: v0 := <<author/project:FicOverlayParser.notNestableHelp|v1>>, v1 := <<author/project:FicOverlayParser.notNestableHelp|v0>>
+            38:23-38:29 VarTopLevel :: Char -> Bool   callee: author/project:FicOverlayParser.isChar   use: gen
+            38:30-38:44 VarLocal :: x
+          39:20-39:82 Call :: Parser c x () -> Parser c x ()
+            39:20-39:27 VarForeign :: (() -> Parser c x ()) -> Parser c x () -> Parser c x ()   callee: elm/parser:Parser.Advanced.andThen   instance: a := (), b := (), c := c, x := x   sig#: e46c2bab   subst: v0 := (), v1 := <<author/project:FicOverlayParser.notNestableHelp|v0>>, v2 := <<author/project:FicOverlayParser.notNestableHelp|v1>>, v3 := ()
+            39:29-39:82 Lambda :: () -> Parser c x ()
+              39:30-39:31 PAnything :: ()
+              39:35-39:82 Call :: Parser c x ()
+                39:35-39:50 VarTopLevel :: (Char -> Bool) -> Parser c x () -> x -> Parser c x ()   callee: author/project:FicOverlayParser.notNestableHelp   use: rec   sig#: 057d4411   subst: v0 := <<author/project:FicOverlayParser.notNestableHelp|v0>>, v1 := <<author/project:FicOverlayParser.notNestableHelp|v1>>
+                39:51-39:61 VarLocal :: Char -> Bool
+                39:62-39:67 VarLocal :: Parser c x ()
+                39:68-39:82 VarLocal :: x
+def notNestableComment :: Token x -> Token x -> Parser c x ()    [24:1-24:19]   id: author/project:FicOverlayParser.notNestableComment   sig: Token v0 -> Token v0 -> Parser v1 v0 ()   kinds: v0:any,v1:any   group: author/project:FicOverlayParser.notNestableComment nonrec ann
+  24:21-24:38 PAlias as open :: Token x
+    24:21-24:30 PCtor Token :: Token x
+      24:27-24:28 PAnything :: String
+      24:29-24:30 PAnything :: x
+  24:41-24:63 PAlias as close :: Token x
+    24:41-24:54 PCtor Token :: Token x
+      24:47-24:51 PVar cStr :: String
+      24:52-24:54 PVar cX :: x
+  25:5-30:88 Case :: Parser c x ()
+    25:10-25:28 Call :: Maybe ( Char, String )
+      25:10-25:23 VarForeign :: String -> Maybe ( Char, String )   callee: elm/core:String.uncons
+      25:24-25:28 VarLocal :: String
+    26:9-26:16 PCtor Nothing :: Maybe ( Char, String )
+    27:13-27:23 Call :: Parser c x ()
+      27:13-27:20 VarForeign :: x -> Parser c x ()   callee: elm/parser:Parser.Advanced.problem   instance: a := (), c := c, x := x   sig#: 5908dded   subst: v0 := <<author/project:FicOverlayParser.notNestableComment|v0>>, v1 := <<author/project:FicOverlayParser.notNestableComment|v1>>, v2 := ()
+      27:21-27:23 VarLocal :: x
+    29:9-29:30 PCtor Just :: Maybe ( Char, String )
+      29:14-29:30 PPair :: ( Char, String )
+        29:16-29:25 PVar closeChar :: Char
+        29:27-29:28 PAnything :: String
+    30:13-30:88 Binop :: Parser c x ()   callee: elm/parser:Parser.Advanced.ignorer   instance: c := c, ignore := (), keep := (), x := x   sig#: 7b092515   subst: v0 := <<author/project:FicOverlayParser.notNestableComment|v1>>, v1 := <<author/project:FicOverlayParser.notNestableComment|v0>>, v2 := (), v3 := ()
+      30:13-30:23 Call :: Parser c x ()
+        30:13-30:18 VarForeign :: Token x -> Parser c x ()   callee: elm/parser:Parser.Advanced.token   instance: c := c, x := x   sig#: 9ddf688c   subst: v0 := <<author/project:FicOverlayParser.notNestableComment|v0>>, v1 := <<author/project:FicOverlayParser.notNestableComment|v1>>
+        30:19-30:23 VarLocal :: Token x
+      30:27-30:88 Call :: Parser c x ()
+        30:27-30:42 VarTopLevel :: (Char -> Bool) -> Parser c x () -> x -> Parser c x ()   callee: author/project:FicOverlayParser.notNestableHelp   use: gen   instance: c1 := c, x1 := x   sig#: 057d4411   subst: v0 := <<author/project:FicOverlayParser.notNestableComment|v1>>, v1 := <<author/project:FicOverlayParser.notNestableComment|v0>>
+        30:44-30:70 Lambda :: Char -> Bool
+          30:45-30:49 PVar char :: Char
+          30:53-30:70 Binop :: Bool   callee: elm/core:Basics.neq   instance: a := Char   sig#: 2cdc0786   subst: v0 := Char
+            30:53-30:57 VarLocal :: Char
+            30:61-30:70 VarLocal :: Char
+        30:73-30:84 Call :: Parser c x ()
+          30:73-30:78 VarForeign :: Token x -> Parser c x ()   callee: elm/parser:Parser.Advanced.token   instance: c := c, x := x   sig#: 9ddf688c   subst: v0 := <<author/project:FicOverlayParser.notNestableComment|v0>>, v1 := <<author/project:FicOverlayParser.notNestableComment|v1>>
+          30:79-30:84 VarLocal :: Token x
+        30:86-30:88 VarLocal :: x
+def multiComment :: Token x -> Token x -> Nestable -> Parser c x ()    [14:1-14:13]   id: author/project:FicOverlayParser.multiComment   sig: Token v0 -> Token v0 -> Nestable -> Parser v1 v0 ()   kinds: v0:any,v1:any   group: author/project:FicOverlayParser.multiComment nonrec ann
+  14:14-14:18 PVar open :: Token x
+  14:19-14:24 PVar close :: Token x
+  14:25-14:33 PVar nestable :: Nestable
+  15:5-20:39 Case :: Parser c x ()
+    15:10-15:18 VarLocal :: Nestable
+    16:9-16:20 PCtor NotNestable :: Nestable
+    17:13-17:42 Call :: Parser c x ()
+      17:13-17:31 VarTopLevel :: Token x -> Token x -> Parser c x ()   callee: author/project:FicOverlayParser.notNestableComment   use: gen   instance: c1 := c, x1 := x   sig#: c1ace44c   subst: v0 := <<author/project:FicOverlayParser.multiComment|v0>>, v1 := <<author/project:FicOverlayParser.multiComment|v1>>
+      17:32-17:36 VarLocal :: Token x
+      17:37-17:42 VarLocal :: Token x
+    19:9-19:17 PCtor Nestable :: Nestable
+    20:13-20:39 Call :: Parser c x ()
+      20:13-20:28 VarTopLevel :: Token x -> Token x -> Parser c x ()   callee: author/project:FicOverlayParser.nestableComment   use: gen   instance: c2 := c, x2 := x   sig#: c1ace44c   subst: v0 := <<author/project:FicOverlayParser.multiComment|v0>>, v1 := <<author/project:FicOverlayParser.multiComment|v1>>
+      20:29-20:33 VarLocal :: Token x
+      20:34-20:39 VarLocal :: Token x
+init: 0   id: author/project:FicOverlayParser.isChar   kind: function   reads:    needs: 
+init: 1   id: author/project:FicOverlayParser.nestableHelp   kind: function   reads: author/project:FicOverlayParser.isChar   needs:    group: author/project:FicOverlayParser.nestableHelp
+init: 2   id: author/project:FicOverlayParser.nestableComment   kind: function   reads: author/project:FicOverlayParser.nestableHelp   needs: 
+init: 3   id: author/project:FicOverlayParser.notNestableHelp   kind: function   reads: author/project:FicOverlayParser.isChar   needs:    group: author/project:FicOverlayParser.notNestableHelp
+init: 4   id: author/project:FicOverlayParser.notNestableComment   kind: function   reads: author/project:FicOverlayParser.notNestableHelp   needs: 
+init: 5   id: author/project:FicOverlayParser.multiComment   kind: function   reads: author/project:FicOverlayParser.nestableComment,author/project:FicOverlayParser.notNestableComment   needs: 

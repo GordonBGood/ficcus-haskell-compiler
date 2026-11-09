@@ -1,0 +1,7 @@
+sequence: "Ok [1,2,3]"
+comment: "Ok { col = 3, row = 3, offset = 11 }"
+tokens: "Ok (\"abc\",12)"
+position: "Ok ({ col = 1, row = 1, offset = 0 },{ col = 1, row = 4, offset = 6 })"
+floats: ["Ok 1.5","Ok 1000","Ok 12","Ok 0.0025","Err [{ col = 1, row = 1, problem = ExpectingFloat }]"]
+numbers: ["Ok 42","Err [{ col = 1, row = 1, problem = ExpectingInt }]","Ok 0","Err [{ col = 1, row = 1, problem = ExpectingInt }]","Ok 12","Err [{ col = 1, row = 1, problem = ExpectingInt }]"]
+arith: ["(1 + (2 * 3)) = 7","((1 + 2) * 3) = 9","((2 * (3 + x1)) * 4) = 24","[{ col = 7, row = 1, problem = ExpectingFloat }]","[{ col = 4, row = 1, problem = ExpectingFloat },{ col = 4, row = 1, problem = ExpectingVariable },{ col = 4, row = 1, problem = ExpectingSymbol \"(\" }]","[{ col = 3, row = 1, problem = ExpectingSymbol \")\" }]","[{ col = 1, row = 1, problem = ExpectingFloat },{ col = 1, row = 1, problem = ExpectingVariable },{ col = 1, row = 1, problem = ExpectingSymbol \"(\" }]","[{ col = 3, row = 1, problem = ExpectingEnd }]","[{ col = 1, row = 1, problem = ExpectingFloat },{ col = 1, row = 1, problem = ExpectingVariable },{ col = 1, row = 1, problem = ExpectingSymbol \"(\" }]"]
