@@ -1,0 +1,23 @@
+set of tuples: Set.fromList [(1,"a"),(1,"z"),(2,"b")]
+record in list: [{ a = 1, bb = "x" },{ a = 2, bb = "y" }]
+function: <function>
+tree: Node (Node Leaf 1 Leaf) 2 Leaf
+nested: Dict.fromList [(1,Just (Array.fromList [Ok (1,2),Err "x"])),(2,Nothing)]
+empty: (Dict.fromList [],Set.fromList [],Array.fromList [])
+array big: Array.fromList [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80]
+array: Array.fromList [1,2,3]
+set: Set.fromList [1,3,5]
+dict string: Dict.fromList [("j",[]),("k",[1,2])]
+dict: Dict.fromList [(1,"a"),(2,"b"),(3,"c")]
+colors: [Red,Green,Blue]
+custom: [Dot,Circle 1.5,Rect 2 3,Tagged "s" (Just 4),Wrapped (Circle -2),Wrapped (Wrapped Dot)]
+toString: "[Just 1,Nothing] { f = 1, g = \"q\" } Just \"it's\""
+record: { x = 1, y = 2.5, ok = True, kids = [Dot], name = "n", pair = (3,'z') }
+maybe result: ((Just 3,Nothing,Just (Just -1)),(Ok 5,Err "bad"))
+lists: (([],[1,2,3]),([[1],[],[2,3]],["a","b"]))
+tuples: ((1,"a"),(2.5,'c',[1]))
+bool order unit: ((True,False),(LT,EQ,GT),())
+string: "quote\" back\\ nl\n tab\t cr\r nul\0 é €"
+chars: ['a','\'','"','\n','\t','\\','é','€','😀','\0']
+floats: [1.5,-0.5,Infinity,-Infinity,NaN,1e+21,1e-7,123456789.125,0.1,0]
+int: -42

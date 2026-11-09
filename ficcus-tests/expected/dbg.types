@@ -1,0 +1,531 @@
+-- module Dbg: problems=0 instances=157 instance-failures=0 defaulted=36
+-- equality-uses: total=0 at-function=0
+module author/project:Dbg
+type Tree   id: author/project:Dbg.Tree   params: 1   ctors: 2   layout: normal
+  ctor Leaf   id: author/project:Dbg.Leaf   tag: 0   arity: 0   fields:    sig: Tree v0   kinds: v0:any
+  ctor Node   id: author/project:Dbg.Node   tag: 1   arity: 3   fields: Tree v0 ;; v0 ;; Tree v0   sig: Tree v0 -> v0 -> Tree v0 -> Tree v0   kinds: v0:any
+type Color   id: author/project:Dbg.Color   params: 0   ctors: 3   layout: enum
+  ctor Red   id: author/project:Dbg.Red   tag: 0   arity: 0   fields:    sig: Color   kinds: 
+  ctor Green   id: author/project:Dbg.Green   tag: 1   arity: 0   fields:    sig: Color   kinds: 
+  ctor Blue   id: author/project:Dbg.Blue   tag: 2   arity: 0   fields:    sig: Color   kinds: 
+type Shape   id: author/project:Dbg.Shape   params: 0   ctors: 5   layout: normal
+  ctor Dot   id: author/project:Dbg.Dot   tag: 0   arity: 0   fields:    sig: Shape   kinds: 
+  ctor Circle   id: author/project:Dbg.Circle   tag: 1   arity: 1   fields: Float   sig: Float -> Shape   kinds: 
+  ctor Rect   id: author/project:Dbg.Rect   tag: 2   arity: 2   fields: Int ;; Int   sig: Int -> Int -> Shape   kinds: 
+  ctor Tagged   id: author/project:Dbg.Tagged   tag: 3   arity: 2   fields: String ;; Maybe Int   sig: String -> Maybe Int -> Shape   kinds: 
+  ctor Wrapped   id: author/project:Dbg.Wrapped   tag: 4   arity: 1   fields: Shape   sig: Shape -> Shape   kinds: 
+def show :: String -> a -> a    [36:1-36:5]   id: author/project:Dbg.show   sig: String -> v0 -> v0   kinds: v0:any   group: author/project:Dbg.show nonrec ann
+  36:6-36:9 PVar tag :: String
+  36:10-36:11 PVar v :: a
+  37:5-37:20 Call :: a
+    37:5-37:14 VarDebug :: String -> a -> a   callee: elm/core:Debug.log   instance: a := a   sig#: 6ecaa5dd   subst: v0 := <<author/project:Dbg.show|v0>>
+    37:15-37:18 VarLocal :: String
+    37:19-37:20 VarLocal :: a
+def main :: Program () () ()    [41:1-41:5]   id: author/project:Dbg.main   sig: Program () () ()   kinds:    group: author/project:Dbg.main nonrec ann
+  42:5-131:10 Call :: Program () () ()
+    42:5-42:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    43:9-131:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      44:13-128:37 Lambda :: () -> ( (), Cmd () )
+        44:14-44:15 PAnything :: ()
+        def a22 :: Set ( number, String )    [109:21-109:24]   id: author/project:Dbg.a22@109:21   sig: Set ( v0, String )   kinds: v0:number   group: author/project:Dbg.a22@109:21 nonrec inferred
+          110:25-110:98 Call :: Set ( number, String )
+            110:25-110:29 VarTopLevel :: String -> Set ( number, String ) -> Set ( number, String )   callee: author/project:Dbg.show   use: gen   instance: a := Set ( number, String )   sig#: 6ecaa5dd   subst: v0 := Set ( <<author/project:Dbg.a22@109:21|v0>>, String )
+            110:30-110:45 Str :: String
+            110:47-110:98 Call :: Set ( number, String )
+              110:47-110:59 VarForeign :: List ( number, String ) -> Set ( number, String )   callee: elm/core:Set.fromList   instance: comparable := ( number, String )   sig#: 8a50a616   subst: v0 := ( <<author/project:Dbg.a22@109:21|v0>>, String )
+              110:60-110:98 List :: List ( number, String )
+                110:62-110:72 Pair :: ( number, String )
+                  110:64-110:65 Int :: number
+                  110:67-110:70 Str :: String
+                110:74-110:84 Pair :: ( number, String )
+                  110:76-110:77 Int :: number
+                  110:79-110:82 Str :: String
+                110:86-110:96 Pair :: ( number, String )
+                  110:88-110:89 Int :: number
+                  110:91-110:94 Str :: String
+        def a21 :: List { a : number1, bb : String }    [106:21-106:24]   id: author/project:Dbg.a21@106:21   sig: List { a : v0, bb : String }   kinds: v0:number   group: author/project:Dbg.a21@106:21 nonrec inferred
+          107:25-107:91 Call :: List { a : number1, bb : String }
+            107:25-107:29 VarTopLevel :: String -> List { a : number1, bb : String } -> List { a : number1, bb : String }   callee: author/project:Dbg.show   use: gen   instance: a := List { a : number1, bb : String }   sig#: 6ecaa5dd   subst: v0 := List { a : <<author/project:Dbg.a21@106:21|v0>>, bb : String }
+            107:30-107:46 Str :: String
+            107:47-107:91 List :: List { a : number1, bb : String }
+              107:49-107:68 Record :: { a : number1, bb : String }
+                107:55-107:56 Int :: number1
+                107:63-107:66 Str :: String
+              107:70-107:89 Record :: { a : number1, bb : String }
+                107:76-107:77 Int :: number1
+                107:84-107:87 Str :: String
+        def a20 :: number2 -> number2    [103:21-103:24]   id: author/project:Dbg.a20@103:21   sig: v0 -> v0   kinds: v0:number   group: author/project:Dbg.a20@103:21 nonrec inferred
+          104:25-104:53 Call :: number2 -> number2
+            104:25-104:29 VarTopLevel :: String -> (number2 -> number2) -> number2 -> number2   callee: author/project:Dbg.show   use: gen   instance: a := number2 -> number2   sig#: 6ecaa5dd   subst: v0 := <<author/project:Dbg.a20@103:21|v0>> -> <<author/project:Dbg.a20@103:21|v0>>
+            104:30-104:40 Str :: String
+            104:42-104:53 Lambda :: number2 -> number2
+              104:43-104:44 PVar x :: number2
+              104:48-104:53 Binop :: number2   callee: elm/core:Basics.add   instance: number := number2   sig#: 08810ccc   subst: v0 := <<author/project:Dbg.a20@103:21|v0>>
+                104:48-104:49 VarLocal :: number2
+                104:52-104:53 Int :: number2
+        def a19 :: Tree number3    [100:21-100:24]   id: author/project:Dbg.a19@100:21   sig: Tree v0   kinds: v0:number   group: author/project:Dbg.a19@100:21 nonrec inferred
+          101:25-101:68 Call :: Tree number3
+            101:25-101:29 VarTopLevel :: String -> Tree number3 -> Tree number3   callee: author/project:Dbg.show   use: gen   instance: a := Tree number3   sig#: 6ecaa5dd   subst: v0 := Tree <<author/project:Dbg.a19@100:21|v0>>
+            101:30-101:36 Str :: String
+            101:38-101:68 Call :: Tree number3
+              101:38-101:42 VarCtor :: Tree number3 -> number3 -> Tree number3 -> Tree number3   callee: author/project:Dbg.Node   instance: a := number3   sig#: 1521e67f   subst: v0 := <<author/project:Dbg.a19@100:21|v0>>
+              101:44-101:60 Call :: Tree number3
+                101:44-101:48 VarCtor :: Tree number3 -> number3 -> Tree number3 -> Tree number3   callee: author/project:Dbg.Node   instance: a := number3   sig#: 1521e67f   subst: v0 := <<author/project:Dbg.a19@100:21|v0>>
+                101:49-101:53 VarCtor :: Tree number3   callee: author/project:Dbg.Leaf   instance: a := number3   sig#: 57275c7c   subst: v0 := <<author/project:Dbg.a19@100:21|v0>>
+                101:54-101:55 Int :: number3
+                101:56-101:60 VarCtor :: Tree number3   callee: author/project:Dbg.Leaf   instance: a := number3   sig#: 57275c7c   subst: v0 := <<author/project:Dbg.a19@100:21|v0>>
+              101:62-101:63 Int :: number3
+              101:64-101:68 VarCtor :: Tree number3   callee: author/project:Dbg.Leaf   instance: a := number3   sig#: 57275c7c   subst: v0 := <<author/project:Dbg.a19@100:21|v0>>
+        def a18 :: Dict number4 (Maybe (Array (Result String ( number5, number6 ))))    [97:21-97:24]   id: author/project:Dbg.a18@97:21   sig: Dict v0 (Maybe (Array (Result String ( v1, v2 ))))   kinds: v0:number,v1:number,v2:number   group: author/project:Dbg.a18@97:21 nonrec inferred
+          98:25-98:127 Call :: Dict number4 (Maybe (Array (Result String ( number5, number6 ))))
+            98:25-98:29 VarTopLevel :: String -> Dict number4 (Maybe (Array (Result String ( number5, number6 )))) -> Dict number4 (Maybe (Array (Result String ( number5, number6 ))))   callee: author/project:Dbg.show   use: gen   instance: a := Dict number4 (Maybe (Array (Result String ( number5, number6 ))))   sig#: 6ecaa5dd   subst: v0 := Dict <<author/project:Dbg.a18@97:21|v0>> (Maybe (Array (Result String ( <<author/project:Dbg.a18@97:21|v1>>, <<author/project:Dbg.a18@97:21|v2>> ))))
+            98:30-98:38 Str :: String
+            98:40-98:127 Call :: Dict number4 (Maybe (Array (Result String ( number5, number6 ))))
+              98:40-98:53 VarForeign :: List ( number4, Maybe (Array (Result String ( number5, number6 ))) ) -> Dict number4 (Maybe (Array (Result String ( number5, number6 ))))   callee: elm/core:Dict.fromList   instance: comparable := number4, v := Maybe (Array (Result String ( number5, number6 )))   sig#: 5fa92c5f   subst: v0 := <<author/project:Dbg.a18@97:21|v0>>, v1 := Maybe (Array (Result String ( <<author/project:Dbg.a18@97:21|v1>>, <<author/project:Dbg.a18@97:21|v2>> )))
+              98:54-98:127 List :: List ( number4, Maybe (Array (Result String ( number5, number6 ))) )
+                98:56-98:109 Pair :: ( number4, Maybe (Array (Result String ( number5, number6 ))) )
+                  98:58-98:59 Int :: number4
+                  98:61-98:106 Call :: Maybe (Array (Result String ( number5, number6 )))
+                    98:61-98:65 VarCtor :: Array (Result String ( number5, number6 )) -> Maybe (Array (Result String ( number5, number6 )))   callee: elm/core:Maybe.Just   instance: a := Array (Result String ( number5, number6 ))   sig#: c14b2381   subst: v0 := Array (Result String ( <<author/project:Dbg.a18@97:21|v1>>, <<author/project:Dbg.a18@97:21|v2>> ))
+                    98:67-98:106 Call :: Array (Result String ( number5, number6 ))
+                      98:67-98:81 VarForeign :: List (Result String ( number5, number6 )) -> Array (Result String ( number5, number6 ))   callee: elm/core:Array.fromList   instance: a := Result String ( number5, number6 )   sig#: ad16019a   subst: v0 := Result String ( <<author/project:Dbg.a18@97:21|v1>>, <<author/project:Dbg.a18@97:21|v2>> )
+                      98:82-98:106 List :: List (Result String ( number5, number6 ))
+                        98:84-98:95 Call :: Result String ( number5, number6 )
+                          98:84-98:86 VarCtor :: ( number5, number6 ) -> Result String ( number5, number6 )   callee: elm/core:Result.Ok   instance: error := String, value := ( number5, number6 )   sig#: 8f049c9f   subst: v0 := ( <<author/project:Dbg.a18@97:21|v1>>, <<author/project:Dbg.a18@97:21|v2>> ), v1 := String
+                          98:87-98:95 Pair :: ( number5, number6 )
+                            98:89-98:90 Int :: number5
+                            98:92-98:93 Int :: number6
+                        98:97-98:104 Call :: Result String ( number5, number6 )
+                          98:97-98:100 VarCtor :: String -> Result String ( number5, number6 )   callee: elm/core:Result.Err   instance: error := String, value := ( number5, number6 )   sig#: 8f04103f   subst: v0 := String, v1 := ( <<author/project:Dbg.a18@97:21|v1>>, <<author/project:Dbg.a18@97:21|v2>> )
+                          98:101-98:104 Str :: String
+                98:111-98:125 Pair :: ( number4, Maybe (Array (Result String ( number5, number6 ))) )
+                  98:113-98:114 Int :: number4
+                  98:116-98:123 VarCtor :: Maybe (Array (Result String ( number5, number6 )))   callee: elm/core:Maybe.Nothing   instance: a := Array (Result String ( number5, number6 ))   sig#: d83d645a   subst: v0 := Array (Result String ( <<author/project:Dbg.a18@97:21|v1>>, <<author/project:Dbg.a18@97:21|v2>> ))
+        def a17 :: ( Dict number7 Char, Set String, Array number8 )    [94:21-94:24]   id: author/project:Dbg.a17@94:21   sig: ( Dict v0 Char, Set String, Array v1 )   kinds: v0:number,v1:number   group: author/project:Dbg.a17@94:21 nonrec inferred
+          95:25-95:185 Call :: ( Dict number7 Char, Set String, Array number8 )
+            95:25-95:29 VarTopLevel :: String -> ( Dict number7 Char, Set String, Array number8 ) -> ( Dict number7 Char, Set String, Array number8 )   callee: author/project:Dbg.show   use: gen   instance: a := ( Dict number7 Char, Set String, Array number8 )   sig#: 6ecaa5dd   subst: v0 := ( Dict <<author/project:Dbg.a17@94:21|v0>> Char, Set String, Array <<author/project:Dbg.a17@94:21|v1>> )
+            95:30-95:37 Str :: String
+            95:38-95:185 Triple :: ( Dict number7 Char, Set String, Array number8 )
+              95:40-95:88 Binop :: Dict number7 Char   callee: elm/core:Basics.apR   instance: a := Dict number7 Char, b := Dict number7 Char   sig#: 742a0ff5   subst: v0 := Dict <<author/project:Dbg.a17@94:21|v0>> Char, v1 := Dict <<author/project:Dbg.a17@94:21|v0>> Char
+                95:40-95:71 Binop :: Dict number7 Char   callee: elm/core:Basics.apR   instance: a := Dict number7 Char, b := Dict number7 Char   sig#: 742a0ff5   subst: v0 := Dict <<author/project:Dbg.a17@94:21|v0>> Char, v1 := Dict <<author/project:Dbg.a17@94:21|v0>> Char
+                  95:40-95:50 VarForeign :: Dict number7 Char   callee: elm/core:Dict.empty   instance: k := number7, v := Char   sig#: dd8ed12a   subst: v0 := <<author/project:Dbg.a17@94:21|v0>>, v1 := Char
+                  95:54-95:71 Call :: Dict number7 Char -> Dict number7 Char
+                    95:54-95:65 VarForeign :: number7 -> Char -> Dict number7 Char -> Dict number7 Char   callee: elm/core:Dict.insert   instance: comparable := number7, v := Char   sig#: 256ddcb4   subst: v0 := <<author/project:Dbg.a17@94:21|v0>>, v1 := Char
+                    95:66-95:67 Int :: number7
+                    95:68-95:71 Chr :: Char
+                95:75-95:88 Call :: Dict number7 Char -> Dict number7 Char
+                  95:75-95:86 VarForeign :: number7 -> Dict number7 Char -> Dict number7 Char   callee: elm/core:Dict.remove   instance: comparable := number7, v := Char   sig#: e595110e   subst: v0 := <<author/project:Dbg.a17@94:21|v0>>, v1 := Char
+                  95:87-95:88 Int :: number7
+              95:90-95:135 Binop :: Set String   callee: elm/core:Basics.apR   instance: a := Set String, b := Set String   sig#: 742a0ff5   subst: v0 := Set String, v1 := Set String
+                95:90-95:117 Binop :: Set String   callee: elm/core:Basics.apR   instance: a := Set String, b := Set String   sig#: 742a0ff5   subst: v0 := Set String, v1 := Set String
+                  95:90-95:99 VarForeign :: Set String   callee: elm/core:Set.empty   instance: a := String   sig#: d0df2ef1   subst: v0 := String
+                  95:103-95:117 Call :: Set String -> Set String
+                    95:103-95:113 VarForeign :: String -> Set String -> Set String   callee: elm/core:Set.insert   instance: comparable := String   sig#: 7cefe608   subst: v0 := String
+                    95:114-95:117 Str :: String
+                95:121-95:135 Call :: Set String -> Set String
+                  95:121-95:131 VarForeign :: String -> Set String -> Set String   callee: elm/core:Set.remove   instance: comparable := String   sig#: 7cefe608   subst: v0 := String
+                  95:132-95:135 Str :: String
+              95:137-95:183 Binop :: Array number8   callee: elm/core:Basics.apR   instance: a := Array number8, b := Array number8   sig#: 742a0ff5   subst: v0 := Array <<author/project:Dbg.a17@94:21|v1>>, v1 := Array <<author/project:Dbg.a17@94:21|v1>>
+                95:137-95:164 Binop :: Array number8   callee: elm/core:Basics.apR   instance: a := Array number8, b := Array number8   sig#: 742a0ff5   subst: v0 := Array <<author/project:Dbg.a17@94:21|v1>>, v1 := Array <<author/project:Dbg.a17@94:21|v1>>
+                  95:137-95:148 VarForeign :: Array number8   callee: elm/core:Array.empty   instance: a := number8   sig#: d16a3311   subst: v0 := <<author/project:Dbg.a17@94:21|v1>>
+                  95:152-95:164 Call :: Array number8 -> Array number8
+                    95:152-95:162 VarForeign :: number8 -> Array number8 -> Array number8   callee: elm/core:Array.push   instance: a := number8   sig#: e0aea4e2   subst: v0 := <<author/project:Dbg.a17@94:21|v1>>
+                    95:163-95:164 Int :: number8
+                95:168-95:183 Call :: Array number8 -> Array number8
+                  95:168-95:179 VarForeign :: Int -> Int -> Array number8 -> Array number8   callee: elm/core:Array.slice   instance: a := number8   sig#: 12a8d856   subst: v0 := <<author/project:Dbg.a17@94:21|v1>>
+                  95:180-95:181 Int :: Int
+                  95:182-95:183 Int :: Int
+        def a16 :: Array Int    [91:21-91:24]   id: author/project:Dbg.a16@91:21   sig: Array Int   kinds:    group: author/project:Dbg.a16@91:21 nonrec inferred
+          92:25-92:99 Call :: Array Int
+            92:25-92:29 VarTopLevel :: String -> Array Int -> Array Int   callee: author/project:Dbg.show   use: gen   instance: a := Array Int   sig#: 6ecaa5dd   subst: v0 := Array Int
+            92:30-92:41 Str :: String
+            92:43-92:99 Call :: Array Int
+              92:43-92:52 VarForeign :: (Int -> Int) -> Array Int -> Array Int   callee: elm/core:Array.map   instance: a := Int, b := Int   sig#: 01ca20c1   subst: v0 := Int, v1 := Int
+              92:54-92:65 Lambda :: Int -> Int
+                92:55-92:56 PVar v :: Int
+                92:60-92:65 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  92:60-92:61 VarLocal :: Int
+                  92:64-92:65 Int :: Int
+              92:68-92:99 Call :: Array Int
+                92:68-92:82 VarForeign :: List Int -> Array Int   callee: elm/core:Array.fromList   instance: a := Int   sig#: ad16019a   subst: v0 := Int
+                92:84-92:99 Call :: List Int
+                  92:84-92:94 VarForeign :: Int -> Int -> List Int   callee: elm/core:List.range
+                  92:95-92:96 Int :: Int
+                  92:97-92:99 Int :: Int
+        def a15 :: Array number9    [88:21-88:24]   id: author/project:Dbg.a15@88:21   sig: Array v0   kinds: v0:number   group: author/project:Dbg.a15@88:21 nonrec inferred
+          89:25-89:65 Call :: Array number9
+            89:25-89:29 VarTopLevel :: String -> Array number9 -> Array number9   callee: author/project:Dbg.show   use: gen   instance: a := Array number9   sig#: 6ecaa5dd   subst: v0 := Array <<author/project:Dbg.a15@88:21|v0>>
+            89:30-89:37 Str :: String
+            89:39-89:65 Call :: Array number9
+              89:39-89:53 VarForeign :: List number9 -> Array number9   callee: elm/core:Array.fromList   instance: a := number9   sig#: ad16019a   subst: v0 := <<author/project:Dbg.a15@88:21|v0>>
+              89:54-89:65 List :: List number9
+                89:56-89:57 Int :: number9
+                89:59-89:60 Int :: number9
+                89:62-89:63 Int :: number9
+        def a14 :: Set number10    [85:21-85:24]   id: author/project:Dbg.a14@85:21   sig: Set v0   kinds: v0:number   group: author/project:Dbg.a14@85:21 nonrec inferred
+          86:25-86:64 Call :: Set number10
+            86:25-86:29 VarTopLevel :: String -> Set number10 -> Set number10   callee: author/project:Dbg.show   use: gen   instance: a := Set number10   sig#: 6ecaa5dd   subst: v0 := Set <<author/project:Dbg.a14@85:21|v0>>
+            86:30-86:35 Str :: String
+            86:37-86:64 Call :: Set number10
+              86:37-86:49 VarForeign :: List number10 -> Set number10   callee: elm/core:Set.fromList   instance: comparable := number10   sig#: 8a50a616   subst: v0 := <<author/project:Dbg.a14@85:21|v0>>
+              86:50-86:64 List :: List number10
+                86:52-86:53 Int :: number10
+                86:55-86:56 Int :: number10
+                86:58-86:59 Int :: number10
+                86:61-86:62 Int :: number10
+        def a13 :: Dict String (List number11)    [82:21-82:24]   id: author/project:Dbg.a13@82:21   sig: Dict String (List v0)   kinds: v0:number   group: author/project:Dbg.a13@82:21 nonrec inferred
+          83:25-83:93 Call :: Dict String (List number11)
+            83:25-83:29 VarTopLevel :: String -> Dict String (List number11) -> Dict String (List number11)   callee: author/project:Dbg.show   use: gen   instance: a := Dict String (List number11)   sig#: 6ecaa5dd   subst: v0 := Dict String (List <<author/project:Dbg.a13@82:21|v0>>)
+            83:30-83:43 Str :: String
+            83:45-83:93 Call :: Dict String (List number11)
+              83:45-83:58 VarForeign :: List ( String, List number11 ) -> Dict String (List number11)   callee: elm/core:Dict.fromList   instance: comparable := String, v := List number11   sig#: 5fa92c5f   subst: v0 := String, v1 := List <<author/project:Dbg.a13@82:21|v0>>
+              83:59-83:93 List :: List ( String, List number11 )
+                83:61-83:78 Pair :: ( String, List number11 )
+                  83:63-83:66 Str :: String
+                  83:68-83:76 List :: List number11
+                    83:70-83:71 Int :: number11
+                    83:73-83:74 Int :: number11
+                83:80-83:91 Pair :: ( String, List number11 )
+                  83:82-83:85 Str :: String
+                  83:87-83:89 List :: List number11
+        def a12 :: Dict number12 String    [79:21-79:24]   id: author/project:Dbg.a12@79:21   sig: Dict v0 String   kinds: v0:number   group: author/project:Dbg.a12@79:21 nonrec inferred
+          80:25-80:90 Call :: Dict number12 String
+            80:25-80:29 VarTopLevel :: String -> Dict number12 String -> Dict number12 String   callee: author/project:Dbg.show   use: gen   instance: a := Dict number12 String   sig#: 6ecaa5dd   subst: v0 := Dict <<author/project:Dbg.a12@79:21|v0>> String
+            80:30-80:36 Str :: String
+            80:38-80:90 Call :: Dict number12 String
+              80:38-80:51 VarForeign :: List ( number12, String ) -> Dict number12 String   callee: elm/core:Dict.fromList   instance: comparable := number12, v := String   sig#: 5fa92c5f   subst: v0 := <<author/project:Dbg.a12@79:21|v0>>, v1 := String
+              80:52-80:90 List :: List ( number12, String )
+                80:54-80:64 Pair :: ( number12, String )
+                  80:56-80:57 Int :: number12
+                  80:59-80:62 Str :: String
+                80:66-80:76 Pair :: ( number12, String )
+                  80:68-80:69 Int :: number12
+                  80:71-80:74 Str :: String
+                80:78-80:88 Pair :: ( number12, String )
+                  80:80-80:81 Int :: number12
+                  80:83-80:86 Str :: String
+        def a11 :: List Color    [76:21-76:24]   id: author/project:Dbg.a11@76:21   sig: List Color   kinds:    group: author/project:Dbg.a11@76:21 nonrec inferred
+          77:25-77:59 Call :: List Color
+            77:25-77:29 VarTopLevel :: String -> List Color -> List Color   callee: author/project:Dbg.show   use: gen   instance: a := List Color   sig#: 6ecaa5dd   subst: v0 := List Color
+            77:30-77:38 Str :: String
+            77:39-77:59 List :: List Color
+              77:41-77:44 VarCtor :: Color   callee: author/project:Dbg.Red
+              77:46-77:51 VarCtor :: Color   callee: author/project:Dbg.Green
+              77:53-77:57 VarCtor :: Color   callee: author/project:Dbg.Blue
+        def a10 :: List Shape    [73:21-73:24]   id: author/project:Dbg.a10@73:21   sig: List Shape   kinds:    group: author/project:Dbg.a10@73:21 nonrec inferred
+          74:25-74:133 Call :: List Shape
+            74:25-74:29 VarTopLevel :: String -> List Shape -> List Shape   callee: author/project:Dbg.show   use: gen   instance: a := List Shape   sig#: 6ecaa5dd   subst: v0 := List Shape
+            74:30-74:38 Str :: String
+            74:39-74:133 List :: List Shape
+              74:41-74:44 VarCtor :: Shape   callee: author/project:Dbg.Dot
+              74:46-74:56 Call :: Shape
+                74:46-74:52 VarCtor :: Float -> Shape   callee: author/project:Dbg.Circle
+                74:53-74:56 Float :: Float
+              74:58-74:66 Call :: Shape
+                74:58-74:62 VarCtor :: Int -> Int -> Shape   callee: author/project:Dbg.Rect
+                74:63-74:64 Int :: Int
+                74:65-74:66 Int :: Int
+              74:68-74:86 Call :: Shape
+                74:68-74:74 VarCtor :: String -> Maybe Int -> Shape   callee: author/project:Dbg.Tagged
+                74:75-74:78 Str :: String
+                74:80-74:86 Call :: Maybe Int
+                  74:80-74:84 VarCtor :: Int -> Maybe Int   callee: elm/core:Maybe.Just   instance: a := Int   sig#: c14b2381   subst: v0 := Int
+                  74:85-74:86 Int :: Int
+              74:89-74:107 Call :: Shape
+                74:89-74:96 VarCtor :: Shape -> Shape   callee: author/project:Dbg.Wrapped
+                74:98-74:107 Call :: Shape
+                  74:98-74:104 VarCtor :: Float -> Shape   callee: author/project:Dbg.Circle
+                  74:105-74:107 Negate :: Float
+                    74:106-74:107 Int :: Float
+              74:110-74:130 Call :: Shape
+                74:110-74:117 VarCtor :: Shape -> Shape   callee: author/project:Dbg.Wrapped
+                74:119-74:130 Call :: Shape
+                  74:119-74:126 VarCtor :: Shape -> Shape   callee: author/project:Dbg.Wrapped
+                  74:127-74:130 VarCtor :: Shape   callee: author/project:Dbg.Dot
+        def s3 :: String    [118:21-118:23]   id: author/project:Dbg.s3@118:21   sig: String   kinds:    group: author/project:Dbg.s3@118:21 nonrec inferred
+          119:25-119:52 Call :: String
+            119:25-119:39 VarDebug :: Maybe String -> String   callee: elm/core:Debug.toString   instance: a := Maybe String   sig#: d170fa67   subst: v0 := Maybe String
+            119:41-119:52 Call :: Maybe String
+              119:41-119:45 VarCtor :: String -> Maybe String   callee: elm/core:Maybe.Just   instance: a := String   sig#: c14b2381   subst: v0 := String
+              119:46-119:52 Str :: String
+        def s2 :: String    [115:21-115:23]   id: author/project:Dbg.s2@115:21   sig: String   kinds:    group: author/project:Dbg.s2@115:21 nonrec inferred
+          116:25-116:60 Call :: String
+            116:25-116:39 VarDebug :: { f : Float, g : String } -> String   callee: elm/core:Debug.toString   instance: a := { f : Float, g : String }   sig#: d170fa67   subst: v0 := { f : Float, g : String }
+            116:40-116:60 Record :: { f : Float, g : String }
+              116:46-116:49 Float :: Float
+              116:55-116:58 Str :: String
+        def s1 :: String    [112:21-112:23]   id: author/project:Dbg.s1@112:21   sig: String   kinds:    group: author/project:Dbg.s1@112:21 nonrec inferred
+          113:25-113:59 Call :: String
+            113:25-113:39 VarDebug :: List (Maybe Int) -> String   <= List (Maybe number13) -> String   callee: elm/core:Debug.toString   instance: a := List (Maybe Int) (defaulted)   sig#: d170fa67   subst: v0 := List (Maybe Int)
+            113:40-113:59 List :: List (Maybe Int)   <= List (Maybe number13)
+              113:42-113:48 Call :: Maybe Int   <= Maybe number13
+                113:42-113:46 VarCtor :: Int -> Maybe Int   <= number13 -> Maybe number13   callee: elm/core:Maybe.Just   instance: a := Int (defaulted)   sig#: c14b2381   subst: v0 := Int
+                113:47-113:48 Int :: Int   <= number13
+              113:50-113:57 VarCtor :: Maybe Int   <= Maybe number13   callee: elm/core:Maybe.Nothing   instance: a := Int (defaulted)   sig#: d83d645a   subst: v0 := Int
+        def l1 :: String    [121:21-121:23]   id: author/project:Dbg.l1@121:21   sig: String   kinds:    group: author/project:Dbg.l1@121:21 nonrec inferred
+          122:25-122:75 Call :: String
+            122:25-122:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            122:35-122:45 Str :: String
+            122:47-122:75 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              122:47-122:49 VarLocal :: String   callee: author/project:Dbg.s1@112:21   use: gen
+              122:53-122:75 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                122:53-122:56 Str :: String
+                122:60-122:75 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  122:60-122:62 VarLocal :: String   callee: author/project:Dbg.s2@115:21   use: gen
+                  122:66-122:75 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                    122:66-122:69 Str :: String
+                    122:73-122:75 VarLocal :: String   callee: author/project:Dbg.s3@118:21   use: gen
+        def a9 :: { x : number14, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( number15, Char ) }    [70:21-70:23]   id: author/project:Dbg.a9@70:21   sig: { x : v0, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( v1, Char ) }   kinds: v0:number,v1:number   group: author/project:Dbg.a9@70:21 nonrec inferred
+          71:25-71:115 Call :: { x : number14, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( number15, Char ) }
+            71:25-71:29 VarTopLevel :: String -> { x : number14, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( number15, Char ) } -> { x : number14, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( number15, Char ) }   callee: author/project:Dbg.show   use: gen   instance: a := { x : number14, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( number15, Char ) }   sig#: 6ecaa5dd   subst: v0 := { x : <<author/project:Dbg.a9@70:21|v0>>, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( <<author/project:Dbg.a9@70:21|v1>>, Char ) }
+            71:30-71:38 Str :: String
+            71:39-71:115 Record :: { x : number14, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( number15, Char ) }
+              71:45-71:46 Int :: number14
+              71:52-71:55 Float :: Float
+              71:109-71:113 VarCtor :: Bool   callee: elm/core:Basics.True
+              71:95-71:102 List :: List Shape
+                71:97-71:100 VarCtor :: Shape   callee: author/project:Dbg.Dot
+              71:64-71:67 Str :: String
+              71:76-71:86 Pair :: ( number15, Char )
+                71:78-71:79 Int :: number15
+                71:81-71:84 Chr :: Char
+        def a8 :: ( ( Maybe number16, Maybe a1, Maybe (Maybe number17) ), ( Result error number18, Result String value ) )    [67:21-67:23]   id: author/project:Dbg.a8@67:21   sig: ( ( Maybe v0, Maybe v1, Maybe (Maybe v2) ), ( Result v3 v4, Result String v5 ) )   kinds: v0:number,v1:any,v2:number,v3:any,v4:number,v5:any   group: author/project:Dbg.a8@67:21 nonrec inferred
+          68:25-68:105 Call :: ( ( Maybe number16, Maybe a1, Maybe (Maybe number17) ), ( Result error number18, Result String value ) )
+            68:25-68:29 VarTopLevel :: String -> ( ( Maybe number16, Maybe a1, Maybe (Maybe number17) ), ( Result error number18, Result String value ) ) -> ( ( Maybe number16, Maybe a1, Maybe (Maybe number17) ), ( Result error number18, Result String value ) )   callee: author/project:Dbg.show   use: gen   instance: a := ( ( Maybe number16, Maybe a1, Maybe (Maybe number17) ), ( Result error number18, Result String value ) )   sig#: 6ecaa5dd   subst: v0 := ( ( Maybe <<author/project:Dbg.a8@67:21|v0>>, Maybe <<author/project:Dbg.a8@67:21|v1>>, Maybe (Maybe <<author/project:Dbg.a8@67:21|v2>>) ), ( Result <<author/project:Dbg.a8@67:21|v3>> <<author/project:Dbg.a8@67:21|v4>>, Result String <<author/project:Dbg.a8@67:21|v5>> ) )
+            68:30-68:44 Str :: String
+            68:45-68:105 Pair :: ( ( Maybe number16, Maybe a1, Maybe (Maybe number17) ), ( Result error number18, Result String value ) )
+              68:47-68:82 Triple :: ( Maybe number16, Maybe a1, Maybe (Maybe number17) )
+                68:49-68:55 Call :: Maybe number16
+                  68:49-68:53 VarCtor :: number16 -> Maybe number16   callee: elm/core:Maybe.Just   instance: a := number16   sig#: c14b2381   subst: v0 := <<author/project:Dbg.a8@67:21|v0>>
+                  68:54-68:55 Int :: number16
+                68:57-68:64 VarCtor :: Maybe a1   callee: elm/core:Maybe.Nothing   instance: a := a1   sig#: d83d645a   subst: v0 := <<author/project:Dbg.a8@67:21|v1>>
+                68:66-68:79 Call :: Maybe (Maybe number17)
+                  68:66-68:70 VarCtor :: Maybe number17 -> Maybe (Maybe number17)   callee: elm/core:Maybe.Just   instance: a := Maybe number17   sig#: c14b2381   subst: v0 := Maybe <<author/project:Dbg.a8@67:21|v2>>
+                  68:72-68:79 Call :: Maybe number17
+                    68:72-68:76 VarCtor :: number17 -> Maybe number17   callee: elm/core:Maybe.Just   instance: a := number17   sig#: c14b2381   subst: v0 := <<author/project:Dbg.a8@67:21|v2>>
+                    68:77-68:79 Negate :: number17
+                      68:78-68:79 Int :: number17
+              68:84-68:103 Pair :: ( Result error number18, Result String value )
+                68:86-68:90 Call :: Result error number18
+                  68:86-68:88 VarCtor :: number18 -> Result error number18   callee: elm/core:Result.Ok   instance: error := error, value := number18   sig#: 8f049c9f   subst: v0 := <<author/project:Dbg.a8@67:21|v4>>, v1 := <<author/project:Dbg.a8@67:21|v3>>
+                  68:89-68:90 Int :: number18
+                68:92-68:101 Call :: Result String value
+                  68:92-68:95 VarCtor :: String -> Result String value   callee: elm/core:Result.Err   instance: error := String, value := value   sig#: 8f04103f   subst: v0 := String, v1 := <<author/project:Dbg.a8@67:21|v5>>
+                  68:96-68:101 Str :: String
+        def a7 :: ( ( List t, List number19 ), ( List (List number20), List String ) )    [64:21-64:23]   id: author/project:Dbg.a7@64:21   sig: ( ( List v0, List v1 ), ( List (List v2), List String ) )   kinds: v0:any,v1:number,v2:number   group: author/project:Dbg.a7@64:21 nonrec inferred
+          65:25-65:104 Call :: ( ( List t, List number19 ), ( List (List number20), List String ) )
+            65:25-65:29 VarTopLevel :: String -> ( ( List t, List number19 ), ( List (List number20), List String ) ) -> ( ( List t, List number19 ), ( List (List number20), List String ) )   callee: author/project:Dbg.show   use: gen   instance: a := ( ( List t, List number19 ), ( List (List number20), List String ) )   sig#: 6ecaa5dd   subst: v0 := ( ( List <<author/project:Dbg.a7@64:21|v0>>, List <<author/project:Dbg.a7@64:21|v1>> ), ( List (List <<author/project:Dbg.a7@64:21|v2>>), List String ) )
+            65:30-65:37 Str :: String
+            65:38-65:104 Pair :: ( ( List t, List number19 ), ( List (List number20), List String ) )
+              65:40-65:59 Pair :: ( List t, List number19 )
+                65:42-65:44 List :: List t
+                65:46-65:57 List :: List number19
+                  65:48-65:49 Int :: number19
+                  65:51-65:52 Int :: number19
+                  65:54-65:55 Int :: number19
+              65:61-65:102 Pair :: ( List (List number20), List String )
+                65:63-65:86 List :: List (List number20)
+                  65:65-65:70 List :: List number20
+                    65:67-65:68 Int :: number20
+                  65:72-65:74 List :: List number20
+                  65:76-65:84 List :: List number20
+                    65:78-65:79 Int :: number20
+                    65:81-65:82 Int :: number20
+                65:88-65:100 List :: List String
+                  65:90-65:93 Str :: String
+                  65:95-65:98 Str :: String
+        def a6 :: ( ( number21, String ), ( Float, Char, List number22 ) )    [61:21-61:23]   id: author/project:Dbg.a6@61:21   sig: ( ( v0, String ), ( Float, Char, List v1 ) )   kinds: v0:number,v1:number   group: author/project:Dbg.a6@61:21 nonrec inferred
+          62:25-62:74 Call :: ( ( number21, String ), ( Float, Char, List number22 ) )
+            62:25-62:29 VarTopLevel :: String -> ( ( number21, String ), ( Float, Char, List number22 ) ) -> ( ( number21, String ), ( Float, Char, List number22 ) )   callee: author/project:Dbg.show   use: gen   instance: a := ( ( number21, String ), ( Float, Char, List number22 ) )   sig#: 6ecaa5dd   subst: v0 := ( ( <<author/project:Dbg.a6@61:21|v0>>, String ), ( Float, Char, List <<author/project:Dbg.a6@61:21|v1>> ) )
+            62:30-62:38 Str :: String
+            62:39-62:74 Pair :: ( ( number21, String ), ( Float, Char, List number22 ) )
+              62:41-62:51 Pair :: ( number21, String )
+                62:43-62:44 Int :: number21
+                62:46-62:49 Str :: String
+              62:53-62:72 Triple :: ( Float, Char, List number22 )
+                62:55-62:58 Float :: Float
+                62:60-62:63 Chr :: Char
+                62:65-62:70 List :: List number22
+                  62:67-62:68 Int :: number22
+        def a5 :: ( ( Bool, Bool ), ( Order, Order, Order ), () )    [58:21-58:23]   id: author/project:Dbg.a5@58:21   sig: ( ( Bool, Bool ), ( Order, Order, Order ), () )   kinds:    group: author/project:Dbg.a5@58:21 nonrec inferred
+          59:25-59:87 Call :: ( ( Bool, Bool ), ( Order, Order, Order ), () )
+            59:25-59:29 VarTopLevel :: String -> ( ( Bool, Bool ), ( Order, Order, Order ), () ) -> ( ( Bool, Bool ), ( Order, Order, Order ), () )   callee: author/project:Dbg.show   use: gen   instance: a := ( ( Bool, Bool ), ( Order, Order, Order ), () )   sig#: 6ecaa5dd   subst: v0 := ( ( Bool, Bool ), ( Order, Order, Order ), () )
+            59:30-59:47 Str :: String
+            59:48-59:87 Triple :: ( ( Bool, Bool ), ( Order, Order, Order ), () )
+              59:50-59:65 Pair :: ( Bool, Bool )
+                59:52-59:56 VarCtor :: Bool   callee: elm/core:Basics.True
+                59:58-59:63 VarCtor :: Bool   callee: elm/core:Basics.False
+              59:67-59:81 Triple :: ( Order, Order, Order )
+                59:69-59:71 VarCtor :: Order   callee: elm/core:Basics.LT
+                59:73-59:75 VarCtor :: Order   callee: elm/core:Basics.EQ
+                59:77-59:79 VarCtor :: Order   callee: elm/core:Basics.GT
+              59:83-59:85 Unit :: ()
+        def a4 :: String    [55:21-55:23]   id: author/project:Dbg.a4@55:21   sig: String   kinds:    group: author/project:Dbg.a4@55:21 nonrec inferred
+          56:25-56:87 Call :: String
+            56:25-56:29 VarTopLevel :: String -> String -> String   callee: author/project:Dbg.show   use: gen   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            56:30-56:38 Str :: String
+            56:39-56:87 Str :: String
+        def a3 :: List Char    [52:21-52:23]   id: author/project:Dbg.a3@52:21   sig: List Char   kinds:    group: author/project:Dbg.a3@52:21 nonrec inferred
+          53:25-53:101 Call :: List Char
+            53:25-53:29 VarTopLevel :: String -> List Char -> List Char   callee: author/project:Dbg.show   use: gen   instance: a := List Char   sig#: 6ecaa5dd   subst: v0 := List Char
+            53:30-53:37 Str :: String
+            53:38-53:101 List :: List Char
+              53:40-53:43 Chr :: Char
+              53:45-53:49 Chr :: Char
+              53:51-53:54 Chr :: Char
+              53:56-53:60 Chr :: Char
+              53:62-53:66 Chr :: Char
+              53:68-53:72 Chr :: Char
+              53:74-53:77 Chr :: Char
+              53:79-53:82 Chr :: Char
+              53:84-53:87 Chr :: Char
+              53:89-53:99 Chr :: Char
+        def a2 :: List Float    [49:21-49:23]   id: author/project:Dbg.a2@49:21   sig: List Float   kinds:    group: author/project:Dbg.a2@49:21 nonrec inferred
+          50:25-50:114 Call :: List Float
+            50:25-50:29 VarTopLevel :: String -> List Float -> List Float   callee: author/project:Dbg.show   use: gen   instance: a := List Float   sig#: 6ecaa5dd   subst: v0 := List Float
+            50:30-50:38 Str :: String
+            50:39-50:114 List :: List Float
+              50:41-50:44 Float :: Float
+              50:46-50:50 Negate :: Float
+                50:47-50:50 Float :: Float
+              50:52-50:57 Binop :: Float   callee: elm/core:Basics.fdiv
+                50:52-50:53 Int :: Float
+                50:56-50:57 Int :: Float
+              50:59-50:65 Binop :: Float   callee: elm/core:Basics.fdiv
+                50:59-50:61 Negate :: Float
+                  50:60-50:61 Int :: Float
+                50:64-50:65 Int :: Float
+              50:67-50:72 Binop :: Float   callee: elm/core:Basics.fdiv
+                50:67-50:68 Int :: Float
+                50:71-50:72 Int :: Float
+              50:74-50:80 Float :: Float
+              50:82-50:88 Float :: Float
+              50:90-50:103 Float :: Float
+              50:105-50:108 Float :: Float
+              50:110-50:112 Negate :: Float
+                50:111-50:112 Int :: Float
+        def a1 :: number23    [46:21-46:23]   id: author/project:Dbg.a1@46:21   sig: v0   kinds: v0:number   group: author/project:Dbg.a1@46:21 nonrec inferred
+          47:25-47:39 Call :: number23
+            47:25-47:29 VarTopLevel :: String -> number23 -> number23   callee: author/project:Dbg.show   use: gen   instance: a := number23   sig#: 6ecaa5dd   subst: v0 := <<author/project:Dbg.a1@46:21|v0>>
+            47:30-47:35 Str :: String
+            47:36-47:39 Negate :: number23
+              47:37-47:39 Int :: number23
+        124:17-128:37 If :: ( (), Cmd () )
+          124:20-124:387 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            124:20-124:383 Call :: Int
+              124:20-124:31 VarForeign :: List () -> Int   callee: elm/core:List.length   instance: a := ()   sig#: 8f686fa0   subst: v0 := ()
+              124:32-124:383 List :: List ()
+                124:34-124:46 Call :: ()
+                  124:34-124:40 VarForeign :: () -> Int -> ()   <= () -> number24 -> ()   callee: elm/core:Basics.always   instance: a := (), b := Int (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := Int
+                  124:41-124:43 Unit :: ()
+                  124:44-124:46 VarLocal :: Int   <= number24   callee: author/project:Dbg.a1@46:21   use: gen   instance: number23 := Int (defaulted)   sig#: 005979ab   subst: v0 := Int
+                124:48-124:60 Call :: ()
+                  124:48-124:54 VarForeign :: () -> List Float -> ()   callee: elm/core:Basics.always   instance: a := (), b := List Float   sig#: 557b498d   subst: v0 := (), v1 := List Float
+                  124:55-124:57 Unit :: ()
+                  124:58-124:60 VarLocal :: List Float   callee: author/project:Dbg.a2@49:21   use: gen
+                124:62-124:74 Call :: ()
+                  124:62-124:68 VarForeign :: () -> List Char -> ()   callee: elm/core:Basics.always   instance: a := (), b := List Char   sig#: 557b498d   subst: v0 := (), v1 := List Char
+                  124:69-124:71 Unit :: ()
+                  124:72-124:74 VarLocal :: List Char   callee: author/project:Dbg.a3@52:21   use: gen
+                124:76-124:88 Call :: ()
+                  124:76-124:82 VarForeign :: () -> String -> ()   callee: elm/core:Basics.always   instance: a := (), b := String   sig#: 557b498d   subst: v0 := (), v1 := String
+                  124:83-124:85 Unit :: ()
+                  124:86-124:88 VarLocal :: String   callee: author/project:Dbg.a4@55:21   use: gen
+                124:90-124:102 Call :: ()
+                  124:90-124:96 VarForeign :: () -> ( ( Bool, Bool ), ( Order, Order, Order ), () ) -> ()   callee: elm/core:Basics.always   instance: a := (), b := ( ( Bool, Bool ), ( Order, Order, Order ), () )   sig#: 557b498d   subst: v0 := (), v1 := ( ( Bool, Bool ), ( Order, Order, Order ), () )
+                  124:97-124:99 Unit :: ()
+                  124:100-124:102 VarLocal :: ( ( Bool, Bool ), ( Order, Order, Order ), () )   callee: author/project:Dbg.a5@58:21   use: gen
+                124:104-124:116 Call :: ()
+                  124:104-124:110 VarForeign :: () -> ( ( Int, String ), ( Float, Char, List Int ) ) -> ()   <= () -> ( ( number25, String ), ( Float, Char, List number26 ) ) -> ()   callee: elm/core:Basics.always   instance: a := (), b := ( ( Int, String ), ( Float, Char, List Int ) ) (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := ( ( Int, String ), ( Float, Char, List Int ) )
+                  124:111-124:113 Unit :: ()
+                  124:114-124:116 VarLocal :: ( ( Int, String ), ( Float, Char, List Int ) )   <= ( ( number25, String ), ( Float, Char, List number26 ) )   callee: author/project:Dbg.a6@61:21   use: gen   instance: number21 := Int (defaulted), number22 := Int (defaulted)   sig#: b5bf2524   subst: v0 := Int, v1 := Int
+                124:118-124:130 Call :: ()
+                  124:118-124:124 VarForeign :: () -> ( ( List ref, List Int ), ( List (List Int), List String ) ) -> ()   <= () -> ( ( List t1, List number27 ), ( List (List number28), List String ) ) -> ()   callee: elm/core:Basics.always   instance: a := (), b := ( ( List ref, List Int ), ( List (List Int), List String ) ) (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := ( ( List ref, List Int ), ( List (List Int), List String ) )
+                  124:125-124:127 Unit :: ()
+                  124:128-124:130 VarLocal :: ( ( List ref, List Int ), ( List (List Int), List String ) )   <= ( ( List t1, List number27 ), ( List (List number28), List String ) )   callee: author/project:Dbg.a7@64:21   use: gen   instance: number19 := Int (defaulted), number20 := Int (defaulted), t := ref (defaulted)   sig#: 623ea157   subst: v0 := ref, v1 := Int, v2 := Int
+                124:132-124:144 Call :: ()
+                  124:132-124:138 VarForeign :: () -> ( ( Maybe Int, Maybe ref, Maybe (Maybe Int) ), ( Result ref Int, Result String ref ) ) -> ()   <= () -> ( ( Maybe number29, Maybe a2, Maybe (Maybe number30) ), ( Result error1 number31, Result String value1 ) ) -> ()   callee: elm/core:Basics.always   instance: a := (), b := ( ( Maybe Int, Maybe ref, Maybe (Maybe Int) ), ( Result ref Int, Result String ref ) ) (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := ( ( Maybe Int, Maybe ref, Maybe (Maybe Int) ), ( Result ref Int, Result String ref ) )
+                  124:139-124:141 Unit :: ()
+                  124:142-124:144 VarLocal :: ( ( Maybe Int, Maybe ref, Maybe (Maybe Int) ), ( Result ref Int, Result String ref ) )   <= ( ( Maybe number29, Maybe a2, Maybe (Maybe number30) ), ( Result error1 number31, Result String value1 ) )   callee: author/project:Dbg.a8@67:21   use: gen   instance: a1 := ref (defaulted), error := ref (defaulted), number18 := Int (defaulted), number16 := Int (defaulted), number17 := Int (defaulted), value := ref (defaulted)   sig#: 8cb21dd0   subst: v0 := Int, v1 := ref, v2 := Int, v3 := ref, v4 := Int, v5 := ref
+                124:146-124:158 Call :: ()
+                  124:146-124:152 VarForeign :: () -> { x : Int, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( Int, Char ) } -> ()   <= () -> { x : number32, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( number33, Char ) } -> ()   callee: elm/core:Basics.always   instance: a := (), b := { x : Int, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( Int, Char ) } (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := { x : Int, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( Int, Char ) }
+                  124:153-124:155 Unit :: ()
+                  124:156-124:158 VarLocal :: { x : Int, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( Int, Char ) }   <= { x : number32, y : Float, ok : Bool, kids : List Shape, name : String, pair : ( number33, Char ) }   callee: author/project:Dbg.a9@70:21   use: gen   instance: number14 := Int (defaulted), number15 := Int (defaulted)   sig#: 450bba8f   subst: v0 := Int, v1 := Int
+                124:160-124:173 Call :: ()
+                  124:160-124:166 VarForeign :: () -> List Shape -> ()   callee: elm/core:Basics.always   instance: a := (), b := List Shape   sig#: 557b498d   subst: v0 := (), v1 := List Shape
+                  124:167-124:169 Unit :: ()
+                  124:170-124:173 VarLocal :: List Shape   callee: author/project:Dbg.a10@73:21   use: gen
+                124:175-124:188 Call :: ()
+                  124:175-124:181 VarForeign :: () -> List Color -> ()   callee: elm/core:Basics.always   instance: a := (), b := List Color   sig#: 557b498d   subst: v0 := (), v1 := List Color
+                  124:182-124:184 Unit :: ()
+                  124:185-124:188 VarLocal :: List Color   callee: author/project:Dbg.a11@76:21   use: gen
+                124:190-124:203 Call :: ()
+                  124:190-124:196 VarForeign :: () -> Dict Int String -> ()   <= () -> Dict number34 String -> ()   callee: elm/core:Basics.always   instance: a := (), b := Dict Int String (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := Dict Int String
+                  124:197-124:199 Unit :: ()
+                  124:200-124:203 VarLocal :: Dict Int String   <= Dict number34 String   callee: author/project:Dbg.a12@79:21   use: gen   instance: number12 := Int (defaulted)   sig#: 712dd095   subst: v0 := Int
+                124:205-124:218 Call :: ()
+                  124:205-124:211 VarForeign :: () -> Dict String (List Int) -> ()   <= () -> Dict String (List number35) -> ()   callee: elm/core:Basics.always   instance: a := (), b := Dict String (List Int) (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := Dict String (List Int)
+                  124:212-124:214 Unit :: ()
+                  124:215-124:218 VarLocal :: Dict String (List Int)   <= Dict String (List number35)   callee: author/project:Dbg.a13@82:21   use: gen   instance: number11 := Int (defaulted)   sig#: e3698c78   subst: v0 := Int
+                124:220-124:233 Call :: ()
+                  124:220-124:226 VarForeign :: () -> Set Int -> ()   <= () -> Set number36 -> ()   callee: elm/core:Basics.always   instance: a := (), b := Set Int (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := Set Int
+                  124:227-124:229 Unit :: ()
+                  124:230-124:233 VarLocal :: Set Int   <= Set number36   callee: author/project:Dbg.a14@85:21   use: gen   instance: number10 := Int (defaulted)   sig#: d0df2ef1   subst: v0 := Int
+                124:235-124:248 Call :: ()
+                  124:235-124:241 VarForeign :: () -> Array Int -> ()   <= () -> Array number37 -> ()   callee: elm/core:Basics.always   instance: a := (), b := Array Int (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := Array Int
+                  124:242-124:244 Unit :: ()
+                  124:245-124:248 VarLocal :: Array Int   <= Array number37   callee: author/project:Dbg.a15@88:21   use: gen   instance: number9 := Int (defaulted)   sig#: d16a3311   subst: v0 := Int
+                124:250-124:263 Call :: ()
+                  124:250-124:256 VarForeign :: () -> Array Int -> ()   callee: elm/core:Basics.always   instance: a := (), b := Array Int   sig#: 557b498d   subst: v0 := (), v1 := Array Int
+                  124:257-124:259 Unit :: ()
+                  124:260-124:263 VarLocal :: Array Int   callee: author/project:Dbg.a16@91:21   use: gen
+                124:265-124:278 Call :: ()
+                  124:265-124:271 VarForeign :: () -> ( Dict Int Char, Set String, Array Int ) -> ()   <= () -> ( Dict number38 Char, Set String, Array number39 ) -> ()   callee: elm/core:Basics.always   instance: a := (), b := ( Dict Int Char, Set String, Array Int ) (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := ( Dict Int Char, Set String, Array Int )
+                  124:272-124:274 Unit :: ()
+                  124:275-124:278 VarLocal :: ( Dict Int Char, Set String, Array Int )   <= ( Dict number38 Char, Set String, Array number39 )   callee: author/project:Dbg.a17@94:21   use: gen   instance: number7 := Int (defaulted), number8 := Int (defaulted)   sig#: 6df356b0   subst: v0 := Int, v1 := Int
+                124:280-124:293 Call :: ()
+                  124:280-124:286 VarForeign :: () -> Dict Int (Maybe (Array (Result String ( Int, Int )))) -> ()   <= () -> Dict number40 (Maybe (Array (Result String ( number41, number42 )))) -> ()   callee: elm/core:Basics.always   instance: a := (), b := Dict Int (Maybe (Array (Result String ( Int, Int )))) (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := Dict Int (Maybe (Array (Result String ( Int, Int ))))
+                  124:287-124:289 Unit :: ()
+                  124:290-124:293 VarLocal :: Dict Int (Maybe (Array (Result String ( Int, Int ))))   <= Dict number40 (Maybe (Array (Result String ( number41, number42 ))))   callee: author/project:Dbg.a18@97:21   use: gen   instance: number4 := Int (defaulted), number5 := Int (defaulted), number6 := Int (defaulted)   sig#: 1ace7682   subst: v0 := Int, v1 := Int, v2 := Int
+                124:295-124:308 Call :: ()
+                  124:295-124:301 VarForeign :: () -> Tree Int -> ()   <= () -> Tree number43 -> ()   callee: elm/core:Basics.always   instance: a := (), b := Tree Int (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := Tree Int
+                  124:302-124:304 Unit :: ()
+                  124:305-124:308 VarLocal :: Tree Int   <= Tree number43   callee: author/project:Dbg.a19@100:21   use: gen   instance: number3 := Int (defaulted)   sig#: 57275c7c   subst: v0 := Int
+                124:310-124:323 Call :: ()
+                  124:310-124:316 VarForeign :: () -> (Int -> Int) -> ()   <= () -> (number44 -> number44) -> ()   callee: elm/core:Basics.always   instance: a := (), b := Int -> Int (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := Int -> Int
+                  124:317-124:319 Unit :: ()
+                  124:320-124:323 VarLocal :: Int -> Int   <= number44 -> number44   callee: author/project:Dbg.a20@103:21   use: gen   instance: number2 := Int (defaulted)   sig#: 1f734da5   subst: v0 := Int
+                124:325-124:338 Call :: ()
+                  124:325-124:331 VarForeign :: () -> List { a : Int, bb : String } -> ()   <= () -> List { a : number45, bb : String } -> ()   callee: elm/core:Basics.always   instance: a := (), b := List { a : Int, bb : String } (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := List { a : Int, bb : String }
+                  124:332-124:334 Unit :: ()
+                  124:335-124:338 VarLocal :: List { a : Int, bb : String }   <= List { a : number45, bb : String }   callee: author/project:Dbg.a21@106:21   use: gen   instance: number1 := Int (defaulted)   sig#: f7b6df36   subst: v0 := Int
+                124:340-124:353 Call :: ()
+                  124:340-124:346 VarForeign :: () -> Set ( Int, String ) -> ()   <= () -> Set ( number46, String ) -> ()   callee: elm/core:Basics.always   instance: a := (), b := Set ( Int, String ) (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := Set ( Int, String )
+                  124:347-124:349 Unit :: ()
+                  124:350-124:353 VarLocal :: Set ( Int, String )   <= Set ( number46, String )   callee: author/project:Dbg.a22@109:21   use: gen   instance: number := Int (defaulted)   sig#: df93ecb4   subst: v0 := Int
+                124:355-124:367 Call :: ()
+                  124:355-124:361 VarForeign :: () -> String -> ()   callee: elm/core:Basics.always   instance: a := (), b := String   sig#: 557b498d   subst: v0 := (), v1 := String
+                  124:362-124:364 Unit :: ()
+                  124:365-124:367 VarLocal :: String   callee: author/project:Dbg.s1@112:21   use: gen
+                124:369-124:381 Call :: ()
+                  124:369-124:375 VarForeign :: () -> String -> ()   callee: elm/core:Basics.always   instance: a := (), b := String   sig#: 557b498d   subst: v0 := (), v1 := String
+                  124:376-124:378 Unit :: ()
+                  124:379-124:381 VarLocal :: String   callee: author/project:Dbg.l1@121:21   use: gen
+            124:386-124:387 Int :: Int
+          125:21-125:37 Pair :: ( (), Cmd () )
+            125:23-125:25 Unit :: ()
+            125:27-125:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          128:21-128:37 Pair :: ( (), Cmd () )
+            128:23-128:25 Unit :: ()
+            128:27-128:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      129:20-129:43 Lambda :: () -> () -> ( (), Cmd () )
+        129:21-129:22 PAnything :: ()
+        129:23-129:24 PVar m :: ()
+        129:28-129:43 Pair :: ( (), Cmd () )
+          129:30-129:31 VarLocal :: ()
+          129:33-129:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      130:27-130:41 Lambda :: () -> Sub ()
+        130:28-130:29 PAnything :: ()
+        130:33-130:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Dbg.show   kind: function   reads:    needs: 
+init: 1   id: author/project:Dbg.main   kind: value   reads: author/project:Dbg.show   needs:    init-dep: no

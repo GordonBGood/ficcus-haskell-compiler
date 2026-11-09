@@ -1,0 +1,131 @@
+module Dbg exposing (main)
+
+-- Debug.log and Debug.toString for all types, in Elm's format (decisions L16 escapes, L29): Int, Float (NaN, Infinity, -0, exponents),
+-- Char, String (escapes), Bool, Order, unit, tuples, lists, Maybe, Result, records (field order), custom types (argument
+-- parentheses), Dict, Set, Array, functions and nested combinations. Output equals Elm's (expected/dbg.out, Elm 0.19.3, node).
+
+import Array exposing (Array)
+import Dict exposing (Dict)
+import Set exposing (Set)
+
+
+type Shape
+    = Dot
+    | Circle Float
+    | Rect Int Int
+    | Tagged String (Maybe Int)
+    | Wrapped Shape
+
+
+type Color
+    = Red
+    | Green
+    | Blue
+
+
+type alias P =
+    { x : Int, y : Float, name : String, pair : ( Int, Char ), kids : List Shape, ok : Bool }
+
+
+type Tree a
+    = Leaf
+    | Node (Tree a) a (Tree a)
+
+
+show : String -> a -> a
+show tag v =
+    Debug.log tag v
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    a1 =
+                        show "int" -42
+
+                    a2 =
+                        show "floats" [ 1.5, -0.5, 1 / 0, -1 / 0, 0 / 0, 1.0e21, 1.0e-7, 123456789.125, 0.1, -0 ]
+
+                    a3 =
+                        show "chars" [ 'a', '\'', '"', '\n', '\t', '\\', 'é', '€', '😀', '\u{0000}' ]
+
+                    a4 =
+                        show "string" "quote\" back\\ nl\n tab\t cr\r nul\u{0000} é €"
+
+                    a5 =
+                        show "bool order unit" ( ( True, False ), ( LT, EQ, GT ), () )
+
+                    a6 =
+                        show "tuples" ( ( 1, "a" ), ( 2.5, 'c', [ 1 ] ) )
+
+                    a7 =
+                        show "lists" ( ( [], [ 1, 2, 3 ] ), ( [ [ 1 ], [], [ 2, 3 ] ], [ "a", "b" ] ) )
+
+                    a8 =
+                        show "maybe result" ( ( Just 3, Nothing, Just (Just -1) ), ( Ok 5, Err "bad" ) )
+
+                    a9 =
+                        show "record" { x = 1, y = 2.5, name = "n", pair = ( 3, 'z' ), kids = [ Dot ], ok = True }
+
+                    a10 =
+                        show "custom" [ Dot, Circle 1.5, Rect 2 3, Tagged "s" (Just 4), Wrapped (Circle -2), Wrapped (Wrapped Dot) ]
+
+                    a11 =
+                        show "colors" [ Red, Green, Blue ]
+
+                    a12 =
+                        show "dict" (Dict.fromList [ ( 3, "c" ), ( 1, "a" ), ( 2, "b" ) ])
+
+                    a13 =
+                        show "dict string" (Dict.fromList [ ( "k", [ 1, 2 ] ), ( "j", [] ) ])
+
+                    a14 =
+                        show "set" (Set.fromList [ 5, 1, 3, 1 ])
+
+                    a15 =
+                        show "array" (Array.fromList [ 1, 2, 3 ])
+
+                    a16 =
+                        show "array big" (Array.map (\v -> v * 2) (Array.fromList (List.range 1 40)))
+
+                    a17 =
+                        show "empty" ( Dict.empty |> Dict.insert 1 'x' |> Dict.remove 1, Set.empty |> Set.insert "a" |> Set.remove "a", Array.empty |> Array.push 1 |> Array.slice 0 0 )
+
+                    a18 =
+                        show "nested" (Dict.fromList [ ( 1, Just (Array.fromList [ Ok ( 1, 2 ), Err "x" ]) ), ( 2, Nothing ) ])
+
+                    a19 =
+                        show "tree" (Node (Node Leaf 1 Leaf) 2 Leaf)
+
+                    a20 =
+                        show "function" (\x -> x + 1)
+
+                    a21 =
+                        show "record in list" [ { a = 1, bb = "x" }, { a = 2, bb = "y" } ]
+
+                    a22 =
+                        show "set of tuples" (Set.fromList [ ( 2, "b" ), ( 1, "z" ), ( 1, "a" ) ])
+
+                    s1 =
+                        Debug.toString [ Just 1, Nothing ]
+
+                    s2 =
+                        Debug.toString { f = 1.0, g = "q" }
+
+                    s3 =
+                        Debug.toString (Just "it's")
+
+                    l1 =
+                        Debug.log "toString" (s1 ++ " " ++ s2 ++ " " ++ s3)
+                in
+                if List.length [ always () a1, always () a2, always () a3, always () a4, always () a5, always () a6, always () a7, always () a8, always () a9, always () a10, always () a11, always () a12, always () a13, always () a14, always () a15, always () a16, always () a17, always () a18, always () a19, always () a20, always () a21, always () a22, always () s1, always () l1 ] > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

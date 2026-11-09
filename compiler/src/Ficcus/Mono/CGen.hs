@@ -1116,6 +1116,14 @@ kernelCall info cls name key args =
             ("elm/core:String.fromInt", [a]) -> return ("fic_str_from_int(" ++ a ++ ")")
             ("elm/core:String.fromFloat", [a]) -> return ("fic_str_from_float(" ++ a ++ ")")
             ("elm/core:Debug.log", [tag, v]) -> debugLog tag v
+            ("elm/core:Debug.toString", [v]) | Key [ByType t] <- key ->
+              do  sb <- fresh "sb"
+                  emit ("fic_sb " ++ sb ++ ";")
+                  emit ("fic_sb_init(&" ++ sb ++ ");")
+                  showStmt info t ("&" ++ sb) v
+                  s <- fresh "s"
+                  emit ("fic_ref " ++ s ++ " = fic_sb_str(&" ++ sb ++ ");")
+                  return s
             _ -> unsupported ("the kernel function " ++ name ++ " (with " ++ show (length args) ++ " arguments)")
   where
     unsupported what = failWith (what ++ " is not supported by the C generator yet")
@@ -1181,13 +1189,35 @@ kernelCall info cls name key args =
               emit (classType cls ++ " " ++ t ++ " = " ++ v ++ ";")
               emit ("fic_log(" ++ tag ++ ", " ++ shown t ++ ");")
               return t
-        Key [ByType t] -> unsupported ("Debug.log of " ++ mtypeText t ++ " (compound printers: slice 8)")
+        Key [ByType t] ->
+          do  sb <- fresh "sb"
+              emit ("fic_sb " ++ sb ++ ";")
+              emit ("fic_sb_init(&" ++ sb ++ ");")
+              showStmt info t ("&" ++ sb) v
+              s <- fresh "s"
+              emit ("fic_ref " ++ s ++ " = fic_sb_str(&" ++ sb ++ ");")
+              emit ("fic_log(" ++ tag ++ ", " ++ s ++ ");")
+              return v
         _ -> unsupported "Debug.log at this key"
     shows' =
       [ ("elm/core:Basics.Int", \t -> "fic_str_from_int(" ++ t ++ ")")
       , ("elm/core:Basics.Float", \t -> "fic_str_from_float(" ++ t ++ ")")
       , ("elm/core:String.String", \t -> "fic_show_string(" ++ t ++ ")")
       ]
+
+
+-- statements that print a value of an exact type into the buffer `sb` (a pointer) in Elm's Debug.toString format
+showStmt :: Info -> MType -> String -> String -> CG ()
+showStmt _ t sb v =
+  case t of
+    TyCon "elm/core:Basics.Int" [] -> emit ("fic_sb_int(" ++ sb ++ ", " ++ v ++ ");")
+    TyCon "elm/core:Basics.Float" [] -> emit ("fic_sb_float(" ++ sb ++ ", " ++ v ++ ");")
+    TyCon "elm/core:Char.Char" [] -> emit ("fic_sb_char(" ++ sb ++ ", " ++ v ++ ");")
+    TyCon "elm/core:String.String" [] -> emit ("fic_sb_string(" ++ sb ++ ", " ++ v ++ ");")
+    TyCon "elm/core:Basics.Bool" [] -> emit ("fic_sb_puts(" ++ sb ++ ", " ++ v ++ " ? \"True\" : \"False\");")
+    TyUnit -> emit ("fic_sb_puts(" ++ sb ++ ", \"()\");")
+    TyFun _ _ -> emit ("fic_sb_puts(" ++ sb ++ ", \"<function>\");")
+    _ -> do { h <- helper (HShow t); emit (h ++ "(" ++ sb ++ ", " ++ v ++ ");") }
 
 
 isNumLit :: MExpr -> Bool
@@ -1215,6 +1245,8 @@ data HKey
   | HCmp MType
   | HApp Class
   | HFromList Class
+  | HShow MType
+  | HShowTree MType
   deriving (Eq, Ord)
 
 
@@ -1243,6 +1275,8 @@ helper k =
         HCmp _ -> "fic_cmp_"
         HApp _ -> "fic_app_"
         HFromList _ -> "fic_jafl_"
+        HShow _ -> "fic_show_"
+        HShowTree _ -> "fic_showtree_"
 
 
 -- the object layout / struct type a helper needs: defined at HELPER_MARK unless a clone defines it already
@@ -1339,6 +1373,8 @@ genHelper info k name =
     HEq t -> withProto ("static uint8_t " ++ name ++ "(" ++ classType (clsOf info t) ++ " a, " ++ classType (clsOf info t) ++ " b)") (needClass info (clsOf info t) >> eqBody t)
     HCmp t -> withProto ("static int " ++ name ++ "(" ++ classType (clsOf info t) ++ " a, " ++ classType (clsOf info t) ++ " b)") (needClass info (clsOf info t) >> cmpBody t)
     HApp c -> withProto ("static fic_ref " ++ name ++ "(fic_ref xs, fic_ref ys)") (appBody c)
+    HShow t -> withProto ("static void " ++ name ++ "(fic_sb *b, " ++ classType (clsOf info t) ++ " x)") (needClass info (clsOf info t) >> emit "(void)x;" >> showBody t)
+    HShowTree e -> withProto ("static void " ++ name ++ "(fic_sb *b, fic_ref x, int *first)") (showTreeBody e)
     HFromList c -> withProto ("static fic_ref " ++ name ++ "(int64_t max, fic_ref xs, fic_ref *rest)") (fromListBody c)
   where
     withProto sig body =
@@ -1492,6 +1528,143 @@ genHelper info k name =
                 emit ("{ int c = " ++ c ++ "; if (c != 0) return c; }")
                 emit "a = ca->f1; b = cb->f1;"
           emit "}"
+
+    -- Debug.toString at an exact type: Elm's format (decisions L16, L29)
+    showBody t =
+      case t of
+        TyTuple ts ->
+          do  emit "fic_sb_puts(b, \"(\");"
+              forM_ (zip [0 :: Int ..] ts) $ \(i, ty) ->
+                do  when (i > 0) (emit "fic_sb_puts(b, \",\");")
+                    v <- structField info (clsOf info t) ty i "x"
+                    showStmt info ty "b" v
+              emit "fic_sb_puts(b, \")\");"
+        TyRecord fs ->
+          do  emit "fic_sb_puts(b, \"{ \");"
+              forM_ (zip [0 :: Int ..] fs) $ \(i, (n, ty)) ->
+                do  emit ("fic_sb_puts(b, \"" ++ (if i > 0 then ", " else "") ++ n ++ " = \");")
+                    v <- structField info (clsOf info t) ty i "x"
+                    showStmt info ty "b" v
+              emit "fic_sb_puts(b, \" }\");"
+        TyCon "elm/core:List.List" [e] ->
+          do  let ec = clsOf info e
+              let fcs = [boxedClass ec, CRef]
+              needObj fcs
+              needClass info ec
+              emit "int first = 1;"
+              emit "fic_sb_puts(b, \"[\");"
+              emit ("while (" ++ tagOf "x" ++ " != 0u) {")
+              indented $
+                do  emit (objType fcs ++ " *c = (" ++ objType fcs ++ " *)x;")
+                    emit "if (!first) fic_sb_puts(b, \",\");"
+                    emit "first = 0;"
+                    v <- adapt (boxedClass ec) ec "c->f0"
+                    showStmt info e "b" v
+                    emit "x = c->f1;"
+              emit "}"
+              emit "fic_sb_puts(b, \"]\");"
+        TyCon "elm/core:Dict.Dict" [kt, vt] ->
+          do  emit "fic_sb_puts(b, \"Dict.fromList [\");"
+              dictWalk kt vt "x" (\kk vv -> do { emit "fic_sb_puts(b, \"(\");"; showStmt info kt "b" kk; emit "fic_sb_puts(b, \",\");"; showStmt info vt "b" vv; emit "fic_sb_puts(b, \")\");" })
+              emit "fic_sb_puts(b, \"]\");"
+        TyCon "elm/core:Set.Set" [e] ->
+          do  needObj [CRef]
+              emit "fic_sb_puts(b, \"Set.fromList [\");"
+              dictWalk e TyUnit ("((" ++ objType [CRef] ++ " *)x)->f0") (\kk _ -> showStmt info e "b" kk)
+              emit "fic_sb_puts(b, \"]\");"
+        TyCon "elm/core:Array.Array" [e] ->
+          do  let ec = clsOf info e
+              let afcs = [CI64, CI64, CRef, CRef]
+              needObj afcs
+              needClass info ec
+              th <- helper (HShowTree e)
+              emit "int first = 1;"
+              emit (objType afcs ++ " *a = (" ++ objType afcs ++ " *)x;")
+              emit "fic_sb_puts(b, \"Array.fromList [\");"
+              emit ("{ int64_t j, m = fic_ja_length(a->f2); for (j = 0; j < m; j++) " ++ th ++ "(b, fic_ja_data(a->f2)[j].p, &first); }")
+              emit "{ int64_t i, n = fic_ja_length(a->f3);"
+              emit "  for (i = 0; i < n; i++) {"
+              emit "    if (!first) fic_sb_puts(b, \",\");"
+              emit "    first = 0;"
+              v <- adapt (boxedClass ec) ec ("fic_ja_data(a->f3)[i]" ++ wordSel ec)
+              indented (indented (showStmt info e "b" v))
+              emit "  } }"
+              emit "fic_sb_puts(b, \"]\");"
+        TyCon n args | Just ctors <- ctorsOf info n args, Map.member n (iUnions info) -> customShow n ctors
+        _ -> emit "fic_sb_puts(b, \"{}\");"          -- an opaque value (Regex): Elm prints {} (decision L29)
+
+    -- the entries of a Dict in order (an explicit stack): `entry` prints one (key, value)
+    dictWalk kt vt root entry =
+      do  let kc = clsOf info kt
+          let vc = clsOf info vt
+          let fcs = [CEnum, boxedClass kc, boxedClass vc, CRef, CRef]
+          needObj fcs
+          needClass info kc
+          needClass info vc
+          let cell = "(" ++ objType fcs ++ " *)"
+          emit "{ fic_ref st[128], t = (fic_ref)(" >> return ()
+          emit ("  " ++ root ++ ");")
+          emit "  int n = 0, dfirst = 1;"
+          emit "  for (;;) {"
+          emit ("    while (" ++ tagOf "t" ++ " == 0u) { st[n++] = t; t = (" ++ cell ++ "t)->f3; }")
+          emit "    if (n == 0) break;"
+          emit "    t = st[--n];"
+          emit "    if (!dfirst) fic_sb_puts(b, \",\");"
+          emit "    dfirst = 0;"
+          kx <- adapt (boxedClass kc) kc ("(" ++ cell ++ "t)->f1")
+          vx <- adapt (boxedClass vc) vc ("(" ++ cell ++ "t)->f2")
+          _ <- indented (indented (entry kx vx))
+          emit ("    t = (" ++ cell ++ "t)->f4;")
+          emit "  } }"
+
+    showTreeBody e =
+      do  let ec = clsOf info e
+          needObj [CRef]
+          needClass info ec
+          self <- gets (\g -> Map.findWithDefault "" (HShowTree e) (gHelpers g))
+          emit "int64_t i, n;"
+          emit ("fic_ref arr = ((" ++ objType [CRef] ++ " *)x)->f0;")
+          emit "n = fic_ja_length(arr);"
+          emit ("if (" ++ tagOf "x" ++ " == 1u) {")
+          indented $
+            do  emit "for (i = 0; i < n; i++) {"
+                emit "  if (!*first) fic_sb_puts(b, \",\");"
+                emit "  *first = 0;"
+                v <- adapt (boxedClass ec) ec ("fic_ja_data(arr)[i]" ++ wordSel ec)
+                indented (showStmt info e "b" v)
+                emit "}"
+          emit "} else {"
+          indented (emit ("for (i = 0; i < n; i++) " ++ self ++ "(b, fic_ja_data(arr)[i].p, first);"))
+          emit "}"
+
+    customShow n ctors
+      | maybe False usEnum (Map.lookup n (iUnions info)) =
+          do  emit "switch (x) {"
+              forM_ ctors $ \(c, tag, _) -> emit ("case " ++ show tag ++ ": fic_sb_puts(b, \"" ++ c ++ "\"); break;")
+              emit "default: break;"
+              emit "}"
+      | otherwise =
+          do  emit ("switch (" ++ tagOf "x" ++ ") {")
+              forM_ ctors $ \(c, tag, fs) ->
+                do  emit ("case " ++ show tag ++ "u: {")
+                    indented $
+                      do  emit ("fic_sb_puts(b, \"" ++ c ++ "\");")
+                          when (not (null fs)) $
+                            do  let fcs = map (boxedClass . clsOf info) fs
+                                needObj fcs
+                                emit (objType fcs ++ " *o = (" ++ objType fcs ++ " *)x;")
+                                forM_ (zip3 [0 :: Int ..] fs fcs) $ \(i, ty, fc) ->
+                                  do  needClass info (clsOf info ty)
+                                      emit "{ int64_t s0;"
+                                      emit "  fic_sb_puts(b, \" \");"
+                                      emit "  s0 = b->n;"
+                                      v <- adapt fc (clsOf info ty) ("o->f" ++ show i)
+                                      indented (showStmt info ty "b" v)
+                                      emit "  fic_sb_wrap_arg(b, s0); }"
+                          emit "break;"
+                    emit "}"
+              emit "default: break;"
+              emit "}"
 
     -- List.take-like copy of the first `max` elements of a list into a JsArray; the rest of the list is stored in *rest
     fromListBody c =
