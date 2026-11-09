@@ -28,7 +28,7 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
-import Ficcus.Mono.CRuntime (closureRuntime, jsArrayRuntime, prelude, stringRuntime)
+import Ficcus.Mono.CRuntime (closureRuntime, fdlibmRuntime, jsArrayRuntime, prelude, stringRuntime)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Print (keyTextIx)
@@ -121,6 +121,7 @@ generate program =
               body = unlines (concatMap (\l -> if l == helperMark then extra else [l]) (reverse (gOut final)))
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
           in Right (prelude ++ "\n" ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_"] then closureRuntime ++ "\n" else "")
+                    ++ (if "fic_fd_" `List.isInfixOf` body then fdlibmRuntime ++ "\n" else "")
                     ++ (if "fic_ja_" `List.isInfixOf` body then jsArrayRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_us_", "fic_pk_"] then stringRuntime ++ "\n" else "")
                     ++ "\n" ++ body)
@@ -1082,17 +1083,17 @@ kernelCall info cls name key args =
             ("elm/core:Basics.floor", [a]) -> return ("fic_floor(" ++ a ++ ")")
             ("elm/core:Basics.ceiling", [a]) -> return ("fic_ceiling(" ++ a ++ ")")
             ("elm/core:Basics.truncate", [a]) -> return ("fic_truncate(" ++ a ++ ")")
-            -- libm for now (decision L18: V8's own routines are ported in slice 8, the last digit of sin, cos, log may differ until then)
+            -- the functions of V8 (fdlibm, runtime/fic_fdlibm.h, decision L18): the digits equal node's
             ("elm/core:Basics.sqrt", [a]) -> return ("sqrt(" ++ a ++ ")")
-            ("elm/core:Basics.logBase", [b, a]) -> return ("fic_logbase(" ++ b ++ ", " ++ a ++ ")")
-            ("elm/core:Basics.log", [a]) -> return ("log(" ++ a ++ ")")
-            ("elm/core:Basics.sin", [a]) -> return ("sin(" ++ a ++ ")")
-            ("elm/core:Basics.cos", [a]) -> return ("cos(" ++ a ++ ")")
-            ("elm/core:Basics.tan", [a]) -> return ("tan(" ++ a ++ ")")
-            ("elm/core:Basics.asin", [a]) -> return ("asin(" ++ a ++ ")")
-            ("elm/core:Basics.acos", [a]) -> return ("acos(" ++ a ++ ")")
-            ("elm/core:Basics.atan", [a]) -> return ("atan(" ++ a ++ ")")
-            ("elm/core:Basics.atan2", [a, b]) -> return ("atan2(" ++ a ++ ", " ++ b ++ ")")
+            ("elm/core:Basics.logBase", [b, a]) -> return ("fic_fd_logbase(" ++ b ++ ", " ++ a ++ ")")
+            ("elm/core:Basics.log", [a]) -> return ("fic_fd_log(" ++ a ++ ")")
+            ("elm/core:Basics.sin", [a]) -> return ("fic_fd_sin(" ++ a ++ ")")
+            ("elm/core:Basics.cos", [a]) -> return ("fic_fd_cos(" ++ a ++ ")")
+            ("elm/core:Basics.tan", [a]) -> return ("fic_fd_tan(" ++ a ++ ")")
+            ("elm/core:Basics.asin", [a]) -> return ("fic_fd_asin(" ++ a ++ ")")
+            ("elm/core:Basics.acos", [a]) -> return ("fic_fd_acos(" ++ a ++ ")")
+            ("elm/core:Basics.atan", [a]) -> return ("fic_fd_atan(" ++ a ++ ")")
+            ("elm/core:Basics.atan2", [a, b]) -> return ("fic_fd_atan2(" ++ a ++ ", " ++ b ++ ")")
             ("elm/core:Basics.isNaN", [a]) -> return ("(uint8_t)(" ++ a ++ " != " ++ a ++ ")")
             ("elm/core:Basics.isInfinite", [a]) -> return ("(uint8_t)(isinf(" ++ a ++ ") != 0)")
             ("elm/core:Basics.xor", [a, b]) -> return ("(uint8_t)(" ++ a ++ " != " ++ b ++ ")")
@@ -1101,7 +1102,7 @@ kernelCall info cls name key args =
             ("elm/core:Basics.pow", [a, b]) ->
               case numberOf key of
                 NInt -> return ("fic_ipow(" ++ a ++ ", " ++ b ++ ")")
-                NFloat -> return ("pow(" ++ a ++ ", " ++ b ++ ")")
+                NFloat -> return ("fic_fd_pow(" ++ a ++ ", " ++ b ++ ")")
                 NOther t -> unsupported ("^ at " ++ t)
             ("elm/core:Basics.modBy", [m, x]) -> return ("fic_modby(" ++ m ++ ", " ++ x ++ ")")
             ("elm/core:Basics.remainderBy", [m, x]) -> return ("fic_remby(" ++ m ++ ", " ++ x ++ ")")

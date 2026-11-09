@@ -6,6 +6,7 @@
 #include "fic_num.h"
 #include "fic_format.h"
 #include "fic_debug.h"
+#include "fic_fdlibm.h"
 
 static int failures = 0;
 #define CHECK(c) do { if (!(c)) { printf("FAIL line %d: %s\n", __LINE__, #c); failures++; } } while (0)
@@ -52,7 +53,7 @@ int main(void) {
   /* Int ^ negative (L4) and logBase (L5) */
   CHECK(fic_ipow(1, -5) == 1 && fic_ipow(-1, -3) == -1 && fic_ipow(-1, -4) == 1 && fic_ipow(2, -1) == 0 && fic_ipow(0, -1) == 0 && fic_ipow(-3, -1) == 0 && fic_ipow(2, 10) == 1024);
   CHECK(FIC_MUL53(1192720667, 277803737) == 331342258489732608LL && FIC_MUL53(-775119345, 277803737) == -215331050661992256LL && FIC_MUL53(3, 5) == 15);      /* L31: the double product of the table in random-fork-L31.md */
-  CHECK(fic_logbase(10.0, 1000.0) == 3.0 && fic_logbase(10.0, 1e6) == 6.0 && fic_logbase(2.0, 8.0) == 3.0 && fic_logbase(3.0, 9.0) > 1.99);
+  CHECK(fic_fd_logbase(10.0, 1000.0) == 3.0 && fic_fd_logbase(10.0, 1e6) == 6.0 && fic_fd_logbase(2.0, 8.0) == 3.0 && fic_fd_logbase(3.0, 9.0) > 1.99);
   /* Float to Int: Math.round ties, saturation, NaN */
   CHECK(fic_round(2.5) == 3 && fic_round(-2.5) == -2 && fic_round(-0.5) == 0 && fic_round(0.49999999999999994) == 0 && fic_round(1.5) == 2);
   CHECK(fic_round(-1.5) == -1 && fic_round(4503599627370497.0) == 4503599627370497LL);

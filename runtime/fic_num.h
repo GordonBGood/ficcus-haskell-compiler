@@ -81,9 +81,3 @@ static int64_t fic_floor(double x) { return fic_f2i(floor(x)); }
 static int64_t fic_ceiling(double x) { return fic_f2i(ceil(x)); }
 static int64_t fic_truncate(double x) { return fic_f2i(trunc(x)); }
 
-/* logBase: log y / log x, with the exact log2 and log10 for the bases 2 and 10 (decision L5: logBase 10 1000 is 3) */
-static double fic_logbase(double base, double x) {
-  if (base == 10.0) return log10(x);
-  if (base == 2.0) return log2(x);
-  return log(x) / log(base);
-}

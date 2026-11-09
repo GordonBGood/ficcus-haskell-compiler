@@ -5,6 +5,7 @@ module Ficcus.Mono.CRuntime
   , closureRuntime
   , jsArrayRuntime
   , stringRuntime
+  , fdlibmRuntime
   )
   where
 
@@ -48,3 +49,9 @@ jsArrayRuntime =
 stringRuntime :: String
 stringRuntime =
   $(embedFiles [ "runtime/fic_case.h", "runtime/fic_ustring.h", "runtime/fic_parser.h" ])
+
+
+-- the Float functions of V8 (fdlibm), decision L18: emitted only by programs that call one of them
+fdlibmRuntime :: String
+fdlibmRuntime =
+  $(embedFiles [ "runtime/fic_fdlibm.h" ])
