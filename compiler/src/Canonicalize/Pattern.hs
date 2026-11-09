@@ -19,6 +19,7 @@ import qualified Canonicalize.Environment.Dups as Dups
 import qualified Data.Index as Index
 import qualified Elm.ModuleName as ModuleName
 import qualified Reporting.Annotation as A
+import qualified Ficcus.Flags as Flags
 import qualified Reporting.Error.Canonicalize as Error
 import qualified Reporting.Result as Result
 
@@ -110,7 +111,9 @@ canonicalize env (A.At region pattern) =
       Result.ok (Can.PStr str)
 
     Src.PInt int ->
-      Result.ok (Can.PInt (fromIntegral int)) -- TODO make overflow an error
+      if Flags.ficcusChecks && int > 9223372036854775807
+        then Result.throw (Error.IntegerTooLarge region)
+        else Result.ok (Can.PInt (fromIntegral int))
 
 
 canonicalizeCtor :: Env.Env -> A.Region -> N.Name -> [Src.Pattern] -> Env.Ctor -> Result DupsDict w Can.Pattern_

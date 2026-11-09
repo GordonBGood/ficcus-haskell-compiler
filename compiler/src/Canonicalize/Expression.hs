@@ -37,6 +37,7 @@ import qualified Elm.Package as Pkg
 import qualified Reporting.Annotation as A
 import qualified Reporting.Error.Canonicalize as Error
 import qualified Reporting.Result as Result
+import qualified Ficcus.Flags as Flags
 import qualified Reporting.Warning as W
 
 
@@ -74,7 +75,9 @@ canonicalize env (A.At region expression) =
       Result.ok (Can.Chr char)
 
     Src.Int int ->
-      Result.ok (Can.Int (fromIntegral int)) -- TODO error on overflow
+      if Flags.ficcusChecks && int > 9223372036854775807
+        then Result.throw (Error.IntegerTooLarge region)
+        else Result.ok (Can.Int (fromIntegral int))
 
     Src.Float float ->
       Result.ok (Can.Float float)

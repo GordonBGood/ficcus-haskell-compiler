@@ -49,6 +49,9 @@ int main(void) {
   /* Debug.toString of a String */
   CHECK(is_str(fic_show_string(fic_str_new("a\"b\\c\n\t", 7)), "\"a\\\"b\\\\c\\n\\t\""));
   CHECK(is_str(fic_show_string(e), "\"\""));
+  /* Int ^ negative (L4) and logBase (L5) */
+  CHECK(fic_ipow(1, -5) == 1 && fic_ipow(-1, -3) == -1 && fic_ipow(-1, -4) == 1 && fic_ipow(2, -1) == 0 && fic_ipow(0, -1) == 0 && fic_ipow(-3, -1) == 0 && fic_ipow(2, 10) == 1024);
+  CHECK(fic_logbase(10.0, 1000.0) == 3.0 && fic_logbase(10.0, 1e6) == 6.0 && fic_logbase(2.0, 8.0) == 3.0 && fic_logbase(3.0, 9.0) > 1.99);
   /* Float to Int: Math.round ties, saturation, NaN */
   CHECK(fic_round(2.5) == 3 && fic_round(-2.5) == -2 && fic_round(-0.5) == 0 && fic_round(0.49999999999999994) == 0 && fic_round(1.5) == 2);
   CHECK(fic_round(-1.5) == -1 && fic_round(4503599627370497.0) == 4503599627370497LL);

@@ -5,6 +5,7 @@ module Ficcus.Flags
   , getKeepModules
   , setExtraSrcDir
   , getExtraSrcDir
+  , ficcusChecks
   )
   where
 
@@ -69,3 +70,12 @@ setExtraSrcDir =
 getExtraSrcDir :: IO (Maybe FilePath)
 getExtraSrcDir =
   readIORef extraSrcDirRef
+
+
+-- the checks that only the C back end makes (decisions L2 and L9: an Int literal beyond 2^63-1 and a surrogate in a string
+-- literal are errors). Elm's JavaScript builds keep accepting them, so the corpus comparisons stay identical.
+-- Read when the first module is canonicalized, after Make has set the flag.
+{-# NOINLINE ficcusChecks #-}
+ficcusChecks :: Bool
+ficcusChecks =
+  unsafePerformIO (readIORef keepModulesRef)

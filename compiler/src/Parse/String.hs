@@ -19,6 +19,7 @@ import qualified Literals
 
 import qualified Elm.String as ES
 import Parse.Primitives (Parser, Cursor, slide, newline, ltAddr, leAddr, notLtAddr, eqIndex, neIndex)
+import qualified Ficcus.Flags as Flags
 import qualified Parse.Number as Number
 import qualified Parse.Primitives as P
 import qualified Reporting.Error.Syntax as E
@@ -349,6 +350,9 @@ eatUnicode pos end cur =
 
     else if code < 0 || 0x10FFFF < code then
       EscapeProblem cur $ E.BadUnicodeCode (wordToWord64# (int2Word# (3# +# minusAddr# newPos pos)))
+
+    else if Flags.ficcusChecks && 0xD800 <= code && code <= 0xDFFF then
+      EscapeProblem cur $ E.BadUnicodeSurrogate (wordToWord64# (int2Word# (3# +# minusAddr# newPos pos)))
 
     else if isTrue# (numDigits <# 4#) || isTrue# (6# <# numDigits) then
       EscapeProblem cur $

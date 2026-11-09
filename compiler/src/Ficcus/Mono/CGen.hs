@@ -1051,6 +1051,7 @@ kernelCall info cls name key args =
             ("elm/core:Basics.truncate", [a]) -> return ("fic_truncate(" ++ a ++ ")")
             -- libm for now (decision L18: V8's own routines are ported in slice 8, the last digit of sin, cos, log may differ until then)
             ("elm/core:Basics.sqrt", [a]) -> return ("sqrt(" ++ a ++ ")")
+            ("elm/core:Basics.logBase", [b, a]) -> return ("fic_logbase(" ++ b ++ ", " ++ a ++ ")")
             ("elm/core:Basics.log", [a]) -> return ("log(" ++ a ++ ")")
             ("elm/core:Basics.sin", [a]) -> return ("sin(" ++ a ++ ")")
             ("elm/core:Basics.cos", [a]) -> return ("cos(" ++ a ++ ")")

@@ -28,7 +28,7 @@ kernelArity cid =
     , ("elm/core:Basics.and", 2), ("elm/core:Basics.or", 2), ("elm/core:Basics.not", 1)
     , ("elm/core:Basics.compare", 2)
     , ("elm/core:Basics.toFloat", 1), ("elm/core:Basics.round", 1), ("elm/core:Basics.floor", 1), ("elm/core:Basics.ceiling", 1)
-    , ("elm/core:Basics.truncate", 1), ("elm/core:Basics.sqrt", 1), ("elm/core:Basics.log", 1), ("elm/core:Basics.xor", 2)
+    , ("elm/core:Basics.truncate", 1), ("elm/core:Basics.sqrt", 1), ("elm/core:Basics.log", 1), ("elm/core:Basics.logBase", 2), ("elm/core:Basics.xor", 2)
     , ("elm/core:Basics.sin", 1), ("elm/core:Basics.cos", 1), ("elm/core:Basics.tan", 1), ("elm/core:Basics.asin", 1)
     , ("elm/core:Basics.acos", 1), ("elm/core:Basics.atan", 1), ("elm/core:Basics.atan2", 2)
     , ("elm/core:Basics.isNaN", 1), ("elm/core:Basics.isInfinite", 1), ("elm/core:Basics.e", 0), ("elm/core:Basics.pi", 0)

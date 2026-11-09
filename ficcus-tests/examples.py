@@ -89,6 +89,9 @@ def main():
     if not a.update and not a.only:       # the runtime C files, compiled and tested standalone
         t = subprocess.run([os.path.join(HERE, "..", "runtime", "test.sh")], capture_output=True, text=True)
         print(t.stdout.strip() if t.returncode == 0 else "FAIL runtime/test.sh\n" + t.stdout + t.stderr); bad += 1 if t.returncode else 0
+    if not a.update and not a.only:       # the compile time checks of the C back end (decisions L2, L9)
+        r = subprocess.run([sys.executable, os.path.join(HERE, "rejects.py"), "--elm", a.elm, "--safe", a.safe, "--elm-home", a.elm_home], capture_output=True, text=True)
+        print(r.stdout.strip()); bad += 1 if r.returncode else 0
     for name in (a.only.split(",") if a.only else NAMES):
         src = os.path.join(HERE, name)
         mod = sorted(f for f in os.listdir(os.path.join(src, "src")) if f.endswith(".fic"))[0]

@@ -6,7 +6,7 @@ static int64_t fic_idiv(int64_t a, int64_t b) {         /* Elm: x // 0 is 0; wra
 
 static int64_t fic_ipow(int64_t b, int64_t e) {         /* Int ^ Int by repeated squaring, wrapping */
   int64_t r = 1;
-  if (e < 0) return 0;
+  if (e < 0) return b == 1 ? 1 : (b == -1 ? ((e & 1) ? -1 : 1) : 0);     /* decision L4: the truncated integer result */
   while (e > 0) { if (e & 1) r = FIC_MUL64(r, b); b = FIC_MUL64(b, b); e >>= 1; }
   return r;
 }
@@ -76,3 +76,10 @@ static int64_t fic_round(double x) {
 static int64_t fic_floor(double x) { return fic_f2i(floor(x)); }
 static int64_t fic_ceiling(double x) { return fic_f2i(ceil(x)); }
 static int64_t fic_truncate(double x) { return fic_f2i(trunc(x)); }
+
+/* logBase: log y / log x, with the exact log2 and log10 for the bases 2 and 10 (decision L5: logBase 10 1000 is 3) */
+static double fic_logbase(double base, double x) {
+  if (base == 10.0) return log10(x);
+  if (base == 2.0) return log2(x);
+  return log(x) / log(base);
+}

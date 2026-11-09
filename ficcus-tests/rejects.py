@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""rejects.py -- the compile time checks of the C back end (decisions L2 and L9): an Int literal beyond 2^63-1 (decimal, hex, in a
+pattern) and a surrogate in a string literal are errors with these titles; the smallest Int written as -9223372036854775807 - 1 and
+the largest literal are accepted; the JavaScript build still accepts all of them (Elm's behaviour, the corpus comparisons stay equal).
+usage: rejects.py --elm BIN --safe tools/safe --elm-home DIR"""
+import argparse, os, shutil, subprocess, sys, tempfile
+
+HEAD = '''module Main exposing (main)
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \\_ -> ( (), Cmd.none )
+        , update = \\_ m -> ( m, Cmd.none )
+        , subscriptions = \\_ -> Sub.none
+        }
+
+'''
+CASES = [   # (name, body, expected: None = accepted, else a text of the error)
+    ("big-decimal", "x : Int\nx =\n    9223372036854775808\n", "This integer is too large for an `Int`"),
+    ("big-1e26", "x : Int\nx =\n    123300000000000000000000000\n", "This integer is too large for an `Int`"),
+    ("big-hex", "x : Int\nx =\n    0xFFFFFFFFFFFFFFFF\n", "This integer is too large for an `Int`"),
+    ("big-pattern", "f : Int -> Int\nf n =\n    case n of\n        9223372036854775808 ->\n            1\n\n        _ ->\n            2\n", "This integer is too large for an `Int`"),
+    ("max-ok", "x : Int\nx =\n    9223372036854775807\n", None),
+    ("min-ok", "x : Int\nx =\n    -9223372036854775807 - 1\n", None),
+    ("surrogate-low", 'x : String\nx =\n    "a\\u{DD56}"\n', "This is a surrogate, not a character"),
+    ("surrogate-high", 'x : String\nx =\n    "\\u{D800}"\n', "This is a surrogate, not a character"),
+    ("near-ok", 'x : String\nx =\n    "\\u{D7FF}\\u{E000}"\n', None),
+]
+
+def main():
+    ap = argparse.ArgumentParser(); ap.add_argument("--elm", required=True); ap.add_argument("--safe", required=True); ap.add_argument("--elm-home", required=True)
+    a = ap.parse_args(); bad = 0
+    elm_json = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "order", "elm.json")).read()
+    for name, body, want in CASES:
+        d = tempfile.mkdtemp(); os.makedirs(os.path.join(d, "src")); open(os.path.join(d, "elm.json"), "w").write(elm_json)
+        src = os.path.join(d, "src", "Main.fic"); open(src, "w").write(HEAD + body)
+        env = dict(os.environ, ELM_HOME=a.elm_home)
+        c = subprocess.run([a.safe, a.elm, "make", "src/Main.fic", "--output=x.c"], cwd=d, env=env, capture_output=True, text=True)
+        text = c.stdout + c.stderr
+        ok = (c.returncode == 0) if want is None else (c.returncode != 0 and want in text)
+        # the JavaScript build accepts the same program (Elm 0.19.3's own behaviour)
+        shutil.copy(src, os.path.join(d, "src", "Main.elm")); os.remove(src); shutil.rmtree(os.path.join(d, "elm-stuff"), ignore_errors=True)
+        j = subprocess.run([a.safe, a.elm, "make", "src/Main.elm", "--output=x.js"], cwd=d, env=env, capture_output=True, text=True)
+        if name.startswith(("big", "surrogate")) and j.returncode != 0: ok = False; text += "\n(the JS build rejected it)"
+        print(("ok   " if ok else "FAIL ") + "rejects " + name); bad += 0 if ok else 1
+        if not ok: print(text[-300:])
+        shutil.rmtree(d, ignore_errors=True)
+    return 1 if bad else 0
+
+if __name__ == "__main__": sys.exit(main())

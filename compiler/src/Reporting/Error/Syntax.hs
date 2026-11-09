@@ -469,6 +469,7 @@ data Escape
   = EscapeUnknown
   | BadUnicodeFormat Word64#
   | BadUnicodeCode Word64#
+  | BadUnicodeSurrogate Word64#
   | BadUnicodeLength Word64# Int Integer
 
 
@@ -2914,6 +2915,21 @@ toEscapeReport source escape cur =
           ,
             D.reflow $
               "The valid code points are between 0 and 10FFFF inclusive."
+          )
+
+    BadUnicodeSurrogate width ->
+      let
+        region = toWiderRegion cur width
+      in
+      Report.Report "BAD UNICODE ESCAPE" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "This is a surrogate, not a character:"
+          ,
+            D.reflow $
+              "The code points D800 to DFFF are only halves of a UTF-16 pair, they are not characters of their own.\
+              \ Write the character you mean with its own code point, for example \\u{1F60A}."
           )
 
     BadUnicodeLength width numDigits badCode ->

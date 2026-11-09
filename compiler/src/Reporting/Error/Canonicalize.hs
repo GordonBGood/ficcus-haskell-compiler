@@ -78,6 +78,7 @@ data Error
   | NotFoundVariant A.Region (Maybe Module.Prefix) N.Name (PossibleNames N.Name)
   | NotFoundBinop A.Region Op.Name (Set.Set Op.Name)
   | PatternHasRecordCtor A.Region N.Name
+  | IntegerTooLarge A.Region
   | PortPayloadInvalid A.Region N.Name Can.Type InvalidPayload
   | PortTypeInvalid A.Region N.Name PortProblem
   | RecursiveAlias A.Region T.Name [T.Var] Src.Type (Graph.MinimalCycle T.Name)
@@ -371,6 +372,22 @@ toReport source err =
                     alts ->
                       ["Maybe","you","want"] ++ D.commaSep "or" format alts ++ ["instead?"]
             )
+
+    IntegerTooLarge region ->
+      Report.Report "INTEGER TOO LARGE" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "This integer is too large for an `Int`:"
+          ,
+            D.stack
+              [ D.reflow $
+                  "An `Int` is a 64 bit number, so the largest literal is 9223372036854775807 (2^63 - 1)."
+              , D.reflow $
+                  "If you need a bigger number, write a `Float` such as `1.0e26`. The smallest `Int` has no literal of its own:\
+                  \ write it as `-9223372036854775807 - 1`."
+              ]
+          )
 
     PatternHasRecordCtor region name ->
       Report.Report "BAD PATTERN" region [] $
