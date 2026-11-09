@@ -438,6 +438,7 @@ genRet info e =
     MLetVal n v b ->
       do  v' <- genExpr info v
           emit (classType (mRep v) ++ " " ++ localName n ++ " = " ++ v' ++ ";")
+          when (take 3 n == "_pv") (emit ("(void)" ++ localName n ++ ";"))
           genRet info b
     MSeq a b ->
       do  a' <- genExpr info a
@@ -536,6 +537,7 @@ genExpr info e =
     MLetVal n v b ->
       do  v' <- genExpr info v
           emit (classType (mRep v) ++ " " ++ localName n ++ " = " ++ v' ++ ";")
+          when (take 3 n == "_pv") (emit ("(void)" ++ localName n ++ ";"))      -- a hoisted polymorphic value may be unused
           genExpr info b
     MSeq a b ->
       do  a' <- genExpr info a

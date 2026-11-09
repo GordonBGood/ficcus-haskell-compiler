@@ -104,6 +104,9 @@ data S =
     , sMarks :: Marks
     , sTops :: Map.Map String Src
     , sEnums :: Map.Map String Bool
+    , sHoist :: Set.Set (String, Int)                   -- local polymorphic values whose let body is being specialized
+    , sHoisted :: Map.Map (String, Int) (Set.Set Int)    -- their clones that the body uses (evaluated once at the binding)
+    , sPvClass :: Map.Map String Class            -- the class of the variable that holds such a clone's value
     }
 
 
@@ -145,7 +148,7 @@ specialize modules marks =
       let
         tops = Map.fromList [ (defIdOf (mmCtx m') (defKeyOf d'), Src (mmCtx m') d' Map.empty Map.empty Nothing) | m' <- modules, d' <- mmDefs m' ]
         enums = Map.fromList (concatMap mmEnums modules)
-        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums
+        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty
         mainId = defIdOf (mmCtx m) (defKeyOf d)
         final = execState (requestRoot mainId >>= \r0 -> drain >> return r0) start
         root = Map.lookup (CKey mainId Nothing (Key [])) (sClones final)
@@ -637,9 +640,21 @@ specLet se defs isRec body@(A.At bregion _) =
       binds <- forM [ d | d <- defs, not (isFun d) ] $ \d ->
         do  v <- specExpr se' (defBody d)
             return (defNameChars d, v)
+      -- a polymorphic value (`let a = Debug.log "a" 1` is generalized over `number`) is evaluated once, where it is bound,
+      -- like Elm's JavaScript value: the clones of the instances that the body uses become variables bound here
+      let CloneId meK = me
+      let hoistIds = [ (defIdOf ctx' (defKeyOf d), meK) | not isRec, [d] <- [defs], isFun d, null (defArgs d) ]
+      modify' (\st -> st { sHoist = Set.union (Set.fromList hoistIds) (sHoist st) })
       b' <- specExpr se' body
+      -- the clones the body needs (local functions, lambdas, other polymorphic values) are generated now, while the
+      -- window is open, so that their uses of the value are variables too
+      when (not (null hoistIds)) drain
+      modify' (\st -> st { sHoist = Set.difference (sHoist st) (Set.fromList hoistIds) })
       _ <- return bregion
-      return (foldr (\(n, v) acc -> MExpr (mRep acc) (MLetVal n v acc)) b' binds)
+      st <- gets id
+      let pvs = [ k | h <- hoistIds, k <- Set.toList (Map.findWithDefault Set.empty h (sHoisted st)) ]
+          bind k acc = MExpr (mRep acc) (MLetVal ("_pv" ++ show k) (MExpr (Map.findWithDefault CRef ("_pv" ++ show k) (sPvClass st)) (MCall (MExpr CRef (MGlobal (CloneId k))) [])) acc)
+      return (foldr bind (foldr (\(n, v) acc -> MExpr (mRep acc) (MLetVal n v acc)) b' binds) pvs)
 
 
 -- a local value with variables of its own (`let e = []` generalized): a lifted clone of no arguments per key,
@@ -757,7 +772,9 @@ specRef se region e =
         RClone c 0 True -> return (MExpr cls (MGlobal c))
         RClone c 0 False -> return (MExpr cls (MCall (MExpr CRef (MGlobal c)) []))
         RClone c _ _ -> return (MExpr CRef (MGlobal c))           -- a function used as a value: a closure (CGen)
-        RLocal n -> return (MExpr cls (MLocal n))
+        RLocal n ->
+          do  when (take 3 n == "_pv") (modify' (\st -> st { sPvClass = Map.insert n cls (sPvClass st) }))
+              return (MExpr cls (MLocal n))
         RCtor name tag 0 -> return (MExpr cls (MCtor name tag (Key [])))
         RCtor name tag arity -> partialApp se region e arity (\as -> MCall (MExpr CRef (MCtor name tag (Key [ ByClass (boxed (mRep a)) | a <- as ]))) as) []
         RRec [] -> return (MExpr cls (MRecord []))
@@ -824,6 +841,15 @@ resolve se region e =
           let did = defIdOf ctx key
           in case Map.lookup did (seLocals se) of
                Just src | null (defArgs (srcDef src)) && not (polyValue (srcCtx src) (srcOuter src) (srcDef src)) -> return (RLocal (N.toChars name))
+               Just src | null (defArgs (srcDef src)) ->
+                 do  r <- viaClone src did
+                     act <- gets sHoist
+                     let CloneId ownerK = maybe (CloneId (-1)) id (srcOwner src)
+                     case r of
+                       RClone (CloneId k) _ _ | Set.member (did, ownerK) act ->
+                         do  modify' (\st -> st { sHoisted = Map.insertWith Set.union (did, ownerK) (Set.singleton k) (sHoisted st) })
+                             return (RLocal ("_pv" ++ show k))
+                       _ -> return r
                Just src -> viaClone src did
                Nothing -> report ("internal: local definition " ++ did ++ " is not in scope of the specializer") >> return RNone
         _ -> return (RLocal (N.toChars name))

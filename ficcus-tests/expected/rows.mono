@@ -15,12 +15,14 @@ mark author/project:Rows.p@67:21   v0=number v1=number
 clone c0   def: author/project:Rows.showQ   key: ()   kind: function   init: 1   needs: 
 clone c1   def: author/project:Rows.main   key: ()   kind: value   init: 8   needs: 
 -- program: 42 clones, reachable from main, dependencies first
-clone c2   def: author/project:Rows.heavy   key: (v0=layout {x:i64, on:enum, name:ref, tags:ref})   name: heavy__row   kind: function   params: r:struct(i64,enum,ref,ref,f64)   result: f64
-  Call :: f64
-    Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Float) :: ref
-    Access .weight #4 :: f64
-      Local r :: struct(i64,enum,ref,ref,f64)
-    Lit 2.0 :: f64
+clone c5   def: author/project:Rows.r@73:21   key: (v0=type elm/core:Basics.Float)   name: r@73:21__f64   kind: function   params:    result: struct(ref,f64)   lifted-from: c1
+  Record name weight :: struct(ref,f64)
+    Lit "r" :: ref
+    Lit 8.0 :: f64
+clone c8   def: author/project:Rows.r@73:21   key: (v0=type elm/core:Basics.Int)   name: r@73:21__i64   kind: function   params:    result: struct(ref,i64)   lifted-from: c1
+  Record name weight :: struct(ref,i64)
+    Lit "r" :: ref
+    Lit 8 :: i64
 clone c3   def: author/project:Rows.q@70:21   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int)   name: q@70:21__i64__i64   kind: function   params:    result: struct(i64,enum,ref,ref,f64)   lifted-from: c1
   Record x on name tags weight :: struct(i64,enum,ref,ref,f64)
     Lit 10 :: i64
@@ -30,16 +32,18 @@ clone c3   def: author/project:Rows.q@70:21   key: (v0=type elm/core:Basics.Int;
       Lit 7 :: i64
       Lit "t" :: ref
     Lit 1.5 :: f64
+clone c2   def: author/project:Rows.heavy   key: (v0=layout {x:i64, on:enum, name:ref, tags:ref})   name: heavy__row   kind: function   params: r:struct(i64,enum,ref,ref,f64)   result: f64
+  Call :: f64
+    Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Float) :: ref
+    Access .weight #4 :: f64
+      Local r :: struct(i64,enum,ref,ref,f64)
+    Lit 2.0 :: f64
 clone c4   def: author/project:Rows.heavy   key: (v0=layout {name:ref})   name: heavy__row   kind: function   params: r:struct(ref,f64)   result: f64
   Call :: f64
     Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Float) :: ref
     Access .weight #1 :: f64
       Local r :: struct(ref,f64)
     Lit 2.0 :: f64
-clone c5   def: author/project:Rows.r@73:21   key: (v0=type elm/core:Basics.Float)   name: r@73:21__f64   kind: function   params:    result: struct(ref,f64)   lifted-from: c1
-  Record name weight :: struct(ref,f64)
-    Lit "r" :: ref
-    Lit 8.0 :: f64
 clone c6   def: author/project:Rows.label   key: (v0=layout {x:i64, on:enum, tags:ref, weight:f64})   name: label__row   kind: function   params: r:struct(i64,enum,ref,ref,f64)   result: ref
   Call :: ref
     Kernel elm/core:Basics.append (v0=app string) :: ref
@@ -58,10 +62,6 @@ clone c7   def: author/project:Rows.label   key: (v0=layout {weight:i64})   name
       Access .name #0 :: ref
         Local r :: struct(ref,i64)
       Lit ">" :: ref
-clone c8   def: author/project:Rows.r@73:21   key: (v0=type elm/core:Basics.Int)   name: r@73:21__i64   kind: function   params:    result: struct(ref,i64)   lifted-from: c1
-  Record name weight :: struct(ref,i64)
-    Lit "r" :: ref
-    Lit 8 :: i64
 clone c9   def: author/project:Rows.label   key: (v0=layout {other:i64})   name: label__row   kind: function   params: r:struct(ref,i64)   result: ref
   Call :: ref
     Kernel elm/core:Basics.append (v0=app string) :: ref
@@ -169,13 +169,13 @@ clone c13   def: author/project:Rows.rename   key: (v0=layout {})   name: rename
         Access .weight #1 :: f64
           Local r :: struct(ref,f64)
         Lit 2.0 :: f64
-clone c14   def: author/project:Rows.getX   key: (v0=layout {y:i64})   name: getX__row   kind: function   params: r:struct(i64,i64)   result: i64
-  Access .x #0 :: i64
-    Local r :: struct(i64,i64)
 clone c15   def: author/project:Rows.p@67:21   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int)   name: p@67:21__i64__i64   kind: function   params:    result: struct(i64,i64)   lifted-from: c1
   Record x y :: struct(i64,i64)
     Lit 3 :: i64
     Lit 4 :: i64
+clone c14   def: author/project:Rows.getX   key: (v0=layout {y:i64})   name: getX__row   kind: function   params: r:struct(i64,i64)   result: i64
+  Access .x #0 :: i64
+    Local r :: struct(i64,i64)
 clone c16   def: author/project:Rows.getX   key: (v0=layout {on:enum, name:ref, tags:ref, weight:f64})   name: getX__row   kind: function   params: r:struct(i64,enum,ref,ref,f64)   result: i64
   Access .x #0 :: i64
     Local r :: struct(i64,enum,ref,ref,f64)
@@ -421,246 +421,239 @@ clone c28   def: elm/core:List.length   key: (v0=ref)   name: length__ref   kind
     Lit 0 :: i64
     Local xs :: ref
 clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let l4 :: struct(unit,unit)
-    Call :: ref
-      Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
-      Lit "heavy" :: ref
-      Call :: ref
-        Kernel elm/core:Basics.append (v0=app string) :: ref
-        Call :: ref
-          Kernel elm/core:String.fromFloat () :: ref
-          Call :: f64
-            Global c2 :: ref
-            Call :: struct(i64,enum,ref,ref,f64)
-              Global c3 :: ref
-        Call :: ref
-          Kernel elm/core:Basics.append (v0=app string) :: ref
-          Lit " " :: ref
-          Call :: ref
-            Kernel elm/core:String.fromFloat () :: ref
-            Call :: f64
-              Global c4 :: ref
-              Call :: struct(ref,f64)
-                Global c5 :: ref
-    Let l5 :: struct(unit,unit)
-      Call :: ref
-        Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
-        Lit "label" :: ref
-        Call :: ref
-          Kernel elm/core:Basics.append (v0=app string) :: ref
-          Call :: ref
-            Global c6 :: ref
-            Call :: struct(i64,enum,ref,ref,f64)
-              Global c3 :: ref
-          Call :: ref
-            Kernel elm/core:Basics.append (v0=app string) :: ref
-            Call :: ref
-              Global c7 :: ref
-              Call :: struct(ref,i64)
-                Global c8 :: ref
-            Call :: ref
-              Global c9 :: ref
-              Record name other :: struct(ref,i64)
-                Lit "n" :: ref
-                Lit 1 :: i64
-      Let l6 :: struct(unit,unit)
-        Call :: ref
-          Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
-          Lit "rename" :: ref
-          Call :: ref
-            Kernel elm/core:Basics.append (v0=app string) :: ref
-            Call :: ref
-              Global c10 :: ref
-              Call :: struct(i64,enum,ref,ref,f64)
-                Global c11 :: ref
-                Lit "A" :: ref
-                Call :: struct(i64,enum,ref,ref,f64)
-                  Global c3 :: ref
-            Call :: ref
-              Kernel elm/core:Basics.append (v0=app string) :: ref
-              Lit " " :: ref
-              Call :: ref
-                Kernel elm/core:Basics.append (v0=app string) :: ref
-                Call :: ref
-                  Global c12 :: ref
-                  Call :: struct(ref,f64)
-                    Global c13 :: ref
-                    Lit "B" :: ref
-                    Call :: struct(ref,f64)
-                      Global c5 :: ref
-                Call :: ref
-                  Kernel elm/core:String.fromFloat () :: ref
-                  Access .weight #1 :: f64
-                    Call :: struct(ref,f64)
-                      Global c13 :: ref
-                      Lit "B" :: ref
-                      Call :: struct(ref,f64)
-                        Global c5 :: ref
-        Let l1 :: struct(unit,unit)
+  Let _pv5 :: struct(unit,unit)
+    Call :: struct(ref,f64)
+      Global c5 :: ref
+    Let _pv8 :: struct(unit,unit)
+      Call :: struct(ref,i64)
+        Global c8 :: ref
+      Let _pv3 :: struct(unit,unit)
+        Call :: struct(i64,enum,ref,ref,f64)
+          Global c3 :: ref
+        Let l4 :: struct(unit,unit)
           Call :: ref
             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
-            Lit "getX" :: ref
+            Lit "heavy" :: ref
             Call :: ref
               Kernel elm/core:Basics.append (v0=app string) :: ref
               Call :: ref
-                Kernel elm/core:String.fromInt () :: ref
-                Call :: i64
-                  Global c14 :: ref
-                  Call :: struct(i64,i64)
-                    Global c15 :: ref
+                Kernel elm/core:String.fromFloat () :: ref
+                Call :: f64
+                  Global c2 :: ref
+                  Local _pv3 :: struct(i64,enum,ref,ref,f64)
               Call :: ref
                 Kernel elm/core:Basics.append (v0=app string) :: ref
                 Lit " " :: ref
                 Call :: ref
-                  Kernel elm/core:String.fromInt () :: ref
-                  Call :: i64
-                    Global c16 :: ref
-                    Call :: struct(i64,enum,ref,ref,f64)
-                      Global c3 :: ref
-          Let l2 :: struct(unit,unit)
+                  Kernel elm/core:String.fromFloat () :: ref
+                  Call :: f64
+                    Global c4 :: ref
+                    Local _pv5 :: struct(ref,f64)
+          Let l5 :: struct(unit,unit)
             Call :: ref
               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
-              Lit "bump" :: ref
+              Lit "label" :: ref
               Call :: ref
                 Kernel elm/core:Basics.append (v0=app string) :: ref
                 Call :: ref
-                  Kernel elm/core:String.fromInt () :: ref
-                  Call :: i64
-                    Global c14 :: ref
-                    Call :: struct(i64,i64)
-                      Global c17 :: ref
-                      Call :: struct(i64,i64)
-                        Global c15 :: ref
+                  Global c6 :: ref
+                  Local _pv3 :: struct(i64,enum,ref,ref,f64)
                 Call :: ref
                   Kernel elm/core:Basics.append (v0=app string) :: ref
-                  Lit " " :: ref
                   Call :: ref
-                    Kernel elm/core:Basics.append (v0=app string) :: ref
-                    Call :: ref
-                      Global c10 :: ref
-                      Call :: struct(i64,enum,ref,ref,f64)
-                        Global c18 :: ref
-                        Call :: struct(i64,enum,ref,ref,f64)
-                          Global c3 :: ref
-                    Call :: ref
-                      Kernel elm/core:Basics.append (v0=app string) :: ref
-                      Lit " " :: ref
-                      Call :: ref
-                        Global c10 :: ref
-                        Call :: struct(i64,enum,ref,ref,f64)
-                          Global c19 :: ref
-                          Call :: struct(i64,enum,ref,ref,f64)
-                            Global c3 :: ref
-            Let l3 :: struct(unit,unit)
+                    Global c7 :: ref
+                    Local _pv8 :: struct(ref,i64)
+                  Call :: ref
+                    Global c9 :: ref
+                    Record name other :: struct(ref,i64)
+                      Lit "n" :: ref
+                      Lit 1 :: i64
+            Let l6 :: struct(unit,unit)
               Call :: ref
                 Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
-                Lit "both" :: ref
+                Lit "rename" :: ref
                 Call :: ref
                   Kernel elm/core:Basics.append (v0=app string) :: ref
                   Call :: ref
-                    Kernel elm/core:String.fromInt () :: ref
-                    Call :: i64
-                      Global c20 :: ref
-                      Call :: struct(i64,i64)
-                        Global c15 :: ref
+                    Global c10 :: ref
+                    Call :: struct(i64,enum,ref,ref,f64)
+                      Global c11 :: ref
+                      Lit "A" :: ref
+                      Local _pv3 :: struct(i64,enum,ref,ref,f64)
                   Call :: ref
                     Kernel elm/core:Basics.append (v0=app string) :: ref
                     Lit " " :: ref
                     Call :: ref
-                      Kernel elm/core:String.fromInt () :: ref
-                      Call :: i64
-                        Global c21 :: ref
-                        Record w x y z :: struct(f64,i64,i64,ref)
-                          Lit 2.5 :: f64
-                          Lit 1 :: i64
-                          Lit 2 :: i64
-                          Lit "zz" :: ref
-              Let l7 :: struct(unit,unit)
-                Call :: ref
-                  Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
-                  Lit "local" :: ref
+                      Kernel elm/core:Basics.append (v0=app string) :: ref
+                      Call :: ref
+                        Global c12 :: ref
+                        Call :: struct(ref,f64)
+                          Global c13 :: ref
+                          Lit "B" :: ref
+                          Local _pv5 :: struct(ref,f64)
+                      Call :: ref
+                        Kernel elm/core:String.fromFloat () :: ref
+                        Access .weight #1 :: f64
+                          Call :: struct(ref,f64)
+                            Global c13 :: ref
+                            Lit "B" :: ref
+                            Local _pv5 :: struct(ref,f64)
+              Let _pv15 :: struct(unit,unit)
+                Call :: struct(i64,i64)
+                  Global c15 :: ref
+                Let l1 :: struct(unit,unit)
                   Call :: ref
-                    Kernel elm/core:Basics.append (v0=app string) :: ref
-                    Call :: ref
-                      Kernel elm/core:String.fromInt () :: ref
-                      Call :: i64
-                        Global c22 :: ref
-                        List :: ref
-                          Call :: struct(i64,i64)
-                            Global c15 :: ref
-                          Record x y :: struct(i64,i64)
-                            Lit 5 :: i64
-                            Lit 0 :: i64
+                    Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                    Lit "getX" :: ref
                     Call :: ref
                       Kernel elm/core:Basics.append (v0=app string) :: ref
-                      Lit " " :: ref
+                      Call :: ref
+                        Kernel elm/core:String.fromInt () :: ref
+                        Call :: i64
+                          Global c14 :: ref
+                          Local _pv15 :: struct(i64,i64)
+                      Call :: ref
+                        Kernel elm/core:Basics.append (v0=app string) :: ref
+                        Lit " " :: ref
+                        Call :: ref
+                          Kernel elm/core:String.fromInt () :: ref
+                          Call :: i64
+                            Global c16 :: ref
+                            Local _pv3 :: struct(i64,enum,ref,ref,f64)
+                  Let l2 :: struct(unit,unit)
+                    Call :: ref
+                      Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                      Lit "bump" :: ref
                       Call :: ref
                         Kernel elm/core:Basics.append (v0=app string) :: ref
                         Call :: ref
                           Kernel elm/core:String.fromInt () :: ref
                           Call :: i64
-                            Global c23 :: ref
-                            List :: ref
-                              Call :: struct(i64,enum,ref,ref,f64)
-                                Global c3 :: ref
-                              Call :: struct(i64,enum,ref,ref,f64)
-                                Global c3 :: ref
+                            Global c14 :: ref
+                            Call :: struct(i64,i64)
+                              Global c17 :: ref
+                              Local _pv15 :: struct(i64,i64)
                         Call :: ref
                           Kernel elm/core:Basics.append (v0=app string) :: ref
                           Lit " " :: ref
                           Call :: ref
-                            Kernel elm/core:String.fromFloat () :: ref
-                            Call :: f64
-                              Kernel elm/core:Basics.add (v0=type elm/core:Basics.Float) :: ref
-                              Call :: f64
-                                Global c24 :: ref
+                            Kernel elm/core:Basics.append (v0=app string) :: ref
+                            Call :: ref
+                              Global c10 :: ref
+                              Call :: struct(i64,enum,ref,ref,f64)
+                                Global c18 :: ref
+                                Local _pv3 :: struct(i64,enum,ref,ref,f64)
+                            Call :: ref
+                              Kernel elm/core:Basics.append (v0=app string) :: ref
+                              Lit " " :: ref
+                              Call :: ref
+                                Global c10 :: ref
                                 Call :: struct(i64,enum,ref,ref,f64)
-                                  Global c3 :: ref
-                              Call :: f64
-                                Global c25 :: ref
-                                Call :: struct(ref,f64)
-                                  Global c5 :: ref
-                Let l8 :: struct(unit,unit)
-                  Call :: ref
-                    Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
-                    Lit "map" :: ref
-                    Call :: ref
-                      Kernel elm/core:String.join () :: ref
-                      Lit "," :: ref
+                                  Global c19 :: ref
+                                  Local _pv3 :: struct(i64,enum,ref,ref,f64)
+                    Let l3 :: struct(unit,unit)
                       Call :: ref
-                        Global c26 :: ref
-                        Global c27 :: ref
-                        List :: ref
-                          Call :: struct(i64,i64)
-                            Global c17 :: ref
-                            Call :: struct(i64,i64)
-                              Global c15 :: ref
-                          Call :: struct(i64,i64)
-                            Global c17 :: ref
-                            Record x y :: struct(i64,i64)
+                        Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                        Lit "both" :: ref
+                        Call :: ref
+                          Kernel elm/core:Basics.append (v0=app string) :: ref
+                          Call :: ref
+                            Kernel elm/core:String.fromInt () :: ref
+                            Call :: i64
+                              Global c20 :: ref
+                              Local _pv15 :: struct(i64,i64)
+                          Call :: ref
+                            Kernel elm/core:Basics.append (v0=app string) :: ref
+                            Lit " " :: ref
+                            Call :: ref
+                              Kernel elm/core:String.fromInt () :: ref
+                              Call :: i64
+                                Global c21 :: ref
+                                Record w x y z :: struct(f64,i64,i64,ref)
+                                  Lit 2.5 :: f64
+                                  Lit 1 :: i64
+                                  Lit 2 :: i64
+                                  Lit "zz" :: ref
+                      Let l7 :: struct(unit,unit)
+                        Call :: ref
+                          Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                          Lit "local" :: ref
+                          Call :: ref
+                            Kernel elm/core:Basics.append (v0=app string) :: ref
+                            Call :: ref
+                              Kernel elm/core:String.fromInt () :: ref
+                              Call :: i64
+                                Global c22 :: ref
+                                List :: ref
+                                  Local _pv15 :: struct(i64,i64)
+                                  Record x y :: struct(i64,i64)
+                                    Lit 5 :: i64
+                                    Lit 0 :: i64
+                            Call :: ref
+                              Kernel elm/core:Basics.append (v0=app string) :: ref
+                              Lit " " :: ref
+                              Call :: ref
+                                Kernel elm/core:Basics.append (v0=app string) :: ref
+                                Call :: ref
+                                  Kernel elm/core:String.fromInt () :: ref
+                                  Call :: i64
+                                    Global c23 :: ref
+                                    List :: ref
+                                      Local _pv3 :: struct(i64,enum,ref,ref,f64)
+                                      Local _pv3 :: struct(i64,enum,ref,ref,f64)
+                                Call :: ref
+                                  Kernel elm/core:Basics.append (v0=app string) :: ref
+                                  Lit " " :: ref
+                                  Call :: ref
+                                    Kernel elm/core:String.fromFloat () :: ref
+                                    Call :: f64
+                                      Kernel elm/core:Basics.add (v0=type elm/core:Basics.Float) :: ref
+                                      Call :: f64
+                                        Global c24 :: ref
+                                        Local _pv3 :: struct(i64,enum,ref,ref,f64)
+                                      Call :: f64
+                                        Global c25 :: ref
+                                        Local _pv5 :: struct(ref,f64)
+                        Let l8 :: struct(unit,unit)
+                          Call :: ref
+                            Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                            Lit "map" :: ref
+                            Call :: ref
+                              Kernel elm/core:String.join () :: ref
+                              Lit "," :: ref
+                              Call :: ref
+                                Global c26 :: ref
+                                Global c27 :: ref
+                                List :: ref
+                                  Call :: struct(i64,i64)
+                                    Global c17 :: ref
+                                    Local _pv15 :: struct(i64,i64)
+                                  Call :: struct(i64,i64)
+                                    Global c17 :: ref
+                                    Record x y :: struct(i64,i64)
+                                      Lit 0 :: i64
+                                      Lit 9 :: i64
+                          If :: struct(unit,unit)
+                            Call :: enum
+                              Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                              Call :: i64
+                                Global c28 :: ref
+                                List :: ref
+                                  Local l1 :: ref
+                                  Local l2 :: ref
+                                  Local l3 :: ref
+                                  Local l4 :: ref
+                                  Local l5 :: ref
+                                  Local l6 :: ref
+                                  Local l7 :: ref
+                                  Local l8 :: ref
                               Lit 0 :: i64
-                              Lit 9 :: i64
-                  If :: struct(unit,unit)
-                    Call :: enum
-                      Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
-                      Call :: i64
-                        Global c28 :: ref
-                        List :: ref
-                          Local l1 :: ref
-                          Local l2 :: ref
-                          Local l3 :: ref
-                          Local l4 :: ref
-                          Local l5 :: ref
-                          Local l6 :: ref
-                          Local l7 :: ref
-                          Local l8 :: ref
-                      Lit 0 :: i64
-                    Tuple :: struct(unit,unit)
-                      Lit () :: unit
-                      Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-                    Tuple :: struct(unit,unit)
-                      Lit () :: unit
-                      Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+                            Tuple :: struct(unit,unit)
+                              Lit () :: unit
+                              Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+                            Tuple :: struct(unit,unit)
+                              Lit () :: unit
+                              Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
 clone c0   def: author/project:Rows.main   key: ()   kind: value   params:    result: unit
   Call :: unit
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref

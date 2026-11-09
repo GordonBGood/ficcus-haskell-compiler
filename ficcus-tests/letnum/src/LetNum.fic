@@ -1,0 +1,54 @@
+module LetNum exposing (main)
+
+-- A let-bound value that is polymorphic only in `number` or `comparable` is evaluated once, where it is bound (Elm: one
+-- JavaScript value), so the Debug.log lines have Elm's order and count: used several times, inside a lambda, in a list,
+-- in a fold, as a Float and as a String (comparable). The output must equal Elm's (expected/letnum.out, Elm 0.19.3, node).
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    a =
+                        Debug.log "a" 1
+
+                    b =
+                        Debug.log "b" (a + 10)
+
+                    c =
+                        Debug.log "c" 2.5
+
+                    d =
+                        Debug.log "d" "str"
+
+                    e =
+                        Debug.log "e" (max 3 4)
+
+                    total =
+                        List.foldl (\x acc -> acc + x + a) 0 [ 1, 2, 3 ]
+
+                    f =
+                        (\_ -> b + e) ()
+
+                    l1 =
+                        Debug.log "l1" (String.fromInt (a + a + b))
+
+                    l2 =
+                        Debug.log "l2" (String.fromFloat (c * 2))
+
+                    l3 =
+                        Debug.log "l3" (d ++ String.fromInt total ++ String.fromInt f)
+
+                    l4 =
+                        Debug.log "l4" (String.fromInt (List.length (List.map (\x -> x + e) [ 1, 2 ])))
+                in
+                if List.length [ l1, l2, l3, l4 ] > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

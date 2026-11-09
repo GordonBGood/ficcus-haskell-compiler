@@ -3,6 +3,22 @@
 mark author/project:Acc.ps@22:21   v0=number v1=number v2=number
 clone c0   def: author/project:Acc.main   key: ()   kind: value   init: 1   needs: 
 -- program: 32 clones, reachable from main, dependencies first
+clone c11   def: author/project:Acc.ps@22:21   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int; v2=type elm/core:Basics.Int)   name: ps@22:21__i64__i64__i64   kind: function   params:    result: ref   lifted-from: c1
+  List :: ref
+    Record x y name pair :: struct(i64,f64,ref,ref)
+      Lit 1 :: i64
+      Lit 2.5 :: f64
+      Lit "a" :: ref
+      Tuple :: struct(i64,i64)
+        Lit 1 :: i64
+        Lit 2 :: i64
+    Record x y name pair :: struct(i64,f64,ref,ref)
+      Lit 3 :: i64
+      Lit 4.5 :: f64
+      Lit "b" :: ref
+      Tuple :: struct(i64,i64)
+        Lit 3 :: i64
+        Lit 4 :: i64
 clone c2   def: author/project:Acc.apply   key: (v0=ref; v1=i64)   name: apply__ref__i64   kind: function   params: f:ref v:ref   result: i64
   Call :: i64
     Local f :: ref
@@ -160,22 +176,6 @@ clone c7   def: author/project:Acc.lambda@35:70   key: ()   kind: function   par
 clone c10   def: .pair   key: ()   kind: function   params: _r:struct(i64,f64,ref,ref)   result: struct(i64,i64)   lifted-from: c1
   Access .pair #3 :: struct(i64,i64)
     Local _r :: struct(i64,f64,ref,ref)
-clone c11   def: author/project:Acc.ps@22:21   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int; v2=type elm/core:Basics.Int)   name: ps@22:21__i64__i64__i64   kind: function   params:    result: ref   lifted-from: c1
-  List :: ref
-    Record x y name pair :: struct(i64,f64,ref,ref)
-      Lit 1 :: i64
-      Lit 2.5 :: f64
-      Lit "a" :: ref
-      Tuple :: struct(i64,i64)
-        Lit 1 :: i64
-        Lit 2 :: i64
-    Record x y name pair :: struct(i64,f64,ref,ref)
-      Lit 3 :: i64
-      Lit 4.5 :: f64
-      Lit "b" :: ref
-      Tuple :: struct(i64,i64)
-        Lit 3 :: i64
-        Lit 4 :: i64
 clone c12   def: .name   key: ()   kind: function   params: _r:struct(i64,f64,ref,ref)   result: ref   lifted-from: c1
   Access .name #2 :: ref
     Local _r :: struct(i64,f64,ref,ref)
@@ -275,102 +275,101 @@ clone c21   def: elm/core:List.length   key: (v0=ref)   name: length__ref   kind
     Lit 0 :: i64
     Local xs :: ref
 clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let l5 :: struct(unit,unit)
+  Let _pv11 :: struct(unit,unit)
     Call :: ref
-      Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
-      Lit "apply" :: ref
-      Call :: ref
-        Kernel elm/core:Basics.append (v0=app string) :: ref
-        Call :: ref
-          Kernel elm/core:String.fromInt () :: ref
-          Call :: i64
-            Global c2 :: ref
-            Global c3 :: ref
-            Record x other :: struct(i64,ref)
-              Lit 7 :: i64
-              Lit "z" :: ref
-        Call :: ref
-          Kernel elm/core:String.fromFloat () :: ref
-          Call :: f64
-            Global c4 :: ref
-            Global c5 :: ref
-            Record y :: struct(f64)
-              Lit 0.5 :: f64
-    Let l4 :: struct(unit,unit)
+      Global c11 :: ref
+    Let l5 :: struct(unit,unit)
       Call :: ref
         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
-        Lit "pair" :: ref
+        Lit "apply" :: ref
         Call :: ref
-          Kernel elm/core:String.join () :: ref
-          Lit "," :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
           Call :: ref
-            Global c6 :: ref
-            Global c7 :: ref
-            Call :: ref
-              Global c6 :: ref
-              Global c10 :: ref
-              Call :: ref
-                Global c11 :: ref
-      Let l3 :: struct(unit,unit)
+            Kernel elm/core:String.fromInt () :: ref
+            Call :: i64
+              Global c2 :: ref
+              Global c3 :: ref
+              Record x other :: struct(i64,ref)
+                Lit 7 :: i64
+                Lit "z" :: ref
+          Call :: ref
+            Kernel elm/core:String.fromFloat () :: ref
+            Call :: f64
+              Global c4 :: ref
+              Global c5 :: ref
+              Record y :: struct(f64)
+                Lit 0.5 :: f64
+      Let l4 :: struct(unit,unit)
         Call :: ref
           Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
-          Lit "name" :: ref
+          Lit "pair" :: ref
           Call :: ref
             Kernel elm/core:String.join () :: ref
             Lit "," :: ref
             Call :: ref
               Global c6 :: ref
-              Global c12 :: ref
+              Global c7 :: ref
               Call :: ref
-                Global c11 :: ref
-        Let l2 :: struct(unit,unit)
+                Global c6 :: ref
+                Global c10 :: ref
+                Local _pv11 :: ref
+        Let l3 :: struct(unit,unit)
           Call :: ref
             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
-            Lit "y" :: ref
+            Lit "name" :: ref
             Call :: ref
-              Kernel elm/core:String.fromFloat () :: ref
-              Call :: f64
-                Global c13 :: ref
-                Global c14 :: ref
-                Lit 0.0 :: f64
-                Call :: ref
-                  Global c15 :: ref
-                  Global c16 :: ref
-                  Call :: ref
-                    Global c11 :: ref
-          Let l1 :: struct(unit,unit)
+              Kernel elm/core:String.join () :: ref
+              Lit "," :: ref
+              Call :: ref
+                Global c6 :: ref
+                Global c12 :: ref
+                Local _pv11 :: ref
+          Let l2 :: struct(unit,unit)
             Call :: ref
               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
-              Lit "x" :: ref
+              Lit "y" :: ref
               Call :: ref
-                Kernel elm/core:String.fromInt () :: ref
-                Call :: i64
-                  Global c17 :: ref
-                  Global c18 :: ref
-                  Lit 0 :: i64
+                Kernel elm/core:String.fromFloat () :: ref
+                Call :: f64
+                  Global c13 :: ref
+                  Global c14 :: ref
+                  Lit 0.0 :: f64
                   Call :: ref
-                    Global c19 :: ref
-                    Global c20 :: ref
+                    Global c15 :: ref
+                    Global c16 :: ref
+                    Local _pv11 :: ref
+            Let l1 :: struct(unit,unit)
+              Call :: ref
+                Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                Lit "x" :: ref
+                Call :: ref
+                  Kernel elm/core:String.fromInt () :: ref
+                  Call :: i64
+                    Global c17 :: ref
+                    Global c18 :: ref
+                    Lit 0 :: i64
                     Call :: ref
-                      Global c11 :: ref
-            If :: struct(unit,unit)
-              Call :: enum
-                Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
-                Call :: i64
-                  Global c21 :: ref
-                  List :: ref
-                    Local l1 :: ref
-                    Local l2 :: ref
-                    Local l3 :: ref
-                    Local l4 :: ref
-                    Local l5 :: ref
-                Lit 0 :: i64
-              Tuple :: struct(unit,unit)
-                Lit () :: unit
-                Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-              Tuple :: struct(unit,unit)
-                Lit () :: unit
-                Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+                      Global c19 :: ref
+                      Global c20 :: ref
+                      Local _pv11 :: ref
+              If :: struct(unit,unit)
+                Call :: enum
+                  Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                  Call :: i64
+                    Global c21 :: ref
+                    List :: ref
+                      Local l1 :: ref
+                      Local l2 :: ref
+                      Local l3 :: ref
+                      Local l4 :: ref
+                      Local l5 :: ref
+                  Lit 0 :: i64
+                Tuple :: struct(unit,unit)
+                  Lit () :: unit
+                  Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+                Tuple :: struct(unit,unit)
+                  Lit () :: unit
+                  Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
 clone c0   def: author/project:Acc.main   key: ()   kind: value   params:    result: unit
   Call :: unit
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref

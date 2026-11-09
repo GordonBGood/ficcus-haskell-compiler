@@ -282,29 +282,31 @@ clone c38   def: author/project:Poly3a.p@176:9   key: (v0=type elm/core:Basics.I
       Lit 3.5 :: f64
       Lit 4.25 :: f64
 clone c23   def: author/project:Poly3a.boxedPair   key: ()   kind: value   params:    result: ref
-  Case :: ref
+  Let _pv38 :: ref
     Call :: struct(ref,ref)
       Global c38 :: ref
-    branch ((a :: i64, b :: i64) :: struct(i64,i64), r :: struct(f64,f64)) :: struct(ref,ref)
-      Call :: ref
-        Kernel elm/core:Basics.append (v0=app string) :: ref
-        Call :: ref
-          Kernel elm/core:String.fromInt () :: ref
-          Call :: i64
-            Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
-            Local a :: i64
-            Local b :: i64
+    Case :: ref
+      Local _pv38 :: struct(ref,ref)
+      branch ((a :: i64, b :: i64) :: struct(i64,i64), r :: struct(f64,f64)) :: struct(ref,ref)
         Call :: ref
           Kernel elm/core:Basics.append (v0=app string) :: ref
-          Lit " " :: ref
           Call :: ref
-            Kernel elm/core:String.fromFloat () :: ref
-            Call :: f64
-              Kernel elm/core:Basics.add (v0=type elm/core:Basics.Float) :: ref
-              Access .x #0 :: f64
-                Local r :: struct(f64,f64)
-              Access .y #1 :: f64
-                Local r :: struct(f64,f64)
+            Kernel elm/core:String.fromInt () :: ref
+            Call :: i64
+              Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+              Local a :: i64
+              Local b :: i64
+          Call :: ref
+            Kernel elm/core:Basics.append (v0=app string) :: ref
+            Lit " " :: ref
+            Call :: ref
+              Kernel elm/core:String.fromFloat () :: ref
+              Call :: f64
+                Kernel elm/core:Basics.add (v0=type elm/core:Basics.Float) :: ref
+                Access .x #0 :: f64
+                  Local r :: struct(f64,f64)
+                Access .y #1 :: f64
+                  Local r :: struct(f64,f64)
 clone c24   def: author/project:Poly3a.boxes   key: ()   kind: value   params:    result: ref
   Case :: ref
     Call :: struct(i64,i64)

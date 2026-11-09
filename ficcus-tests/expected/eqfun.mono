@@ -59,22 +59,24 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
           Lit "not reached" :: ref
           Lit 0 :: i64
-        Seq :: struct(unit,unit)
-          Call :: i64
-            Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
-            Lit "same function" :: ref
+        Let _pv5 :: struct(unit,unit)
+          Call :: struct(i64,ref)
+            Global c5 :: ref
+          Seq :: struct(unit,unit)
             Call :: i64
-              Global c2 :: ref
-              Call :: enum
-                Kernel elm/core:Basics.eq (v0=type {a:elm/core:Basics.Int, f:(elm/core:Basics.Int -> elm/core:Basics.Int)}) :: ref
-                Call :: struct(i64,ref)
-                  Global c5 :: ref
-                Record a f :: struct(i64,ref)
-                  Lit 1 :: i64
-                  Global c3 :: ref
-          Tuple :: struct(unit,unit)
-            Lit () :: unit
-            Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+              Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+              Lit "same function" :: ref
+              Call :: i64
+                Global c2 :: ref
+                Call :: enum
+                  Kernel elm/core:Basics.eq (v0=type {a:elm/core:Basics.Int, f:(elm/core:Basics.Int -> elm/core:Basics.Int)}) :: ref
+                  Local _pv5 :: struct(i64,ref)
+                  Record a f :: struct(i64,ref)
+                    Lit 1 :: i64
+                    Global c3 :: ref
+            Tuple :: struct(unit,unit)
+              Lit () :: unit
+              Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
 clone c0   def: author/project:EqFun.main   key: ()   kind: value   params:    result: unit
   Call :: unit
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
