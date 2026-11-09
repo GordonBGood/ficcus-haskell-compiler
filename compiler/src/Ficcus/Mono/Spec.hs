@@ -989,6 +989,9 @@ unescape str =
     '\\' : 'u' : a : b : c : d : rest | all isHex [a, b, c, d] ->
       let hi = hexValue [a, b, c, d]
       in case rest of
+           -- Elm 0.19.3 writes the literal \u{FFFF} as the pair D7FF DFFF (its surrogate arithmetic is off by one at 0xFFFF):
+           -- that is the one code point U+FFFF (reported, the JS output of the lexer is not changed)
+           '\\' : 'u' : 'D' : 'F' : 'F' : 'F' : rest2 | hi == 0xD7FF -> '\xFFFF' : unescape rest2
            '\\' : 'u' : e : f : g : h : rest2
              | hi >= 0xD800 && hi < 0xDC00, all isHex [e, f, g, h], lo <- hexValue [e, f, g, h], lo >= 0xDC00 && lo < 0xE000 ->
                  toEnum (0x10000 + (hi - 0xD800) * 0x400 + (lo - 0xDC00)) : unescape rest2

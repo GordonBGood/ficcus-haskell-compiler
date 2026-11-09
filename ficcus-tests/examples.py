@@ -11,8 +11,8 @@ Exit status 1 on any difference.
 import argparse, os, shutil, subprocess, sys, tempfile, difflib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2", "init2", "silly", "grow1", "grow2", "grow3"]
-RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2", "init2", "silly", "grow3"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
+NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2", "init2", "silly", "grow1", "grow2", "grow3", "lit"]
+RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2", "init2", "silly", "grow3", "lit"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
 
 
 CRASH = {"eqfun": "Trying to use `(==)` on functions."}      # programs that end with a run time error: exit status 1 and this text on stderr
@@ -56,6 +56,12 @@ def run_c(a, dst, name, mod):
     want = open(os.path.join(HERE, "expected", name + ".out"), encoding="utf-8").read()
     rt = os.path.join(HERE, "..", "..", "targets", "c")
     bad = 0
+    if name == "lit":       # the UTF-8 bytes of the literals in the generated C (octal escapes), for every length boundary
+        c_text = open(os.path.join(dst, "x.c"), encoding="utf-8", errors="replace").read()
+        for cp in (0x7F, 0x80, 0x7FF, 0x800, 0xD7FF, 0xE000, 0xFFFD, 0xFFFF, 0x10000, 0x1F623, 0x10FFFF):
+            lit = "".join("\\%03o" % b for b in chr(cp).encode("utf-8"))
+            if ('"' + lit + '"') not in c_text: print("FAIL lit.c: bytes of U+%X (%s) not found as a literal" % (cp, lit)); bad += 1
+            else: print("ok   lit.c bytes of U+%X" % cp)
     for cc in ("gcc", "clang"):
         if shutil.which(cc) is None: continue
         exe = os.path.join(dst, "x_" + cc)

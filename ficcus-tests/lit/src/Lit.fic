@@ -1,0 +1,66 @@
+module Lit exposing (main)
+
+-- String literals of every UTF-8 length boundary: U+007F, 0080, 07FF, 0800, D7FF, E000, FFFD, FFFF, 10000, 1F623, 10FFFF.
+-- Each literal has String.length 1, String.toList of one code point, and equals String.fromChar (Char.fromCode n).
+-- (Elm 0.19.3 gets U+FFFF wrong, two UTF-16 units: the expected output is written from the code points, not from Elm;
+-- examples.py checks the UTF-8 bytes in the generated C as well: expected/lit.bytes.)
+
+
+check : String -> Int -> String
+check s code =
+    String.fromInt (String.length s)
+        ++ " "
+        ++ String.fromInt code
+        ++ " "
+        ++ "[" ++ String.join "," (List.map (\c -> String.fromInt (Char.toCode c)) (String.toList s)) ++ "]"
+        ++ " "
+        ++ (if s == String.fromChar (Char.fromCode code) then "T" else "F")
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    l0 =
+                        Debug.log "7F" (check "\u{007F}" 127)
+
+                    l1 =
+                        Debug.log "80" (check "\u{0080}" 128)
+
+                    l2 =
+                        Debug.log "7FF" (check "\u{07FF}" 2047)
+
+                    l3 =
+                        Debug.log "800" (check "\u{0800}" 2048)
+
+                    l4 =
+                        Debug.log "D7FF" (check "\u{D7FF}" 55295)
+
+                    l5 =
+                        Debug.log "E000" (check "\u{E000}" 57344)
+
+                    l6 =
+                        Debug.log "FFFD" (check "\u{FFFD}" 65533)
+
+                    l7 =
+                        Debug.log "FFFF" (check "\u{FFFF}" 65535)
+
+                    l8 =
+                        Debug.log "10000" (check "\u{10000}" 65536)
+
+                    l9 =
+                        Debug.log "1F623" (check "\u{1F623}" 128547)
+
+                    l10 =
+                        Debug.log "10FFFF" (check "\u{10FFFF}" 1114111)
+                in
+                if List.length [ l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10 ] > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
