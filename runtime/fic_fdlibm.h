@@ -1145,7 +1145,7 @@ static double fic_fd_pow(double x, double y) {
   w = v - (z - u);
   t = z * z;
   t1 = z - t * (P1 + t * (P2 + t * (P3 + t * (P4 + t * P5))));
-  r = (z * t1) / (t1 - 2.0) - (w + z * w);
+  r = (z * t1) / ((t1 - 2.0) - (w + z * w));      /* V8's form (not fdlibm's (z*t1)/(t1-2) - (w+z*w)) */
   z = 1.0 - (r - z);
   GET_HIGH_WORD(j, z);
   j = (int32_t)((uint32_t)j + ((uint32_t)n << 20));
