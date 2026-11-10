@@ -3,8 +3,13 @@ module Ficcus.Mono.Kernel
   ( kernelArity
   , forcedExact
   , directKernelIds
+  , kernelSig
+  , kernelResultBorrowed
   )
   where
+
+
+import Ficcus.Mono.Class (AppClass(..), Key(..), KeyPart(..))
 
 
 -- Ficcus, stage (iii) slice 1: the kernel table (decision A2).
@@ -77,3 +82,73 @@ directKernelIds m n =
   case m of
     "Parser" -> [ "elm/parser:Parser.Advanced." ++ n ]
     _ -> [ "elm/core:" ++ m ++ "." ++ n ]
+
+
+
+-- | the ownership signature of a kernel (STAGE4-PLAN section 8): one letter per argument, `s` an argument that is never a
+-- reference (no count), `b` a reference argument the kernel only borrows (the caller keeps its count and drops it after the
+-- call), `o` a reference argument the kernel consumes (stores it, returns it or drops it, on every path). Where an argument can be
+-- of a scalar class at one key and of a reference class at another (the `a` of `foldl`) the letter says what it is when it is a
+-- reference. The result is always owned, except for the kernels in `kernelResultBorrowed`. The defaults are: every
+-- reference argument borrowed, so a kernel that is not listed is `bbb..`.
+-- The table is checked against the arities of `kernelArity` when the Rc pass starts (a missing entry is an error of the compiler).
+kernelSig :: String -> Key -> Maybe String
+kernelSig cid key =
+  case (cid, key) of
+    ("elm/core:Basics.append", Key [ByApp AStr]) -> Just "bb"
+    ("elm/core:Basics.append", _) -> Just "bo"           -- xs is copied (its elements are dup'd), ys becomes the tail of the result
+    _ -> lookup cid table
+  where
+    table =
+      [ ("elm/core:List.cons", "oo")
+      -- Elm.JsArray: the array of unsafeSet and push is consumed (updated in place when unique, S6; copied until then); the
+      -- element of singleton, unsafeSet and push is stored; unsafeGet returns a borrowed element (the pass adds the count)
+      , ("elm/core:Elm.JsArray.empty", ""), ("elm/core:Elm.JsArray.singleton", "o"), ("elm/core:Elm.JsArray.length", "b")
+      , ("elm/core:Elm.JsArray.initialize", "ssb"), ("elm/core:Elm.JsArray.initializeFromList", "sb")
+      , ("elm/core:Elm.JsArray.unsafeGet", "sb"), ("elm/core:Elm.JsArray.unsafeSet", "soo"), ("elm/core:Elm.JsArray.push", "oo")
+      , ("elm/core:Elm.JsArray.foldl", "bob"), ("elm/core:Elm.JsArray.foldr", "bob"), ("elm/core:Elm.JsArray.map", "bb")
+      , ("elm/core:Elm.JsArray.indexedMap", "bsb"), ("elm/core:Elm.JsArray.slice", "ssb"), ("elm/core:Elm.JsArray.appendN", "sbb")
+      -- String and Char: every string is borrowed, the results are new strings (or counted copies)
+      , ("elm/core:String.length", "b"), ("elm/core:String.slice", "ssb"), ("elm/core:String.cons", "sb"), ("elm/core:String.join", "bb")
+      , ("elm/core:String.words", "b"), ("elm/core:String.toUpper", "b"), ("elm/core:String.toLower", "b"), ("elm/core:String.map", "bb")
+      , ("elm/core:String.foldl", "bob"), ("elm/core:String.foldr", "bob"), ("elm/core:String.fromList", "b")
+      , ("elm/core:String.append", "bb"), ("elm/core:String.contains", "bb"), ("elm/core:String.startsWith", "bb")
+      , ("elm/core:String.endsWith", "bb"), ("elm/core:String.indexes", "bb"), ("elm/core:String.indices", "bb")
+      , ("elm/core:String.split", "bb"), ("elm/core:String.lines", "b"), ("elm/core:String.reverse", "b"), ("elm/core:String.trim", "b")
+      , ("elm/core:String.trimLeft", "b"), ("elm/core:String.trimRight", "b"), ("elm/core:String.uncons", "b")
+      , ("elm/core:String.filter", "bb"), ("elm/core:String.any", "bb"), ("elm/core:String.all", "bb"), ("elm/core:String.toInt", "b")
+      , ("elm/core:String.toFloat", "b"), ("elm/core:String.fromInt", "s"), ("elm/core:String.fromFloat", "s")
+      , ("elm/core:Char.toCode", "s"), ("elm/core:Char.toUpper", "s"), ("elm/core:Char.toLower", "s"), ("elm/core:Char.fromCode", "s")
+      , ("elm/core:Char.toLocaleUpper", "s"), ("elm/core:Char.toLocaleLower", "s")
+      -- elm/parser: the source string is borrowed; the string cache of the kernels keeps its own count
+      , ("elm/parser:Parser.Advanced.isSubString", "bsssb"), ("elm/parser:Parser.Advanced.findSubString", "bsssb")
+      , ("elm/parser:Parser.Advanced.isSubChar", "bsb"), ("elm/parser:Parser.Advanced.isAsciiCode", "ssb")
+      , ("elm/parser:Parser.Advanced.chompBase10", "sb"), ("elm/parser:Parser.Advanced.consumeBase", "ssb")
+      , ("elm/parser:Parser.Advanced.consumeBase16", "sb")
+      -- Debug: the tag is borrowed, the value is returned by log (so owned); toString only reads its argument
+      , ("elm/core:Debug.todo", "b"), ("elm/core:Debug.log", "bo"), ("elm/core:Debug.toString", "b")
+      , ("elm/core:Platform.worker", "b"), ("elm/core:Platform.Cmd.none", ""), ("elm/core:Platform.Sub.none", "")
+      -- Basics: comparisons and equality read two values of the key's type
+      , ("elm/core:Basics.eq", "bb"), ("elm/core:Basics.neq", "bb"), ("elm/core:Basics.gt", "bb"), ("elm/core:Basics.ge", "bb")
+      , ("elm/core:Basics.lt", "bb"), ("elm/core:Basics.le", "bb"), ("elm/core:Basics.compare", "bb")
+      ]
+      ++ [ (n, replicate k 's') | (n, k) <- scalarKernels ]
+
+
+-- the kernels whose arguments are never references
+scalarKernels :: [(String, Int)]
+scalarKernels =
+  [ ("elm/core:Basics." ++ n, k)
+  | (n, k) <- [ ("add", 2), ("sub", 2), ("mul", 2), ("mulRound53", 2), ("fdiv", 2), ("idiv", 2), ("pow", 2), ("negate", 1)
+              , ("modBy", 2), ("remainderBy", 2), ("and", 2), ("or", 2), ("not", 1), ("toFloat", 1), ("round", 1), ("floor", 1)
+              , ("ceiling", 1), ("truncate", 1), ("sqrt", 1), ("log", 1), ("logBase", 2), ("xor", 2), ("sin", 1), ("cos", 1)
+              , ("tan", 1), ("asin", 1), ("acos", 1), ("atan", 1), ("atan2", 2), ("isNaN", 1), ("isInfinite", 1), ("e", 0), ("pi", 0) ] ]
+  ++ [ ("elm/core:Bitwise." ++ n, k) | (n, k) <- bitwise ]
+  ++ [ ("elm/core:Bitwise64." ++ n, k) | (n, k) <- bitwise ]
+  where
+    bitwise = [ ("and", 2), ("or", 2), ("xor", 2), ("complement", 1), ("shiftLeftBy", 2), ("shiftRightBy", 2), ("shiftRightZfBy", 2) ]
+
+
+-- | kernels that return a reference they do not own (a counted element of an array): the caller adds the count
+kernelResultBorrowed :: String -> Bool
+kernelResultBorrowed cid = cid == "elm/core:Elm.JsArray.unsafeGet"
