@@ -1,0 +1,393 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:Evo (project)
+clone c0   def: author/project:Evo.total   key: ()   kind: function   init: 0   needs: 
+clone c1   def: author/project:Evo.t   key: ()   kind: function   init: 1   needs: 
+clone c2   def: author/project:Evo.f   key: ()   kind: function   init: 2   needs: 
+clone c3   def: author/project:Evo.go   key: ()   kind: function   init: 3   needs: 
+clone c4   def: author/project:Evo.main   key: ()   kind: value   init: 4   needs: 
+-- program: 13 clones, reachable from main, dependencies first
+clone c3   def: author/project:Evo.t   key: ()   kind: function   params: s:ref n:i64   result: i64
+  Call :: i64
+    Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+    Local s :: ref
+    Local n :: i64
+clone c4   def: elm/core:Tuple.first   key: (v0=i64; v1=i64)   name: first__i64__i64   kind: function   params: _p0:struct(i64,i64)   result: i64
+  Case :: i64
+    Local _p0 :: struct(i64,i64)
+    branch (x :: i64, _ :: i64) :: struct(i64,i64)
+      Local x :: i64
+clone c5   def: author/project:Evo.lambda@43:28   key: ()   kind: function   params: x:i64   result: i64   lifted-from: c2
+  Call :: i64
+    Global c3 :: ref
+    Lit "pipe2" :: ref
+    Local x :: i64
+clone c6   def: author/project:Evo.f   key: ()   kind: function   params: a:i64 b:i64 c:i64   result: i64
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Call :: i64
+      Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+      Local a :: i64
+      Local b :: i64
+    Local c :: i64
+clone c7   def: author/project:Evo.lambda@42:12   key: ()   kind: function   params: x:i64 y:i64   result: i64   lifted-from: c2
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local x :: i64
+    Local y :: i64
+clone c9   def: author/project:Evo.lambda@45:22   key: ()   kind: function   params: _p0:struct(i64,i64,i64)   result: i64   lifted-from: c2
+  Case :: i64
+    Local _p0 :: struct(i64,i64,i64)
+    branch (a :: i64, b :: i64, c :: i64) :: struct(i64,i64,i64)
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+          Local a :: i64
+          Local b :: i64
+        Local c :: i64
+clone c12   def: elm/core:List.foldl   key: (v0=i64; v1=i64)   name: foldl__i64__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: i64
+        Global c12 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: i64
+          Local acc :: i64
+        Local xs :: ref
+clone c13   def: elm/core:List.lambda@345:9   key: ()   outer: c10 (v0=type elm/core:Basics.Int)   kind: function   params: _pb13_0:i64 _pb13_1:i64   result: i64   lifted-from: c10
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local _pb13_0 :: i64
+    Local _pb13_1 :: i64
+clone c10   def: elm/core:List.sum   key: (v0=type elm/core:Basics.Int)   name: sum__i64   kind: function   params: numbers:ref   result: i64
+  Call :: i64
+    Global c12 :: ref
+    Global c13 :: ref
+    Lit 0 :: i64
+    Local numbers :: ref
+clone c11   def: author/project:Evo.total   key: ()   kind: function   params: _p0:ref   result: i64
+  Case :: i64
+    Local _p0 :: ref
+    branch Pair #0 a :: i64 b :: i64 c :: i64 :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+          Local a :: i64
+          Local b :: i64
+        Local c :: i64
+clone c2   def: author/project:Evo.go   key: ()   kind: function   params: _a0:unit   result: i64
+  Let ignored@32:5 :: i64
+    Call :: i64
+      Global c3 :: ref
+      Lit "ignored-let" :: ref
+      Lit 1 :: i64
+    Let andand@35:5 :: i64
+      Call :: enum
+        Kernel elm/core:Basics.and () :: ref
+        Call :: enum
+          Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+          Call :: i64
+            Global c3 :: ref
+            Lit "and1" :: ref
+            Lit 0 :: i64
+          Lit 0 :: i64
+        Call :: enum
+          Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+          Call :: i64
+            Global c3 :: ref
+            Lit "and2" :: ref
+            Lit 1 :: i64
+          Lit 0 :: i64
+      Let first@41:5 :: i64
+        Call :: i64
+          Global c4 :: ref
+          Tuple :: struct(i64,i64)
+            Call :: i64
+              Global c3 :: ref
+              Lit "fst1" :: ref
+              Lit 1 :: i64
+            Call :: i64
+              Global c3 :: ref
+              Lit "fst2" :: ref
+              Lit 2 :: i64
+        Let caseE@38:5 :: i64
+          Case :: i64
+            Call :: i64
+              Global c3 :: ref
+              Lit "scrut" :: ref
+              Lit 1 :: i64
+            branch 1 :: i64
+              Call :: i64
+                Global c3 :: ref
+                Lit "br1" :: ref
+                Lit 1 :: i64
+            branch _ :: i64
+              Call :: i64
+                Global c3 :: ref
+                Lit "br2" :: ref
+                Lit 2 :: i64
+          Let skip@34:5 :: i64
+            If :: i64
+              Call :: enum
+                Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                Call :: i64
+                  Global c3 :: ref
+                  Lit "cond2" :: ref
+                  Lit 0 :: i64
+                Lit 0 :: i64
+              Call :: i64
+                Global c3 :: ref
+                Lit "then2" :: ref
+                Lit 1 :: i64
+              Call :: i64
+                Global c3 :: ref
+                Lit "else2" :: ref
+                Lit 2 :: i64
+            Let plus@31:5 :: i64
+              Call :: i64
+                Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                Call :: i64
+                  Global c3 :: ref
+                  Lit "p1" :: ref
+                  Lit 1 :: i64
+                Call :: i64
+                  Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+                  Call :: i64
+                    Global c3 :: ref
+                    Lit "p2" :: ref
+                    Lit 2 :: i64
+                  Call :: i64
+                    Global c3 :: ref
+                    Lit "p3" :: ref
+                    Lit 3 :: i64
+              Let pipe@43:5 :: i64
+                Call :: i64
+                  Global c5 :: ref
+                  Call :: i64
+                    Global c3 :: ref
+                    Lit "pipe1" :: ref
+                    Lit 1 :: i64
+                Let oror@36:5 :: i64
+                  Call :: enum
+                    Kernel elm/core:Basics.or () :: ref
+                    Call :: enum
+                      Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                      Call :: i64
+                        Global c3 :: ref
+                        Lit "or1" :: ref
+                        Lit 1 :: i64
+                      Lit 0 :: i64
+                    Call :: enum
+                      Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                      Call :: i64
+                        Global c3 :: ref
+                        Lit "or2" :: ref
+                        Lit 1 :: i64
+                      Lit 0 :: i64
+                  Let ctor@29:5 :: i64
+                    Call :: ref
+                      Ctor Pair tag 0 (v0=i64; v1=i64; v2=i64) :: ref
+                      Call :: i64
+                        Global c3 :: ref
+                        Lit "c1" :: ref
+                        Lit 1 :: i64
+                      Call :: i64
+                        Global c3 :: ref
+                        Lit "c2" :: ref
+                        Lit 2 :: i64
+                      Call :: i64
+                        Global c3 :: ref
+                        Lit "c3" :: ref
+                        Lit 3 :: i64
+                    Let cond@33:5 :: i64
+                      If :: i64
+                        Call :: enum
+                          Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                          Call :: i64
+                            Global c3 :: ref
+                            Lit "cond" :: ref
+                            Lit 1 :: i64
+                          Lit 0 :: i64
+                        Call :: i64
+                          Global c3 :: ref
+                          Lit "then" :: ref
+                          Lit 1 :: i64
+                        Call :: i64
+                          Global c3 :: ref
+                          Lit "else" :: ref
+                          Lit 2 :: i64
+                      Let call@30:5 :: i64
+                        Call :: i64
+                          Global c6 :: ref
+                          Call :: i64
+                            Global c3 :: ref
+                            Lit "a1" :: ref
+                            Lit 1 :: i64
+                          Call :: i64
+                            Global c3 :: ref
+                            Lit "a2" :: ref
+                            Lit 2 :: i64
+                          Call :: i64
+                            Global c3 :: ref
+                            Lit "a3" :: ref
+                            Lit 3 :: i64
+                        Let tup@27:5 :: i64
+                          Tuple :: struct(i64,i64,i64)
+                            Call :: i64
+                              Global c3 :: ref
+                              Lit "tup1" :: ref
+                              Lit 1 :: i64
+                            Call :: i64
+                              Global c3 :: ref
+                              Lit "tup2" :: ref
+                              Lit 2 :: i64
+                            Call :: i64
+                              Global c3 :: ref
+                              Lit "tup3" :: ref
+                              Lit 3 :: i64
+                          Let lst@28:5 :: i64
+                            List :: ref
+                              Call :: i64
+                                Global c3 :: ref
+                                Lit "l1" :: ref
+                                Lit 1 :: i64
+                              Call :: i64
+                                Global c3 :: ref
+                                Lit "l2" :: ref
+                                Lit 2 :: i64
+                              Call :: i64
+                                Global c3 :: ref
+                                Lit "l3" :: ref
+                                Lit 3 :: i64
+                            Let lam@42:5 :: i64
+                              Call :: i64
+                                Global c7 :: ref
+                                Call :: i64
+                                  Global c3 :: ref
+                                  Lit "lam1" :: ref
+                                  Lit 1 :: i64
+                                Call :: i64
+                                  Global c3 :: ref
+                                  Lit "lam2" :: ref
+                                  Lit 2 :: i64
+                              Let r@26:5 :: i64
+                                Record a b c :: struct(i64,i64,i64)
+                                  Call :: i64
+                                    Global c3 :: ref
+                                    Lit "rec-a" :: ref
+                                    Lit 2 :: i64
+                                  Call :: i64
+                                    Global c3 :: ref
+                                    Lit "rec-b" :: ref
+                                    Lit 1 :: i64
+                                  Call :: i64
+                                    Global c3 :: ref
+                                    Lit "rec-c" :: ref
+                                    Lit 3 :: i64
+                                Let upd@37:5 :: i64
+                                  Let _up8 :: struct(i64,i64,i64)
+                                    Local r@26:5 :: struct(i64,i64,i64)
+                                    Record a b c :: struct(i64,i64,i64)
+                                      Call :: i64
+                                        Global c3 :: ref
+                                        Lit "upd-a" :: ref
+                                        Lit 9 :: i64
+                                      Call :: i64
+                                        Global c3 :: ref
+                                        Lit "upd-b" :: ref
+                                        Lit 8 :: i64
+                                      Access .c #2 :: i64
+                                        Local _up8 :: struct(i64,i64,i64)
+                                  Call :: i64
+                                    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                    Call :: i64
+                                      Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                      Call :: i64
+                                        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                        Call :: i64
+                                          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                          Call :: i64
+                                            Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                            Call :: i64
+                                              Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                              Call :: i64
+                                                Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                Call :: i64
+                                                  Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                  Call :: i64
+                                                    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                    Call :: i64
+                                                      Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                      Call :: i64
+                                                        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                        Call :: i64
+                                                          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                          Call :: i64
+                                                            Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                            Call :: i64
+                                                              Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                              Call :: i64
+                                                                Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                                Call :: i64
+                                                                  Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                                  Call :: i64
+                                                                    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                                    Call :: i64
+                                                                      Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                                                                      Access .a #0 :: i64
+                                                                        Local r@26:5 :: struct(i64,i64,i64)
+                                                                      Access .b #1 :: i64
+                                                                        Local r@26:5 :: struct(i64,i64,i64)
+                                                                    Access .c #2 :: i64
+                                                                      Local r@26:5 :: struct(i64,i64,i64)
+                                                                  Call :: i64
+                                                                    Global c9 :: ref
+                                                                    Local tup@27:5 :: struct(i64,i64,i64)
+                                                                Call :: i64
+                                                                  Global c10 :: ref
+                                                                  Local lst@28:5 :: ref
+                                                              Call :: i64
+                                                                Global c11 :: ref
+                                                                Local ctor@29:5 :: ref
+                                                            Local call@30:5 :: i64
+                                                          Local plus@31:5 :: i64
+                                                        Local cond@33:5 :: i64
+                                                      Local skip@34:5 :: i64
+                                                    If :: i64
+                                                      Local andand@35:5 :: enum
+                                                      Lit 1 :: i64
+                                                      Lit 0 :: i64
+                                                  If :: i64
+                                                    Local oror@36:5 :: enum
+                                                    Lit 1 :: i64
+                                                    Lit 0 :: i64
+                                                Access .a #0 :: i64
+                                                  Local upd@37:5 :: struct(i64,i64,i64)
+                                              Access .b #1 :: i64
+                                                Local upd@37:5 :: struct(i64,i64,i64)
+                                            Local caseE@38:5 :: i64
+                                          Local first@41:5 :: i64
+                                        Local lam@42:5 :: i64
+                                      Local pipe@43:5 :: i64
+                                    Local ignored@32:5 :: i64
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Seq :: struct(unit,unit)
+    Call :: i64
+      Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+      Lit "result" :: ref
+      Call :: i64
+        Global c2 :: ref
+        Lit () :: unit
+    Tuple :: struct(unit,unit)
+      Lit () :: unit
+      Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Evo.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

@@ -1,6 +1,7 @@
 /* Bitwise and Bitwise64 against node (test_bitwise.expected comes from gen_bitwise_test.js) */
 #include <stdio.h>
 #include <stdint.h>
+#include "fic_rt.h"
 #include "fic_base.h"
 #include "fic_num.h"
 

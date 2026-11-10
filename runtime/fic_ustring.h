@@ -35,11 +35,7 @@ static int fic_us_put(char *o, uint32_t c) {
   return 4;
 }
 
-static int64_t fic_us_length(fic_ref s) {
-  int64_t i, n = 0, len = FIC_STR(s)->len;
-  for (i = 0; i < len; i++) if (((unsigned char)FIC_STR(s)->data[i] & 0xC0u) != 0x80u) n++;
-  return n;
-}
+static int64_t fic_us_length(fic_ref s) { return FIC_STR(s)->cps; }   /* L11: cached in the header */
 
 /* JavaScript's slice rule on code point indices: negative indices count from the end, both are clamped */
 static fic_ref fic_us_slice(int64_t from, int64_t to, fic_ref s) {
@@ -66,6 +62,7 @@ static fic_ref fic_us_cons(uint32_t c, fic_ref s) {
   int64_t len = FIC_STR(s)->len;
   fic_string *r = (fic_string *)fic_alloc(sizeof(fic_string) + (size_t)(len + k) + 1, FIC_TAG_STRING, 0);
   r->len = len + k;
+  r->cps = FIC_STR(s)->cps + 1;
   memcpy(r->data, buf, (size_t)k);
   memcpy(r->data + k, FIC_STR(s)->data, (size_t)len);
   r->data[len + k] = 0;
@@ -81,6 +78,7 @@ static fic_ref fic_us_join(fic_ref sep, fic_ref list) {
   if (count > 1) total += sl * (count - 1);
   r = (fic_string *)fic_alloc(sizeof(fic_string) + (size_t)total + 1, FIC_TAG_STRING, 0);
   r->len = total;
+  r->cps = 0;
   o = r->data;
   for (p = list; p->tag != 0u; p = ((fic_us_cell *)p)->f1) {
     fic_ref x = ((fic_us_cell *)p)->f0;
@@ -88,6 +86,7 @@ static fic_ref fic_us_join(fic_ref sep, fic_ref list) {
     if (((fic_us_cell *)p)->f1->tag != 0u) { memcpy(o, FIC_STR(sep)->data, (size_t)sl); o += sl; }
   }
   *o = 0;
+  r->cps = fic_str_cps_of(r->data, total);
   return &r->h;
 }
 
@@ -98,7 +97,7 @@ static int fic_us_ws(uint32_t c) {
 }
 
 static fic_ref fic_us_cons_cell(fic_ref head, fic_ref tail) {
-  fic_us_cell *c = (fic_us_cell *)fic_alloc(sizeof(fic_us_cell), 1u, 0);
+  fic_us_cell *c = (fic_us_cell *)fic_alloc(sizeof(fic_us_cell), 1u, 2);
   c->f0 = head; c->f1 = tail;
   return &c->h;
 }
@@ -106,7 +105,7 @@ static fic_ref fic_us_cons_cell(fic_ref head, fic_ref tail) {
 /* Elm's `words`: str.trim().split(/\s+/g), so words "" and words "  " are [""] (decision L13) */
 static fic_ref fic_us_words(fic_ref s) {
   const unsigned char *d = (const unsigned char *)FIC_STR(s)->data, *end = d + FIC_STR(s)->len, *p = d, *q, *a, *b;
-  fic_ref list = (fic_ref)fic_alloc(sizeof(fic_hdr), 0u, 0);
+  fic_ref list = (fic_ref)&fic_nul0;
   int64_t n = 0, i = 0;
   const unsigned char **starts, **ends;
   uint32_t c;
@@ -248,7 +247,7 @@ static uint32_t fic_us_clower(uint32_t c) {
 }
 
 /* String.fromList: the cells of a List Char hold the code point (uint32_t) and the tail */
-typedef struct fic_us_ccell { fic_hdr h; uint32_t f0; fic_ref f1; } fic_us_ccell;
+typedef struct fic_us_ccell { fic_hdr h; fic_ref f1; uint32_t f0; } fic_us_ccell;   /* a cons cell of a List Char: the reference first */
 static fic_ref fic_us_from_list(fic_ref list) {
   int64_t total = 0;
   fic_ref p;
@@ -266,7 +265,7 @@ static fic_ref fic_us_from_list(fic_ref list) {
 
 /* ---- searching and splitting (UTF-8 byte comparison is the code point comparison; indexes count code points, L11/L22) ---- */
 
-typedef struct fic_us_icell { fic_hdr h; int64_t f0; fic_ref f1; } fic_us_icell;   /* a cons cell of a List Int */
+typedef struct fic_us_icell { fic_hdr h; fic_ref f1; int64_t f0; } fic_us_icell;   /* a cons cell of a List Int */
 
 static const char *fic_us_memmem(const char *h, int64_t hl, const char *n, int64_t nl, int64_t from) {
   int64_t i;
@@ -297,14 +296,14 @@ static int64_t fic_us_cp_index(const char *d, int64_t b) {
 static fic_ref fic_us_indexes(fic_ref sub, fic_ref s) {
   int64_t sl = FIC_STR(sub)->len, hl = FIC_STR(s)->len, n = 0, i = 0, k;
   int64_t *at;
-  fic_ref list = (fic_ref)fic_alloc(sizeof(fic_hdr), 0u, 0);
+  fic_ref list = (fic_ref)&fic_nul0;
   const char *p;
   if (sl < 1) return list;
   at = (int64_t *)malloc((size_t)(hl + 1) * sizeof(int64_t));
   if (at == NULL) abort();
   while ((p = fic_us_memmem(FIC_STR(s)->data, hl, FIC_STR(sub)->data, sl, i)) != NULL) { at[n++] = (int64_t)(p - FIC_STR(s)->data); i = at[n - 1] + sl; }
   for (k = n - 1; k >= 0; k--) {
-    fic_us_icell *c = (fic_us_icell *)fic_alloc(sizeof(fic_us_icell), 1u, 0);
+    fic_us_icell *c = (fic_us_icell *)fic_alloc(sizeof(fic_us_icell), 1u, 1);
     c->f0 = fic_us_cp_index(FIC_STR(s)->data, at[k]); c->f1 = list; list = &c->h;
   }
   free(at);
@@ -313,7 +312,7 @@ static fic_ref fic_us_indexes(fic_ref sub, fic_ref s) {
 
 /* a list of the pieces (start, length) of s in order */
 static fic_ref fic_us_pieces(fic_ref s, const int64_t *st, const int64_t *ln, int64_t n) {
-  fic_ref list = (fic_ref)fic_alloc(sizeof(fic_hdr), 0u, 0);
+  fic_ref list = (fic_ref)&fic_nul0;
   int64_t i;
   for (i = n - 1; i >= 0; i--) list = fic_us_cons_cell(fic_str_new(FIC_STR(s)->data + st[i], ln[i]), list);
   return list;
@@ -370,7 +369,7 @@ static fic_ref fic_us_reverse(fic_ref s) {
     for (k = b; k < i; k++) r->data[o++] = FIC_STR(s)->data[k];
     i = b;
   }
-  r->len = hl; r->data[hl] = 0;
+  r->len = hl; r->cps = FIC_STR(s)->cps; r->data[hl] = 0;
   return &r->h;
 }
 

@@ -11,8 +11,8 @@ Exit status 1 on any difference.
 import argparse, os, shutil, subprocess, sys, tempfile, difflib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2", "init2", "silly", "grow1", "grow2", "grow3", "lit", "dbg", "parse", "unres", "rand", "synt"]
-RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2", "init2", "silly", "grow3", "lit", "dbg", "parse", "unres", "rand", "synt"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
+NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2", "init2", "silly", "grow1", "grow2", "grow3", "lit", "dbg", "parse", "unres", "rand", "synt", "evo"]
+RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2", "init2", "silly", "grow3", "lit", "dbg", "parse", "unres", "rand", "synt", "evo"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
 
 
 CRASH = {"eqfun": "Trying to use `(==)` on functions."}      # programs that end with a run time error: exit status 1 and this text on stderr
@@ -43,6 +43,12 @@ def clone_counts(mono_text):
     return counts
 
 
+# FIC_DROP_ALL=1: build every example with -DFIC_DROP_ALL (STAGE4-PLAN S0: the layout check and the free of every object at exit);
+# FIC_CFLAGS adds other C flags (e.g. -DFIC_STATS)
+DROP_ALL = bool(os.environ.get("FIC_DROP_ALL"))
+EXTRA = (["-DFIC_DROP_ALL"] if DROP_ALL else []) + os.environ.get("FIC_CFLAGS", "").split()
+
+
 def run_c(a, dst, name, mod):
     """--output=x.c, build with gcc and clang (the flags of targets/suite.json), run, compare with expected/<name>.out"""
     env = dict(os.environ, ELM_HOME=a.elm_home)
@@ -50,7 +56,7 @@ def run_c(a, dst, name, mod):
     if p.returncode != 0:
         print("FAIL %s.c: compiler exit %d\n%s" % (name, p.returncode, (p.stdout + p.stderr).decode()[-400:])); return 1
     pre = "".join(open(os.path.join(HERE, "..", "runtime", f), encoding="utf-8").read()
-                  for f in ("fic_base.h", "fic_string.h", "fic_num.h", "fic_format.h", "fic_debug.h"))
+                  for f in ("fic_rt.h", "fic_base.h", "fic_string.h", "fic_num.h", "fic_format.h", "fic_debug.h"))
     if not open(os.path.join(dst, "x.c"), encoding="utf-8").read().startswith(pre):
         print("FAIL %s.c: the file does not start with the runtime/ files" % name); return 1
     want = open(os.path.join(HERE, "expected", name + ".out"), encoding="utf-8").read()
@@ -66,7 +72,7 @@ def run_c(a, dst, name, mod):
         if shutil.which(cc) is None: continue
         exe = os.path.join(dst, "x_" + cc)
         b = subprocess.run([cc, "-std=c99", "-pedantic", "-Wall", "-Wextra", "-Wno-unused-function", "-ffp-contract=off", "-O2",
-                            "-I", rt, os.path.join(dst, "x.c"), "-o", exe, "-lm"], capture_output=True)
+                            *EXTRA, "-I", rt, os.path.join(dst, "x.c"), "-o", exe, "-lm"], capture_output=True)
         if b.returncode != 0 or b.stderr:
             print("FAIL %s.c %s: %s" % (name, cc, b.stderr.decode()[-300:])); bad += 1; continue
         r = subprocess.run([exe], capture_output=True)
@@ -75,7 +81,9 @@ def run_c(a, dst, name, mod):
         if (r.returncode != (1 if crash else 0)) or got != want or (crash and crash not in r.stderr.decode("utf-8", "replace")):
             print("FAIL %s.c %s: exit %d, output differs" % (name, cc, r.returncode))
             sys.stdout.writelines(list(difflib.unified_diff(want.splitlines(True), got.splitlines(True), "expected", "got"))[:20]); bad += 1
-        else: print("ok   %s.c (%s)" % (name, cc))
+        elif DROP_ALL and not crash and ("FIC_DROP_ALL: " not in r.stderr.decode("utf-8", "replace") or " 0 bad, 0 live" not in r.stderr.decode("utf-8", "replace")):
+            print("FAIL %s.c %s: FIC_DROP_ALL check: %s" % (name, cc, r.stderr.decode("utf-8", "replace")[-300:])); bad += 1
+        else: print("ok   %s.c (%s)%s" % (name, cc, " " + r.stderr.decode("utf-8", "replace").strip().splitlines()[-1] if DROP_ALL and not crash else ""))
     return bad
 
 

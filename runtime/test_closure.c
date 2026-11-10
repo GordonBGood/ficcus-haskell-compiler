@@ -1,6 +1,7 @@
 /* Standalone tests of the closure runtime: calls with the right, a smaller and a larger number of arguments,
    partial applications of partial applications, every mix of scalars and references in the words.
    Build and run: runtime/test.sh */
+#include "fic_rt.h"
 #include "fic_base.h"
 #include "fic_closure.h"
 

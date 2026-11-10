@@ -1,0 +1,55 @@
+module Evo exposing (main)
+
+
+t : String -> Int -> Int
+t s n =
+  Debug.log s n
+
+
+type Shape
+  = Pair Int Int Int
+
+
+f : Int -> Int -> Int -> Int
+f a b c =
+  a + b + c
+
+
+total : Shape -> Int
+total (Pair a b c) =
+  a + b + c
+
+
+go : () -> Int
+go _ =
+  let
+    r = { b = t "rec-b" 1, a = t "rec-a" 2, c = t "rec-c" 3 }
+    tup = ( t "tup1" 1, t "tup2" 2, t "tup3" 3 )
+    lst = [ t "l1" 1, t "l2" 2, t "l3" 3 ]
+    ctor = Pair (t "c1" 1) (t "c2" 2) (t "c3" 3)
+    call = f (t "a1" 1) (t "a2" 2) (t "a3" 3)
+    plus = t "p1" 1 + t "p2" 2 * t "p3" 3
+    ignored = t "ignored-let" 1
+    cond = if t "cond" 1 > 0 then t "then" 1 else t "else" 2
+    skip = if t "cond2" 0 > 0 then t "then2" 1 else t "else2" 2
+    andand = (t "and1" 0 > 0) && (t "and2" 1 > 0)
+    oror = (t "or1" 1 > 0) || (t "or2" 1 > 0)
+    upd = { r | a = t "upd-a" 9, b = t "upd-b" 8 }
+    caseE = case t "scrut" 1 of
+              1 -> t "br1" 1
+              _ -> t "br2" 2
+    first = Tuple.first ( t "fst1" 1, t "fst2" 2 )
+    lam = (\x y -> x + y) (t "lam1" 1) (t "lam2" 2)
+    pipe = t "pipe1" 1 |> (\x -> t "pipe2" x)
+  in
+  r.a + r.b + r.c + (\(a, b, c) -> a + b + c) tup + List.sum lst + total ctor + call + plus + cond + skip
+    + (if andand then 1 else 0) + (if oror then 1 else 0) + upd.a + upd.b + caseE + first + lam + pipe + ignored
+
+
+main : Program () () ()
+main =
+  Platform.worker
+    { init = \_ -> let _ = Debug.log "result" (go ()) in ( (), Cmd.none )
+    , update = \_ m -> ( m, Cmd.none )
+    , subscriptions = \_ -> Sub.none
+    }

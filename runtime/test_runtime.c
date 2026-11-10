@@ -1,6 +1,7 @@
 /* Standalone tests of the runtime fragments (strings, Int/Float helpers, the Float formatter, Debug printers).
    The fragments have no include guards: they are one text, included in this order, as in a generated file.
    Build and run: runtime/test.sh */
+#include "fic_rt.h"
 #include "fic_base.h"
 #include "fic_string.h"
 #include "fic_num.h"

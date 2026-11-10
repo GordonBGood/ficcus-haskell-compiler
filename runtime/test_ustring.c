@@ -1,5 +1,6 @@
 /* Standalone test of fic_ustring.h against node (test_ustring.expected is made by gen_ustring_test.js). */
 #include <stdio.h>
+#include "fic_rt.h"
 #include "fic_base.h"
 #include "fic_string.h"
 #include "fic_num.h"

@@ -1,0 +1,345 @@
+-- module Evo: problems=0 instances=108 instance-failures=0 defaulted=0
+-- equality-uses: total=0 at-function=0
+module author/project:Evo
+type Shape   id: author/project:Evo.Shape   params: 0   ctors: 1   layout: normal
+  ctor Pair   id: author/project:Evo.Pair   tag: 0   arity: 3   fields: Int ;; Int ;; Int   sig: Int -> Int -> Int -> Shape   kinds: 
+def total :: Shape -> Int    [19:1-19:6]   id: author/project:Evo.total   sig: Shape -> Int   kinds:    group: author/project:Evo.total nonrec ann
+  19:8-19:18 PCtor Pair :: Shape
+    19:13-19:14 PVar a :: Int
+    19:15-19:16 PVar b :: Int
+    19:17-19:18 PVar c :: Int
+  20:3-20:12 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    20:3-20:8 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      20:3-20:4 VarLocal :: Int
+      20:7-20:8 VarLocal :: Int
+    20:11-20:12 VarLocal :: Int
+def t :: String -> Int -> Int    [5:1-5:2]   id: author/project:Evo.t   sig: String -> Int -> Int   kinds:    group: author/project:Evo.t nonrec ann
+  5:3-5:4 PVar s :: String
+  5:5-5:6 PVar n :: Int
+  6:3-6:16 Call :: Int
+    6:3-6:12 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+    6:13-6:14 VarLocal :: String
+    6:15-6:16 VarLocal :: Int
+def f :: Int -> Int -> Int -> Int    [14:1-14:2]   id: author/project:Evo.f   sig: Int -> Int -> Int -> Int   kinds:    group: author/project:Evo.f nonrec ann
+  14:3-14:4 PVar a :: Int
+  14:5-14:6 PVar b :: Int
+  14:7-14:8 PVar c :: Int
+  15:3-15:12 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    15:3-15:8 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      15:3-15:4 VarLocal :: Int
+      15:7-15:8 VarLocal :: Int
+    15:11-15:12 VarLocal :: Int
+def go :: () -> Int    [24:1-24:3]   id: author/project:Evo.go   sig: () -> Int   kinds:    group: author/project:Evo.go nonrec ann
+  24:4-24:5 PAnything :: ()
+  def ignored :: Int    [32:5-32:12]   id: author/project:Evo.ignored@32:5   sig: Int   kinds:    group: author/project:Evo.ignored@32:5 nonrec inferred
+    32:15-32:32 Call :: Int
+      32:15-32:16 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+      32:17-32:30 Str :: String
+      32:31-32:32 Int :: Int
+  def andand :: Bool    [35:5-35:11]   id: author/project:Evo.andand@35:5   sig: Bool   kinds:    group: author/project:Evo.andand@35:5 nonrec inferred
+    35:14-35:50 Binop :: Bool   callee: elm/core:Basics.and
+      35:15-35:29 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        35:15-35:25 Call :: Int
+          35:15-35:16 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+          35:17-35:23 Str :: String
+          35:24-35:25 Int :: Int
+        35:28-35:29 Int :: Int
+      35:35-35:49 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        35:35-35:45 Call :: Int
+          35:35-35:36 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+          35:37-35:43 Str :: String
+          35:44-35:45 Int :: Int
+        35:48-35:49 Int :: Int
+  def first :: Int    [41:5-41:10]   id: author/project:Evo.first@41:5   sig: Int   kinds:    group: author/project:Evo.first@41:5 nonrec inferred
+    41:13-41:51 Call :: Int
+      41:13-41:24 VarForeign :: ( Int, Int ) -> Int   callee: elm/core:Tuple.first   instance: a := Int, b := Int   sig#: ee0f5e96   subst: v0 := Int, v1 := Int
+      41:25-41:51 Pair :: ( Int, Int )
+        41:27-41:37 Call :: Int
+          41:27-41:28 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+          41:29-41:35 Str :: String
+          41:36-41:37 Int :: Int
+        41:39-41:49 Call :: Int
+          41:39-41:40 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+          41:41-41:47 Str :: String
+          41:48-41:49 Int :: Int
+  def caseE :: Int    [38:5-38:10]   id: author/project:Evo.caseE@38:5   sig: Int   kinds:    group: author/project:Evo.caseE@38:5 nonrec inferred
+    38:13-40:29 Case :: Int
+      38:18-38:29 Call :: Int
+        38:18-38:19 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        38:20-38:27 Str :: String
+        38:28-38:29 Int :: Int
+      39:15-39:16 PInt :: Int
+      39:20-39:29 Call :: Int
+        39:20-39:21 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        39:22-39:27 Str :: String
+        39:28-39:29 Int :: Int
+      40:15-40:16 PAnything :: Int
+      40:20-40:29 Call :: Int
+        40:20-40:21 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        40:22-40:27 Str :: String
+        40:28-40:29 Int :: Int
+  def skip :: Int    [34:5-34:9]   id: author/project:Evo.skip@34:5   sig: Int   kinds:    group: author/project:Evo.skip@34:5 nonrec inferred
+    34:12-34:64 If :: Int
+      34:15-34:30 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        34:15-34:26 Call :: Int
+          34:15-34:16 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+          34:17-34:24 Str :: String
+          34:25-34:26 Int :: Int
+        34:29-34:30 Int :: Int
+      34:36-34:47 Call :: Int
+        34:36-34:37 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        34:38-34:45 Str :: String
+        34:46-34:47 Int :: Int
+      34:53-34:64 Call :: Int
+        34:53-34:54 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        34:55-34:62 Str :: String
+        34:63-34:64 Int :: Int
+  def plus :: Int    [31:5-31:9]   id: author/project:Evo.plus@31:5   sig: Int   kinds:    group: author/project:Evo.plus@31:5 nonrec inferred
+    31:12-31:42 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      31:12-31:20 Call :: Int
+        31:12-31:13 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        31:14-31:18 Str :: String
+        31:19-31:20 Int :: Int
+      31:23-31:42 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        31:23-31:31 Call :: Int
+          31:23-31:24 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+          31:25-31:29 Str :: String
+          31:30-31:31 Int :: Int
+        31:34-31:42 Call :: Int
+          31:34-31:35 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+          31:36-31:40 Str :: String
+          31:41-31:42 Int :: Int
+  def pipe :: Int    [43:5-43:9]   id: author/project:Evo.pipe@43:5   sig: Int   kinds:    group: author/project:Evo.pipe@43:5 nonrec inferred
+    43:12-43:46 Binop :: Int   callee: elm/core:Basics.apR   instance: a := Int, b := Int   sig#: 742a0ff5   subst: v0 := Int, v1 := Int
+      43:12-43:23 Call :: Int
+        43:12-43:13 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        43:14-43:21 Str :: String
+        43:22-43:23 Int :: Int
+      43:28-43:45 Lambda :: Int -> Int
+        43:29-43:30 PVar x :: Int
+        43:34-43:45 Call :: Int
+          43:34-43:35 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+          43:36-43:43 Str :: String
+          43:44-43:45 VarLocal :: Int
+  def oror :: Bool    [36:5-36:9]   id: author/project:Evo.oror@36:5   sig: Bool   kinds:    group: author/project:Evo.oror@36:5 nonrec inferred
+    36:12-36:46 Binop :: Bool   callee: elm/core:Basics.or
+      36:13-36:26 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        36:13-36:22 Call :: Int
+          36:13-36:14 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+          36:15-36:20 Str :: String
+          36:21-36:22 Int :: Int
+        36:25-36:26 Int :: Int
+      36:32-36:45 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        36:32-36:41 Call :: Int
+          36:32-36:33 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+          36:34-36:39 Str :: String
+          36:40-36:41 Int :: Int
+        36:44-36:45 Int :: Int
+  def ctor :: Shape    [29:5-29:9]   id: author/project:Evo.ctor@29:5   sig: Shape   kinds:    group: author/project:Evo.ctor@29:5 nonrec inferred
+    29:12-29:48 Call :: Shape
+      29:12-29:16 VarCtor :: Int -> Int -> Int -> Shape   callee: author/project:Evo.Pair
+      29:18-29:26 Call :: Int
+        29:18-29:19 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        29:20-29:24 Str :: String
+        29:25-29:26 Int :: Int
+      29:29-29:37 Call :: Int
+        29:29-29:30 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        29:31-29:35 Str :: String
+        29:36-29:37 Int :: Int
+      29:40-29:48 Call :: Int
+        29:40-29:41 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        29:42-29:46 Str :: String
+        29:47-29:48 Int :: Int
+  def cond :: Int    [33:5-33:9]   id: author/project:Evo.cond@33:5   sig: Int   kinds:    group: author/project:Evo.cond@33:5 nonrec inferred
+    33:12-33:61 If :: Int
+      33:15-33:29 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        33:15-33:25 Call :: Int
+          33:15-33:16 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+          33:17-33:23 Str :: String
+          33:24-33:25 Int :: Int
+        33:28-33:29 Int :: Int
+      33:35-33:45 Call :: Int
+        33:35-33:36 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        33:37-33:43 Str :: String
+        33:44-33:45 Int :: Int
+      33:51-33:61 Call :: Int
+        33:51-33:52 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        33:53-33:59 Str :: String
+        33:60-33:61 Int :: Int
+  def call :: Int    [30:5-30:9]   id: author/project:Evo.call@30:5   sig: Int   kinds:    group: author/project:Evo.call@30:5 nonrec inferred
+    30:12-30:45 Call :: Int
+      30:12-30:13 VarTopLevel :: Int -> Int -> Int -> Int   callee: author/project:Evo.f   use: gen
+      30:15-30:23 Call :: Int
+        30:15-30:16 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        30:17-30:21 Str :: String
+        30:22-30:23 Int :: Int
+      30:26-30:34 Call :: Int
+        30:26-30:27 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        30:28-30:32 Str :: String
+        30:33-30:34 Int :: Int
+      30:37-30:45 Call :: Int
+        30:37-30:38 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        30:39-30:43 Str :: String
+        30:44-30:45 Int :: Int
+  def tup :: ( Int, Int, Int )    [27:5-27:8]   id: author/project:Evo.tup@27:5   sig: ( Int, Int, Int )   kinds:    group: author/project:Evo.tup@27:5 nonrec inferred
+    27:11-27:49 Triple :: ( Int, Int, Int )
+      27:13-27:23 Call :: Int
+        27:13-27:14 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        27:15-27:21 Str :: String
+        27:22-27:23 Int :: Int
+      27:25-27:35 Call :: Int
+        27:25-27:26 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        27:27-27:33 Str :: String
+        27:34-27:35 Int :: Int
+      27:37-27:47 Call :: Int
+        27:37-27:38 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        27:39-27:45 Str :: String
+        27:46-27:47 Int :: Int
+  def lst :: List Int    [28:5-28:8]   id: author/project:Evo.lst@28:5   sig: List Int   kinds:    group: author/project:Evo.lst@28:5 nonrec inferred
+    28:11-28:43 List :: List Int
+      28:13-28:21 Call :: Int
+        28:13-28:14 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        28:15-28:19 Str :: String
+        28:20-28:21 Int :: Int
+      28:23-28:31 Call :: Int
+        28:23-28:24 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        28:25-28:29 Str :: String
+        28:30-28:31 Int :: Int
+      28:33-28:41 Call :: Int
+        28:33-28:34 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        28:35-28:39 Str :: String
+        28:40-28:41 Int :: Int
+  def lam :: Int    [42:5-42:8]   id: author/project:Evo.lam@42:5   sig: Int   kinds:    group: author/project:Evo.lam@42:5 nonrec inferred
+    42:12-42:51 Call :: Int
+      42:12-42:25 Lambda :: Int -> Int -> Int
+        42:13-42:14 PVar x :: Int
+        42:15-42:16 PVar y :: Int
+        42:20-42:25 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          42:20-42:21 VarLocal :: Int
+          42:24-42:25 VarLocal :: Int
+      42:28-42:38 Call :: Int
+        42:28-42:29 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        42:30-42:36 Str :: String
+        42:37-42:38 Int :: Int
+      42:41-42:51 Call :: Int
+        42:41-42:42 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        42:43-42:49 Str :: String
+        42:50-42:51 Int :: Int
+  def r :: { a : Int, b : Int, c : Int }    [26:5-26:6]   id: author/project:Evo.r@26:5   sig: { a : Int, b : Int, c : Int }   kinds:    group: author/project:Evo.r@26:5 nonrec inferred
+    26:9-26:62 Record :: { a : Int, b : Int, c : Int }
+      26:32-26:43 Call :: Int
+        26:32-26:33 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        26:34-26:41 Str :: String
+        26:42-26:43 Int :: Int
+      26:15-26:26 Call :: Int
+        26:15-26:16 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        26:17-26:24 Str :: String
+        26:25-26:26 Int :: Int
+      26:49-26:60 Call :: Int
+        26:49-26:50 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        26:51-26:58 Str :: String
+        26:59-26:60 Int :: Int
+  def upd :: { a : Int, b : Int, c : Int }    [37:5-37:8]   id: author/project:Evo.upd@37:5   sig: { a : Int, b : Int, c : Int }   kinds:    group: author/project:Evo.upd@37:5 nonrec inferred
+    37:11-37:51 Update :: { a : Int, b : Int, c : Int }
+      37:13-37:14 VarLocal :: { a : Int, b : Int, c : Int }   callee: author/project:Evo.r@26:5   use: gen
+      37:21-37:32 Call :: Int
+        37:21-37:22 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        37:23-37:30 Str :: String
+        37:31-37:32 Int :: Int
+      37:38-37:49 Call :: Int
+        37:38-37:39 VarTopLevel :: String -> Int -> Int   callee: author/project:Evo.t   use: gen
+        37:40-37:47 Str :: String
+        37:48-37:49 Int :: Int
+  45:3-46:113 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    45:3-46:103 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      45:3-46:96 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        45:3-46:90 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          45:3-46:82 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            45:3-46:74 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+              45:3-46:66 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                45:3-46:57 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  45:3-46:31 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                    45:3-45:106 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                      45:3-45:99 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                        45:3-45:92 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                          45:3-45:85 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                            45:3-45:78 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                              45:3-45:65 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                45:3-45:50 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                  45:3-45:18 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                    45:3-45:12 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                      45:3-45:6 Access :: Int
+                                        45:3-45:4 VarLocal :: { a : Int, b : Int, c : Int }   callee: author/project:Evo.r@26:5   use: gen
+                                      45:9-45:12 Access :: Int
+                                        45:9-45:10 VarLocal :: { a : Int, b : Int, c : Int }   callee: author/project:Evo.r@26:5   use: gen
+                                    45:15-45:18 Access :: Int
+                                      45:15-45:16 VarLocal :: { a : Int, b : Int, c : Int }   callee: author/project:Evo.r@26:5   use: gen
+                                  45:22-45:50 Call :: Int
+                                    45:22-45:45 Lambda :: ( Int, Int, Int ) -> Int
+                                      45:23-45:32 PTriple :: ( Int, Int, Int )
+                                        45:24-45:25 PVar a :: Int
+                                        45:27-45:28 PVar b :: Int
+                                        45:30-45:31 PVar c :: Int
+                                      45:36-45:45 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                        45:36-45:41 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                          45:36-45:37 VarLocal :: Int
+                                          45:40-45:41 VarLocal :: Int
+                                        45:44-45:45 VarLocal :: Int
+                                    45:47-45:50 VarLocal :: ( Int, Int, Int )   callee: author/project:Evo.tup@27:5   use: gen
+                                45:53-45:65 Call :: Int
+                                  45:53-45:61 VarForeign :: List Int -> Int   callee: elm/core:List.sum   instance: number := Int   sig#: 78b59c50   subst: v0 := Int
+                                  45:62-45:65 VarLocal :: List Int   callee: author/project:Evo.lst@28:5   use: gen
+                              45:68-45:78 Call :: Int
+                                45:68-45:73 VarTopLevel :: Shape -> Int   callee: author/project:Evo.total   use: gen
+                                45:74-45:78 VarLocal :: Shape   callee: author/project:Evo.ctor@29:5   use: gen
+                            45:81-45:85 VarLocal :: Int   callee: author/project:Evo.call@30:5   use: gen
+                          45:88-45:92 VarLocal :: Int   callee: author/project:Evo.plus@31:5   use: gen
+                        45:95-45:99 VarLocal :: Int   callee: author/project:Evo.cond@33:5   use: gen
+                      45:102-45:106 VarLocal :: Int   callee: author/project:Evo.skip@34:5   use: gen
+                    46:8-46:31 If :: Int
+                      46:11-46:17 VarLocal :: Bool   callee: author/project:Evo.andand@35:5   use: gen
+                      46:23-46:24 Int :: Int
+                      46:30-46:31 Int :: Int
+                  46:36-46:57 If :: Int
+                    46:39-46:43 VarLocal :: Bool   callee: author/project:Evo.oror@36:5   use: gen
+                    46:49-46:50 Int :: Int
+                    46:56-46:57 Int :: Int
+                46:61-46:66 Access :: Int
+                  46:61-46:64 VarLocal :: { a : Int, b : Int, c : Int }   callee: author/project:Evo.upd@37:5   use: gen
+              46:69-46:74 Access :: Int
+                46:69-46:72 VarLocal :: { a : Int, b : Int, c : Int }   callee: author/project:Evo.upd@37:5   use: gen
+            46:77-46:82 VarLocal :: Int   callee: author/project:Evo.caseE@38:5   use: gen
+          46:85-46:90 VarLocal :: Int   callee: author/project:Evo.first@41:5   use: gen
+        46:93-46:96 VarLocal :: Int   callee: author/project:Evo.lam@42:5   use: gen
+      46:99-46:103 VarLocal :: Int   callee: author/project:Evo.pipe@43:5   use: gen
+    46:106-46:113 VarLocal :: Int   callee: author/project:Evo.ignored@32:5   use: gen
+def main :: Program () () ()    [50:1-50:5]   id: author/project:Evo.main   sig: Program () () ()   kinds:    group: author/project:Evo.main nonrec ann
+  51:3-55:6 Call :: Program () () ()
+    51:3-51:18 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    52:5-55:6 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      52:14-52:74 Lambda :: () -> ( (), Cmd () )
+        52:15-52:16 PAnything :: ()
+        52:24-52:25 PAnything :: Int
+        52:28-52:53 Call :: Int
+          52:28-52:37 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          52:38-52:46 Str :: String
+          52:48-52:53 Call :: Int
+            52:48-52:50 VarTopLevel :: () -> Int   callee: author/project:Evo.go   use: gen
+            52:51-52:53 Unit :: ()
+        52:58-52:74 Pair :: ( (), Cmd () )
+          52:60-52:62 Unit :: ()
+          52:64-52:72 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      53:16-53:39 Lambda :: () -> () -> ( (), Cmd () )
+        53:17-53:18 PAnything :: ()
+        53:19-53:20 PVar m :: ()
+        53:24-53:39 Pair :: ( (), Cmd () )
+          53:26-53:27 VarLocal :: ()
+          53:29-53:37 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      54:23-54:37 Lambda :: () -> Sub ()
+        54:24-54:25 PAnything :: ()
+        54:29-54:37 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Evo.total   kind: function   reads:    needs: 
+init: 1   id: author/project:Evo.t   kind: function   reads:    needs: 
+init: 2   id: author/project:Evo.f   kind: function   reads:    needs: 
+init: 3   id: author/project:Evo.go   kind: function   reads: author/project:Evo.total,author/project:Evo.t,author/project:Evo.f   needs: 
+init: 4   id: author/project:Evo.main   kind: value   reads: author/project:Evo.go   needs:    init-dep: no

@@ -1,6 +1,7 @@
 /* Standalone test of fic_jsarray.h (no closures: initialize, map, indexedMap, foldl and foldr are tested through the
    Elm examples against Elm itself). */
 #include <stdio.h>
+#include "fic_rt.h"
 #include "fic_base.h"
 #include "fic_closure.h"
 #include "fic_jsarray.h"
