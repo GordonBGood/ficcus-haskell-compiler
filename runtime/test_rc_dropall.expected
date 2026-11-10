@@ -1,0 +1,13 @@
+FIC_DROP_ALL: 3 objects checked, 0 bad, 0 live after the free
+ok list of Ints
+ok list of strings
+ok list of lists
+ok shared tails
+ok degenerate trees
+ok zigzag tree, shared DAG
+ok PAP chain
+ok vectors
+ok vector of lists
+ok wide object
+ok stack mark
+rc tests ok
