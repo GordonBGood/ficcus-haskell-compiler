@@ -62,6 +62,10 @@ data MNode
   | MRecord [(String, MExpr)]
   | MTuple [MExpr]
   | MList [MExpr]
+  -- added by the Rc pass (Ficcus.Mono.Rc, STAGE4-PLAN section 3); the specializer never makes them
+  | MDup [(String, Class)] MExpr           -- add a count to each variable (a struct: to each reference component), then the expression
+  | MDrop [(String, Class)] MExpr          -- remove a count from each variable, then the expression
+  | MOwn MExpr                             -- the expression is a borrowed value (a view into something that stays alive): add a count, the result is owned
   deriving (Show)
 
 
@@ -145,6 +149,9 @@ children (MExpr _ node) =
     MRecord fs -> map snd fs
     MTuple xs -> xs
     MList xs -> xs
+    MDup _ e -> [e]
+    MDrop _ e -> [e]
+    MOwn e -> [e]
 
 
 -- | the clones an expression refers to, in order of first occurrence

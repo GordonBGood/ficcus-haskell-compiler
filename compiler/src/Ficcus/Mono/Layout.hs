@@ -11,6 +11,7 @@ module Ficcus.Mono.Layout
   , memberOf
   , fieldStores
   , leafPaths
+  , refPaths
   )
   where
 
@@ -144,3 +145,12 @@ leafPaths c v =
   case c of
     CStruct fs -> concat [ leafPaths f (v ++ ".f" ++ show k) | (k, f) <- zip [0 :: Int ..] fs ]
     _ -> [v]
+
+
+-- the C paths of the reference leaves of the value `v` of class `c` (a struct holds one count on each of them)
+refPaths :: Class -> String -> [String]
+refPaths c v =
+  case c of
+    CStruct fs -> concat [ refPaths f (v ++ ".f" ++ show k) | (k, f) <- zip [0 :: Int ..] fs ]
+    CRef -> [v]
+    _ -> []

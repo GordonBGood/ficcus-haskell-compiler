@@ -166,6 +166,9 @@ executable elm
         Ficcus.Mono.Marks
         Ficcus.Mono.Class
         Ficcus.Mono.Layout
+        Ficcus.Mono.Free
+        Ficcus.Mono.Rc
+        Ficcus.Mono.RcCheck
         Ficcus.Mono.Ir
         Ficcus.Mono.Print
         Ficcus.Mono.Modules

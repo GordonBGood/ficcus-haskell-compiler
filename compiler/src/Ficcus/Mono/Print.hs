@@ -160,6 +160,9 @@ renderExpr depth (MExpr cls node) =
     MRecord fs -> line ("Record " ++ unwords (map fst fs)) ++ kids (map snd fs)
     MTuple xs -> line "Tuple" ++ kids xs
     MList xs -> line "List" ++ kids xs
+    MDup vs e -> line ("Dup " ++ unwords (map fst vs)) ++ kids [e]
+    MDrop vs e -> line ("Drop " ++ unwords (map fst vs)) ++ kids [e]
+    MOwn e -> line "Own" ++ kids [e]
   where
     line s = [pad depth (s ++ " :: " ++ classText cls)]
     kids = concatMap (renderExpr (depth + 1))
