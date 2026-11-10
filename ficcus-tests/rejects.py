@@ -26,6 +26,14 @@ CASES = [   # (name, body, expected: None = accepted, else a text of the error)
     ("min-ok", "x : Int\nx =\n    -9223372036854775807 - 1\n", None),
     ("surrogate-low", 'x : String\nx =\n    "a\\u{DD56}"\n', "This is a surrogate, not a character"),
     ("surrogate-high", 'x : String\nx =\n    "\\u{D800}"\n', "This is a surrogate, not a character"),
+    # syntax track E5 (underscores in numbers) and E2 (list type): the errors
+    ("us-end", "x : Int\nx =\n    1_\n", "needs a digit on both sides"),
+    ("us-before-dot", "x : Float\nx =\n    1_.5\n", "needs a digit on both sides"),
+    ("us-after-dot", "x : Float\nx =\n    1._5\n", "Numbers cannot end with a dot"),
+    ("us-hex-prefix", "x : Int\nx =\n    0x_FF\n", "WEIRD HEXIDECIMAL"),
+    ("us-leading-zero", "x : Int\nx =\n    0_1\n", "leading zeros"),
+    ("us-name", "x : Int\nx =\n    1_x\n", "needs a digit on both sides"),
+    ("list-type-open", "x : [Int\nx =\n    []\n", "closing square bracket"),
     ("near-ok", 'x : String\nx =\n    "\\u{D7FF}\\u{E000}"\n', None),
 ]
 

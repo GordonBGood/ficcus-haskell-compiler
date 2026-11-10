@@ -1,0 +1,85 @@
+module Synt exposing (main)
+
+-- Ficcus syntax additions, track E: negative literal patterns (E1), `[a]` for `List a` (E2), the built-in List reachable by a
+-- qualifier although the module declares its own List (E3), underscores in numeric literals (E5).
+
+import List
+import List as L
+
+
+type List a
+    = List a
+
+
+main : Program () Int ()
+main =
+    Platform.worker
+        { init = \_ -> ( run (), Cmd.none )
+        , update = \_ model -> ( model, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+sign : Int -> String
+sign n =
+    case n of
+        -1 ->
+            "minus one"
+
+        0 ->
+            "zero"
+
+        -2147483648 ->
+            "minus 2^31"
+
+        1 ->
+            "one"
+
+        _ ->
+            "other"
+
+
+type alias Table =
+    [ ( Int, [ String ] ) ]
+
+
+table : Table
+table =
+    [ ( 1, [ "a", "b" ] ), ( 2, [] ) ]
+
+
+total : [ Int ] -> Int
+total xs =
+    List.foldl (+) 0 xs
+
+
+viaAlias : L.List Int
+viaAlias =
+    [ 1, 2 ]
+
+
+viaModuleName : List.List Int
+viaModuleName =
+    [ 3 ]
+
+
+viaSugar : [ Int ]
+viaSugar =
+    [ 4, 5 ]
+
+
+local : List Int
+local =
+    List 5
+
+
+run : () -> Int
+run _ =
+    List.length
+        [ Debug.log "sign" (List.map sign [ -1, 0, 1, -5, -2147483648 ]) |> always ()
+        , Debug.log "table" table |> always ()
+        , Debug.log "total" (total (viaAlias ++ viaModuleName ++ viaSugar)) |> always ()
+        , Debug.log "local" local |> always ()
+        , Debug.log "int" [ 1_000_000_000, 0xFF_FF, 1_0, 2_0 + 7 ] |> always ()
+        , Debug.log "float" [ 1_000.000_1, 1e1_0, 6.022e2_3, 1_2.5e-1_0 ] |> always ()
+        ]

@@ -10,11 +10,13 @@ module Parse.Number
 
 
 import GHC.Base (UnliftedType)
+import GHC.Exts (Int(I#))
 import GHC.Exts (isTrue#)
 import GHC.Prim
 import GHC.Word (Word8(..))
 
 import qualified AST.Prim.Variable as Var
+import qualified Parse.NumberUnderscore as NU
 import qualified Elm.Float as EF
 import Parse.Primitives (Parser, Cursor, ltAddr, notLtAddr, slide)
 import qualified Parse.Primitives as P
@@ -47,11 +49,32 @@ number toExpectation toError =
             case w of
               0x30#Word8 {-0-} -> chompZero (plusAddr# pos 1#) end
               _                -> chompInt  (plusAddr# pos 1#) end (fromDecDigit w)
+
+          underscoreAt p = ltAddr p end && isUnderscore (indexWord8OffAddr# p 0#)
+
+          -- Ficcus (track E5): the scanner stopped at an underscore: read the literal again with underscores allowed
+          underscored =
+            case NU.rescan pos (I# (minusAddr# end pos)) of
+              NU.OkInt (I# n) value ->
+                do  let !np = plusAddr# pos n
+                    let !newCur = slide cur (wordToWord64# (int2Word# n))
+                    cok (Int value) (P.State np end indent newCur)
+
+              NU.OkFloat (I# n) float ->
+                do  let !np = plusAddr# pos n
+                    let !newCur = slide cur (wordToWord64# (int2Word# n))
+                    cok (Float float) (P.State np end indent newCur)
+
+              NU.Err (I# n) bad ->
+                do  let !newCur = slide cur (wordToWord64# (int2Word# n))
+                    cerr newCur (toError bad)
         in
         case outcome of
-          Err newPos problem ->
-            do  let !newCur = slide cur (wordToWord64# (int2Word# (minusAddr# newPos pos)))
-                cerr newCur (toError problem)
+          Err newPos problem
+            | underscoreAt newPos -> underscored
+            | otherwise ->
+                do  let !newCur = slide cur (wordToWord64# (int2Word# (minusAddr# newPos pos)))
+                    cerr newCur (toError problem)
 
           OkInt newPos n ->
             do  let !newCur = slide cur (wordToWord64# (int2Word# (minusAddr# newPos pos)))
@@ -59,11 +82,19 @@ number toExpectation toError =
                 let !newState = P.State newPos end indent newCur
                 cok integer newState
 
-          OkFloat newPos ->
-            do  let !newCur = slide cur (wordToWord64# (int2Word# (minusAddr# newPos pos)))
-                let !newState = P.State newPos end indent newCur
-                float <- EF.fromAddr pos newPos
-                cok (Float float) newState
+          OkFloat newPos
+            | underscoreAt newPos -> underscored
+            | otherwise ->
+                do  let !newCur = slide cur (wordToWord64# (int2Word# (minusAddr# newPos pos)))
+                    let !newState = P.State newPos end indent newCur
+                    float <- EF.fromAddr pos newPos
+                    cok (Float float) newState
+
+
+
+isUnderscore :: Word8# -> Bool
+isUnderscore w =
+  isTrue# (eqWord8# w 0x5F#Word8)
 
 
 

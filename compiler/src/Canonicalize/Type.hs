@@ -10,6 +10,8 @@ import qualified Data.List as List
 import qualified Data.Map as Map
 
 import qualified AST.Canonical as Can
+import qualified AST.ListSugar as ListSugar
+import qualified Elm.ModuleName as ModuleName
 import qualified AST.Source as Src
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
@@ -50,6 +52,9 @@ canonicalize env (A.At typeRegion tipe) =
         Result.ok (Can.TVar x)
 
     Src.TType region name args ->
+      if ListSugar.isSugar name
+      then Can.TType ModuleName.list T.list <$> traverse (canonicalize env) args   -- `[a]` (track E2)
+      else
         canonicalizeType env typeRegion name args =<<
           Env.findType region env name
 

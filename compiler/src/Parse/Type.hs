@@ -9,6 +9,7 @@ module Parse.Type
 
 import qualified String as S
 
+import qualified AST.ListSugar as ListSugar
 import qualified AST.Source as Src
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
@@ -55,6 +56,16 @@ term =
                     Space.checkIndent end E.TTupleIndentEnd
                     chompTupleEnd start tipe []
               ]
+        ,
+          -- lists: `[a]` is `List a` (Ficcus, syntax track E2)
+          inContext E.TList (word1 0x5B#Word8 {-[-} E.TStart) $
+            do  Space.chompAndCheckIndent E.TListSpace E.TListIndentType
+                (tipe, end) <- specialize E.TListType expression
+                Space.checkIndent end E.TListIndentEnd
+                word1 0x5D#Word8 {-]-} E.TListEnd
+                end2 <- getPosition
+                let region = A.region start end2
+                return $ A.At region $ Src.TType region ListSugar.sugarName [tipe]
         ,
           -- records
           inContext E.TRecord (word1 0x7B#Word8 {- { -} E.TStart) $

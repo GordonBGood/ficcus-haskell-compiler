@@ -107,10 +107,17 @@ addImport ifaces (State vs ts cs bs qvs qts qcs) (Src.Import (A.At _ name) maybe
     !prefix = case maybeAlias of { Just p -> p ; Nothing -> Module.toPrefix name }
     !home = ModuleName.Canonical pkg name
 
-    !rawTypeInfo =
+    !rawTypeInfo0 =
       Map.union
         (Map.mapMaybeWithKey (unionToType home) unions)
         (Map.mapMaybeWithKey (aliasToType home) aliases)
+
+    -- Ficcus (track E3): the built-in `List` type is reachable through the module `List` (`List.List`, `L.List`), also when
+    -- the module declares a `List` of its own, which wins for the unqualified name
+    !rawTypeInfo =
+      if home == ModuleName.list
+      then Map.insert T.list (Env.Union 1 ModuleName.list, Map.empty) rawTypeInfo0
+      else rawTypeInfo0
 
     !vars = Map.map (Env.Specific home) defs
     !types = Map.map (Env.Specific home . fst) rawTypeInfo

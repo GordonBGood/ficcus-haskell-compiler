@@ -146,6 +146,7 @@ executable elm
         AST.Prim.Name
         AST.Prim.Operator
         AST.Prim.TypeName
+        AST.ListSugar
         AST.Prim.TypeVar
         AST.Prim.Variable
         AST.Utils.Shader
@@ -196,6 +197,7 @@ executable elm
         Parse.Keyword_TH
         Parse.Module
         Parse.Number
+        Parse.NumberUnderscore
         Parse.Pattern
         Parse.Shader
         Parse.Space

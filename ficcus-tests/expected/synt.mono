@@ -1,0 +1,312 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:Synt (project)
+clone c0   def: author/project:Synt.viaModuleName   key: ()   kind: value   init: 0   needs: 
+clone c1   def: author/project:Synt.viaSugar   key: ()   kind: value   init: 1   needs: 
+clone c2   def: author/project:Synt.viaAlias   key: ()   kind: value   init: 2   needs: 
+clone c3   def: author/project:Synt.total   key: ()   kind: function   init: 3   needs: 
+clone c4   def: author/project:Synt.table   key: ()   kind: value   init: 4   needs: 
+clone c5   def: author/project:Synt.local   key: ()   kind: value   init: 5   needs: 
+clone c6   def: author/project:Synt.sign   key: ()   kind: function   init: 6   needs: 
+clone c7   def: author/project:Synt.run   key: ()   kind: function   init: 7   needs: c0,c1,c2,c4,c5
+clone c8   def: author/project:Synt.main   key: ()   kind: value   init: 8   needs: c0,c1,c2,c4,c5
+-- program: 24 clones, reachable from main, dependencies first
+clone c14   def: elm/core:List.foldl   key: (v0=unit; v1=i64)   name: foldl__unit__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: unit :: xs :: ref :: ref
+      Call :: i64
+        Global c14 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: unit
+          Local acc :: i64
+        Local xs :: ref
+clone c15   def: elm/core:List.lambda@252:10   key: ()   outer: c3 (v0=unit)   kind: function   params: _a0:unit i:i64   result: i64   lifted-from: c3
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local i :: i64
+    Lit 1 :: i64
+clone c3   def: elm/core:List.length   key: (v0=unit)   name: length__unit   kind: function   params: xs:ref   result: i64
+  Call :: i64
+    Global c14 :: ref
+    Global c15 :: ref
+    Lit 0 :: i64
+    Local xs :: ref
+clone c4   def: elm/core:Basics.always   key: (v0=unit; v1=ref)   name: always__unit__ref   kind: function   params: a:unit _a1:ref   result: unit
+  Local a :: unit
+clone c21   def: elm/core:List.foldl   key: (v0=i64; v1=ref)   name: foldl__i64__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: ref
+        Global c21 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: i64
+          Local acc :: ref
+        Local xs :: ref
+clone c23   def: elm/core:List.lambda@261:9   key: ()   outer: c22 (v0=i64)   kind: function   params: _pb23_0:i64 _pb23_1:ref   result: ref   lifted-from: c22
+  Call :: ref
+    Kernel elm/core:List.cons (v0=i64) :: ref
+    Local _pb23_0 :: i64
+    Local _pb23_1 :: ref
+clone c22   def: elm/core:List.reverse   key: (v0=i64)   name: reverse__i64   kind: function   params: list:ref   result: ref
+  Call :: ref
+    Global c21 :: ref
+    Global c23 :: ref
+    List :: ref
+    Local list :: ref
+clone c20   def: elm/core:List.foldrHelper   key: (v0=i64; v1=ref)   name: foldrHelper__i64__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
+  Case :: ref
+    Local ls :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch a :: i64 :: r1 :: ref :: ref
+      Case :: ref
+        Local r1 :: ref
+        branch [] :: ref
+          Call :: ref
+            Local fn :: ref
+            Local a :: i64
+            Local acc :: ref
+        branch b :: i64 :: r2 :: ref :: ref
+          Case :: ref
+            Local r2 :: ref
+            branch [] :: ref
+              Call :: ref
+                Local fn :: ref
+                Local a :: i64
+                Call :: ref
+                  Local fn :: ref
+                  Local b :: i64
+                  Local acc :: ref
+            branch c :: i64 :: r3 :: ref :: ref
+              Case :: ref
+                Local r3 :: ref
+                branch [] :: ref
+                  Call :: ref
+                    Local fn :: ref
+                    Local a :: i64
+                    Call :: ref
+                      Local fn :: ref
+                      Local b :: i64
+                      Call :: ref
+                        Local fn :: ref
+                        Local c :: i64
+                        Local acc :: ref
+                branch d :: i64 :: r4 :: ref :: ref
+                  Let res@200:41 :: ref
+                    If :: ref
+                      Call :: enum
+                        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                        Local ctr :: i64
+                        Lit 500 :: i64
+                      Call :: ref
+                        Global c21 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: ref
+                          Global c22 :: ref
+                          Local r4 :: ref
+                      Call :: ref
+                        Global c20 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: i64
+                          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                          Local ctr :: i64
+                          Lit 1 :: i64
+                        Local r4 :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local a :: i64
+                      Call :: ref
+                        Local fn :: ref
+                        Local b :: i64
+                        Call :: ref
+                          Local fn :: ref
+                          Local c :: i64
+                          Call :: ref
+                            Local fn :: ref
+                            Local d :: i64
+                            Local res@200:41 :: ref
+clone c16   def: elm/core:List.foldr   key: (v0=i64; v1=ref)   name: foldr__i64__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
+  Call :: ref
+    Global c20 :: ref
+    Local fn :: ref
+    Local acc :: ref
+    Lit 0 :: i64
+    Local ls :: ref
+clone c17   def: elm/core:List.lambda@125:10   key: ()   outer: c5 (v0=i64; v1=ref)   kind: function   params: x:i64 acc:ref   result: ref   lifted-from: c5
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Call :: ref
+      Local f :: ref
+      Local x :: i64
+    Local acc :: ref
+clone c5   def: elm/core:List.map   key: (v0=i64; v1=ref)   name: map__i64__ref   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Global c16 :: ref
+    Global c17 :: ref
+    List :: ref
+    Local xs :: ref
+clone c6   def: author/project:Synt.sign   key: ()   kind: function   params: n:i64   result: ref
+  Case :: ref
+    Local n :: i64
+    branch -1 :: i64
+      Lit "minus one" :: ref
+    branch 0 :: i64
+      Lit "zero" :: ref
+    branch -2147483648 :: i64
+      Lit "minus 2^31" :: ref
+    branch 1 :: i64
+      Lit "one" :: ref
+    branch _ :: i64
+      Lit "other" :: ref
+clone c7   def: author/project:Synt.table   key: ()   kind: value   params:    result: ref
+  List :: ref
+    Tuple :: struct(i64,ref)
+      Lit 1 :: i64
+      List :: ref
+        Lit "a" :: ref
+        Lit "b" :: ref
+    Tuple :: struct(i64,ref)
+      Lit 2 :: i64
+      List :: ref
+clone c8   def: elm/core:Basics.always   key: (v0=unit; v1=i64)   name: always__unit__i64   kind: function   params: a:unit _a1:i64   result: unit
+  Local a :: unit
+clone c18   def: elm/core:List.foldl   key: (v0=i64; v1=i64)   name: foldl__i64__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: i64
+        Global c18 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: i64
+          Local acc :: i64
+        Local xs :: ref
+clone c19   def: author/project:Synt.lambda@53:16   key: ()   kind: function   params: _pb19_0:i64 _pb19_1:i64   result: i64   lifted-from: c9
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local _pb19_0 :: i64
+    Local _pb19_1 :: i64
+clone c9   def: author/project:Synt.total   key: ()   kind: function   params: xs:ref   result: i64
+  Call :: i64
+    Global c18 :: ref
+    Global c19 :: ref
+    Lit 0 :: i64
+    Local xs :: ref
+clone c10   def: author/project:Synt.viaAlias   key: ()   kind: value   params:    result: ref
+  List :: ref
+    Lit 1 :: i64
+    Lit 2 :: i64
+clone c11   def: author/project:Synt.viaModuleName   key: ()   kind: value   params:    result: ref
+  List :: ref
+    Lit 3 :: i64
+clone c12   def: author/project:Synt.viaSugar   key: ()   kind: value   params:    result: ref
+  List :: ref
+    Lit 4 :: i64
+    Lit 5 :: i64
+clone c13   def: author/project:Synt.local   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Ctor List tag 0 (v0=i64) :: ref
+    Lit 5 :: i64
+clone c2   def: author/project:Synt.run   key: ()   kind: function   params: _a0:unit   result: i64
+  Call :: i64
+    Global c3 :: ref
+    List :: ref
+      Call :: unit
+        Global c4 :: ref
+        Lit () :: unit
+        Call :: ref
+          Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:String.String)) :: ref
+          Lit "sign" :: ref
+          Call :: ref
+            Global c5 :: ref
+            Global c6 :: ref
+            List :: ref
+              Call :: i64
+                Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+                Lit 1 :: i64
+              Lit 0 :: i64
+              Lit 1 :: i64
+              Call :: i64
+                Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+                Lit 5 :: i64
+              Call :: i64
+                Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+                Lit 2147483648 :: i64
+      Call :: unit
+        Global c4 :: ref
+        Lit () :: unit
+        Call :: ref
+          Kernel elm/core:Debug.log (v0=type (elm/core:List.List (elm/core:Basics.Int, (elm/core:List.List elm/core:String.String)))) :: ref
+          Lit "table" :: ref
+          Global c7 :: ref
+      Call :: unit
+        Global c8 :: ref
+        Lit () :: unit
+        Call :: i64
+          Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+          Lit "total" :: ref
+          Call :: i64
+            Global c9 :: ref
+            Call :: ref
+              Kernel elm/core:Basics.append (v0=app list i64) :: ref
+              Global c10 :: ref
+              Call :: ref
+                Kernel elm/core:Basics.append (v0=app list i64) :: ref
+                Global c11 :: ref
+                Global c12 :: ref
+      Call :: unit
+        Global c4 :: ref
+        Lit () :: unit
+        Call :: ref
+          Kernel elm/core:Debug.log (v0=type (author/project:Synt.List elm/core:Basics.Int)) :: ref
+          Lit "local" :: ref
+          Global c13 :: ref
+      Call :: unit
+        Global c4 :: ref
+        Lit () :: unit
+        Call :: ref
+          Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
+          Lit "int" :: ref
+          List :: ref
+            Lit 1000000000 :: i64
+            Lit 65535 :: i64
+            Lit 10 :: i64
+            Call :: i64
+              Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+              Lit 20 :: i64
+              Lit 7 :: i64
+      Call :: unit
+        Global c4 :: ref
+        Lit () :: unit
+        Call :: ref
+          Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:Basics.Float)) :: ref
+          Lit "float" :: ref
+          List :: ref
+            Lit 1000.0001 :: f64
+            Lit 1.0e10 :: f64
+            Lit 6.022e23 :: f64
+            Lit 1.25e-9 :: f64
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(i64,unit)   lifted-from: c0
+  Tuple :: struct(i64,unit)
+    Call :: i64
+      Global c2 :: ref
+      Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Synt.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=i64; v2=unit) :: ref
+    Global c1 :: ref

@@ -14,6 +14,7 @@ module Elm.Compiler.Type
   where
 
 
+import qualified AST.ListSugar as ListSugar
 import qualified AST.Source as Src
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
@@ -147,7 +148,7 @@ fromRawType (A.At _ astType) =
           (map fromRawType cs)
 
     Src.TType _ name args ->
-        Type name (map fromRawType args)
+        Type (ListSugar.displayName name) (map fromRawType args)
 
     Src.TTypeQual _ _ name args ->
         Type name (map fromRawType args)

@@ -13,6 +13,7 @@ module Reporting.Render.Type
   where
 
 
+import qualified AST.ListSugar as ListSugar
 import qualified AST.Source as Src
 import qualified AST.Canonical as Can
 import qualified AST.Prim.Name as N
@@ -147,7 +148,7 @@ srcToDoc context (A.At _ tipe) =
 
     Src.TType _ name args ->
       apply context
-        (D.fromType name)
+        (D.fromType (ListSugar.displayName name))
         (map (srcToDoc App) args)
 
     Src.TTypeQual _ home name args ->

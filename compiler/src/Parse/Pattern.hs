@@ -8,6 +8,7 @@ module Parse.Pattern
 
 import qualified Data.List as List
 import qualified Data.Utf8 as Utf8
+import GHC.Exts (isTrue#)
 import GHC.Prim
 
 import qualified AST.Source as Src
@@ -57,6 +58,21 @@ termHelp start =
               Var.Unqualified n -> Src.PCtor     region   n []
               Var.Qualified h n -> Src.PCtorQual region h n []
     ,
+      -- a negative literal, `-1` (Ficcus, syntax track E1): an Int pattern
+      do  negativeStart
+          number <- Number.number E.PStart E.PNumber
+          end <- getPosition
+          case number of
+            Number.Int int ->
+              return (A.at start end (Src.PInt (negate int)))
+
+            Number.Float float ->
+              P.Parser $ \_ (P.State _ _ _ cur) _ _ cerr _ ->
+                let
+                  !width = wordToWord64# (int2Word# (Utf8.size# float))
+                in
+                cerr (subWord64# cur width) (E.PFloat width)
+    ,
       do  number <- Number.number E.PStart E.PNumber
           end <- getPosition
           case number of
@@ -76,6 +92,26 @@ termHelp start =
       do  chr <- String.character E.PStart E.PChar
           addEnd start (Src.PChr chr)
     ]
+
+
+
+-- NEGATIVE LITERAL (Ficcus, syntax track E1)
+
+
+-- a minus sign directly followed by a digit; otherwise the pattern parser does not consume anything (the `-` of `->` ends
+-- a pattern list, as in `\\_ -> e`)
+negativeStart :: Parser E.Pattern ()
+negativeStart =
+  P.Parser $ \_ (P.State pos end indent cur) cok _ _ eerr ->
+    let
+      !pos1 = plusAddr# pos 1#
+    in
+    if ltAddr pos1 end
+       && not (neIndex pos 0# 0x2D#Word8 {---})
+       && isTrue# (geWord8# (indexWord8OffAddr# pos 1#) 0x30#Word8)
+       && isTrue# (leWord8# (indexWord8OffAddr# pos 1#) 0x39#Word8)
+    then cok () (P.State pos1 end indent (slide cur 1#Word64))
+    else eerr cur E.PStart
 
 
 

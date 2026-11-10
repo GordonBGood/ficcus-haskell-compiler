@@ -1,0 +1,6 @@
+sign: ["minus one","zero","one","other","minus 2^31"]
+table: [(1,["a","b"]),(2,[])]
+total: 15
+local: List 5
+int: [1000000000,65535,10,27]
+float: [1000.0001,10000000000,6.022e+23,1.25e-9]

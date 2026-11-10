@@ -32,6 +32,7 @@ module Reporting.Error.Syntax
   , Type(..)
   , TRecord(..)
   , TTuple(..)
+  , TList(..)
   --
   , Char(..)
   , String(..)
@@ -412,6 +413,7 @@ data PList
 data Type
   = TRecord TRecord Cursor
   | TTuple TTuple Cursor
+  | TList TList Cursor
   --
   | TStart Cursor
   | TSpace Space Cursor
@@ -434,6 +436,15 @@ data TRecord
   | TRecordIndentColon Cursor
   | TRecordIndentType Cursor
   | TRecordIndentEnd Cursor
+
+
+data TList
+  = TListEnd Cursor
+  | TListType Type Cursor
+  | TListSpace Space Cursor
+  --
+  | TListIndentType Cursor
+  | TListIndentEnd Cursor
 
 
 data TTuple
@@ -475,6 +486,7 @@ data Escape
 
 data Number
   = NumberEnd
+  | NumberUnderscore
   | NumberDot Integer
   | NumberHexDigit
   | NumberNoLeadingZero
@@ -2990,6 +3002,23 @@ toNumberReport source number cur =
               ]
           )
 
+    NumberUnderscore ->
+      Report.Report "WEIRD NUMBER" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "I thought I was reading a number, but I ran into an underscore in the wrong place:"
+          ,
+            D.stack
+              [ D.reflow $
+                  "An underscore can separate the digits of a number to make it easier to read,\
+                  \ but it needs a digit on both sides. These are fine:"
+              , D.indent 4 $ D.vcat [ "1_000_000", "0xFF_FF", "3.141_592", "6.022e2_3" ]
+              , D.reflow $
+                  "Not at the start or the end of the digits, and not next to a dot, an e or the 0x."
+              ]
+          )
+
     NumberDot int ->
       Report.Report "WEIRD NUMBER" region [] $
         Code.toSnippet source region Nothing
@@ -5387,6 +5416,9 @@ toTypeReport source context tipe startCur =
     TTuple tuple cur ->
       toTTupleReport source context tuple cur
 
+    TList list cur ->
+      toTListReport source context list cur
+
     TStart cur ->
       case Code.whatIsNext source cur of
         Code.Keyword keyword ->
@@ -5787,6 +5819,67 @@ noteForRecordTypeIndentError =
         "Notice that each line starts with some indentation. Usually two or four spaces.\
         \ This is the stylistic convention in the Elm ecosystem."
     ]
+
+
+toTListReport :: Code.Source -> TContext -> TList -> Cursor -> Report.Report
+toTListReport source context list startCur =
+  case list of
+    TListEnd cur ->
+      let
+        surroundings = A.Region startCur cur
+        region = toRegion cur
+      in
+      Report.Report "UNFINISHED LIST TYPE" region [] $
+        Code.toSnippet source surroundings (Just region)
+          (
+            D.reflow $
+              "I was expecting to see a closing square bracket next, but I got stuck here:"
+          ,
+            D.fillSep
+              ["A","list","type","looks","like",D.dullyellow "[Int]","or",D.dullyellow "[(String,Int)]" <> ",","and","means"
+              ,"the","same","as",D.dullyellow "List Int" <> "."
+              ]
+          )
+
+    TListType tipe cur ->
+      toTypeReport source context tipe cur
+
+    TListSpace space cur ->
+      toSpaceReport source space cur
+
+    TListIndentType cur ->
+      let
+        surroundings = A.Region startCur cur
+        region = toRegion cur
+      in
+      Report.Report "UNFINISHED LIST TYPE" region [] $
+        Code.toSnippet source surroundings (Just region)
+          (
+            D.reflow $
+              "I just saw an open square bracket, so I was expecting to see a type next."
+          ,
+            D.fillSep
+              ["Something","like",D.dullyellow "[Int]","or",D.dullyellow "[Person]" <> "."
+              ,"I","can","get","confused","by","indentation:","maybe","the","type","is","not","indented","enough?"
+              ]
+          )
+
+    TListIndentEnd cur ->
+      let
+        surroundings = A.Region startCur cur
+        region = toRegion cur
+      in
+      Report.Report "UNFINISHED LIST TYPE" region [] $
+        Code.toSnippet source surroundings (Just region)
+          (
+            D.reflow $
+              "I was expecting to see a closing square bracket next, but I got stuck here:"
+          ,
+            D.fillSep
+              ["Try","adding","a",D.dullyellow "]","to","see","if","that","helps?"
+              ,"It","may","also","be","that","the","bracket","is","not","indented","enough."
+              ]
+          )
 
 
 toTTupleReport :: Code.Source -> TContext -> TTuple -> Cursor -> Report.Report

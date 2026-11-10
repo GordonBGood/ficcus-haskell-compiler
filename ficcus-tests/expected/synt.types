@@ -1,0 +1,160 @@
+-- module Synt: problems=0 instances=38 instance-failures=0 defaulted=11
+-- equality-uses: total=0 at-function=0
+module author/project:Synt
+type List   id: author/project:Synt.List   params: 1   ctors: 1   layout: unbox
+  ctor List   id: author/project:Synt.List   tag: 0   arity: 1   fields: v0   sig: v0 -> List v0   kinds: v0:any
+def viaModuleName :: List Int    [62:1-62:14]   id: author/project:Synt.viaModuleName   sig: List Int   kinds:    group: author/project:Synt.viaModuleName nonrec ann
+  63:5-63:10 List :: List Int
+    63:7-63:8 Int :: Int
+def viaSugar :: List Int    [67:1-67:9]   id: author/project:Synt.viaSugar   sig: List Int   kinds:    group: author/project:Synt.viaSugar nonrec ann
+  68:5-68:13 List :: List Int
+    68:7-68:8 Int :: Int
+    68:10-68:11 Int :: Int
+def viaAlias :: List Int    [57:1-57:9]   id: author/project:Synt.viaAlias   sig: List Int   kinds:    group: author/project:Synt.viaAlias nonrec ann
+  58:5-58:13 List :: List Int
+    58:7-58:8 Int :: Int
+    58:10-58:11 Int :: Int
+def total :: List Int -> Int    [52:1-52:6]   id: author/project:Synt.total   sig: List Int -> Int   kinds:    group: author/project:Synt.total nonrec ann
+  52:7-52:9 PVar xs :: List Int
+  53:5-53:24 Call :: Int
+    53:5-53:15 VarForeign :: (Int -> Int -> Int) -> Int -> List Int -> Int   callee: elm/core:List.foldl   instance: a := Int, b := Int   sig#: 8a8782c6   subst: v0 := Int, v1 := Int
+    53:16-53:19 VarOperator :: Int -> Int -> Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    53:20-53:21 Int :: Int
+    53:22-53:24 VarLocal :: List Int
+def table :: Table    [47:1-47:6]   id: author/project:Synt.table   sig: Table   kinds:    group: author/project:Synt.table nonrec ann
+  48:5-48:39 List :: Table
+    48:7-48:26 Pair :: ( Int, List String )
+      48:9-48:10 Int :: Int
+      48:12-48:24 List :: List String
+        48:14-48:17 Str :: String
+        48:19-48:22 Str :: String
+    48:28-48:37 Pair :: ( Int, List String )
+      48:30-48:31 Int :: Int
+      48:33-48:35 List :: List String
+def local :: List Int    [72:1-72:6]   id: author/project:Synt.local   sig: List Int   kinds:    group: author/project:Synt.local nonrec ann
+  73:5-73:11 Call :: List Int
+    73:5-73:9 VarCtor :: Int -> List Int   callee: author/project:Synt.List   instance: a := Int   sig#: cb26b68a   subst: v0 := Int
+    73:10-73:11 Int :: Int
+def sign :: Int -> String    [24:1-24:5]   id: author/project:Synt.sign   sig: Int -> String   kinds:    group: author/project:Synt.sign nonrec ann
+  24:6-24:7 PVar n :: Int
+  25:5-39:20 Case :: String
+    25:10-25:11 VarLocal :: Int
+    26:9-26:11 PInt :: Int
+    27:13-27:24 Str :: String
+    29:9-29:10 PInt :: Int
+    30:13-30:19 Str :: String
+    32:9-32:20 PInt :: Int
+    33:13-33:25 Str :: String
+    35:9-35:10 PInt :: Int
+    36:13-36:18 Str :: String
+    38:9-38:10 PAnything :: Int
+    39:13-39:20 Str :: String
+def run :: () -> Int    [77:1-77:4]   id: author/project:Synt.run   sig: () -> Int   kinds:    group: author/project:Synt.run nonrec ann
+  77:5-77:6 PAnything :: ()
+  78:5-85:10 Call :: Int
+    78:5-78:16 VarForeign :: List () -> Int   callee: elm/core:List.length   instance: a := ()   sig#: 8f686fa0   subst: v0 := ()
+    79:9-85:10 List :: List ()
+      79:11-79:86 Binop :: ()   callee: elm/core:Basics.apR   instance: a := List String, b := ()   sig#: 742a0ff5   subst: v0 := List String, v1 := ()
+        79:11-79:72 Call :: List String
+          79:11-79:20 VarDebug :: String -> List String -> List String   callee: elm/core:Debug.log   instance: a := List String   sig#: 6ecaa5dd   subst: v0 := List String
+          79:21-79:27 Str :: String
+          79:29-79:72 Call :: List String
+            79:29-79:37 VarForeign :: (Int -> String) -> List Int -> List String   callee: elm/core:List.map   instance: a := Int, b := String   sig#: 6a702f63   subst: v0 := Int, v1 := String
+            79:38-79:42 VarTopLevel :: Int -> String   callee: author/project:Synt.sign   use: gen
+            79:43-79:72 List :: List Int
+              79:45-79:47 Negate :: Int
+                79:46-79:47 Int :: Int
+              79:49-79:50 Int :: Int
+              79:52-79:53 Int :: Int
+              79:55-79:57 Negate :: Int
+                79:56-79:57 Int :: Int
+              79:59-79:70 Negate :: Int
+                79:60-79:70 Int :: Int
+        79:77-79:86 Call :: List String -> ()
+          79:77-79:83 VarForeign :: () -> List String -> ()   callee: elm/core:Basics.always   instance: a := (), b := List String   sig#: 557b498d   subst: v0 := (), v1 := List String
+          79:84-79:86 Unit :: ()
+      80:11-80:47 Binop :: ()   callee: elm/core:Basics.apR   instance: a := List ( Int, List String ), b := ()   sig#: 742a0ff5   subst: v0 := List ( Int, List String ), v1 := ()
+        80:11-80:34 Call :: Table
+          80:11-80:20 VarDebug :: String -> Table -> Table   callee: elm/core:Debug.log   instance: a := List ( Int, List String )   sig#: 6ecaa5dd   subst: v0 := List ( Int, List String )
+          80:21-80:28 Str :: String
+          80:29-80:34 VarTopLevel :: Table   callee: author/project:Synt.table   use: gen
+        80:38-80:47 Call :: Table -> ()
+          80:38-80:44 VarForeign :: () -> Table -> ()   callee: elm/core:Basics.always   instance: a := (), b := List ( Int, List String )   sig#: 557b498d   subst: v0 := (), v1 := List ( Int, List String )
+          80:45-80:47 Unit :: ()
+      81:11-81:89 Binop :: ()   callee: elm/core:Basics.apR   instance: a := Int, b := ()   sig#: 742a0ff5   subst: v0 := Int, v1 := ()
+        81:11-81:74 Call :: Int
+          81:11-81:20 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          81:21-81:28 Str :: String
+          81:30-81:74 Call :: Int
+            81:30-81:35 VarTopLevel :: List Int -> Int   callee: author/project:Synt.total   use: gen
+            81:37-81:74 Binop :: List Int   callee: elm/core:Basics.append   instance: appendable := List Int   sig#: 08810ccc   subst: v0 := List Int
+              81:37-81:45 VarTopLevel :: List Int   callee: author/project:Synt.viaAlias   use: gen
+              81:49-81:74 Binop :: List Int   callee: elm/core:Basics.append   instance: appendable := List Int   sig#: 08810ccc   subst: v0 := List Int
+                81:49-81:62 VarTopLevel :: List Int   callee: author/project:Synt.viaModuleName   use: gen
+                81:66-81:74 VarTopLevel :: List Int   callee: author/project:Synt.viaSugar   use: gen
+        81:80-81:89 Call :: Int -> ()
+          81:80-81:86 VarForeign :: () -> Int -> ()   callee: elm/core:Basics.always   instance: a := (), b := Int   sig#: 557b498d   subst: v0 := (), v1 := Int
+          81:87-81:89 Unit :: ()
+      82:11-82:47 Binop :: ()   callee: elm/core:Basics.apR   instance: a := List Int, b := ()   sig#: 742a0ff5   subst: v0 := List Int, v1 := ()
+        82:11-82:34 Call :: List Int
+          82:11-82:20 VarDebug :: String -> List Int -> List Int   callee: elm/core:Debug.log   instance: a := List Int   sig#: 6ecaa5dd   subst: v0 := List Int
+          82:21-82:28 Str :: String
+          82:29-82:34 VarTopLevel :: List Int   callee: author/project:Synt.local   use: gen
+        82:38-82:47 Call :: List Int -> ()
+          82:38-82:44 VarForeign :: () -> List Int -> ()   callee: elm/core:Basics.always   instance: a := (), b := List Int   sig#: 557b498d   subst: v0 := (), v1 := List Int
+          82:45-82:47 Unit :: ()
+      83:11-83:80 Binop :: ()   callee: elm/core:Basics.apR   instance: a := List Int (defaulted), b := ()   sig#: 742a0ff5   subst: v0 := List Int, v1 := ()
+        83:11-83:67 Call :: List Int   <= List number
+          83:11-83:20 VarDebug :: String -> List Int -> List Int   <= String -> List number -> List number   callee: elm/core:Debug.log   instance: a := List Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := List Int
+          83:21-83:26 Str :: String
+          83:27-83:67 List :: List Int   <= List number
+            83:29-83:42 Int :: Int   <= number
+            83:44-83:51 Int :: Int   <= number
+            83:53-83:56 Int :: Int   <= number
+            83:58-83:65 Binop :: Int   <= number   callee: elm/core:Basics.add   instance: number := Int (defaulted)   sig#: 08810ccc   subst: v0 := Int
+              83:58-83:61 Int :: Int   <= number
+              83:64-83:65 Int :: Int   <= number
+        83:71-83:80 Call :: List Int -> ()   <= List number -> ()
+          83:71-83:77 VarForeign :: () -> List Int -> ()   <= () -> List number -> ()   callee: elm/core:Basics.always   instance: a := (), b := List Int (defaulted)   sig#: 557b498d   subst: v0 := (), v1 := List Int
+          83:78-83:80 Unit :: ()
+      84:11-84:87 Binop :: ()   callee: elm/core:Basics.apR   instance: a := List Float, b := ()   sig#: 742a0ff5   subst: v0 := List Float, v1 := ()
+        84:11-84:74 Call :: List Float
+          84:11-84:20 VarDebug :: String -> List Float -> List Float   callee: elm/core:Debug.log   instance: a := List Float   sig#: 6ecaa5dd   subst: v0 := List Float
+          84:21-84:28 Str :: String
+          84:29-84:74 List :: List Float
+            84:31-84:42 Float :: Float
+            84:44-84:49 Float :: Float
+            84:51-84:60 Float :: Float
+            84:62-84:72 Float :: Float
+        84:78-84:87 Call :: List Float -> ()
+          84:78-84:84 VarForeign :: () -> List Float -> ()   callee: elm/core:Basics.always   instance: a := (), b := List Float   sig#: 557b498d   subst: v0 := (), v1 := List Float
+          84:85-84:87 Unit :: ()
+def main :: Program () Int ()    [15:1-15:5]   id: author/project:Synt.main   sig: Program () Int ()   kinds:    group: author/project:Synt.main nonrec ann
+  16:5-20:10 Call :: Program () Int ()
+    16:5-16:20 VarForeign :: { init : () -> ( Int, Cmd () ), update : () -> Int -> ( Int, Cmd () ), subscriptions : Int -> Sub () } -> Program () Int ()   callee: elm/core:Platform.worker   instance: flags := (), model := Int, msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := Int, v2 := ()
+    17:9-20:10 Record :: { init : () -> ( Int, Cmd () ), update : () -> Int -> ( Int, Cmd () ), subscriptions : Int -> Sub () }
+      17:18-17:44 Lambda :: () -> ( Int, Cmd () )
+        17:19-17:20 PAnything :: ()
+        17:24-17:44 Pair :: ( Int, Cmd () )
+          17:26-17:32 Call :: Int
+            17:26-17:29 VarTopLevel :: () -> Int   callee: author/project:Synt.run   use: gen
+            17:30-17:32 Unit :: ()
+          17:34-17:42 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      18:20-18:51 Lambda :: () -> Int -> ( Int, Cmd () )
+        18:21-18:22 PAnything :: ()
+        18:23-18:28 PVar model :: Int
+        18:32-18:51 Pair :: ( Int, Cmd () )
+          18:34-18:39 VarLocal :: Int
+          18:41-18:49 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      19:27-19:41 Lambda :: Int -> Sub ()
+        19:28-19:29 PAnything :: Int
+        19:33-19:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Synt.viaModuleName   kind: value   reads:    needs:    init-dep: no
+init: 1   id: author/project:Synt.viaSugar   kind: value   reads:    needs:    init-dep: no
+init: 2   id: author/project:Synt.viaAlias   kind: value   reads:    needs:    init-dep: no
+init: 3   id: author/project:Synt.total   kind: function   reads:    needs: 
+init: 4   id: author/project:Synt.table   kind: value   reads:    needs:    init-dep: no
+init: 5   id: author/project:Synt.local   kind: value   reads:    needs:    init-dep: no
+init: 6   id: author/project:Synt.sign   kind: function   reads:    needs: 
+init: 7   id: author/project:Synt.run   kind: function   reads: author/project:Synt.viaModuleName,author/project:Synt.viaSugar,author/project:Synt.viaAlias,author/project:Synt.total,author/project:Synt.table,author/project:Synt.local,author/project:Synt.sign   needs: author/project:Synt.viaModuleName,author/project:Synt.viaSugar,author/project:Synt.viaAlias,author/project:Synt.table,author/project:Synt.local
+init: 8   id: author/project:Synt.main   kind: value   reads: author/project:Synt.run   needs: author/project:Synt.viaModuleName,author/project:Synt.viaSugar,author/project:Synt.viaAlias,author/project:Synt.table,author/project:Synt.local   init-dep: yes
