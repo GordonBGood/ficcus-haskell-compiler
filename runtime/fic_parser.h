@@ -8,12 +8,29 @@ static fic_ref fic_pk_s;                  /* the string of the cache */
 static int64_t fic_pk_cp, fic_pk_b;       /* a code point index of it and its byte offset */
 static int64_t fic_pk_len = -1;           /* the number of code points of the cached string (-1: not known) */
 
+/* the cache holds a count on its string in a counted program (a string freed and another allocated at the same address must not be
+   mistaken for the cached one); fic_pk_release gives it back at the end of the program (test builds) */
+static void fic_pk_use(fic_ref s) {
+  if (s != fic_pk_s) {
+#ifdef FIC_RC
+    fic_dup(s);
+    if (fic_pk_s != NULL) fic_drop(fic_pk_s);
+#endif
+    fic_pk_s = s; fic_pk_cp = 0; fic_pk_b = 0; fic_pk_len = -1;
+  }
+}
+static void fic_pk_release(void) {
+#ifdef FIC_RC
+  if (fic_pk_s != NULL) { fic_drop(fic_pk_s); fic_pk_s = NULL; }
+#endif
+}
+
 /* the byte offset of the code point `cp` of s (the length of s when cp is the number of code points), or -1 beyond the end */
 static int64_t fic_pk_off(fic_ref s, int64_t cp) {
   const unsigned char *d = (const unsigned char *)FIC_STR(s)->data;
   int64_t n = FIC_STR(s)->len, i, b;
   if (cp < 0) return -1;
-  if (s != fic_pk_s) { fic_pk_s = s; fic_pk_cp = 0; fic_pk_b = 0; fic_pk_len = -1; }
+  fic_pk_use(s);
   if (cp < fic_pk_cp) { fic_pk_cp = 0; fic_pk_b = 0; }
   i = fic_pk_cp; b = fic_pk_b;
   while (i < cp) {
@@ -27,7 +44,7 @@ static int64_t fic_pk_off(fic_ref s, int64_t cp) {
 }
 
 static int64_t fic_pk_len_of(fic_ref s) {
-  if (s != fic_pk_s) { fic_pk_s = s; fic_pk_cp = 0; fic_pk_b = 0; fic_pk_len = -1; }
+  fic_pk_use(s);
   if (fic_pk_len < 0) fic_pk_len = fic_us_length(s);
   return fic_pk_len;
 }

@@ -49,9 +49,9 @@ static void fic_sb_putn(fic_sb *b, const char *s, int64_t k) {
 static void fic_sb_puts(fic_sb *b, const char *s) { fic_sb_putn(b, s, (int64_t)strlen(s)); }
 static fic_ref fic_sb_str(fic_sb *b) { fic_ref r = fic_str_new(b->p, b->n); free(b->p); b->p = NULL; return r; }
 
-static void fic_sb_int(fic_sb *b, int64_t v) { fic_ref s = fic_str_from_int(v); fic_sb_putn(b, FIC_STR(s)->data, FIC_STR(s)->len); }
-static void fic_sb_float(fic_sb *b, double v) { fic_ref s = fic_str_from_float(v); fic_sb_putn(b, FIC_STR(s)->data, FIC_STR(s)->len); }
-static void fic_sb_string(fic_sb *b, fic_ref s) { fic_ref q = fic_show_string(s); fic_sb_putn(b, FIC_STR(q)->data, FIC_STR(q)->len); }
+static void fic_sb_int(fic_sb *b, int64_t v) { fic_ref s = fic_str_from_int(v); fic_sb_putn(b, FIC_STR(s)->data, FIC_STR(s)->len); FIC_RC_DROP(s); }
+static void fic_sb_float(fic_sb *b, double v) { fic_ref s = fic_str_from_float(v); fic_sb_putn(b, FIC_STR(s)->data, FIC_STR(s)->len); FIC_RC_DROP(s); }
+static void fic_sb_string(fic_sb *b, fic_ref s) { fic_ref q = fic_show_string(s); fic_sb_putn(b, FIC_STR(q)->data, FIC_STR(q)->len); FIC_RC_DROP(q); }
 
 /* a Char: 'x' with the escapes of Elm's addSlashes (backslash, \n \t \r \v \0 and the single quote) */
 static void fic_sb_char(fic_sb *b, uint32_t c) {

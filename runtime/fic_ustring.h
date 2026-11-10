@@ -105,7 +105,7 @@ static fic_ref fic_us_cons_cell(fic_ref head, fic_ref tail) {
 /* Elm's `words`: str.trim().split(/\s+/g), so words "" and words "  " are [""] (decision L13) */
 static fic_ref fic_us_words(fic_ref s) {
   const unsigned char *d = (const unsigned char *)FIC_STR(s)->data, *end = d + FIC_STR(s)->len, *p = d, *q, *a, *b;
-  fic_ref list = (fic_ref)&fic_nul0;
+  fic_ref list = fic_nil();
   int64_t n = 0, i = 0;
   const unsigned char **starts, **ends;
   uint32_t c;
@@ -296,7 +296,7 @@ static int64_t fic_us_cp_index(const char *d, int64_t b) {
 static fic_ref fic_us_indexes(fic_ref sub, fic_ref s) {
   int64_t sl = FIC_STR(sub)->len, hl = FIC_STR(s)->len, n = 0, i = 0, k;
   int64_t *at;
-  fic_ref list = (fic_ref)&fic_nul0;
+  fic_ref list = fic_nil();
   const char *p;
   if (sl < 1) return list;
   at = (int64_t *)malloc((size_t)(hl + 1) * sizeof(int64_t));
@@ -312,7 +312,7 @@ static fic_ref fic_us_indexes(fic_ref sub, fic_ref s) {
 
 /* a list of the pieces (start, length) of s in order */
 static fic_ref fic_us_pieces(fic_ref s, const int64_t *st, const int64_t *ln, int64_t n) {
-  fic_ref list = (fic_ref)&fic_nul0;
+  fic_ref list = fic_nil();
   int64_t i;
   for (i = n - 1; i >= 0; i--) list = fic_us_cons_cell(fic_str_new(FIC_STR(s)->data + st[i], ln[i]), list);
   return list;

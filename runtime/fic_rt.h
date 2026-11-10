@@ -240,6 +240,18 @@ static inline void fic_free_shell(fic_ref p) { fic_free_obj(p); }
 
 /* Kernel macros (STAGE4-PLAN section 8). FIC_DUP and FIC_DROP count; FIC_MOVE documents that ownership of x passes on
    (no code); FIC_CHECK_UNIQUE(x) is x, and under FIC_CHECK aborts when x is shared. */
+/* The kernels of the runtime (fic_closure.h, fic_jsarray.h, ...) follow the ownership convention of STAGE4-PLAN section 8 only in a
+   counted program (-DFIC_RC, which the generator defines for `--rc`): without counts nothing may be freed, because a value can be held
+   by several owners that do not count. FIC_RC_DUP/FIC_RC_DROP are the counts a kernel adds for itself. */
+#ifdef FIC_RC
+#  define FIC_RC_DUP(x)  ((void)fic_dup(x))
+#  define FIC_RC_DROP(x) fic_drop(x)
+#else
+#  define FIC_RC_DUP(x)  ((void)0)
+#  define FIC_RC_DROP(x) ((void)0)
+#endif
+/* an owned reference to the empty list (a kernel that builds a list ends it with this) */
+static inline fic_ref fic_nil(void) { FIC_RC_DUP((fic_ref)&fic_nul0); return (fic_ref)&fic_nul0; }
 #define FIC_DUP(x)  fic_dup(x)
 #define FIC_DROP(x) fic_drop(x)
 #define FIC_MOVE(x) (x)
@@ -378,6 +390,9 @@ static int fic_shutdown(void) {
 #ifdef FIC_STATS
   fprintf(stderr, "FIC_STATS: allocs %zu live %zu peak %zu dup %zu drop %zu free_slow %zu reuse_hit %zu reuse_miss %zu\n",
           fic_total_allocs, fic_live_objects, fic_peak_live, fic_n_dup, fic_n_drop, fic_n_free_slow, fic_n_reuse_hit, fic_n_reuse_miss);
+#ifdef FIC_RC
+  if (fic_live_objects != 0) bad = 1;          /* a counted program must have freed everything by now (the globals are dropped first) */
+#endif
 #endif
   free(fic_dstack); fic_dstack = NULL; fic_dtop = fic_dcap = 0;
   return bad;
