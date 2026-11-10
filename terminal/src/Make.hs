@@ -18,6 +18,7 @@ import qualified Data.List as List
 import qualified Data.Maybe as Maybe
 import qualified Data.NonEmptyList as NE
 import qualified System.Directory as Dir
+import qualified System.Environment
 import qualified System.FilePath as FP
 
 import qualified AST.Optimized as Opt
@@ -31,6 +32,8 @@ import qualified Ficcus.Mono.Marks as Marks
 import qualified Ficcus.Mono.Modules as Modules
 import qualified Ficcus.Mono.Overlay as Overlay
 import qualified Ficcus.Mono.Print as Print
+import qualified Ficcus.Mono.Rc as Rc
+import qualified Ficcus.Mono.RcCheck as RcCheck
 import qualified Ficcus.Mono.Spec as Spec
 import qualified File
 import qualified Generate
@@ -41,6 +44,10 @@ import qualified Reporting.Task as Task
 import qualified Root as R
 import Terminal (Parser(..))
 
+
+
+readMaybeInt :: String -> Maybe Int
+readMaybeInt s = case reads s of { [(k, "")] -> Just k; _ -> Nothing }
 
 
 -- Ficcus: report problems of the specializer or the C generator and stop
@@ -62,6 +69,7 @@ data Flags =
     , _output :: Maybe Output
     , _report :: Maybe ReportType
     , _docs :: Maybe FilePath
+    , _rc :: Bool                -- Ficcus: --output=x.c with reference counting (stage iv, `--rc`)
     }
 
 
@@ -87,7 +95,7 @@ type Task a = Task.Task Exit.Make a
 
 
 run :: [FilePath] -> Flags -> IO ()
-run paths flags@(Flags _ _ _ report _) =
+run paths flags@(Flags _ _ _ report _ _) =
   do  style <- getStyle report
       maybeRoot <- R.findRoot
       Reporting.attemptWithStyle style Exit.makeToReport $
@@ -97,7 +105,7 @@ run paths flags@(Flags _ _ _ report _) =
 
 
 runHelp :: R.Root -> [FilePath] -> Reporting.Style -> Flags -> IO (Either Exit.Make ())
-runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs) =
+runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcMode) =
   R.withRootLock root $ \writer stuff ->
   Task.run $
   do  desiredMode <- getMode debug optimize
@@ -167,10 +175,20 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs) =
                       case Spec.specialize mods (Marks.compute facts) of
                         Nothing -> failWith ["no `main` in the project"]
                         Just (Left errs) -> failWith errs
-                        Just (Right program) ->
-                          case CGen.generate program of
+                        Just (Right program) -> do
+                          -- with `--rc`: the Rc pass, then its independent checker, then the generator with counts
+                          -- FICCUS_RC_MUTATE=n (tests of the checker): remove the n-th dup/drop the pass inserted, then check
+                          mutation <- Task.io (System.Environment.lookupEnv "FICCUS_RC_MUTATE")
+                          let mutated prog = case mutation >>= readMaybeInt of
+                                               Nothing -> Right prog
+                                               Just k -> maybe (Left ["FICCUS_RC_MUTATE: there is no dup or drop number " ++ show k]) Right (Rc.rcMutate k prog)
+                          let counted = if rcMode then Rc.rcProgram program >>= mutated >>= \counted0 -> (case RcCheck.rcCheck counted0 of { [] -> Right counted0; errs -> Left errs }) else Right program
+                          case counted of
                             Left errs -> failWith errs
-                            Right text -> generate writer style target (B.stringUtf8 text) (Build.getRootNames artifacts)
+                            Right program' ->
+                              case CGen.generate rcMode program' of
+                                Left errs -> failWith errs
+                                Right text -> generate writer style target (B.stringUtf8 text) (Build.getRootNames artifacts)
 
                 Just (C target) ->
                   case getNoMains artifacts of

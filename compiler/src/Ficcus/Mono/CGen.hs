@@ -17,7 +17,9 @@ module Ficcus.Mono.CGen
 --     and Elm's is left to right;
 --   * `Platform.worker`: `main` must be `Platform.worker { init = ... }`; C `main` runs `fic_init`, then
 --     the init function, and ignores the result (commands are ignored, STAGE3-PLAN R9);
---   * no dup/drop (slices 1 to 3 may leak, STAGE3-PLAN amendment).
+--   * without `--rc` there is no dup/drop (the output of the first slices, the oracle of stage iv). With it (gRc) the program
+--     comes from Ficcus.Mono.Rc: `MDup`/`MDrop`/`MOwn` become the counts, every expression yields an owned value, and the
+--     places where the generator itself makes or consumes values (objects, struct boxes, closures) follow the same convention.
 
 
 import Control.Monad (foldM, forM, forM_, when)
@@ -30,6 +32,7 @@ import qualified Data.Set as Set
 
 import Ficcus.Mono.CRuntime (closureRuntime, fdlibmRuntime, jsArrayRuntime, prelude, stringRuntime)
 import Ficcus.Mono.Class
+import Ficcus.Mono.Free (captures, refClass)
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Layout
 import Ficcus.Mono.Print (keyTextIx)
@@ -56,6 +59,8 @@ data G =
     , gExtraObjs :: Set.Set [Class]  -- object layouts used only by helpers
     , gExtraStructs :: Set.Set [Class]
     , gNullary :: Set.Set Int          -- tags whose static nullary object (fic_nulN) is used
+    , gRc :: Bool                      -- the program has counts (--rc): the generated code owns, dups and drops (STAGE4-PLAN)
+    , gStrings :: Map.Map String Int   -- the static string literals, by text
     }
 
 
@@ -104,8 +109,8 @@ fresh base =
 
 
 -- | the C text of a program, or the messages
-generate :: MProgram -> Either [String] String
-generate program =
+generate :: Bool -> MProgram -> Either [String] String
+generate rcMode program =
   case mpMain program of
     Nothing -> Left [ "internal: no main" ]
     Just root ->
@@ -113,7 +118,7 @@ generate program =
         clones = mpClones program
         info = Info (Map.fromList [ (mdClone d, d) | d <- clones ]) (captures clones) (mpUnions program)
                     (Set.fromList (allObjects clones)) (Set.fromList (structsOf clones))
-        g0 = G [] 0 0 [] Nothing [] False "" Map.empty [] [] Set.empty Set.empty Set.empty
+        g0 = G [] 0 0 [] Nothing [] False "" Map.empty [] [] Set.empty Set.empty Set.empty rcMode Map.empty
         final = execState (program' info root clones) g0
       in
       case reverse (gErrors final) of
@@ -121,9 +126,11 @@ generate program =
           let extra = concatMap structDef (Set.toList (gExtraStructs final))
                       ++ map objectDef (Set.toList (gExtraObjs final)) ++ reverse (gProtos final)
                       ++ [ "static fic_hdr fic_nul" ++ show t ++ " = { FIC_IMMORTAL, " ++ show t ++ "u, 0, 0 };" | t <- Set.toList (gNullary final), t > 1 ]
-              body = unlines (concatMap (\l -> if l == helperMark then extra else [l]) (reverse (gOut final)))
+                      ++ [ staticString str i | (str, i) <- Map.toList (gStrings final) ]
+              body = unlines (concatMap (\l -> if l == helperMark then extra else if l == "  /* PK_RELEASE */" then [ "  fic_pk_release();" | pkUsed ] else [l]) (reverse (gOut final)))
+              pkUsed = any ("fic_pk_" `List.isInfixOf`) (gOut final)
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
-          in Right (prelude ++ "\n" ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_"] then closureRuntime ++ "\n" else "")
+          in Right ((if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n" ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_"] then closureRuntime ++ "\n" else "")
                     ++ (if "fic_fd_" `List.isInfixOf` body then fdlibmRuntime ++ "\n" else "")
                     ++ (if "fic_ja_" `List.isInfixOf` body then jsArrayRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_us_", "fic_pk_"] then stringRuntime ++ "\n" else "")
@@ -156,10 +163,21 @@ program' info root clones =
       initFn <- workerInit info root
       emit "int main(void) {"
       indented $
-        do  emit "fic_init();"
+        do  rcMode <- gets gRc
+            emit "fic_init();"
             case initFn of
-              Just d -> emit ("(void)" ++ functionName d ++ "(0);")
+              Just d
+                | rcMode && refClass (mdResult d) ->
+                    do  emit (classType (mdResult d) ++ " fic_res = " ++ functionName d ++ "(0);")
+                        mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths (mdResult d) "fic_res")
+                | otherwise -> emit ("(void)" ++ functionName d ++ "(0);")
               Nothing -> return ()
+            -- the global values hold one count each for ever: they are dropped only for the checks of the test builds
+            when rcMode $
+              do  emit "#if defined(FIC_DROP_ALL) || defined(FIC_STATS)"
+                  forM_ values (\d -> mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths (mdResult d) (globalName d)))
+                  emit "#endif"
+            when rcMode (emit "/* PK_RELEASE */")
             emit "#if defined(FIC_DROP_ALL) || defined(FIC_STATS)"
             emit "if (fic_shutdown() != 0) return 3;"
             emit "#endif"
@@ -288,56 +306,6 @@ structDef fs =
 
 
 
--- CAPTURED VARIABLES OF LIFTED FUNCTIONS
-
-
--- the local variables a lifted clone uses from its owner, directly or through the lifted clones it calls
-captures :: [MDef] -> Map.Map CloneId [(String, Class)]
-captures clones =
-  fixpoint (Map.fromList [ (mdClone d, if mdLifted d == Nothing then Map.empty else Map.map id (freeOf d)) | d <- clones ])
-  where
-    byId = Map.fromList [ (mdClone d, d) | d <- clones ]
-    freeOf d =
-      let (used, bound) = maybe (Map.empty, Set.empty) locals (mdBody d)
-          own = Set.union bound (Set.fromList (map fst (mdParams d)))
-      in Map.filterWithKey (\k _ -> not (Set.member k own)) used
-    fixpoint m =
-      let step = Map.mapWithKey (\c cur -> grow c cur) m
-          grow c cur =
-            case Map.lookup c byId of
-              Nothing -> cur
-              Just d ->
-                let own = Set.union (maybe Set.empty (snd . locals) (mdBody d)) (Set.fromList (map fst (mdParams d)))
-                    viaCallees = Map.unions [ Map.filterWithKey (\k _ -> not (Set.member k own)) (Map.findWithDefault Map.empty r m)
-                                            | r <- maybe [] exprRefs (mdBody d), r /= c ]
-                in Map.union cur viaCallees
-      in if step == m then Map.map Map.toList m else fixpoint step
-    locals :: MExpr -> (Map.Map String Class, Set.Set String)
-    locals e =
-      let here = case mNode e of
-            MLocal n -> (Map.singleton n (mRep e), Set.empty)
-            MLetVal n _ _ -> (Map.empty, Set.singleton n)
-            MCase _ bs -> (Map.empty, Set.fromList (concatMap (patVars . fst) bs))
-            _ -> (Map.empty, Set.empty)
-          below = map locals (children e)
-      in (Map.unions (fst here : map fst below), Set.unions (snd here : map snd below))
-
-
-
--- the variables a pattern binds
-patVars :: MPat -> [String]
-patVars (MPat _ n) =
-  case n of
-    PVar v -> [v]
-    PCtor _ _ ps -> concatMap patVars ps
-    PTuple ps -> concatMap patVars ps
-    PCons a b -> patVars a ++ patVars b
-    PAlias p v -> v : patVars p
-    PRecord fs -> [ v | (_, v, _) <- fs ]
-    _ -> []
-
-
-
 -- FUNCTIONS
 
 
@@ -404,6 +372,8 @@ genRet info e =
   case mNode e of
     MIf bs final -> genIfRet bs final
     MCase scrut bs -> genCase info (genRet info) scrut bs
+    MDup vs b -> do { dupVars vs; genRet info b }
+    MDrop vs b -> do { dropVars vs; genRet info b }
     MLetVal n v b ->
       do  v' <- genExpr info v
           emit (classType (mRep v) ++ " " ++ localName n ++ " = " ++ v' ++ ";")
@@ -420,10 +390,11 @@ genRet info e =
             then
               do  let pcls = maybe [] (map snd . mdParams) (Map.lookup c (iClones info))
                   let targets = pcls ++ map mRep (drop (length pcls) args)
-                  vals <- forM (zip args targets) (\(a, pc) -> genExpr info a >>= adapt (mRep a) pc)
-              -- evaluate all arguments before assigning any parameter
-                  temps <- forM (zip3 targets vals params) $ \(pc, v, p) ->
-                    do  t <- fresh "tail"
+              -- evaluate all arguments, in order, into temporaries before assigning any parameter (a value that is an expression
+              -- must be computed now: a later argument may drop what it uses)
+                  temps <- forM (zip3 args targets params) $ \(a, pc, p) ->
+                    do  v <- genExpr info a >>= adaptOwn (mRep a) pc
+                        t <- fresh "tail"
                         emit (classType pc ++ " " ++ t ++ " = " ++ v ++ ";")
                         return (p, t)
                   forM_ temps (\(p, t) -> emit (localName p ++ " = " ++ t ++ ";"))
@@ -464,6 +435,13 @@ genExpr info e =
   case mNode e of
     MLit l -> literal (mRep e) l
     MLocal n -> return (localName n)
+    MDup vs b -> do { dupVars vs; genExpr info b }
+    MDrop vs b -> do { dropVars vs; genExpr info b }
+    MOwn b ->
+      do  v <- genExpr info b
+          t <- variable (mRep b) v
+          dupVars' (mRep b) t
+          return t
     MGlobal c ->
       case Map.lookup c (iClones info) of
         Just d | not (isFunction d) -> adapt (mdResult d) (mRep e) (globalName d)
@@ -474,7 +452,7 @@ genExpr info e =
     MCall (MExpr _ (MGlobal c)) args | Just d <- Map.lookup c (iClones info), isFunction d, length args == length (mdParams d) ->
       do  vals <- atomsTo info (zip args (map snd (mdParams d)))
           let caps = [ localName n | (n, _) <- Map.findWithDefault [] c (iCaptured info) ]
-          adapt (mdResult d) (mRep e) (functionName d ++ "(" ++ List.intercalate ", " (caps ++ vals) ++ ")")
+          adaptOwn (mdResult d) (mRep e) (functionName d ++ "(" ++ List.intercalate ", " (caps ++ vals) ++ ")")
     MCall (MExpr _ (MCtor _ tag (Key parts))) args ->
       do  let cs = [ c | ByClass c <- parts ]
           vals <- atomsTo info (zip args cs)
@@ -485,7 +463,7 @@ genExpr info e =
     MList xs ->
       do  let cs = boxedClass . mRep
           vals <- atomsTo info [ (x, cs x) | x <- xs ]
-          nil <- nullary 0
+          nil <- nullaryOwned 0
           foldM (\acc (x, v) -> allocObj [cs x, CRef] 1 [v, acc]) nil (reverse (zip xs vals))
     MCase scrut bs ->
       do  t <- fresh "t"
@@ -633,8 +611,8 @@ closureSection info ds =
                             case [ i | (i, (m, _, _)) <- zip [0 :: Int ..] layout, m == n ] of
                               i : _ -> return (fieldRead classType [ fc | (_, _, fc) <- layout ] i "s")
                               [] -> failWith "internal: a captured variable is not in the closure layout"
-                  vals <- forM (zip [0 :: Int ..] ps) (\(i, (_, pc)) -> adapt (abiClass pc) pc ("a" ++ show i ++ wordSel pc))
-                  r <- adapt (mdResult d) (abiClass (mdResult d)) (functionName d ++ "(" ++ List.intercalate ", " (capVals ++ vals) ++ ")")
+                  vals <- forM (zip [0 :: Int ..] ps) (\(i, (_, pc)) -> adaptOwn (abiClass pc) pc ("a" ++ show i ++ wordSel pc))
+                  r <- adaptOwn (mdResult d) (abiClass (mdResult d)) (functionName d ++ "(" ++ List.intercalate ", " (capVals ++ vals) ++ ")")
                   emit ("return " ++ wordMk (mdResult d) r ++ ";")
             emit "}"
             emit ("static const fic_code " ++ codeName d ++ " = { (void (*)(void))" ++ stubName d ++ ", " ++ show (length ps) ++ "u };")
@@ -677,7 +655,7 @@ unknownCall info e h args =
           let mask = sum [ 2 ^ i | (i, a) <- zip [0 :: Int ..] args, abiClass (mRep a) == CRef ] :: Int
           let call = "fic_ap" ++ show (length args) ++ "(" ++ hr ++ ", " ++ show mask ++ "u, "
                      ++ List.intercalate ", " [ wordMk (mRep a) v | (a, v) <- zip args vals ] ++ ")"
-          adapt (abiClass (mRep e)) (mRep e) (call ++ wordSel (mRep e))
+          adaptOwn (abiClass (mRep e)) (mRep e) (call ++ wordSel (mRep e))
 
 
 -- the field classes of a struct class (for the elements, if the class is not one)
@@ -694,7 +672,7 @@ atomsTo :: Info -> [(MExpr, Class)] -> CG [String]
 atomsTo info args =
   forM args $ \(a, target) ->
     do  v <- genExpr info a
-        v' <- adapt (mRep a) target v
+        v' <- adaptOwn (mRep a) target v
         if atom a && mRep a == target
           then return v'
           else
@@ -721,6 +699,33 @@ adapt from to v
   | otherwise = failWith ("internal: no conversion from " ++ classTag from ++ " to " ++ classTag to)
 
 
+-- `adapt` for a value that is owned (an argument, the result of a call): a struct that comes out of a box takes a count on each
+-- reference component and gives the box up (without counts it is the same view as `adapt`)
+adaptOwn :: Class -> Class -> String -> CG String
+adaptOwn from to v =
+  do  rcMode <- gets gRc
+      case (from, to) of
+        (CRef, CStruct _) | rcMode ->
+          do  t <- variable from v
+              s <- variable to (unboxExpr to t)
+              dupVars' to s
+              emit ("fic_drop(" ++ t ++ ");")
+              return s
+        _ -> adapt from to v
+
+
+dupVars :: [(String, Class)] -> CG ()
+dupVars vs = mapM_ (\(n, c) -> dupVars' c (localName n)) vs
+
+
+dropVars :: [(String, Class)] -> CG ()
+dropVars vs = mapM_ (\(n, c) -> mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths c (localName n))) vs
+
+
+dupVars' :: Class -> String -> CG ()
+dupVars' c v = mapM_ (\p -> emit ("fic_dup(" ++ p ++ ");")) (refPaths c v)
+
+
 -- the same for a pure `v` (a path into an object that is read only when a test has succeeded): no statements
 adaptPure :: Class -> Class -> String -> CG String
 adaptPure from to v
@@ -744,7 +749,7 @@ variable c v
 
 -- a heap object of a constructor or a list cell: header (tag) and fields
 allocObj :: [Class] -> Int -> [String] -> CG String
-allocObj [] tag [] = nullary tag
+allocObj [] tag [] = nullaryOwned tag
 allocObj cs tag vals = allocObj' cs (show tag ++ "u") vals
 
 
@@ -753,6 +758,15 @@ nullary :: Int -> CG String
 nullary tag =
   do  modify' (\g -> g { gNullary = Set.insert tag (gNullary g) })
       return ("(&fic_nul" ++ show tag ++ ")")
+
+
+-- an owned reference to the static nullary object (with counts, a dup of an immortal object)
+nullaryOwned :: Int -> CG String
+nullaryOwned tag =
+  do  p <- nullary tag
+      rcMode <- gets gRc
+      when rcMode (emit ("fic_dup(" ++ p ++ ");"))
+      return p
 
 
 allocObj' :: [Class] -> String -> [String] -> CG String
@@ -850,9 +864,27 @@ literal cls l =
     LFloat x -> return (show x)
     LChar c -> return ("UINT32_C(" ++ show c ++ ")")
     LUnit -> return "0"
-    LString s ->
-      let (lit, n) = cString s
-      in return ("fic_str_new(\"" ++ lit ++ "\", " ++ show n ++ ")")
+    LString s -> staticLiteral s
+
+
+-- a string literal is a static immortal object (one per text), counted like any other object
+staticLiteral :: String -> CG String
+staticLiteral str =
+  do  known <- gets (Map.lookup str . gStrings)
+      i <- case known of
+             Just k -> return k
+             Nothing ->
+               do  k <- gets (Map.size . gStrings)
+                   modify' (\g -> g { gStrings = Map.insert str k (gStrings g) })
+                   return k
+      return ("((fic_ref)&fic_slit" ++ show i ++ ")")
+
+
+staticString :: String -> Int -> String
+staticString str i =
+  let (lit, n) = cString str
+  in "static struct { fic_hdr h; int64_t len; int64_t cps; char data[" ++ show (n + 1) ++ "]; } fic_slit" ++ show i
+     ++ " = { { FIC_IMMORTAL, FIC_TAG_STRING, 0, 0 }, " ++ show n ++ ", " ++ show (length str) ++ ", \"" ++ lit ++ "\" };"
 
 
 -- a C string literal body and its length in bytes (UTF-8, octal escapes for anything but printable ASCII)
@@ -909,6 +941,8 @@ jsArrayCall info cls op key args =
           arr <- fresh "arr"
           emit ("fic_ref " ++ rest ++ ";")
           emit ("fic_ref " ++ arr ++ " = " ++ h ++ "(" ++ mx' ++ ", " ++ ls' ++ ", &" ++ rest ++ ");")
+          rcMode <- gets gRc
+          when rcMode (emit ("fic_dup(" ++ rest ++ ");"))               -- the rest of the list is a borrowed tail of `ls`
           return ("(" ++ classType cls ++ "){ " ++ arr ++ ", " ++ rest ++ " }")
     ("unsafeGet", Key [ByClass c], [i, a]) ->
       do  vs <- atomsTo info [(i, CI64), (a, CRef)]
@@ -929,7 +963,7 @@ jsArrayCall info cls op key args =
           let f' = avs !! 0
               acc' = avs !! 1
               a' = avs !! 2
-          adapt cb cls ("fic_ja_" ++ fold ++ "(" ++ f' ++ ", " ++ maskOf [ca, cb] ++ ", " ++ wordMk cb acc' ++ ", " ++ a' ++ ")" ++ wordSel cb)
+          adaptOwn cb cls ("fic_ja_" ++ fold ++ "(" ++ f' ++ ", " ++ maskOf [ca, cb] ++ ", " ++ wordMk cb acc' ++ ", " ++ a' ++ ")" ++ wordSel cb)
     ("map", Key [ByClass ca, ByClass cb], [f, a]) ->
       do  avs <- atomsTo info [(f, CRef), (a, CRef)]
           let f' = avs !! 0
@@ -993,7 +1027,7 @@ kernelCall info cls name key args =
     _ | name `elem` ["elm/core:String.foldl", "elm/core:String.foldr"], Key [ByClass cb] <- key, [f, acc, s] <- args ->
       do  avs <- atomsTo info [(f, CRef), (acc, cb), (s, CRef)]
           let fn = if name == "elm/core:String.foldl" then "fic_us_foldl" else "fic_us_foldr"
-          adapt cb cls (fn ++ "(" ++ (avs !! 0) ++ ", " ++ (if boxedClass cb == CRef then "2u" else "0u") ++ ", " ++ wordMk cb (avs !! 1) ++ ", " ++ (avs !! 2) ++ ")" ++ wordSel cb)
+          adaptOwn cb cls (fn ++ "(" ++ (avs !! 0) ++ ", " ++ (if boxedClass cb == CRef then "2u" else "0u") ++ ", " ++ wordMk cb (avs !! 1) ++ ", " ++ (avs !! 2) ++ ")" ++ wordSel cb)
     _ ->
       do  vals <- atoms info args
           case (name, vals) of
@@ -1222,7 +1256,10 @@ kernelCall info cls name key args =
         Key [ByType (TyCon n [])] | Just shown <- lookup n shows' ->
           do  t <- fresh "l"
               emit (classType cls ++ " " ++ t ++ " = " ++ v ++ ";")
-              emit ("fic_log(" ++ tag ++ ", " ++ shown t ++ ");")
+              sh <- fresh "sh"
+              emit ("fic_ref " ++ sh ++ " = " ++ shown t ++ ";")
+              emit ("fic_log(" ++ tag ++ ", " ++ sh ++ ");")
+              dropIfRc sh
               return t
         Key [ByType t] ->
           do  sb <- fresh "sb"
@@ -1232,8 +1269,10 @@ kernelCall info cls name key args =
               s <- fresh "s"
               emit ("fic_ref " ++ s ++ " = fic_sb_str(&" ++ sb ++ ");")
               emit ("fic_log(" ++ tag ++ ", " ++ s ++ ");")
+              dropIfRc s
               return v
         _ -> unsupported "Debug.log at this key"
+    dropIfRc x = do { rcMode <- gets gRc; when rcMode (emit ("fic_drop(" ++ x ++ ");")) }
     shows' =
       [ ("elm/core:Basics.Int", \t -> "fic_str_from_int(" ++ t ++ ")")
       , ("elm/core:Basics.Float", \t -> "fic_str_from_float(" ++ t ++ ")")
@@ -1716,6 +1755,8 @@ genHelper info k name =
           emit "for (i = 0; i < n; i++) {"
           indented $
             do  emit ("fic_ja_data(r)[i] = " ++ wordMk c (fl fcs 0 ("((" ++ objType fcs ++ " *)p)")) ++ ";")
+                rcMode <- gets gRc
+                when (rcMode && c == CRef) (emit ("fic_dup(" ++ fl fcs 0 ("((" ++ objType fcs ++ " *)p)") ++ ");"))
                 emit ("p = " ++ fl fcs 1 ("((" ++ objType fcs ++ " *)p)") ++ ";")
           emit "}"
           emit "*rest = p;"
@@ -1731,6 +1772,8 @@ genHelper info k name =
             do  emit (objType fcs ++ " *c = (" ++ objType fcs ++ " *)xs;")
                 emit (objType fcs ++ " *n = (" ++ objType fcs ++ " *)fic_alloc(sizeof(" ++ objType fcs ++ "), 1u, " ++ show (nptrOf fcs) ++ ");")
                 mapM_ emit (fieldStores fcs 0 "n" (fl fcs 0 "c"))
+                rcMode <- gets gRc
+                when (rcMode && c == CRef) (emit ("fic_dup(" ++ fl fcs 0 "c" ++ ");"))
                 emit ("n->" ++ memberOf fcs 1 ++ " = ys;")
                 emit ("*link = &n->h; link = &n->" ++ memberOf fcs 1 ++ "; xs = " ++ fl fcs 1 "c" ++ ";")
           emit "}"
