@@ -149,6 +149,7 @@ executable elm
         AST.ListSugar
         AST.Prim.TypeVar
         AST.Prim.Variable
+        AST.Utils.Row
         AST.Utils.Shader
         AST.Utils.Type
         Canonicalize.Effects
