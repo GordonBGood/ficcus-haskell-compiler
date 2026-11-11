@@ -29,8 +29,11 @@ data Problem
   = NotARecord (Maybe (T.Name, T.Var)) Can.Type
       -- ^ a record extension (`{ a | x : Int }`, directly or through the type alias and
       --   parameter given) whose extension is a type that is not a record
-  | DuplicateFields (Maybe (T.Name, T.Var)) [N.Name]
-      -- ^ a record extension that gives fields the extended record already has
+  | DuplicateFields (Maybe (T.Name, T.Var)) [(N.Name, Can.Type, Can.Type)]
+      -- ^ a record extension that gives a field the extended record already has, with another type
+  | UnmetConstraint T.Name T.Var Can.Type
+      -- ^ a type that cannot satisfy the constraint of the type alias parameter (named `number`, `comparable`,
+      --   `appendable` or `compappend`) it is given for
 
 
 
@@ -59,30 +62,51 @@ toReport source region problem =
               \ fields. Is a type argument in the wrong place?"
           )
 
-    DuplicateFields maybeVia names ->
+    DuplicateFields maybeVia clashes ->
       Report.Report "DUPLICATE FIELD" region [] $
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              case maybeVia of
-                Just (alias, param) ->
-                  "The `" <> T.nameToChars alias <> "` type alias adds " <> fieldsText names
-                  <> " to its `" <> T.varToChars param <> "` type variable, but the record I find there already has "
-                  <> (if length names == 1 then "it:" else "them:")
-
-                Nothing ->
-                  "This record extension adds " <> fieldsText names <> " that the extended record already has:"
+              case clashes of
+                (name, _, _) : _ ->
+                  "The `" <> N.toChars name <> "` field appears twice, with different types"
+                  <> (case maybeVia of
+                        Just (alias, param) -> " (the `" <> T.nameToChars alias <> "` type alias adds it to its `" <> T.varToChars param <> "` type variable):"
+                        Nothing -> ":")
+                [] -> "A field appears twice, with different types:"
           ,
-            D.reflow "A record cannot have two fields with the same name. Remove the field from one of the two types!"
+            D.stack
+              [ D.reflow $
+                  case clashes of
+                    (_, t1, t2) : _ -> "One has the type `" <> ppType t1 <> "` and the other `" <> ppType t2 <> "`."
+                    [] -> ""
+              , D.reflow "A record has one field of each name, so the two types must be the same. Change one of them!"
+              ]
+          )
+
+    UnmetConstraint alias var tipe ->
+      Report.Report "BAD TYPE ARGUMENT" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "The `" <> T.nameToChars alias <> "` type alias has a type variable named `" <> T.varToChars var
+              <> "`, which only " <> constraintText var <> " can be, but I see `" <> ppType tipe <> "` there:"
+          ,
+            D.reflow $
+              "Names that start with `number`, `comparable`, `appendable` and `compappend` stand for the constrained\
+              \ type variables of the core libraries, in an alias as well. Give it a type that fits, or choose another\
+              \ name for the type variable."
           )
 
 
-fieldsText :: [N.Name] -> String
-fieldsText names =
-  case names of
-    [name] -> "a `" <> N.toChars name <> "` field"
-    _ -> "the " <> List.intercalate ", " (map (\n -> "`" <> N.toChars n <> "`") names) <> " fields"
-
+constraintText :: T.Var -> String
+constraintText (T.Var _ constraint) =
+  case constraint of
+    T.Number -> "an `Int` or a `Float`"
+    T.Comparable -> "a comparable type (`Int`, `Float`, `Char`, `String`, or lists and tuples of them)"
+    T.Appendable -> "a `String` or a `List`"
+    T.CompAppend -> "a `String` or a `List` of comparable types"
+    T.Any -> "any type"
 
 
 -- A SMALL TYPE PRINTER (module names left out: the real names are in the source snippet)

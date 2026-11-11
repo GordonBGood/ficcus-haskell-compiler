@@ -1,0 +1,36 @@
+module Main exposing (main)
+
+-- repeated field b, Float in the extended row and a custom type in the extension
+
+
+type Color
+    = Red
+    | Green Int
+
+
+type T r
+    = T { r | a : Int } { r | b : Color }
+
+
+v =
+    T { a = 1, b = 2.5 } { b = Green 9 }
+
+
+f (T p q) =
+    ( p.b, case q.b of
+                Red -> 0
+                Green n -> n )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ = Debug.log "p3" (f v)
+                in
+                ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
