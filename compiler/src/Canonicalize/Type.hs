@@ -2,6 +2,7 @@
 module Canonicalize.Type
   ( toAnnotation
   , canonicalize
+  , checkKinds
   )
   where
 
@@ -13,6 +14,7 @@ import qualified AST.Canonical as Can
 import qualified AST.ListSugar as ListSugar
 import qualified Elm.ModuleName as ModuleName
 import qualified AST.Source as Src
+import qualified Canonicalize.Kind as Kind
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
 import qualified AST.Prim.TypeVar as T
@@ -36,10 +38,21 @@ type Result i w a =
 
 
 toAnnotation :: Env.Env -> Src.Type -> Result i w Can.Annotation
-toAnnotation env srcType =
+toAnnotation env srcType@(A.At region _) =
   do  tipe <- canonicalize env srcType
+      checkKinds region [tipe]
       Result.ok $ Can.Forall (addFreeVars Map.empty tipe) tipe
 
+
+
+-- KIND CHECK OF RECORD EXTENSIONS (track D10, see Canonicalize.Kind)
+
+
+checkKinds :: A.Region -> [Can.Type] -> Result i w ()
+checkKinds region types =
+  case Kind.checkTypes types of
+    Nothing -> Result.ok ()
+    Just problem -> Result.throw (Error.KindProblem region problem)
 
 
 -- CANONICALIZE TYPES

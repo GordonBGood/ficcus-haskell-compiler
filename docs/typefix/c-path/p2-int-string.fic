@@ -1,0 +1,41 @@
+module Main exposing (main)
+
+-- repeated field b, Int in the extended row and String in the extension: through inference only
+
+
+type T r
+    = T { r | a : Int } { r | b : String }
+
+
+v =
+    T { a = 1, b = 2 } { b = "x" }
+
+
+sumT (T p q) =
+    p.a + p.b + String.length q.b
+
+
+getQ : T { b : Int } -> String
+getQ (T _ q) =
+    q.b
+
+
+getP : T { b : Int } -> Int
+getP (T p _) =
+    p.b
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ = Debug.log "p2" (sumT v)
+                    _ = Debug.log "p2 annotated" ( getQ v, getP v )
+                    _ = Debug.log "p2 q" (case v of T _ q -> q.b)
+                in
+                ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

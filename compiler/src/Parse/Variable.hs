@@ -259,9 +259,21 @@ chompLowerVar pos end cur =
     in
     if ltAddr pos next
     then chompInners next end (slide cur 1#Word64)
+    else if underscoreName pos end
+    then chompInners (plusAddr# pos 1#) end (slide cur 1#Word64)
     else (# pos, cur #)
   else
     (# pos, cur #)
+
+
+-- Ficcus (track E4): a name may start with an underscore when a letter, digit or underscore follows,
+-- `_b_`; a lone `_` stays the wildcard
+underscoreName :: Addr# -> Addr# -> Bool
+underscoreName pos end =
+  let !pos1 = plusAddr# pos 1# in
+  ltAddr pos1 end
+  && eqIndex pos 0# 0x5F#Word8 {-_-}
+  && ltAddr pos1 (Var.chompInner pos1 end (indexWord8OffAddr# pos1 0#))
 
 
 

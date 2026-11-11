@@ -22,6 +22,7 @@ import Parse.Primitives (Parser, Cursor, slide, newline, ltAddr, leAddr, notLtAd
 import qualified Ficcus.Flags as Flags
 import qualified Parse.Number as Number
 import qualified Parse.Primitives as P
+import qualified Parse.StringLayout as StringLayout
 import qualified Reporting.Error.Syntax as E
 
 
@@ -125,7 +126,10 @@ string toExpectation toError =
         if isDoubleQuote pos1 end then
           let !pos2 = plusAddr# pos 2# in
           if isDoubleQuote pos2 end
-          then multiString pos end cur
+          then
+            case multiString pos end cur of
+              Ok p c u -> Ok p (StringLayout.afterMultiline cur c) u   -- Ficcus track E4
+              result -> result
           else Ok pos2 (slide cur 2#Word64) Utf8.empty
         else
           singleString pos1 end (slide cur 1#Word64)

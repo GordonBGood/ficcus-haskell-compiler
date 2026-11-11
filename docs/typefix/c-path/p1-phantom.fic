@@ -1,0 +1,44 @@
+module Main exposing (main)
+
+-- repeated field, different phantom types, as elm-review's Rule.withModuleContext: Forbidden then Required
+
+
+type Required
+    = Required
+
+
+type Forbidden
+    = Forbidden
+
+
+type Schema state ctx
+    = Schema ctx
+
+
+init : Schema { w : Forbidden } Int
+init =
+    Schema 7
+
+
+mark : Schema state ctx -> Schema { state | w : Required } ctx
+mark (Schema c) =
+    Schema c
+
+
+use : Schema { w : Required } Int -> Int
+use (Schema c) =
+    c + 1
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ = Debug.log "p1" (use (mark init))
+                in
+                ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

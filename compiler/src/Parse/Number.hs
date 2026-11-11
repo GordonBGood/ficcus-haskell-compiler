@@ -68,7 +68,14 @@ number toExpectation toError =
               NU.Err (I# n) bad ->
                 do  let !newCur = slide cur (wordToWord64# (int2Word# n))
                     cerr newCur (toError bad)
+
+          -- Ficcus (track E4): a binary literal, `0b1010`; the scanner above does not know it
+          binaryStart =
+            isTrue# (eqWord8# w 0x30#Word8)
+            && ltAddr (plusAddr# pos 1#) end
+            && isTrue# (eqWord8# (indexWord8OffAddr# (plusAddr# pos 1#) 0#) 0x62#Word8 {-b-})
         in
+        if binaryStart then underscored else
         case outcome of
           Err newPos problem
             | underscoreAt newPos -> underscored
