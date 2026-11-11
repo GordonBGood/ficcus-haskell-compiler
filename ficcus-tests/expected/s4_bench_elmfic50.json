@@ -1,0 +1,738 @@
+{
+ "fibonacci": {
+  "s3": {
+   "dups": 0,
+   "drops": 6,
+   "allocs": 6,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 3,
+   "live": 0,
+   "ms": 1.608366030268371,
+   "ms_min": 1.410328026395291
+  },
+  "default": {
+   "dups": 0,
+   "drops": 6,
+   "allocs": 6,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 3,
+   "live": 0,
+   "ms": 1.8380630062893033,
+   "ms_min": 1.8156809965148568
+  },
+  "proj": {
+   "dups": 0,
+   "drops": 6,
+   "allocs": 6,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 3,
+   "live": 0,
+   "ms": 2.116129035130143,
+   "ms_min": 1.9808280048891902
+  },
+  "reuse": {
+   "dups": 0,
+   "drops": 6,
+   "allocs": 6,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 3,
+   "live": 0,
+   "ms": 2.080852980725467,
+   "ms_min": 1.7975670052692294
+  }
+ },
+ "bintree": {
+  "s3": {
+   "dups": 30277678,
+   "drops": 174832,
+   "allocs": 30102982,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 393236,
+   "live": 0,
+   "ms": 192.0682640047744,
+   "ms_min": 190.8082040026784
+  },
+  "default": {
+   "dups": 30277678,
+   "drops": 174832,
+   "allocs": 30102982,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 393236,
+   "live": 0,
+   "ms": 196.27580500673503,
+   "ms_min": 192.0554400421679
+  },
+  "proj": {
+   "dups": 30277666,
+   "drops": 174832,
+   "allocs": 30102982,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 393236,
+   "live": 0,
+   "ms": 204.13625898072496,
+   "ms_min": 201.5661369659938
+  },
+  "reuse": {
+   "dups": 30277678,
+   "drops": 436974,
+   "allocs": 29840840,
+   "reuses": 262142,
+   "reuse_miss": 0,
+   "peak": 393236,
+   "live": 0,
+   "ms": 195.27796300826594,
+   "ms_min": 186.97088997578248
+  }
+ },
+ "sievestream": {
+  "s3": {
+   "dups": 7548937,
+   "drops": 4878231,
+   "allocs": 8754764,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 2254,
+   "live": 0,
+   "ms": 84.22016899567097,
+   "ms_min": 83.07773800333962
+  },
+  "default": {
+   "dups": 7548362,
+   "drops": 4878231,
+   "allocs": 8754189,
+   "reuses": 575,
+   "reuse_miss": 0,
+   "peak": 2254,
+   "live": 0,
+   "ms": 86.31799300201237,
+   "ms_min": 85.55266301846132
+  },
+  "proj": {
+   "dups": 17606808,
+   "drops": 14937252,
+   "allocs": 8753589,
+   "reuses": 1175,
+   "reuse_miss": 0,
+   "peak": 2254,
+   "live": 0,
+   "ms": 91.87322697835043,
+   "ms_min": 91.49394201813266
+  },
+  "reuse": {
+   "dups": 7548337,
+   "drops": 4878206,
+   "allocs": 8753589,
+   "reuses": 1175,
+   "reuse_miss": 0,
+   "peak": 2254,
+   "live": 0,
+   "ms": 88.80652399966493,
+   "ms_min": 88.15580600639805
+  }
+ },
+ "sievepq": {
+  "s3": {
+   "dups": 18975590,
+   "drops": 18517390,
+   "allocs": 9203725,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 271,
+   "live": 0,
+   "ms": 81.86839200789109,
+   "ms_min": 77.51472998643294
+  },
+  "default": {
+   "dups": 18975590,
+   "drops": 18517390,
+   "allocs": 9203725,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 271,
+   "live": 0,
+   "ms": 81.78099000360817,
+   "ms_min": 80.29650500975549
+  },
+  "proj": {
+   "dups": 15760385,
+   "drops": 16043577,
+   "allocs": 9203288,
+   "reuses": 437,
+   "reuse_miss": 505,
+   "peak": 269,
+   "live": 0,
+   "ms": 73.84158100467175,
+   "ms_min": 72.78156199026853
+  },
+  "reuse": {
+   "dups": 18975658,
+   "drops": 18517895,
+   "allocs": 9203288,
+   "reuses": 437,
+   "reuse_miss": 505,
+   "peak": 271,
+   "live": 0,
+   "ms": 79.2088249581866,
+   "ms_min": 78.31585797248408
+  }
+ },
+ "hamheap": {
+  "s3": {
+   "dups": 739769,
+   "drops": 494957,
+   "allocs": 227641,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 887,
+   "live": 0,
+   "ms": 3.9792670286260545,
+   "ms_min": 3.8825790397822857
+  },
+  "default": {
+   "dups": 739769,
+   "drops": 494957,
+   "allocs": 227641,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 887,
+   "live": 0,
+   "ms": 4.187675018329173,
+   "ms_min": 3.904359007719904
+  },
+  "proj": {
+   "dups": 744657,
+   "drops": 520889,
+   "allocs": 224809,
+   "reuses": 2832,
+   "reuse_miss": 2832,
+   "peak": 887,
+   "live": 0,
+   "ms": 4.322495020460337,
+   "ms_min": 3.7956259911879897
+  },
+  "reuse": {
+   "dups": 744652,
+   "drops": 505504,
+   "allocs": 224809,
+   "reuses": 2832,
+   "reuse_miss": 2832,
+   "peak": 887,
+   "live": 0,
+   "ms": 4.054157005157322,
+   "ms_min": 3.882498014718294
+  }
+ },
+ "hamming": {
+  "s3": {
+   "dups": 438707,
+   "drops": 111146,
+   "allocs": 63519,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 592,
+   "live": 0,
+   "ms": 3.8092019967734814,
+   "ms_min": 3.4678690135478973
+  },
+  "default": {
+   "dups": 431009,
+   "drops": 103453,
+   "allocs": 63519,
+   "reuses": 0,
+   "reuse_miss": 7848,
+   "peak": 592,
+   "live": 0,
+   "ms": 3.1073999707587063,
+   "ms_min": 2.5712940259836614
+  },
+  "proj": {
+   "dups": 473119,
+   "drops": 145598,
+   "allocs": 63494,
+   "reuses": 25,
+   "reuse_miss": 7853,
+   "peak": 592,
+   "live": 0,
+   "ms": 3.2166019664146006,
+   "ms_min": 3.0036760144867003
+  },
+  "reuse": {
+   "dups": 431051,
+   "drops": 103501,
+   "allocs": 63513,
+   "reuses": 6,
+   "reuse_miss": 7872,
+   "peak": 592,
+   "live": 0,
+   "ms": 3.5070410231128335,
+   "ms_min": 3.176046011503786
+  }
+ },
+ "hamming_heap_records": {
+  "s3": {
+   "dups": 438707,
+   "drops": 111146,
+   "allocs": 63519,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 592,
+   "live": 0,
+   "ms": 3.06933798128739,
+   "ms_min": 2.9918450163677335
+  },
+  "default": {
+   "dups": 431009,
+   "drops": 103453,
+   "allocs": 63519,
+   "reuses": 0,
+   "reuse_miss": 7848,
+   "peak": 592,
+   "live": 0,
+   "ms": 3.7346939789131284,
+   "ms_min": 3.4232960315421224
+  },
+  "proj": {
+   "dups": 473119,
+   "drops": 145598,
+   "allocs": 63494,
+   "reuses": 25,
+   "reuse_miss": 7853,
+   "peak": 592,
+   "live": 0,
+   "ms": 3.45395301701501,
+   "ms_min": 3.087473043706268
+  },
+  "reuse": {
+   "dups": 431051,
+   "drops": 103501,
+   "allocs": 63513,
+   "reuses": 6,
+   "reuse_miss": 7872,
+   "peak": 592,
+   "live": 0,
+   "ms": 3.1908430391922593,
+   "ms_min": 2.7022569556720555
+  }
+ },
+ "hamvec": {
+  "s3": {
+   "dups": 106191,
+   "drops": 125193,
+   "allocs": 39736,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 509,
+   "live": 0,
+   "ms": 2.047200978267938,
+   "ms_min": 1.8156809965148568
+  },
+  "default": {
+   "dups": 106191,
+   "drops": 125193,
+   "allocs": 39736,
+   "reuses": 0,
+   "reuse_miss": 202,
+   "peak": 509,
+   "live": 0,
+   "ms": 2.1364970016293228,
+   "ms_min": 2.069742011372
+  },
+  "proj": {
+   "dups": 129483,
+   "drops": 156199,
+   "allocs": 32022,
+   "reuses": 7714,
+   "reuse_miss": 202,
+   "peak": 506,
+   "live": 0,
+   "ms": 2.3621160071343184,
+   "ms_min": 2.2071379935368896
+  },
+  "reuse": {
+   "dups": 121619,
+   "drops": 140621,
+   "allocs": 39736,
+   "reuses": 0,
+   "reuse_miss": 7916,
+   "peak": 509,
+   "live": 0,
+   "ms": 2.523413975723088,
+   "ms_min": 2.3454150068573654
+  }
+ },
+ "sieve_user": {
+  "s3": {
+   "dups": 11646468,
+   "drops": 2841070,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 1605,
+   "live": 0,
+   "ms": 19.305812020320445,
+   "ms_min": 18.840668024495244
+  },
+  "default": {
+   "dups": 11646468,
+   "drops": 2841070,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 397164,
+   "peak": 1605,
+   "live": 0,
+   "ms": 18.16049503395334,
+   "ms_min": 18.159854982513934
+  },
+  "proj": {
+   "dups": 12174942,
+   "drops": 3369560,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 397164,
+   "peak": 1590,
+   "live": 0,
+   "ms": 21.049419010523707,
+   "ms_min": 19.43919900804758
+  },
+  "reuse": {
+   "dups": 11646468,
+   "drops": 2841070,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 397164,
+   "peak": 1605,
+   "live": 0,
+   "ms": 18.4365080203861,
+   "ms_min": 18.38204701198265
+  }
+ },
+ "sieve_plain": {
+  "s3": {
+   "dups": 11646468,
+   "drops": 2841070,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 1605,
+   "live": 0,
+   "ms": 17.62696501100436,
+   "ms_min": 17.548759991768748
+  },
+  "default": {
+   "dups": 11646468,
+   "drops": 2841070,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 397164,
+   "peak": 1605,
+   "live": 0,
+   "ms": 21.523829957004637,
+   "ms_min": 19.14601499447599
+  },
+  "proj": {
+   "dups": 12174942,
+   "drops": 3369560,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 397164,
+   "peak": 1590,
+   "live": 0,
+   "ms": 21.21933497255668,
+   "ms_min": 20.64869605237618
+  },
+  "reuse": {
+   "dups": 11646468,
+   "drops": 2841070,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 397164,
+   "peak": 1605,
+   "live": 0,
+   "ms": 19.879317027516663,
+   "ms_min": 18.676695006433874
+  }
+ },
+ "sieve_plain_hoist": {
+  "s3": {
+   "dups": 11646468,
+   "drops": 2841070,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 1605,
+   "live": 0,
+   "ms": 20.32302098814398,
+   "ms_min": 17.86842301953584
+  },
+  "default": {
+   "dups": 11646468,
+   "drops": 2841070,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 397164,
+   "peak": 1605,
+   "live": 0,
+   "ms": 23.53040501475334,
+   "ms_min": 18.79615499638021
+  },
+  "proj": {
+   "dups": 12174942,
+   "drops": 3369560,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 397164,
+   "peak": 1590,
+   "live": 0,
+   "ms": 19.65734496479854,
+   "ms_min": 19.099008000921458
+  },
+  "reuse": {
+   "dups": 11646468,
+   "drops": 2841070,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 397164,
+   "peak": 1605,
+   "live": 0,
+   "ms": 19.44900705711916,
+   "ms_min": 19.312965974677354
+  }
+ },
+ "wordfreq": {
+  "s3": {
+   "dups": 7915498,
+   "drops": 3050086,
+   "allocs": 4329192,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 855624,
+   "live": 0,
+   "ms": 131.53694500215352,
+   "ms_min": 131.17942999815568
+  },
+  "default": {
+   "dups": 7871872,
+   "drops": 3028273,
+   "allocs": 4307379,
+   "reuses": 21813,
+   "reuse_miss": 0,
+   "peak": 855624,
+   "live": 0,
+   "ms": 139.56083095399663,
+   "ms_min": 133.82031401852146
+  },
+  "proj": {
+   "dups": 2793559,
+   "drops": 3063337,
+   "allocs": 4111119,
+   "reuses": 218073,
+   "reuse_miss": 0,
+   "peak": 455625,
+   "live": 0,
+   "ms": 110.91003997717053,
+   "ms_min": 110.46711797825992
+  },
+  "reuse": {
+   "dups": 3227468,
+   "drops": 2635773,
+   "allocs": 3914869,
+   "reuses": 414323,
+   "reuse_miss": 0,
+   "peak": 855624,
+   "live": 0,
+   "ms": 122.3343099700287,
+   "ms_min": 114.10375899868086
+  }
+ },
+ "mandel": {
+  "s3": {
+   "dups": 817444,
+   "drops": 1891312,
+   "allocs": 1576254,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 23700,
+   "live": 0,
+   "ms": 80.73897601570934,
+   "ms_min": 80.48722898820415
+  },
+  "default": {
+   "dups": 817444,
+   "drops": 1891312,
+   "allocs": 1576254,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 23700,
+   "live": 0,
+   "ms": 80.35352994920686,
+   "ms_min": 79.01370304170996
+  },
+  "proj": {
+   "dups": 1191313,
+   "drops": 2265219,
+   "allocs": 1576254,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 23699,
+   "live": 0,
+   "ms": 78.7932529929094,
+   "ms_min": 77.44920800905675
+  },
+  "reuse": {
+   "dups": 817444,
+   "drops": 1891312,
+   "allocs": 1576254,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 23700,
+   "live": 0,
+   "ms": 83.96470500156283,
+   "ms_min": 81.14600100088865
+  }
+ },
+ "nbody": {
+  "s3": {
+   "dups": 158158163,
+   "drops": 79079175,
+   "allocs": 89089230,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 64,
+   "live": 0,
+   "ms": 573.2624690281227,
+   "ms_min": 568.2563050067984
+  },
+  "default": {
+   "dups": 158158163,
+   "drops": 79079175,
+   "allocs": 89089230,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 64,
+   "live": 0,
+   "ms": 590.3944449964911,
+   "ms_min": 578.0361120123416
+  },
+  "proj": {
+   "dups": 229229347,
+   "drops": 150150366,
+   "allocs": 89089230,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 63,
+   "live": 0,
+   "ms": 675.9503330104053,
+   "ms_min": 671.6757380054332
+  },
+  "reuse": {
+   "dups": 158158163,
+   "drops": 80080175,
+   "allocs": 88088230,
+   "reuses": 1001000,
+   "reuse_miss": 0,
+   "peak": 64,
+   "live": 0,
+   "ms": 587.9314629710279,
+   "ms_min": 576.3188229757361
+  }
+ },
+ "fannkuch": {
+  "s3": {
+   "dups": 292754638,
+   "drops": 453251699,
+   "allocs": 453251698,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 13,
+   "live": 0,
+   "ms": 2826.5270309639163,
+   "ms_min": 2737.2321900329553
+  },
+  "default": {
+   "dups": 292754638,
+   "drops": 453251699,
+   "allocs": 453251698,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 13,
+   "live": 0,
+   "ms": 2783.9240159955807,
+   "ms_min": 2759.9853330175392
+  },
+  "proj": {
+   "dups": 761940455,
+   "drops": 922437516,
+   "allocs": 453251698,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 12,
+   "live": 0,
+   "ms": 3281.852083047852,
+   "ms_min": 3254.8720230115578
+  },
+  "reuse": {
+   "dups": 292754638,
+   "drops": 453251699,
+   "allocs": 453251698,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 13,
+   "live": 0,
+   "ms": 2762.3244660208,
+   "ms_min": 2747.0651759649627
+  }
+ },
+ "spectral": {
+  "s3": {
+   "dups": 19971834,
+   "drops": 30372273,
+   "allocs": 10404029,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 131,
+   "live": 0,
+   "ms": 64.82266599778086,
+   "ms_min": 64.46216703625396
+  },
+  "default": {
+   "dups": 19971834,
+   "drops": 30372273,
+   "allocs": 10404029,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 131,
+   "live": 0,
+   "ms": 61.93726003402844,
+   "ms_min": 61.00098096067086
+  },
+  "proj": {
+   "dups": 30813034,
+   "drops": 41213473,
+   "allocs": 10404029,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 131,
+   "live": 0,
+   "ms": 72.14864698471501,
+   "ms_min": 69.28915798198432
+  },
+  "reuse": {
+   "dups": 19971870,
+   "drops": 30372309,
+   "allocs": 10404029,
+   "reuses": 0,
+   "reuse_miss": 36,
+   "peak": 131,
+   "live": 0,
+   "ms": 66.09530898276716,
+   "ms_min": 63.655599020421505
+  }
+ }
+}

@@ -62,7 +62,7 @@ def suite_mode(a):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--elm", required=True); ap.add_argument("--tag", required=True); ap.add_argument("--out", required=True)
+    ap.add_argument("--elm", required=True); ap.add_argument("--tag", default="x"); ap.add_argument("--out", required=True)
     ap.add_argument("--elm-home", default=os.environ.get("ELM_HOME")); ap.add_argument("--rc", action="store_true")
     ap.add_argument("--runs", type=int, default=5); ap.add_argument("--only", default="")
     ap.add_argument("--suite", action="store_true", help="all 16 suite programs, counters and time, for each of --settings")
