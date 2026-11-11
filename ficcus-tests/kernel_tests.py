@@ -35,6 +35,16 @@ big : Int -> Array String
 big n =
     Array.initialize n mk
 
+
+emptyS : Array String
+emptyS =
+    Array.empty
+
+
+noS : List String
+noS =
+    []
+
 %s
 main : Program () () ()
 main =
@@ -74,15 +84,15 @@ t("elm/core:Basics.append/list", ['List.range 1 3 ++ List.range 4 6', 'let a = [
                                   'let a = [ mk 5 ] in ( a ++ [ mk 6 ], [ mk 7 ] ++ a, a )'])
 t("elm/core:List.cons", ['1 :: List.range 2 4', 'let a = [ mk 1 ] in ( mk 2 :: a, a )', 'let s = mk 3 in ( s :: [], s :: [ s ], s )'])
 J = "elm/core:Elm.JsArray."
-t(J + "empty", ['Array.toList (Array.empty : Array String)', 'Array.length (Array.push (mk 1) Array.empty)'], needle="fic_ja_empty")
+t(J + "empty", ['Array.toList emptyS', 'Array.length (Array.push (mk 1) Array.empty)'], needle="fic_ja_empty")
 t(J + "singleton", ['Array.toList (Array.push (mk 0) (big 32))', 'let a = big 64 in ( Array.length (Array.push (mk 1) a), Array.length a )',
                     'Array.toList (Array.slice 1 40 (big 70))'], needle="fic_ja_singleton")
-t(J + "length", ['Array.length (big 5)', 'let a = big 40 in ( Array.length a, Array.get 39 a )', 'Array.length (Array.empty : Array String)'], needle="fic_ja_length")
+t(J + "length", ['Array.length (big 5)', 'let a = big 40 in ( Array.length a, Array.get 39 a )', 'Array.length emptyS'], needle="fic_ja_length")
 t(J + "initialize", ['Array.toList (Array.initialize 3 mk)', 'Array.length (Array.initialize 100 mk)', 'Array.toList (Array.initialize 0 mk)',
                      'let f = \\i -> mk (i * 2) in ( Array.toList (Array.initialize 2 f), f 1 )'], needle="fic_ja_initialize(")
 t(J + "initializeFromList", ['Array.toList (Array.fromList [ mk 1, mk 2 ])', 'let l = List.map mk (List.range 1 70) in ( Array.length (Array.fromList l), List.length l )',
-                             'Array.toList (Array.fromList ([] : List String))'], needle="initializeFromList")
-t(J + "unsafeGet", ['Array.get 1 (big 3)', 'let a = big 50 in ( Array.get 40 a, Array.get 2 a, Array.get 99 a, Array.length a )', 'Array.get 0 (Array.empty : Array String)'],
+                             'Array.toList (Array.fromList noS)'], needle="fic_jafl_")
+t(J + "unsafeGet", ['Array.get 1 (big 3)', 'let a = big 50 in ( ( Array.get 40 a, Array.get 2 a ), Array.get 99 a, Array.length a )', 'Array.get 0 emptyS'],
   needle="fic_ja_get")
 t(J + "unsafeSet", ['Array.toList (Array.set 1 (mk 9) (big 3))', 'let a = big 3 in ( Array.toList (Array.set 0 (mk 8) a), Array.toList a )',
                     'let a = big 70 in ( Array.get 5 (Array.set 5 (mk 7) a), Array.get 5 a )', 'Array.toList (Array.set 9 (mk 6) (big 2))',
@@ -91,11 +101,11 @@ t(J + "push", ['Array.toList (Array.push (mk 9) (big 2))', 'let a = big 2 in ( A
                'Array.length (List.foldl Array.push (big 1) (List.map mk (List.range 1 80)))', 'let s = mk 7 in ( Array.toList (Array.push s (Array.push s Array.empty)), s )'],
   needle="fic_ja_push")
 t(J + "foldl", ['Array.foldl (\\s acc -> acc ++ s) "" (big 4)', 'let a = big 40 in ( Array.foldl (\\s n -> n + String.length s) 0 a, Array.length a )',
-                'Array.foldl (\\s acc -> s :: acc) [] (big 3)', 'Array.foldl (\\s acc -> acc ++ s) (mk 1) (Array.empty : Array String)'], needle="fic_ja_foldl")
+                'Array.foldl (\\s acc -> s :: acc) [] (big 3)', 'Array.foldl (\\s acc -> acc ++ s) (mk 1) emptyS'], needle="fic_ja_foldl")
 t(J + "foldr", ['Array.foldr (\\s acc -> acc ++ s) "" (big 4)', 'let a = big 40 in ( Array.toList a |> List.length, Array.foldr (\\s acc -> s :: acc) [] a |> List.length )',
-                'Array.foldr (\\s acc -> acc ++ s) (mk 1) (Array.empty : Array String)'], needle="fic_ja_foldr")
+                'Array.foldr (\\s acc -> acc ++ s) (mk 1) emptyS'], needle="fic_ja_foldr")
 t(J + "map", ['Array.toList (Array.map (\\s -> s ++ "!") (big 3))', 'let a = big 40 in ( Array.length (Array.map String.length a), Array.get 3 a )',
-              'Array.toList (Array.map String.length (Array.empty : Array String))'], needle="fic_ja_map")
+              'Array.toList (Array.map String.length emptyS)'], needle="fic_ja_map")
 t(J + "indexedMap", ['Array.toList (Array.indexedMap (\\i s -> String.fromInt i ++ s) (big 3))',
                      'let a = big 40 in ( Array.get 35 (Array.indexedMap (\\i s -> ( i, s )) a), Array.get 35 a )'], needle="fic_ja_indexedmap")
 t(J + "slice", ['Array.toList (Array.slice 1 3 (big 5))', 'let a = big 70 in ( Array.toList (Array.slice 30 36 a), Array.length a )',
@@ -150,7 +160,7 @@ NUM = 'Parser.number { int = Just identity, hex = Just identity, octal = Just id
 t(P + "consumeBase", ['run (%s) ("0o" ++ String.fromInt 17)' % NUM, 'let s = "0b" ++ String.fromInt 101 in ( run (%s) s, s )' % NUM, 'run (%s) ("0o" ++ mk 9)' % NUM], **popt)
 t(P + "consumeBase16", ['run (%s) ("0x" ++ String.fromInt 1 ++ "F")' % NUM, 'let s = "0x" ++ String.fromInt 10 in ( run (%s) s, s )' % NUM, 'run (%s) ("0x" ++ "zz")' % NUM], **popt)
 # the one entry string cache of the parser kernels: alternate two strings, a string that dies while it is cached, one cached twice
-t("parser string cache", ['let a = mk 111 in let b = mk 222 in ( run Parser.int a, run Parser.int b, run Parser.int a, ( a, b ) )',
+t("parser string cache", ['let a = mk 111 in let b = mk 222 in ( ( run Parser.int a, run Parser.int b ), run Parser.int a, ( a, b ) )',
                           'List.map (\\i -> run Parser.int (String.fromInt i ++ "")) (List.range 1 5)',
                           'let s = mk 7 in ( run (Parser.getChompedString (Parser.chompWhile Char.isDigit)) s, run (Parser.getChompedString (Parser.chompWhile Char.isDigit)) s )'], **popt)
 
