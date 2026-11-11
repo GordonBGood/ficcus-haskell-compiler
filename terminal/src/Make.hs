@@ -244,6 +244,12 @@ writeOverlay root =
       jsonText <- if hasJson then readFileStrict elmJson else return ""
       let usesParser = "elm/parser" `List.isInfixOf` jsonText
       let usesRandom = "elm/random" `List.isInfixOf` jsonText
+      -- the overlays of elm/json and elm/bytes import the package: only when it is a direct dependency (an application lists
+      -- them in the "direct" object, which comes first)
+      let directText = takeWhile (/= '}') (dropUntil "\"direct\"" jsonText)
+      let direct name = if null directText then name `List.isInfixOf` jsonText else name `List.isInfixOf` directText
+      let usesJson = direct "\"elm/json\""
+      let usesBytes = direct "\"elm/bytes\""
       let optional used name source =
             do  let f = dir FP.</> name
                 if used
@@ -253,7 +259,14 @@ writeOverlay root =
                            return []
       parserFiles <- optional usesParser Overlay.parserFileName Overlay.parserSource
       randomFiles <- optional usesRandom Overlay.randomFileName Overlay.randomSource
-      return (file : parserFiles ++ randomFiles)
+      jsonFiles <- optional usesJson Overlay.jsonFileName Overlay.jsonSource
+      bytesFiles <- optional usesBytes Overlay.bytesFileName Overlay.bytesSource
+      return (file : parserFiles ++ randomFiles ++ jsonFiles ++ bytesFiles)
+  where
+    dropUntil pat str =
+      case str of
+        [] -> []
+        _ : rest -> if pat `List.isPrefixOf` str then str else dropUntil pat rest
 
 
 readFileStrict :: FilePath -> IO String

@@ -177,8 +177,163 @@ EQ = CMP + ['let r = { n = mk 5, m = Just [ mk 6 ] } in ( {op} r r, {op} r { r |
 for name, op, lst in (("eq", "(==)", EQ), ("neq", "(/=)", EQ), ("gt", "(>)", CMP), ("ge", "(>=)", CMP), ("lt", "(<)", CMP), ("le", "(<=)", CMP), ("compare", "compare", CMP)):
     t("elm/core:Basics." + name, [e.replace("{op}", op) for e in lst])
 
+# ---- elm/json (runtime/fic_json.h, overlay/FicOverlayJson.elm) ----
+JSON = "import Dict\nimport Json.Decode as D\nimport Json.Encode as E\nimport Set"
+JDECL = """
+dec : D.Decoder a -> String -> Result String a
+dec d s =
+    Result.mapError D.errorToString (D.decodeString d s)
+
+
+q : String -> String
+q s =
+    "\\"" ++ s ++ "\\""
+
+
+js : Int -> String
+js n =
+    "[" ++ String.fromInt n ++ "," ++ q (mk n) ++ ",{" ++ q "k" ++ ":[" ++ q (mk (n + 1)) ++ "]}]"
+
+
+enc : E.Value -> String
+enc =
+    E.encode 0
+"""
+jopt = dict(imports=JSON, decls=JDECL, deps=["elm/json"])
+JE = "elm/json:Json.Encode."
+JD = "elm/json:Json.Decode."
+JO = "author/project:FicOverlayJson."
+t(JE + "encode", ['E.encode 0 (E.string (mk 1))', 'let v = E.list E.string [ mk 1, mk 2 ] in ( E.encode 2 v, E.encode 0 v )', 'E.encode 4 (E.object [])',
+                  'E.encode 3 (E.object [ ( mk 1, E.list E.int [ 1, 2 ] ), ( "f", E.float 1.5 ), ( "n", E.float (0 / 0) ) ])'], needle="fic_json_encode", **jopt)
+t(JE + "string", ['enc (E.string (mk 1))', 'let s = mk 2 in ( enc (E.string s), s )', 'E.string (mk 3) == E.string (mk 3)', 'enc (E.string "")'], **jopt)
+t(JE + "int", ['enc (E.int 5)', 'let v = E.int -7 in ( enc v, v == v, v == E.float -7 )'], needle="fic_json_int", **jopt)
+t(JE + "float", ['enc (E.float 1.5)', 'let v = E.float 1.0e21 in ( enc v, v == v )', 'enc (E.float (1 / 0))'], needle="fic_json_float", **jopt)
+t(JE + "bool", ['enc (E.bool True)', 'let v = E.bool False in ( enc v, v == v, v == E.bool True )'], needle="fic_json_bool", **jopt)
+t(JE + "null", ['enc E.null', 'let v = E.null in ( enc v, v == v, enc (E.list identity [ v, v ]) )'], needle="fic_json_null", **jopt)
+t(JO + "arrayFrom", ['enc (E.list E.string [ mk 1, mk 2 ])', 'let l = [ mk 1 ] in ( enc (E.list E.string l), l )', 'enc (E.list E.int [])', 'enc (E.array E.string (big 3))',
+                     'enc (E.set E.string (Set.fromList [ mk 2, mk 1 ]))', 'let v = E.string (mk 4) in ( enc (E.list identity [ v, v ]), enc v )'], needle="fic_json_array_from", **jopt)
+t(JO + "objectFrom", ['enc (E.object [ ( mk 1, E.string (mk 2) ), ( mk 3, E.int 4 ) ])',
+                      'let v = E.string (mk 5) in ( enc (E.object [ ( "a", v ), ( "a", E.null ), ( "b", v ), ( "a", v ) ]), enc v )',
+                      'enc (E.dict identity E.string (Dict.fromList [ ( mk 1, mk 2 ), ( mk 0, mk 3 ) ]))', 'enc (E.object [])',
+                      'E.object [ ( mk 1, E.int 1 ), ( mk 2, E.int 2 ) ] == E.object [ ( mk 2, E.int 2 ), ( mk 1, E.int 1 ) ]'], needle="fic_json_object_from", **jopt)
+t(JO + "objectKeys", ['dec (D.keyValuePairs D.string) ("{" ++ q (mk 1) ++ ":" ++ q (mk 2) ++ "}")', 'dec (D.keyValuePairs D.int) (js 1)',
+                      'let d = D.keyValuePairs D.int in ( dec d "{}", dec d "{\\"a\\":1,\\"b\\":2}" )'], needle="FIC_JD_KEYS", **jopt)
+t(JO + "objectValues", ['dec (D.dict D.string) ("{" ++ q (mk 1) ++ ":" ++ q (mk 2) ++ "}")',
+                        'dec (D.keyValuePairs D.string) ("{\\"a\\":" ++ q (mk 1) ++ ",\\"b\\":" ++ q (mk 2) ++ ",\\"c\\":3}")',
+                        'let d = D.keyValuePairs (D.list D.string) in ( dec d "{\\"a\\":[\\"x\\"]}", dec d "{}", dec d "[]" )'], needle="FIC_JD_VALUES", **jopt)
+t(JO + "arrayAsList", ['dec (D.array D.string) ("[" ++ q (mk 1) ++ "]")', 'dec (D.array D.string) ("[" ++ q (mk 1) ++ ",2]")', 'dec (D.array D.int) "{}"',
+                       'let d = D.array D.int in ( dec d "[1,2]", dec d "[]" )'], needle="FIC_JD_ARRAY", **jopt)
+t(JD + "string", ['dec D.string (q (mk 1))', 'dec D.string "1"', 'let d = D.string in ( dec d "\\"a\\"", dec d "\\"b\\"" )'], needle="FIC_JD_STRING", **jopt)
+t(JD + "bool", ['dec D.bool "true"', 'dec D.bool (q (mk 1))', 'let d = D.bool in ( dec d "false", dec d "0" )'], needle="FIC_JD_BOOL", **jopt)
+t(JD + "int", ['dec D.int "9007199254740993"', 'dec D.int (q (mk 1))', 'let d = D.int in ( dec d "1e3", dec d "1.5", dec d "-0" )'], needle="FIC_JD_INT", **jopt)
+t(JD + "float", ['dec D.float "1.5"', 'dec D.float (q (mk 1))', 'let d = D.float in ( dec d "3", dec d "1e400", dec d "null" )'], needle="FIC_JD_FLOAT", **jopt)
+t(JD + "value", ['Result.map enc (dec D.value (js 1))', 'let r = dec D.value (js 2) in ( Result.map enc r, r == r )',
+                 'let d = D.value in ( Result.map enc (dec d "null"), Result.map enc (dec (D.index 1 d) (js 3)) )'], needle="FIC_JD_VALUE", **jopt)
+t(JD + "null", ['dec (D.null (mk 1)) "null"', 'dec (D.null (mk 2)) "1"', 'let d = D.null ( 1, mk 3 ) in ( dec d "null", dec d "null" )', 'dec (D.nullable D.string) "null"',
+                'dec (D.null 7) "null"', 'D.null (mk 1) == D.null (mk 1)'], needle="FIC_JD_NULL", **jopt)
+t(JD + "list", ['dec (D.list D.string) ("[" ++ q (mk 1) ++ "," ++ q (mk 2) ++ "]")', 'dec (D.list D.string) ("[" ++ q (mk 1) ++ "," ++ q (mk 2) ++ ",3]")',
+                'dec (D.list D.int) "[1,2,3]"', 'dec (D.list D.float) "[1.5]"', 'dec (D.list D.bool) "[true,false]"', 'dec (D.list (D.succeed ())) "[1]"',
+                'dec (D.list (D.map (\\s -> ( s, 1 )) D.string)) "[\\"a\\"]"', 'dec (D.list D.int) "{}"', 'dec (D.list (D.map Char.fromCode D.int)) "[97,98]"',
+                'let d = D.list (D.list D.string) in ( dec d "[[\\"a\\"],[]]", dec d "[[\\"a\\"],[1]]" )'], needle="FIC_JD_LIST", **jopt)
+t(JD + "field", ['dec (D.field (mk 1) D.string) ("{" ++ q (mk 1) ++ ":" ++ q (mk 2) ++ "}")', 'dec (D.field (mk 1) D.string) "{}"', 'dec (D.field (mk 1) D.string) ("{" ++ q (mk 1) ++ ":1}")',
+                 'dec (D.at [ "a", "b" ] D.string) "{\\"a\\":{\\"b\\":\\"c\\"}}"', 'let d = D.field "a" D.int in ( dec d "{\\"a\\":1}", dec d "[]", d == d )'], needle="fic_jd_field", **jopt)
+t(JD + "index", ['dec (D.index 1 D.string) (js 1)', 'dec (D.index 9 D.string) (js 1)', 'dec (D.index -1 D.string) (js 1)', 'dec (D.index 0 D.string) (js 1)',
+                 'let d = D.index 0 D.int in ( dec d "[5]", dec d "{}", d == D.index 1 D.int )'], needle="fic_jd_index", **jopt)
+t(JD + "oneOf", ['dec (D.oneOf [ D.string, D.map String.fromInt D.int ]) (q (mk 1))', 'dec (D.oneOf [ D.string, D.map String.fromInt D.int ]) "5"',
+                 'dec (D.oneOf [ D.string, D.map String.fromInt D.int ]) "true"', 'dec (D.oneOf [ D.fail (mk 1), D.fail (mk 2) ]) "1" |> Result.map ((+) 1)',
+                 'let ds = [ D.string, D.map String.fromInt D.int ] in ( dec (D.oneOf ds) "1", dec (D.oneOf ds) "true", List.length ds )',
+                 'D.oneOf [ D.int ] == D.oneOf [ D.int, D.int ]'], needle="fic_jd_oneof", **jopt)
+t(JD + "map", ['dec (D.map (\\s -> s ++ mk 1) D.string) "\\"a\\""', 'dec (D.map (\\s -> s ++ mk 1) D.string) "1"',
+               'let f = String.append (mk 2) in ( dec (D.map f D.string) "\\"a\\"", f "z" )', 'dec (D.map (\\n -> ( n, mk n )) D.int) "3"', 'dec (D.map String.length D.string) (q (mk 5))',
+               'let d = D.map mk D.int in ( dec d "1", dec d "2", dec (D.list d) "[3,4]" )'], needle="fic_jd_map1", **jopt)
+M2 = 'D.map2 (\\a b -> a ++ b) (D.index 0 D.string) (D.index 1 D.string)'
+t(JD + "map2", ['dec (%s) ("[" ++ q (mk 1) ++ "," ++ q (mk 2) ++ "]")' % M2, 'dec (%s) ("[1," ++ q (mk 2) ++ "]")' % M2, 'dec (%s) ("[" ++ q (mk 1) ++ ",2]")' % M2,
+                'dec (D.map3 (\\a b c -> [ a, b, c ]) (D.index 0 D.string) (D.index 1 D.string) (D.index 2 D.string)) ("[" ++ q (mk 1) ++ "," ++ q (mk 2) ++ "," ++ q (mk 3) ++ "]")',
+                'dec (D.map3 (\\a b c -> [ a, b, c ]) (D.index 0 D.string) (D.index 1 D.string) (D.index 2 D.string)) ("[" ++ q (mk 1) ++ "," ++ q (mk 2) ++ ",3]")',
+                'dec (D.map8 (\\a b c d e f g h -> ( [ a, b, c, d ], e + f, [ g, h ] )) D.string D.string D.string D.string (D.succeed 1) (D.succeed 2) D.string D.string) (q (mk 4))',
+                'let d = D.map2 Tuple.pair D.int D.int in ( dec d "1", dec d "true" )'], needle="fic_jd_map2", **jopt)
+t(JD + "decodeString", ['dec D.value (js 1) |> Result.map enc', 'dec D.int "{"', 'dec D.int ""', 'dec D.string "\\"a\\\\u00e9\\\\ud83d\\\\ude23\\\\n\\\\ud800x\\""',
+                        'dec D.value ("[1,{\\"a\\":[" ++ q (mk 1) ++ "],\\"b\\":}]") |> Result.map enc', 'let s = js 3 in ( dec D.value s |> Result.map enc, s )',
+                        'dec D.value "{\\"a\\":\\"x\\",\\"b\\":\\"y\\",\\"a\\":\\"z\\"}" |> Result.map enc', 'dec D.value " [ 1.5e2 , -0 , 12345678901234567890 , true , null ] x" |> Result.map enc',
+                        'dec D.value " [ 1.5e2 , -0 , 12345678901234567890 , true , null ] " |> Result.map enc'], needle="fic_jd_decode_string", **jopt)
+t(JD + "decodeValue", ['D.decodeValue D.string (E.string (mk 1)) |> Result.mapError D.errorToString',
+                       'let v = E.list E.string [ mk 1, mk 2 ] in ( D.decodeValue (D.list D.string) v |> Result.mapError D.errorToString, enc v )',
+                       'D.decodeValue D.int (E.string (mk 3)) |> Result.mapError D.errorToString',
+                       'D.decodeValue (D.field "a" D.int) (E.object [ ( "a", E.int 9 ) ]) |> Result.mapError Debug.toString'], needle="fic_jd_decode_value", **jopt)
+t(JD + "succeed", ['dec (D.succeed (mk 1)) "1"', 'let d = D.succeed [ mk 2 ] in ( dec d "1", dec d "2" )', 'dec (D.succeed 5) "{"', 'dec (D.succeed ( 1, mk 3 )) "1"',
+                   'D.succeed (mk 1) == D.succeed (mk 1)', 'D.succeed 1.5 == D.succeed 2.5', "dec (D.succeed 'c') \"0\""], needle="FIC_JD_SUCCEED", **jopt)
+t(JD + "fail", ['dec (D.map2 (+) D.int (D.fail (mk 1))) "1"', 'dec (D.oneOf [ D.fail (mk 2), D.int ]) "1"', 'dec (D.oneOf [ D.fail (mk 2), D.int ]) "true"',
+                'let d = D.oneOf [ D.fail (mk 3), D.int ] in ( dec d "1", dec (D.list d) "[1,null]" )'], needle="fic_jd_fail", **jopt)
+t(JD + "andThen", ['dec (D.string |> D.andThen (\\s -> D.succeed (s ++ mk 1))) "\\"a\\""', 'dec (D.int |> D.andThen (\\n -> if n > 0 then D.succeed (mk n) else D.fail (mk n))) "0"',
+                   'dec (D.int |> D.andThen (\\n -> if n > 0 then D.succeed (mk n) else D.fail (mk n))) "4"', 'dec (D.string |> D.andThen (\\s -> D.succeed (s ++ mk 1))) "1"',
+                   'dec (D.lazy (\\_ -> D.string)) "\\"a\\""', 'let d = D.string |> D.andThen (\\s -> D.map (\\n -> ( s, n )) (D.succeed 1)) in ( dec d (q (mk 2)), dec d "0" )'],
+  needle="fic_jd_andthen", **jopt)
+
+# ---- elm/bytes (runtime/fic_bytes.h, overlay/FicOverlayBytes.elm) ----
+BYTES = "import Bytes exposing (Bytes, Endianness(..))\nimport Bytes.Decode as BD\nimport Bytes.Encode as BE"
+BDECL = """
+bs : List Int -> Bytes
+bs xs =
+    BE.encode (BE.sequence (List.map BE.unsignedInt8 xs))
+
+
+toList : Bytes -> List Int
+toList b =
+    Maybe.withDefault [ -1 ] (BD.decode (BD.loop ( Bytes.width b, [] ) listStep) b)
+
+
+listStep : ( Int, List Int ) -> BD.Decoder (BD.Step ( Int, List Int ) (List Int))
+listStep ( n, acc ) =
+    if n <= 0 then
+        BD.succeed (BD.Done (List.reverse acc))
+
+    else
+        BD.map (\\x -> BD.Loop ( n - 1, x :: acc )) BD.unsignedInt8
+
+
+strStep : ( Int, List String ) -> BD.Decoder (BD.Step ( Int, List String ) (List String))
+strStep ( n, acc ) =
+    if n <= 0 then
+        BD.succeed (BD.Done (List.reverse acc))
+
+    else
+        BD.map (\\s -> BD.Loop ( n - 1, (s ++ mk n) :: acc )) (BD.string 1)
+"""
+bopt = dict(imports=BYTES, decls=BDECL, deps=["elm/bytes"])
+BO = "author/project:FicOverlayBytes."
+t("elm/bytes:Bytes.width", ['Bytes.width (bs [ 1, 2, 3 ])', 'let b = bs [ 1 ] in ( Bytes.width b, Bytes.width b, b == b )', 'Bytes.width (bs [])', 'Debug.toString (bs [ 1, 2 ])'],
+  needle="fic_bytes_width", **bopt)
+t("elm/bytes:Bytes.Encode.encode",
+  ['toList (BE.encode (BE.sequence [ BE.signedInt8 -1, BE.signedInt16 BE -2, BE.signedInt32 LE -3, BE.unsignedInt8 4, BE.unsignedInt16 LE 5, BE.unsignedInt32 BE 6, BE.float32 BE 1.5, BE.float64 LE 2.5, BE.string (mk 7), BE.bytes (bs [ 8, 9 ]), BE.sequence [] ]))',
+   'let e = BE.string (mk 1) in ( toList (BE.encode e), toList (BE.encode (BE.sequence [ e, e ])) )', 'Bytes.width (BE.encode (BE.sequence []))',
+   'let b = bs [ 1, 2 ] in ( toList (BE.encode (BE.sequence [ BE.bytes b, BE.bytes b ])), toList b )', 'toList (BE.encode (BE.float32 LE 1.0e40))'], needle="fic_bytes_encode", **bopt)
+t("elm/bytes:Bytes.Encode.getStringWidth", ['BE.getStringWidth (mk 1)', 'let s = mk 22 ++ "é" in ( BE.getStringWidth s, s )', 'BE.getStringWidth ""'], needle="fic_bytes_string_width", **bopt)
+t(BO + "wrap", ['BD.decode (BD.succeed (mk 1)) (bs [])', 'let d = BD.succeed (mk 2) in ( BD.decode d (bs []), BD.decode d (bs [ 1 ]) )', 'BD.decode (BD.map2 (+) BD.unsignedInt8 BD.fail) (bs [ 1 ])',
+                'BD.decode (BD.map (\\x -> mk x) BD.unsignedInt8) (bs [ 5 ])'], **bopt)
+t(BO + "unwrap", ['BD.decode (BD.string 2) (bs [ 104, 105 ])', 'let b = bs [ 104, 105, 106 ] in ( BD.decode (BD.string 3) b, BD.decode (BD.string 4) b, Bytes.width b )',
+                  'BD.decode (BD.string 1 |> BD.andThen (\\s -> BD.map (\\u -> s ++ u) (BD.string 5))) (bs [ 97, 98 ])',
+                  'BD.decode (BD.string 1 |> BD.andThen (\\s -> BD.map (\\u -> s ++ u) (BD.string 1))) (bs [ 97, 98 ])',
+                  'BD.decode (BD.loop ( 3, [] ) strStep) (bs [ 97, 98, 99 ])', 'BD.decode (BD.loop ( 4, [] ) strStep) (bs [ 97, 98, 99 ])',
+                  'BD.decode (BD.map5 (\\a b c d e -> [ a, b, c, d, e ]) (BD.string 1) (BD.string 1) (BD.string 1) (BD.string 1) (BD.string 1)) (bs [ 97, 98, 99, 100, 101 ])',
+                  'BD.decode (BD.map5 (\\a b c d e -> [ a, b, c, d, e ]) (BD.string 1) (BD.string 1) (BD.string 1) (BD.string 1) (BD.string 1)) (bs [ 97, 98, 99, 100 ])'], **bopt)
+t(BO + "failure", ['BD.decode (BD.map2 (+) BD.unsignedInt8 BD.fail) (bs [ 1 ])', 'BD.decode (BD.map2 (\\a b -> a ++ b) (BD.string 1) (BD.andThen (\\_ -> BD.fail) BD.unsignedInt8)) (bs [ 97, 98 ])',
+                   'BD.decode (BD.map (\\x -> ( x, mk 1 )) BD.unsignedInt8) (bs [])', 'BD.decode (BD.float64 BE) (bs [ 1 ])', 'BD.decode (BD.map (\\b -> toList b) (BD.bytes 3)) (bs [ 1 ])',
+                   'BD.decode (BD.map2 Tuple.pair (BD.map (\\x -> [ mk x ]) BD.unsignedInt8) (BD.float32 LE)) (bs [ 1, 2 ])'], **bopt)
+for kname, d8, ok, short in (("readI8", "BD.signedInt8", "[ 255 ]", "[]"), ("readU8", "BD.unsignedInt8", "[ 255 ]", "[]"),
+                             ("readI16", "(BD.signedInt16 BE)", "[ 255, 254 ]", "[ 1 ]"), ("readU16", "(BD.unsignedInt16 LE)", "[ 1, 2 ]", "[ 1 ]"),
+                             ("readI32", "(BD.signedInt32 BE)", "[ 128, 0, 0, 1 ]", "[ 1, 2, 3 ]"), ("readU32", "(BD.unsignedInt32 LE)", "[ 255, 255, 255, 255 ]", "[ 1, 2, 3 ]"),
+                             ("readF32", "(BD.float32 BE)", "[ 63, 192, 0, 0 ]", "[ 1, 2, 3 ]"), ("readF64", "(BD.float64 LE)", "[ 0, 0, 0, 0, 0, 0, 4, 64 ]", "[ 1, 2, 3, 4, 5, 6, 7 ]")):
+    t(BO + kname, ['BD.decode %s (bs %s)' % (d8, ok), 'BD.decode %s (bs %s)' % (d8, short),
+                   'let b = bs (%s ++ %s) in ( BD.decode (BD.map2 Tuple.pair %s %s) b, BD.decode (BD.map3 (\\x y z -> [ x, y, z ]) %s %s %s) b, Bytes.width b )' % (ok, ok, d8, d8, d8, d8, d8)], **bopt)
+t(BO + "readBytes", ['Maybe.map toList (BD.decode (BD.bytes 2) (bs [ 1, 2, 3 ]))', 'Maybe.map toList (BD.decode (BD.bytes 4) (bs [ 1, 2, 3 ]))',
+                     'let b = bs [ 1, 2, 3 ] in ( Maybe.map toList (BD.decode (BD.map2 (\\_ x -> x) BD.unsignedInt8 (BD.bytes 2)) b), toList b )',
+                     'Maybe.map toList (BD.decode (BD.bytes 0) (bs []))', 'Maybe.map toList (BD.decode (BD.bytes -1) (bs [ 1 ]))'], needle="fic_bytes_read_bytes", **bopt)
+t(BO + "readString", ['BD.decode (BD.string 2) (bs [ 104, 105 ])', 'BD.decode (BD.string 2) (bs [ 195, 40 ])', 'BD.decode (BD.string 3) (bs [ 104, 105 ])',
+                      'let b = BE.encode (BE.string (mk 1 ++ "é😣")) in ( BD.decode (BD.string (Bytes.width b)) b, BD.decode (BD.string 3) b, Bytes.width b )',
+                      'BD.decode (BD.string 0) (bs [])', 'BD.decode (BD.string -1) (bs [ 1 ])'], needle="fic_bytes_read_string", **bopt)
+
 ELM_JSON = '''{"type": "application", "source-directories": ["src"], "elm-version": "0.19.3",
- "dependencies": {"direct": {"elm/core": "1.0.5"%s}, "indirect": {"elm/json": "1.1.3"}}, "test-dependencies": {"direct": {}, "indirect": {}}}
+ "dependencies": {"direct": {"elm/core": "1.0.5"%s}, "indirect": {%s}}, "test-dependencies": {"direct": {}, "indirect": {}}}
 '''
 CFLAGS = ["-std=c99", "-ffp-contract=off", "-w"]
 SAN = ["-O1", "-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL", "-DFIC_STATS"]
@@ -187,7 +342,10 @@ SAN = ["-O1", "-fsanitize=address,undefined", "-fno-sanitize-recover=undefined",
 def needed():
     """the kernels of the table that hold a reference: a `b` or `o` in the signature, or a reference result"""
     ar, sig = kernel_sigs.table()
-    ref_result = {"elm/core:String.fromInt", "elm/core:String.fromFloat", "elm/core:Elm.JsArray.empty", "elm/core:Platform.Cmd.none", "elm/core:Platform.Sub.none"}
+    ref_result = {"elm/core:String.fromInt", "elm/core:String.fromFloat", "elm/core:Elm.JsArray.empty", "elm/core:Platform.Cmd.none", "elm/core:Platform.Sub.none",
+                  "elm/json:Json.Encode.int", "elm/json:Json.Encode.float", "elm/json:Json.Encode.bool", "elm/json:Json.Encode.null", "elm/json:Json.Decode.string",
+                  "elm/json:Json.Decode.bool", "elm/json:Json.Decode.int", "elm/json:Json.Decode.float", "elm/json:Json.Decode.value",
+                  "author/project:FicOverlayJson.objectKeys", "author/project:FicOverlayBytes.failure"}
     out = []
     for c in ar:
         s = "bb" if c == "elm/core:Basics.append" else sig.get(c, "")
@@ -215,7 +373,9 @@ def run_one(a, kernel, work):
     exprs, opt = T[kernel]
     shutil.rmtree(work, ignore_errors=True)
     os.makedirs(os.path.join(work, "src"))
-    open(os.path.join(work, "elm.json"), "w").write(ELM_JSON % (', "elm/parser": "1.1.0"' if opt.get("parser") else ""))
+    deps = opt.get("deps", []) + (["elm/parser"] if opt.get("parser") else [])
+    versions = {"elm/parser": "1.1.0", "elm/json": "1.1.3", "elm/bytes": "1.0.8"}
+    open(os.path.join(work, "elm.json"), "w").write(ELM_JSON % ("".join(', "%s": "%s"' % (d, versions[d]) for d in deps), "" if "elm/json" in deps else '"elm/json": "1.1.3"'))
     open(os.path.join(work, "src", "Main.fic"), "w").write(program(kernel))
     env = dict(os.environ, ELM_HOME=a.elm_home)
     elm = os.path.abspath(a.elm)

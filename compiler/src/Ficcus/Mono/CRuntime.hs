@@ -6,6 +6,8 @@ module Ficcus.Mono.CRuntime
   , jsArrayRuntime
   , stringRuntime
   , fdlibmRuntime
+  , jsonRuntime
+  , bytesRuntime
   )
   where
 
@@ -56,3 +58,15 @@ stringRuntime =
 fdlibmRuntime :: String
 fdlibmRuntime =
   $(embedFiles [ "runtime/fic_fdlibm.h" ])
+
+
+-- the kernel of elm/json (needs the closure, JsArray and String runtimes): emitted only by programs that use it
+jsonRuntime :: String
+jsonRuntime =
+  $(embedFiles [ "runtime/fic_json.h" ])
+
+
+-- the kernel of elm/bytes (needs the String runtime): emitted only by programs that use it
+bytesRuntime :: String
+bytesRuntime =
+  $(embedFiles [ "runtime/fic_bytes.h" ])

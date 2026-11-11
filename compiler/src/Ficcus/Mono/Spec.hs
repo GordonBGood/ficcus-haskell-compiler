@@ -384,6 +384,9 @@ classOfName enums name _ =
     "elm/core:String.String" -> CRef         -- declared as a one constructor type in elm/core, but a built-in
     "elm/core:List.List" -> CRef
     "elm/core:Elm.JsArray.JsArray" -> CRef   -- declared without constructors, a built-in (runtime/fic_jsarray.h)
+    "elm/json:Json.Encode.Value" -> CRef      -- declared with one constructor without fields: built-ins (runtime/fic_json.h, fic_bytes.h)
+    "elm/json:Json.Decode.Decoder" -> CRef
+    "elm/bytes:Bytes.Bytes" -> CRef
     "elm/core:Platform.Cmd.Cmd" -> CUnit       -- commands are ignored by Platform.worker (STAGE3-PLAN R9)
     "elm/core:Platform.Sub.Sub" -> CUnit
     "elm/core:Platform.Program" -> CUnit

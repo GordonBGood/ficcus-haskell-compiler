@@ -25,7 +25,7 @@ import Ficcus.Mono.Class (AppClass(..), Key(..), KeyPart(..))
 -- | arity of a kernel function by callee id
 kernelArity :: String -> Maybe Int
 kernelArity cid =
-  lookup cid
+  lookup cid $
     [ ("elm/core:Basics.add", 2), ("elm/core:Basics.sub", 2), ("elm/core:Basics.mul", 2), ("elm/core:Basics.mulRound53", 2)
     , ("elm/core:Basics.fdiv", 2), ("elm/core:Basics.idiv", 2), ("elm/core:Basics.pow", 2)
     , ("elm/core:Basics.negate", 1), ("elm/core:Basics.modBy", 2), ("elm/core:Basics.remainderBy", 2)
@@ -66,6 +66,35 @@ kernelArity cid =
     , ("elm/core:Platform.worker", 1)
     , ("elm/core:Platform.Cmd.none", 0), ("elm/core:Platform.Sub.none", 0)
     ]
+    ++ jsonKernels ++ bytesKernels
+
+
+-- elm/json (runtime/fic_json.h). The functions of Json.Encode and Json.Decode that are kernel functions in Elm are kernels here by the
+-- id of their Elm wrapper; `Json.Encode.list`, `array`, `set`, `object`, `dict` and `Json.Decode.array`, `keyValuePairs`, `map3` to
+-- `map8` are written in Elm (overlay/FicOverlayJson.elm) on top of the five kernels declared there.
+jsonKernels :: [(String, Int)]
+jsonKernels =
+  [ ("elm/json:Json.Encode.encode", 2), ("elm/json:Json.Encode.string", 1), ("elm/json:Json.Encode.int", 1), ("elm/json:Json.Encode.float", 1)
+      , ("elm/json:Json.Encode.bool", 1), ("elm/json:Json.Encode.null", 0) ]
+  ++ [ ("author/project:FicOverlayJson.arrayFrom", 1), ("author/project:FicOverlayJson.objectFrom", 2), ("author/project:FicOverlayJson.objectKeys", 0)
+      , ("author/project:FicOverlayJson.objectValues", 1), ("author/project:FicOverlayJson.arrayAsList", 1) ]
+  ++ [ ("elm/json:Json.Decode.string", 0), ("elm/json:Json.Decode.bool", 0), ("elm/json:Json.Decode.int", 0), ("elm/json:Json.Decode.float", 0)
+      , ("elm/json:Json.Decode.value", 0), ("elm/json:Json.Decode.null", 1), ("elm/json:Json.Decode.list", 1), ("elm/json:Json.Decode.field", 2)
+      , ("elm/json:Json.Decode.index", 2), ("elm/json:Json.Decode.oneOf", 1), ("elm/json:Json.Decode.map", 2), ("elm/json:Json.Decode.map2", 3)
+      , ("elm/json:Json.Decode.decodeString", 2), ("elm/json:Json.Decode.decodeValue", 2), ("elm/json:Json.Decode.succeed", 1)
+      , ("elm/json:Json.Decode.fail", 1), ("elm/json:Json.Decode.andThen", 2) ]
+
+
+-- elm/bytes (runtime/fic_bytes.h). `Bytes.Decode` is written in Elm (overlay/FicOverlayBytes.elm) on top of the readers declared
+-- there: a failed read gives the offset -1 and a placeholder value (`failure`), so no exception is needed.
+bytesKernels :: [(String, Int)]
+bytesKernels =
+  [ ("elm/bytes:Bytes.width", 1), ("elm/bytes:Bytes.Encode.encode", 1), ("elm/bytes:Bytes.Encode.getStringWidth", 1) ]
+  ++ [ ("author/project:FicOverlayBytes.wrap", 1), ("author/project:FicOverlayBytes.unwrap", 1), ("author/project:FicOverlayBytes.failure", 1)
+      , ("author/project:FicOverlayBytes.readI8", 2), ("author/project:FicOverlayBytes.readU8", 2), ("author/project:FicOverlayBytes.readI16", 3)
+      , ("author/project:FicOverlayBytes.readU16", 3), ("author/project:FicOverlayBytes.readI32", 3), ("author/project:FicOverlayBytes.readU32", 3)
+      , ("author/project:FicOverlayBytes.readF32", 3), ("author/project:FicOverlayBytes.readF64", 3), ("author/project:FicOverlayBytes.readBytes", 3)
+      , ("author/project:FicOverlayBytes.readString", 3) ]
 
 
 -- | variables of kernel functions keyed by their exact type even though the scheme does not say so
@@ -81,6 +110,7 @@ directKernelIds :: String -> String -> [String]
 directKernelIds m n =
   case m of
     "Parser" -> [ "elm/parser:Parser.Advanced." ++ n ]
+    "Bytes" -> [ "elm/bytes:Bytes." ++ n, "elm/bytes:Bytes.Encode." ++ n ]
     _ -> [ "elm/core:" ++ m ++ "." ++ n ]
 
 
@@ -133,6 +163,25 @@ kernelSig cid key =
       , ("elm/core:Basics.lt", "bb"), ("elm/core:Basics.le", "bb"), ("elm/core:Basics.compare", "bb")
       ]
       ++ [ (n, replicate k 's') | (n, k) <- scalarKernels ]
+      -- elm/json: a function that builds a decoder consumes what it stores (decoders, closures, the constant of succeed and null,
+      -- the message of fail, the list of oneOf); running a decoder borrows it and the value; Encode.string returns its argument
+      ++ [ ("elm/json:Json.Encode.encode", "sb"), ("elm/json:Json.Encode.string", "o"), ("elm/json:Json.Encode.int", "s"), ("elm/json:Json.Encode.float", "s")
+      , ("elm/json:Json.Encode.bool", "s"), ("elm/json:Json.Encode.null", "") ]
+      ++ [ ("author/project:FicOverlayJson.arrayFrom", "b"), ("author/project:FicOverlayJson.objectFrom", "bb"), ("author/project:FicOverlayJson.objectKeys", "")
+      , ("author/project:FicOverlayJson.objectValues", "o"), ("author/project:FicOverlayJson.arrayAsList", "o") ]
+      ++ [ ("elm/json:Json.Decode.string", ""), ("elm/json:Json.Decode.bool", ""), ("elm/json:Json.Decode.int", ""), ("elm/json:Json.Decode.float", "")
+      , ("elm/json:Json.Decode.value", ""), ("elm/json:Json.Decode.null", "o"), ("elm/json:Json.Decode.list", "o"), ("elm/json:Json.Decode.field", "oo")
+      , ("elm/json:Json.Decode.index", "so"), ("elm/json:Json.Decode.oneOf", "o"), ("elm/json:Json.Decode.map", "oo"), ("elm/json:Json.Decode.map2", "ooo")
+      , ("elm/json:Json.Decode.decodeString", "bb"), ("elm/json:Json.Decode.decodeValue", "bb"), ("elm/json:Json.Decode.succeed", "o")
+      , ("elm/json:Json.Decode.fail", "o"), ("elm/json:Json.Decode.andThen", "oo") ]
+      -- elm/bytes: bytes, encoders and strings are borrowed; wrap stores its function, unwrap gives a counted copy of it
+      ++ [ ("elm/bytes:Bytes.width", "b"), ("elm/bytes:Bytes.Encode.encode", "b"), ("elm/bytes:Bytes.Encode.getStringWidth", "b") ]
+      ++ [ ("author/project:FicOverlayBytes.wrap", "o"), ("author/project:FicOverlayBytes.unwrap", "b"), ("author/project:FicOverlayBytes.failure", "s")
+      , ("author/project:FicOverlayBytes.readI8", "bs"), ("author/project:FicOverlayBytes.readU8", "bs"), ("author/project:FicOverlayBytes.readI16", "sbs")
+      , ("author/project:FicOverlayBytes.readU16", "sbs"), ("author/project:FicOverlayBytes.readI32", "sbs")
+      , ("author/project:FicOverlayBytes.readU32", "sbs"), ("author/project:FicOverlayBytes.readF32", "sbs")
+      , ("author/project:FicOverlayBytes.readF64", "sbs"), ("author/project:FicOverlayBytes.readBytes", "sbs")
+      , ("author/project:FicOverlayBytes.readString", "sbs") ]
 
 
 -- the kernels whose arguments are never references

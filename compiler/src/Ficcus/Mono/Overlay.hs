@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, PatternGuards #-}
 module Ficcus.Mono.Overlay
   ( overlaySource
   , overlayModuleName
@@ -10,6 +10,8 @@ module Ficcus.Mono.Overlay
   , bitwise64FileName
   , parserSource
   , parserFileName
+  , jsonSource, jsonFileName
+  , bytesSource, bytesFileName
   )
   where
 
@@ -22,6 +24,9 @@ module Ficcus.Mono.Overlay
 -- `elm-stuff/ficcus-overlay/` and compiled as an extra root module of every `.c` and `.mono` build, and the
 -- specializer redirects the kernel id to the definition below.
 
+
+import Data.Char (toUpper)
+import qualified Data.List as List
 
 import Ficcus.Mono.Embed (embedFiles)
 
@@ -49,6 +54,14 @@ overlayId cid =
       case cid of
         "elm/parser:Parser.Advanced.multiComment" -> Just "author/project:FicOverlayParser.multiComment"
         "elm/random:Random.float" -> Just "author/project:FicOverlayRandom.float"
+        _ | Just n <- List.stripPrefix "elm/json:Json.Encode." cid, n `elem` ["list", "array", "set", "object", "dict"] ->
+              Just ("author/project:FicOverlayJson.encode" ++ capital n)
+          | Just n <- List.stripPrefix "elm/json:Json.Decode." cid, n `elem` ["array", "keyValuePairs", "map3", "map4", "map5", "map6", "map7", "map8"] ->
+              Just ("author/project:FicOverlayJson." ++ n)
+          | Just n <- List.stripPrefix "elm/bytes:Bytes.Decode." cid
+          , n `elem` [ "decode", "signedInt8", "signedInt16", "signedInt32", "unsignedInt8", "unsignedInt16", "unsignedInt32", "float32", "float64"
+                     , "bytes", "string", "map", "map2", "map3", "map4", "map5", "andThen", "succeed", "fail", "loop" ] ->
+              Just ("author/project:FicOverlayBytes." ++ n)
         _ -> Nothing
   where
     table =
@@ -58,6 +71,7 @@ overlayId cid =
       , ("elm/core:List.sortBy", "listSortBy"), ("elm/core:List.sortWith", "listSortWith")
       ]
     -- the module of the parser overlay is not the same: see below
+    capital n = case n of { c : rest -> toUpper c : rest; [] -> [] }
 
 
 -- the 64 bit Bitwise module (overlay/Bitwise64.elm): written beside FicOverlay.elm, its functions are kernel functions
@@ -78,6 +92,26 @@ parserSource =
 
 parserFileName :: FilePath
 parserFileName = "FicOverlayParser.elm"
+
+
+-- the elm/json overlay (overlay/FicOverlayJson.elm): compiled only into projects that depend directly on elm/json
+jsonSource :: String
+jsonSource =
+  $(embedFiles [ "overlay/FicOverlayJson.elm" ])
+
+
+jsonFileName :: FilePath
+jsonFileName = "FicOverlayJson.elm"
+
+
+-- the elm/bytes overlay (overlay/FicOverlayBytes.elm): compiled only into projects that depend directly on elm/bytes
+bytesSource :: String
+bytesSource =
+  $(embedFiles [ "overlay/FicOverlayBytes.elm" ])
+
+
+bytesFileName :: FilePath
+bytesFileName = "FicOverlayBytes.elm"
 
 
 -- the elm/random overlay (overlay/FicOverlayRandom.elm): compiled only into projects that depend on elm/random

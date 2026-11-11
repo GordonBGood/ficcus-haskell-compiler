@@ -30,7 +30,7 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
-import Ficcus.Mono.CRuntime (closureRuntime, fdlibmRuntime, jsArrayRuntime, prelude, stringRuntime)
+import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, prelude, stringRuntime)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free (captures, refClass)
 import Ficcus.Mono.Ir
@@ -130,10 +130,13 @@ generate rcMode program =
               body = unlines (concatMap (\l -> if l == helperMark then extra else if l == "  /* PK_RELEASE */" then [ "  fic_pk_release();" | pkUsed ] else [l]) (reverse (gOut final)))
               pkUsed = any ("fic_pk_" `List.isInfixOf`) (gOut final)
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
-          in Right ((if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n" ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_"] then closureRuntime ++ "\n" else "")
+          in Right ((if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n" ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_"] then closureRuntime ++ "\n" else "")
                     ++ (if "fic_fd_" `List.isInfixOf` body then fdlibmRuntime ++ "\n" else "")
-                    ++ (if "fic_ja_" `List.isInfixOf` body then jsArrayRuntime ++ "\n" else "")
-                    ++ (if any (`List.isInfixOf` body) ["fic_us_", "fic_pk_"] then stringRuntime ++ "\n" else "")
+                    ++ (if any (`List.isInfixOf` body) ["fic_ja_", "fic_json_", "fic_jd_"] then jsArrayRuntime ++ "\n" else "")
+                    ++ (if any (`List.isInfixOf` body) ["fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_"] then stringRuntime ++ "\n" else "")
+                    -- the kernels of elm/json and elm/bytes, after the runtimes they are written with
+                    ++ (if any (`List.isInfixOf` body) ["fic_json_", "fic_jd_"] then jsonRuntime ++ "\n" else "")
+                    ++ (if "fic_bytes_" `List.isInfixOf` body then bytesRuntime ++ "\n" else "")
                     ++ "\n" ++ body)
         errs -> Left errs
 
@@ -1062,7 +1065,142 @@ kernelValue name key =
     "elm/core:Basics.pi" -> return "3.141592653589793"
     "elm/core:Platform.Cmd.none" -> return "0"
     "elm/core:Platform.Sub.none" -> return "0"
+    -- elm/json: the primitive decoders are static objects (an owned reference to one), `null` is a static value
+    "elm/json:Json.Decode.string" -> return "fic_jd_prim(FIC_JD_STRING)"
+    "elm/json:Json.Decode.bool" -> return "fic_jd_prim(FIC_JD_BOOL)"
+    "elm/json:Json.Decode.int" -> return "fic_jd_prim(FIC_JD_INT)"
+    "elm/json:Json.Decode.float" -> return "fic_jd_prim(FIC_JD_FLOAT)"
+    "elm/json:Json.Decode.value" -> return "fic_jd_prim(FIC_JD_VALUE)"
+    "author/project:FicOverlayJson.objectKeys" -> return "fic_jd_prim(FIC_JD_KEYS)"
+    "elm/json:Json.Encode.null" -> return "fic_json_null()"
     _ -> failWith ("kernel value `" ++ name ++ "` is not supported by the C generator yet")
+
+
+-- THE KERNELS OF elm/json AND elm/bytes (runtime/fic_json.h, runtime/fic_bytes.h; STAGE4-PLAN section 8)
+--
+-- A value of a type variable of a decoder (`succeed x`, the result of the function of `map`) is a word of the closure ABI; the
+-- runtime gets its class code ('p' a reference, 'i', 'd', 'c', 'e'). `decodeValue` and `decodeString` build the `Result` here, where
+-- the class of the result is known. The readers of `Bytes.Decode` return the pair (new offset, value) as a struct.
+jsonBytesCall :: Info -> Class -> String -> Key -> [MExpr] -> Maybe (CG String)
+jsonBytesCall info cls name key args =
+  case (name, args) of
+    ("elm/json:Json.Encode.encode", [_, _]) -> call "fic_json_encode"
+    ("elm/json:Json.Encode.string", [_]) -> Just (do { vs <- atoms info args; return (concat vs) })
+    ("elm/json:Json.Encode.int", [_]) -> call "fic_json_int"
+    ("elm/json:Json.Encode.float", [_]) -> call "fic_json_float"
+    ("elm/json:Json.Encode.bool", [_]) -> call "fic_json_bool"
+    ("author/project:FicOverlayJson.arrayFrom", [_]) -> call "fic_json_array_from"
+    ("author/project:FicOverlayJson.objectFrom", [_, _]) -> call "fic_json_object_from"
+    ("elm/json:Json.Decode.null", [x]) -> constant "FIC_JD_NULL" x
+    ("elm/json:Json.Decode.succeed", [x]) -> constant "FIC_JD_SUCCEED" x
+    ("elm/json:Json.Decode.fail", [_]) -> call "fic_jd_fail"
+    ("elm/json:Json.Decode.list", [_]) -> callWith "fic_jd_list" ["FIC_JD_LIST"]
+    ("author/project:FicOverlayJson.arrayAsList", [_]) -> callWith "fic_jd_list" ["FIC_JD_ARRAY"]
+    ("author/project:FicOverlayJson.objectValues", [_]) -> callWith "fic_jd_list" ["FIC_JD_VALUES"]
+    ("elm/json:Json.Decode.field", [_, _]) -> call "fic_jd_field"
+    ("elm/json:Json.Decode.index", [_, _]) -> call "fic_jd_index"
+    ("elm/json:Json.Decode.oneOf", [_]) -> call "fic_jd_oneof"
+    ("elm/json:Json.Decode.andThen", [_, _]) -> call "fic_jd_andthen"
+    -- the class of the result of the function is the class of the last variable of the scheme (`value`)
+    ("elm/json:Json.Decode.map", [_, _]) | Just c <- lastClass -> callWith "fic_jd_map1" [codeOf c]
+    ("elm/json:Json.Decode.map2", [_, _, _]) | Just c <- lastClass -> callWith "fic_jd_map2" [codeOf c]
+    ("elm/json:Json.Decode.decodeValue", [_, _]) | Just c <- lastClass -> Just (run "fic_jd_decode_value" c)
+    ("elm/json:Json.Decode.decodeString", [_, _]) | Just c <- lastClass -> Just (run "fic_jd_decode_string" c)
+    ("elm/bytes:Bytes.width", [_]) -> call "fic_bytes_width"
+    ("elm/bytes:Bytes.Encode.encode", [_]) -> call "fic_bytes_encode"
+    ("elm/bytes:Bytes.Encode.getStringWidth", [_]) -> call "fic_bytes_string_width"
+    -- the constructor `Decoder` of Bytes.Decode (one field, a function) and its field
+    ("author/project:FicOverlayBytes.wrap", [_]) -> Just (do { vs <- atoms info args; needObj [CRef]; allocObj [CRef] 0 vs })
+    ("author/project:FicOverlayBytes.unwrap", [_]) ->
+      Just $
+        do  vs <- atoms info args
+            needObj [CRef]
+            rcMode <- gets gRc
+            f <- fresh "bf"
+            emit ("fic_ref " ++ f ++ " = " ++ fieldRead classType [CRef] 0 ("((" ++ objType [CRef] ++ " *)(" ++ concat vs ++ "))") ++ ";")
+            when rcMode (emit ("fic_dup(" ++ f ++ ");"))
+            return f
+    ("author/project:FicOverlayBytes.failure", [_]) ->
+      Just $
+        do  _ <- atoms info args
+            pair (\_ -> return "-1") (\c -> return (placeholder c))
+    ("author/project:FicOverlayBytes.readI8", [_, _]) -> readInt "1, 1, 1"
+    ("author/project:FicOverlayBytes.readU8", [_, _]) -> readInt "1, 0, 1"
+    ("author/project:FicOverlayBytes.readI16", [_, _, _]) -> readInt "2, 1"
+    ("author/project:FicOverlayBytes.readU16", [_, _, _]) -> readInt "2, 0"
+    ("author/project:FicOverlayBytes.readI32", [_, _, _]) -> readInt "4, 1"
+    ("author/project:FicOverlayBytes.readU32", [_, _, _]) -> readInt "4, 0"
+    ("author/project:FicOverlayBytes.readF32", [_, _, _]) -> reader "fic_bytes_read_f32(" "double" "0"
+    ("author/project:FicOverlayBytes.readF64", [_, _, _]) -> reader "fic_bytes_read_f64(" "double" "0"
+    ("author/project:FicOverlayBytes.readBytes", [_, _, _]) -> reader "fic_bytes_read_bytes(" "fic_ref" "NULL"
+    ("author/project:FicOverlayBytes.readString", [_, _, _]) -> reader "fic_bytes_read_string(" "fic_ref" "NULL"
+    _ -> Nothing
+  where
+    call fn = callWith fn []
+    callWith fn first = Just (do { vs <- atoms info args; return (fn ++ "(" ++ List.intercalate ", " (first ++ vs) ++ ")") })
+
+    lastClass = case key of { Key parts | ByClass c : _ <- reverse parts -> Just c; _ -> Nothing }
+
+    codeOf c =
+      case abiClass c of
+        CI64 -> "'i'"
+        CF64 -> "'d'"
+        CU32 -> "'c'"
+        CEnum -> "'e'"
+        CUnit -> "'e'"
+        _ -> "'p'"
+
+    constant kind x =
+      Just $
+        do  vs <- atomsTo info [(x, abiClass (mRep x))]
+            return ("fic_jd_const(" ++ kind ++ ", " ++ codeOf (mRep x) ++ ", " ++ wordMk (mRep x) (concat vs) ++ ")")
+
+    -- Result: Ok is constructor 0 (one field, the value), Err constructor 1 (the Error)
+    run fn c =
+      do  vs <- atoms info args
+          let fc = abiClass c
+          needObj [fc]
+          needObj [CRef]
+          w <- fresh "jw"; e <- fresh "je"; r <- fresh "jr"
+          emit ("fic_word " ++ w ++ ";")
+          emit ("fic_ref " ++ e ++ " = " ++ fn ++ "(" ++ List.intercalate ", " vs ++ ", &" ++ w ++ ");")
+          emit ("fic_ref " ++ r ++ ";")
+          emit ("if (" ++ e ++ " == NULL) {")
+          indented (do { o <- allocObj [fc] 0 [w ++ wordSel fc]; emit (r ++ " = " ++ o ++ ";") })
+          emit "} else {"
+          indented (do { o <- allocObj [CRef] 1 [e]; emit (r ++ " = " ++ o ++ ";") })
+          emit "}"
+          return r
+
+    -- the struct (offset, value) of a reader
+    pair mkOffset mkValue =
+      case cls of
+        CStruct [CI64, vc] ->
+          do  needClass info cls
+              o <- mkOffset vc
+              v <- mkValue vc
+              t <- fresh "bp"
+              emit (classType cls ++ " " ++ t ++ " = { " ++ o ++ ", " ++ v ++ " };")
+              return t
+        _ -> failWith ("internal: the result of " ++ name ++ " is not a pair of an offset and a value")
+
+    -- a value that is never looked at (only dropped): a reference is the static empty list
+    placeholder c =
+      case c of
+        CRef -> "fic_nil()"
+        CF64 -> "0.0"
+        CStruct fs -> "{ " ++ List.intercalate ", " (map placeholder fs) ++ " }"
+        _ -> "0"
+
+    readInt how = reader ("fic_bytes_read_int(" ++ how ++ ", ") "int64_t" "0"
+
+    reader fn ctype zero =
+      Just $
+        do  vs <- atoms info args
+            v <- fresh "bv"; o <- fresh "bo"
+            emit (ctype ++ " " ++ v ++ " = " ++ zero ++ ";")
+            emit ("int64_t " ++ o ++ " = " ++ fn ++ List.intercalate ", " vs ++ ", &" ++ v ++ ");")
+            pair (\_ -> return o) (\_ -> return v)
 
 
 data Num' = NInt | NFloat | NOther String
@@ -1095,6 +1233,7 @@ kernelCall info cls name key args =
       do  avs <- atomsTo info [(f, CRef), (acc, cb), (s, CRef)]
           let fn = if name == "elm/core:String.foldl" then "fic_us_foldl" else "fic_us_foldr"
           adaptOwn cb cls (fn ++ "(" ++ (avs !! 0) ++ ", " ++ (if boxedClass cb == CRef then "2u" else "0u") ++ ", " ++ wordMk cb (avs !! 1) ++ ", " ++ (avs !! 2) ++ ")" ++ wordSel cb)
+    _ | Just act <- jsonBytesCall info cls name key args -> act
     _ ->
       do  vals <- atoms info args
           case (name, vals) of
@@ -1358,6 +1497,13 @@ showStmt _ t sb v =
     TyCon "elm/core:Basics.Bool" [] -> emit ("fic_sb_puts(" ++ sb ++ ", " ++ v ++ " ? \"True\" : \"False\");")
     TyUnit -> emit ("fic_sb_puts(" ++ sb ++ ", \"()\");")
     TyFun _ _ -> emit ("fic_sb_puts(" ++ sb ++ ", \"<function>\");")
+    -- Json values and decoders print as Elm's `<internals>`, Bytes as `<3 bytes>` (decision L29)
+    TyCon "elm/json:Json.Encode.Value" [] -> emit ("fic_sb_puts(" ++ sb ++ ", \"<internals>\");")
+    TyCon "elm/json:Json.Decode.Decoder" [_] -> emit ("fic_sb_puts(" ++ sb ++ ", \"<internals>\");")
+    TyCon "elm/bytes:Bytes.Bytes" [] ->
+      do  emit ("fic_sb_puts(" ++ sb ++ ", \"<\");")
+          emit ("fic_sb_int(" ++ sb ++ ", fic_bytes_width(" ++ v ++ "));")
+          emit ("fic_sb_puts(" ++ sb ++ ", \" bytes>\");")
     _ -> do { h <- helper (HShow t); emit (h ++ "(" ++ sb ++ ", " ++ v ++ ");") }
 
 
@@ -1538,6 +1684,10 @@ genHelper info k name =
         TyCon "elm/core:List.List" [e] -> listEq e
         TyCon "elm/core:Elm.JsArray.JsArray" [e] -> jsArrayEq e
         TyCon "elm/core:Dict.Dict" [kt, vt] -> dictEq kt vt
+        -- the built-in types of elm/json and elm/bytes: structural equality in the runtime
+        TyCon "elm/json:Json.Encode.Value" [] -> emit "return fic_json_eq(a, b);"
+        TyCon "elm/json:Json.Decode.Decoder" [_] -> emit "return fic_jd_eq(a, b);"
+        TyCon "elm/bytes:Bytes.Bytes" [] -> emit "return fic_bytes_eq(a, b);"
         TyCon n args | Just ctors <- ctorsOf info n args, Map.member n (iUnions info) -> customEq n ctors
         _ -> failUnit ("equality at " ++ mtypeText t ++ " is not supported by the C generator yet") >> emit "return 0;"
 
