@@ -261,9 +261,10 @@ type CtorDups = Dups.Dict N.Name (Env.Info Env.Ctor)
 
 
 canonicalizeAlias :: Env.Env -> A.Located Src.Alias -> Result i w ( (T.Name, Can.Alias), CtorDups )
-canonicalizeAlias env@(Env.Env home _ _ _ _ _ _ _) (A.At _ (Src.Alias (A.At region name) args tipe)) =
+canonicalizeAlias env@(Env.Env home _ _ _ _ _ _ _) (A.At aliasRegion (Src.Alias (A.At region name) args tipe)) =
   do  let vars = map A.toValue args
       ctipe <- Type.canonicalize env tipe
+      Type.checkKinds aliasRegion [ctipe]
       Result.ok
         ( (name, Can.Alias vars ctipe)
         ,
@@ -293,8 +294,9 @@ toRecordCtor home name vars fields =
 
 
 canonicalizeUnion :: Env.Env -> A.Located Src.Union -> Result i w ( (T.Name, Can.Union), CtorDups )
-canonicalizeUnion env@(Env.Env home _ _ _ _ _ _ _) (A.At _ (Src.Union (A.At _ name) avars ctors)) =
+canonicalizeUnion env@(Env.Env home _ _ _ _ _ _ _) (A.At unionRegion (Src.Union (A.At _ name) avars ctors)) =
   do  cctors <- Index.indexedTraverse (canonicalizeCtor env) ctors
+      Type.checkKinds unionRegion [ t | A.At _ (Can.Ctor _ _ _ ts) <- cctors, t <- ts ]
       let vars = map A.toValue avars
       let alts = map A.toValue cctors
       let union = Can.Union vars alts (length alts) (toOpts ctors)

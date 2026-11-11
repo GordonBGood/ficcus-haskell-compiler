@@ -158,6 +158,7 @@ executable elm
         Canonicalize.Environment.Foreign
         Canonicalize.Environment.Local
         Canonicalize.Expression
+        Canonicalize.Kind
         Canonicalize.Module
         Canonicalize.Pattern
         Canonicalize.Type
@@ -219,6 +220,7 @@ executable elm
         Reporting.Error.Canonicalize
         Reporting.Error.Docs
         Reporting.Error.Import
+        Reporting.Error.Kind
         Reporting.Error.Json
         Reporting.Error.Main
         Reporting.Error.Pattern

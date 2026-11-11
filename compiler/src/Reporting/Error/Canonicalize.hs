@@ -30,6 +30,7 @@ import qualified Data.Index as Index
 import qualified Elm.ModuleName as ModuleName
 import qualified Reporting.Annotation as A
 import qualified Reporting.Doc as D
+import qualified Reporting.Error.Kind as Kind
 import Reporting.Doc (Doc, (<+>))
 import qualified Reporting.Render.Code as Code
 import qualified Reporting.Render.Type as RT
@@ -79,6 +80,7 @@ data Error
   | NotFoundBinop A.Region Op.Name (Set.Set Op.Name)
   | PatternHasRecordCtor A.Region N.Name
   | IntegerTooLarge A.Region
+  | KindProblem A.Region Kind.Problem
   | PortPayloadInvalid A.Region N.Name Can.Type InvalidPayload
   | PortTypeInvalid A.Region N.Name PortProblem
   | RecursiveAlias A.Region T.Name [T.Var] Src.Type (Graph.MinimalCycle T.Name)
@@ -150,6 +152,8 @@ toReport source err =
     AmbiguousType    r p n h hs -> ambiguousName source r p n h hs "type" T.nameToChars
     AmbiguousVariant r p n h hs -> ambiguousName source r p n h hs "variant" N.toChars
     AmbiguousBinop   r   n h hs -> ambiguousName source r Nothing n h hs "operator" Op.toChars
+
+    KindProblem region problem -> Kind.toReport source region problem
 
     BadArity_Type    r n e a -> badArity source r n e a T.nameToChars "type"
     BadArity_Pattern r n e a -> badArity source r n e a N.toChars "variant"
