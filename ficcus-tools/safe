@@ -1,0 +1,4 @@
+#!/bin/sh
+# usage: safe <command...>   limits memory to 3 GB and time to 60 s
+exec systemd-run --user --scope --quiet -p MemoryMax="${SAFE_MEM:-3G}" -p MemorySwapMax=0 \
+     timeout -k 5 "${SAFE_TIMEOUT:-60}" "$@"
