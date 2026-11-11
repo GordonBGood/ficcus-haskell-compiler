@@ -3,6 +3,7 @@
 module Ficcus.Mono.Overlay
   ( overlaySource
   , overlayModuleName
+  , supportModuleNames
   , overlayFileName
   , overlayId
   , randomSource, randomFileName, randomOverlayPrefix
@@ -38,6 +39,12 @@ overlaySource =
 
 overlayModuleName :: String
 overlayModuleName = "FicOverlay"
+
+
+-- | the modules that are not part of the project in the listings (`x.mono`, `x.types`): the overlay of elm/core and the Elm parts of
+-- the Json and Bytes kernels, which are compiled into every project that lists the package
+supportModuleNames :: [String]
+supportModuleNames = [overlayModuleName, "FicOverlayJson", "FicOverlayBytes"]
 
 
 overlayFileName :: FilePath

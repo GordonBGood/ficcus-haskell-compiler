@@ -90,7 +90,7 @@ prod stuff details (Build.Artifacts pkg _ roots modules) =
 -- Ficcus: `--output=x.types`: the type dumps that Build wrote for the project modules
 typeDumps :: R.Stuff -> Build.Artifacts -> IO B.Builder
 typeDumps stuff (Build.Artifacts _ _ _ modules) =
-  do  let names = List.sort (filter (\n -> Module.toChars n /= Overlay.overlayModuleName) (map moduleName modules))
+  do  let names = List.sort (filter (\n -> Module.toChars n `notElem` Overlay.supportModuleNames) (map moduleName modules))
       parts <- traverse (readDump stuff) names
       packages <- packageDumps stuff
       return (mconcat parts <> packages)
