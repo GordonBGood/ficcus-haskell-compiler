@@ -78,7 +78,7 @@ data Flags =
 
 -- | Ficcus: is `--output=x.c` counted when neither `--rc` nor `--no-rc` is given? (S5: the flip of this default is a commit of its own)
 rcDefault :: Bool
-rcDefault = False
+rcDefault = True
 
 
 data Output
