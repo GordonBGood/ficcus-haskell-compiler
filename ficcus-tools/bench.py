@@ -41,7 +41,8 @@ def suite_mode(a):
         if only and n not in only: continue
         for st in settings:
             elm = a.s3_elm if st == "s3" else a.elm
-            env = dict(os.environ, FICCUS_ELM=os.path.abspath(elm), FICCUS_FLAGS="--rc", **({} if st == "s3" else SETTINGS[st]))
+            # `norc`: the oracle build (--no-rc), which never frees: a program that needs more than the cap is a SKIP
+            env = dict(os.environ, FICCUS_ELM=os.path.abspath(elm), FICCUS_FLAGS="--no-rc" if st == "norc" else "--rc", **({} if st in ("s3", "norc") else SETTINGS[st]))
             if a.elm_home: env["ELM_HOME"] = a.elm_home
             src = os.path.normpath(os.path.join(ROOT, "ficcus-haskell-compiler", "ficcus-tests", "runall", t["fic"]))
             c = os.path.join(a.out, "%s_%s.c" % (n, st))
@@ -52,6 +53,8 @@ def suite_mode(a):
             subprocess.run([a.cc] + flags + [c, "-o", exe_t, "-lm"], check=True)
             p = subprocess.run([exe_s], capture_output=True, text=True, preexec_fn=_cap)
             m = STATS.search(p.stderr)
+            if st == "norc" and p.returncode != 0:
+                print("%-22s %-8s SKIP: exit %d under the %s MB cap (the no-RC build never frees)" % (n, st, p.returncode, os.environ.get("BENCH_CAP_MB", "6144")), flush=True); continue
             if p.returncode != 0 or not m: print("%-22s %-8s FAILED (exit %d) %s" % (n, st, p.returncode, p.stderr[-120:]), flush=True); continue
             allocs, live, peak, dup, drop, hit, miss = (int(x) for x in m.groups())
             times = [wall(exe_t) for _ in range(a.runs)]
