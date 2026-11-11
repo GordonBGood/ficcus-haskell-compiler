@@ -30,7 +30,48 @@ chompInner :: Addr# -> Addr# -> Word8# -> Addr#
 
 chompUpper = chomp isUpper Char.isUpper
 chompLower = chomp isLower Char.isLower
-chompInner = chomp isInner Char.isAlpha
+chompInner pos end w =
+  if isTrue# (eqWord8# w 0x27#Word8 {-'-})
+  then
+    -- Ficcus (track E4): `x'` is one name. As in Elm 0.19.3, a quote that starts a character
+    -- literal (`f'a'`, `f'\n'`) still ends the name.
+    if charLiteralAt pos end then pos else plusAddr# pos 1#
+  else
+    chomp isInner Char.isAlpha pos end w
+
+
+-- | Does a character literal, `'a'` or `'\n'` or `'\u{1F600}'`, start at the quote at `pos`?
+charLiteralAt :: Addr# -> Addr# -> Bool
+charLiteralAt pos end =
+  let
+    byteAt n = if isTrue# (ltAddr# (plusAddr# pos n) end) then getWord8# pos n else 0##
+    quote = 0x27##
+    b1 = byteAt 1#
+    hexRun n k =
+      let b = byteAt n in
+      if isTrue# (isHex b) then hexRun (n +# 1#) (k +# 1#)
+      else isTrue# (k ># 0#) && isTrue# (eqWord# b 0x7D##) && isTrue# (eqWord# (byteAt (n +# 1#)) quote)
+    isHex b =
+      (leWord# 0x30## b `andI#` leWord# b 0x39##)
+      `orI#` (leWord# 0x61## b `andI#` leWord# b 0x66##)
+      `orI#` (leWord# 0x41## b `andI#` leWord# b 0x46##)
+  in
+  if isTrue# (eqWord# b1 0x5C##)
+  then
+    let b2 = byteAt 2# in
+    if isTrue# (eqWord# b2 0x6E## `orI#` eqWord# b2 0x72## `orI#` eqWord# b2 0x74## `orI#` eqWord# b2 0x22##
+                `orI#` eqWord# b2 quote `orI#` eqWord# b2 0x5C##)
+    then isTrue# (eqWord# (byteAt 3#) quote)
+    else if isTrue# (eqWord# b2 0x75##) && isTrue# (eqWord# (byteAt 3#) 0x7B##)
+    then hexRun 4# 0#
+    else False
+  else if isTrue# (ltWord# b1 0x20##) || isTrue# (eqWord# b1 quote)
+  then False
+  else
+    let
+      len = if isTrue# (ltWord# b1 0x80##) then 1# else if isTrue# (ltWord# b1 0xE0##) then 2# else if isTrue# (ltWord# b1 0xF0##) then 3# else 4#
+    in
+    isTrue# (eqWord# (byteAt (1# +# len)) quote)
 
 
 

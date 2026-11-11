@@ -60,22 +60,30 @@ fromInt n =
   Name (N.toBuilder (intToAscii n))
 
 
+-- Ficcus (track E4): an Elm name may contain a prime, `x'`, which a JavaScript name cannot; it is written
+-- as a dollar sign (no Elm name has one, so two names never get the same JavaScript name). Names without a
+-- prime come out byte for byte as before.
+nameBuilder :: N.Name -> B.Builder
+nameBuilder name =
+  S.toEscapedBuilder 0x27#Word8 {-'-} 0x24#Word8 {-$-} (N.toString name)
+
+
 fromLocal :: N.Name -> Name
 fromLocal name =
   if Set.member name reservedNames then
-    Name ("_" <> N.toBuilder name)
+    Name ("_" <> nameBuilder name)
   else
-    Name (N.toBuilder name)
+    Name (nameBuilder name)
 
 
 fromGlobal :: ModuleName.Canonical -> N.Name -> Name
 fromGlobal home name =
-  Name $ homeToBuilder home <> usd <> N.toBuilder name
+  Name $ homeToBuilder home <> usd <> nameBuilder name
 
 
 fromCycle :: ModuleName.Canonical -> N.Name -> Name
 fromCycle home name =
-  Name $ homeToBuilder home <> "$cyclic$" <> N.toBuilder name
+  Name $ homeToBuilder home <> "$cyclic$" <> nameBuilder name
 
 
 fromKernel :: Module.Kernel -> N.Name -> Name
@@ -106,12 +114,12 @@ makeA n =
 
 makeLabel :: N.Name -> Int -> Name
 makeLabel name index =
-  Name (N.toBuilder name <> usd <> B.intDec index)
+  Name (nameBuilder name <> usd <> B.intDec index)
 
 
 makeTemp :: N.Name -> Name
 makeTemp name =
-  Name ("$temp$" <> N.toBuilder name)
+  Name ("$temp$" <> nameBuilder name)
 
 
 dollar :: Name
