@@ -29,12 +29,15 @@ module Ficcus.Mono.RcCheck
 
 import Control.Monad (forM_, unless, when, zipWithM_)
 import Control.Monad.State.Strict (StateT(..), evalStateT, get, gets, modify')
+import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 
+import Ficcus.Mono.Borrow (viewExpr, viewRoot)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig)
+import Ficcus.Mono.Layout (leavesOf)
 
 
 data V =
@@ -69,6 +72,8 @@ rcCheck program =
      | d <- clones, Just (mdClone d) /= mpMain program, Just body <- [mdBody d]
      , Left err <- [evalStateT (checkDef d caps body) (Cx Map.empty byId caps)]
      , let msg = "rc check: " ++ mdName d ++ ": " ++ err ]
+     ++ [ "rc check: " ++ mdName d ++ ": " ++ err
+        | d <- clones, Just (mdClone d) /= mpMain program, Just body <- [mdBody d], err <- tailCheck byId d body ]
 
 
 bad :: String -> CK a
@@ -78,12 +83,19 @@ bad msg = StateT (\_ -> Left msg)
 checkDef :: MDef -> Map.Map CloneId [(String, Class)] -> MExpr -> CK ()
 checkDef d caps body =
   do  let capVars = [ n | (n, c) <- Map.findWithDefault [] (mdClone d) caps, refClass c ]
-      let params = [ n | (n, c) <- mdParams d, refClass c ]
-      modify' (\s -> s { cxScope = Map.fromList ([ (n, V True 1 Nothing) | n <- params ] ++ [ (n, V False 0 Nothing) | n <- capVars ]) })
+      let params = [ (n, o) | ((n, c), o) <- zip (mdParams d) (paramOwns d), refClass c ]
+      -- an owned parameter has one count; a borrowed one is readable for the whole call and has none
+      modify' (\s -> s { cxScope = Map.fromList ([ (n, if o == Owned then V True 1 Nothing else V False 0 Nothing) | (n, o) <- params ]
+                                                 ++ [ (n, V False 0 Nothing) | n <- capVars ]) })
       owned body
       sc <- gets cxScope
       forM_ (Map.toList sc) $ \(n, v) ->
         when (vCount v /= 0) (bad ("variable " ++ n ++ " has " ++ show (vCount v) ++ " count(s) left at the end of the function"))
+
+
+-- | the reference leaves of a class
+refLeaves :: Class -> [Class]
+refLeaves c = [ l | l@CRef <- leavesOf c ]
 
 
 -- VARIABLES
@@ -189,6 +201,15 @@ owned e =
       do  forM_ vs (\(n, c) -> when (refClass c) (consume n))
           owned b
     MOwn b -> view b
+    MUnpack s c bs b ->
+      do  let nleaves = length (refLeaves c)
+          let taken = concat [ ix | (_, _, ix) <- bs ]
+          when (length taken /= length (List.nub taken) || any (\k -> k < 0 || k >= nleaves) taken)
+            (bad "a component of a struct is taken twice, or does not exist")
+          forM_ bs (\(v, vc, ix) -> when (length ix /= length (refLeaves vc)) (bad ("the pattern variable " ++ v ++ " takes the wrong number of components")))
+          forM_ bs (\(v, vc, _) -> when (refClass vc) (modify' (\st -> st { cxScope = Map.adjust (\x -> x { vCount = vCount x + 1 }) v (cxScope st) })))
+          consume s
+          owned b
 
 
 -- | an expression that only looks at something that stays alive (the argument of `MOwn`, a borrowed argument)
@@ -217,7 +238,10 @@ call e h args =
       do  cx <- get
           case Map.lookup c (cxClones cx) of
             Just d | mdKind d == Function, length args == length (mdParams d) ->
-              do  mapM_ owned args
+              do  forM_ (zip3 args (paramOwns d) (mdParams d)) $ \(a, o, (_, pc)) ->
+                    if o == Borrowed && refClass (mRep a) && mRep a == pc then view a else owned a     -- another class: the generator converts, an owned value
+                  -- the borrowed variables must still be alive when the call happens (after the owned arguments have been consumed)
+                  forM_ [ n | (a, o, (_, pc)) <- zip3 args (paramOwns d) (mdParams d), o == Borrowed, refClass (mRep a), mRep a == pc, Just n <- [viewRoot a] ] borrow
                   forM_ [ n | (n, cc) <- Map.findWithDefault [] c (cxCaps cx), refClass cc ] borrow     -- the caller passes its variables, borrowed
             _ -> apply
     _ -> apply
@@ -298,3 +322,39 @@ caseOf s bs =
               put' r
   where
     put' sc = modify' (\st -> st { cxScope = sc })
+
+
+-- TAIL CALLS (STAGE4-PLAN 3.6, 13): a self tail call is a loop, which has no "after" in which something could be dropped, so a borrowed
+-- parameter may only be given a value that stays alive for the whole call: a borrowed parameter, a captured variable, a field or a
+-- pattern variable of those (not counted by the branch), a static value.
+
+tailCheck :: Map.Map CloneId MDef -> MDef -> MExpr -> [String]
+tailCheck clones d = go (Map.fromList [ (n, o == Borrowed) | ((n, _), o) <- zip params (paramOwns d) ])
+  where
+    params = mdParams d
+    stable env n = Map.findWithDefault True n env                              -- a variable that is not bound here is captured: borrowed
+    go env e =
+      case mNode e of
+        MIf bs f -> concat (go env f : [ go env b | (_, b) <- bs ])
+        MLetVal n _ b -> go (Map.insert n False env) b
+        MSeq _ b -> go env b
+        MDup _ b -> go env b
+        MDrop _ b -> go env b
+        MUnpack _ _ _ b -> go env b
+        MCase s bs ->
+          concat [ go (foldr (\(v, _) m -> Map.insert v (viaScrutinee s env && not (counted v b)) m) env (patBinders p)) b | (p, b) <- bs ]
+        MCall h args
+          | MGlobal c <- mNode h, c == mdClone d, length args == length params ->
+              [ "a self tail call gives the borrowed parameter " ++ n ++ " a value that is not alive for the whole call"
+              | (((n, pc), o), a) <- zip (zip params (paramOwns d)) args, o == Borrowed, refClass pc, not (mRep a == pc && stableExpr env a) ]
+        _ -> []
+    viaScrutinee s env = case mNode s of { MLocal n -> stable env n; _ -> False }
+    counted v b = case mNode b of { MDup vs _ -> v `elem` map fst vs; _ -> False }
+    stableExpr env a =
+      case mNode a of
+        MLocal n -> stable env n
+        MAccess r _ _ -> stableExpr env r
+        MLit _ -> True
+        MCtor _ _ _ -> True
+        MGlobal c -> viewExpr clones a && maybe False ((== Value) . mdKind) (Map.lookup c clones)
+        _ -> False

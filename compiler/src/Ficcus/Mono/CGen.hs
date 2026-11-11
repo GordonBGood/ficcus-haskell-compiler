@@ -321,7 +321,8 @@ cloneComment :: MDef -> String
 cloneComment d =
   let CloneId n = mdClone d
   in "/* c" ++ show n ++ " " ++ safe (mdName d) ++ "   key: " ++ safe (keyTextIx (mdVars d) (mdKey d))
-     ++ maybe "" (\(CloneId o) -> "   lifted-from: c" ++ show o) (mdLifted d) ++ " */"
+     ++ maybe "" (\(CloneId o) -> "   lifted-from: c" ++ show o) (mdLifted d)
+     ++ (case [ pn | ((pn, _), Borrowed) <- zip (mdParams d) (paramOwns d) ] of { [] -> ""; ns -> "   borrowed: " ++ unwords (map safe ns) }) ++ " */"
   where
     safe = concatMap (\c -> if c == '*' then "_" else [c])
 
@@ -374,6 +375,7 @@ genRet info e =
     MCase scrut bs -> genCase info (genRet info) scrut bs
     MDup vs b -> do { dupVars vs; genRet info b }
     MDrop vs b -> do { dropVars vs; genRet info b }
+    MUnpack s c bs b -> do { unpackDrops s c bs; genRet info b }
     MLetVal n v b ->
       do  v' <- genExpr info v
           emit (classType (mRep v) ++ " " ++ localName n ++ " = " ++ v' ++ ";")
@@ -437,6 +439,7 @@ genExpr info e =
     MLocal n -> return (localName n)
     MDup vs b -> do { dupVars vs; genExpr info b }
     MDrop vs b -> do { dropVars vs; genExpr info b }
+    MUnpack s c bs b -> do { unpackDrops s c bs; genExpr info b }
     MOwn b ->
       do  v <- genExpr info b
           t <- variable (mRep b) v
@@ -611,8 +614,17 @@ closureSection info ds =
                             case [ i | (i, (m, _, _)) <- zip [0 :: Int ..] layout, m == n ] of
                               i : _ -> return (fieldRead classType [ fc | (_, _, fc) <- layout ] i "s")
                               [] -> failWith "internal: a captured variable is not in the closure layout"
-                  vals <- forM (zip [0 :: Int ..] ps) (\(i, (_, pc)) -> adaptOwn (abiClass pc) pc ("a" ++ show i ++ wordSel pc))
-                  r <- adaptOwn (mdResult d) (abiClass (mdResult d)) (functionName d ++ "(" ++ List.intercalate ", " (capVals ++ vals) ++ ")")
+                  -- the entry takes every argument owned: an argument the function only borrows is dropped after the call (S3, f_entry)
+                  let owns = zip3 [0 :: Int ..] ps (paramOwns d)
+                  vals <- forM owns (\(i, (_, pc), o) ->
+                            let w = "a" ++ show i ++ wordSel pc
+                            in if o == Borrowed then adapt (abiClass pc) pc w else adaptOwn (abiClass pc) pc w)
+                  let drops = [ "fic_drop(a" ++ show i ++ ".p);" | (i, (_, pc), o) <- owns, o == Borrowed, abiClass pc == CRef ]
+                  let call = functionName d ++ "(" ++ List.intercalate ", " (capVals ++ vals) ++ ")"
+                  res <-
+                    if null drops then return call
+                    else do { rv <- fresh "rv"; emit (classType (mdResult d) ++ " " ++ rv ++ " = " ++ call ++ ";"); mapM_ emit drops; return rv }
+                  r <- adaptOwn (mdResult d) (abiClass (mdResult d)) res
                   emit ("return " ++ wordMk (mdResult d) r ++ ";")
             emit "}"
             emit ("static const fic_code " ++ codeName d ++ " = { (void (*)(void))" ++ stubName d ++ ", " ++ show (length ps) ++ "u };")
@@ -712,6 +724,13 @@ adaptOwn from to v =
               emit ("fic_drop(" ++ t ++ ");")
               return s
         _ -> adapt from to v
+
+
+-- | the leaves of a dying struct that no pattern variable takes over are dropped
+unpackDrops :: String -> Class -> [(String, Class, [Int])] -> CG ()
+unpackDrops s c bs =
+  let taken = concat [ ix | (_, _, ix) <- bs ]
+  in forM_ (zip [0 :: Int ..] (refPaths c (localName s))) (\(k, p) -> when (k `notElem` taken) (emit ("fic_drop(" ++ p ++ ");")))
 
 
 dupVars :: [(String, Class)] -> CG ()

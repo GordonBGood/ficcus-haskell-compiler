@@ -279,7 +279,7 @@ genClone cid (CKey did _ key@(Key parts)) src =
         { mdClone = cid, mdName = did, mdKey = key
         , mdKind = if null args && srcOwner src == Nothing then Value else Function
         , mdParams = params, mdResult = mRep body', mdBody = Just body'
-        , mdInit = Nothing, mdNeeds = [], mdLifted = srcOwner src, mdVars = map snd ownIx }
+        , mdInit = Nothing, mdNeeds = [], mdLifted = srcOwner src, mdVars = map snd ownIx, mdOwn = [] }
 
 
 param :: SEnv -> (Int, Can.Pattern) -> SM (String, Class)
@@ -596,7 +596,7 @@ specExpr se (A.At region e) =
                       fcls <- classOfTy se ft
                       let rcls = CStruct (map snd fl)
                           body = MExpr fcls (MAccess (MExpr rcls (MLocal "_r")) (N.toChars fld) i)
-                      modify' (\st -> st { sDone = Map.insert lamId (MDef lamId ("." ++ N.toChars fld) (Key []) Function [("_r", rcls)] fcls (Just body) Nothing [] (Just (seClone se)) []) (sDone st) })
+                      modify' (\st -> st { sDone = Map.insert lamId (MDef lamId ("." ++ N.toChars fld) (Key []) Function [("_r", rcls)] fcls (Just body) Nothing [] (Just (seClone se)) [] []) (sDone st) })
                       return (MExpr CRef (MGlobal lamId))
             _ -> unsupported "a field accessor on a record whose layout is not known" region
     Can.VarLocal _ -> specRef se region e
@@ -863,7 +863,7 @@ partialApp se region resNode remaining mk supplied =
           let sup = [ ("_pa" ++ show k ++ "_" ++ show i, a) | (i, a) <- zip [0 :: Int ..] supplied ]
           let ps = [ ("_pb" ++ show k ++ "_" ++ show i, c) | (i, c) <- zip [0 :: Int ..] pcls ]
           let body = MExpr rcls (mk ([ MExpr (mRep a) (MLocal t) | (t, a) <- sup ] ++ [ MExpr c (MLocal p) | (p, c) <- ps ]))
-          modify' (\st -> st { sDone = Map.insert lamId (MDef lamId (lambdaName se region) (Key []) Function ps rcls (Just body) Nothing [] (Just (seClone se)) []) (sDone st) })
+          modify' (\st -> st { sDone = Map.insert lamId (MDef lamId (lambdaName se region) (Key []) Function ps rcls (Just body) Nothing [] (Just (seClone se)) [] []) (sDone st) })
           return (foldr (\(t, a) acc -> MExpr CRef (MLetVal t a acc)) (MExpr CRef (MGlobal lamId)) sup)
 
 
@@ -893,7 +893,7 @@ specLambda se region pats body =
       ps <- forM (zip [0 :: Int ..] pats) (param se')
       body0 <- specExpr se' body
       body' <- wrapParams se' (zip pats ps) body0
-      modify' (\st -> st { sDone = Map.insert lamId (MDef lamId (lambdaName se region) (Key []) Function ps (mRep body') (Just body') Nothing [] (Just (seClone se)) []) (sDone st) })
+      modify' (\st -> st { sDone = Map.insert lamId (MDef lamId (lambdaName se region) (Key []) Function ps (mRep body') (Just body') Nothing [] (Just (seClone se)) [] []) (sDone st) })
       return (MExpr CRef (MGlobal lamId))
 
 
@@ -1010,7 +1010,7 @@ specWorker se region fregion f args =
           initId <- freshId
           p <- param se (0, pat)
           body' <- specExpr (se { seClone = initId }) body
-          let def = MDef initId "init" (Key []) Function [p] (mRep body') (Just body') Nothing [] (Just (seClone se)) []
+          let def = MDef initId "init" (Key []) Function [p] (mRep body') (Just body') Nothing [] (Just (seClone se)) [] []
           modify' (\s -> s { sDone = Map.insert initId def (sDone s) })
           return (MExpr cls (MCall (MExpr CRef (MKernel "elm/core:Platform.worker" key)) [MExpr CRef (MGlobal initId)]))
     _ -> unsupported "Platform.worker without a literal record with an `init` lambda" region

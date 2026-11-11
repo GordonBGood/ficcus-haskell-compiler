@@ -7,6 +7,8 @@ module Ficcus.Mono.Ir
   , MPat(..)
   , MPatNode(..)
   , DefKind(..)
+  , Own(..)
+  , paramOwns
   , MDef(..)
   , MProgram(..)
   , UnionShape(..)
@@ -65,6 +67,9 @@ data MNode
   -- added by the Rc pass (Ficcus.Mono.Rc, STAGE4-PLAN section 3); the specializer never makes them
   | MDup [(String, Class)] MExpr           -- add a count to each variable (a struct: to each reference component), then the expression
   | MDrop [(String, Class)] MExpr          -- remove a count from each variable, then the expression
+  | MUnpack String Class [(String, Class, [Int])] MExpr
+      -- a struct variable that dies here is taken apart: each listed (pattern) variable takes over the counts on the given reference
+      -- leaves (indices into the reference leaves of the struct, in order); the counts on all other leaves are dropped (S3, per component)
   | MOwn MExpr                             -- the expression is a borrowed value (a view into something that stays alive): add a count, the result is owned
   deriving (Show)
 
@@ -90,6 +95,17 @@ data DefKind = Value | Function
   deriving (Eq, Show)
 
 
+-- | how a function treats a parameter of a reference class (STAGE4-PLAN section 4): it consumes a count (owned), or only looks at the
+-- value, which the caller keeps alive for the whole call (borrowed)
+data Own = Owned | Borrowed
+  deriving (Eq, Show)
+
+
+-- | the ownership of every parameter of a clone (all owned when the inference has not run)
+paramOwns :: MDef -> [Own]
+paramOwns d = take (length (mdParams d)) (mdOwn d ++ repeat Owned)
+
+
 -- | one clone of a definition at a key
 data MDef =
   MDef
@@ -105,6 +121,7 @@ data MDef =
     , mdLifted :: Maybe CloneId            -- the clone a local function or lambda was lifted out of (its owner)
     , mdVars :: [Int]                      -- the scheme variable index of each part of the key (own variables only:
                                            -- the variables of an enclosing definition belong to the owner's key)
+    , mdOwn :: [Own]                       -- ownership of each parameter (S3, Ficcus.Mono.Borrow); empty: all owned (the specializer's output)
     }
   deriving (Show)
 
@@ -152,6 +169,7 @@ children (MExpr _ node) =
     MDup _ e -> [e]
     MDrop _ e -> [e]
     MOwn e -> [e]
+    MUnpack _ _ _ e -> [e]
 
 
 -- | the clones an expression refers to, in order of first occurrence

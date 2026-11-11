@@ -15,6 +15,7 @@ import qualified Data.ByteString.Builder as B
 import System.Exit (ExitCode(..), exitWith)
 import System.IO (hPutStrLn, stderr)
 import qualified Data.List as List
+import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.NonEmptyList as NE
 import qualified System.Directory as Dir
@@ -28,6 +29,7 @@ import qualified Elm.Details as Details
 import qualified Ficcus.Flags as Flags
 import qualified Ficcus.Mono.CGen as CGen
 import qualified Ficcus.Mono.Facts as Facts
+import qualified Ficcus.Mono.Ir as Mono
 import qualified Ficcus.Mono.Marks as Marks
 import qualified Ficcus.Mono.Modules as Modules
 import qualified Ficcus.Mono.Overlay as Overlay
@@ -182,7 +184,14 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcMode) =
                           let mutated prog = case mutation >>= readMaybeInt of
                                                Nothing -> Right prog
                                                Just k -> maybe (Left ["FICCUS_RC_MUTATE: there is no dup or drop number " ++ show k]) Right (Rc.rcMutate k prog)
-                          let counted = if rcMode then Rc.rcProgram program >>= mutated >>= \counted0 -> (case RcCheck.rcCheck counted0 of { [] -> Right counted0; errs -> Left errs }) else Right program
+                          -- FICCUS_RC_DUMP=text (debugging): print the counted clones whose definition name contains the text, before the check
+                          dumpText <- Task.io (System.Environment.lookupEnv "FICCUS_RC_DUMP")
+                          let rced = if rcMode then Rc.rcProgram program >>= mutated else Right program
+                          case (dumpText, rced) of
+                            (Just pat, Right prog) ->
+                              Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones prog, pat `List.isInfixOf` Mono.mdName d ]))
+                            _ -> return ()
+                          let counted = if rcMode then rced >>= \counted0 -> (case RcCheck.rcCheck counted0 of { [] -> Right counted0; errs -> Left errs }) else Right program
                           case counted of
                             Left errs -> failWith errs
                             Right program' ->

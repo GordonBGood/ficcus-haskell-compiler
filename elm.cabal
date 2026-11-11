@@ -167,6 +167,7 @@ executable elm
         Ficcus.Mono.Class
         Ficcus.Mono.Layout
         Ficcus.Mono.Free
+        Ficcus.Mono.Borrow
         Ficcus.Mono.Rc
         Ficcus.Mono.RcCheck
         Ficcus.Mono.Ir

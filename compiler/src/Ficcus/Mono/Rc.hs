@@ -38,10 +38,12 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
+import Ficcus.Mono.Borrow
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig)
+import Ficcus.Mono.Layout (nptrOf)
 
 
 type Env = Map.Map String Class          -- the owned variables of a reference class that are in scope
@@ -63,14 +65,18 @@ data Ctx =
   Ctx
     { cClones :: Map.Map CloneId MDef
     , cCaps :: Map.Map CloneId [(String, Class)]
+    , cOwn :: OwnCtx                         -- the question "which variables does this expression consume?" (Ficcus.Mono.Borrow)
+    , cViews :: Map.Map String String        -- a pattern variable that is only a view into its scrutinee, and the owned variable that keeps it alive
     }
 
 
 -- | the program with counts; the root (`main = Platform.worker ...`) is left alone
 rcProgram :: MProgram -> Either [String] MProgram
-rcProgram program =
-  let clones = mpClones program
-      ctx = Ctx (Map.fromList [ (mdClone d, d) | d <- clones ]) (captures clones)
+rcProgram program0 =
+  let clones = inferBorrow (mpMain program0) (mpClones program0)
+      program = program0 { mpClones = clones }
+      caps = captures clones
+      ctx = Ctx (Map.fromList [ (mdClone d, d) | d <- clones ]) caps (ownCtx caps clones) Map.empty
       (clones', errs) = evalState (do { cs <- mapM (rcDef ctx (mpMain program)) clones; es <- gets rsErrors; return (cs, es) }) (RS 0 [] "")
   in if null errs then Right program { mpClones = clones' } else Left (reverse errs)
 
@@ -80,7 +86,7 @@ rcDef ctx root d =
   case mdBody d of
     Just body | Just (mdClone d) /= root ->
       do  modify' (\s -> s { rsWhere = mdName d })
-          let env = Map.fromList [ (n, c) | (n, c) <- mdParams d, refClass c ]
+          let env = Map.fromList [ (n, c) | ((n, c), o) <- zip (mdParams d) (paramOwns d), refClass c, o == Owned ]
           body' <- rc ctx env Set.empty body
           return d { mdBody = Just body' }
     _ -> return d
@@ -102,16 +108,19 @@ fvOf :: Ctx -> MExpr -> Map.Map String Class
 fvOf ctx = freeVars (cCaps ctx)
 
 
+-- | the variables an expression needs: the ones it names, and the owned variable behind every view it names
 fvNames :: Ctx -> MExpr -> Set.Set String
-fvNames ctx = Map.keysSet . fvOf ctx
+fvNames ctx e =
+  let names = Map.keysSet (fvOf ctx e)
+  in Set.union names (Set.fromList [ r | n <- Set.toList names, Just r <- [Map.lookup n (cViews ctx)] ])
 
 
 -- | the expression, consuming every owned variable of `env` that is not in `live` (and using `live` without consuming it):
 -- the variables of `env` that the expression does not use and `live` does not need are dropped first
 rc :: Ctx -> Env -> Live -> MExpr -> RM MExpr
 rc ctx env live e =
-  do  let fvE = fvOf ctx e
-      let dead = [ (n, c) | (n, c) <- Map.toList env, not (Map.member n fvE), not (Set.member n live) ]
+  do  let fvE = fvNames ctx e
+      let dead = [ (n, c) | (n, c) <- Map.toList env, not (Set.member n fvE), not (Set.member n live) ]
       let env' = foldr (Map.delete . fst) env dead
       e' <- rcNode ctx env' live e
       return (if null dead then e' else MExpr (mRep e) (MDrop dead e'))
@@ -133,6 +142,7 @@ rcNode ctx env live e =
     MLocal n
       | not (refClass cls) -> return e
       | Map.member n env -> return (if Set.member n live then node (MDup [(n, cls)] e) else e)
+      | Map.member n (cViews ctx) -> failRc ("internal: the view " ++ n ++ " is consumed") >> return e
       | otherwise -> return (node (MOwn e))                       -- a borrowed variable (captured by a lifted function)
     MGlobal c ->
       case Map.lookup c (cClones ctx) of
@@ -165,8 +175,13 @@ rcNode ctx env live e =
               do  b' <- rc ctx env1 live b
                   return (node (MSeq a' b'))
     MCase s bs -> rcCase ctx env live cls s bs
-    MAccess r f i ->
-      withCall ctx env live cls [(useOf 'b' r, r)] Set.empty
+    MAccess r f i
+      | refClass cls, CStruct fs <- mRep r, i < length fs, fs !! i == cls, dying r ->
+          -- the struct dies with this read: the field is taken out of it (no dup), the other components are dropped
+          do  tmp <- fresh
+              rcNode ctx env live (node (MCase r [(MPat (mRep r) (PRecord [(i, tmp, cls)]), node (MLocal tmp))]))
+      | otherwise ->
+      withCall ctx env live cls [(useOf ctx 'b' r, r)] Set.empty
         (\as -> case as of
                   [r'] -> let access = node (MAccess r' f i) in if refClass cls then node (MOwn access) else access
                   _ -> e)
@@ -180,6 +195,14 @@ rcNode ctx env live e =
     MDup _ _ -> failRc "internal: the Rc pass ran twice" >> return e
     MDrop _ _ -> failRc "internal: the Rc pass ran twice" >> return e
     MOwn _ -> failRc "internal: the Rc pass ran twice" >> return e
+    MUnpack _ _ _ _ -> failRc "internal: the Rc pass ran twice" >> return e
+
+
+  where
+    -- an owned variable that is not used again, or an expression (a temporary): nothing else holds the struct
+    dying r = case mNode r of
+      MLocal n -> Map.member n env && not (Set.member n live)
+      _ -> not (isView ctx r)
 
 
 -- | a function used as a value: a static closure when it captures nothing; otherwise the closure object takes a count on each
@@ -205,24 +228,27 @@ data Use
   deriving (Eq)
 
 
-useOf :: Char -> MExpr -> Use
-useOf letter a
+useOf :: Ctx -> Char -> MExpr -> Use
+useOf ctx letter a
   | not (refClass (mRep a)) = UScalar
   | letter == 'o' = UOwn
-  | staticValue a = UStatic
+  | staticValue ctx a = UStatic
   | otherwise = UBorrow
 
 
-staticValue :: MExpr -> Bool
-staticValue x =
+-- | something that needs no count to be read: a literal string, a constructor without fields, the value of a top level definition
+staticValue :: Ctx -> MExpr -> Bool
+staticValue ctx x =
   case mNode x of
     MLit (LString _) -> True
     MCtor _ _ _ -> True
+    MGlobal c -> maybe False ((== Value) . mdKind) (Map.lookup c (cClones ctx))
     _ -> False
 
 
-isLocal :: MExpr -> Bool
-isLocal a = case mNode a of { MLocal _ -> True; _ -> False }
+-- | a variable, or a field of a variable: it can be passed to a borrowed position as it is
+isView :: Ctx -> MExpr -> Bool
+isView ctx a = case viewRoot a of { Just _ -> viewExpr (cClones ctx) a; Nothing -> False }
 
 
 isAtom :: MExpr -> Bool
@@ -241,9 +267,10 @@ ownedArgs ctx env live args =
 -- arguments. `extra` are variables the call uses without consuming them (the captured variables of a lifted callee).
 callArgs :: Ctx -> Env -> Live -> [(Use, MExpr)] -> Set.Set String -> RM ([(String, Class, MExpr)], [MExpr], [(String, Class)], [String], Env)
 callArgs ctx env0 live uses extra =
-  do  let borrowedLocals = [ n | (u, MExpr c (MLocal n)) <- uses, u == UBorrow || u == UStatic, refClass c ]
+  do  let borrowedLocals = List.nub (concat [ n : maybe [] pure (Map.lookup n (cViews ctx))
+                                                | (u, a) <- uses, u == UBorrow || u == UStatic, refClass (mRep a), Just n <- [viewRoot a] ])
       let liveBase = Set.union live (Set.union extra (Set.fromList borrowedLocals))
-      let needTemps = or [ True | (UBorrow, a) <- uses, not (isLocal a) ]
+      let needTemps = or [ True | (UBorrow, a) <- uses, not (isView ctx a) ]
       let later = drop 1 (scanr Set.union Set.empty [ fvNames ctx a | (_, a) <- uses ])
       let step (env, bs, as, ts) ((u, a), after) =
             do  let liveA = Set.union liveBase after
@@ -251,7 +278,7 @@ callArgs ctx env0 live uses extra =
                 case u of
                   UStatic -> return (env', bs, as ++ [a], ts)
                   UBorrow
-                    | isLocal a -> return (env', bs, as ++ [a], ts)
+                    | isView ctx a -> return (env', bs, as ++ [a], ts)
                     | otherwise ->
                         do  v <- rc ctx env liveA a
                             t <- fresh
@@ -291,8 +318,14 @@ rcCall ctx env live e h args =
       else do { args' <- ownedArgs ctx env live args; return (MExpr cls (MCall h args')) }
     MGlobal c
       | Just d <- Map.lookup c (cClones ctx), mdKind d == Function, length args == length (mdParams d) ->
-          let caps = Set.fromList [ n | (n, cc) <- Map.findWithDefault [] c (cCaps ctx), refClass cc ]
-          in withCall ctx env live cls [ (if refClass (mRep a) then UOwn else UScalar, a) | a <- args ] caps (\as -> MExpr cls (MCall h as))
+          let capNames = [ n | (n, cc) <- Map.findWithDefault [] c (cCaps ctx), refClass cc ]
+              caps = Set.fromList (concatMap (\n -> n : maybe [] pure (Map.lookup n (cViews ctx))) capNames)     -- and the owners of the views among them
+              useFor o pc a
+                | not (refClass (mRep a)) = UScalar
+                | o == Borrowed && mRep a == pc = if staticValue ctx a then UStatic else UBorrow
+                | otherwise = UOwn
+              uses = [ (useFor o pc a, a) | (a, o, (_, pc)) <- zip3 args (paramOwns d) (mdParams d) ]
+          in withCall ctx env live cls uses caps (\as -> MExpr cls (MCall h as))
     _ -> rcApply ctx env live e h args
 
 
@@ -323,7 +356,7 @@ rcKernel ctx env live e name key args =
           | length sigText /= length args ->
               failRc ("the kernel function " ++ name ++ " has a signature of " ++ show (length sigText) ++ " letters and " ++ show (length args) ++ " arguments") >> return e
           | otherwise ->
-              let uses = zipWith (\l a -> (useOf l a, a)) sigText args
+              let uses = zipWith (\l a -> (useOf ctx l a, a)) sigText args
                   kernel = MExpr (CUnit) (MKernel name key)
                   build as =
                     let call = MExpr cls (MCall (case mNode (headOf e) of { MKernel _ _ -> headOf e; _ -> kernel }) as)
@@ -352,28 +385,75 @@ rcIf ctx env0 live cls branches final =
           return ((c', b') : restBs, f)
 
 
--- | a case: the scrutinee is a variable (a temporary when it is an expression); the variables a branch binds and uses are dup'd at
--- the start of the branch, and what is dead there (the scrutinee too, usually) is dropped
+-- | a case: the scrutinee is a variable (a temporary when it is an expression). A variable the pattern binds is
+--   * a VIEW into the scrutinee when the branch only looks at it: nothing is counted, and the scrutinee (the owned variable `root`
+--     behind it) stays alive until the last use of the view;
+--   * an owned variable (dup'd at the start of the branch, where the scrutinee is dropped if it is dead) when the branch consumes
+--     it and the scrutinee is an owned variable: this keeps the scrutinee's death early, as in S2;
+--   * borrowed like a captured variable (dup'd where it is consumed) when nothing owned keeps the scrutinee alive (a borrowed
+--     parameter, a view).
 rcCase :: Ctx -> Env -> Live -> Class -> MExpr -> [(MPat, MExpr)] -> RM MExpr
 rcCase ctx env live cls s bs =
   case mNode s of
-    MLocal _ -> do { bs' <- branches env; return (MExpr cls (MCase s bs')) }
+    MLocal n -> do { bs' <- branches (rootOf n) (if Map.member n env then Just n else Nothing) env; return (MExpr cls (MCase s bs')) }
     _ ->
       do  t <- fresh
           let liveS = Set.union live (Set.unions [ Set.difference (fvNames ctx b) (Set.fromList (map fst (patBinders p))) | (p, b) <- bs ])
           s' <- rc ctx env liveS s
           let env1 = consumedAfter env liveS
           let env2 = if refClass (mRep s) then Map.insert t (mRep s) env1 else env1
-          bs' <- branches env2
+          bs' <- branches (if refClass (mRep s) then Just t else Nothing) (if refClass (mRep s) then Just t else Nothing) env2
           return (MExpr cls (MLetVal t s' (MExpr cls (MCase (MExpr (mRep s) (MLocal t)) bs'))))
   where
-    branches envB =
+    -- the owned variable that keeps the scrutinee alive, if there is one
+    rootOf n
+      | Just r <- Map.lookup n (cViews ctx) = Just r
+      | Map.member n env = Just n
+      | otherwise = Nothing
+    branches root self envB =
       mapM (\(p, b) ->
-              do  let used = fvNames ctx b
-                  let dups = [ (v, c) | (v, c) <- patBinders p, refClass c, Set.member v used ]
-                  b' <- rc ctx (Map.union (Map.fromList dups) envB) live b
-                  return (p, if null dups then b' else MExpr (mRep b) (MDup dups b')))
+              case unpackable self b p of
+                Just (r, sc, bound) ->
+                  -- a struct that dies at this match: the variables take over their components, the rest is dropped (no dup, no drop of the whole)
+                  do  let env' = Map.union (Map.fromList [ (v, c) | (v, c, _) <- bound ]) (Map.delete r envB)
+                      b' <- rc ctx env' live b
+                      return (p, MExpr (mRep b) (MUnpack r sc bound b'))
+                Nothing -> viewBranch root envB p b)
            bs
+    -- the struct scrutinee is an owned variable that nothing uses after the match, and the pattern binds a variable to each field
+    unpackable self b p =
+      case (self, mRep s, mpNode p) of
+        (Just r, sc@(CStruct fs), pn)
+          | not (Set.member r live), not (Set.member r (fvNames ctx b)), Just fields <- fieldVars pn fs ->
+              Just (r, sc, [ (v, c, leafRange fs i) | (i, v, c) <- fields, refClass c, Set.member v (Map.keysSet (fvOf ctx b)) ])
+        _ -> Nothing
+    fieldVars pn fs =
+      fmap concat $
+        case pn of
+          PTuple ps | length ps == length fs -> sequence [ plain i fc q | (i, fc, q) <- zip3 [0 :: Int ..] fs ps ]
+          PRecord rs -> sequence [ plain i fc (MPat c (PVar v)) | (i, v, c) <- rs, i < length fs, let fc = fs !! i ]
+          _ -> Nothing
+    plain i fc q =
+      case mpNode q of
+        PVar v | mpRep q == fc -> Just [(i, v, fc)]
+        PWild -> Just []
+        _ -> Nothing
+    viewBranch root envB p b =
+              do  let used = Map.keysSet (fvOf ctx b)
+                  let consumed = ownedVars (cOwn ctx) b
+                  let binders = [ (v, c) | (v, c) <- patBinders p, refClass c, Set.member v used ]
+                  let dups = [ (v, c) | (v, c) <- binders, Just _ <- [root], Set.member v consumed ]
+                  let views = [ v | (v, _) <- binders, Just _ <- [root], not (Set.member v consumed) ]
+                  let ctx' = ctx { cViews = foldr (\v m -> maybe m (\r -> Map.insert v r m) root) (cViews ctx) views }
+                  b' <- rc ctx' (Map.union (Map.fromList dups) envB) live b
+                  return (p, if null dups then b' else MExpr (mRep b) (MDup dups b'))
+
+
+-- | the indices (among the reference leaves of a struct with these fields) of the leaves of field i
+leafRange :: [Class] -> Int -> [Int]
+leafRange fs i =
+  let before = nptrOf (take i fs)
+  in [before .. before + nptrOf [fs !! i] - 1]
 
 
 -- FAULT INJECTION (the tests of the checker)
@@ -415,4 +495,5 @@ rcMutate n program =
         MTuple xs -> MTuple <$> mapM mut xs
         MList xs -> MList <$> mapM mut xs
         MOwn b -> MOwn <$> mut b
+        MUnpack s c bs b -> do { k <- get; put (k + 1); b' <- mut b; return (if k == n then mNode b' else MUnpack s c bs b') }
         other -> return other

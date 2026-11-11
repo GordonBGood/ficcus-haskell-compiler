@@ -60,7 +60,7 @@ renderProgram allModules program =
       )
       where
         cloneOf _ n i =
-          (i, MDef (CloneId n) (ifId i) (Key []) (if ifValue i then Value else Function) [] CRef Nothing (Just (ifIndex i)) [] Nothing [0 ..])
+          (i, MDef (CloneId n) (ifId i) (Key []) (if ifValue i then Value else Function) [] CRef Nothing (Just (ifIndex i)) [] Nothing [0 ..] [])
 
 
 markLine :: Marks -> DefFact -> Maybe String
@@ -163,6 +163,7 @@ renderExpr depth (MExpr cls node) =
     MDup vs e -> line ("Dup " ++ unwords (map fst vs)) ++ kids [e]
     MDrop vs e -> line ("Drop " ++ unwords (map fst vs)) ++ kids [e]
     MOwn e -> line "Own" ++ kids [e]
+    MUnpack s _ bs e -> line ("Unpack " ++ s ++ " -> " ++ unwords [ v ++ show ix | (v, _, ix) <- bs ]) ++ kids [e]
   where
     line s = [pad depth (s ++ " :: " ++ classText cls)]
     kids = concatMap (renderExpr (depth + 1))
