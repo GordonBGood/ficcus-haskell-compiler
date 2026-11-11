@@ -41,6 +41,7 @@ rescan addr len =
   let
     byte i = if i < len then unsafeDupablePerformIO (peekByteOff (Ptr addr) i :: IO Word8) else 0
     isDec w = w >= 0x30 && w <= 0x39
+    isBin w = w == 0x30 || w == 0x31
     isHex w = isDec w || (w >= 0x61 && w <= 0x66) || (w >= 0x41 && w <= 0x46)
 
     -- digits (and the underscores between them) from `i`, whose first byte is a digit: the digits read, the next offset
@@ -68,7 +69,17 @@ rescan addr len =
 
     isNameByte w = isDec w || (w >= 0x61 && w <= 0x7A) || (w >= 0x41 && w <= 0x5A) || w == 0x5F || w >= 0x80
   in
-  if byte 0 == 0x30 && (byte 1 == 0x78)
+  if byte 0 == 0x30 && byte 1 == 0x62
+  then
+    -- binary (Ficcus track E4, `0b1010`, with underscores between digits as in the other bases)
+    if not (isBin (byte 2)) then Err 2 E.NumberBinDigit
+    else
+      case run isBin 2 of
+        Left i -> Err i E.NumberUnderscore
+        Right (ds, i) ->
+          if i < len && isDec (byte i) then Err i E.NumberBinDigit
+          else finish i (\k -> OkInt k (value 2 ds))
+  else if byte 0 == 0x30 && (byte 1 == 0x78)
   then
     -- hexadecimal
     if not (isHex (byte 2)) then Err 2 E.NumberHexDigit

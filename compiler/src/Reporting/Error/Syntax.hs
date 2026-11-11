@@ -489,6 +489,7 @@ data Number
   | NumberUnderscore
   | NumberDot Integer
   | NumberHexDigit
+  | NumberBinDigit
   | NumberNoLeadingZero
 
 
@@ -3045,6 +3046,20 @@ toNumberReport source number cur =
                   "Valid hexidecimal digits include 0123456789abcdefABCDEF, so I can\
                   \ only recognize things like this:"
               , D.indent 4 $ D.vcat [ "0x2B", "0x002B", "0x00ffb3" ]
+              ]
+          )
+
+    NumberBinDigit ->
+      Report.Report "WEIRD BINARY" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "I thought I was reading a binary number until I got here:"
+          ,
+            D.stack
+              [ D.reflow $
+                  "Valid binary digits are 0 and 1, so I can only recognize things like this:"
+              , D.indent 4 $ D.vcat [ "0b101", "0b0010_1011" ]
               ]
           )
 
