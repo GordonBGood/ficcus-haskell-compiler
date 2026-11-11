@@ -234,9 +234,11 @@ reuseOwned ctx d =
 
 
 {-# NOINLINE hybridRule #-}
--- | EXPERIMENT (S4b): the projection rule only for recursion over recursive data (`FICCUS_BORROW_HYBRID=1`)
+-- | The default rule since S5 (planning chat, 11 Nov): the projection rule only for recursion over recursive data (S4b, "hybrid").
+-- `FICCUS_BORROW_S3=1` selects the S3 rule (no projection rule at all); `FICCUS_BORROW_PROJ=1` the full projection rule (a superset);
+-- `FICCUS_BORROW_REUSE=1` adds the reuse-driven rule to whichever is selected.
 hybridRule :: Bool
-hybridRule = unsafePerformIO (fmap (== Just "1") (lookupEnv "FICCUS_BORROW_HYBRID"))
+hybridRule = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_BORROW_S3"))
 
 
 -- | the custom types that contain themselves (directly, through another custom type, or inside a list, tuple or record field)

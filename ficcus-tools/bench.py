@@ -23,7 +23,7 @@ def wall(exe):
     t = time.perf_counter(); subprocess.run([exe], capture_output=True, preexec_fn=_cap); return (time.perf_counter() - t) * 1000
 
 # the S4 ownership rules (docs/STAGE4-S4.md): environment of the compiler run
-SETTINGS = {"default": {}, "proj": {"FICCUS_BORROW_PROJ": "1"}, "hybrid": {"FICCUS_BORROW_HYBRID": "1"}, "reuse": {"FICCUS_BORROW_REUSE": "1"}, "nospec": {"FICCUS_NO_SPEC": "1"}, "noreuse": {"FICCUS_NO_REUSE": "1"}}
+SETTINGS = {"default": {}, "s3rule": {"FICCUS_BORROW_S3": "1"}, "proj": {"FICCUS_BORROW_PROJ": "1"}, "hybrid": {}, "reuse": {"FICCUS_BORROW_REUSE": "1"}, "nospec": {"FICCUS_NO_SPEC": "1"}, "noreuse": {"FICCUS_NO_REUSE": "1"}}
 STATS = re.compile(r"FIC_STATS: allocs (\d+) live (\d+) peak (\d+) dup (\d+) drop (\d+) free_slow \d+ reuse_hit (\d+) reuse_miss (\d+)")
 
 
