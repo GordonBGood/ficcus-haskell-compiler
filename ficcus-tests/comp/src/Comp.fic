@@ -1,0 +1,129 @@
+module Comp exposing (main)
+
+-- Structs that hold references, taken apart when they die (S3, per component counts): tuples and records returned by functions,
+-- fields read from a temporary, a pair of which only one part is used, a pair whose parts are passed on, nested pairs, a pair that
+-- is used again after a field was read, borrowed list parameters and views of a scrutinee. The output must equal Elm's
+-- (expected/comp.out, Elm 0.19.3, node).
+
+
+type alias Person =
+    { name : String, tags : List String, age : Int }
+
+
+split : List Int -> ( List Int, List Int )
+split xs =
+    List.foldr
+        (\x ( es, os ) ->
+            if modBy 2 x == 0 then
+                ( x :: es, os )
+
+            else
+                ( es, x :: os )
+        )
+        ( [], [] )
+        xs
+
+
+mk : String -> Int -> Person
+mk n a =
+    { name = n ++ "!", tags = [ n, n ++ n ], age = a }
+
+
+firstTag : Person -> String
+firstTag p =
+    case p.tags of
+        t :: _ ->
+            t
+
+        [] ->
+            "none"
+
+
+swap : ( a, b ) -> ( b, a )
+swap ( a, b ) =
+    ( b, a )
+
+
+onlyFst : ( List Int, List Int ) -> List Int
+onlyFst ( a, _ ) =
+    a
+
+
+both : ( List Int, List Int ) -> Int
+both ( a, b ) =
+    List.sum a + List.sum b + List.length a
+
+
+nested : ( ( String, List Int ), List String ) -> String
+nested ( ( s, l ), t ) =
+    s ++ String.fromInt (List.length l) ++ String.concat t
+
+
+reuse : ( List Int, List Int ) -> ( Int, List Int )
+reuse pair =
+    case pair of
+        ( a, b ) ->
+            ( List.length a + List.length (Tuple.first pair), b )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    ( es, os ) =
+                        split (List.range 1 10)
+
+                    p =
+                        mk "ab" 3
+
+                    q =
+                        mk "w" 4
+
+                    a1 =
+                        Debug.log "evens" es
+
+                    a2 =
+                        Debug.log "odds" os
+
+                    a3 =
+                        Debug.log "name" (mk "x" 1).name
+
+                    a4 =
+                        Debug.log "tags" (mk "y" 2).tags
+
+                    a5 =
+                        Debug.log "first" (firstTag (mk "z" 3))
+
+                    a6 =
+                        Debug.log "swap" (swap ( es, "s" ))
+
+                    a7 =
+                        Debug.log "onlyFst" (onlyFst (split [ 5, 6, 7, 8 ]))
+
+                    a8 =
+                        Debug.log "both" (both (split (List.range 1 20)))
+
+                    a9 =
+                        Debug.log "nested" (nested ( ( "n", [ 1, 2 ] ), [ "a", "b" ] ))
+
+                    b1 =
+                        Debug.log "reuse" (reuse (split [ 1, 2, 3, 4, 5 ]))
+
+                    b2 =
+                        Debug.log "person" ( q.name, q.tags, q.age + p.age )
+
+                    b3 =
+                        Debug.log "shared" (both ( es, es ))
+                in
+                if List.length a1 + List.length a2 + List.length a4 + a8 + Tuple.first b1 + b3 + String.length a3 + String.length a5 + String.length a9 + List.length (Tuple.second a6) + List.length a7 + (case b2 of
+                                                                                                                                                                         ( n, t, ag ) ->
+                                                                                                                                                                            String.length n + List.length t + ag) > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

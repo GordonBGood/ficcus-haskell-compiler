@@ -1,0 +1,12 @@
+shared: 65
+reuse: (4,[1,3,5])
+nested: "n2ab"
+both: 220
+onlyFst: [6,8]
+swap: ("s",[2,4,6,8,10])
+first: "z"
+tags: ["y","yy"]
+name: "x!"
+odds: [1,3,5,7,9]
+evens: [2,4,6,8,10]
+person: ("w!",["w","ww"],7)
