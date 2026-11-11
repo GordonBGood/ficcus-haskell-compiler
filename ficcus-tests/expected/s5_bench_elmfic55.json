@@ -1,0 +1,375 @@
+{
+ "fibonacci": {
+  "default": {
+   "dups": 0,
+   "drops": 6,
+   "allocs": 6,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 3,
+   "live": 0,
+   "ms": 2.2083399999246467,
+   "ms_min": 1.860143000158132
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 6,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 6,
+   "live": 6,
+   "ms": 2.1089750007377006,
+   "ms_min": 1.3713160005863756
+  }
+ },
+ "bintree": {
+  "default": {
+   "dups": 30277666,
+   "drops": 174832,
+   "allocs": 30102982,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 393236,
+   "live": 0,
+   "ms": 184.0742689992112,
+   "ms_min": 181.99572999947122
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 30102982,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 30102982,
+   "live": 30102982,
+   "ms": 466.93042399965634,
+   "ms_min": 457.930915000361
+  }
+ },
+ "sievestream": {
+  "default": {
+   "dups": 7548362,
+   "drops": 4878231,
+   "allocs": 8754189,
+   "reuses": 575,
+   "reuse_miss": 0,
+   "peak": 2254,
+   "live": 0,
+   "ms": 82.56542900016939,
+   "ms_min": 81.70404999964376
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 8754764,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 8754764,
+   "live": 8754764,
+   "ms": 138.4626080007365,
+   "ms_min": 135.99575700027344
+  }
+ },
+ "sievepq": {
+  "default": {
+   "dups": 17493748,
+   "drops": 17776940,
+   "allocs": 9203288,
+   "reuses": 437,
+   "reuse_miss": 505,
+   "peak": 269,
+   "live": 0,
+   "ms": 81.42687599956844,
+   "ms_min": 77.06300399968313
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 9203725,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 9203725,
+   "live": 9203725,
+   "ms": 138.19150400013314,
+   "ms_min": 134.6599859998605
+  }
+ },
+ "hamheap": {
+  "default": {
+   "dups": 729272,
+   "drops": 505504,
+   "allocs": 224809,
+   "reuses": 2832,
+   "reuse_miss": 2832,
+   "peak": 887,
+   "live": 0,
+   "ms": 4.744479000692081,
+   "ms_min": 4.633774000467383
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 227641,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 227641,
+   "live": 227641,
+   "ms": 6.4919030000964995,
+   "ms_min": 6.332656999802566
+  }
+ },
+ "hamming": {
+  "default": {
+   "dups": 431029,
+   "drops": 103483,
+   "allocs": 63519,
+   "reuses": 0,
+   "reuse_miss": 7848,
+   "peak": 592,
+   "live": 0,
+   "ms": 3.3255649996135617,
+   "ms_min": 3.1504990001849364
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 63519,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 63519,
+   "live": 63519,
+   "ms": 4.697089999353921,
+   "ms_min": 3.9162909997685347
+  }
+ },
+ "hamming_heap_records": {
+  "default": {
+   "dups": 431029,
+   "drops": 103483,
+   "allocs": 63519,
+   "reuses": 0,
+   "reuse_miss": 7848,
+   "peak": 592,
+   "live": 0,
+   "ms": 2.8505520003818674,
+   "ms_min": 2.5322020001112833
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 63519,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 63519,
+   "live": 63519,
+   "ms": 4.810460999578936,
+   "ms_min": 4.158169999755046
+  }
+ },
+ "hamvec": {
+  "default": {
+   "dups": 106191,
+   "drops": 125193,
+   "allocs": 39736,
+   "reuses": 0,
+   "reuse_miss": 202,
+   "peak": 509,
+   "live": 0,
+   "ms": 2.6633150000634487,
+   "ms_min": 2.6537459998507984
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 39736,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 39736,
+   "live": 39736,
+   "ms": 3.1522930003120564,
+   "ms_min": 3.02340300004289
+  }
+ },
+ "sieve_user": {
+  "default": {
+   "dups": 11646452,
+   "drops": 2841070,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 397164,
+   "peak": 1590,
+   "live": 0,
+   "ms": 18.75967900014075,
+   "ms_min": 18.43346300029225
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 1523014,
+   "live": 1523014,
+   "ms": 78.73574899986124,
+   "ms_min": 76.59132799926738
+  }
+ },
+ "sieve_plain": {
+  "default": {
+   "dups": 11646452,
+   "drops": 2841070,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 397164,
+   "peak": 1590,
+   "live": 0,
+   "ms": 18.895500999860815,
+   "ms_min": 18.123787999684282
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 1523014,
+   "live": 1523014,
+   "ms": 75.72428799994668,
+   "ms_min": 73.6045630001172
+  }
+ },
+ "sieve_plain_hoist": {
+  "default": {
+   "dups": 11646452,
+   "drops": 2841070,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 397164,
+   "peak": 1590,
+   "live": 0,
+   "ms": 19.819597000605427,
+   "ms_min": 18.16625700030272
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 1523014,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 1523014,
+   "live": 1523014,
+   "ms": 75.58026100014104,
+   "ms_min": 74.5343190001222
+  }
+ },
+ "wordfreq": {
+  "default": {
+   "dups": 2777249,
+   "drops": 3047027,
+   "allocs": 4111119,
+   "reuses": 218073,
+   "reuse_miss": 0,
+   "peak": 455625,
+   "live": 0,
+   "ms": 104.32162200049788,
+   "ms_min": 103.92028600017511
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 4329192,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 4329192,
+   "live": 4329192,
+   "ms": 156.31730600034643,
+   "ms_min": 154.7753830000147
+  }
+ },
+ "mandel": {
+  "default": {
+   "dups": 817406,
+   "drops": 1891312,
+   "allocs": 1576254,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 23700,
+   "live": 0,
+   "ms": 76.68848800039996,
+   "ms_min": 76.1022899996533
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 1576254,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 1576254,
+   "live": 1576254,
+   "ms": 95.80207399994833,
+   "ms_min": 95.68729100010387
+  }
+ },
+ "nbody": {
+  "default": {
+   "dups": 169169189,
+   "drops": 90090208,
+   "allocs": 89089230,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 64,
+   "live": 0,
+   "ms": 547.5484779999533,
+   "ms_min": 546.9404389996271
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 89089230,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 89089230,
+   "live": 89089230,
+   "ms": 1923.8418269997055,
+   "ms_min": 1915.6928669999616
+  }
+ },
+ "fannkuch": {
+  "default": {
+   "dups": 292754638,
+   "drops": 453251699,
+   "allocs": 453251698,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 13,
+   "live": 0,
+   "ms": 2659.5010870005353,
+   "ms_min": 2651.43729600004
+  }
+ },
+ "spectral": {
+  "default": {
+   "dups": 19971874,
+   "drops": 30372313,
+   "allocs": 10404029,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 131,
+   "live": 0,
+   "ms": 61.247210999681556,
+   "ms_min": 60.85606399938115
+  },
+  "norc": {
+   "dups": 0,
+   "drops": 0,
+   "allocs": 10404029,
+   "reuses": 0,
+   "reuse_miss": 0,
+   "peak": 10404029,
+   "live": 10404029,
+   "ms": 97.43463500035432,
+   "ms_min": 96.31496600013634
+  }
+ }
+}

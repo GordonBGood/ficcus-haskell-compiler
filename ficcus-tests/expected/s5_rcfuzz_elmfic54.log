@@ -1,0 +1,21 @@
+... 25 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 50 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 75 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 100 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 125 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 150 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 175 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 200 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 225 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 250 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 275 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 300 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 325 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 350 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 375 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 400 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 425 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 450 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 475 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+... 500 of 500 programs, failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
+rcfuzz: 500 programs (seeds 1..500), settings default,proj,reuse: failures {'default': 0, 'proj': 0, 'reuse': 0}, generator problems 0
