@@ -120,13 +120,13 @@ negativeStart =
 
 wildcard :: Parser E.Pattern ()
 wildcard =
-  P.Parser $ \_ (P.State pos end indent cur) cok _ cerr eerr ->
+  P.Parser $ \_ (P.State pos end indent cur) cok _ _ eerr ->
     if eqAddr pos end || neIndex pos 0# 0x5F#Word8 {- _ -}
     then eerr cur E.PStart
     else
       let
         !newPos = plusAddr# pos 1#
-        !(# badPos, badOffset #) = chompInners newPos end
+        !(# _, badOffset #) = chompInners newPos end
       in
       case badOffset of
         0#Word64 ->
@@ -134,8 +134,9 @@ wildcard =
               cok () newState
 
         _ ->
-          do  name <- N.fromAddr pos badPos
-              cerr cur (E.PWildcardNotVar name badOffset)
+          -- Ficcus (track E4): `_b_` is a variable with a leading underscore (read by Var.lower), not a
+          -- wildcard followed by letters
+          eerr cur E.PStart
 
 
 chompInners :: Addr# -> Addr# -> (# Addr#, Word64# #)
