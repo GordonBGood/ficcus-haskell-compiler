@@ -6,6 +6,7 @@ module Type.Solve
 
 
 import Control.Monad
+import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import qualified Data.Map.Strict as Map
 import qualified Data.Map.Utils as Map
 import qualified Data.NonEmptyList as NE
@@ -211,7 +212,8 @@ solve env rank pools state constraint =
           let finalMark = nextMark visitMark
 
           -- pop pool
-          generalize youngMark visitMark nextRank nextPools
+          let grayMark = nextMark finalMark
+          hiddenCycle <- generalize youngMark visitMark grayMark nextRank nextPools
           MVector.write nextPools nextRank []
 
           -- check that things went well: a rigid variable that was unified with
@@ -219,7 +221,13 @@ solve env rank pools state constraint =
           escapes <- fmap concat (traverse (rigidEscape header) rigids)
 
           let newEnv = Map.union env (Map.map A.toValue locals)
-          let tempState = State savedEnv finalMark (escapes ++ errors)
+          -- a cycle among the variables of this definition that its type does not show (Ficcus D10, 1491);
+          -- only reported when nothing else went wrong before (after an error such cycles are a consequence)
+          let cycles =
+                case Map.toList header of
+                  (name, A.At region _) : _ | hiddenCycle && null errors && null escapes -> [Error.HiddenCycle region name]
+                  _ -> []
+          let tempState = State savedEnv grayMark (cycles ++ escapes ++ errors)
           newState <- solve newEnv rank nextPools tempState subCon
 
           foldM occurs newState (Map.toList locals)
@@ -312,16 +320,17 @@ occurs state (name, A.At region variable) =
 {-| Every variable has rank less than or equal to the maxRank of the pool.
 This sorts variables into the young and old pools accordingly.
 -}
-generalize :: Mark -> Mark -> Int -> Pools -> IO ()
-generalize youngMark visitMark youngRank pools =
+generalize :: Mark -> Mark -> Mark -> Int -> Pools -> IO Bool
+generalize youngMark visitMark grayMark youngRank pools =
   do  youngVars <- MVector.read pools youngRank
       rankTable <- poolToRankTable youngMark youngRank youngVars
+      cycleRef <- newIORef False
 
       -- get the ranks right for each entry.
       -- start at low ranks so that we only have to pass
       -- over the information once.
       Vector.imapM_
-        (\rank table -> mapM_ (adjustRank youngMark visitMark rank) table)
+        (\rank table -> mapM_ (adjustRank youngMark visitMark grayMark cycleRef rank) table)
         rankTable
 
       -- For variables that have rank lowerer than youngRank, register them in
@@ -348,6 +357,8 @@ generalize youngMark visitMark youngRank pools =
                       then MVector.modify pools (var:) rank
                       else UF.set var $ Descriptor content noRank mark copy
 
+      readIORef cycleRef
+
 
 poolToRankTable :: Mark -> Int -> [Variable] -> IO (Vector.Vector [Variable])
 poolToRankTable youngMark youngRank youngInhabitants =
@@ -369,15 +380,21 @@ poolToRankTable youngMark youngRank youngInhabitants =
 -- Adjust variable ranks such that ranks never increase as you move deeper.
 -- This way the outermost rank is representative of the entire structure.
 --
-adjustRank :: Mark -> Mark -> Int -> Variable -> IO Int
-adjustRank youngMark visitMark groupRank var =
+adjustRank :: Mark -> Mark -> Mark -> IORef Bool -> Int -> Variable -> IO Int
+adjustRank youngMark visitMark grayMark cycleRef groupRank var =
   do  (Descriptor content rank mark copy) <- UF.get var
       if mark == youngMark then
-          do  -- Set the variable as marked first because it may be cyclic.
-              UF.set var $ Descriptor content rank visitMark copy
-              maxRank <- adjustRankContent youngMark visitMark groupRank content
+          do  -- Set the variable as marked first because it may be cyclic. It is gray while its
+              -- content is visited: meeting a gray variable again is a cycle (Ficcus D10: the occurs
+              -- check only looked at the types of the definitions, not at all variables).
+              UF.set var $ Descriptor content rank grayMark copy
+              maxRank <- adjustRankContent youngMark visitMark grayMark cycleRef groupRank content
               UF.set var $ Descriptor content maxRank visitMark copy
               return maxRank
+
+        else if mark == grayMark then
+          do  writeIORef cycleRef True
+              return rank
 
         else if mark == visitMark then
           return rank
@@ -389,10 +406,10 @@ adjustRank youngMark visitMark groupRank var =
               return minRank
 
 
-adjustRankContent :: Mark -> Mark -> Int -> Content -> IO Int
-adjustRankContent youngMark visitMark groupRank content =
+adjustRankContent :: Mark -> Mark -> Mark -> IORef Bool -> Int -> Content -> IO Int
+adjustRankContent youngMark visitMark grayMark cycleRef groupRank content =
   let
-    go = adjustRank youngMark visitMark groupRank
+    go = adjustRank youngMark visitMark grayMark cycleRef groupRank
   in
     case content of
       FlexVar _ ->

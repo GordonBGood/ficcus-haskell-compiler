@@ -47,6 +47,7 @@ data Error
   | InfiniteType A.Region N.Name T.Type
   | RigidEscape A.Region N.Name String  -- annotated definition, type variable of its annotation
   | Runaway A.Region Bool               -- unification does not terminate; True: an infinite type
+  | HiddenCycle A.Region N.Name         -- a cyclic type among the variables of a definition, not in its own type
 
 
 
@@ -187,6 +188,22 @@ toReport source localizer err =
 
     Runaway region isCycle ->
       toRunawayReport source region isCycle
+
+    HiddenCycle region name ->
+      Report.Report "INFINITE TYPE" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "While checking `" <> N.toChars name <> "`, I found a type that would have to contain itself:"
+          ,
+            D.stack
+              [ D.reflow $
+                  "It is not part of the type of `" <> N.toChars name <> "`, so I cannot show it, but somewhere in this definition a type variable ends up equal to a type that contains that same variable, like `m` and `OnePlus m` at once. There is no finite type that fits."
+              , D.toSimpleHint
+                  "Phantom types are a common source of this. Check the types of the values that are\
+                  \ compared or combined here."
+              ]
+          )
 
 
 
