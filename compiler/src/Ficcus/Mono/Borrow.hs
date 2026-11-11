@@ -29,6 +29,7 @@ module Ficcus.Mono.Borrow
 -- get a count of their own at the start of the branch; the others are views into the scrutinee, which stays alive).
 
 
+import qualified Data.Graph as Graph
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import System.Environment (lookupEnv)
@@ -54,9 +55,11 @@ ownCtx caps clones = OwnCtx (Map.fromList [ (mdClone d, d) | d <- clones ]) caps
 
 
 -- | the clones with `mdOwn` inferred; `root` (the `main` value) is left alone
-inferBorrow :: Maybe CloneId -> [MDef] -> [MDef]
-inferBorrow root clones0 = go (map start clones0)
+inferBorrow :: Map.Map String UnionShape -> Maybe CloneId -> [MDef] -> [MDef]
+inferBorrow unions root clones0 = go (map start clones0)
   where
+    recTypes = recursiveTypes unions
+    sccs = sccOf clones0
     caps = captures clones0
     -- a call that hands a parameter a value of another class (a struct where a box is expected) makes a fresh box that only an owner drops
     byId = Map.fromList [ (mdClone d, d) | d <- clones0 ]
@@ -76,7 +79,8 @@ inferBorrow root clones0 = go (map start clones0)
     step ctx d =
       case mdBody d of
         Just body | mdKind d == Function, Just (mdClone d) /= root ->
-          let consumed = Set.unions [ownedVars ctx body, tailBad ctx d, if projRule then projOwned ctx d else Set.empty, if reuseRule then reuseOwned ctx d else Set.empty]
+          let consumed = Set.unions [ownedVars ctx body, tailBad ctx d, if projRule then projOwned ctx d else Set.empty, if reuseRule then reuseOwned ctx d else Set.empty,
+                                       if hybridRule then hybridOwned unions recTypes sccs ctx d else Set.empty]
               now = [ if o == Owned || Set.member n consumed then Owned else Borrowed | ((n, _), o) <- zip (mdParams d) (paramOwns d) ]
           in d { mdOwn = now }
         _ -> d
@@ -227,6 +231,79 @@ reuseOwned ctx d =
         , Just cell <- [cellOfPat p], Just k <- [objSizeClass (cellFields cell)]
         , Map.notMember n (freeVars (ocCaps ctx) b)
         , Just _ <- [placeToken "tok" k b] ]
+
+
+{-# NOINLINE hybridRule #-}
+-- | EXPERIMENT (S4b): the projection rule only for recursion over recursive data (`FICCUS_BORROW_HYBRID=1`)
+hybridRule :: Bool
+hybridRule = unsafePerformIO (fmap (== Just "1") (lookupEnv "FICCUS_BORROW_HYBRID"))
+
+
+-- | the custom types that contain themselves (directly, through another custom type, or inside a list, tuple or record field)
+recursiveTypes :: Map.Map String UnionShape -> Set.Set String
+recursiveTypes unions =
+  Set.fromList (concat [ ns | Graph.CyclicSCC ns <- Graph.stronglyConnComp [ (n, n, refsOf u) | (n, u) <- Map.toList unions ] ])
+  where
+    refsOf u = concat [ concatMap tyRefs fs | (_, _, fs) <- usCtors u ]
+    tyRefs t =
+      case t of
+        TyCon n args -> n : concatMap tyRefs args
+        TyFun a b -> tyRefs a ++ tyRefs b
+        TyRecord fs -> concatMap (tyRefs . snd) fs
+        TyTuple ts -> concatMap tyRefs ts
+        TyUnit -> []
+
+
+-- | for each clone that can reach itself through calls, a number that identifies its group of mutually recursive clones
+sccOf :: [MDef] -> Map.Map CloneId Int
+sccOf clones =
+  Map.fromList (concat [ [ (c, i) | c <- cs ] | (i, Graph.CyclicSCC cs) <- zip [0 :: Int ..] comps ])
+  where
+    comps = Graph.stronglyConnComp [ (mdClone d, mdClone d, maybe [] exprRefs (mdBody d)) | d <- clones ]
+
+
+-- | S4b, the hybrid rule: the parameters that Lean's projection rule would own (a pattern variable taken from them is consumed), but
+-- only when (1) the parameter is matched against a recursive data type (a list pattern, or a constructor of a custom type that
+-- contains itself) and (2) the parameter, or a pattern variable taken from it, is an argument of a call of a recursive function
+-- (itself: it recurses over the value; or another one: it hands the parts to a recursion, as `replaceMin` does with `siftdown`).
+-- A function that passes the whole parameter on gets it owned by the ordinary rule (an argument of an owned parameter). Everything else (numeric loops, arrays, records
+-- and tuples, a single match in a function that does not recurse) stays borrowed.
+hybridOwned :: Map.Map String UnionShape -> Set.Set String -> Map.Map CloneId Int -> OwnCtx -> MDef -> Set.Set String
+hybridOwned unions recTypes sccs ctx d =
+  case mdBody d of
+    Just body ->
+      let params = Set.fromList (map fst (mdParams d))
+          rootOf = roots (Map.fromList [ (n, n) | n <- Set.toList params ]) body
+          recData = Set.fromList [ n | (n, p) <- matches body, Set.member n params, recPat p ]
+          toRec = Set.fromList [ q | args <- recCalls body, a <- args, v <- Map.keys (freeVars (ocCaps ctx) a), Just q <- [Map.lookup v rootOf] ]
+      in Set.intersection (projOwned ctx d) (Set.intersection recData toRec)
+    _ -> Set.empty
+  where
+    -- every pattern variable taken (through any number of matches) from a parameter, with that parameter
+    roots env e =
+      case mNode e of
+        MCase s bs | MLocal n <- mNode s, Just q <- Map.lookup n env ->
+          Map.unions (env : roots env s : [ roots (foldr (\(v, _) m -> Map.insert v q m) env (patBinders p)) b | (p, b) <- bs ])
+        _ -> Map.unions (env : map (roots env) (children e))
+    matches e =
+      (case mNode e of
+         MCase s bs | MLocal n <- mNode s -> [ (n, p) | (p, _) <- bs ]
+         _ -> [])
+      ++ concatMap matches (children e)
+    recPat (MPat _ node) =
+      case node of
+        PCons _ _ -> True
+        PNil -> True
+        PAlias q _ -> recPat q
+        PCtor name tag ps ->
+          or [ Set.member t recTypes | (t, u) <- Map.toList unions, (n, k, fs) <- usCtors u, n == name, k == tag, length fs == length ps ]
+        _ -> False
+    -- the calls of recursive functions (this one included)
+    recCalls e =
+      (case mNode e of
+         MCall h args | MGlobal c <- mNode h, Map.member c sccs -> [args]
+         _ -> [])
+      ++ concatMap recCalls (children e)
 
 
 {-# NOINLINE projRule #-}

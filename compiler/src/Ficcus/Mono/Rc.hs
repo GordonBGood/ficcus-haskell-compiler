@@ -77,7 +77,7 @@ data Ctx =
 -- | the program with counts; the root (`main = Platform.worker ...`) is left alone
 rcProgram :: MProgram -> Either [String] MProgram
 rcProgram program0 =
-  let clones = inferBorrow (mpMain program0) (mpClones program0)
+  let clones = inferBorrow (mpUnions program0) (mpMain program0) (mpClones program0)
       program = program0 { mpClones = clones }
       caps = captures clones
       ctx = Ctx (Map.fromList [ (mdClone d, d) | d <- clones ]) caps (ownCtx caps clones) Map.empty
