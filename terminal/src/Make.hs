@@ -72,7 +72,13 @@ data Flags =
     , _report :: Maybe ReportType
     , _docs :: Maybe FilePath
     , _rc :: Bool                -- Ficcus: --output=x.c with reference counting (stage iv, `--rc`)
+    , _noRc :: Bool              -- Ficcus: --output=x.c without counts (`--no-rc`): the permanent oracle
     }
+
+
+-- | Ficcus: is `--output=x.c` counted when neither `--rc` nor `--no-rc` is given? (S5: the flip of this default is a commit of its own)
+rcDefault :: Bool
+rcDefault = False
 
 
 data Output
@@ -97,7 +103,7 @@ type Task a = Task.Task Exit.Make a
 
 
 run :: [FilePath] -> Flags -> IO ()
-run paths flags@(Flags _ _ _ report _ _) =
+run paths flags@(Flags _ _ _ report _ _ _) =
   do  style <- getStyle report
       maybeRoot <- R.findRoot
       Reporting.attemptWithStyle style Exit.makeToReport $
@@ -107,7 +113,8 @@ run paths flags@(Flags _ _ _ report _ _) =
 
 
 runHelp :: R.Root -> [FilePath] -> Reporting.Style -> Flags -> IO (Either Exit.Make ())
-runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcMode) =
+runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag noRcFlag) =
+  let rcMode = not noRcFlag && (rcFlag || rcDefault) in
   R.withRootLock root $ \writer stuff ->
   Task.run $
   do  desiredMode <- getMode debug optimize

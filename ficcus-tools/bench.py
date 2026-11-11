@@ -72,7 +72,7 @@ def main():
     if a.suite: return suite_mode(a)
     env = dict(os.environ, FICCUS_ELM=os.path.abspath(a.elm))
     if a.elm_home: env["ELM_HOME"] = a.elm_home
-    if a.rc: env["FICCUS_FLAGS"] = "--rc"
+    env["FICCUS_FLAGS"] = "--rc" if a.rc else "--no-rc"
     only = [x for x in a.only.split(",") if x]
     for cc in ("gcc", "clang"):
         for n, f in TESTS.items():

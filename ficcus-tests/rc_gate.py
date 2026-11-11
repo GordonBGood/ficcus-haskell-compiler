@@ -73,7 +73,7 @@ def main():
             if mode == "norc" and not a.norc: continue
             cfile = os.path.join(out, "%s_%s.c" % (name, "rc" if mode == "san" else mode))
             if mode != "san":
-                e = dict(env, FICCUS_FLAGS="--rc" if mode == "rc" else "")
+                e = dict(env, FICCUS_FLAGS="--rc" if mode == "rc" else "--no-rc")
                 rc, so, se = sh([ficc, fsrc, "-o", cfile], env=e, timeout=300)
                 if rc != 0: status = "COMPILE-FAIL"; print(name, mode, (se or so)[-300:]); break
             exe = os.path.join(out, "%s_%s" % (name, mode))

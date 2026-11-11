@@ -10,6 +10,7 @@
 # Environment: FICCUS_ELM  the compiler binary (default: the newest bin/elmfic* of this workspace)
 #              ELM_HOME    the package cache (default: the usual one)
 #              FICCUS_CC   the C compiler (default gcc)
+#              FICCUS_FLAGS  extra compiler flags (--no-rc: the oracle build; --rc)
 # Not available to the compiler yet: elm/json, elm/parser, elm/bytes, elm/regex, elm/random (the library packages are
 # read from ELM_HOME; programs that use them fail in the specializer with a message naming the kernel function).
 here=$(cd "$(dirname "$0")/.." && pwd)
@@ -31,5 +32,5 @@ cat > "$w/elm.json" <<'JSON'
   "test-dependencies": {"direct": {}, "indirect": {}}
 }
 JSON
-(cd "$w" && "$elm" make src/Main.fic --output="$out.c") || exit 1
+(cd "$w" && "$elm" make src/Main.fic --output="$out.c" $FICCUS_FLAGS) || exit 1
 ${FICCUS_CC:-gcc} -std=c99 -O2 -ffp-contract=off -w -I "$here/targets/c" "$out.c" -o "$out" -lm

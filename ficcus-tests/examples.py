@@ -58,7 +58,7 @@ SAN_FLAGS = {"gcc": ["-fsanitize=address,undefined", "-fno-sanitize-recover=unde
 def run_c(a, dst, name, mod):
     """--output=x.c, build with gcc and clang (the flags of targets/suite.json), run, compare with expected/<name>.out"""
     env = dict(os.environ, ELM_HOME=a.elm_home)
-    p = subprocess.run([a.safe, a.elm, "make", "src/" + mod, "--output=x.c"] + (["--rc"] if RC else []), cwd=dst, env=env, capture_output=True)
+    p = subprocess.run([a.safe, a.elm, "make", "src/" + mod, "--output=x.c"] + (["--rc"] if RC else ["--no-rc"]), cwd=dst, env=env, capture_output=True)
     if p.returncode != 0:
         print("FAIL %s.c: compiler exit %d\n%s" % (name, p.returncode, (p.stdout + p.stderr).decode()[-400:])); return 1
     pre = "".join(open(os.path.join(HERE, "..", "runtime", f), encoding="utf-8").read()

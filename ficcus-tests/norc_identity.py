@@ -27,9 +27,11 @@ REF = os.path.join(HERE, "expected", "norc_identity.sha256")
 LOG = os.path.join(HERE, "expected", "norc_identity.log")
 
 
-def c_text(elm, home, src, out):
+def c_text(elm, home, src, out, flags="--no-rc"):
+    # `--no-rc` is explicit (the default of the compiler may be --rc); a compiler from before S5 does not know the flag: retry without
     p = subprocess.run([os.path.join(HERE, "ficc"), src, "-o", out],
-                       env=dict(os.environ, FICCUS_ELM=os.path.abspath(elm), ELM_HOME=home, FICCUS_FLAGS=""), capture_output=True, text=True)
+                       env=dict(os.environ, FICCUS_ELM=os.path.abspath(elm), ELM_HOME=home, FICCUS_FLAGS=flags), capture_output=True, text=True)
+    if p.returncode != 0 and flags: return c_text(elm, home, src, out, "")
     return open(out, "rb").read() if p.returncode == 0 and os.path.exists(out) else None
 
 

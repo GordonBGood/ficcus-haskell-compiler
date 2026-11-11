@@ -12,7 +12,7 @@ functions and outputs that use: let, case on lists, trees, tuples, Maybe and Res
 record updates, self tail calls (loops), strings.
 
 For each program:
-  1. the no-RC build (`elm make` without --rc, gcc -O1) is run: its output is the oracle;
+  1. the no-RC build (`elm make --no-rc`, gcc -O1) is run: its output is the oracle;
   2. for each ownership setting the `--rc` build (the compiler runs RcCheck on it: a rejected program is a failure) is built with
      AddressSanitizer + UBSan (-DFIC_NO_POOL, leak detection on) and -DFIC_STATS and run: the output must equal the oracle's, the
      exit status must be 0, the sanitizers silent, and the run must end with 0 live objects.
@@ -463,7 +463,7 @@ def check(a, text, work, settings):
         rc, so, se = sh([a.safe, os.path.abspath(a.elm_check), "make", "src/Main.elm", "--output=/dev/null"], cwd=work, env=env)
         os.remove(os.path.join(work, "src", "Main.elm"))
         if rc != 0: return [("generator", "not valid Elm 0.19.3: " + (so + se)[-600:])]
-    rc, so, se = sh([a.safe, elm, "make", "src/Main.fic", "--output=norc.c", "--no-rc"] if a.norc_flag else [a.safe, elm, "make", "src/Main.fic", "--output=norc.c"], cwd=work, env=env)
+    rc, so, se = sh([a.safe, elm, "make", "src/Main.fic", "--output=norc.c", "--no-rc"], cwd=work, env=env)
     if rc != 0: return [("generator", "the no-RC compile failed: " + (so + se)[-600:])]
     rc, so, se = sh(["gcc"] + CFLAGS + ["-O1", "norc.c", "-o", "norc", "-lm"], cwd=work)
     if rc != 0: return [("generator", "the no-RC C build failed: " + se[-400:])]
@@ -490,7 +490,6 @@ def main():
     ap.add_argument("--settings", default="default,proj,reuse"); ap.add_argument("--out", default=None)
     ap.add_argument("--keep", default=os.path.join(HERE, "rcfuzz")); ap.add_argument("--elm-check", default=None)
     ap.add_argument("--print", type=int, default=None, dest="show"); ap.add_argument("--replay", action="store_true")
-    ap.add_argument("--norc-flag", action="store_true", help="pass --no-rc for the oracle build (when --rc is the compiler's default)")
     a = ap.parse_args()
     if a.show is not None:
         sys.stdout.write(program_text(a.show)); return 0
