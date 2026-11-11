@@ -163,6 +163,9 @@ renderExpr depth (MExpr cls node) =
     MDup vs e -> line ("Dup " ++ unwords (map fst vs)) ++ kids [e]
     MDrop vs e -> line ("Drop " ++ unwords (map fst vs)) ++ kids [e]
     MOwn e -> line "Own" ++ kids [e]
+    MSpec s _ bs t e -> line ("Spec " ++ s ++ " -> " ++ unwords [ v ++ "#" ++ show i | (v, _, i) <- bs ] ++ maybe "" (" token " ++) t) ++ kids [e]
+    MReuse t e -> line ("Reuse " ++ t) ++ kids [e]
+    MFreeTok t e -> line ("FreeToken " ++ t) ++ kids [e]
     MUnpack s _ bs e -> line ("Unpack " ++ s ++ " -> " ++ unwords [ v ++ show ix | (v, _, ix) <- bs ]) ++ kids [e]
   where
     line s = [pad depth (s ++ " :: " ++ classText cls)]

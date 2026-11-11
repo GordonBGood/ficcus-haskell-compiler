@@ -37,7 +37,8 @@ import Ficcus.Mono.Class
 import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig)
-import Ficcus.Mono.Layout (leavesOf)
+import Ficcus.Mono.Layout (leavesOf, objSizeClass)
+import Ficcus.Mono.Reuse
 
 
 data V =
@@ -56,6 +57,7 @@ data Cx =
     { cxScope :: Scope
     , cxClones :: Map.Map CloneId MDef
     , cxCaps :: Map.Map CloneId [(String, Class)]
+    , cxTokens :: Map.Map String (Maybe Int)     -- the reuse tokens in scope (S4) and the size class of their cell
     }
 
 
@@ -70,7 +72,7 @@ rcCheck program =
       byId = Map.fromList [ (mdClone d, d) | d <- clones ]
   in [ msg
      | d <- clones, Just (mdClone d) /= mpMain program, Just body <- [mdBody d]
-     , Left err <- [evalStateT (checkDef d caps body) (Cx Map.empty byId caps)]
+     , Left err <- [evalStateT (checkDef d caps body) (Cx Map.empty byId caps Map.empty)]
      , let msg = "rc check: " ++ mdName d ++ ": " ++ err ]
      ++ [ "rc check: " ++ mdName d ++ ": " ++ err
         | d <- clones, Just (mdClone d) /= mpMain program, Just body <- [mdBody d], err <- tailCheck byId d body ]
@@ -201,6 +203,22 @@ owned e =
       do  forM_ vs (\(n, c) -> when (refClass c) (consume n))
           owned b
     MOwn b -> view b
+    MSpec _ _ _ _ _ -> bad "a drop specialization that is not the whole body of a case branch"
+    MReuse t x ->
+      do  tokens <- gets cxTokens
+          case Map.lookup t tokens of
+            Nothing -> bad ("the reuse token " ++ t ++ " is not in scope")
+            Just k ->
+              case appCell x of
+                Just cs | k /= Nothing, objSizeClass cs == k -> return ()
+                _ -> bad ("the reuse token " ++ t ++ " is used by something that is not a constructor application of the size class of its cell")
+          owned x
+          consume t
+    MFreeTok t b ->
+      do  tokens <- gets cxTokens
+          unless (Map.member t tokens) (bad ("the reuse token " ++ t ++ " is not in scope"))
+          consume t
+          owned b
     MUnpack s c bs b ->
       do  let nleaves = length (refLeaves c)
           let taken = concat [ ix | (_, _, ix) <- bs ]
@@ -306,7 +324,7 @@ caseOf s bs =
                 do  modify' (\st -> st { cxScope = s0 })
                     let binders = [ n | (n, c) <- patBinders p, refClass c ]
                     forM_ binders (\n -> modify' (\st -> st { cxScope = Map.insert n (V False 0 root) (cxScope st) }))
-                    owned b
+                    branchBody root p b
                     forM_ binders $ \n ->
                       do  v <- gets (Map.lookup n . cxScope)
                           case v of
@@ -322,6 +340,33 @@ caseOf s bs =
               put' r
   where
     put' sc = modify' (\st -> st { cxScope = sc })
+
+
+-- | the body of a case branch: an ordinary expression, or (S4) a drop specialization of the scrutinee
+branchBody :: Maybe String -> MPat -> MExpr -> CK ()
+branchBody root p b =
+  case mNode b of
+    MSpec s fcs bs mt body ->
+      do  when (root /= Just s) (bad "a drop specialization of something that is not the scrutinee variable of its case")
+          cell <- maybe (bad ("the pattern of the specialized branch (" ++ s ++ ") is not a constructor with variable arguments")) return (cellOfPat p)
+          when (fcs /= cellFields cell) (bad "a drop specialization with a different object layout than its pattern")
+          forM_ bs $ \(v, c, i) ->
+            unless ((i, v, c) `elem` cellVars cell && i < length fcs && fcs !! i == c && refClass c)
+              (bad ("the specialized variable " ++ v ++ " is not a reference field of the pattern"))
+          when (length (List.nub [ i | (_, _, i) <- bs ]) /= length bs) (bad "a field of a specialized cell is taken twice")
+          consume s
+          forM_ bs (\(v, _, _) -> modify' (\st -> st { cxScope = Map.adjust (\x -> x { vCount = vCount x + 1 }) v (cxScope st) }))
+          case mt of
+            Nothing -> owned body
+            Just t ->
+              do  modify' (\st -> st { cxScope = Map.insert t (V True 1 Nothing) (cxScope st), cxTokens = Map.insert t (objSizeClass fcs) (cxTokens st) })
+                  owned body
+                  v <- gets (Map.lookup t . cxScope)
+                  case v of
+                    Just x | vCount x /= 0 -> bad ("the reuse token " ++ t ++ " has " ++ show (vCount x) ++ " count(s) left at the end of its branch (never used or freed)")
+                    _ -> return ()
+                  modify' (\st -> st { cxScope = Map.delete t (cxScope st), cxTokens = Map.delete t (cxTokens st) })
+    _ -> owned b
 
 
 -- TAIL CALLS (STAGE4-PLAN 3.6, 13): a self tail call is a loop, which has no "after" in which something could be dropped, so a borrowed
@@ -341,6 +386,8 @@ tailCheck clones d = go (Map.fromList [ (n, o == Borrowed) | ((n, _), o) <- zip 
         MDup _ b -> go env b
         MDrop _ b -> go env b
         MUnpack _ _ _ b -> go env b
+        MFreeTok _ b -> go env b
+        MSpec _ _ _ _ b -> go env b
         MCase s bs ->
           concat [ go (foldr (\(v, _) m -> Map.insert v (viaScrutinee s env && not (counted v b)) m) env (patBinders p)) b | (p, b) <- bs ]
         MCall h args
@@ -349,7 +396,7 @@ tailCheck clones d = go (Map.fromList [ (n, o == Borrowed) | ((n, _), o) <- zip 
               | (((n, pc), o), a) <- zip (zip params (paramOwns d)) args, o == Borrowed, refClass pc, not (mRep a == pc && stableExpr env a) ]
         _ -> []
     viaScrutinee s env = case mNode s of { MLocal n -> stable env n; _ -> False }
-    counted v b = case mNode b of { MDup vs _ -> v `elem` map fst vs; _ -> False }
+    counted v b = case mNode b of { MDup vs _ -> v `elem` map fst vs; MSpec _ _ bs _ _ -> v `elem` [ n | (n, _, _) <- bs ]; _ -> False }
     stableExpr env a =
       case mNode a of
         MLocal n -> stable env n

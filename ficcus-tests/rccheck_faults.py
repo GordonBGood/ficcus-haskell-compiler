@@ -4,15 +4,20 @@
   python3 ficcus-tests/rccheck_faults.py --elm bin/elmficNN --elm-home H [--only a,b] [--sample F --seed S]
 
 Every `dup` and `drop` that the pass inserts is needed (the counts are exact), so removing any single one of them must be reported
-by the checker. For each example the program is compiled with `--rc` and FICCUS_RC_MUTATE=n for n = 0, K, 2K, ... (--sample F --seed S: a random fraction F of the sites, fixed seed); the compiler must fail with a message that starts with "rc check:". Exit status 1 when a mutated program is accepted."""
+by the checker. For each example the program is compiled with `--rc` and FICCUS_RC_MUTATE=n for n = 0, K, 2K, ... (--sample F --seed S: a random
+fraction F of the sites, fixed seed); the compiler must fail with a message that starts with "rc check:". Exit status 1 when a mutated program is accepted.
+
+S4: the same for the reset/reuse operations (FICCUS_RC_MUTATE=rK): removal of a drop specialization (MSpec), of the token of one, of a
+reuse (MReuse) and of a token free (MFreeTok). There are few of them, so they are ALWAYS tested in full, also with --sample (the sample
+covers only the dup/drop sites; STAGE4-PLAN 14: sample 0.05, seed 1)."""
 import argparse, os, random, subprocess, sys, shutil, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT = ["fib", "lists", "acc", "clo", "dict", "letnum", "str2"]
 
 
-def compile_mutant(elm, home, work, mod, n):
-    env = dict(os.environ, ELM_HOME=home, FICCUS_RC_MUTATE=str(n))
+def compile_mutant(elm, home, work, mod, n, prefix=""):
+    env = dict(os.environ, ELM_HOME=home, FICCUS_RC_MUTATE=prefix + str(n))
     p = subprocess.run([elm, "make", "src/" + mod, "--output=x.c", "--rc"], cwd=work, env=env, capture_output=True, text=True, timeout=300)
     return p.returncode, p.stdout + p.stderr
 
@@ -35,16 +40,20 @@ def main():
         if "there is no dup or drop number" not in text0:
             print("%-8s skipped: does not compile with --rc (%s)" % (name, text0.strip().splitlines()[0][:80])); continue
         rng = random.Random(a.seed)
-        while True:
-            if a.sample < 1.0 and rng.random() >= a.sample: n += 1; continue
-            rc, text = compile_mutant(elm, a.elm_home, dst, mod, n)
-            if "there is no dup or drop number" in text: break
-            if rc != 0 and "rc check:" in text: caught += 1
-            else:
-                missed += 1; print("MISSED %s: removing dup/drop %d was accepted (exit %d) %s" % (name, n, rc, text[-200:]))
-            n += 1
+        reuse_n = 0
+        for prefix in ("", "r"):
+            n = 0
+            while True:
+                if prefix == "" and a.sample < 1.0 and rng.random() >= a.sample: n += 1; continue
+                rc, text = compile_mutant(elm, a.elm_home, dst, mod, n, prefix)
+                if "there is no dup or drop number" in text or "there is no reset or reuse number" in text: break
+                if rc != 0 and "rc check:" in text: caught += 1
+                else:
+                    missed += 1; print("MISSED %s: removing %ssite %d was accepted (exit %d) %s" % (name, prefix, n, rc, text[-200:]))
+                if prefix == "r": reuse_n += 1
+                n += 1
         total += caught + missed; bad += missed
-        print("%-8s %d mutations: %d caught, %d missed" % (name, caught + missed, caught, missed), flush=True)
+        print("%-8s %d mutations (%d reset/reuse): %d caught, %d missed" % (name, caught + missed, reuse_n, caught, missed), flush=True)
         shutil.rmtree(work, ignore_errors=True)
     print("total %d mutations, %d missed" % (total, bad))
     return 1 if bad else 0

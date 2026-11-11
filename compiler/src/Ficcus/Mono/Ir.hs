@@ -70,6 +70,14 @@ data MNode
   | MUnpack String Class [(String, Class, [Int])] MExpr
       -- a struct variable that dies here is taken apart: each listed (pattern) variable takes over the counts on the given reference
       -- leaves (indices into the reference leaves of the struct, in order); the counts on all other leaves are dropped (S3, per component)
+  | MSpec String [Class] [(String, Class, Int)] (Maybe String) MExpr
+      -- S4 drop specialization, always the whole body of a case branch: the scrutinee variable (owned, dies here) is a heap object whose fields
+      -- have these classes; each listed pattern variable (with the index of its field) takes over the count of that field. When the object is
+      -- unique the other reference fields are dropped and the cell becomes the reuse token of the given name (it is freed at once when there
+      -- is no token); when it is shared every listed variable gets a count of its own and the object loses one
+  | MReuse String MExpr                    -- S4: the expression is a constructor application (or a cons): it is built in the cell of the token
+                                           -- (a fresh cell when the token is empty); consumes the token
+  | MFreeTok String MExpr                  -- S4: the token is not used on this path: free its cell, then the expression
   | MOwn MExpr                             -- the expression is a borrowed value (a view into something that stays alive): add a count, the result is owned
   deriving (Show)
 
@@ -170,6 +178,9 @@ children (MExpr _ node) =
     MDrop _ e -> [e]
     MOwn e -> [e]
     MUnpack _ _ _ e -> [e]
+    MSpec _ _ _ _ e -> [e]
+    MReuse _ e -> [e]
+    MFreeTok _ e -> [e]
 
 
 -- | the clones an expression refers to, in order of first occurrence

@@ -24,7 +24,7 @@ RUNALL = os.path.join(HERE, "runall")
 sys.path.insert(0, RUNALL)
 import run_all  # noqa: E402   (normalize_c, the output normalization of the suite)
 
-STATS = re.compile(r"FIC_STATS: allocs (\d+) live (\d+) peak (\d+) dup (\d+) drop (\d+)")
+STATS = re.compile(r"FIC_STATS: allocs (\d+) live (\d+) peak (\d+) dup (\d+) drop (\d+)(?: free_slow \d+ reuse_hit (\d+) reuse_miss (\d+))?")
 FLAGS = ["-std=c99", "-ffp-contract=off", "-w", "-DFIC_STATS", "-I", os.path.join(ROOT, "targets", "c")]
 
 
@@ -41,6 +41,7 @@ def main():
     ap.add_argument("--elm", required=True); ap.add_argument("--elm-home", required=True); ap.add_argument("--only", default="")
     ap.add_argument("--san", action="store_true"); ap.add_argument("--out", default=None)
     ap.add_argument("--cc", default="gcc")
+    ap.add_argument("--env", action="append", default=[], help="KEY=VALUE for the compiler run (the S4 ownership rule: FICCUS_BORROW_PROJ=1, FICCUS_BORROW_REUSE=1; FICCUS_NO_REUSE=1, FICCUS_NO_SPEC=1)")
     ap.add_argument("--norc", action="store_true", help="also build and run the no-RC variant (capped at RC_GATE_CAP_MB, default 6144; a program that "
                     "needs more is reported as SKIP with the reason, not failed). Default off: compare with the recorded counters instead")
     ap.add_argument("--baseline", default=None, help="a recorded output of this script (the S2 --rc counters): dup, drop and peak are shown next to the new ones")
@@ -50,6 +51,7 @@ def main():
     suite = json.load(open(os.path.join(RUNALL, "suite.json")))["tests"]
     only = [x for x in a.only.split(",") if x]
     env = dict(os.environ, FICCUS_ELM=os.path.abspath(a.elm), ELM_HOME=a.elm_home)
+    env.update(dict(kv.split("=", 1) for kv in a.env))
     ficc = os.path.join(HERE, "ficc")
     bad = 0
     base = {}
@@ -57,7 +59,7 @@ def main():
         for l in open(a.baseline):
             f = l.split()
             if len(f) >= 10 and f[0] != "test" and f[1] == "ok": base[f[0]] = (int(f[6]), int(f[7]), int(f[8]))     # rc peak, dup, drop
-    print("%-22s %-6s %10s %10s | %10s %10s %10s %10s %6s" % ("test", "status", "allocs", "peak", "rc allocs", "rc peak", "dup", "drop", "live"))
+    print("%-22s %-6s %10s %10s | %10s %10s %10s %10s %6s %10s" % ("test", "status", "allocs", "peak", "rc allocs", "rc peak", "dup", "drop", "live", "reuse"))
     for t in suite:
         name = t["name"]
         if only and name not in only: continue
@@ -87,11 +89,11 @@ def main():
             if rc != 0: status = "FAIL(exit %d)" % rc; print(name, mode, se[-600:]); break
             if run_all.normalize_c(so, subs) != want: status = "FAIL(output)"; print(name, mode, "output differs from the golden file"); break
             m = STATS.search(se)
-            if mode != "san" and m: res[mode] = tuple(int(x) for x in m.groups())
+            if mode != "san" and m: res[mode] = tuple(int(x or 0) for x in m.groups())
             if mode == "rc" and m and int(m.group(2)) != 0: status = "FAIL(live %s)" % m.group(2); break
         if status != "ok" and not status.startswith("SKIP"): bad += 1
-        n, r = res.get("norc", (0, 0, 0, 0, 0)), res.get("rc", (0, 0, 0, 0, 0))
-        print("%-22s %-6s %10d %10d | %10d %10d %10d %10d %6d" % (name, status, n[0], n[2], r[0], r[2], r[3], r[4], r[1]), flush=True)
+        n, r = res.get("norc", (0,) * 7), res.get("rc", (0,) * 7)
+        print("%-22s %-6s %10d %10d | %10d %10d %10d %10d %6d %10d" % (name, status, n[0], n[2], r[0], r[2], r[3], r[4], r[1], r[5]), flush=True)
         if name in base and r[0]: print("%-22s %-6s %10s %10s | %10s %10d %10d %10d   (recorded baseline)" % ("", "", "", "", "", base[name][0], base[name][1], base[name][2]), flush=True)
     if not a.out: shutil.rmtree(out, ignore_errors=True)
     return 1 if bad else 0

@@ -376,6 +376,8 @@ genRet info e =
     MDup vs b -> do { dupVars vs; genRet info b }
     MDrop vs b -> do { dropVars vs; genRet info b }
     MUnpack s c bs b -> do { unpackDrops s c bs; genRet info b }
+    MSpec s fcs bs mt b -> do { specCode s fcs bs mt; genRet info b }
+    MFreeTok t b -> do { freeToken t; genRet info b }
     MLetVal n v b ->
       do  v' <- genExpr info v
           emit (classType (mRep v) ++ " " ++ localName n ++ " = " ++ v' ++ ";")
@@ -440,6 +442,18 @@ genExpr info e =
     MDup vs b -> do { dupVars vs; genExpr info b }
     MDrop vs b -> do { dropVars vs; genExpr info b }
     MUnpack s c bs b -> do { unpackDrops s c bs; genExpr info b }
+    MSpec s fcs bs mt b -> do { specCode s fcs bs mt; genExpr info b }
+    MFreeTok t b -> do { freeToken t; genExpr info b }
+    MReuse t x ->
+      case mNode x of
+        MCall (MExpr _ (MCtor _ tag (Key parts))) args ->
+          do  let cs = [ c | ByClass c <- parts ]
+              vals <- atomsTo info (zip args cs)
+              allocObjAt (Just (localName t)) cs (show tag ++ "u") vals
+        MCall (MExpr _ (MKernel "elm/core:List.cons" (Key [ByClass c]))) [h, tl] ->
+          do  vals <- atomsTo info [(h, c), (tl, CRef)]
+              allocObjAt (Just (localName t)) [c, CRef] "1u" vals
+        _ -> failWith "internal: a reuse of something that is not a constructor application"
     MOwn b ->
       do  v <- genExpr info b
           t <- variable (mRep b) v
@@ -733,6 +747,32 @@ unpackDrops s c bs =
   in forM_ (zip [0 :: Int ..] (refPaths c (localName s))) (\(k, p) -> when (k `notElem` taken) (emit ("fic_drop(" ++ p ++ ");")))
 
 
+-- | drop specialization (S4, Ficcus.Mono.Rc `specBranch`): a unique cell gives its fields to the pattern variables (the other reference
+-- fields are dropped) and becomes the reuse token, or is freed when there is no token; a shared cell is dup'd into the variables and
+-- loses one count
+specCode :: String -> [Class] -> [(String, Class, Int)] -> Maybe String -> CG ()
+specCode s fcs bs mt =
+  do  let x = localName s
+      let cell = "((" ++ objType fcs ++ " *)(" ++ x ++ "))"
+      let moved = [ i | (_, _, i) <- bs ]
+      forM_ mt (\t -> emit ("fic_ref " ++ localName t ++ " = NULL; (void)" ++ localName t ++ ";"))
+      emit ("if (" ++ x ++ "->rc == 1) {")
+      indented $
+        do  forM_ [ i | (i, CRef) <- zip [0 :: Int ..] fcs, i `notElem` moved ] (\i -> emit ("fic_drop(" ++ fieldRead classType fcs i cell ++ ");"))
+            case mt of
+              Just t -> emit (localName t ++ " = " ++ x ++ ";")
+              Nothing -> emit ("fic_free_obj(" ++ x ++ ");")
+      emit "} else {"
+      indented $
+        do  forM_ bs (\(v, c, _) -> dupVars' c (localName v))
+            emit ("fic_drop_shared(" ++ x ++ ");")
+      emit "}"
+
+
+freeToken :: String -> CG ()
+freeToken t = emit ("if (" ++ localName t ++ " != NULL) fic_free_obj(" ++ localName t ++ ");")
+
+
 dupVars :: [(String, Class)] -> CG ()
 dupVars vs = mapM_ (\(n, c) -> dupVars' c (localName n)) vs
 
@@ -789,10 +829,18 @@ nullaryOwned tag =
 
 
 allocObj' :: [Class] -> String -> [String] -> CG String
-allocObj' cs tag vals =
+allocObj' = allocObjAt Nothing
+
+
+-- an object built in the cell of a reuse token (a fresh one when the token is empty)
+allocObjAt :: Maybe String -> [Class] -> String -> [String] -> CG String
+allocObjAt token cs tag vals =
   do  o <- fresh "o"
       vals' <- forM (zip cs vals) (\(c, v) -> case c of { CStruct _ -> variable c v; _ -> return v })
-      emit (objType cs ++ " *" ++ o ++ " = (" ++ objType cs ++ " *)fic_alloc(sizeof(" ++ objType cs ++ "), " ++ tag ++ ", " ++ show (nptrOf cs) ++ ");")
+      let size = "sizeof(" ++ objType cs ++ ")"
+      let call = maybe ("fic_alloc(" ++ size ++ ", " ++ tag ++ ", " ++ show (nptrOf cs) ++ ")")
+                       (\t -> "fic_reuse(" ++ t ++ ", " ++ size ++ ", " ++ tag ++ ", " ++ show (nptrOf cs) ++ ")") token
+      emit (objType cs ++ " *" ++ o ++ " = (" ++ objType cs ++ " *)" ++ call ++ ";")
       forM_ (zip [0 :: Int ..] vals') (\(i, v) -> mapM_ emit (fieldStores cs i o v))
       return ("(&" ++ o ++ "->h)")
 

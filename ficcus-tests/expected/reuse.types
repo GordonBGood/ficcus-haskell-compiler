@@ -1,0 +1,654 @@
+-- module Reuse: problems=0 instances=206 instance-failures=0 defaulted=0
+-- equality-uses: total=2 at-function=0
+module author/project:Reuse
+type Tree   id: author/project:Reuse.Tree   params: 0   ctors: 2   layout: normal
+  ctor Leaf   id: author/project:Reuse.Leaf   tag: 0   arity: 0   fields:    sig: Tree   kinds: 
+  ctor Node   id: author/project:Reuse.Node   tag: 1   arity: 3   fields: Tree ;; Int ;; Tree   sig: Tree -> Int -> Tree -> Tree   kinds: 
+type Chain   id: author/project:Reuse.Chain   params: 0   ctors: 2   layout: normal
+  ctor End   id: author/project:Reuse.End   tag: 0   arity: 0   fields:    sig: Chain   kinds: 
+  ctor Link   id: author/project:Reuse.Link   tag: 1   arity: 2   fields: Int ;; Chain   sig: Int -> Chain -> Chain   kinds: 
+type Shape   id: author/project:Reuse.Shape   params: 0   ctors: 3   layout: normal
+  ctor Circle   id: author/project:Reuse.Circle   tag: 0   arity: 1   fields: Int   sig: Int -> Shape   kinds: 
+  ctor Rect   id: author/project:Reuse.Rect   tag: 1   arity: 2   fields: Int ;; Int   sig: Int -> Int -> Shape   kinds: 
+  ctor Named   id: author/project:Reuse.Named   tag: 2   arity: 2   fields: String ;; Int   sig: String -> Int -> Shape   kinds: 
+def fromChain :: Chain -> List Int    [109:1-109:10]   id: author/project:Reuse.fromChain   sig: Chain -> List Int   kinds:    group: author/project:Reuse.fromChain rec ann
+  109:11-109:12 PVar c :: Chain
+  110:5-115:32 Case :: List Int
+    110:10-110:11 VarLocal :: Chain
+    111:9-111:12 PCtor End :: Chain
+    112:13-112:15 List :: List Int
+    114:9-114:20 PCtor Link :: Chain
+      114:14-114:15 PVar x :: Int
+      114:16-114:20 PVar rest :: Chain
+    115:13-115:32 Binop :: List Int   callee: elm/core:List.cons   instance: a := Int   sig#: ddd4c5f2   subst: v0 := Int
+      115:13-115:14 VarLocal :: Int
+      115:18-115:32 Call :: List Int
+        115:18-115:27 VarTopLevel :: Chain -> List Int   callee: author/project:Reuse.fromChain   use: rec
+        115:28-115:32 VarLocal :: Chain
+def dictRound :: Int -> Dict Int Int -> Dict Int Int    [176:1-176:10]   id: author/project:Reuse.dictRound   sig: Int -> Dict Int Int -> Dict Int Int   kinds:    group: author/project:Reuse.dictRound rec ann
+  176:11-176:12 PVar n :: Int
+  176:13-176:14 PVar d :: Dict Int Int
+  177:5-181:62 If :: Dict Int Int
+    177:8-177:14 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Int   sig#: 2cdc0786   subst: v0 := Int
+      177:8-177:9 VarLocal :: Int
+      177:13-177:14 Int :: Int
+    178:9-178:10 VarLocal :: Dict Int Int
+    181:9-181:61 Call :: Dict Int Int
+      181:9-181:18 VarTopLevel :: Int -> Dict Int Int -> Dict Int Int   callee: author/project:Reuse.dictRound   use: rec
+      181:20-181:25 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        181:20-181:21 VarLocal :: Int
+        181:24-181:25 Int :: Int
+      181:28-181:61 Call :: Dict Int Int
+        181:28-181:39 VarForeign :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: elm/core:Dict.insert   instance: comparable := Int, v := Int   sig#: 256ddcb4   subst: v0 := Int, v1 := Int
+        181:41-181:55 Call :: Int
+          181:41-181:46 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+          181:47-181:48 Int :: Int
+          181:50-181:55 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            181:50-181:51 VarLocal :: Int
+            181:54-181:55 Int :: Int
+        181:58-181:59 VarLocal :: Int
+        181:60-181:61 VarLocal :: Dict Int Int
+def keepEven :: List Int -> List Int    [37:1-37:9]   id: author/project:Reuse.keepEven   sig: List Int -> List Int   kinds:    group: author/project:Reuse.keepEven rec ann
+  37:10-37:12 PVar xs :: List Int
+  38:5-47:30 Case :: List Int
+    38:10-38:12 VarLocal :: List Int
+    39:9-39:11 PList :: List Int
+    40:13-40:15 List :: List Int
+    42:9-42:18 PCons :: List Int
+      42:9-42:10 PVar x :: Int
+      42:14-42:18 PVar rest :: List Int
+    43:13-47:30 If :: List Int
+      43:16-43:30 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Int   sig#: 2cdc0786   subst: v0 := Int
+        43:16-43:25 Call :: Int
+          43:16-43:21 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+          43:22-43:23 Int :: Int
+          43:24-43:25 VarLocal :: Int
+        43:29-43:30 Int :: Int
+      44:17-44:35 Binop :: List Int   callee: elm/core:List.cons   instance: a := Int   sig#: ddd4c5f2   subst: v0 := Int
+        44:17-44:18 VarLocal :: Int
+        44:22-44:35 Call :: List Int
+          44:22-44:30 VarTopLevel :: List Int -> List Int   callee: author/project:Reuse.keepEven   use: rec
+          44:31-44:35 VarLocal :: List Int
+      47:17-47:30 Call :: List Int
+        47:17-47:25 VarTopLevel :: List Int -> List Int   callee: author/project:Reuse.keepEven   use: rec
+        47:26-47:30 VarLocal :: List Int
+def toChain :: List Int -> Chain    [99:1-99:8]   id: author/project:Reuse.toChain   sig: List Int -> Chain   kinds:    group: author/project:Reuse.toChain rec ann
+  99:9-99:11 PVar xs :: List Int
+  100:5-105:40 Case :: Chain
+    100:10-100:12 VarLocal :: List Int
+    101:9-101:11 PList :: List Int
+    102:13-102:16 VarCtor :: Chain   callee: author/project:Reuse.End
+    104:9-104:18 PCons :: List Int
+      104:9-104:10 PVar x :: Int
+      104:14-104:18 PVar rest :: List Int
+    105:13-105:39 Call :: Chain
+      105:13-105:17 VarCtor :: Int -> Chain -> Chain   callee: author/project:Reuse.Link
+      105:19-105:24 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        105:19-105:20 VarLocal :: Int
+        105:23-105:24 Int :: Int
+      105:27-105:39 Call :: Chain
+        105:27-105:34 VarTopLevel :: List Int -> Chain   callee: author/project:Reuse.toChain   use: rec
+        105:35-105:39 VarLocal :: List Int
+def toList :: Tree -> List Int    [78:1-78:7]   id: author/project:Reuse.toList   sig: Tree -> List Int   kinds:    group: author/project:Reuse.toList rec ann
+  78:8-78:9 PVar t :: Tree
+  79:5-84:40 Case :: List Int
+    79:10-79:11 VarLocal :: Tree
+    80:9-80:13 PCtor Leaf :: Tree
+    81:13-81:15 List :: List Int
+    83:9-83:19 PCtor Node :: Tree
+      83:14-83:15 PVar l :: Tree
+      83:16-83:17 PVar x :: Int
+      83:18-83:19 PVar r :: Tree
+    84:13-84:40 Binop :: List Int   callee: elm/core:Basics.append   instance: appendable := List Int   sig#: 08810ccc   subst: v0 := List Int
+      84:13-84:21 Call :: List Int
+        84:13-84:19 VarTopLevel :: Tree -> List Int   callee: author/project:Reuse.toList   use: rec
+        84:20-84:21 VarLocal :: Tree
+      84:26-84:39 Binop :: List Int   callee: elm/core:List.cons   instance: a := Int   sig#: ddd4c5f2   subst: v0 := Int
+        84:26-84:27 VarLocal :: Int
+        84:31-84:39 Call :: List Int
+          84:31-84:37 VarTopLevel :: Tree -> List Int   callee: author/project:Reuse.toList   use: rec
+          84:38-84:39 VarLocal :: Tree
+def pairUp :: List Int -> List (List Int)    [155:1-155:7]   id: author/project:Reuse.pairUp   sig: List Int -> List (List Int)   kinds:    group: author/project:Reuse.pairUp rec ann
+  155:8-155:10 PVar xs :: List Int
+  156:5-161:15 Case :: List (List Int)
+    156:10-156:12 VarLocal :: List Int
+    157:9-157:23 PCons :: List Int
+      157:9-157:10 PVar a :: Int
+      157:14-157:23 PCons :: List Int
+        157:14-157:15 PVar b :: Int
+        157:19-157:23 PVar rest :: List Int
+    158:13-158:36 Binop :: List (List Int)   callee: elm/core:List.cons   instance: a := List Int   sig#: ddd4c5f2   subst: v0 := List Int
+      158:13-158:21 List :: List Int
+        158:15-158:16 VarLocal :: Int
+        158:18-158:19 VarLocal :: Int
+      158:25-158:36 Call :: List (List Int)
+        158:25-158:31 VarTopLevel :: List Int -> List (List Int)   callee: author/project:Reuse.pairUp   use: rec
+        158:32-158:36 VarLocal :: List Int
+    160:9-160:10 PAnything :: List Int
+    161:13-161:15 List :: List (List Int)
+def insert :: Int -> Tree -> Tree    [61:1-61:7]   id: author/project:Reuse.insert   sig: Int -> Tree -> Tree   kinds:    group: author/project:Reuse.insert rec ann
+  61:8-61:9 PVar v :: Int
+  61:10-61:11 PVar t :: Tree
+  62:5-74:27 Case :: Tree
+    62:10-62:11 VarLocal :: Tree
+    63:9-63:13 PCtor Leaf :: Tree
+    64:13-64:29 Call :: Tree
+      64:13-64:17 VarCtor :: Tree -> Int -> Tree -> Tree   callee: author/project:Reuse.Node
+      64:18-64:22 VarCtor :: Tree   callee: author/project:Reuse.Leaf
+      64:23-64:24 VarLocal :: Int
+      64:25-64:29 VarCtor :: Tree   callee: author/project:Reuse.Leaf
+    66:9-66:19 PCtor Node :: Tree
+      66:14-66:15 PVar l :: Tree
+      66:16-66:17 PVar x :: Int
+      66:18-66:19 PVar r :: Tree
+    67:13-74:27 If :: Tree
+      67:16-67:21 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        67:16-67:17 VarLocal :: Int
+        67:20-67:21 VarLocal :: Int
+      68:17-68:38 Call :: Tree
+        68:17-68:21 VarCtor :: Tree -> Int -> Tree -> Tree   callee: author/project:Reuse.Node
+        68:23-68:33 Call :: Tree
+          68:23-68:29 VarTopLevel :: Int -> Tree -> Tree   callee: author/project:Reuse.insert   use: rec
+          68:30-68:31 VarLocal :: Int
+          68:32-68:33 VarLocal :: Tree
+        68:35-68:36 VarLocal :: Int
+        68:37-68:38 VarLocal :: Tree
+      70:21-70:26 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        70:21-70:22 VarLocal :: Int
+        70:25-70:26 VarLocal :: Int
+      71:17-71:37 Call :: Tree
+        71:17-71:21 VarCtor :: Tree -> Int -> Tree -> Tree   callee: author/project:Reuse.Node
+        71:22-71:23 VarLocal :: Tree
+        71:24-71:25 VarLocal :: Int
+        71:27-71:37 Call :: Tree
+          71:27-71:33 VarTopLevel :: Int -> Tree -> Tree   callee: author/project:Reuse.insert   use: rec
+          71:34-71:35 VarLocal :: Int
+          71:36-71:37 VarLocal :: Tree
+      74:17-74:27 Call :: Tree
+        74:17-74:21 VarCtor :: Tree -> Int -> Tree -> Tree   callee: author/project:Reuse.Node
+        74:22-74:23 VarLocal :: Tree
+        74:24-74:25 VarLocal :: Int
+        74:26-74:27 VarLocal :: Tree
+def first3 :: ( a, b, c ) -> a    [185:1-185:7]   id: author/project:Reuse.first3   sig: ( v0, v1, v2 ) -> v0   kinds: v0:any,v1:any,v2:any   group: author/project:Reuse.first3 nonrec ann
+  185:8-185:19 PTriple :: ( a, b, c )
+    185:10-185:11 PVar a :: a
+    185:13-185:14 PAnything :: b
+    185:16-185:17 PAnything :: c
+  186:5-186:6 VarLocal :: a
+def again :: List Int -> Int    [166:1-166:6]   id: author/project:Reuse.again   sig: List Int -> Int   kinds:    group: author/project:Reuse.again nonrec ann
+  166:7-166:9 PVar xs :: List Int
+  167:5-172:31 Case :: Int
+    167:10-167:12 VarLocal :: List Int
+    168:9-168:11 PList :: List Int
+    169:13-169:14 Int :: Int
+    171:9-171:15 PCons :: List Int
+      171:9-171:10 PVar x :: Int
+      171:14-171:15 PAnything :: List Int
+    172:13-172:31 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      172:13-172:14 VarLocal :: Int
+      172:17-172:31 Call :: Int
+        172:17-172:28 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+        172:29-172:31 VarLocal :: List Int
+def grow :: Shape -> Shape    [120:1-120:5]   id: author/project:Reuse.grow   sig: Shape -> Shape   kinds:    group: author/project:Reuse.grow nonrec ann
+  120:6-120:7 PVar s :: Shape
+  121:5-137:25 Case :: Shape
+    121:10-121:11 VarLocal :: Shape
+    122:9-122:17 PCtor Circle :: Shape
+      122:16-122:17 PVar r :: Int
+    123:13-127:31 If :: Shape
+      123:16-123:22 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        123:16-123:17 VarLocal :: Int
+        123:20-123:22 Int :: Int
+      124:17-124:25 Call :: Shape
+        124:17-124:23 VarCtor :: Int -> Shape   callee: author/project:Reuse.Circle
+        124:24-124:25 VarLocal :: Int
+      127:17-127:30 Call :: Shape
+        127:17-127:23 VarCtor :: Int -> Shape   callee: author/project:Reuse.Circle
+        127:25-127:30 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          127:25-127:26 VarLocal :: Int
+          127:29-127:30 Int :: Int
+    129:9-129:17 PCtor Rect :: Shape
+      129:14-129:15 PVar w :: Int
+      129:16-129:17 PVar h :: Int
+    130:13-130:26 Call :: Shape
+      130:13-130:19 VarCtor :: Int -> Shape   callee: author/project:Reuse.Circle
+      130:21-130:26 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        130:21-130:22 VarLocal :: Int
+        130:25-130:26 VarLocal :: Int
+    132:9-132:18 PCtor Named :: Shape
+      132:15-132:16 PVar n :: String
+      132:17-132:18 PVar k :: Int
+    133:13-137:25 If :: Shape
+      133:16-133:21 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        133:16-133:17 VarLocal :: Int
+        133:20-133:21 Int :: Int
+      134:17-134:31 Call :: Shape
+        134:17-134:22 VarCtor :: String -> Int -> Shape   callee: author/project:Reuse.Named
+        134:23-134:24 VarLocal :: String
+        134:26-134:31 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          134:26-134:27 VarLocal :: Int
+          134:30-134:31 Int :: Int
+      137:17-137:25 Call :: Shape
+        137:17-137:23 VarCtor :: Int -> Shape   callee: author/project:Reuse.Circle
+        137:24-137:25 Int :: Int
+def bump :: Maybe Int -> Maybe Int    [88:1-88:5]   id: author/project:Reuse.bump   sig: Maybe Int -> Maybe Int   kinds:    group: author/project:Reuse.bump nonrec ann
+  88:6-88:7 PVar m :: Maybe Int
+  89:5-94:20 Case :: Maybe Int
+    89:10-89:11 VarLocal :: Maybe Int
+    90:9-90:15 PCtor Just :: Maybe Int
+      90:14-90:15 PVar x :: Int
+    91:13-91:24 Call :: Maybe Int
+      91:13-91:17 VarCtor :: Int -> Maybe Int   callee: elm/core:Maybe.Just   instance: a := Int   sig#: c14b2381   subst: v0 := Int
+      91:19-91:24 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        91:19-91:20 VarLocal :: Int
+        91:23-91:24 Int :: Int
+    93:9-93:16 PCtor Nothing :: Maybe Int
+    94:13-94:20 VarCtor :: Maybe Int   callee: elm/core:Maybe.Nothing   instance: a := Int   sig#: d83d645a   subst: v0 := Int
+def area :: Shape -> Int    [141:1-141:5]   id: author/project:Reuse.area   sig: Shape -> Int   kinds:    group: author/project:Reuse.area nonrec ann
+  141:6-141:7 PVar s :: Shape
+  142:5-150:32 Case :: Int
+    142:10-142:11 VarLocal :: Shape
+    143:9-143:17 PCtor Circle :: Shape
+      143:16-143:17 PVar r :: Int
+    144:13-144:22 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      144:13-144:18 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        144:13-144:14 Int :: Int
+        144:17-144:18 VarLocal :: Int
+      144:21-144:22 VarLocal :: Int
+    146:9-146:17 PCtor Rect :: Shape
+      146:14-146:15 PVar w :: Int
+      146:16-146:17 PVar h :: Int
+    147:13-147:18 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      147:13-147:14 VarLocal :: Int
+      147:17-147:18 VarLocal :: Int
+    149:9-149:18 PCtor Named :: Shape
+      149:15-149:16 PVar n :: String
+      149:17-149:18 PVar k :: Int
+    150:13-150:32 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      150:13-150:28 Call :: Int
+        150:13-150:26 VarForeign :: String -> Int   callee: elm/core:String.length
+        150:27-150:28 VarLocal :: String
+      150:31-150:32 VarLocal :: Int
+def rev :: List Int -> List Int -> List Int    [51:1-51:4]   id: author/project:Reuse.rev   sig: List Int -> List Int -> List Int   kinds:    group: author/project:Reuse.rev rec ann
+  51:5-51:8 PVar acc :: List Int
+  51:9-51:11 PVar xs :: List Int
+  52:5-57:32 Case :: List Int
+    52:10-52:12 VarLocal :: List Int
+    53:9-53:11 PList :: List Int
+    54:13-54:16 VarLocal :: List Int
+    56:9-56:18 PCons :: List Int
+      56:9-56:10 PVar x :: Int
+      56:14-56:18 PVar rest :: List Int
+    57:13-57:32 Call :: List Int
+      57:13-57:16 VarTopLevel :: List Int -> List Int -> List Int   callee: author/project:Reuse.rev   use: rec
+      57:18-57:26 Binop :: List Int   callee: elm/core:List.cons   instance: a := Int   sig#: ddd4c5f2   subst: v0 := Int
+        57:18-57:19 VarLocal :: Int
+        57:23-57:26 VarLocal :: List Int
+      57:28-57:32 VarLocal :: List Int
+def inc :: List Int -> List Int    [27:1-27:4]   id: author/project:Reuse.inc   sig: List Int -> List Int   kinds:    group: author/project:Reuse.inc rec ann
+  27:5-27:7 PVar xs :: List Int
+  28:5-33:32 Case :: List Int
+    28:10-28:12 VarLocal :: List Int
+    29:9-29:11 PList :: List Int
+    30:13-30:15 List :: List Int
+    32:9-32:18 PCons :: List Int
+      32:9-32:10 PVar x :: Int
+      32:14-32:18 PVar rest :: List Int
+    33:13-33:32 Binop :: List Int   callee: elm/core:List.cons   instance: a := Int   sig#: ddd4c5f2   subst: v0 := Int
+      33:14-33:19 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        33:14-33:15 VarLocal :: Int
+        33:18-33:19 Int :: Int
+      33:24-33:32 Call :: List Int
+        33:24-33:27 VarTopLevel :: List Int -> List Int   callee: author/project:Reuse.inc   use: rec
+        33:28-33:32 VarLocal :: List Int
+def main :: Program () () ()    [190:1-190:5]   id: author/project:Reuse.main   sig: Program () () ()   kinds:    group: author/project:Reuse.main nonrec ann
+  191:5-259:10 Call :: Program () () ()
+    191:5-191:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    192:9-259:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      193:13-256:37 Lambda :: () -> ( (), Cmd () )
+        193:14-193:15 PAnything :: ()
+        def shapes :: List Shape    [228:21-228:27]   id: author/project:Reuse.shapes@228:21   sig: List Shape   kinds:    group: author/project:Reuse.shapes@228:21 nonrec inferred
+          229:25-229:86 List :: List Shape
+            229:27-229:35 Call :: Shape
+              229:27-229:33 VarCtor :: Int -> Shape   callee: author/project:Reuse.Circle
+              229:34-229:35 Int :: Int
+            229:37-229:46 Call :: Shape
+              229:37-229:43 VarCtor :: Int -> Shape   callee: author/project:Reuse.Circle
+              229:44-229:46 Int :: Int
+            229:48-229:56 Call :: Shape
+              229:48-229:52 VarCtor :: Int -> Int -> Shape   callee: author/project:Reuse.Rect
+              229:53-229:54 Int :: Int
+              229:55-229:56 Int :: Int
+            229:58-229:70 Call :: Shape
+              229:58-229:63 VarCtor :: String -> Int -> Shape   callee: author/project:Reuse.Named
+              229:64-229:68 Str :: String
+              229:69-229:70 Int :: Int
+            229:72-229:84 Call :: Shape
+              229:72-229:77 VarCtor :: String -> Int -> Shape   callee: author/project:Reuse.Named
+              229:78-229:82 Str :: String
+              229:83-229:84 Int :: Int
+        def base :: List Int    [195:21-195:25]   id: author/project:Reuse.base@195:21   sig: List Int   kinds:    group: author/project:Reuse.base@195:21 nonrec inferred
+          196:25-196:40 Call :: List Int
+            196:25-196:35 VarForeign :: Int -> Int -> List Int   callee: elm/core:List.range
+            196:36-196:37 Int :: Int
+            196:38-196:40 Int :: Int
+        def t1 :: Tree    [210:21-210:23]   id: author/project:Reuse.t1@210:21   sig: Tree   kinds:    group: author/project:Reuse.t1@210:21 nonrec inferred
+          211:25-211:71 Call :: Tree
+            211:25-211:35 VarForeign :: (Int -> Tree -> Tree) -> Tree -> List Int -> Tree   callee: elm/core:List.foldl   instance: a := Int, b := Tree   sig#: 8a8782c6   subst: v0 := Int, v1 := Tree
+            211:36-211:42 VarTopLevel :: Int -> Tree -> Tree   callee: author/project:Reuse.insert   use: gen
+            211:43-211:47 VarCtor :: Tree   callee: author/project:Reuse.Leaf
+            211:48-211:71 List :: List Int
+              211:50-211:51 Int :: Int
+              211:53-211:54 Int :: Int
+              211:56-211:57 Int :: Int
+              211:59-211:60 Int :: Int
+              211:62-211:63 Int :: Int
+              211:65-211:66 Int :: Int
+              211:68-211:69 Int :: Int
+        def t2 :: Tree    [213:21-213:23]   id: author/project:Reuse.t2@213:21   sig: Tree   kinds:    group: author/project:Reuse.t2@213:21 nonrec inferred
+          214:25-214:36 Call :: Tree
+            214:25-214:31 VarTopLevel :: Int -> Tree -> Tree   callee: author/project:Reuse.insert   use: gen
+            214:32-214:33 Int :: Int
+            214:34-214:36 VarLocal :: Tree   callee: author/project:Reuse.t1@210:21   use: gen
+        def t3 :: Tree    [216:21-216:23]   id: author/project:Reuse.t3@216:21   sig: Tree   kinds:    group: author/project:Reuse.t3@216:21 nonrec inferred
+          217:25-217:46 Call :: Tree
+            217:25-217:31 VarTopLevel :: Int -> Tree -> Tree   callee: author/project:Reuse.insert   use: gen
+            217:32-217:33 Int :: Int
+            217:35-217:46 Call :: Tree
+              217:35-217:41 VarTopLevel :: Int -> Tree -> Tree   callee: author/project:Reuse.insert   use: gen
+              217:42-217:43 Int :: Int
+              217:44-217:46 VarLocal :: Tree   callee: author/project:Reuse.t1@210:21   use: gen
+        def d1 :: Dict Int Int    [240:21-240:23]   id: author/project:Reuse.d1@240:21   sig: Dict Int Int   kinds:    group: author/project:Reuse.d1@240:21 nonrec inferred
+          241:25-241:48 Call :: Dict Int Int
+            241:25-241:34 VarTopLevel :: Int -> Dict Int Int -> Dict Int Int   callee: author/project:Reuse.dictRound   use: gen
+            241:35-241:37 Int :: Int
+            241:38-241:48 VarForeign :: Dict Int Int   callee: elm/core:Dict.empty   instance: k := Int, v := Int   sig#: dd8ed12a   subst: v0 := Int, v1 := Int
+        def d2 :: Dict Int Int    [243:21-243:23]   id: author/project:Reuse.d2@243:21   sig: Dict Int Int   kinds:    group: author/project:Reuse.d2@243:21 nonrec inferred
+          244:25-244:45 Call :: Dict Int Int
+            244:25-244:36 VarForeign :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: elm/core:Dict.insert   instance: comparable := Int, v := Int   sig#: 256ddcb4   subst: v0 := Int, v1 := Int
+            244:37-244:40 Int :: Int
+            244:41-244:42 Int :: Int
+            244:43-244:45 VarLocal :: Dict Int Int   callee: author/project:Reuse.d1@240:21   use: gen
+        def b3 :: List (List Int)    [249:21-249:23]   id: author/project:Reuse.b3@249:21   sig: List (List Int)   kinds:    group: author/project:Reuse.b3@249:21 nonrec inferred
+          250:25-250:108 Call :: List (List Int)
+            250:25-250:34 VarDebug :: String -> List (List Int) -> List (List Int)   callee: elm/core:Debug.log   instance: a := List (List Int)   sig#: 6ecaa5dd   subst: v0 := List (List Int)
+            250:35-250:47 Str :: String
+            250:49-250:108 Call :: List (List Int)
+              250:49-250:57 VarForeign :: (Int -> List Int) -> List Int -> List (List Int)   callee: elm/core:List.map   instance: a := Int, b := List Int   sig#: 6a702f63   subst: v0 := Int, v1 := List Int
+              250:59-250:98 Lambda :: Int -> List Int
+                250:60-250:61 PVar x :: Int
+                250:65-250:97 Call :: List Int
+                  250:65-250:73 VarForeign :: (Int -> Int) -> List Int -> List Int   callee: elm/core:List.map   instance: a := Int, b := Int   sig#: 6a702f63   subst: v0 := Int, v1 := Int
+                  250:75-250:86 Lambda :: Int -> Int
+                    250:76-250:77 PVar y :: Int
+                    250:81-250:86 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                      250:81-250:82 VarLocal :: Int
+                      250:85-250:86 VarLocal :: Int
+                  250:89-250:97 Call :: List Int
+                    250:89-250:92 VarTopLevel :: List Int -> List Int   callee: author/project:Reuse.inc   use: gen
+                    250:93-250:97 VarLocal :: List Int   callee: author/project:Reuse.base@195:21   use: gen
+              250:100-250:108 List :: List Int
+                250:102-250:103 Int :: Int
+                250:105-250:106 Int :: Int
+        def b2 :: ( List ( Int, Int ), List ( Int, Int ), Int )    [246:21-246:23]   id: author/project:Reuse.b2@246:21   sig: ( List ( Int, Int ), List ( Int, Int ), Int )   kinds:    group: author/project:Reuse.b2@246:21 nonrec inferred
+          247:25-247:90 Call :: ( List ( Int, Int ), List ( Int, Int ), Int )
+            247:25-247:34 VarDebug :: String -> ( List ( Int, Int ), List ( Int, Int ), Int ) -> ( List ( Int, Int ), List ( Int, Int ), Int )   callee: elm/core:Debug.log   instance: a := ( List ( Int, Int ), List ( Int, Int ), Int )   sig#: 6ecaa5dd   subst: v0 := ( List ( Int, Int ), List ( Int, Int ), Int )
+            247:35-247:41 Str :: String
+            247:42-247:90 Triple :: ( List ( Int, Int ), List ( Int, Int ), Int )
+              247:44-247:58 Call :: List ( Int, Int )
+                247:44-247:55 VarForeign :: Dict Int Int -> List ( Int, Int )   callee: elm/core:Dict.toList   instance: k := Int, v := Int   sig#: 99c914ae   subst: v0 := Int, v1 := Int
+                247:56-247:58 VarLocal :: Dict Int Int   callee: author/project:Reuse.d1@240:21   use: gen
+              247:60-247:74 Call :: List ( Int, Int )
+                247:60-247:71 VarForeign :: Dict Int Int -> List ( Int, Int )   callee: elm/core:Dict.toList   instance: k := Int, v := Int   sig#: 99c914ae   subst: v0 := Int, v1 := Int
+                247:72-247:74 VarLocal :: Dict Int Int   callee: author/project:Reuse.d2@243:21   use: gen
+              247:76-247:88 Call :: Int
+                247:76-247:85 VarForeign :: Dict Int Int -> Int   callee: elm/core:Dict.size   instance: k := Int, v := Int   sig#: d0910be5   subst: v0 := Int, v1 := Int
+                247:86-247:88 VarLocal :: Dict Int Int   callee: author/project:Reuse.d1@240:21   use: gen
+        def b1 :: ( Int, Int, Int )    [237:21-237:23]   id: author/project:Reuse.b1@237:21   sig: ( Int, Int, Int )   kinds:    group: author/project:Reuse.b1@237:21 nonrec inferred
+          238:25-238:85 Call :: ( Int, Int, Int )
+            238:25-238:34 VarDebug :: String -> ( Int, Int, Int ) -> ( Int, Int, Int )   callee: elm/core:Debug.log   instance: a := ( Int, Int, Int )   sig#: 6ecaa5dd   subst: v0 := ( Int, Int, Int )
+            238:35-238:42 Str :: String
+            238:43-238:85 Triple :: ( Int, Int, Int )
+              238:45-238:55 Call :: Int
+                238:45-238:50 VarTopLevel :: List Int -> Int   callee: author/project:Reuse.again   use: gen
+                238:51-238:55 VarLocal :: List Int   callee: author/project:Reuse.base@195:21   use: gen
+              238:57-238:65 Call :: Int
+                238:57-238:62 VarTopLevel :: List Int -> Int   callee: author/project:Reuse.again   use: gen
+                238:63-238:65 List :: List Int
+              238:67-238:82 Call :: Int
+                238:67-238:72 VarTopLevel :: List Int -> Int   callee: author/project:Reuse.again   use: gen
+                238:74-238:82 Call :: List Int
+                  238:74-238:77 VarTopLevel :: List Int -> List Int   callee: author/project:Reuse.inc   use: gen
+                  238:78-238:82 VarLocal :: List Int   callee: author/project:Reuse.base@195:21   use: gen
+        def a9 :: ( List (List Int), List (List Int) )    [234:21-234:23]   id: author/project:Reuse.a9@234:21   sig: ( List (List Int), List (List Int) )   kinds:    group: author/project:Reuse.a9@234:21 nonrec inferred
+          235:25-235:84 Call :: ( List (List Int), List (List Int) )
+            235:25-235:34 VarDebug :: String -> ( List (List Int), List (List Int) ) -> ( List (List Int), List (List Int) )   callee: elm/core:Debug.log   instance: a := ( List (List Int), List (List Int) )   sig#: 6ecaa5dd   subst: v0 := ( List (List Int), List (List Int) )
+            235:35-235:43 Str :: String
+            235:44-235:84 Pair :: ( List (List Int), List (List Int) )
+              235:46-235:57 Call :: List (List Int)
+                235:46-235:52 VarTopLevel :: List Int -> List (List Int)   callee: author/project:Reuse.pairUp   use: gen
+                235:53-235:57 VarLocal :: List Int   callee: author/project:Reuse.base@195:21   use: gen
+              235:59-235:81 Call :: List (List Int)
+                235:59-235:65 VarTopLevel :: List Int -> List (List Int)   callee: author/project:Reuse.pairUp   use: gen
+                235:67-235:81 Call :: List Int
+                  235:67-235:77 VarForeign :: Int -> Int -> List Int   callee: elm/core:List.range
+                  235:78-235:79 Int :: Int
+                  235:80-235:81 Int :: Int
+        def a8 :: ( List Shape, List Int, List Int )    [231:21-231:23]   id: author/project:Reuse.a8@231:21   sig: ( List Shape, List Int, List Int )   kinds:    group: author/project:Reuse.a8@231:21 nonrec inferred
+          232:25-232:126 Call :: ( List Shape, List Int, List Int )
+            232:25-232:34 VarDebug :: String -> ( List Shape, List Int, List Int ) -> ( List Shape, List Int, List Int )   callee: elm/core:Debug.log   instance: a := ( List Shape, List Int, List Int )   sig#: 6ecaa5dd   subst: v0 := ( List Shape, List Int, List Int )
+            232:35-232:41 Str :: String
+            232:42-232:126 Triple :: ( List Shape, List Int, List Int )
+              232:44-232:64 Call :: List Shape
+                232:44-232:52 VarForeign :: (Shape -> Shape) -> List Shape -> List Shape   callee: elm/core:List.map   instance: a := Shape, b := Shape   sig#: 6a702f63   subst: v0 := Shape, v1 := Shape
+                232:53-232:57 VarTopLevel :: Shape -> Shape   callee: author/project:Reuse.grow   use: gen
+                232:58-232:64 VarLocal :: List Shape   callee: author/project:Reuse.shapes@228:21   use: gen
+              232:66-232:86 Call :: List Int
+                232:66-232:74 VarForeign :: (Shape -> Int) -> List Shape -> List Int   callee: elm/core:List.map   instance: a := Shape, b := Int   sig#: 6a702f63   subst: v0 := Shape, v1 := Int
+                232:75-232:79 VarTopLevel :: Shape -> Int   callee: author/project:Reuse.area   use: gen
+                232:80-232:86 VarLocal :: List Shape   callee: author/project:Reuse.shapes@228:21   use: gen
+              232:88-232:123 Call :: List Int
+                232:88-232:96 VarForeign :: (Shape -> Int) -> List Shape -> List Int   callee: elm/core:List.map   instance: a := Shape, b := Int   sig#: 6a702f63   subst: v0 := Shape, v1 := Int
+                232:97-232:101 VarTopLevel :: Shape -> Int   callee: author/project:Reuse.area   use: gen
+                232:103-232:123 Call :: List Shape
+                  232:103-232:111 VarForeign :: (Shape -> Shape) -> List Shape -> List Shape   callee: elm/core:List.map   instance: a := Shape, b := Shape   sig#: 6a702f63   subst: v0 := Shape, v1 := Shape
+                  232:112-232:116 VarTopLevel :: Shape -> Shape   callee: author/project:Reuse.grow   use: gen
+                  232:117-232:123 VarLocal :: List Shape   callee: author/project:Reuse.shapes@228:21   use: gen
+        def a7 :: ( List Int, List Int, List Int )    [225:21-225:23]   id: author/project:Reuse.a7@225:21   sig: ( List Int, List Int, List Int )   kinds:    group: author/project:Reuse.a7@225:21 nonrec inferred
+          226:25-226:128 Call :: ( List Int, List Int, List Int )
+            226:25-226:34 VarDebug :: String -> ( List Int, List Int, List Int ) -> ( List Int, List Int, List Int )   callee: elm/core:Debug.log   instance: a := ( List Int, List Int, List Int )   sig#: 6ecaa5dd   subst: v0 := ( List Int, List Int, List Int )
+            226:35-226:42 Str :: String
+            def c :: Chain    [226:48-226:49]   id: author/project:Reuse.c@226:48   sig: Chain   kinds:    group: author/project:Reuse.c@226:48 nonrec inferred
+              226:52-226:64 Call :: Chain
+                226:52-226:59 VarTopLevel :: List Int -> Chain   callee: author/project:Reuse.toChain   use: gen
+                226:60-226:64 VarLocal :: List Int   callee: author/project:Reuse.base@195:21   use: gen
+            226:68-226:128 Triple :: ( List Int, List Int, List Int )
+              226:70-226:81 Call :: List Int
+                226:70-226:79 VarTopLevel :: Chain -> List Int   callee: author/project:Reuse.fromChain   use: gen
+                226:80-226:81 VarLocal :: Chain   callee: author/project:Reuse.c@226:48   use: gen
+              226:83-226:94 Call :: List Int
+                226:83-226:92 VarTopLevel :: Chain -> List Int   callee: author/project:Reuse.fromChain   use: gen
+                226:93-226:94 VarLocal :: Chain   callee: author/project:Reuse.c@226:48   use: gen
+              226:96-226:124 Call :: List Int
+                226:96-226:105 VarTopLevel :: Chain -> List Int   callee: author/project:Reuse.fromChain   use: gen
+                226:107-226:124 Call :: Chain
+                  226:107-226:114 VarTopLevel :: List Int -> Chain   callee: author/project:Reuse.toChain   use: gen
+                  226:116-226:124 Call :: List Int
+                    226:116-226:119 VarTopLevel :: List Int -> List Int   callee: author/project:Reuse.inc   use: gen
+                    226:120-226:124 VarLocal :: List Int   callee: author/project:Reuse.base@195:21   use: gen
+        def a6 :: ( Maybe Int, Maybe Int, List (Maybe Int) )    [222:21-222:23]   id: author/project:Reuse.a6@222:21   sig: ( Maybe Int, Maybe Int, List (Maybe Int) )   kinds:    group: author/project:Reuse.a6@222:21 nonrec inferred
+          223:25-223:107 Call :: ( Maybe Int, Maybe Int, List (Maybe Int) )
+            223:25-223:34 VarDebug :: String -> ( Maybe Int, Maybe Int, List (Maybe Int) ) -> ( Maybe Int, Maybe Int, List (Maybe Int) )   callee: elm/core:Debug.log   instance: a := ( Maybe Int, Maybe Int, List (Maybe Int) )   sig#: 6ecaa5dd   subst: v0 := ( Maybe Int, Maybe Int, List (Maybe Int) )
+            223:35-223:41 Str :: String
+            223:42-223:107 Triple :: ( Maybe Int, Maybe Int, List (Maybe Int) )
+              223:44-223:56 Call :: Maybe Int
+                223:44-223:48 VarTopLevel :: Maybe Int -> Maybe Int   callee: author/project:Reuse.bump   use: gen
+                223:50-223:56 Call :: Maybe Int
+                  223:50-223:54 VarCtor :: Int -> Maybe Int   callee: elm/core:Maybe.Just   instance: a := Int   sig#: c14b2381   subst: v0 := Int
+                  223:55-223:56 Int :: Int
+              223:59-223:71 Call :: Maybe Int
+                223:59-223:63 VarTopLevel :: Maybe Int -> Maybe Int   callee: author/project:Reuse.bump   use: gen
+                223:64-223:71 VarCtor :: Maybe Int   callee: elm/core:Maybe.Nothing   instance: a := Int   sig#: d83d645a   subst: v0 := Int
+              223:73-223:105 Call :: List (Maybe Int)
+                223:73-223:81 VarForeign :: (Maybe Int -> Maybe Int) -> List (Maybe Int) -> List (Maybe Int)   callee: elm/core:List.map   instance: a := Maybe Int, b := Maybe Int   sig#: 6a702f63   subst: v0 := Maybe Int, v1 := Maybe Int
+                223:82-223:86 VarTopLevel :: Maybe Int -> Maybe Int   callee: author/project:Reuse.bump   use: gen
+                223:87-223:105 List :: List (Maybe Int)
+                  223:89-223:95 Call :: Maybe Int
+                    223:89-223:93 VarCtor :: Int -> Maybe Int   callee: elm/core:Maybe.Just   instance: a := Int   sig#: c14b2381   subst: v0 := Int
+                    223:94-223:95 Int :: Int
+                  223:97-223:103 Call :: Maybe Int
+                    223:97-223:101 VarCtor :: Int -> Maybe Int   callee: elm/core:Maybe.Just   instance: a := Int   sig#: c14b2381   subst: v0 := Int
+                    223:102-223:103 Int :: Int
+        def a5 :: ( List Int, List Int, List Int )    [219:21-219:23]   id: author/project:Reuse.a5@219:21   sig: ( List Int, List Int, List Int )   kinds:    group: author/project:Reuse.a5@219:21 nonrec inferred
+          220:25-220:78 Call :: ( List Int, List Int, List Int )
+            220:25-220:34 VarDebug :: String -> ( List Int, List Int, List Int ) -> ( List Int, List Int, List Int )   callee: elm/core:Debug.log   instance: a := ( List Int, List Int, List Int )   sig#: 6ecaa5dd   subst: v0 := ( List Int, List Int, List Int )
+            220:35-220:42 Str :: String
+            220:43-220:78 Triple :: ( List Int, List Int, List Int )
+              220:45-220:54 Call :: List Int
+                220:45-220:51 VarTopLevel :: Tree -> List Int   callee: author/project:Reuse.toList   use: gen
+                220:52-220:54 VarLocal :: Tree   callee: author/project:Reuse.t1@210:21   use: gen
+              220:56-220:65 Call :: List Int
+                220:56-220:62 VarTopLevel :: Tree -> List Int   callee: author/project:Reuse.toList   use: gen
+                220:63-220:65 VarLocal :: Tree   callee: author/project:Reuse.t2@213:21   use: gen
+              220:67-220:76 Call :: List Int
+                220:67-220:73 VarTopLevel :: Tree -> List Int   callee: author/project:Reuse.toList   use: gen
+                220:74-220:76 VarLocal :: Tree   callee: author/project:Reuse.t3@216:21   use: gen
+        def a4 :: ( List Int, List Int )    [207:21-207:23]   id: author/project:Reuse.a4@207:21   sig: ( List Int, List Int )   kinds:    group: author/project:Reuse.a4@207:21 nonrec inferred
+          208:25-208:62 Call :: ( List Int, List Int )
+            208:25-208:34 VarDebug :: String -> ( List Int, List Int ) -> ( List Int, List Int )   callee: elm/core:Debug.log   instance: a := ( List Int, List Int )   sig#: 6ecaa5dd   subst: v0 := ( List Int, List Int )
+            208:35-208:40 Str :: String
+            208:41-208:62 Pair :: ( List Int, List Int )
+              208:43-208:54 Call :: List Int
+                208:43-208:46 VarTopLevel :: List Int -> List Int -> List Int   callee: author/project:Reuse.rev   use: gen
+                208:47-208:49 List :: List Int
+                208:50-208:54 VarLocal :: List Int   callee: author/project:Reuse.base@195:21   use: gen
+              208:56-208:60 VarLocal :: List Int   callee: author/project:Reuse.base@195:21   use: gen
+        def a3 :: ( List Int, Int )    [204:21-204:23]   id: author/project:Reuse.a3@204:21   sig: ( List Int, Int )   kinds:    group: author/project:Reuse.a3@204:21 nonrec inferred
+          205:25-205:81 Call :: ( List Int, Int )
+            205:25-205:34 VarDebug :: String -> ( List Int, Int ) -> ( List Int, Int )   callee: elm/core:Debug.log   instance: a := ( List Int, Int )   sig#: 6ecaa5dd   subst: v0 := ( List Int, Int )
+            205:35-205:45 Str :: String
+            205:46-205:81 Pair :: ( List Int, Int )
+              205:48-205:61 Call :: List Int
+                205:48-205:56 VarTopLevel :: List Int -> List Int   callee: author/project:Reuse.keepEven   use: gen
+                205:57-205:61 VarLocal :: List Int   callee: author/project:Reuse.base@195:21   use: gen
+              205:63-205:79 Call :: Int
+                205:63-205:74 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+                205:75-205:79 VarLocal :: List Int   callee: author/project:Reuse.base@195:21   use: gen
+        def a2 :: ( List Int, List Int )    [201:21-201:23]   id: author/project:Reuse.a2@201:21   sig: ( List Int, List Int )   kinds:    group: author/project:Reuse.a2@201:21 nonrec inferred
+          202:25-202:66 Call :: ( List Int, List Int )
+            202:25-202:34 VarDebug :: String -> ( List Int, List Int ) -> ( List Int, List Int )   callee: elm/core:Debug.log   instance: a := ( List Int, List Int )   sig#: 6ecaa5dd   subst: v0 := ( List Int, List Int )
+            202:35-202:47 Str :: String
+            202:48-202:66 Pair :: ( List Int, List Int )
+              202:50-202:58 Call :: List Int
+                202:50-202:53 VarTopLevel :: List Int -> List Int   callee: author/project:Reuse.inc   use: gen
+                202:54-202:58 VarLocal :: List Int   callee: author/project:Reuse.base@195:21   use: gen
+              202:60-202:64 VarLocal :: List Int   callee: author/project:Reuse.base@195:21   use: gen
+        def a1 :: List Int    [198:21-198:23]   id: author/project:Reuse.a1@198:21   sig: List Int   kinds:    group: author/project:Reuse.a1@198:21 nonrec inferred
+          199:25-199:68 Call :: List Int
+            199:25-199:34 VarDebug :: String -> List Int -> List Int   callee: elm/core:Debug.log   instance: a := List Int   sig#: 6ecaa5dd   subst: v0 := List Int
+            199:35-199:47 Str :: String
+            199:49-199:68 Call :: List Int
+              199:49-199:52 VarTopLevel :: List Int -> List Int   callee: author/project:Reuse.inc   use: gen
+              199:54-199:68 Call :: List Int
+                199:54-199:64 VarForeign :: Int -> Int -> List Int   callee: elm/core:List.range
+                199:65-199:66 Int :: Int
+                199:67-199:68 Int :: Int
+        252:17-256:37 If :: ( (), Cmd () )
+          252:20-252:329 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            252:20-252:325 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+              252:20-252:307 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                252:20-252:282 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  252:20-252:269 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                    252:20-252:238 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                      252:20-252:212 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                        252:20-252:186 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                          252:20-252:152 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                            252:20-252:126 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                              252:20-252:95 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                252:20-252:64 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                  252:20-252:34 Call :: Int
+                                    252:20-252:31 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+                                    252:32-252:34 VarLocal :: List Int   callee: author/project:Reuse.a1@198:21   use: gen
+                                  252:37-252:64 Call :: Int
+                                    252:37-252:48 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+                                    252:50-252:64 Call :: List Int
+                                      252:50-252:61 VarForeign :: ( List Int, List Int ) -> List Int   callee: elm/core:Tuple.first   instance: a := List Int, b := List Int   sig#: ee0f5e96   subst: v0 := List Int, v1 := List Int
+                                      252:62-252:64 VarLocal :: ( List Int, List Int )   callee: author/project:Reuse.a2@201:21   use: gen
+                                252:68-252:95 Call :: Int
+                                  252:68-252:79 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+                                  252:81-252:95 Call :: List Int
+                                    252:81-252:92 VarForeign :: ( List Int, Int ) -> List Int   callee: elm/core:Tuple.first   instance: a := List Int, b := Int   sig#: ee0f5e96   subst: v0 := List Int, v1 := Int
+                                    252:93-252:95 VarLocal :: ( List Int, Int )   callee: author/project:Reuse.a3@204:21   use: gen
+                              252:99-252:126 Call :: Int
+                                252:99-252:110 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+                                252:112-252:126 Call :: List Int
+                                  252:112-252:123 VarForeign :: ( List Int, List Int ) -> List Int   callee: elm/core:Tuple.first   instance: a := List Int, b := List Int   sig#: ee0f5e96   subst: v0 := List Int, v1 := List Int
+                                  252:124-252:126 VarLocal :: ( List Int, List Int )   callee: author/project:Reuse.a4@207:21   use: gen
+                            252:130-252:152 Call :: Int
+                              252:130-252:141 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+                              252:143-252:152 Call :: List Int
+                                252:143-252:149 VarTopLevel :: ( List Int, List Int, List Int ) -> List Int   callee: author/project:Reuse.first3   use: gen   instance: a := List Int, b := List Int, c := List Int   sig#: b06b8466   subst: v0 := List Int, v1 := List Int, v2 := List Int
+                                252:150-252:152 VarLocal :: ( List Int, List Int, List Int )   callee: author/project:Reuse.a5@219:21   use: gen
+                          252:156-252:186 Call :: Int
+                            252:156-252:173 VarForeign :: Int -> Maybe Int -> Int   callee: elm/core:Maybe.withDefault   instance: a := Int   sig#: be843909   subst: v0 := Int
+                            252:174-252:175 Int :: Int
+                            252:177-252:186 Call :: Maybe Int
+                              252:177-252:183 VarTopLevel :: ( Maybe Int, Maybe Int, List (Maybe Int) ) -> Maybe Int   callee: author/project:Reuse.first3   use: gen   instance: a := Maybe Int, b := Maybe Int, c := List (Maybe Int)   sig#: b06b8466   subst: v0 := Maybe Int, v1 := Maybe Int, v2 := List (Maybe Int)
+                              252:184-252:186 VarLocal :: ( Maybe Int, Maybe Int, List (Maybe Int) )   callee: author/project:Reuse.a6@222:21   use: gen
+                        252:190-252:212 Call :: Int
+                          252:190-252:201 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+                          252:203-252:212 Call :: List Int
+                            252:203-252:209 VarTopLevel :: ( List Int, List Int, List Int ) -> List Int   callee: author/project:Reuse.first3   use: gen   instance: a := List Int, b := List Int, c := List Int   sig#: b06b8466   subst: v0 := List Int, v1 := List Int, v2 := List Int
+                            252:210-252:212 VarLocal :: ( List Int, List Int, List Int )   callee: author/project:Reuse.a7@225:21   use: gen
+                      252:216-252:238 Call :: Int
+                        252:216-252:227 VarForeign :: List Shape -> Int   callee: elm/core:List.length   instance: a := Shape   sig#: 8f686fa0   subst: v0 := Shape
+                        252:229-252:238 Call :: List Shape
+                          252:229-252:235 VarTopLevel :: ( List Shape, List Int, List Int ) -> List Shape   callee: author/project:Reuse.first3   use: gen   instance: a := List Shape, b := List Int, c := List Int   sig#: b06b8466   subst: v0 := List Shape, v1 := List Int, v2 := List Int
+                          252:236-252:238 VarLocal :: ( List Shape, List Int, List Int )   callee: author/project:Reuse.a8@231:21   use: gen
+                    252:242-252:269 Call :: Int
+                      252:242-252:253 VarForeign :: List (List Int) -> Int   callee: elm/core:List.length   instance: a := List Int   sig#: 8f686fa0   subst: v0 := List Int
+                      252:255-252:269 Call :: List (List Int)
+                        252:255-252:266 VarForeign :: ( List (List Int), List (List Int) ) -> List (List Int)   callee: elm/core:Tuple.first   instance: a := List (List Int), b := List (List Int)   sig#: ee0f5e96   subst: v0 := List (List Int), v1 := List (List Int)
+                        252:267-252:269 VarLocal :: ( List (List Int), List (List Int) )   callee: author/project:Reuse.a9@234:21   use: gen
+                  252:273-252:282 Call :: Int
+                    252:273-252:279 VarTopLevel :: ( Int, Int, Int ) -> Int   callee: author/project:Reuse.first3   use: gen   instance: a := Int, b := Int, c := Int   sig#: b06b8466   subst: v0 := Int, v1 := Int, v2 := Int
+                    252:280-252:282 VarLocal :: ( Int, Int, Int )   callee: author/project:Reuse.b1@237:21   use: gen
+                252:285-252:307 Call :: Int
+                  252:285-252:296 VarForeign :: List ( Int, Int ) -> Int   callee: elm/core:List.length   instance: a := ( Int, Int )   sig#: 8f686fa0   subst: v0 := ( Int, Int )
+                  252:298-252:307 Call :: List ( Int, Int )
+                    252:298-252:304 VarTopLevel :: ( List ( Int, Int ), List ( Int, Int ), Int ) -> List ( Int, Int )   callee: author/project:Reuse.first3   use: gen   instance: a := List ( Int, Int ), b := List ( Int, Int ), c := Int   sig#: b06b8466   subst: v0 := List ( Int, Int ), v1 := List ( Int, Int ), v2 := Int
+                    252:305-252:307 VarLocal :: ( List ( Int, Int ), List ( Int, Int ), Int )   callee: author/project:Reuse.b2@246:21   use: gen
+              252:311-252:325 Call :: Int
+                252:311-252:322 VarForeign :: List (List Int) -> Int   callee: elm/core:List.length   instance: a := List Int   sig#: 8f686fa0   subst: v0 := List Int
+                252:323-252:325 VarLocal :: List (List Int)   callee: author/project:Reuse.b3@249:21   use: gen
+            252:328-252:329 Int :: Int
+          253:21-253:37 Pair :: ( (), Cmd () )
+            253:23-253:25 Unit :: ()
+            253:27-253:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          256:21-256:37 Pair :: ( (), Cmd () )
+            256:23-256:25 Unit :: ()
+            256:27-256:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      257:20-257:43 Lambda :: () -> () -> ( (), Cmd () )
+        257:21-257:22 PAnything :: ()
+        257:23-257:24 PVar m :: ()
+        257:28-257:43 Pair :: ( (), Cmd () )
+          257:30-257:31 VarLocal :: ()
+          257:33-257:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      258:27-258:41 Lambda :: () -> Sub ()
+        258:28-258:29 PAnything :: ()
+        258:33-258:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Reuse.fromChain   kind: function   reads:    needs:    group: author/project:Reuse.fromChain
+init: 1   id: author/project:Reuse.dictRound   kind: function   reads:    needs:    group: author/project:Reuse.dictRound
+init: 2   id: author/project:Reuse.keepEven   kind: function   reads:    needs:    group: author/project:Reuse.keepEven
+init: 3   id: author/project:Reuse.toChain   kind: function   reads:    needs:    group: author/project:Reuse.toChain
+init: 4   id: author/project:Reuse.toList   kind: function   reads:    needs:    group: author/project:Reuse.toList
+init: 5   id: author/project:Reuse.pairUp   kind: function   reads:    needs:    group: author/project:Reuse.pairUp
+init: 6   id: author/project:Reuse.insert   kind: function   reads:    needs:    group: author/project:Reuse.insert
+init: 7   id: author/project:Reuse.first3   kind: function   reads:    needs: 
+init: 8   id: author/project:Reuse.again   kind: function   reads:    needs: 
+init: 9   id: author/project:Reuse.grow   kind: function   reads:    needs: 
+init: 10   id: author/project:Reuse.bump   kind: function   reads:    needs: 
+init: 11   id: author/project:Reuse.area   kind: function   reads:    needs: 
+init: 12   id: author/project:Reuse.rev   kind: function   reads:    needs:    group: author/project:Reuse.rev
+init: 13   id: author/project:Reuse.inc   kind: function   reads:    needs:    group: author/project:Reuse.inc
+init: 14   id: author/project:Reuse.main   kind: value   reads: author/project:Reuse.fromChain,author/project:Reuse.dictRound,author/project:Reuse.keepEven,author/project:Reuse.toChain,author/project:Reuse.toList,author/project:Reuse.pairUp,author/project:Reuse.insert,author/project:Reuse.first3,author/project:Reuse.again,author/project:Reuse.grow,author/project:Reuse.bump,author/project:Reuse.area,author/project:Reuse.rev,author/project:Reuse.inc   needs:    init-dep: no

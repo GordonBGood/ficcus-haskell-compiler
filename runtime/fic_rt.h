@@ -91,8 +91,8 @@ static fic_hdr fic_nul1 FIC_UNUSED = { FIC_IMMORTAL, 1u, 0, 0 };
 #  define FIC_UNPOISON(p, n) ((void)0)
 #endif
 
+#define FIC_MAX_CLASS  32                       /* the largest pooled object: 32 units of 8 bytes (also the limit of a reuse token, with or without the pool) */
 #ifndef FIC_NO_POOL
-#define FIC_MAX_CLASS  32
 #define FIC_SLAB_BYTES ((size_t)1 << 20)
 static void *fic_free_list[FIC_MAX_CLASS + 1];
 static unsigned char *fic_bump, *fic_bump_end;
@@ -179,9 +179,13 @@ static inline void *fic_alloc(size_t bytes, uint16_t tag, uint16_t nptr) {
     } else { h = (fic_hdr *)malloc(bytes); if (h == NULL) abort(); h->cls = 0; }
   }
 #else
-  h = (fic_hdr *)malloc(bytes);
-  if (h == NULL) abort();
-  h->cls = 0;
+  {                                   /* no pool (ASan): malloc, but the size class is kept so that a reuse token can be checked (S4) */
+    size_t c = (bytes + 7) >> 3;
+    if (c < 2) c = 2;
+    h = (fic_hdr *)malloc(c * 8);
+    if (h == NULL) abort();
+    h->cls = c <= FIC_MAX_CLASS ? (uint8_t)c : 0;
+  }
 #endif
   h->rc = 1; h->tag = tag; h->nptr = (uint8_t)nptr;
   fic_live_objects++; fic_total_allocs++;
@@ -192,6 +196,25 @@ static inline void *fic_alloc(size_t bytes, uint16_t tag, uint16_t nptr) {
   fic_reg_add(h);
 #endif
   return h;
+}
+
+/* S4 reuse: an object built in the cell of a token (the cell of a unique object that was taken apart, of the same size class), or a fresh
+   one when the token is NULL (the cell was shared). The class check makes a wrong pairing a miss, never a heap overflow. */
+static inline void fic_free_obj(void *o);
+static inline void *fic_reuse(void *tok, size_t bytes, uint16_t tag, uint16_t nptr) {
+  if (tok != NULL) {
+    size_t c = (bytes + 7) >> 3;
+    fic_hdr *h = (fic_hdr *)tok;
+    if (c < 2) c = 2;
+    if (h->cls == c) {
+      h->rc = 1; h->tag = tag; h->nptr = (uint8_t)nptr;
+      FIC_STAT(fic_n_reuse_hit++);
+      return h;
+    }
+    fic_free_obj(tok);                                  /* a pairing the generator got wrong: not a reuse */
+  }
+  FIC_STAT(fic_n_reuse_miss++);
+  return fic_alloc(bytes, tag, nptr);
 }
 
 /* free an object whose count is zero or that was moved out (a reuse token not reused) */
@@ -233,6 +256,8 @@ static inline void fic_drop(fic_ref p) {
   FIC_STAT(fic_n_drop++);
   if (--p->rc == 0) fic_free_slow(p);
 }
+/* a shared object (count above 1) loses one count: it cannot die (drop specialization, S4) */
+static inline void fic_drop_shared(fic_ref p) { FIC_STAT(fic_n_drop++); p->rc--; }
 /* uniqueness: the one owner may update in place */
 static inline int fic_is_unique(fic_ref p) { return p->rc == 1; }
 /* free the memory of an object whose fields were moved out (nothing below it is released) */

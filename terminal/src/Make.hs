@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, PatternGuards #-}
 module Make
   ( Flags(..)
   , Output(..)
@@ -181,9 +181,13 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcMode) =
                           -- with `--rc`: the Rc pass, then its independent checker, then the generator with counts
                           -- FICCUS_RC_MUTATE=n (tests of the checker): remove the n-th dup/drop the pass inserted, then check
                           mutation <- Task.io (System.Environment.lookupEnv "FICCUS_RC_MUTATE")
-                          let mutated prog = case mutation >>= readMaybeInt of
-                                               Nothing -> Right prog
-                                               Just k -> maybe (Left ["FICCUS_RC_MUTATE: there is no dup or drop number " ++ show k]) Right (Rc.rcMutate k prog)
+                          -- "rN": only the S4 sites (drop specializations, tokens, reuses)
+                          let mutated prog = case mutation of
+                                               Just ('r' : digits) | Just k <- readMaybeInt digits ->
+                                                 maybe (Left ["FICCUS_RC_MUTATE: there is no reset or reuse number " ++ show k]) Right (Rc.rcMutate True k prog)
+                                               _ -> case mutation >>= readMaybeInt of
+                                                      Nothing -> Right prog
+                                                      Just k -> maybe (Left ["FICCUS_RC_MUTATE: there is no dup or drop number " ++ show k]) Right (Rc.rcMutate False k prog)
                           -- FICCUS_RC_DUMP=text (debugging): print the counted clones whose definition name contains the text, before the check
                           dumpText <- Task.io (System.Environment.lookupEnv "FICCUS_RC_DUMP")
                           let rced = if rcMode then Rc.rcProgram program >>= mutated else Right program

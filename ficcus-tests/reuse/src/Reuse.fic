@@ -1,0 +1,259 @@
+module Reuse exposing (main)
+
+-- Drop specialization and constructor reuse (S4). Every function here matches on a constructor and builds a constructor of the same size
+-- class, on a value that is unique at some call and shared at others (the old version is printed after the update: a reuse of a cell that
+-- is in fact shared would corrupt it). Output equal to Elm's (expected/reuse.out, Elm 0.19.3, node).
+
+import Dict exposing (Dict)
+
+
+type Tree
+    = Leaf
+    | Node Tree Int Tree
+
+
+type Chain
+    = End
+    | Link Int Chain
+
+
+type Shape
+    = Circle Int
+    | Rect Int Int
+    | Named String Int
+
+
+inc : List Int -> List Int
+inc xs =
+    case xs of
+        [] ->
+            []
+
+        x :: rest ->
+            (x + 1) :: inc rest
+
+
+keepEven : List Int -> List Int
+keepEven xs =
+    case xs of
+        [] ->
+            []
+
+        x :: rest ->
+            if modBy 2 x == 0 then
+                x :: keepEven rest
+
+            else
+                keepEven rest
+
+
+rev : List Int -> List Int -> List Int
+rev acc xs =
+    case xs of
+        [] ->
+            acc
+
+        x :: rest ->
+            rev (x :: acc) rest
+
+
+insert : Int -> Tree -> Tree
+insert v t =
+    case t of
+        Leaf ->
+            Node Leaf v Leaf
+
+        Node l x r ->
+            if v < x then
+                Node (insert v l) x r
+
+            else if v > x then
+                Node l x (insert v r)
+
+            else
+                Node l x r
+
+
+toList : Tree -> List Int
+toList t =
+    case t of
+        Leaf ->
+            []
+
+        Node l x r ->
+            toList l ++ (x :: toList r)
+
+
+bump : Maybe Int -> Maybe Int
+bump m =
+    case m of
+        Just x ->
+            Just (x + 1)
+
+        Nothing ->
+            Nothing
+
+
+-- a cell of another type with the same size class: a list cell (Int, tail) becomes a Link (Int, Chain)
+toChain : List Int -> Chain
+toChain xs =
+    case xs of
+        [] ->
+            End
+
+        x :: rest ->
+            Link (x * 2) (toChain rest)
+
+
+fromChain : Chain -> List Int
+fromChain c =
+    case c of
+        End ->
+            []
+
+        Link x rest ->
+            x :: fromChain rest
+
+
+-- the token is used in one arm only; the other arms free it
+grow : Shape -> Shape
+grow s =
+    case s of
+        Circle r ->
+            if r > 10 then
+                Circle r
+
+            else
+                Circle (r * 2)
+
+        Rect w h ->
+            Circle (w + h)
+
+        Named n k ->
+            if k > 0 then
+                Named n (k - 1)
+
+            else
+                Circle 0
+
+
+area : Shape -> Int
+area s =
+    case s of
+        Circle r ->
+            3 * r * r
+
+        Rect w h ->
+            w * h
+
+        Named n k ->
+            String.length n * k
+
+
+-- the first constructor in evaluation order takes the token, the later one allocates
+pairUp : List Int -> List (List Int)
+pairUp xs =
+    case xs of
+        a :: b :: rest ->
+            [ a, b ] :: pairUp rest
+
+        _ ->
+            []
+
+
+-- the matched value is used again after the match (no reuse), and used only through a view (no reuse)
+again : List Int -> Int
+again xs =
+    case xs of
+        [] ->
+            0
+
+        x :: _ ->
+            x + List.length xs
+
+
+dictRound : Int -> Dict Int Int -> Dict Int Int
+dictRound n d =
+    if n == 0 then
+        d
+
+    else
+        dictRound (n - 1) (Dict.insert (modBy 7 (n * 3)) n d)
+
+
+first3 : ( a, b, c ) -> a
+first3 ( a, _, _ ) =
+    a
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    base =
+                        List.range 1 10
+
+                    a1 =
+                        Debug.log "inc unique" (inc (List.range 1 6))
+
+                    a2 =
+                        Debug.log "inc shared" ( inc base, base )
+
+                    a3 =
+                        Debug.log "keepEven" ( keepEven base, List.length base )
+
+                    a4 =
+                        Debug.log "rev" ( rev [] base, base )
+
+                    t1 =
+                        List.foldl insert Leaf [ 5, 3, 8, 1, 4, 7, 9 ]
+
+                    t2 =
+                        insert 6 t1
+
+                    t3 =
+                        insert 2 (insert 6 t1)
+
+                    a5 =
+                        Debug.log "trees" ( toList t1, toList t2, toList t3 )
+
+                    a6 =
+                        Debug.log "bump" ( bump (Just 1), bump Nothing, List.map bump [ Just 1, Just 2 ] )
+
+                    a7 =
+                        Debug.log "chain" (let c = toChain base in ( fromChain c, fromChain c, fromChain (toChain (inc base)) ))
+
+                    shapes =
+                        [ Circle 3, Circle 30, Rect 2 5, Named "ab" 3, Named "zz" 0 ]
+
+                    a8 =
+                        Debug.log "grow" ( List.map grow shapes, List.map area shapes, List.map area (List.map grow shapes) )
+
+                    a9 =
+                        Debug.log "pairUp" ( pairUp base, pairUp (List.range 1 5) )
+
+                    b1 =
+                        Debug.log "again" ( again base, again [], again (inc base) )
+
+                    d1 =
+                        dictRound 20 Dict.empty
+
+                    d2 =
+                        Dict.insert 100 1 d1
+
+                    b2 =
+                        Debug.log "dict" ( Dict.toList d1, Dict.toList d2, Dict.size d1 )
+
+                    b3 =
+                        Debug.log "map in map" (List.map (\x -> List.map (\y -> y + x) (inc base)) [ 1, 2 ])
+                in
+                if List.length a1 + List.length (Tuple.first a2) + List.length (Tuple.first a3) + List.length (Tuple.first a4) + List.length (first3 a5) + Maybe.withDefault 0 (first3 a6) + List.length (first3 a7) + List.length (first3 a8) + List.length (Tuple.first a9) + first3 b1 + List.length (first3 b2) + List.length b3 > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

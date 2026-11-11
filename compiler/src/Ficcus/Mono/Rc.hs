@@ -35,6 +35,7 @@ module Ficcus.Mono.Rc
 import Control.Monad (foldM)
 import Control.Monad.State.Strict (State, evalState, get, gets, modify', put, runState)
 import qualified Data.List as List
+import Data.Maybe (isJust)
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
@@ -43,7 +44,10 @@ import Ficcus.Mono.Class
 import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig)
-import Ficcus.Mono.Layout (nptrOf)
+import Ficcus.Mono.Layout (nptrOf, objSizeClass)
+import Ficcus.Mono.Reuse
+import System.Environment (lookupEnv)
+import System.IO.Unsafe (unsafePerformIO)
 
 
 type Env = Map.Map String Class          -- the owned variables of a reference class that are in scope
@@ -196,6 +200,9 @@ rcNode ctx env live e =
     MDrop _ _ -> failRc "internal: the Rc pass ran twice" >> return e
     MOwn _ -> failRc "internal: the Rc pass ran twice" >> return e
     MUnpack _ _ _ _ -> failRc "internal: the Rc pass ran twice" >> return e
+    MSpec _ _ _ _ _ -> failRc "internal: the Rc pass ran twice" >> return e
+    MReuse t x -> do { x' <- rcNode ctx env live x; return (node (MReuse t x')) }          -- placed by `specBranch` before the pass runs
+    MFreeTok t x -> do { x' <- rc ctx env live x; return (node (MFreeTok t x')) }
 
 
   where
@@ -418,7 +425,11 @@ rcCase ctx env live cls s bs =
                   do  let env' = Map.union (Map.fromList [ (v, c) | (v, c, _) <- bound ]) (Map.delete r envB)
                       b' <- rc ctx env' live b
                       return (p, MExpr (mRep b) (MUnpack r sc bound b'))
-                Nothing -> viewBranch root envB p b)
+                Nothing ->
+                  do  spec <- specBranch self envB p b
+                      case spec of
+                        Just r -> return r
+                        Nothing -> viewBranch root envB p b)
            bs
     -- the struct scrutinee is an owned variable that nothing uses after the match, and the pattern binds a variable to each field
     unpackable self b p =
@@ -438,6 +449,30 @@ rcCase ctx env live cls s bs =
         PVar v | mpRep q == fc -> Just [(i, v, fc)]
         PWild -> Just []
         _ -> Nothing
+    -- S4 drop specialization and reuse (docs/STAGE4-PLAN.md, 14): the scrutinee is an owned variable that dies at the match and the pattern
+    -- is one constructor (or `::`) with variable arguments. The used pattern variables then all own a count (no views: the cell has to be
+    -- dead at the start of the branch), and the branch becomes `MSpec`: unique cell: the fields are moved out and the cell kept as a reuse
+    -- token when the branch builds an object of its size class (or freed); shared cell: the used fields are dup'd and the cell loses a
+    -- count. Without a token this is only done when the branch consumes every used variable anyway (S3 dup'd them and dropped the cell: the
+    -- same counts, fused); a branch that only looks at a variable keeps the S3 view.
+    specBranch self envB p b =
+      case (self, mRep s, cellOfPat p) of
+        (Just r, CRef, Just cell)
+          | specOn, Map.member r envB, not (Set.member r live), not (Set.member r (fvNames ctx b)), all fieldOk usedRef,
+            isJust (placed "?" cell) || (allConsumed && not (null usedRef)) ->
+              do  tok <- if isJust (placed "?" cell) then fmap Just fresh else return Nothing
+                  let b1 = maybe b id (tok >>= \t -> placed t cell)
+                  let env' = Map.union (Map.fromList [ (v, c) | (_, v, c) <- usedRef ]) (Map.delete r envB)
+                  b2 <- rc ctx env' live b1
+                  return (Just (p, MExpr (mRep b) (MSpec r (cellFields cell) [ (v, c, i) | (i, v, c) <- usedRef ] tok b2)))
+          where
+            usedNames = Map.keysSet (fvOf ctx b)
+            usedRef = [ (i, v, c) | (i, v, c) <- cellVars cell, refClass c, Set.member v usedNames ]
+            fieldOk (i, _, c) = c == cellFields cell !! i
+            consumed = ownedVars (cOwn ctx) b
+            allConsumed = all (\(_, v, _) -> Set.member v consumed) usedRef
+            placed t ce = if reuseOn then objSizeClass (cellFields ce) >>= \k -> placeToken t k b else Nothing
+        _ -> return Nothing
     viewBranch root envB p b =
               do  let used = Map.keysSet (fvOf ctx b)
                   let consumed = ownedVars (cOwn ctx) b
@@ -449,6 +484,17 @@ rcCase ctx env live cls s bs =
                   return (p, if null dups then b' else MExpr (mRep b) (MDup dups b'))
 
 
+-- the S4 switches (experiments and the fault tests: the default is on, as the pass is meant to be used)
+{-# NOINLINE specOn #-}
+specOn :: Bool
+specOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_SPEC"))
+
+
+{-# NOINLINE reuseOn #-}
+reuseOn :: Bool
+reuseOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_REUSE"))
+
+
 -- | the indices (among the reference leaves of a struct with these fields) of the leaves of field i
 leafRange :: [Class] -> Int -> [Int]
 leafRange fs i =
@@ -458,13 +504,21 @@ leafRange fs i =
 
 -- FAULT INJECTION (the tests of the checker)
 
--- | the program with the n-th `MDup` or `MDrop` node (counting in order through the clones) removed: a program that the checker must
--- reject, because every count the pass inserts is needed. `Nothing` when there are not that many nodes.
-rcMutate :: Int -> MProgram -> Maybe MProgram
-rcMutate n program =
+-- | the program with the n-th site removed: a program that the checker must reject, because everything the pass inserts is needed.
+-- The sites, counting in order through the clones: every `MDup`, `MDrop` and `MUnpack`, and (S4) every drop specialization (the whole
+-- `MSpec`: counts and token are gone), the token of an `MSpec` (the later `MReuse` and `MFreeTok` then name a token that does not exist),
+-- every `MReuse` (the token is never used: the cell leaks) and every `MFreeTok`. With `reuseOnly` only the S4 sites are counted.
+-- `Nothing` when there are not that many sites.
+rcMutate :: Bool -> Int -> MProgram -> Maybe MProgram
+rcMutate reuseOnly n program =
   let (clones', total) = runState (mapM mutDef (mpClones program)) 0
   in if total > n then Just program { mpClones = clones' } else Nothing
   where
+    -- is this the site to remove? (a site of the other kind is not counted when `reuseOnly`)
+    hit :: Bool -> State Int Bool
+    hit s4 =
+      if reuseOnly && not s4 then return False
+      else do { k <- get; put (k + 1); return (k == n) }
     mutDef d =
       case mdBody d of
         Nothing -> return d
@@ -472,14 +526,20 @@ rcMutate n program =
     mut :: MExpr -> State Int MExpr
     mut e =
       case mNode e of
-        MDup vs b -> site (MDup vs) b e
-        MDrop vs b -> site (MDrop vs) b e
+        MDup vs b -> site False (MDup vs) b e
+        MDrop vs b -> site False (MDrop vs) b e
+        MReuse t b -> do { h <- hit True; b' <- mut b; return (if h then b' else e { mNode = MReuse t b' }) }
+        MFreeTok t b -> do { h <- hit True; b' <- mut b; return (if h then b' else e { mNode = MFreeTok t b' }) }
+        MSpec s fcs bs mt b ->
+          do  gone <- hit True
+              noTok <- maybe (return False) (const (hit True)) mt
+              b' <- mut b
+              return (if gone then b' else e { mNode = MSpec s fcs bs (if noTok then Nothing else mt) b' })
         node -> do { node' <- mutNode node; return e { mNode = node' } }
-    site con b e =
-      do  k <- get
-          put (k + 1)
+    site s4 con b e =
+      do  h <- hit s4
           b' <- mut b
-          return (if k == n then b' else e { mNode = con b' })
+          return (if h then b' else e { mNode = con b' })
     pair f x = do { x' <- mut x; return (f, x') }
     mutNode node =
       case node of
@@ -495,5 +555,5 @@ rcMutate n program =
         MTuple xs -> MTuple <$> mapM mut xs
         MList xs -> MList <$> mapM mut xs
         MOwn b -> MOwn <$> mut b
-        MUnpack s c bs b -> do { k <- get; put (k + 1); b' <- mut b; return (if k == n then mNode b' else MUnpack s c bs b') }
+        MUnpack s c bs b -> do { h <- hit False; b' <- mut b; return (if h then mNode b' else MUnpack s c bs b') }
         other -> return other

@@ -38,6 +38,8 @@ import Ficcus.Mono.Class
 import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel (kernelSig)
+import Ficcus.Mono.Layout (objSizeClass)
+import Ficcus.Mono.Reuse
 
 
 data OwnCtx =
@@ -74,7 +76,7 @@ inferBorrow root clones0 = go (map start clones0)
     step ctx d =
       case mdBody d of
         Just body | mdKind d == Function, Just (mdClone d) /= root ->
-          let consumed = Set.unions [ownedVars ctx body, tailBad ctx d, if projRule then projOwned ctx d else Set.empty]
+          let consumed = Set.unions [ownedVars ctx body, tailBad ctx d, if projRule then projOwned ctx d else Set.empty, if reuseRule then reuseOwned ctx d else Set.empty]
               now = [ if o == Owned || Set.member n consumed then Owned else Borrowed | ((n, _), o) <- zip (mdParams d) (paramOwns d) ]
           in d { mdOwn = now }
         _ -> d
@@ -109,6 +111,9 @@ ownedVars ctx = owned
         MDrop _ b -> owned b
         MOwn b -> borrowed b
         MUnpack _ _ _ b -> owned b
+        MSpec _ _ _ _ b -> owned b
+        MReuse _ b -> owned b
+        MFreeTok _ b -> owned b
     -- an argument that is only looked at: a variable or a projection of one is used as it is, anything else is evaluated into a
     -- temporary that the call drops afterwards
     borrowed a = if viewExpr (ocClones ctx) a then Set.empty else owned a
@@ -179,6 +184,8 @@ tailBad ctx d =
         MSeq _ b -> go tl env b
         MDup _ b -> go tl env b
         MDrop _ b -> go tl env b
+        MSpec _ _ _ _ b -> go tl env b
+        MFreeTok _ b -> go tl env b
         MCase s bs ->
           Set.unions
             [ go tl (foldr (\(v, _) m -> Map.insert v viaScrutinee m) env (patBinders p)) b
@@ -199,6 +206,27 @@ tailBad ctx d =
         MCtor _ _ _ -> True
         MGlobal c -> maybe False ((== Value) . mdKind) (Map.lookup c (ocClones ctx))
         _ -> False
+
+
+{-# NOINLINE reuseRule #-}
+-- | EXPERIMENT (S4): a parameter is owned when a case on it is a reuse candidate (`FICCUS_BORROW_REUSE=1`)
+reuseRule :: Bool
+reuseRule = unsafePerformIO (fmap (== Just "1") (lookupEnv "FICCUS_BORROW_REUSE"))
+
+
+-- | the parameters of which a case in tail position is a candidate for constructor reuse: the pattern is one constructor (or `::`) with
+-- variable arguments, the branch does not use the parameter again and builds an object of the size class of the matched cell
+reuseOwned :: OwnCtx -> MDef -> Set.Set String
+reuseOwned ctx d =
+  case mdBody d of
+    Nothing -> Set.empty
+    Just body ->
+      Set.fromList
+        [ n
+        | (n, p, b) <- reuseCandidates body, n `elem` map fst (mdParams d)
+        , Just cell <- [cellOfPat p], Just k <- [objSizeClass (cellFields cell)]
+        , Map.notMember n (freeVars (ocCaps ctx) b)
+        , Just _ <- [placeToken "tok" k b] ]
 
 
 {-# NOINLINE projRule #-}

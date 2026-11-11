@@ -12,6 +12,7 @@ module Ficcus.Mono.Layout
   , fieldStores
   , leafPaths
   , refPaths
+  , objSizeClass
   )
   where
 
@@ -154,3 +155,19 @@ refPaths c v =
     CStruct fs -> concat [ refPaths f (v ++ ".f" ++ show k) | (k, f) <- zip [0 :: Int ..] fs ]
     CRef -> [v]
     _ -> []
+
+
+-- | the size class of a heap object with these field classes, as `fic_alloc` computes it (8 byte units, at least 2); `Nothing` when the
+-- object is too big for the pool (more than FIC_MAX_CLASS = 32 units: it is malloc'd and never reused). The layout is the one of
+-- `objectDef`: the 8 byte header, the reference words, then the scalars in declaration order, each aligned to its size.
+objSizeClass :: [Class] -> Maybe Int
+objSizeClass cs =
+  let leaves = concatMap leavesOf cs
+      members = [ l | l <- leaves, l == CRef ] ++ [ l | l <- leaves, l /= CRef ]
+      size l = case l of { CRef -> 8; CI64 -> 8; CF64 -> 8; CU32 -> 4; _ -> 1 } :: Int
+      place off l = let a = size l in ((off + a - 1) `div` a) * a + a
+      end = foldl place 8 members
+      align = maximum (4 : map size members)
+      bytes = ((end + align - 1) `div` align) * align
+      units = max 2 ((bytes + 7) `div` 8)
+  in if units <= 32 then Just units else Nothing
