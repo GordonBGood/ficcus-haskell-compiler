@@ -1,0 +1,112 @@
+module LetOp exposing (main)
+
+-- A `let` directly as an operand of a binary operator (found by rcfuzz.py: "internal: no scheme for elm/core:Basics.add"),
+-- and as the record of a field access: a `let` node has no recorded type of its own, its type is the type of its body.
+-- The output must equal Elm's (expected/letop.out, Elm 0.19.3, node).
+
+
+p : Int
+p =
+    5
+
+
+right : Int -> Int
+right x =
+    8 + (let v = 2 in x + v)
+
+
+left : Int -> Int
+left x =
+    (let v = 3 in x * v) - 1
+
+
+both : Int -> Int
+both x =
+    (let a = x + 1 in a) * (let b = x + 2 in b)
+
+
+nested : Int -> Int
+nested x =
+    1 + (let a = 2 in let b = a + x in a * b)
+
+
+localFun : Int -> Int
+localFun x =
+    10 + (let go n acc = if n <= 0 then acc else go (n - 1) (acc + n) in go x 0)
+
+
+destruct : ( Int, Int ) -> Int
+destruct t =
+    100 - (let ( a, b ) = t in a + b)
+
+
+str : String -> String
+str s =
+    "<" ++ (let t = s ++ s in t) ++ ">"
+
+
+flt : Float -> Float
+flt x =
+    (let h = x / 2 in h) + 0.25
+
+
+cmp : Int -> Bool
+cmp x =
+    (let y = x + 1 in y) > x && (let l = [ x ] in l) == [ x ]
+
+
+consed : Int -> List Int
+consed x =
+    x :: (let r = [ x + 1, x + 2 ] in r)
+
+
+piped : Int -> Int
+piped x =
+    (let f y = y + x in f) <| (let z = 4 in z)
+
+
+field : Int -> Int
+field x =
+    (let r = { a = x, b = x + 1 } in r).b + (let q = { a = x } in q).a
+
+
+mk : Int -> { a : Int, b : Int }
+mk x =
+    { a = x, b = x + 1 }
+
+
+-- a field of a record without references that is the result of a call (the Rc checker rejected this before elmfic56)
+viaCall : Int -> Int
+viaCall x =
+    (mk x).b + (mk (x + 1)).a
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    l1 =
+                        Debug.log "ints" [ right p, left p, both p, nested p, localFun p, destruct ( p, 7 ), piped p, field p, viaCall p ]
+
+                    l2 =
+                        Debug.log "str" (str "ab")
+
+                    l3 =
+                        Debug.log "flt" (flt 3)
+
+                    l4 =
+                        Debug.log "cmp" (cmp p)
+
+                    l5 =
+                        Debug.log "consed" (consed p)
+                in
+                if List.length l1 > 0 && l2 /= "" && l3 > 0 && l4 && l5 /= [] then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

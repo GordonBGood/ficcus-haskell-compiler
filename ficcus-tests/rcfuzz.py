@@ -332,9 +332,9 @@ class Gen:
         val = self.gen(vt, env, d - 1, base + 8)
         body = body_of(base + 8)
         ann = (p(base + 5) + v + " : " + ELM[vt].strip("()")) if self.annotate else ""
-        # `identity`: a let that is directly an operand of a binary operator is not compiled to C yet ("internal: no scheme for
-        # elm/core:Basics.add", every compiler since elmfic36; not a matter of counting); a let under a call is
-        return "(identity" + p(base) + "(let" + ann + p(base + 5) + v + " =" + p(base + 9) + val + p(base + 1) + "in" + p(base + 5) + body + "))"
+        # a let may be directly an operand of a binary operator (fixed in elmfic56: "internal: no scheme for elm/core:Basics.add" before;
+        # the example `letop` is the case)
+        return "(" + p(base) + "(let" + ann + p(base + 5) + v + " =" + p(base + 9) + val + p(base + 1) + "in" + p(base + 5) + body + "))"
 
     # the forms that exist for every type
     def generic(self, t, env, d, ind):

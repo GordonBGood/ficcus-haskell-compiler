@@ -191,7 +191,7 @@ owned e =
     MCase s bs -> caseOf s bs
     MAccess r _ _ ->
       do  when (refClass cls) (bad "a field access that yields a reference without a count (not wrapped in Own)")
-          view r
+          viewRecord r
     MUpdate _ _ -> bad "a record update"
     MRecord fs -> mapM_ (owned . snd) fs
     MTuple xs -> mapM_ owned xs
@@ -230,6 +230,12 @@ owned e =
           owned b
 
 
+-- | the record of a field access: a struct without references is any expression (`(mk x).b`, `(let q = .. in q).a`: there is
+-- nothing to keep alive), one with references is looked at
+viewRecord :: MExpr -> CK ()
+viewRecord r = if refClass (mRep r) then view r else owned r
+
+
 -- | an expression that only looks at something that stays alive (the argument of `MOwn`, a borrowed argument)
 view :: MExpr -> CK ()
 view e =
@@ -239,7 +245,7 @@ view e =
     MGlobal _ -> return ()
     MKernel _ _ -> return ()
     MCtor _ _ _ -> return ()
-    MAccess r _ _ -> view r
+    MAccess r _ _ -> viewRecord r
     MCall (MExpr _ (MKernel name _)) args | kernelResultBorrowed name -> kernelCallArgs name args
     _ -> bad "an expression in a position that only looks at a value (a borrowed argument must be a variable, a literal or a global)"
 

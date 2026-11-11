@@ -5,6 +5,7 @@ module Type.Recorder
   , Key(..)
   , DefKey(..)
   , exprKey
+  , valueKey
   , patKey
   , defKey
   , recordExpr
@@ -87,6 +88,17 @@ data DefKey = DefKey !Word64 !Word64 N.Name
 exprKey :: A.Region -> Can.Expr_ -> Key
 exprKey region expr =
   mkKey region ("E:" ++ exprKind expr)
+
+
+-- the key of the node that carries the type of an expression used as a value: a `let` is not recorded (see
+-- isRecordedExpr), its type is the type of its body
+valueKey :: A.Region -> Can.Expr_ -> Key
+valueKey region expr =
+  case expr of
+    Can.Let _ (A.At r body)           -> valueKey r body
+    Can.LetRec _ (A.At r body)        -> valueKey r body
+    Can.LetDestruct _ _ (A.At r body) -> valueKey r body
+    _                                 -> exprKey region expr
 
 
 patKey :: A.Region -> Can.Pattern_ -> Key

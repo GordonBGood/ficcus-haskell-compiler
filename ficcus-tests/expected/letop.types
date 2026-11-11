@@ -1,0 +1,301 @@
+-- module LetOp: problems=0 instances=105 instance-failures=0 defaulted=0
+-- equality-uses: total=3 at-function=0
+module author/project:LetOp
+def localFun :: Int -> Int    [34:1-34:9]   id: author/project:LetOp.localFun   sig: Int -> Int   kinds:    group: author/project:LetOp.localFun nonrec ann
+  34:10-34:11 PVar x :: Int
+  35:5-35:81 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    35:5-35:7 Int :: Int
+    def go :: number -> number -> number    [35:15-35:17]   id: author/project:LetOp.go@35:15   sig: v0 -> v0 -> v0   kinds: v0:number   group: author/project:LetOp.go@35:15 rec inferred
+      35:18-35:19 PVar n :: number
+      35:20-35:23 PVar acc :: number
+      35:26-35:70 If :: number
+        35:29-35:35 Binop :: Bool   callee: elm/core:Basics.le   instance: comparable := number   sig#: 2cdc0786   subst: v0 := <<author/project:LetOp.go@35:15|v0>>
+          35:29-35:30 VarLocal :: number
+          35:34-35:35 Int :: number
+        35:41-35:44 VarLocal :: number
+        35:50-35:69 Call :: number
+          35:50-35:52 VarLocal :: number -> number -> number   callee: author/project:LetOp.go@35:15   use: rec   sig#: 08810ccc   subst: v0 := <<author/project:LetOp.go@35:15|v0>>
+          35:54-35:59 Binop :: number   callee: elm/core:Basics.sub   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:LetOp.go@35:15|v0>>
+            35:54-35:55 VarLocal :: number
+            35:58-35:59 Int :: number
+          35:62-35:69 Binop :: number   callee: elm/core:Basics.add   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:LetOp.go@35:15|v0>>
+            35:62-35:65 VarLocal :: number
+            35:68-35:69 VarLocal :: number
+    35:74-35:80 Call :: Int
+      35:74-35:76 VarLocal :: Int -> Int -> Int   callee: author/project:LetOp.go@35:15   use: gen   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      35:77-35:78 VarLocal :: Int
+      35:79-35:80 Int :: Int
+def destruct :: ( Int, Int ) -> Int    [39:1-39:9]   id: author/project:LetOp.destruct   sig: ( Int, Int ) -> Int   kinds:    group: author/project:LetOp.destruct nonrec ann
+  39:10-39:11 PVar t :: ( Int, Int )
+  40:5-40:38 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    40:5-40:8 Int :: Int
+    40:16-40:24 PPair :: ( Int, Int )
+      40:18-40:19 PVar a :: Int
+      40:21-40:22 PVar b :: Int
+    40:27-40:28 VarLocal :: ( Int, Int )
+    40:32-40:37 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      40:32-40:33 VarLocal :: Int
+      40:36-40:37 VarLocal :: Int
+def nested :: Int -> Int    [29:1-29:7]   id: author/project:LetOp.nested   sig: Int -> Int   kinds:    group: author/project:LetOp.nested nonrec ann
+  29:8-29:9 PVar x :: Int
+  30:5-30:46 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    30:5-30:6 Int :: Int
+    def a :: number    [30:14-30:15]   id: author/project:LetOp.a@30:14   sig: v0   kinds: v0:number   group: author/project:LetOp.a@30:14 nonrec inferred
+      30:18-30:19 Int :: number
+    def b :: Int    [30:27-30:28]   id: author/project:LetOp.b@30:27   sig: Int   kinds:    group: author/project:LetOp.b@30:27 nonrec inferred
+      30:31-30:36 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        30:31-30:32 VarLocal :: Int   callee: author/project:LetOp.a@30:14   use: gen   instance: number := Int   sig#: 005979ab   subst: v0 := Int
+        30:35-30:36 VarLocal :: Int
+    30:40-30:45 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      30:40-30:41 VarLocal :: Int   callee: author/project:LetOp.a@30:14   use: gen   instance: number := Int   sig#: 005979ab   subst: v0 := Int
+      30:44-30:45 VarLocal :: Int   callee: author/project:LetOp.b@30:27   use: gen
+def consed :: Int -> List Int    [59:1-59:7]   id: author/project:LetOp.consed   sig: Int -> List Int   kinds:    group: author/project:LetOp.consed nonrec ann
+  59:8-59:9 PVar x :: Int
+  60:5-60:41 Binop :: List Int   callee: elm/core:List.cons   instance: a := Int   sig#: ddd4c5f2   subst: v0 := Int
+    60:5-60:6 VarLocal :: Int
+    def r :: List Int    [60:15-60:16]   id: author/project:LetOp.r@60:15   sig: List Int   kinds:    group: author/project:LetOp.r@60:15 nonrec inferred
+      60:19-60:35 List :: List Int
+        60:21-60:26 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          60:21-60:22 VarLocal :: Int
+          60:25-60:26 Int :: Int
+        60:28-60:33 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          60:28-60:29 VarLocal :: Int
+          60:32-60:33 Int :: Int
+    60:39-60:40 VarLocal :: List Int   callee: author/project:LetOp.r@60:15   use: gen
+def right :: Int -> Int    [14:1-14:6]   id: author/project:LetOp.right   sig: Int -> Int   kinds:    group: author/project:LetOp.right nonrec ann
+  14:7-14:8 PVar x :: Int
+  15:5-15:29 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    15:5-15:6 Int :: Int
+    def v :: number    [15:14-15:15]   id: author/project:LetOp.v@15:14   sig: v0   kinds: v0:number   group: author/project:LetOp.v@15:14 nonrec inferred
+      15:18-15:19 Int :: number
+    15:23-15:28 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      15:23-15:24 VarLocal :: Int
+      15:27-15:28 VarLocal :: Int   callee: author/project:LetOp.v@15:14   use: gen   instance: number := Int   sig#: 005979ab   subst: v0 := Int
+def piped :: Int -> Int    [64:1-64:6]   id: author/project:LetOp.piped   sig: Int -> Int   kinds:    group: author/project:LetOp.piped nonrec ann
+  64:7-64:8 PVar x :: Int
+  65:5-65:47 Binop :: Int   callee: elm/core:Basics.apL   instance: a := Int, b := Int   sig#: fe268994   subst: v0 := Int, v1 := Int
+    def f :: Int -> Int    [65:10-65:11]   id: author/project:LetOp.f@65:10   sig: Int -> Int   kinds:    group: author/project:LetOp.f@65:10 nonrec inferred
+      65:12-65:13 PVar y :: Int
+      65:16-65:21 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        65:16-65:17 VarLocal :: Int
+        65:20-65:21 VarLocal :: Int
+    65:25-65:26 VarLocal :: Int -> Int   callee: author/project:LetOp.f@65:10   use: gen
+    def z :: number    [65:36-65:37]   id: author/project:LetOp.z@65:36   sig: v0   kinds: v0:number   group: author/project:LetOp.z@65:36 nonrec inferred
+      65:40-65:41 Int :: number
+    65:45-65:46 VarLocal :: Int   callee: author/project:LetOp.z@65:36   use: gen   instance: number := Int   sig#: 005979ab   subst: v0 := Int
+def field :: Int -> Int    [69:1-69:6]   id: author/project:LetOp.field   sig: Int -> Int   kinds:    group: author/project:LetOp.field nonrec ann
+  69:7-69:8 PVar x :: Int
+  70:5-70:71 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    70:5-70:42 Access :: Int
+      def r :: { a : Int, b : Int }    [70:10-70:11]   id: author/project:LetOp.r@70:10   sig: { a : Int, b : Int }   kinds:    group: author/project:LetOp.r@70:10 nonrec inferred
+        70:14-70:34 Record :: { a : Int, b : Int }
+          70:20-70:21 VarLocal :: Int
+          70:27-70:32 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            70:27-70:28 VarLocal :: Int
+            70:31-70:32 Int :: Int
+      70:38-70:39 VarLocal :: { a : Int, b : Int }   callee: author/project:LetOp.r@70:10   use: gen
+    70:45-70:71 Access :: Int
+      def q :: { a : Int }    [70:50-70:51]   id: author/project:LetOp.q@70:50   sig: { a : Int }   kinds:    group: author/project:LetOp.q@70:50 nonrec inferred
+        70:54-70:63 Record :: { a : Int }
+          70:60-70:61 VarLocal :: Int
+      70:67-70:68 VarLocal :: { a : Int }   callee: author/project:LetOp.q@70:50   use: gen
+def left :: Int -> Int    [19:1-19:5]   id: author/project:LetOp.left   sig: Int -> Int   kinds:    group: author/project:LetOp.left nonrec ann
+  19:6-19:7 PVar x :: Int
+  20:5-20:29 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    def v :: number    [20:10-20:11]   id: author/project:LetOp.v@20:10   sig: v0   kinds: v0:number   group: author/project:LetOp.v@20:10 nonrec inferred
+      20:14-20:15 Int :: number
+    20:19-20:24 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      20:19-20:20 VarLocal :: Int
+      20:23-20:24 VarLocal :: Int   callee: author/project:LetOp.v@20:10   use: gen   instance: number := Int   sig#: 005979ab   subst: v0 := Int
+    20:28-20:29 Int :: Int
+def both :: Int -> Int    [24:1-24:5]   id: author/project:LetOp.both   sig: Int -> Int   kinds:    group: author/project:LetOp.both nonrec ann
+  24:6-24:7 PVar x :: Int
+  25:5-25:48 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    def a :: Int    [25:10-25:11]   id: author/project:LetOp.a@25:10   sig: Int   kinds:    group: author/project:LetOp.a@25:10 nonrec inferred
+      25:14-25:19 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        25:14-25:15 VarLocal :: Int
+        25:18-25:19 Int :: Int
+    25:23-25:24 VarLocal :: Int   callee: author/project:LetOp.a@25:10   use: gen
+    def b :: Int    [25:33-25:34]   id: author/project:LetOp.b@25:33   sig: Int   kinds:    group: author/project:LetOp.b@25:33 nonrec inferred
+      25:37-25:42 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        25:37-25:38 VarLocal :: Int
+        25:41-25:42 Int :: Int
+    25:46-25:47 VarLocal :: Int   callee: author/project:LetOp.b@25:33   use: gen
+def str :: String -> String    [44:1-44:4]   id: author/project:LetOp.str   sig: String -> String   kinds:    group: author/project:LetOp.str nonrec ann
+  44:5-44:6 PVar s :: String
+  45:5-45:40 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    45:5-45:8 Str :: String
+    45:13-45:40 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      def t :: String    [45:17-45:18]   id: author/project:LetOp.t@45:17   sig: String   kinds:    group: author/project:LetOp.t@45:17 nonrec inferred
+        45:21-45:27 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+          45:21-45:22 VarLocal :: String
+          45:26-45:27 VarLocal :: String
+      45:31-45:32 VarLocal :: String   callee: author/project:LetOp.t@45:17   use: gen
+      45:37-45:40 Str :: String
+def flt :: Float -> Float    [49:1-49:4]   id: author/project:LetOp.flt   sig: Float -> Float   kinds:    group: author/project:LetOp.flt nonrec ann
+  49:5-49:6 PVar x :: Float
+  50:5-50:32 Binop :: Float   callee: elm/core:Basics.add   instance: number := Float   sig#: 08810ccc   subst: v0 := Float
+    def h :: Float    [50:10-50:11]   id: author/project:LetOp.h@50:10   sig: Float   kinds:    group: author/project:LetOp.h@50:10 nonrec inferred
+      50:14-50:19 Binop :: Float   callee: elm/core:Basics.fdiv
+        50:14-50:15 VarLocal :: Float
+        50:18-50:19 Int :: Float
+    50:23-50:24 VarLocal :: Float   callee: author/project:LetOp.h@50:10   use: gen
+    50:28-50:32 Float :: Float
+def cmp :: Int -> Bool    [54:1-54:4]   id: author/project:LetOp.cmp   sig: Int -> Bool   kinds:    group: author/project:LetOp.cmp nonrec ann
+  54:5-54:6 PVar x :: Int
+  55:5-55:62 Binop :: Bool   callee: elm/core:Basics.and
+    55:6-55:29 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      def y :: Int    [55:10-55:11]   id: author/project:LetOp.y@55:10   sig: Int   kinds:    group: author/project:LetOp.y@55:10 nonrec inferred
+        55:14-55:19 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          55:14-55:15 VarLocal :: Int
+          55:18-55:19 Int :: Int
+      55:23-55:24 VarLocal :: Int   callee: author/project:LetOp.y@55:10   use: gen
+      55:28-55:29 VarLocal :: Int
+    55:34-55:62 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := List Int   sig#: 2cdc0786   subst: v0 := List Int
+      def l :: List Int    [55:38-55:39]   id: author/project:LetOp.l@55:38   sig: List Int   kinds:    group: author/project:LetOp.l@55:38 nonrec inferred
+        55:42-55:47 List :: List Int
+          55:44-55:45 VarLocal :: Int
+      55:51-55:52 VarLocal :: List Int   callee: author/project:LetOp.l@55:38   use: gen
+      55:57-55:62 List :: List Int
+        55:59-55:60 VarLocal :: Int
+def mk :: Int -> { a : Int, b : Int }    [74:1-74:3]   id: author/project:LetOp.mk   sig: Int -> { a : Int, b : Int }   kinds:    group: author/project:LetOp.mk nonrec ann
+  74:4-74:5 PVar x :: Int
+  75:5-75:25 Record :: { a : Int, b : Int }
+    75:11-75:12 VarLocal :: Int
+    75:18-75:23 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      75:18-75:19 VarLocal :: Int
+      75:22-75:23 Int :: Int
+def viaCall :: Int -> Int    [80:1-80:8]   id: author/project:LetOp.viaCall   sig: Int -> Int   kinds:    group: author/project:LetOp.viaCall nonrec ann
+  80:9-80:10 PVar x :: Int
+  81:5-81:30 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    81:5-81:13 Access :: Int
+      81:6-81:10 Call :: { a : Int, b : Int }
+        81:6-81:8 VarTopLevel :: Int -> { a : Int, b : Int }   callee: author/project:LetOp.mk   use: gen
+        81:9-81:10 VarLocal :: Int
+    81:16-81:30 Access :: Int
+      81:17-81:26 Call :: { a : Int, b : Int }
+        81:17-81:19 VarTopLevel :: Int -> { a : Int, b : Int }   callee: author/project:LetOp.mk   use: gen
+        81:21-81:26 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          81:21-81:22 VarLocal :: Int
+          81:25-81:26 Int :: Int
+def p :: Int    [9:1-9:2]   id: author/project:LetOp.p   sig: Int   kinds:    group: author/project:LetOp.p nonrec ann
+  10:5-10:6 Int :: Int
+def main :: Program () () ()    [85:1-85:5]   id: author/project:LetOp.main   sig: Program () () ()   kinds:    group: author/project:LetOp.main nonrec ann
+  86:5-112:10 Call :: Program () () ()
+    86:5-86:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    87:9-112:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      88:13-109:37 Lambda :: () -> ( (), Cmd () )
+        88:14-88:15 PAnything :: ()
+        def l5 :: List Int    [102:21-102:23]   id: author/project:LetOp.l5@102:21   sig: List Int   kinds:    group: author/project:LetOp.l5@102:21 nonrec inferred
+          103:25-103:53 Call :: List Int
+            103:25-103:34 VarDebug :: String -> List Int -> List Int   callee: elm/core:Debug.log   instance: a := List Int   sig#: 6ecaa5dd   subst: v0 := List Int
+            103:35-103:43 Str :: String
+            103:45-103:53 Call :: List Int
+              103:45-103:51 VarTopLevel :: Int -> List Int   callee: author/project:LetOp.consed   use: gen
+              103:52-103:53 VarTopLevel :: Int   callee: author/project:LetOp.p   use: gen
+        def l4 :: Bool    [99:21-99:23]   id: author/project:LetOp.l4@99:21   sig: Bool   kinds:    group: author/project:LetOp.l4@99:21 nonrec inferred
+          100:25-100:47 Call :: Bool
+            100:25-100:34 VarDebug :: String -> Bool -> Bool   callee: elm/core:Debug.log   instance: a := Bool   sig#: 6ecaa5dd   subst: v0 := Bool
+            100:35-100:40 Str :: String
+            100:42-100:47 Call :: Bool
+              100:42-100:45 VarTopLevel :: Int -> Bool   callee: author/project:LetOp.cmp   use: gen
+              100:46-100:47 VarTopLevel :: Int   callee: author/project:LetOp.p   use: gen
+        def l3 :: Float    [96:21-96:23]   id: author/project:LetOp.l3@96:21   sig: Float   kinds:    group: author/project:LetOp.l3@96:21 nonrec inferred
+          97:25-97:47 Call :: Float
+            97:25-97:34 VarDebug :: String -> Float -> Float   callee: elm/core:Debug.log   instance: a := Float   sig#: 6ecaa5dd   subst: v0 := Float
+            97:35-97:40 Str :: String
+            97:42-97:47 Call :: Float
+              97:42-97:45 VarTopLevel :: Float -> Float   callee: author/project:LetOp.flt   use: gen
+              97:46-97:47 Int :: Float
+        def l2 :: String    [93:21-93:23]   id: author/project:LetOp.l2@93:21   sig: String   kinds:    group: author/project:LetOp.l2@93:21 nonrec inferred
+          94:25-94:50 Call :: String
+            94:25-94:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            94:35-94:40 Str :: String
+            94:42-94:50 Call :: String
+              94:42-94:45 VarTopLevel :: String -> String   callee: author/project:LetOp.str   use: gen
+              94:46-94:50 Str :: String
+        def l1 :: List Int    [90:21-90:23]   id: author/project:LetOp.l1@90:21   sig: List Int   kinds:    group: author/project:LetOp.l1@90:21 nonrec inferred
+          91:25-91:139 Call :: List Int
+            91:25-91:34 VarDebug :: String -> List Int -> List Int   callee: elm/core:Debug.log   instance: a := List Int   sig#: 6ecaa5dd   subst: v0 := List Int
+            91:35-91:41 Str :: String
+            91:42-91:139 List :: List Int
+              91:44-91:51 Call :: Int
+                91:44-91:49 VarTopLevel :: Int -> Int   callee: author/project:LetOp.right   use: gen
+                91:50-91:51 VarTopLevel :: Int   callee: author/project:LetOp.p   use: gen
+              91:53-91:59 Call :: Int
+                91:53-91:57 VarTopLevel :: Int -> Int   callee: author/project:LetOp.left   use: gen
+                91:58-91:59 VarTopLevel :: Int   callee: author/project:LetOp.p   use: gen
+              91:61-91:67 Call :: Int
+                91:61-91:65 VarTopLevel :: Int -> Int   callee: author/project:LetOp.both   use: gen
+                91:66-91:67 VarTopLevel :: Int   callee: author/project:LetOp.p   use: gen
+              91:69-91:77 Call :: Int
+                91:69-91:75 VarTopLevel :: Int -> Int   callee: author/project:LetOp.nested   use: gen
+                91:76-91:77 VarTopLevel :: Int   callee: author/project:LetOp.p   use: gen
+              91:79-91:89 Call :: Int
+                91:79-91:87 VarTopLevel :: Int -> Int   callee: author/project:LetOp.localFun   use: gen
+                91:88-91:89 VarTopLevel :: Int   callee: author/project:LetOp.p   use: gen
+              91:91-91:108 Call :: Int
+                91:91-91:99 VarTopLevel :: ( Int, Int ) -> Int   callee: author/project:LetOp.destruct   use: gen
+                91:100-91:108 Pair :: ( Int, Int )
+                  91:102-91:103 VarTopLevel :: Int   callee: author/project:LetOp.p   use: gen
+                  91:105-91:106 Int :: Int
+              91:110-91:117 Call :: Int
+                91:110-91:115 VarTopLevel :: Int -> Int   callee: author/project:LetOp.piped   use: gen
+                91:116-91:117 VarTopLevel :: Int   callee: author/project:LetOp.p   use: gen
+              91:119-91:126 Call :: Int
+                91:119-91:124 VarTopLevel :: Int -> Int   callee: author/project:LetOp.field   use: gen
+                91:125-91:126 VarTopLevel :: Int   callee: author/project:LetOp.p   use: gen
+              91:128-91:137 Call :: Int
+                91:128-91:135 VarTopLevel :: Int -> Int   callee: author/project:LetOp.viaCall   use: gen
+                91:136-91:137 VarTopLevel :: Int   callee: author/project:LetOp.p   use: gen
+        105:17-109:37 If :: ( (), Cmd () )
+          105:20-105:78 Binop :: Bool   callee: elm/core:Basics.and
+            105:20-105:38 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+              105:20-105:34 Call :: Int
+                105:20-105:31 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+                105:32-105:34 VarLocal :: List Int   callee: author/project:LetOp.l1@90:21   use: gen
+              105:37-105:38 Int :: Int
+            105:42-105:78 Binop :: Bool   callee: elm/core:Basics.and
+              105:42-105:50 Binop :: Bool   callee: elm/core:Basics.neq   instance: a := String   sig#: 2cdc0786   subst: v0 := String
+                105:42-105:44 VarLocal :: String   callee: author/project:LetOp.l2@93:21   use: gen
+                105:48-105:50 Str :: String
+              105:54-105:78 Binop :: Bool   callee: elm/core:Basics.and
+                105:54-105:60 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Float   sig#: 2cdc0786   subst: v0 := Float
+                  105:54-105:56 VarLocal :: Float   callee: author/project:LetOp.l3@96:21   use: gen
+                  105:59-105:60 Int :: Float
+                105:64-105:78 Binop :: Bool   callee: elm/core:Basics.and
+                  105:64-105:66 VarLocal :: Bool   callee: author/project:LetOp.l4@99:21   use: gen
+                  105:70-105:78 Binop :: Bool   callee: elm/core:Basics.neq   instance: a := List Int   sig#: 2cdc0786   subst: v0 := List Int
+                    105:70-105:72 VarLocal :: List Int   callee: author/project:LetOp.l5@102:21   use: gen
+                    105:76-105:78 List :: List Int
+          106:21-106:37 Pair :: ( (), Cmd () )
+            106:23-106:25 Unit :: ()
+            106:27-106:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          109:21-109:37 Pair :: ( (), Cmd () )
+            109:23-109:25 Unit :: ()
+            109:27-109:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      110:20-110:43 Lambda :: () -> () -> ( (), Cmd () )
+        110:21-110:22 PAnything :: ()
+        110:23-110:24 PVar m :: ()
+        110:28-110:43 Pair :: ( (), Cmd () )
+          110:30-110:31 VarLocal :: ()
+          110:33-110:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      111:27-111:41 Lambda :: () -> Sub ()
+        111:28-111:29 PAnything :: ()
+        111:33-111:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:LetOp.localFun   kind: function   reads:    needs: 
+init: 1   id: author/project:LetOp.destruct   kind: function   reads:    needs: 
+init: 2   id: author/project:LetOp.nested   kind: function   reads:    needs: 
+init: 3   id: author/project:LetOp.consed   kind: function   reads:    needs: 
+init: 4   id: author/project:LetOp.right   kind: function   reads:    needs: 
+init: 5   id: author/project:LetOp.piped   kind: function   reads:    needs: 
+init: 6   id: author/project:LetOp.field   kind: function   reads:    needs: 
+init: 7   id: author/project:LetOp.left   kind: function   reads:    needs: 
+init: 8   id: author/project:LetOp.both   kind: function   reads:    needs: 
+init: 9   id: author/project:LetOp.str   kind: function   reads:    needs: 
+init: 10   id: author/project:LetOp.flt   kind: function   reads:    needs: 
+init: 11   id: author/project:LetOp.cmp   kind: function   reads:    needs: 
+init: 12   id: author/project:LetOp.mk   kind: function   reads:    needs: 
+init: 13   id: author/project:LetOp.viaCall   kind: function   reads: author/project:LetOp.mk   needs: 
+init: 14   id: author/project:LetOp.p   kind: value   reads:    needs:    init-dep: no
+init: 15   id: author/project:LetOp.main   kind: value   reads: author/project:LetOp.localFun,author/project:LetOp.destruct,author/project:LetOp.nested,author/project:LetOp.consed,author/project:LetOp.right,author/project:LetOp.piped,author/project:LetOp.field,author/project:LetOp.left,author/project:LetOp.both,author/project:LetOp.str,author/project:LetOp.flt,author/project:LetOp.cmp,author/project:LetOp.viaCall,author/project:LetOp.p   needs: author/project:LetOp.p   init-dep: yes

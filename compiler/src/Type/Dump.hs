@@ -833,7 +833,7 @@ schemeOf ctx e raw =
 
     annotation (Can.Forall _ tipe) = canToTType tipe
 
-    nodeType (A.At r x) = Map.lookup (Recorder.exprKey r x) (_nodes (_typed ctx))
+    nodeType (A.At r x) = Map.lookup (Recorder.valueKey r x) (_nodes (_typed ctx))   -- valueKey: an operand may be a `let`
 
 
 -- a direct use of ==, /= or compare (Basics)

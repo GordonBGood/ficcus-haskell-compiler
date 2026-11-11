@@ -541,7 +541,7 @@ specExpr se (A.At region e) =
       do  cls <- exprClass se region e
           r'' <- specExpr se r
           enums <- gets sEnums
-          let fields = case nodeType se (Recorder.exprKey rregion r') of
+          let fields = case nodeType se (Recorder.valueKey rregion r') of
                 Just t -> map fst <$> rowFieldsT enums (seEnv se) t
                 Nothing -> Nothing
           case (fields, cls) of
@@ -559,7 +559,7 @@ specExpr se (A.At region e) =
       do  cls <- exprClass se region e
           r'' <- specExpr se r
           enums <- gets sEnums
-          let fields = case nodeType se (Recorder.exprKey rregion r') of
+          let fields = case nodeType se (Recorder.valueKey rregion r') of
                 Just t -> map fst <$> rowFieldsT enums (seEnv se) t
                 Nothing -> Nothing
           case fields >>= \fs -> lookup (N.toChars fld) (zip fs [0 :: Int ..]) of
