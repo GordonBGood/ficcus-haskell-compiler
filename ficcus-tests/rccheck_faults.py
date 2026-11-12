@@ -9,7 +9,10 @@ fraction F of the sites, fixed seed); the compiler must fail with a message that
 
 S4: the same for the reset/reuse operations (FICCUS_RC_MUTATE=rK): removal of a drop specialization (MSpec), of the token of one, of a
 reuse (MReuse) and of a token free (MFreeTok). There are few of them, so they are ALWAYS tested in full, also with --sample (the sample
-covers only the dup/drop sites; STAGE4-PLAN 14: sample 0.05, seed 1)."""
+covers only the dup/drop sites; STAGE4-PLAN 14: sample 0.05, seed 1).
+
+S6 (FICCUS_RC_MUTATE=sK), also always in full: a take whose index is changed (the placeholder it leaves could be seen) and an owning call
+of a function value turned into an ordinary call (the function is never consumed). The example `fbip` has them."""
 import argparse, os, random, subprocess, sys, shutil, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -41,19 +44,19 @@ def main():
             print("%-8s skipped: does not compile with --rc (%s)" % (name, text0.strip().splitlines()[0][:80])); continue
         rng = random.Random(a.seed)
         reuse_n = 0
-        for prefix in ("", "r"):
+        for prefix in ("", "r", "s"):
             n = 0
             while True:
                 if prefix == "" and a.sample < 1.0 and rng.random() >= a.sample: n += 1; continue
                 rc, text = compile_mutant(elm, a.elm_home, dst, mod, n, prefix)
-                if "there is no dup or drop number" in text or "there is no reset or reuse number" in text: break
+                if "there is no dup or drop number" in text or "there is no reset or reuse number" in text or "there is no S6 site number" in text: break
                 if rc != 0 and "rc check:" in text: caught += 1
                 else:
                     missed += 1; print("MISSED %s: removing %ssite %d was accepted (exit %d) %s" % (name, prefix, n, rc, text[-200:]))
-                if prefix == "r": reuse_n += 1
+                if prefix in ("r", "s"): reuse_n += 1
                 n += 1
         total += caught + missed; bad += missed
-        print("%-8s %d mutations (%d reset/reuse): %d caught, %d missed" % (name, caught + missed, reuse_n, caught, missed), flush=True)
+        print("%-8s %d mutations (%d reset/reuse/S6): %d caught, %d missed" % (name, caught + missed, reuse_n, caught, missed), flush=True)
         shutil.rmtree(work, ignore_errors=True)
     print("total %d mutations, %d missed" % (total, bad))
     return 1 if bad else 0

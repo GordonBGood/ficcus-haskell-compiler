@@ -9,7 +9,8 @@
 Program number N is made from random.Random(N) alone (fixed seeds: the same N is the same program for ever, as long as this file
 does not change). Each program has a fixed prelude (recursive functions on lists and trees, a pair builder, loops) and generated
 functions and outputs that use: let, case on lists, trees, tuples, Maybe and Result, closures and partial applications, records and
-record updates, self tail calls (loops), strings.
+record updates, self tail calls (loops), strings, and (S6) arrays and dictionaries: Array.set, push, append, slice, map on arrays with
+and without a tree, shared and not shared, Dict.insert, update, remove and union, partial applications that hold an array.
 
 For each program:
   1. the no-RC build (`elm make --no-rc`, gcc -O1) is run: its output is the oracle;
@@ -25,6 +26,9 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 SETTINGS = {"default": {}, "proj": {"FICCUS_BORROW_PROJ": "1"}, "reuse": {"FICCUS_BORROW_REUSE": "1"}, "s3rule": {"FICCUS_BORROW_S3": "1"}}
 
 PRELUDE = '''module Main exposing (main)
+
+import Array exposing (Array)
+import Dict exposing (Dict)
 
 
 type Tree
@@ -187,13 +191,77 @@ getXs r =
 szRec : Rec -> Int
 szRec r =
     r.a + String.length r.s + List.length r.xs
+
+
+-- S6: arrays and dictionaries (updates in place when the value is not shared)
+sumArr : Array Int -> Int
+sumArr a =
+    Array.foldl (+) (Array.length a) a
+
+
+szArrS : Array String -> Int
+szArrS a =
+    Array.foldl (\\s n -> n + String.length s + 1) 0 a
+
+
+szDct : Dict Int Int -> Int
+szDct d =
+    Dict.foldl (\\k v n -> n + k + v) (Dict.size d) d
+
+
+setAll : Int -> Array Int -> Array Int
+setAll i a =
+    if i <= 0 then
+        a
+
+    else
+        setAll (i - 1) (Array.set (modBy (1 + Array.length a) (i * 7)) i a)
+
+
+growArr : Int -> Array Int -> Array Int
+growArr i a =
+    if i <= 0 then
+        a
+
+    else
+        growArr (i - 1) (Array.push i a)
+
+
+fillD : Int -> Dict Int Int -> Dict Int Int
+fillD i d =
+    if i <= 0 then
+        d
+
+    else
+        fillD (i - 1) (Dict.insert (modBy 13 (i * 5)) i d)
+
+
+getAt : Array Int -> Int -> Int
+getAt a i =
+    Maybe.withDefault i (Array.get i a)
+
+
+putAt : Array Int -> Int -> Int -> Array Int
+putAt a i v =
+    Array.set i v a
+
+
+-- a function that is not known here gets its array: a partial application made at run time
+bindA : (Array Int -> Int -> Int -> Array Int) -> Array Int -> (Int -> Int -> Array Int)
+bindA g a =
+    g a
+
+
+callA : Int -> (Int -> Int -> Array Int) -> Array Int
+callA i f =
+    f i (i + 1)
 '''
 
-TYPES = ["Int", "Str", "Bool", "LInt", "LStr", "Tree", "MInt", "Res", "Pair", "Rec", "Fn"]
+TYPES = ["Int", "Str", "Bool", "LInt", "LStr", "Tree", "MInt", "Res", "Pair", "Rec", "Fn", "Arr", "ArrS", "Dct"]
 ELM = {"Int": "Int", "Str": "String", "Bool": "Bool", "LInt": "List Int", "LStr": "List String", "Tree": "Tree", "MInt": "Maybe Int",
-       "Res": "Result String Int", "Pair": "Pair", "Rec": "Rec", "Fn": "(Int -> Int)"}
+       "Res": "Result String Int", "Pair": "Pair", "Rec": "Rec", "Fn": "(Int -> Int)", "Arr": "Array Int", "ArrS": "Array String", "Dct": "Dict Int Int"}
 SIZE = {"Int": "%s", "Str": "String.length %s", "Bool": "szB %s", "LInt": "List.length %s", "LStr": "String.length (joinS %s)", "Tree": "treeSum %s",
-        "MInt": "szM %s", "Res": "szR %s", "Pair": "szP %s", "Rec": "szRec %s", "Fn": "%s 3"}
+        "MInt": "szM %s", "Res": "szR %s", "Pair": "szP %s", "Rec": "szRec %s", "Fn": "%s 3", "Arr": "sumArr %s", "ArrS": "szArrS %s", "Dct": "szDct %s"}
 
 
 class Gen:
@@ -226,6 +294,9 @@ class Gen:
         if t == "Pair": return r.choice(["( 1, [] )", "( 2, [ 5, 6 ] )"])
         if t == "Rec": return r.choice(['{ a = 1, s = "r", xs = [] }', '{ a = 4, s = "", xs = [ 1, 2 ] }'])
         if t == "Fn": return r.choice(["(add3 1 2)", "(\\\\w -> w + 1)".replace("\\\\", "\\")])
+        if t == "Arr": return r.choice(["Array.empty", "(Array.fromList [ 1, 2, 3 ])", "(Array.repeat 40 2)", "(Array.initialize 70 identity)"])
+        if t == "ArrS": return r.choice(["Array.empty", '(Array.fromList [ "a", "b" ])', '(Array.repeat 35 "s")'])
+        if t == "Dct": return r.choice(["Dict.empty", "(Dict.fromList [ ( 1, 2 ), ( 3, 4 ) ])", "(fillD 20 Dict.empty)"])
         raise ValueError(t)
 
     # an expression of type t; `ind` is the indentation of the line it starts on (continuation lines are indented more)
@@ -236,7 +307,12 @@ class Gen:
         k = r.random()
         if k < 0.34: return self.generic(t, env, d, ind)
         if t == "Int":
-            c = r.randint(0, 11)
+            c = r.randint(0, 16)
+            if c == 12: return "(sumArr %s)" % g("Arr")
+            if c == 13: return "(Maybe.withDefault 0 (Array.get (modBy 5 %s) %s))" % (g("Int"), g("Arr"))
+            if c == 14: return "(Dict.size %s)" % g("Dct")
+            if c == 15: return "(Maybe.withDefault 1 (Dict.get (modBy 9 %s) %s))" % (g("Int"), g("Dct"))
+            if c == 16: return "(szArrS %s)" % g("ArrS")
             if c == 0: return "(%s + %s)" % (g("Int"), g("Int"))
             if c == 1: return "(%s - %s)" % (g("Int"), g("Int"))
             if c == 2: return "(modBy 7 (%s * %s))" % (g("Int"), g("Int"))
@@ -252,7 +328,8 @@ class Gen:
             if c == 10: return "(add3 %s %s %s)" % (g("Int"), g("Int"), g("Int"))
             return "(szM %s)" % g("MInt")
         if t == "Str":
-            c = r.randint(0, 4)
+            c = r.randint(0, 5)
+            if c == 5: return "(Maybe.withDefault \"none\" (Array.get (modBy 3 %s) %s))" % (g("Int"), g("ArrS"))
             if c == 0: return "(%s ++ %s)" % (g("Str"), g("Str"))
             if c == 1: return "(String.fromInt %s)" % g("Int")
             if c == 2: return "(getS %s)" % g("Rec")
@@ -267,7 +344,10 @@ class Gen:
             if c == 4: return "(%s && %s)" % (g("Bool"), g("Bool"))
             return "(%s || List.isEmpty %s)" % (g("Bool"), g("LInt"))
         if t == "LInt":
-            c = r.randint(0, 11)
+            c = r.randint(0, 14)
+            if c == 12: return "(Array.toList %s)" % g("Arr")
+            if c == 13: return "(Dict.keys %s)" % g("Dct")
+            if c == 14: return "(Dict.values %s)" % g("Dct")
             if c == 0: return "(%s :: %s)" % (g("Int"), g("LInt"))
             if c == 1: return "[ %s, %s ]" % (g("Int"), g("Int"))
             if c == 2: return "(List.map %s %s)" % (g("Fn"), g("LInt"))
@@ -283,7 +363,8 @@ class Gen:
             if c == 10: return "(getXs %s)" % g("Rec")
             return "(inc (inc %s))" % g("LInt")
         if t == "LStr":
-            c = r.randint(0, 2)
+            c = r.randint(0, 3)
+            if c == 3: return "(Array.toList %s)" % g("ArrS")
             if c == 0: return "(%s :: %s)" % (g("Str"), g("LStr"))
             if c == 1: return "(List.map String.fromInt %s)" % g("LInt")
             return "[ %s, %s ]" % (g("Str"), g("Str"))
@@ -294,7 +375,9 @@ class Gen:
             if c == 2: return "(fromList %s)" % g("LInt")
             return "(insert %s (insert %s %s))" % (g("Int"), g("Int"), g("Tree"))
         if t == "MInt":
-            c = r.randint(0, 2)
+            c = r.randint(0, 4)
+            if c == 3: return "(Array.get (modBy 6 %s) %s)" % (g("Int"), g("Arr"))
+            if c == 4: return "(Dict.get %s %s)" % (g("Int"), g("Dct"))
             if c == 0: return "(Just %s)" % g("Int")
             if c == 1: return "(List.head %s)" % g("LInt")
             return "(Maybe.map %s %s)" % (g("Fn"), g("MInt"))
@@ -315,8 +398,37 @@ class Gen:
             elif c == 2: upd = lambda i: "{ %s | xs = %s, s = %s }" % (v, self.gen("LInt", e2, d - 1, i), self.gen("Str", e2, d - 1, i))
             else: upd = lambda i: "{ %s | s = %s ++ %s.s, a = %s.a + 1 }" % (v, self.gen("Str", env, d - 1, i), v, v)
             return self.let(v, "Rec", upd, env, d, ind)
+        if t == "Arr":
+            c = r.randint(0, 10)
+            if c == 0: return "(Array.set (modBy 4 %s) %s %s)" % (g("Int"), g("Int"), g("Arr"))
+            if c == 1: return "(Array.set (modBy 70 %s) %s %s)" % (g("Int"), g("Int"), g("Arr"))
+            if c == 2: return "(Array.push %s %s)" % (g("Int"), g("Arr"))
+            if c == 3: return "(Array.map %s %s)" % (g("Fn"), g("Arr"))
+            if c == 4: return "(Array.fromList %s)" % g("LInt")
+            if c == 5: return "(setAll (modBy 9 %s) %s)" % (g("Int"), g("Arr"))
+            if c == 6: return "(Array.append %s %s)" % (g("Arr"), g("Arr"))
+            if c == 7: return "(Array.slice 1 (modBy 50 %s) %s)" % (g("Int"), g("Arr"))
+            if c == 8: return "(growArr (modBy 40 %s) %s)" % (g("Int"), g("Arr"))
+            if c == 9: return "(callA (modBy 3 %s) (bindA putAt %s))" % (g("Int"), g("Arr"))
+            return "(Array.set 0 %s (Array.set 1 %s %s))" % (g("Int"), g("Int"), g("Arr"))
+        if t == "ArrS":
+            c = r.randint(0, 4)
+            if c == 0: return "(Array.set (modBy 3 %s) %s %s)" % (g("Int"), g("Str"), g("ArrS"))
+            if c == 1: return "(Array.set (modBy 40 %s) %s %s)" % (g("Int"), g("Str"), g("ArrS"))
+            if c == 2: return "(Array.push %s %s)" % (g("Str"), g("ArrS"))
+            if c == 3: return "(Array.map String.fromInt %s)" % g("Arr")
+            return "(Array.fromList %s)" % g("LStr")
+        if t == "Dct":
+            c = r.randint(0, 5)
+            if c == 0: return "(Dict.insert (modBy 9 %s) %s %s)" % (g("Int"), g("Int"), g("Dct"))
+            if c == 1: return "(Dict.remove (modBy 9 %s) %s)" % (g("Int"), g("Dct"))
+            if c == 2: return "(Dict.update (modBy 9 %s) (Maybe.map %s) %s)" % (g("Int"), g("Fn"), g("Dct"))
+            if c == 3: return "(fillD (modBy 30 %s) %s)" % (g("Int"), g("Dct"))
+            if c == 4: return "(Dict.union %s %s)" % (g("Dct"), g("Dct"))
+            return "(Dict.insert %s %s (Dict.insert %s %s %s))" % (g("Int"), g("Int"), g("Int"), g("Int"), g("Dct"))
         if t == "Fn":
-            c = r.randint(0, 3)
+            c = r.randint(0, 4)
+            if c == 4: return "(getAt %s)" % g("Arr")
             w = self.fresh()
             if c == 0: return "(\\%s -> %s)" % (w, self.gen("Int", env + [(w, "Int")], d - 1, ind + 8))
             if c == 1: return "(add3 %s %s)" % (g("Int"), g("Int"))

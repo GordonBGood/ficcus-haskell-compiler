@@ -3,6 +3,7 @@
 module Ficcus.Mono.Rc
   ( rcProgram
   , rcMutate
+  , rcMutateS6
   )
   where
 
@@ -734,4 +735,50 @@ rcMutate reuseOnly n program =
         MList xs -> MList <$> mapM mut xs
         MOwn b -> MOwn <$> mut b
         MUnpack s c bs b -> do { h <- hit False; b' <- mut b; return (if h then mNode b' else MUnpack s c bs b') }
+        other -> return other
+
+
+-- | S6 fault injection (`FICCUS_RC_MUTATE=sK`): the K-th S6 site is broken, and the checker must reject the program. The sites: a take
+-- (its index becomes a literal that no update uses, so the placeholder could be seen) and an owning call (it becomes an ordinary call,
+-- which does not consume the function value).
+rcMutateS6 :: Int -> MProgram -> Maybe MProgram
+rcMutateS6 n program =
+  let (clones', total) = runState (mapM mutDef (mpClones program)) 0
+  in if total > n then Just program { mpClones = clones' } else Nothing
+  where
+    hit :: State Int Bool
+    hit = do { k <- get; put (k + 1); return (k == n) }
+    mutDef d =
+      case mdBody d of
+        Nothing -> return d
+        Just b -> do { b' <- mut b; return d { mdBody = Just b' } }
+    mut :: MExpr -> State Int MExpr
+    mut e =
+      case mNode e of
+        MCall h [i, a] | MKernel name _ <- mNode h, name == takeKernel ->
+          do  broken <- hit
+              return (if broken then e { mNode = MCall h [i { mNode = MLit (LInt 4095) }, a] } else e)
+        MCall h (f : rest) | MKernel name _ <- mNode h, name == applyOwnKernel ->
+          do  broken <- hit
+              rest' <- mapM mut rest
+              return (if broken then e { mNode = MCall f rest' } else e { mNode = MCall h (f : rest') })
+        node -> do { node' <- kids node; return e { mNode = node' } }
+    kids node =
+      case node of
+        MCall f as -> do { f' <- mut f; as' <- mapM mut as; return (MCall f' as') }
+        MIf bs f -> do { bs' <- mapM (\(c, b) -> do { c' <- mut c; b' <- mut b; return (c', b') }) bs; f' <- mut f; return (MIf bs' f') }
+        MLetVal v x b -> do { x' <- mut x; b' <- mut b; return (MLetVal v x' b') }
+        MSeq a b -> do { a' <- mut a; b' <- mut b; return (MSeq a' b') }
+        MCase sc bs -> do { sc' <- mut sc; bs' <- mapM (\(pt, b) -> do { b' <- mut b; return (pt, b') }) bs; return (MCase sc' bs') }
+        MAccess r f i -> do { r' <- mut r; return (MAccess r' f i) }
+        MRecord fs -> do { fs' <- mapM (\(f, x) -> do { x' <- mut x; return (f, x') }) fs; return (MRecord fs') }
+        MTuple xs -> MTuple <$> mapM mut xs
+        MList xs -> MList <$> mapM mut xs
+        MDup vs b -> MDup vs <$> mut b
+        MDrop vs b -> MDrop vs <$> mut b
+        MOwn b -> MOwn <$> mut b
+        MUnpack sv c bs b -> MUnpack sv c bs <$> mut b
+        MSpec sv fcs bs mt b -> MSpec sv fcs bs mt <$> mut b
+        MReuse t b -> MReuse t <$> mut b
+        MFreeTok t b -> MFreeTok t <$> mut b
         other -> return other
