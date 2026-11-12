@@ -546,32 +546,40 @@ static fic_word fic_ap9(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_
    else holds (count 1) and this call completes it, the arguments it holds are MOVED to the function (no counts are touched, so a
    unique value held by the partial application is still unique in the function) and the partial application is freed before the
    call; otherwise f is called as by fic_ap<n> and dropped afterwards. */
+static fic_word fic_ap1_own(fic_ref f, uint32_t mask, fic_word a0);
+static fic_word fic_ap2_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1);
+static fic_word fic_ap3_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2);
+static fic_word fic_ap4_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3);
+static fic_word fic_ap5_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4);
+static fic_word fic_ap6_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4, fic_word a5);
+static fic_word fic_ap7_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4, fic_word a5, fic_word a6);
+static fic_word fic_ap8_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4, fic_word a5, fic_word a6, fic_word a7);
+static fic_word fic_ap9_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4, fic_word a5, fic_word a6, fic_word a7, fic_word a8);
+
 static fic_word fic_ap1_own(fic_ref f, uint32_t mask, fic_word a0) {
   fic_word r;
 #ifdef FIC_RC
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
-    const fic_code *c = FIC_CLO(g)->code;
-    if (c->arity == p->nargs + 1u) {
+    if (FIC_CLO(g)->code->arity == p->nargs + 1u) {
       fic_word s[8];
       unsigned i, j = p->nargs;
+      uint32_t m = p->mask | (mask << j);
       for (i = 0; i < j; i++) s[i] = p->args[i];
-      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      fic_free_obj(f);                          /* the shell only: its count on the function and on the arguments passes on */
       FIC_STAT(fic_n_pap_steal++);
-      switch (j) {
-      case 1u: r = ((fic_fn2)c->fn)(g, s[0], a0); break;
-      case 2u: r = ((fic_fn3)c->fn)(g, s[0], s[1], a0); break;
-      case 3u: r = ((fic_fn4)c->fn)(g, s[0], s[1], s[2], a0); break;
-      case 4u: r = ((fic_fn5)c->fn)(g, s[0], s[1], s[2], s[3], a0); break;
-      case 5u: r = ((fic_fn6)c->fn)(g, s[0], s[1], s[2], s[3], s[4], a0); break;
-      case 6u: r = ((fic_fn7)c->fn)(g, s[0], s[1], s[2], s[3], s[4], s[5], a0); break;
-      case 7u: r = ((fic_fn8)c->fn)(g, s[0], s[1], s[2], s[3], s[4], s[5], s[6], a0); break;
-      case 8u: r = ((fic_fn9)c->fn)(g, s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], a0); break;
+      switch (j) {                              /* the function is consumed in turn: it may be a unique partial application itself */
+      case 1u: return fic_ap2_own(g, m, s[0], a0);
+      case 2u: return fic_ap3_own(g, m, s[0], s[1], a0);
+      case 3u: return fic_ap4_own(g, m, s[0], s[1], s[2], a0);
+      case 4u: return fic_ap5_own(g, m, s[0], s[1], s[2], s[3], a0);
+      case 5u: return fic_ap6_own(g, m, s[0], s[1], s[2], s[3], s[4], a0);
+      case 6u: return fic_ap7_own(g, m, s[0], s[1], s[2], s[3], s[4], s[5], a0);
+      case 7u: return fic_ap8_own(g, m, s[0], s[1], s[2], s[3], s[4], s[5], s[6], a0);
+      case 8u: return fic_ap9_own(g, m, s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], a0);
       default: abort();
       }
-      fic_drop(g);
-      return r;
     }
   }
 #endif
@@ -586,25 +594,23 @@ static fic_word fic_ap2_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1) 
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
-    const fic_code *c = FIC_CLO(g)->code;
-    if (c->arity == p->nargs + 2u) {
+    if (FIC_CLO(g)->code->arity == p->nargs + 2u) {
       fic_word s[7];
       unsigned i, j = p->nargs;
+      uint32_t m = p->mask | (mask << j);
       for (i = 0; i < j; i++) s[i] = p->args[i];
-      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      fic_free_obj(f);                          /* the shell only: its count on the function and on the arguments passes on */
       FIC_STAT(fic_n_pap_steal++);
-      switch (j) {
-      case 1u: r = ((fic_fn3)c->fn)(g, s[0], a0, a1); break;
-      case 2u: r = ((fic_fn4)c->fn)(g, s[0], s[1], a0, a1); break;
-      case 3u: r = ((fic_fn5)c->fn)(g, s[0], s[1], s[2], a0, a1); break;
-      case 4u: r = ((fic_fn6)c->fn)(g, s[0], s[1], s[2], s[3], a0, a1); break;
-      case 5u: r = ((fic_fn7)c->fn)(g, s[0], s[1], s[2], s[3], s[4], a0, a1); break;
-      case 6u: r = ((fic_fn8)c->fn)(g, s[0], s[1], s[2], s[3], s[4], s[5], a0, a1); break;
-      case 7u: r = ((fic_fn9)c->fn)(g, s[0], s[1], s[2], s[3], s[4], s[5], s[6], a0, a1); break;
+      switch (j) {                              /* the function is consumed in turn: it may be a unique partial application itself */
+      case 1u: return fic_ap3_own(g, m, s[0], a0, a1);
+      case 2u: return fic_ap4_own(g, m, s[0], s[1], a0, a1);
+      case 3u: return fic_ap5_own(g, m, s[0], s[1], s[2], a0, a1);
+      case 4u: return fic_ap6_own(g, m, s[0], s[1], s[2], s[3], a0, a1);
+      case 5u: return fic_ap7_own(g, m, s[0], s[1], s[2], s[3], s[4], a0, a1);
+      case 6u: return fic_ap8_own(g, m, s[0], s[1], s[2], s[3], s[4], s[5], a0, a1);
+      case 7u: return fic_ap9_own(g, m, s[0], s[1], s[2], s[3], s[4], s[5], s[6], a0, a1);
       default: abort();
       }
-      fic_drop(g);
-      return r;
     }
   }
 #endif
@@ -619,24 +625,22 @@ static fic_word fic_ap3_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, 
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
-    const fic_code *c = FIC_CLO(g)->code;
-    if (c->arity == p->nargs + 3u) {
+    if (FIC_CLO(g)->code->arity == p->nargs + 3u) {
       fic_word s[6];
       unsigned i, j = p->nargs;
+      uint32_t m = p->mask | (mask << j);
       for (i = 0; i < j; i++) s[i] = p->args[i];
-      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      fic_free_obj(f);                          /* the shell only: its count on the function and on the arguments passes on */
       FIC_STAT(fic_n_pap_steal++);
-      switch (j) {
-      case 1u: r = ((fic_fn4)c->fn)(g, s[0], a0, a1, a2); break;
-      case 2u: r = ((fic_fn5)c->fn)(g, s[0], s[1], a0, a1, a2); break;
-      case 3u: r = ((fic_fn6)c->fn)(g, s[0], s[1], s[2], a0, a1, a2); break;
-      case 4u: r = ((fic_fn7)c->fn)(g, s[0], s[1], s[2], s[3], a0, a1, a2); break;
-      case 5u: r = ((fic_fn8)c->fn)(g, s[0], s[1], s[2], s[3], s[4], a0, a1, a2); break;
-      case 6u: r = ((fic_fn9)c->fn)(g, s[0], s[1], s[2], s[3], s[4], s[5], a0, a1, a2); break;
+      switch (j) {                              /* the function is consumed in turn: it may be a unique partial application itself */
+      case 1u: return fic_ap4_own(g, m, s[0], a0, a1, a2);
+      case 2u: return fic_ap5_own(g, m, s[0], s[1], a0, a1, a2);
+      case 3u: return fic_ap6_own(g, m, s[0], s[1], s[2], a0, a1, a2);
+      case 4u: return fic_ap7_own(g, m, s[0], s[1], s[2], s[3], a0, a1, a2);
+      case 5u: return fic_ap8_own(g, m, s[0], s[1], s[2], s[3], s[4], a0, a1, a2);
+      case 6u: return fic_ap9_own(g, m, s[0], s[1], s[2], s[3], s[4], s[5], a0, a1, a2);
       default: abort();
       }
-      fic_drop(g);
-      return r;
     }
   }
 #endif
@@ -651,23 +655,21 @@ static fic_word fic_ap4_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, 
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
-    const fic_code *c = FIC_CLO(g)->code;
-    if (c->arity == p->nargs + 4u) {
+    if (FIC_CLO(g)->code->arity == p->nargs + 4u) {
       fic_word s[5];
       unsigned i, j = p->nargs;
+      uint32_t m = p->mask | (mask << j);
       for (i = 0; i < j; i++) s[i] = p->args[i];
-      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      fic_free_obj(f);                          /* the shell only: its count on the function and on the arguments passes on */
       FIC_STAT(fic_n_pap_steal++);
-      switch (j) {
-      case 1u: r = ((fic_fn5)c->fn)(g, s[0], a0, a1, a2, a3); break;
-      case 2u: r = ((fic_fn6)c->fn)(g, s[0], s[1], a0, a1, a2, a3); break;
-      case 3u: r = ((fic_fn7)c->fn)(g, s[0], s[1], s[2], a0, a1, a2, a3); break;
-      case 4u: r = ((fic_fn8)c->fn)(g, s[0], s[1], s[2], s[3], a0, a1, a2, a3); break;
-      case 5u: r = ((fic_fn9)c->fn)(g, s[0], s[1], s[2], s[3], s[4], a0, a1, a2, a3); break;
+      switch (j) {                              /* the function is consumed in turn: it may be a unique partial application itself */
+      case 1u: return fic_ap5_own(g, m, s[0], a0, a1, a2, a3);
+      case 2u: return fic_ap6_own(g, m, s[0], s[1], a0, a1, a2, a3);
+      case 3u: return fic_ap7_own(g, m, s[0], s[1], s[2], a0, a1, a2, a3);
+      case 4u: return fic_ap8_own(g, m, s[0], s[1], s[2], s[3], a0, a1, a2, a3);
+      case 5u: return fic_ap9_own(g, m, s[0], s[1], s[2], s[3], s[4], a0, a1, a2, a3);
       default: abort();
       }
-      fic_drop(g);
-      return r;
     }
   }
 #endif
@@ -682,22 +684,20 @@ static fic_word fic_ap5_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, 
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
-    const fic_code *c = FIC_CLO(g)->code;
-    if (c->arity == p->nargs + 5u) {
+    if (FIC_CLO(g)->code->arity == p->nargs + 5u) {
       fic_word s[4];
       unsigned i, j = p->nargs;
+      uint32_t m = p->mask | (mask << j);
       for (i = 0; i < j; i++) s[i] = p->args[i];
-      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      fic_free_obj(f);                          /* the shell only: its count on the function and on the arguments passes on */
       FIC_STAT(fic_n_pap_steal++);
-      switch (j) {
-      case 1u: r = ((fic_fn6)c->fn)(g, s[0], a0, a1, a2, a3, a4); break;
-      case 2u: r = ((fic_fn7)c->fn)(g, s[0], s[1], a0, a1, a2, a3, a4); break;
-      case 3u: r = ((fic_fn8)c->fn)(g, s[0], s[1], s[2], a0, a1, a2, a3, a4); break;
-      case 4u: r = ((fic_fn9)c->fn)(g, s[0], s[1], s[2], s[3], a0, a1, a2, a3, a4); break;
+      switch (j) {                              /* the function is consumed in turn: it may be a unique partial application itself */
+      case 1u: return fic_ap6_own(g, m, s[0], a0, a1, a2, a3, a4);
+      case 2u: return fic_ap7_own(g, m, s[0], s[1], a0, a1, a2, a3, a4);
+      case 3u: return fic_ap8_own(g, m, s[0], s[1], s[2], a0, a1, a2, a3, a4);
+      case 4u: return fic_ap9_own(g, m, s[0], s[1], s[2], s[3], a0, a1, a2, a3, a4);
       default: abort();
       }
-      fic_drop(g);
-      return r;
     }
   }
 #endif
@@ -712,21 +712,19 @@ static fic_word fic_ap6_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, 
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
-    const fic_code *c = FIC_CLO(g)->code;
-    if (c->arity == p->nargs + 6u) {
+    if (FIC_CLO(g)->code->arity == p->nargs + 6u) {
       fic_word s[3];
       unsigned i, j = p->nargs;
+      uint32_t m = p->mask | (mask << j);
       for (i = 0; i < j; i++) s[i] = p->args[i];
-      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      fic_free_obj(f);                          /* the shell only: its count on the function and on the arguments passes on */
       FIC_STAT(fic_n_pap_steal++);
-      switch (j) {
-      case 1u: r = ((fic_fn7)c->fn)(g, s[0], a0, a1, a2, a3, a4, a5); break;
-      case 2u: r = ((fic_fn8)c->fn)(g, s[0], s[1], a0, a1, a2, a3, a4, a5); break;
-      case 3u: r = ((fic_fn9)c->fn)(g, s[0], s[1], s[2], a0, a1, a2, a3, a4, a5); break;
+      switch (j) {                              /* the function is consumed in turn: it may be a unique partial application itself */
+      case 1u: return fic_ap7_own(g, m, s[0], a0, a1, a2, a3, a4, a5);
+      case 2u: return fic_ap8_own(g, m, s[0], s[1], a0, a1, a2, a3, a4, a5);
+      case 3u: return fic_ap9_own(g, m, s[0], s[1], s[2], a0, a1, a2, a3, a4, a5);
       default: abort();
       }
-      fic_drop(g);
-      return r;
     }
   }
 #endif
@@ -741,20 +739,18 @@ static fic_word fic_ap7_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, 
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
-    const fic_code *c = FIC_CLO(g)->code;
-    if (c->arity == p->nargs + 7u) {
+    if (FIC_CLO(g)->code->arity == p->nargs + 7u) {
       fic_word s[2];
       unsigned i, j = p->nargs;
+      uint32_t m = p->mask | (mask << j);
       for (i = 0; i < j; i++) s[i] = p->args[i];
-      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      fic_free_obj(f);                          /* the shell only: its count on the function and on the arguments passes on */
       FIC_STAT(fic_n_pap_steal++);
-      switch (j) {
-      case 1u: r = ((fic_fn8)c->fn)(g, s[0], a0, a1, a2, a3, a4, a5, a6); break;
-      case 2u: r = ((fic_fn9)c->fn)(g, s[0], s[1], a0, a1, a2, a3, a4, a5, a6); break;
+      switch (j) {                              /* the function is consumed in turn: it may be a unique partial application itself */
+      case 1u: return fic_ap8_own(g, m, s[0], a0, a1, a2, a3, a4, a5, a6);
+      case 2u: return fic_ap9_own(g, m, s[0], s[1], a0, a1, a2, a3, a4, a5, a6);
       default: abort();
       }
-      fic_drop(g);
-      return r;
     }
   }
 #endif
@@ -769,19 +765,17 @@ static fic_word fic_ap8_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, 
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
-    const fic_code *c = FIC_CLO(g)->code;
-    if (c->arity == p->nargs + 8u) {
+    if (FIC_CLO(g)->code->arity == p->nargs + 8u) {
       fic_word s[1];
       unsigned i, j = p->nargs;
+      uint32_t m = p->mask | (mask << j);
       for (i = 0; i < j; i++) s[i] = p->args[i];
-      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      fic_free_obj(f);                          /* the shell only: its count on the function and on the arguments passes on */
       FIC_STAT(fic_n_pap_steal++);
-      switch (j) {
-      case 1u: r = ((fic_fn9)c->fn)(g, s[0], a0, a1, a2, a3, a4, a5, a6, a7); break;
+      switch (j) {                              /* the function is consumed in turn: it may be a unique partial application itself */
+      case 1u: return fic_ap9_own(g, m, s[0], a0, a1, a2, a3, a4, a5, a6, a7);
       default: abort();
       }
-      fic_drop(g);
-      return r;
     }
   }
 #endif

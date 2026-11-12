@@ -1,0 +1,360 @@
+module Fbip exposing (main)
+
+import Array exposing (Array)
+import Dict exposing (Dict)
+
+-- S6 (docs/STAGE4-S6.md): updates in place. Every update below is done once on a value that nobody else holds (in place when
+-- counted) and once on a value that is still used afterwards (it must be copied: the old value is printed after the update).
+-- Arrays of every depth of the Array tree (tail only, one, two and three levels), of Int, String, custom type and record elements;
+-- Array.push; a top level array; an array inside a custom type and a record; arrays of arrays; partial applications that hold an
+-- array (called once, called twice); Dict.insert, update and remove. The output must equal Elm's (expected/fbip.out).
+
+
+type Shape
+    = Dot
+    | Line Int
+    | Box Int Int
+
+
+type Wrap
+    = Wrap Int (Array Int)
+
+
+type alias Rec =
+    { n : Int, arr : Array String }
+
+
+shape : Shape -> String
+shape s =
+    case s of
+        Dot ->
+            "."
+
+        Line n ->
+            "-" ++ String.fromInt n
+
+        Box w h ->
+            "#" ++ String.fromInt w ++ "x" ++ String.fromInt h
+
+
+-- (an Array Int: a `let` of `Array.repeat 5 0` would have the type `Array number`)
+rep : Int -> Int -> Array Int
+rep n x =
+    Array.repeat n x
+
+
+seen : a -> Int
+seen _ =
+    1
+
+
+sumA : Array Int -> Int
+sumA a =
+    Array.foldl (+) 0 a
+
+
+-- length, sum, a checksum that depends on the order
+sig : Array Int -> ( Int, Int, Int )
+sig a =
+    ( Array.length a, sumA a, Array.foldl (\x acc -> modBy 1000003 (acc * 31 + x)) 7 a )
+
+
+sigS : Array String -> ( Int, String )
+sigS a =
+    ( Array.length a, Array.foldl (\x acc -> String.right 12 (acc ++ x)) "" a )
+
+
+fill : Int -> Int -> Int -> Array Int -> Array Int
+fill i n step a =
+    if i >= n then
+        a
+
+    else
+        fill (i + 1) n step (Array.set (modBy (Array.length a) (i * step)) i a)
+
+
+fillS : Int -> Int -> Array String -> Array String
+fillS i n a =
+    if i >= n then
+        a
+
+    else
+        fillS (i + 1) n (Array.set (modBy (Array.length a) (i * 13)) ("s" ++ String.fromInt i) a)
+
+
+grow : Int -> Int -> Array Int -> Array Int
+grow i n a =
+    if i >= n then
+        a
+
+    else
+        grow (i + 1) n (Array.push (i * 3) a)
+
+
+growS : Int -> Int -> Array String -> Array String
+growS i n a =
+    if i >= n then
+        a
+
+    else
+        growS (i + 1) n (Array.push (String.fromInt i) a)
+
+
+-- the old array is used after every update: each one copies
+keepAll : Int -> Int -> Array Int -> Int -> Int
+keepAll i n a acc =
+    if i >= n then
+        acc + sumA a
+
+    else
+        let
+            b =
+                Array.set (modBy (Array.length a) i) (i + 1000) a
+        in
+        keepAll (i + 1) n b (acc + sumA a)
+
+
+constant : Array Int
+constant =
+    Array.initialize 40 (\i -> i * i)
+
+
+stepWrap : Int -> Wrap -> Wrap
+stepWrap i (Wrap n a) =
+    Wrap (n + 1) (Array.set (modBy 7 i) i a)
+
+
+loopWrap : Int -> Int -> Wrap -> Wrap
+loopWrap i n w =
+    if i >= n then
+        w
+
+    else
+        loopWrap (i + 1) n (stepWrap i w)
+
+
+stepRec : Int -> Rec -> Rec
+stepRec i r =
+    { n = r.n + i, arr = Array.set (modBy 5 i) (String.fromInt i) r.arr }
+
+
+loopRec : Int -> Int -> Rec -> Rec
+loopRec i n r =
+    if i >= n then
+        r
+
+    else
+        loopRec (i + 1) n (stepRec i r)
+
+
+setCell : Int -> Int -> Int -> Array (Array Int) -> Array (Array Int)
+setCell row col v grid =
+    case Array.get row grid of
+        Just line ->
+            Array.set row (Array.set col v line) grid
+
+        Nothing ->
+            grid
+
+
+loopGrid : Int -> Int -> Array (Array Int) -> Array (Array Int)
+loopGrid i n g =
+    if i >= n then
+        g
+
+    else
+        loopGrid (i + 1) n (setCell (modBy 6 i) (modBy 9 (i * 5)) i g)
+
+
+put : Array Int -> Int -> Int -> Array Int
+put a i v =
+    Array.set i v a
+
+
+-- a function that is not known here gets its first argument: a partial application made at run time
+bind : (Array Int -> Int -> Int -> Array Int) -> Array Int -> (Int -> Int -> Array Int)
+bind g a =
+    g a
+
+
+callOnce : Int -> (Int -> Int -> Array Int) -> Array Int
+callOnce i f =
+    f (modBy 20 i) i
+
+
+callTwice : Int -> (Int -> Int -> Array Int) -> ( Array Int, Array Int )
+callTwice i f =
+    ( f 0 i, f 1 (i + 1) )
+
+
+loopPap : Int -> Int -> Array Int -> Array Int
+loopPap i n a =
+    if i >= n then
+        a
+
+    else
+        loopPap (i + 1) n (callOnce i (bind put a))
+
+
+addAll : List Int -> (Int -> Int) -> List Int
+addAll xs f =
+    List.map f xs
+
+
+fillD : Int -> Int -> Dict Int Int -> Dict Int Int
+fillD i n d =
+    if i >= n then
+        d
+
+    else
+        fillD (i + 1) n (Dict.insert (modBy 97 (i * 31)) i d)
+
+
+bumpD : Int -> Int -> Dict Int Int -> Dict Int Int
+bumpD i n d =
+    if i >= n then
+        d
+
+    else
+        bumpD (i + 1) n (Dict.update (modBy 120 (i * 7)) (\m -> Just (Maybe.withDefault 0 m + i)) d)
+
+
+dropD : Int -> Int -> Dict Int Int -> Dict Int Int
+dropD i n d =
+    if i >= n then
+        d
+
+    else
+        dropD (i + 2) n (Dict.remove i d)
+
+
+sigD : Dict Int Int -> ( Int, Int, Int )
+sigD d =
+    ( Dict.size d, Dict.foldl (\k v acc -> acc + k * v) 0 d, Dict.foldr (\k v acc -> modBy 1000003 (acc * 7 + k + v)) 1 d )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    small =
+                        rep 5 0
+
+                    a1 =
+                        Debug.log "tail unique" (sig (fill 0 300 3 (Array.repeat 20 0)))
+
+                    a2 =
+                        Debug.log "tail shared" ( sig (fill 0 7 2 small), sig small, Array.toList (Array.set 9 1 small) )
+
+                    a3 =
+                        Debug.log "one level" (sig (fill 0 3000 7 (Array.repeat 700 1)))
+
+                    a4 =
+                        Debug.log "two levels" (sig (fill 0 9000 37 (Array.initialize 5000 identity)))
+
+                    deep =
+                        Array.initialize 40000 (\i -> modBy 100 i)
+
+                    a5 =
+                        Debug.log "three levels" ( sig (fill 0 20000 977 (Array.initialize 40000 (\i -> modBy 100 i))), sig (fill 0 500 977 deep), sig deep )
+
+                    a6 =
+                        Debug.log "keep all" ( keepAll 0 50 (Array.repeat 8 1) 0, keepAll 0 20 (Array.repeat 100 2) 0 )
+
+                    strs =
+                        Array.initialize 1100 (\i -> "e" ++ String.fromInt i)
+
+                    a7 =
+                        Debug.log "strings" ( sigS (fillS 0 4000 (Array.initialize 1100 (\i -> "e" ++ String.fromInt i))), sigS (fillS 0 30 strs), sigS strs )
+
+                    shapes =
+                        Array.fromList [ Dot, Line 1, Box 2 3, Dot ]
+
+                    a8 =
+                        Debug.log "shapes"
+                            ( List.map shape (Array.toList (Array.set 0 (Box 9 9) (Array.set 3 (Line 7) (Array.fromList [ Dot, Line 1, Box 2 3, Dot ]))))
+                            , List.map shape (Array.toList (Array.set 1 Dot shapes))
+                            , List.map shape (Array.toList shapes)
+                            )
+
+                    pairs =
+                        Array.initialize 40 (\i -> ( i, String.fromInt i ))
+
+                    a9 =
+                        Debug.log "pairs" ( Array.get 35 (Array.set 35 ( -1, "x" ) pairs), Array.get 35 pairs, Array.get 3 (Array.set 3 ( 0, "y" ) (Array.initialize 4 (\i -> ( i, "p" )))) )
+
+                    b1 =
+                        Debug.log "push unique" ( sig (grow 0 5000 Array.empty), sigS (growS 0 1500 Array.empty) )
+
+                    base =
+                        grow 0 70 Array.empty
+
+                    b2 =
+                        Debug.log "push shared" ( sig (grow 0 40 base), sig (Array.push 1 base), sig base )
+
+                    b3 =
+                        Debug.log "constant" ( sig (fill 0 100 3 constant), sig (Array.push 5 constant), sig constant )
+
+                    w0 =
+                        Wrap 0 (Array.repeat 7 0)
+
+                    b4 =
+                        Debug.log "wrap"
+                            ( case loopWrap 0 1000 (Wrap 0 (Array.repeat 7 0)) of
+                                Wrap n a ->
+                                    ( n, Array.toList a )
+                            , case ( stepWrap 3 w0, w0 ) of
+                                ( Wrap n a, Wrap m b ) ->
+                                    ( n, Array.toList a, ( m, Array.toList b ) )
+                            )
+
+                    r0 =
+                        { n = 0, arr = Array.repeat 5 "-" }
+
+                    b5 =
+                        Debug.log "record" ( (loopRec 0 500 { n = 0, arr = Array.repeat 5 "-" }).arr |> Array.toList, (stepRec 2 r0).arr |> Array.toList, Array.toList r0.arr )
+
+                    grid =
+                        Array.repeat 6 (rep 9 0)
+
+                    b6 =
+                        Debug.log "grid" ( Array.toList (Array.map sumA (loopGrid 0 2000 (Array.initialize 6 (\_ -> Array.repeat 9 0)))), Array.toList (Array.map sumA (loopGrid 0 30 grid)), Array.toList (Array.map sumA grid) )
+
+                    held =
+                        rep 20 0
+
+                    twice =
+                        callTwice 5 (bind put held)
+
+                    b7 =
+                        Debug.log "pap" ( sig (loopPap 0 5000 (Array.repeat 20 0)), ( Array.toList (Tuple.first twice), Array.toList (Tuple.second twice) ), sig held )
+
+                    add =
+                        (+)
+
+                    b8 =
+                        Debug.log "pap scalars" ( addAll [ 1, 2, 3 ] (add 10), callOnce 3 (bind put (Array.repeat 20 7)) |> sumA )
+
+                    d0 =
+                        fillD 0 60 Dict.empty
+
+                    c1 =
+                        Debug.log "dict insert" ( sigD (fillD 0 5000 Dict.empty), sigD (fillD 60 90 d0), sigD d0 )
+
+                    c2 =
+                        Debug.log "dict update" ( sigD (bumpD 0 3000 (fillD 0 200 Dict.empty)), sigD (bumpD 0 10 d0), sigD d0 )
+
+                    c3 =
+                        Debug.log "dict remove" ( sigD (dropD 0 97 (fillD 0 400 Dict.empty)), sigD (dropD 1 50 d0), sigD d0 )
+                in
+                -- (every value is used: the C compilers warn about a variable that is not)
+                if seen a1 + seen a2 + seen a3 + seen a4 + seen a5 + seen a6 + seen a7 + seen a8 + seen a9 + seen b1 + seen b2 + seen b3 + seen b4 + seen b5 + seen b6 + seen b7 + seen b8 + seen c1 + seen c2 + seen c3 > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

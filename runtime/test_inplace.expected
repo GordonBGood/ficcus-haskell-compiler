@@ -1,0 +1,32 @@
+FIC_STATS: allocs 30 live 0 peak 8 dup 20 drop 26 free_slow 13 reuse_hit 0 reuse_miss 0 inplace 12 copied 9 pap_steal 4
+ok   push on a unique array: 6 elements, capacity 8
+ok   set on a unique array is in place
+ok   set on a shared array copies
+ok   push on a shared array copies
+ok   set out of range changes nothing
+ok   raw arrays: nothing is live
+ok   set in place drops the old element
+ok   the copy of a shared array counts the elements it shares
+ok   after the copy is dropped the elements are unique again
+ok   take from a unique array moves the element out
+ok   the set after the take puts it back in place
+ok   an array with a placeholder can be dropped
+ok   reference arrays: nothing is live
+ok   take from a shared array gives a counted copy
+ok   the set after it copies the array
+ok   shared take: nothing is live
+ok   a partial application holds the argument
+     add3: the count of the boxed argument is 1
+ok   unique: the result, one steal (the count printed above is 1)
+ok   unique: nothing is live
+     add3: the count of the boxed argument is 2
+ok   shared: the result, no steal (the count printed above is 2)
+     add3: the count of the boxed argument is 1
+ok   then unique: stolen
+     add3: the count of the boxed argument is 1
+ok   a static closure is called and stays
+ok   one more argument: a partial application of the partial application
+     add3: the count of the boxed argument is 1
+ok   completed through both, both stolen (the count printed above is 1)
+ok   closures: nothing is live
+0 failure(s)

@@ -8,8 +8,9 @@ tmp=${TMPDIR:-/tmp}
 bad=0
 if python3 "$here/gen_closure.py" | cmp -s - "$here/fic_closure.h"; then echo "ok   fic_closure.h is generated"; else echo "FAIL fic_closure.h differs from gen_closure.py"; bad=1; fi
 # name:source:extra flags. test_rc runs under a 256 KB stack (the generic drop must not recurse); its variants check the
-# layout test mode (-DFIC_DROP_ALL) and the counters (-DFIC_STATS -DFIC_CHECK) with smaller sizes
-tests="test_runtime:test_runtime: test_closure:test_closure: test_bitwise:test_bitwise: test_jsarray:test_jsarray: test_ustring:test_ustring: test_fdlibm:test_fdlibm: test_rc:test_rc: test_rc_dropall:test_rc:-DFIC_DROP_ALL test_rc_stats:test_rc:-DFIC_STATS+-DFIC_CHECK+-DSMALL"
+# layout test mode (-DFIC_DROP_ALL) and the counters (-DFIC_STATS -DFIC_CHECK) with smaller sizes; test_inplace is the S6 runtime
+# (arrays updated in place, take, owning calls) as a counted program (-DFIC_RC)
+tests="test_runtime:test_runtime: test_closure:test_closure: test_bitwise:test_bitwise: test_jsarray:test_jsarray: test_ustring:test_ustring: test_fdlibm:test_fdlibm: test_rc:test_rc: test_rc_dropall:test_rc:-DFIC_DROP_ALL test_rc_stats:test_rc:-DFIC_STATS+-DFIC_CHECK+-DSMALL test_inplace:test_inplace:-DFIC_RC+-DFIC_STATS"
 for cc in gcc clang; do
   command -v $cc >/dev/null || continue
   san=; [ -n "$SAN" ] && { san="-fsanitize=address,undefined -fno-sanitize-recover=undefined -g -DFIC_NO_POOL"; [ $cc = clang ] && san="$san -fuse-ld=bfd" || san="$san -Wno-maybe-uninitialized"; }

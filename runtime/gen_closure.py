@@ -107,6 +107,9 @@ w("""/* S6 (STAGE4-PLAN section 6): fic_ap<n>_own(f, mask, a0..) is fic_ap<n> th
    unique value held by the partial application is still unique in the function) and the partial application is freed before the
    call; otherwise f is called as by fic_ap<n> and dropped afterwards. */""")
 for n in range(1, MAXA + 1):
+    w("static fic_word fic_ap%d_own(fic_ref f, uint32_t mask, %s);" % (n, args(n)))
+w("")
+for n in range(1, MAXA + 1):
     w("static fic_word fic_ap%d_own(fic_ref f, uint32_t mask, %s) {" % (n, args(n)))
     w("  fic_word r;")
     if n < MAXA:
@@ -114,20 +117,18 @@ for n in range(1, MAXA + 1):
         w("  if (f->tag == FIC_TAG_PAP && f->rc == 1) {")
         w("    fic_pap *p = (fic_pap *)f;")
         w("    fic_ref g = p->fun;")
-        w("    const fic_code *c = FIC_CLO(g)->code;")
-        w("    if (c->arity == p->nargs + %du) {" % n)
+        w("    if (FIC_CLO(g)->code->arity == p->nargs + %du) {" % n)
         w("      fic_word s[%d];" % (MAXA - n))
         w("      unsigned i, j = p->nargs;")
+        w("      uint32_t m = p->mask | (mask << j);")
         w("      for (i = 0; i < j; i++) s[i] = p->args[i];")
-        w("      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */")
+        w("      fic_free_obj(f);                          /* the shell only: its count on the function and on the arguments passes on */")
         w("      FIC_STAT(fic_n_pap_steal++);")
-        w("      switch (j) {")
+        w("      switch (j) {                              /* the function is consumed in turn: it may be a unique partial application itself */")
         for j in range(1, MAXA - n + 1):
-            w("      case %du: r = ((fic_fn%d)c->fn)(g, %s, %s); break;" % (j, j + n, ", ".join("s[%d]" % i for i in range(j)), names(n)))
+            w("      case %du: return fic_ap%d_own(g, m, %s, %s);" % (j, j + n, ", ".join("s[%d]" % i for i in range(j)), names(n)))
         w("      default: abort();")
         w("      }")
-        w("      fic_drop(g);")
-        w("      return r;")
         w("    }")
         w("  }")
         w("#endif")

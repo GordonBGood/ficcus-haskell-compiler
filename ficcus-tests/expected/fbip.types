@@ -1,0 +1,1338 @@
+-- module Fbip: problems=0 instances=409 instance-failures=0 defaulted=1
+-- equality-uses: total=0 at-function=0
+module author/project:Fbip
+type Wrap   id: author/project:Fbip.Wrap   params: 0   ctors: 1   layout: normal
+  ctor Wrap   id: author/project:Fbip.Wrap   tag: 0   arity: 2   fields: Int ;; Array Int   sig: Int -> Array Int -> Wrap   kinds: 
+type Shape   id: author/project:Fbip.Shape   params: 0   ctors: 3   layout: normal
+  ctor Dot   id: author/project:Fbip.Dot   tag: 0   arity: 0   fields:    sig: Shape   kinds: 
+  ctor Line   id: author/project:Fbip.Line   tag: 1   arity: 1   fields: Int   sig: Int -> Shape   kinds: 
+  ctor Box   id: author/project:Fbip.Box   tag: 2   arity: 2   fields: Int ;; Int   sig: Int -> Int -> Shape   kinds: 
+def callTwice :: Int -> (Int -> Int -> Array Int) -> ( Array Int, Array Int )    [186:1-186:10]   id: author/project:Fbip.callTwice   sig: Int -> (Int -> Int -> Array Int) -> ( Array Int, Array Int )   kinds:    group: author/project:Fbip.callTwice nonrec ann
+  186:11-186:12 PVar i :: Int
+  186:13-186:14 PVar f :: Int -> Int -> Array Int
+  187:5-187:27 Pair :: ( Array Int, Array Int )
+    187:7-187:12 Call :: Array Int
+      187:7-187:8 VarLocal :: Int -> Int -> Array Int
+      187:9-187:10 Int :: Int
+      187:11-187:12 VarLocal :: Int
+    187:14-187:24 Call :: Array Int
+      187:14-187:15 VarLocal :: Int -> Int -> Array Int
+      187:16-187:17 Int :: Int
+      187:19-187:24 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        187:19-187:20 VarLocal :: Int
+        187:23-187:24 Int :: Int
+def stepWrap :: Int -> Wrap -> Wrap    [123:1-123:9]   id: author/project:Fbip.stepWrap   sig: Int -> Wrap -> Wrap   kinds:    group: author/project:Fbip.stepWrap nonrec ann
+  123:10-123:11 PVar i :: Int
+  123:13-123:21 PCtor Wrap :: Wrap
+    123:18-123:19 PVar n :: Int
+    123:20-123:21 PVar a :: Array Int
+  124:5-124:44 Call :: Wrap
+    124:5-124:9 VarCtor :: Int -> Array Int -> Wrap   callee: author/project:Fbip.Wrap
+    124:11-124:16 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      124:11-124:12 VarLocal :: Int
+      124:15-124:16 Int :: Int
+    124:19-124:44 Call :: Array Int
+      124:19-124:28 VarForeign :: Int -> Int -> Array Int -> Array Int   callee: elm/core:Array.set   instance: a := Int   sig#: 3119be98   subst: v0 := Int
+      124:30-124:39 Call :: Int
+        124:30-124:35 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+        124:36-124:37 Int :: Int
+        124:38-124:39 VarLocal :: Int
+      124:41-124:42 VarLocal :: Int
+      124:43-124:44 VarLocal :: Array Int
+def loopWrap :: Int -> Int -> Wrap -> Wrap    [128:1-128:9]   id: author/project:Fbip.loopWrap   sig: Int -> Int -> Wrap -> Wrap   kinds:    group: author/project:Fbip.loopWrap rec ann
+  128:10-128:11 PVar i :: Int
+  128:12-128:13 PVar n :: Int
+  128:14-128:15 PVar w :: Wrap
+  129:5-133:42 If :: Wrap
+    129:8-129:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      129:8-129:9 VarLocal :: Int
+      129:13-129:14 VarLocal :: Int
+    130:9-130:10 VarLocal :: Wrap
+    133:9-133:41 Call :: Wrap
+      133:9-133:17 VarTopLevel :: Int -> Int -> Wrap -> Wrap   callee: author/project:Fbip.loopWrap   use: rec
+      133:19-133:24 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        133:19-133:20 VarLocal :: Int
+        133:23-133:24 Int :: Int
+      133:26-133:27 VarLocal :: Int
+      133:29-133:41 Call :: Wrap
+        133:29-133:37 VarTopLevel :: Int -> Wrap -> Wrap   callee: author/project:Fbip.stepWrap   use: gen
+        133:38-133:39 VarLocal :: Int
+        133:40-133:41 VarLocal :: Wrap
+def constant :: Array Int    [118:1-118:9]   id: author/project:Fbip.constant   sig: Array Int   kinds:    group: author/project:Fbip.constant nonrec ann
+  119:5-119:37 Call :: Array Int
+    119:5-119:21 VarForeign :: Int -> (Int -> Int) -> Array Int   callee: elm/core:Array.initialize   instance: a := Int   sig#: 6241b1a2   subst: v0 := Int
+    119:22-119:24 Int :: Int
+    119:26-119:37 Lambda :: Int -> Int
+      119:27-119:28 PVar i :: Int
+      119:32-119:37 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        119:32-119:33 VarLocal :: Int
+        119:36-119:37 VarLocal :: Int
+def callOnce :: Int -> (Int -> Int -> Array Int) -> Array Int    [181:1-181:9]   id: author/project:Fbip.callOnce   sig: Int -> (Int -> Int -> Array Int) -> Array Int   kinds:    group: author/project:Fbip.callOnce nonrec ann
+  181:10-181:11 PVar i :: Int
+  181:12-181:13 PVar f :: Int -> Int -> Array Int
+  182:5-182:21 Call :: Array Int
+    182:5-182:6 VarLocal :: Int -> Int -> Array Int
+    182:8-182:18 Call :: Int
+      182:8-182:13 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+      182:14-182:16 Int :: Int
+      182:17-182:18 VarLocal :: Int
+    182:20-182:21 VarLocal :: Int
+def stepRec :: Int -> Rec -> Rec    [137:1-137:8]   id: author/project:Fbip.stepRec   sig: Int -> Rec -> Rec   kinds:    group: author/project:Fbip.stepRec nonrec ann
+  137:9-137:10 PVar i :: Int
+  137:11-137:12 PVar r :: Rec
+  138:5-138:74 Record :: Rec
+    138:11-138:18 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      138:11-138:14 Access :: Int
+        138:11-138:12 VarLocal :: { n : Int, arr : Array String }
+      138:17-138:18 VarLocal :: Int
+    138:26-138:72 Call :: Array String
+      138:26-138:35 VarForeign :: Int -> String -> Array String -> Array String   callee: elm/core:Array.set   instance: a := String   sig#: 3119be98   subst: v0 := String
+      138:37-138:46 Call :: Int
+        138:37-138:42 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+        138:43-138:44 Int :: Int
+        138:45-138:46 VarLocal :: Int
+      138:49-138:65 Call :: String
+        138:49-138:63 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+        138:64-138:65 VarLocal :: Int
+      138:67-138:72 Access :: Array String
+        138:67-138:68 VarLocal :: { n : Int, arr : Array String }
+def setCell :: Int -> Int -> Int -> Array (Array Int) -> Array (Array Int)    [151:1-151:8]   id: author/project:Fbip.setCell   sig: Int -> Int -> Int -> Array (Array Int) -> Array (Array Int)   kinds:    group: author/project:Fbip.setCell nonrec ann
+  151:9-151:12 PVar row :: Int
+  151:13-151:16 PVar col :: Int
+  151:17-151:18 PVar v :: Int
+  151:19-151:23 PVar grid :: Array (Array Int)
+  152:5-157:17 Case :: Array (Array Int)
+    152:10-152:28 Call :: Maybe (Array Int)
+      152:10-152:19 VarForeign :: Int -> Array (Array Int) -> Maybe (Array Int)   callee: elm/core:Array.get   instance: a := Array Int   sig#: bbadb997   subst: v0 := Array Int
+      152:20-152:23 VarLocal :: Int
+      152:24-152:28 VarLocal :: Array (Array Int)
+    153:9-153:18 PCtor Just :: Maybe (Array Int)
+      153:14-153:18 PVar line :: Array Int
+    154:13-154:54 Call :: Array (Array Int)
+      154:13-154:22 VarForeign :: Int -> Array Int -> Array (Array Int) -> Array (Array Int)   callee: elm/core:Array.set   instance: a := Array Int   sig#: 3119be98   subst: v0 := Array Int
+      154:23-154:26 VarLocal :: Int
+      154:28-154:48 Call :: Array Int
+        154:28-154:37 VarForeign :: Int -> Int -> Array Int -> Array Int   callee: elm/core:Array.set   instance: a := Int   sig#: 3119be98   subst: v0 := Int
+        154:38-154:41 VarLocal :: Int
+        154:42-154:43 VarLocal :: Int
+        154:44-154:48 VarLocal :: Array Int
+      154:50-154:54 VarLocal :: Array (Array Int)
+    156:9-156:16 PCtor Nothing :: Maybe (Array Int)
+    157:13-157:17 VarLocal :: Array (Array Int)
+def loopGrid :: Int -> Int -> Array (Array Int) -> Array (Array Int)    [161:1-161:9]   id: author/project:Fbip.loopGrid   sig: Int -> Int -> Array (Array Int) -> Array (Array Int)   kinds:    group: author/project:Fbip.loopGrid rec ann
+  161:10-161:11 PVar i :: Int
+  161:12-161:13 PVar n :: Int
+  161:14-161:15 PVar g :: Array (Array Int)
+  162:5-166:71 If :: Array (Array Int)
+    162:8-162:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      162:8-162:9 VarLocal :: Int
+      162:13-162:14 VarLocal :: Int
+    163:9-163:10 VarLocal :: Array (Array Int)
+    166:9-166:70 Call :: Array (Array Int)
+      166:9-166:17 VarTopLevel :: Int -> Int -> Array (Array Int) -> Array (Array Int)   callee: author/project:Fbip.loopGrid   use: rec
+      166:19-166:24 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        166:19-166:20 VarLocal :: Int
+        166:23-166:24 Int :: Int
+      166:26-166:27 VarLocal :: Int
+      166:29-166:70 Call :: Array (Array Int)
+        166:29-166:36 VarTopLevel :: Int -> Int -> Int -> Array (Array Int) -> Array (Array Int)   callee: author/project:Fbip.setCell   use: gen
+        166:38-166:47 Call :: Int
+          166:38-166:43 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+          166:44-166:45 Int :: Int
+          166:46-166:47 VarLocal :: Int
+        166:50-166:64 Call :: Int
+          166:50-166:55 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+          166:56-166:57 Int :: Int
+          166:59-166:64 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            166:59-166:60 VarLocal :: Int
+            166:63-166:64 Int :: Int
+        166:67-166:68 VarLocal :: Int
+        166:69-166:70 VarLocal :: Array (Array Int)
+def loopRec :: Int -> Int -> Rec -> Rec    [142:1-142:8]   id: author/project:Fbip.loopRec   sig: Int -> Int -> Rec -> Rec   kinds:    group: author/project:Fbip.loopRec rec ann
+  142:9-142:10 PVar i :: Int
+  142:11-142:12 PVar n :: Int
+  142:13-142:14 PVar r :: Rec
+  143:5-147:40 If :: Rec
+    143:8-143:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      143:8-143:9 VarLocal :: Int
+      143:13-143:14 VarLocal :: Int
+    144:9-144:10 VarLocal :: Rec
+    147:9-147:39 Call :: Rec
+      147:9-147:16 VarTopLevel :: Int -> Int -> Rec -> Rec   callee: author/project:Fbip.loopRec   use: rec
+      147:18-147:23 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        147:18-147:19 VarLocal :: Int
+        147:22-147:23 Int :: Int
+      147:25-147:26 VarLocal :: Int
+      147:28-147:39 Call :: Rec
+        147:28-147:35 VarTopLevel :: Int -> Rec -> Rec   callee: author/project:Fbip.stepRec   use: gen
+        147:36-147:37 VarLocal :: Int
+        147:38-147:39 VarLocal :: Rec
+def addAll :: List Int -> (Int -> Int) -> List Int    [200:1-200:7]   id: author/project:Fbip.addAll   sig: List Int -> (Int -> Int) -> List Int   kinds:    group: author/project:Fbip.addAll nonrec ann
+  200:8-200:10 PVar xs :: List Int
+  200:11-200:12 PVar f :: Int -> Int
+  201:5-201:18 Call :: List Int
+    201:5-201:13 VarForeign :: (Int -> Int) -> List Int -> List Int   callee: elm/core:List.map   instance: a := Int, b := Int   sig#: 6a702f63   subst: v0 := Int, v1 := Int
+    201:14-201:15 VarLocal :: Int -> Int
+    201:16-201:18 VarLocal :: List Int
+def shape :: Shape -> String    [28:1-28:6]   id: author/project:Fbip.shape   sig: Shape -> String   kinds:    group: author/project:Fbip.shape nonrec ann
+  28:7-28:8 PVar s :: Shape
+  29:5-37:63 Case :: String
+    29:10-29:11 VarLocal :: Shape
+    30:9-30:12 PCtor Dot :: Shape
+    31:13-31:16 Str :: String
+    33:9-33:15 PCtor Line :: Shape
+      33:14-33:15 PVar n :: Int
+    34:13-34:36 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      34:13-34:16 Str :: String
+      34:20-34:36 Call :: String
+        34:20-34:34 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+        34:35-34:36 VarLocal :: Int
+    36:9-36:16 PCtor Box :: Shape
+      36:13-36:14 PVar w :: Int
+      36:15-36:16 PVar h :: Int
+    37:13-37:63 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      37:13-37:16 Str :: String
+      37:20-37:63 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        37:20-37:36 Call :: String
+          37:20-37:34 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+          37:35-37:36 VarLocal :: Int
+        37:40-37:63 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+          37:40-37:43 Str :: String
+          37:47-37:63 Call :: String
+            37:47-37:61 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+            37:62-37:63 VarLocal :: Int
+def growS :: Int -> Int -> Array String -> Array String    [95:1-95:6]   id: author/project:Fbip.growS   sig: Int -> Int -> Array String -> Array String   kinds:    group: author/project:Fbip.growS rec ann
+  95:7-95:8 PVar i :: Int
+  95:9-95:10 PVar n :: Int
+  95:11-95:12 PVar a :: Array String
+  96:5-100:58 If :: Array String
+    96:8-96:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      96:8-96:9 VarLocal :: Int
+      96:13-96:14 VarLocal :: Int
+    97:9-97:10 VarLocal :: Array String
+    100:9-100:57 Call :: Array String
+      100:9-100:14 VarTopLevel :: Int -> Int -> Array String -> Array String   callee: author/project:Fbip.growS   use: rec
+      100:16-100:21 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        100:16-100:17 VarLocal :: Int
+        100:20-100:21 Int :: Int
+      100:23-100:24 VarLocal :: Int
+      100:26-100:57 Call :: Array String
+        100:26-100:36 VarForeign :: String -> Array String -> Array String   callee: elm/core:Array.push   instance: a := String   sig#: e0aea4e2   subst: v0 := String
+        100:38-100:54 Call :: String
+          100:38-100:52 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+          100:53-100:54 VarLocal :: Int
+        100:56-100:57 VarLocal :: Array String
+def fillS :: Int -> Int -> Array String -> Array String    [77:1-77:6]   id: author/project:Fbip.fillS   sig: Int -> Int -> Array String -> Array String   kinds:    group: author/project:Fbip.fillS rec ann
+  77:7-77:8 PVar i :: Int
+  77:9-77:10 PVar n :: Int
+  77:11-77:12 PVar a :: Array String
+  78:5-82:98 If :: Array String
+    78:8-78:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      78:8-78:9 VarLocal :: Int
+      78:13-78:14 VarLocal :: Int
+    79:9-79:10 VarLocal :: Array String
+    82:9-82:97 Call :: Array String
+      82:9-82:14 VarTopLevel :: Int -> Int -> Array String -> Array String   callee: author/project:Fbip.fillS   use: rec
+      82:16-82:21 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        82:16-82:17 VarLocal :: Int
+        82:20-82:21 Int :: Int
+      82:23-82:24 VarLocal :: Int
+      82:26-82:97 Call :: Array String
+        82:26-82:35 VarForeign :: Int -> String -> Array String -> Array String   callee: elm/core:Array.set   instance: a := String   sig#: 3119be98   subst: v0 := String
+        82:37-82:67 Call :: Int
+          82:37-82:42 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+          82:44-82:58 Call :: Int
+            82:44-82:56 VarForeign :: Array String -> Int   callee: elm/core:Array.length   instance: a := String   sig#: 46a433c9   subst: v0 := String
+            82:57-82:58 VarLocal :: Array String
+          82:61-82:67 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            82:61-82:62 VarLocal :: Int
+            82:65-82:67 Int :: Int
+        82:71-82:94 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+          82:71-82:74 Str :: String
+          82:78-82:94 Call :: String
+            82:78-82:92 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+            82:93-82:94 VarLocal :: Int
+        82:96-82:97 VarLocal :: Array String
+def fillD :: Int -> Int -> Dict Int Int -> Dict Int Int    [205:1-205:6]   id: author/project:Fbip.fillD   sig: Int -> Int -> Dict Int Int -> Dict Int Int   kinds:    group: author/project:Fbip.fillD rec ann
+  205:7-205:8 PVar i :: Int
+  205:9-205:10 PVar n :: Int
+  205:11-205:12 PVar d :: Dict Int Int
+  206:5-210:62 If :: Dict Int Int
+    206:8-206:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      206:8-206:9 VarLocal :: Int
+      206:13-206:14 VarLocal :: Int
+    207:9-207:10 VarLocal :: Dict Int Int
+    210:9-210:61 Call :: Dict Int Int
+      210:9-210:14 VarTopLevel :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: author/project:Fbip.fillD   use: rec
+      210:16-210:21 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        210:16-210:17 VarLocal :: Int
+        210:20-210:21 Int :: Int
+      210:23-210:24 VarLocal :: Int
+      210:26-210:61 Call :: Dict Int Int
+        210:26-210:37 VarForeign :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: elm/core:Dict.insert   instance: comparable := Int, v := Int   sig#: 256ddcb4   subst: v0 := Int, v1 := Int
+        210:39-210:55 Call :: Int
+          210:39-210:44 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+          210:45-210:47 Int :: Int
+          210:49-210:55 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            210:49-210:50 VarLocal :: Int
+            210:53-210:55 Int :: Int
+        210:58-210:59 VarLocal :: Int
+        210:60-210:61 VarLocal :: Dict Int Int
+def dropD :: Int -> Int -> Dict Int Int -> Dict Int Int    [223:1-223:6]   id: author/project:Fbip.dropD   sig: Int -> Int -> Dict Int Int -> Dict Int Int   kinds:    group: author/project:Fbip.dropD rec ann
+  223:7-223:8 PVar i :: Int
+  223:9-223:10 PVar n :: Int
+  223:11-223:12 PVar d :: Dict Int Int
+  224:5-228:42 If :: Dict Int Int
+    224:8-224:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      224:8-224:9 VarLocal :: Int
+      224:13-224:14 VarLocal :: Int
+    225:9-225:10 VarLocal :: Dict Int Int
+    228:9-228:41 Call :: Dict Int Int
+      228:9-228:14 VarTopLevel :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: author/project:Fbip.dropD   use: rec
+      228:16-228:21 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        228:16-228:17 VarLocal :: Int
+        228:20-228:21 Int :: Int
+      228:23-228:24 VarLocal :: Int
+      228:26-228:41 Call :: Dict Int Int
+        228:26-228:37 VarForeign :: Int -> Dict Int Int -> Dict Int Int   callee: elm/core:Dict.remove   instance: comparable := Int, v := Int   sig#: e595110e   subst: v0 := Int, v1 := Int
+        228:38-228:39 VarLocal :: Int
+        228:40-228:41 VarLocal :: Dict Int Int
+def bumpD :: Int -> Int -> Dict Int Int -> Dict Int Int    [214:1-214:6]   id: author/project:Fbip.bumpD   sig: Int -> Int -> Dict Int Int -> Dict Int Int   kinds:    group: author/project:Fbip.bumpD rec ann
+  214:7-214:8 PVar i :: Int
+  214:9-214:10 PVar n :: Int
+  214:11-214:12 PVar d :: Dict Int Int
+  215:5-219:101 If :: Dict Int Int
+    215:8-215:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      215:8-215:9 VarLocal :: Int
+      215:13-215:14 VarLocal :: Int
+    216:9-216:10 VarLocal :: Dict Int Int
+    219:9-219:100 Call :: Dict Int Int
+      219:9-219:14 VarTopLevel :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: author/project:Fbip.bumpD   use: rec
+      219:16-219:21 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        219:16-219:17 VarLocal :: Int
+        219:20-219:21 Int :: Int
+      219:23-219:24 VarLocal :: Int
+      219:26-219:100 Call :: Dict Int Int
+        219:26-219:37 VarForeign :: Int -> (Maybe Int -> Maybe Int) -> Dict Int Int -> Dict Int Int   callee: elm/core:Dict.update   instance: comparable := Int, v := Int   sig#: 7f5c8ccc   subst: v0 := Int, v1 := Int
+        219:39-219:55 Call :: Int
+          219:39-219:44 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+          219:45-219:48 Int :: Int
+          219:50-219:55 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            219:50-219:51 VarLocal :: Int
+            219:54-219:55 Int :: Int
+        219:59-219:97 Lambda :: Maybe Int -> Maybe Int
+          219:60-219:61 PVar m :: Maybe Int
+          219:65-219:96 Call :: Maybe Int
+            219:65-219:69 VarCtor :: Int -> Maybe Int   callee: elm/core:Maybe.Just   instance: a := Int   sig#: c14b2381   subst: v0 := Int
+            219:71-219:96 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+              219:71-219:92 Call :: Int
+                219:71-219:88 VarForeign :: Int -> Maybe Int -> Int   callee: elm/core:Maybe.withDefault   instance: a := Int   sig#: be843909   subst: v0 := Int
+                219:89-219:90 Int :: Int
+                219:91-219:92 VarLocal :: Maybe Int
+              219:95-219:96 VarLocal :: Int
+        219:99-219:100 VarLocal :: Dict Int Int
+def sumA :: Array Int -> Int    [52:1-52:5]   id: author/project:Fbip.sumA   sig: Array Int -> Int   kinds:    group: author/project:Fbip.sumA nonrec ann
+  52:6-52:7 PVar a :: Array Int
+  53:5-53:24 Call :: Int
+    53:5-53:16 VarForeign :: (Int -> Int -> Int) -> Int -> Array Int -> Int   callee: elm/core:Array.foldl   instance: a := Int, b := Int   sig#: 84804fa1   subst: v0 := Int, v1 := Int
+    53:17-53:20 VarOperator :: Int -> Int -> Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    53:21-53:22 Int :: Int
+    53:23-53:24 VarLocal :: Array Int
+def keepAll :: Int -> Int -> Array Int -> Int -> Int    [105:1-105:8]   id: author/project:Fbip.keepAll   sig: Int -> Int -> Array Int -> Int -> Int   kinds:    group: author/project:Fbip.keepAll rec ann
+  105:9-105:10 PVar i :: Int
+  105:11-105:12 PVar n :: Int
+  105:13-105:14 PVar a :: Array Int
+  105:15-105:18 PVar acc :: Int
+  106:5-114:43 If :: Int
+    106:8-106:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      106:8-106:9 VarLocal :: Int
+      106:13-106:14 VarLocal :: Int
+    107:9-107:21 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      107:9-107:12 VarLocal :: Int
+      107:15-107:21 Call :: Int
+        107:15-107:19 VarTopLevel :: Array Int -> Int   callee: author/project:Fbip.sumA   use: gen
+        107:20-107:21 VarLocal :: Array Int
+    def b :: Array Int    [111:13-111:14]   id: author/project:Fbip.b@111:13   sig: Array Int   kinds:    group: author/project:Fbip.b@111:13 nonrec inferred
+      112:17-112:66 Call :: Array Int
+        112:17-112:26 VarForeign :: Int -> Int -> Array Int -> Array Int   callee: elm/core:Array.set   instance: a := Int   sig#: 3119be98   subst: v0 := Int
+        112:28-112:52 Call :: Int
+          112:28-112:33 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+          112:35-112:49 Call :: Int
+            112:35-112:47 VarForeign :: Array Int -> Int   callee: elm/core:Array.length   instance: a := Int   sig#: 46a433c9   subst: v0 := Int
+            112:48-112:49 VarLocal :: Array Int
+          112:51-112:52 VarLocal :: Int
+        112:55-112:63 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          112:55-112:56 VarLocal :: Int
+          112:59-112:63 Int :: Int
+        112:65-112:66 VarLocal :: Array Int
+    114:9-114:42 Call :: Int
+      114:9-114:16 VarTopLevel :: Int -> Int -> Array Int -> Int -> Int   callee: author/project:Fbip.keepAll   use: rec
+      114:18-114:23 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        114:18-114:19 VarLocal :: Int
+        114:22-114:23 Int :: Int
+      114:25-114:26 VarLocal :: Int
+      114:27-114:28 VarLocal :: Array Int   callee: author/project:Fbip.b@111:13   use: gen
+      114:30-114:42 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        114:30-114:33 VarLocal :: Int
+        114:36-114:42 Call :: Int
+          114:36-114:40 VarTopLevel :: Array Int -> Int   callee: author/project:Fbip.sumA   use: gen
+          114:41-114:42 VarLocal :: Array Int
+def sigS :: Array String -> ( Int, String )    [63:1-63:5]   id: author/project:Fbip.sigS   sig: Array String -> ( Int, String )   kinds:    group: author/project:Fbip.sigS nonrec ann
+  63:6-63:7 PVar a :: Array String
+  64:5-64:80 Pair :: ( Int, String )
+    64:7-64:21 Call :: Int
+      64:7-64:19 VarForeign :: Array String -> Int   callee: elm/core:Array.length   instance: a := String   sig#: 46a433c9   subst: v0 := String
+      64:20-64:21 VarLocal :: Array String
+    64:23-64:78 Call :: String
+      64:23-64:34 VarForeign :: (String -> String -> String) -> String -> Array String -> String   callee: elm/core:Array.foldl   instance: a := String, b := String   sig#: 84804fa1   subst: v0 := String, v1 := String
+      64:36-64:72 Lambda :: String -> String -> String
+        64:37-64:38 PVar x :: String
+        64:39-64:42 PVar acc :: String
+        64:46-64:71 Call :: String
+          64:46-64:58 VarForeign :: Int -> String -> String   callee: elm/core:String.right
+          64:59-64:61 Int :: Int
+          64:63-64:71 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+            64:63-64:66 VarLocal :: String
+            64:70-64:71 VarLocal :: String
+      64:74-64:76 Str :: String
+      64:77-64:78 VarLocal :: Array String
+def sigD :: Dict Int Int -> ( Int, Int, Int )    [232:1-232:5]   id: author/project:Fbip.sigD   sig: Dict Int Int -> ( Int, Int, Int )   kinds:    group: author/project:Fbip.sigD nonrec ann
+  232:6-232:7 PVar d :: Dict Int Int
+  233:5-233:124 Triple :: ( Int, Int, Int )
+    233:7-233:18 Call :: Int
+      233:7-233:16 VarForeign :: Dict Int Int -> Int   callee: elm/core:Dict.size   instance: k := Int, v := Int   sig#: d0910be5   subst: v0 := Int, v1 := Int
+      233:17-233:18 VarLocal :: Dict Int Int
+    233:20-233:60 Call :: Int
+      233:20-233:30 VarForeign :: (Int -> Int -> Int -> Int) -> Int -> Dict Int Int -> Int   callee: elm/core:Dict.foldl   instance: b := Int, k := Int, v := Int   sig#: 55d94404   subst: v0 := Int, v1 := Int, v2 := Int
+      233:32-233:55 Lambda :: Int -> Int -> Int -> Int
+        233:33-233:34 PVar k :: Int
+        233:35-233:36 PVar v :: Int
+        233:37-233:40 PVar acc :: Int
+        233:44-233:55 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          233:44-233:47 VarLocal :: Int
+          233:50-233:55 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            233:50-233:51 VarLocal :: Int
+            233:54-233:55 VarLocal :: Int
+      233:57-233:58 Int :: Int
+      233:59-233:60 VarLocal :: Dict Int Int
+    233:62-233:122 Call :: Int
+      233:62-233:72 VarForeign :: (Int -> Int -> Int -> Int) -> Int -> Dict Int Int -> Int   callee: elm/core:Dict.foldr   instance: b := Int, k := Int, v := Int   sig#: 55d94404   subst: v0 := Int, v1 := Int, v2 := Int
+      233:74-233:117 Lambda :: Int -> Int -> Int -> Int
+        233:75-233:76 PVar k :: Int
+        233:77-233:78 PVar v :: Int
+        233:79-233:82 PVar acc :: Int
+        233:86-233:116 Call :: Int
+          233:86-233:91 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+          233:92-233:99 Int :: Int
+          233:101-233:116 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            233:101-233:112 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+              233:101-233:108 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                233:101-233:104 VarLocal :: Int
+                233:107-233:108 Int :: Int
+              233:111-233:112 VarLocal :: Int
+            233:115-233:116 VarLocal :: Int
+      233:119-233:120 Int :: Int
+      233:121-233:122 VarLocal :: Dict Int Int
+def seen :: a -> Int    [47:1-47:5]   id: author/project:Fbip.seen   sig: v0 -> Int   kinds: v0:any   group: author/project:Fbip.seen nonrec ann
+  47:6-47:7 PAnything :: a
+  48:5-48:6 Int :: Int
+def grow :: Int -> Int -> Array Int -> Array Int    [86:1-86:5]   id: author/project:Fbip.grow   sig: Int -> Int -> Array Int -> Array Int   kinds:    group: author/project:Fbip.grow rec ann
+  86:6-86:7 PVar i :: Int
+  86:8-86:9 PVar n :: Int
+  86:10-86:11 PVar a :: Array Int
+  87:5-91:46 If :: Array Int
+    87:8-87:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      87:8-87:9 VarLocal :: Int
+      87:13-87:14 VarLocal :: Int
+    88:9-88:10 VarLocal :: Array Int
+    91:9-91:45 Call :: Array Int
+      91:9-91:13 VarTopLevel :: Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.grow   use: rec
+      91:15-91:20 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        91:15-91:16 VarLocal :: Int
+        91:19-91:20 Int :: Int
+      91:22-91:23 VarLocal :: Int
+      91:25-91:45 Call :: Array Int
+        91:25-91:35 VarForeign :: Int -> Array Int -> Array Int   callee: elm/core:Array.push   instance: a := Int   sig#: e0aea4e2   subst: v0 := Int
+        91:37-91:42 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          91:37-91:38 VarLocal :: Int
+          91:41-91:42 Int :: Int
+        91:44-91:45 VarLocal :: Array Int
+def fill :: Int -> Int -> Int -> Array Int -> Array Int    [68:1-68:5]   id: author/project:Fbip.fill   sig: Int -> Int -> Int -> Array Int -> Array Int   kinds:    group: author/project:Fbip.fill rec ann
+  68:6-68:7 PVar i :: Int
+  68:8-68:9 PVar n :: Int
+  68:10-68:14 PVar step :: Int
+  68:15-68:16 PVar a :: Array Int
+  69:5-73:80 If :: Array Int
+    69:8-69:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      69:8-69:9 VarLocal :: Int
+      69:13-69:14 VarLocal :: Int
+    70:9-70:10 VarLocal :: Array Int
+    73:9-73:79 Call :: Array Int
+      73:9-73:13 VarTopLevel :: Int -> Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.fill   use: rec
+      73:15-73:20 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        73:15-73:16 VarLocal :: Int
+        73:19-73:20 Int :: Int
+      73:22-73:23 VarLocal :: Int
+      73:24-73:28 VarLocal :: Int
+      73:30-73:79 Call :: Array Int
+        73:30-73:39 VarForeign :: Int -> Int -> Array Int -> Array Int   callee: elm/core:Array.set   instance: a := Int   sig#: 3119be98   subst: v0 := Int
+        73:41-73:73 Call :: Int
+          73:41-73:46 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+          73:48-73:62 Call :: Int
+            73:48-73:60 VarForeign :: Array Int -> Int   callee: elm/core:Array.length   instance: a := Int   sig#: 46a433c9   subst: v0 := Int
+            73:61-73:62 VarLocal :: Array Int
+          73:65-73:73 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            73:65-73:66 VarLocal :: Int
+            73:69-73:73 VarLocal :: Int
+        73:76-73:77 VarLocal :: Int
+        73:78-73:79 VarLocal :: Array Int
+def bind :: (Array Int -> Int -> Int -> Array Int) -> Array Int -> Int -> Int -> Array Int    [176:1-176:5]   id: author/project:Fbip.bind   sig: (Array Int -> Int -> Int -> Array Int) -> Array Int -> Int -> Int -> Array Int   kinds:    group: author/project:Fbip.bind nonrec ann
+  176:6-176:7 PVar g :: Array Int -> Int -> Int -> Array Int
+  176:8-176:9 PVar a :: Array Int
+  177:5-177:8 Call :: Int -> Int -> Array Int
+    177:5-177:6 VarLocal :: Array Int -> Int -> Int -> Array Int
+    177:7-177:8 VarLocal :: Array Int
+def sig :: Array Int -> ( Int, Int, Int )    [58:1-58:4]   id: author/project:Fbip.sig   sig: Array Int -> ( Int, Int, Int )   kinds:    group: author/project:Fbip.sig nonrec ann
+  58:5-58:6 PVar a :: Array Int
+  59:5-59:89 Triple :: ( Int, Int, Int )
+    59:7-59:21 Call :: Int
+      59:7-59:19 VarForeign :: Array Int -> Int   callee: elm/core:Array.length   instance: a := Int   sig#: 46a433c9   subst: v0 := Int
+      59:20-59:21 VarLocal :: Array Int
+    59:23-59:29 Call :: Int
+      59:23-59:27 VarTopLevel :: Array Int -> Int   callee: author/project:Fbip.sumA   use: gen
+      59:28-59:29 VarLocal :: Array Int
+    59:31-59:87 Call :: Int
+      59:31-59:42 VarForeign :: (Int -> Int -> Int) -> Int -> Array Int -> Int   callee: elm/core:Array.foldl   instance: a := Int, b := Int   sig#: 84804fa1   subst: v0 := Int, v1 := Int
+      59:44-59:82 Lambda :: Int -> Int -> Int
+        59:45-59:46 PVar x :: Int
+        59:47-59:50 PVar acc :: Int
+        59:54-59:81 Call :: Int
+          59:54-59:59 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+          59:60-59:67 Int :: Int
+          59:69-59:81 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            59:69-59:77 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+              59:69-59:72 VarLocal :: Int
+              59:75-59:77 Int :: Int
+            59:80-59:81 VarLocal :: Int
+      59:84-59:85 Int :: Int
+      59:86-59:87 VarLocal :: Array Int
+def rep :: Int -> Int -> Array Int    [42:1-42:4]   id: author/project:Fbip.rep   sig: Int -> Int -> Array Int   kinds:    group: author/project:Fbip.rep nonrec ann
+  42:5-42:6 PVar n :: Int
+  42:7-42:8 PVar x :: Int
+  43:5-43:21 Call :: Array Int
+    43:5-43:17 VarForeign :: Int -> Int -> Array Int   callee: elm/core:Array.repeat   instance: a := Int   sig#: 56f3bd0e   subst: v0 := Int
+    43:18-43:19 VarLocal :: Int
+    43:20-43:21 VarLocal :: Int
+def put :: Array Int -> Int -> Int -> Array Int    [170:1-170:4]   id: author/project:Fbip.put   sig: Array Int -> Int -> Int -> Array Int   kinds:    group: author/project:Fbip.put nonrec ann
+  170:5-170:6 PVar a :: Array Int
+  170:7-170:8 PVar i :: Int
+  170:9-170:10 PVar v :: Int
+  171:5-171:20 Call :: Array Int
+    171:5-171:14 VarForeign :: Int -> Int -> Array Int -> Array Int   callee: elm/core:Array.set   instance: a := Int   sig#: 3119be98   subst: v0 := Int
+    171:15-171:16 VarLocal :: Int
+    171:17-171:18 VarLocal :: Int
+    171:19-171:20 VarLocal :: Array Int
+def loopPap :: Int -> Int -> Array Int -> Array Int    [191:1-191:8]   id: author/project:Fbip.loopPap   sig: Int -> Int -> Array Int -> Array Int   kinds:    group: author/project:Fbip.loopPap rec ann
+  191:9-191:10 PVar i :: Int
+  191:11-191:12 PVar n :: Int
+  191:13-191:14 PVar a :: Array Int
+  192:5-196:52 If :: Array Int
+    192:8-192:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      192:8-192:9 VarLocal :: Int
+      192:13-192:14 VarLocal :: Int
+    193:9-193:10 VarLocal :: Array Int
+    196:9-196:50 Call :: Array Int
+      196:9-196:16 VarTopLevel :: Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.loopPap   use: rec
+      196:18-196:23 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        196:18-196:19 VarLocal :: Int
+        196:22-196:23 Int :: Int
+      196:25-196:26 VarLocal :: Int
+      196:28-196:50 Call :: Array Int
+        196:28-196:36 VarTopLevel :: Int -> (Int -> Int -> Array Int) -> Array Int   callee: author/project:Fbip.callOnce   use: gen
+        196:37-196:38 VarLocal :: Int
+        196:40-196:50 Call :: Int -> Int -> Array Int
+          196:40-196:44 VarTopLevel :: (Array Int -> Int -> Int -> Array Int) -> Array Int -> Int -> Int -> Array Int   callee: author/project:Fbip.bind   use: gen
+          196:45-196:48 VarTopLevel :: Array Int -> Int -> Int -> Array Int   callee: author/project:Fbip.put   use: gen
+          196:49-196:50 VarLocal :: Array Int
+def main :: Program () () ()    [237:1-237:5]   id: author/project:Fbip.main   sig: Program () () ()   kinds:    group: author/project:Fbip.main nonrec ann
+  238:5-360:10 Call :: Program () () ()
+    238:5-238:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    239:9-360:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      240:13-357:37 Lambda :: () -> ( (), Cmd () )
+        240:14-240:15 PAnything :: ()
+        def shapes :: Array Shape    [272:21-272:27]   id: author/project:Fbip.shapes@272:21   sig: Array Shape   kinds:    group: author/project:Fbip.shapes@272:21 nonrec inferred
+          273:25-273:69 Call :: Array Shape
+            273:25-273:39 VarForeign :: List Shape -> Array Shape   callee: elm/core:Array.fromList   instance: a := Shape   sig#: ad16019a   subst: v0 := Shape
+            273:40-273:69 List :: List Shape
+              273:42-273:45 VarCtor :: Shape   callee: author/project:Fbip.Dot
+              273:47-273:53 Call :: Shape
+                273:47-273:51 VarCtor :: Int -> Shape   callee: author/project:Fbip.Line
+                273:52-273:53 Int :: Int
+              273:55-273:62 Call :: Shape
+                273:55-273:58 VarCtor :: Int -> Int -> Shape   callee: author/project:Fbip.Box
+                273:59-273:60 Int :: Int
+                273:61-273:62 Int :: Int
+              273:64-273:67 VarCtor :: Shape   callee: author/project:Fbip.Dot
+        def small :: Array Int    [242:21-242:26]   id: author/project:Fbip.small@242:21   sig: Array Int   kinds:    group: author/project:Fbip.small@242:21 nonrec inferred
+          243:25-243:32 Call :: Array Int
+            243:25-243:28 VarTopLevel :: Int -> Int -> Array Int   callee: author/project:Fbip.rep   use: gen
+            243:29-243:30 Int :: Int
+            243:31-243:32 Int :: Int
+        def pairs :: Array ( Int, String )    [282:21-282:26]   id: author/project:Fbip.pairs@282:21   sig: Array ( Int, String )   kinds:    group: author/project:Fbip.pairs@282:21 nonrec inferred
+          283:25-283:75 Call :: Array ( Int, String )
+            283:25-283:41 VarForeign :: Int -> (Int -> ( Int, String )) -> Array ( Int, String )   callee: elm/core:Array.initialize   instance: a := ( Int, String )   sig#: 6241b1a2   subst: v0 := ( Int, String )
+            283:42-283:44 Int :: Int
+            283:46-283:75 Lambda :: Int -> ( Int, String )
+              283:47-283:48 PVar i :: Int
+              283:52-283:75 Pair :: ( Int, String )
+                283:54-283:55 VarLocal :: Int
+                283:57-283:73 Call :: String
+                  283:57-283:71 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                  283:72-283:73 VarLocal :: Int
+        def strs :: Array String    [266:21-266:25]   id: author/project:Fbip.strs@266:21   sig: Array String   kinds:    group: author/project:Fbip.strs@266:21 nonrec inferred
+          267:25-267:77 Call :: Array String
+            267:25-267:41 VarForeign :: Int -> (Int -> String) -> Array String   callee: elm/core:Array.initialize   instance: a := String   sig#: 6241b1a2   subst: v0 := String
+            267:42-267:46 Int :: Int
+            267:48-267:77 Lambda :: Int -> String
+              267:49-267:50 PVar i :: Int
+              267:54-267:77 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                267:54-267:57 Str :: String
+                267:61-267:77 Call :: String
+                  267:61-267:75 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                  267:76-267:77 VarLocal :: Int
+        def held :: Array Int    [325:21-325:25]   id: author/project:Fbip.held@325:21   sig: Array Int   kinds:    group: author/project:Fbip.held@325:21 nonrec inferred
+          326:25-326:33 Call :: Array Int
+            326:25-326:28 VarTopLevel :: Int -> Int -> Array Int   callee: author/project:Fbip.rep   use: gen
+            326:29-326:31 Int :: Int
+            326:32-326:33 Int :: Int
+        def twice :: ( Array Int, Array Int )    [328:21-328:26]   id: author/project:Fbip.twice@328:21   sig: ( Array Int, Array Int )   kinds:    group: author/project:Fbip.twice@328:21 nonrec inferred
+          329:25-329:51 Call :: ( Array Int, Array Int )
+            329:25-329:34 VarTopLevel :: Int -> (Int -> Int -> Array Int) -> ( Array Int, Array Int )   callee: author/project:Fbip.callTwice   use: gen
+            329:35-329:36 Int :: Int
+            329:38-329:51 Call :: Int -> Int -> Array Int
+              329:38-329:42 VarTopLevel :: (Array Int -> Int -> Int -> Array Int) -> Array Int -> Int -> Int -> Array Int   callee: author/project:Fbip.bind   use: gen
+              329:43-329:46 VarTopLevel :: Array Int -> Int -> Int -> Array Int   callee: author/project:Fbip.put   use: gen
+              329:47-329:51 VarLocal :: Array Int   callee: author/project:Fbip.held@325:21   use: gen
+        def grid :: Array (Array Int)    [319:21-319:25]   id: author/project:Fbip.grid@319:21   sig: Array (Array Int)   kinds:    group: author/project:Fbip.grid@319:21 nonrec inferred
+          320:25-320:48 Call :: Array (Array Int)
+            320:25-320:37 VarForeign :: Int -> Array Int -> Array (Array Int)   callee: elm/core:Array.repeat   instance: a := Array Int   sig#: 56f3bd0e   subst: v0 := Array Int
+            320:38-320:39 Int :: Int
+            320:41-320:48 Call :: Array Int
+              320:41-320:44 VarTopLevel :: Int -> Int -> Array Int   callee: author/project:Fbip.rep   use: gen
+              320:45-320:46 Int :: Int
+              320:47-320:48 Int :: Int
+        def deep :: Array Int    [257:21-257:25]   id: author/project:Fbip.deep@257:21   sig: Array Int   kinds:    group: author/project:Fbip.deep@257:21 nonrec inferred
+          258:25-258:66 Call :: Array Int
+            258:25-258:41 VarForeign :: Int -> (Int -> Int) -> Array Int   callee: elm/core:Array.initialize   instance: a := Int   sig#: 6241b1a2   subst: v0 := Int
+            258:42-258:47 Int :: Int
+            258:49-258:66 Lambda :: Int -> Int
+              258:50-258:51 PVar i :: Int
+              258:55-258:66 Call :: Int
+                258:55-258:60 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+                258:61-258:64 Int :: Int
+                258:65-258:66 VarLocal :: Int
+        def base :: Array Int    [291:21-291:25]   id: author/project:Fbip.base@291:21   sig: Array Int   kinds:    group: author/project:Fbip.base@291:21 nonrec inferred
+          292:25-292:46 Call :: Array Int
+            292:25-292:29 VarTopLevel :: Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.grow   use: gen
+            292:30-292:31 Int :: Int
+            292:32-292:34 Int :: Int
+            292:35-292:46 VarForeign :: Array Int   callee: elm/core:Array.empty   instance: a := Int   sig#: d16a3311   subst: v0 := Int
+        def add :: number -> number -> number    [334:21-334:24]   id: author/project:Fbip.add@334:21   sig: v0 -> v0 -> v0   kinds: v0:number   group: author/project:Fbip.add@334:21 nonrec inferred
+          335:25-335:28 VarOperator :: number -> number -> number   callee: elm/core:Basics.add   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Fbip.add@334:21|v0>>
+        def w0 :: Wrap    [300:21-300:23]   id: author/project:Fbip.w0@300:21   sig: Wrap   kinds:    group: author/project:Fbip.w0@300:21 nonrec inferred
+          301:25-301:49 Call :: Wrap
+            301:25-301:29 VarCtor :: Int -> Array Int -> Wrap   callee: author/project:Fbip.Wrap
+            301:30-301:31 Int :: Int
+            301:33-301:49 Call :: Array Int
+              301:33-301:45 VarForeign :: Int -> Int -> Array Int   callee: elm/core:Array.repeat   instance: a := Int   sig#: 56f3bd0e   subst: v0 := Int
+              301:46-301:47 Int :: Int
+              301:48-301:49 Int :: Int
+        def r0 :: { n : number1, arr : Array String }    [313:21-313:23]   id: author/project:Fbip.r0@313:21   sig: { n : v0, arr : Array String }   kinds: v0:number   group: author/project:Fbip.r0@313:21 nonrec inferred
+          314:25-314:60 Record :: { n : number1, arr : Array String }
+            314:31-314:32 Int :: number1
+            314:40-314:58 Call :: Array String
+              314:40-314:52 VarForeign :: Int -> String -> Array String   callee: elm/core:Array.repeat   instance: a := String   sig#: 56f3bd0e   subst: v0 := String
+              314:53-314:54 Int :: Int
+              314:55-314:58 Str :: String
+        def d0 :: Dict Int Int    [340:21-340:23]   id: author/project:Fbip.d0@340:21   sig: Dict Int Int   kinds:    group: author/project:Fbip.d0@340:21 nonrec inferred
+          341:25-341:46 Call :: Dict Int Int
+            341:25-341:30 VarTopLevel :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: author/project:Fbip.fillD   use: gen
+            341:31-341:32 Int :: Int
+            341:33-341:35 Int :: Int
+            341:36-341:46 VarForeign :: Dict Int Int   callee: elm/core:Dict.empty   instance: k := Int, v := Int   sig#: dd8ed12a   subst: v0 := Int, v1 := Int
+        def c3 :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )    [349:21-349:23]   id: author/project:Fbip.c3@349:21   sig: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   kinds:    group: author/project:Fbip.c3@349:21 nonrec inferred
+          350:25-350:126 Call :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+            350:25-350:34 VarDebug :: String -> ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) ) -> ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   callee: elm/core:Debug.log   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   sig#: 6ecaa5dd   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+            350:35-350:48 Str :: String
+            350:49-350:126 Triple :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+              350:51-350:91 Call :: ( Int, Int, Int )
+                350:51-350:55 VarTopLevel :: Dict Int Int -> ( Int, Int, Int )   callee: author/project:Fbip.sigD   use: gen
+                350:57-350:91 Call :: Dict Int Int
+                  350:57-350:62 VarTopLevel :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: author/project:Fbip.dropD   use: gen
+                  350:63-350:64 Int :: Int
+                  350:65-350:67 Int :: Int
+                  350:69-350:91 Call :: Dict Int Int
+                    350:69-350:74 VarTopLevel :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: author/project:Fbip.fillD   use: gen
+                    350:75-350:76 Int :: Int
+                    350:77-350:80 Int :: Int
+                    350:81-350:91 VarForeign :: Dict Int Int   callee: elm/core:Dict.empty   instance: k := Int, v := Int   sig#: dd8ed12a   subst: v0 := Int, v1 := Int
+              350:95-350:114 Call :: ( Int, Int, Int )
+                350:95-350:99 VarTopLevel :: Dict Int Int -> ( Int, Int, Int )   callee: author/project:Fbip.sigD   use: gen
+                350:101-350:114 Call :: Dict Int Int
+                  350:101-350:106 VarTopLevel :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: author/project:Fbip.dropD   use: gen
+                  350:107-350:108 Int :: Int
+                  350:109-350:111 Int :: Int
+                  350:112-350:114 VarLocal :: Dict Int Int   callee: author/project:Fbip.d0@340:21   use: gen
+              350:117-350:124 Call :: ( Int, Int, Int )
+                350:117-350:121 VarTopLevel :: Dict Int Int -> ( Int, Int, Int )   callee: author/project:Fbip.sigD   use: gen
+                350:122-350:124 VarLocal :: Dict Int Int   callee: author/project:Fbip.d0@340:21   use: gen
+        def c2 :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )    [346:21-346:23]   id: author/project:Fbip.c2@346:21   sig: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   kinds:    group: author/project:Fbip.c2@346:21 nonrec inferred
+          347:25-347:128 Call :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+            347:25-347:34 VarDebug :: String -> ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) ) -> ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   callee: elm/core:Debug.log   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   sig#: 6ecaa5dd   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+            347:35-347:48 Str :: String
+            347:49-347:128 Triple :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+              347:51-347:93 Call :: ( Int, Int, Int )
+                347:51-347:55 VarTopLevel :: Dict Int Int -> ( Int, Int, Int )   callee: author/project:Fbip.sigD   use: gen
+                347:57-347:93 Call :: Dict Int Int
+                  347:57-347:62 VarTopLevel :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: author/project:Fbip.bumpD   use: gen
+                  347:63-347:64 Int :: Int
+                  347:65-347:69 Int :: Int
+                  347:71-347:93 Call :: Dict Int Int
+                    347:71-347:76 VarTopLevel :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: author/project:Fbip.fillD   use: gen
+                    347:77-347:78 Int :: Int
+                    347:79-347:82 Int :: Int
+                    347:83-347:93 VarForeign :: Dict Int Int   callee: elm/core:Dict.empty   instance: k := Int, v := Int   sig#: dd8ed12a   subst: v0 := Int, v1 := Int
+              347:97-347:116 Call :: ( Int, Int, Int )
+                347:97-347:101 VarTopLevel :: Dict Int Int -> ( Int, Int, Int )   callee: author/project:Fbip.sigD   use: gen
+                347:103-347:116 Call :: Dict Int Int
+                  347:103-347:108 VarTopLevel :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: author/project:Fbip.bumpD   use: gen
+                  347:109-347:110 Int :: Int
+                  347:111-347:113 Int :: Int
+                  347:114-347:116 VarLocal :: Dict Int Int   callee: author/project:Fbip.d0@340:21   use: gen
+              347:119-347:126 Call :: ( Int, Int, Int )
+                347:119-347:123 VarTopLevel :: Dict Int Int -> ( Int, Int, Int )   callee: author/project:Fbip.sigD   use: gen
+                347:124-347:126 VarLocal :: Dict Int Int   callee: author/project:Fbip.d0@340:21   use: gen
+        def c1 :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )    [343:21-343:23]   id: author/project:Fbip.c1@343:21   sig: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   kinds:    group: author/project:Fbip.c1@343:21 nonrec inferred
+          344:25-344:115 Call :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+            344:25-344:34 VarDebug :: String -> ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) ) -> ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   callee: elm/core:Debug.log   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   sig#: 6ecaa5dd   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+            344:35-344:48 Str :: String
+            344:49-344:115 Triple :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+              344:51-344:80 Call :: ( Int, Int, Int )
+                344:51-344:55 VarTopLevel :: Dict Int Int -> ( Int, Int, Int )   callee: author/project:Fbip.sigD   use: gen
+                344:57-344:80 Call :: Dict Int Int
+                  344:57-344:62 VarTopLevel :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: author/project:Fbip.fillD   use: gen
+                  344:63-344:64 Int :: Int
+                  344:65-344:69 Int :: Int
+                  344:70-344:80 VarForeign :: Dict Int Int   callee: elm/core:Dict.empty   instance: k := Int, v := Int   sig#: dd8ed12a   subst: v0 := Int, v1 := Int
+              344:83-344:103 Call :: ( Int, Int, Int )
+                344:83-344:87 VarTopLevel :: Dict Int Int -> ( Int, Int, Int )   callee: author/project:Fbip.sigD   use: gen
+                344:89-344:103 Call :: Dict Int Int
+                  344:89-344:94 VarTopLevel :: Int -> Int -> Dict Int Int -> Dict Int Int   callee: author/project:Fbip.fillD   use: gen
+                  344:95-344:97 Int :: Int
+                  344:98-344:100 Int :: Int
+                  344:101-344:103 VarLocal :: Dict Int Int   callee: author/project:Fbip.d0@340:21   use: gen
+              344:106-344:113 Call :: ( Int, Int, Int )
+                344:106-344:110 VarTopLevel :: Dict Int Int -> ( Int, Int, Int )   callee: author/project:Fbip.sigD   use: gen
+                344:111-344:113 VarLocal :: Dict Int Int   callee: author/project:Fbip.d0@340:21   use: gen
+        def b8 :: ( List Int, Int )    [337:21-337:23]   id: author/project:Fbip.b8@337:21   sig: ( List Int, Int )   kinds:    group: author/project:Fbip.b8@337:21 nonrec inferred
+          338:25-338:131 Call :: ( List Int, Int )
+            338:25-338:34 VarDebug :: String -> ( List Int, Int ) -> ( List Int, Int )   callee: elm/core:Debug.log   instance: a := ( List Int, Int )   sig#: 6ecaa5dd   subst: v0 := ( List Int, Int )
+            338:35-338:48 Str :: String
+            338:49-338:131 Pair :: ( List Int, Int )
+              338:51-338:77 Call :: List Int
+                338:51-338:57 VarTopLevel :: List Int -> (Int -> Int) -> List Int   callee: author/project:Fbip.addAll   use: gen
+                338:58-338:69 List :: List Int
+                  338:60-338:61 Int :: Int
+                  338:63-338:64 Int :: Int
+                  338:66-338:67 Int :: Int
+                338:71-338:77 Call :: Int -> Int
+                  338:71-338:74 VarLocal :: Int -> Int -> Int   callee: author/project:Fbip.add@334:21   use: gen   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  338:75-338:77 Int :: Int
+              338:80-338:129 Binop :: Int   callee: elm/core:Basics.apR   instance: a := Array Int, b := Int   sig#: 742a0ff5   subst: v0 := Array Int, v1 := Int
+                338:80-338:119 Call :: Array Int
+                  338:80-338:88 VarTopLevel :: Int -> (Int -> Int -> Array Int) -> Array Int   callee: author/project:Fbip.callOnce   use: gen
+                  338:89-338:90 Int :: Int
+                  338:92-338:119 Call :: Int -> Int -> Array Int
+                    338:92-338:96 VarTopLevel :: (Array Int -> Int -> Int -> Array Int) -> Array Int -> Int -> Int -> Array Int   callee: author/project:Fbip.bind   use: gen
+                    338:97-338:100 VarTopLevel :: Array Int -> Int -> Int -> Array Int   callee: author/project:Fbip.put   use: gen
+                    338:102-338:119 Call :: Array Int
+                      338:102-338:114 VarForeign :: Int -> Int -> Array Int   callee: elm/core:Array.repeat   instance: a := Int   sig#: 56f3bd0e   subst: v0 := Int
+                      338:115-338:117 Int :: Int
+                      338:118-338:119 Int :: Int
+                338:125-338:129 VarTopLevel :: Array Int -> Int   callee: author/project:Fbip.sumA   use: gen
+        def b7 :: ( ( Int, Int, Int ), ( List Int, List Int ), ( Int, Int, Int ) )    [331:21-331:23]   id: author/project:Fbip.b7@331:21   sig: ( ( Int, Int, Int ), ( List Int, List Int ), ( Int, Int, Int ) )   kinds:    group: author/project:Fbip.b7@331:21 nonrec inferred
+          332:25-332:168 Call :: ( ( Int, Int, Int ), ( List Int, List Int ), ( Int, Int, Int ) )
+            332:25-332:34 VarDebug :: String -> ( ( Int, Int, Int ), ( List Int, List Int ), ( Int, Int, Int ) ) -> ( ( Int, Int, Int ), ( List Int, List Int ), ( Int, Int, Int ) )   callee: elm/core:Debug.log   instance: a := ( ( Int, Int, Int ), ( List Int, List Int ), ( Int, Int, Int ) )   sig#: 6ecaa5dd   subst: v0 := ( ( Int, Int, Int ), ( List Int, List Int ), ( Int, Int, Int ) )
+            332:35-332:40 Str :: String
+            332:41-332:168 Triple :: ( ( Int, Int, Int ), ( List Int, List Int ), ( Int, Int, Int ) )
+              332:43-332:81 Call :: ( Int, Int, Int )
+                332:43-332:46 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                332:48-332:81 Call :: Array Int
+                  332:48-332:55 VarTopLevel :: Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.loopPap   use: gen
+                  332:56-332:57 Int :: Int
+                  332:58-332:62 Int :: Int
+                  332:64-332:81 Call :: Array Int
+                    332:64-332:76 VarForeign :: Int -> Int -> Array Int   callee: elm/core:Array.repeat   instance: a := Int   sig#: 56f3bd0e   subst: v0 := Int
+                    332:77-332:79 Int :: Int
+                    332:80-332:81 Int :: Int
+              332:85-332:156 Pair :: ( List Int, List Int )
+                332:87-332:118 Call :: List Int
+                  332:87-332:99 VarForeign :: Array Int -> List Int   callee: elm/core:Array.toList   instance: a := Int   sig#: 7d46edeb   subst: v0 := Int
+                  332:101-332:118 Call :: Array Int
+                    332:101-332:112 VarForeign :: ( Array Int, Array Int ) -> Array Int   callee: elm/core:Tuple.first   instance: a := Array Int, b := Array Int   sig#: ee0f5e96   subst: v0 := Array Int, v1 := Array Int
+                    332:113-332:118 VarLocal :: ( Array Int, Array Int )   callee: author/project:Fbip.twice@328:21   use: gen
+                332:121-332:153 Call :: List Int
+                  332:121-332:133 VarForeign :: Array Int -> List Int   callee: elm/core:Array.toList   instance: a := Int   sig#: 7d46edeb   subst: v0 := Int
+                  332:135-332:153 Call :: Array Int
+                    332:135-332:147 VarForeign :: ( Array Int, Array Int ) -> Array Int   callee: elm/core:Tuple.second   instance: a := Array Int, b := Array Int   sig#: ee0f5e97   subst: v0 := Array Int, v1 := Array Int
+                    332:148-332:153 VarLocal :: ( Array Int, Array Int )   callee: author/project:Fbip.twice@328:21   use: gen
+              332:158-332:166 Call :: ( Int, Int, Int )
+                332:158-332:161 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                332:162-332:166 VarLocal :: Array Int   callee: author/project:Fbip.held@325:21   use: gen
+        def b6 :: ( List Int, List Int, List Int )    [322:21-322:23]   id: author/project:Fbip.b6@322:21   sig: ( List Int, List Int, List Int )   kinds:    group: author/project:Fbip.b6@322:21 nonrec inferred
+          323:25-323:227 Call :: ( List Int, List Int, List Int )
+            323:25-323:34 VarDebug :: String -> ( List Int, List Int, List Int ) -> ( List Int, List Int, List Int )   callee: elm/core:Debug.log   instance: a := ( List Int, List Int, List Int )   sig#: 6ecaa5dd   subst: v0 := ( List Int, List Int, List Int )
+            323:35-323:41 Str :: String
+            323:42-323:227 Triple :: ( List Int, List Int, List Int )
+              323:44-323:133 Call :: List Int
+                323:44-323:56 VarForeign :: Array Int -> List Int   callee: elm/core:Array.toList   instance: a := Int   sig#: 7d46edeb   subst: v0 := Int
+                323:58-323:133 Call :: Array Int
+                  323:58-323:67 VarForeign :: (Array Int -> Int) -> Array (Array Int) -> Array Int   callee: elm/core:Array.map   instance: a := Array Int, b := Int   sig#: 01ca20c1   subst: v0 := Array Int, v1 := Int
+                  323:68-323:72 VarTopLevel :: Array Int -> Int   callee: author/project:Fbip.sumA   use: gen
+                  323:74-323:133 Call :: Array (Array Int)
+                    323:74-323:82 VarTopLevel :: Int -> Int -> Array (Array Int) -> Array (Array Int)   callee: author/project:Fbip.loopGrid   use: gen
+                    323:83-323:84 Int :: Int
+                    323:85-323:89 Int :: Int
+                    323:91-323:133 Call :: Array (Array Int)
+                      323:91-323:107 VarForeign :: Int -> (Int -> Array Int) -> Array (Array Int)   callee: elm/core:Array.initialize   instance: a := Array Int   sig#: 6241b1a2   subst: v0 := Array Int
+                      323:108-323:109 Int :: Int
+                      323:111-323:133 Lambda :: Int -> Array Int
+                        323:112-323:113 PAnything :: Int
+                        323:117-323:133 Call :: Array Int
+                          323:117-323:129 VarForeign :: Int -> Int -> Array Int   callee: elm/core:Array.repeat   instance: a := Int   sig#: 56f3bd0e   subst: v0 := Int
+                          323:130-323:131 Int :: Int
+                          323:132-323:133 Int :: Int
+              323:139-323:187 Call :: List Int
+                323:139-323:151 VarForeign :: Array Int -> List Int   callee: elm/core:Array.toList   instance: a := Int   sig#: 7d46edeb   subst: v0 := Int
+                323:153-323:187 Call :: Array Int
+                  323:153-323:162 VarForeign :: (Array Int -> Int) -> Array (Array Int) -> Array Int   callee: elm/core:Array.map   instance: a := Array Int, b := Int   sig#: 01ca20c1   subst: v0 := Array Int, v1 := Int
+                  323:163-323:167 VarTopLevel :: Array Int -> Int   callee: author/project:Fbip.sumA   use: gen
+                  323:169-323:187 Call :: Array (Array Int)
+                    323:169-323:177 VarTopLevel :: Int -> Int -> Array (Array Int) -> Array (Array Int)   callee: author/project:Fbip.loopGrid   use: gen
+                    323:178-323:179 Int :: Int
+                    323:180-323:182 Int :: Int
+                    323:183-323:187 VarLocal :: Array (Array Int)   callee: author/project:Fbip.grid@319:21   use: gen
+              323:191-323:224 Call :: List Int
+                323:191-323:203 VarForeign :: Array Int -> List Int   callee: elm/core:Array.toList   instance: a := Int   sig#: 7d46edeb   subst: v0 := Int
+                323:205-323:224 Call :: Array Int
+                  323:205-323:214 VarForeign :: (Array Int -> Int) -> Array (Array Int) -> Array Int   callee: elm/core:Array.map   instance: a := Array Int, b := Int   sig#: 01ca20c1   subst: v0 := Array Int, v1 := Int
+                  323:215-323:219 VarTopLevel :: Array Int -> Int   callee: author/project:Fbip.sumA   use: gen
+                  323:220-323:224 VarLocal :: Array (Array Int)   callee: author/project:Fbip.grid@319:21   use: gen
+        def b5 :: ( List String, List String, List String )    [316:21-316:23]   id: author/project:Fbip.b5@316:21   sig: ( List String, List String, List String )   kinds:    group: author/project:Fbip.b5@316:21 nonrec inferred
+          317:25-317:176 Call :: ( List String, List String, List String )
+            317:25-317:34 VarDebug :: String -> ( List String, List String, List String ) -> ( List String, List String, List String )   callee: elm/core:Debug.log   instance: a := ( List String, List String, List String )   sig#: 6ecaa5dd   subst: v0 := ( List String, List String, List String )
+            317:35-317:43 Str :: String
+            317:44-317:176 Triple :: ( List String, List String, List String )
+              317:46-317:117 Binop :: List String   callee: elm/core:Basics.apR   instance: a := Array String, b := List String   sig#: 742a0ff5   subst: v0 := Array String, v1 := List String
+                317:46-317:101 Access :: Array String
+                  317:47-317:96 Call :: { n : Int, arr : Array String }
+                    317:47-317:54 VarTopLevel :: Int -> Int -> Rec -> Rec   callee: author/project:Fbip.loopRec   use: gen
+                    317:55-317:56 Int :: Int
+                    317:57-317:60 Int :: Int
+                    317:61-317:96 Record :: Rec
+                      317:67-317:68 Int :: Int
+                      317:76-317:94 Call :: Array String
+                        317:76-317:88 VarForeign :: Int -> String -> Array String   callee: elm/core:Array.repeat   instance: a := String   sig#: 56f3bd0e   subst: v0 := String
+                        317:89-317:90 Int :: Int
+                        317:91-317:94 Str :: String
+                317:105-317:117 VarForeign :: Array String -> List String   callee: elm/core:Array.toList   instance: a := String   sig#: 7d46edeb   subst: v0 := String
+              317:119-317:153 Binop :: List String   callee: elm/core:Basics.apR   instance: a := Array String, b := List String   sig#: 742a0ff5   subst: v0 := Array String, v1 := List String
+                317:119-317:137 Access :: Array String
+                  317:120-317:132 Call :: { n : Int, arr : Array String }
+                    317:120-317:127 VarTopLevel :: Int -> Rec -> Rec   callee: author/project:Fbip.stepRec   use: gen
+                    317:128-317:129 Int :: Int
+                    317:130-317:132 VarLocal :: Rec   callee: author/project:Fbip.r0@313:21   use: gen   instance: number1 := Int   sig#: c4603e8c   subst: v0 := Int
+                317:141-317:153 VarForeign :: Array String -> List String   callee: elm/core:Array.toList   instance: a := String   sig#: 7d46edeb   subst: v0 := String
+              317:155-317:174 Call :: List String
+                317:155-317:167 VarForeign :: Array String -> List String   callee: elm/core:Array.toList   instance: a := String   sig#: 7d46edeb   subst: v0 := String
+                317:168-317:174 Access :: Array String
+                  317:168-317:170 VarLocal :: { n : Int, arr : Array String }   <= { n : number2, arr : Array String }   callee: author/project:Fbip.r0@313:21   use: gen   instance: number1 := Int (defaulted)   sig#: c4603e8c   subst: v0 := Int
+        def b4 :: ( ( Int, List Int ), ( Int, List Int, ( Int, List Int ) ) )    [303:21-303:23]   id: author/project:Fbip.b4@303:21   sig: ( ( Int, List Int ), ( Int, List Int, ( Int, List Int ) ) )   kinds:    group: author/project:Fbip.b4@303:21 nonrec inferred
+          304:25-311:30 Call :: ( ( Int, List Int ), ( Int, List Int, ( Int, List Int ) ) )
+            304:25-304:34 VarDebug :: String -> ( ( Int, List Int ), ( Int, List Int, ( Int, List Int ) ) ) -> ( ( Int, List Int ), ( Int, List Int, ( Int, List Int ) ) )   callee: elm/core:Debug.log   instance: a := ( ( Int, List Int ), ( Int, List Int, ( Int, List Int ) ) )   sig#: 6ecaa5dd   subst: v0 := ( ( Int, List Int ), ( Int, List Int, ( Int, List Int ) ) )
+            304:35-304:41 Str :: String
+            305:29-311:30 Pair :: ( ( Int, List Int ), ( Int, List Int, ( Int, List Int ) ) )
+              305:31-307:58 Case :: ( Int, List Int )
+                305:36-305:77 Call :: Wrap
+                  305:36-305:44 VarTopLevel :: Int -> Int -> Wrap -> Wrap   callee: author/project:Fbip.loopWrap   use: gen
+                  305:45-305:46 Int :: Int
+                  305:47-305:51 Int :: Int
+                  305:53-305:77 Call :: Wrap
+                    305:53-305:57 VarCtor :: Int -> Array Int -> Wrap   callee: author/project:Fbip.Wrap
+                    305:58-305:59 Int :: Int
+                    305:61-305:77 Call :: Array Int
+                      305:61-305:73 VarForeign :: Int -> Int -> Array Int   callee: elm/core:Array.repeat   instance: a := Int   sig#: 56f3bd0e   subst: v0 := Int
+                      305:74-305:75 Int :: Int
+                      305:76-305:77 Int :: Int
+                306:33-306:41 PCtor Wrap :: Wrap
+                  306:38-306:39 PVar n :: Int
+                  306:40-306:41 PVar a :: Array Int
+                307:37-307:58 Pair :: ( Int, List Int )
+                  307:39-307:40 VarLocal :: Int
+                  307:42-307:56 Call :: List Int
+                    307:42-307:54 VarForeign :: Array Int -> List Int   callee: elm/core:Array.toList   instance: a := Int   sig#: 7d46edeb   subst: v0 := Int
+                    307:55-307:56 VarLocal :: Array Int
+              308:31-310:81 Case :: ( Int, List Int, ( Int, List Int ) )
+                308:36-308:57 Pair :: ( Wrap, Wrap )
+                  308:38-308:51 Call :: Wrap
+                    308:38-308:46 VarTopLevel :: Int -> Wrap -> Wrap   callee: author/project:Fbip.stepWrap   use: gen
+                    308:47-308:48 Int :: Int
+                    308:49-308:51 VarLocal :: Wrap   callee: author/project:Fbip.w0@300:21   use: gen
+                  308:53-308:55 VarLocal :: Wrap   callee: author/project:Fbip.w0@300:21   use: gen
+                309:33-309:55 PPair :: ( Wrap, Wrap )
+                  309:35-309:43 PCtor Wrap :: Wrap
+                    309:40-309:41 PVar n :: Int
+                    309:42-309:43 PVar a :: Array Int
+                  309:45-309:53 PCtor Wrap :: Wrap
+                    309:50-309:51 PVar m :: Int
+                    309:52-309:53 PVar b :: Array Int
+                310:37-310:81 Triple :: ( Int, List Int, ( Int, List Int ) )
+                  310:39-310:40 VarLocal :: Int
+                  310:42-310:56 Call :: List Int
+                    310:42-310:54 VarForeign :: Array Int -> List Int   callee: elm/core:Array.toList   instance: a := Int   sig#: 7d46edeb   subst: v0 := Int
+                    310:55-310:56 VarLocal :: Array Int
+                  310:58-310:79 Pair :: ( Int, List Int )
+                    310:60-310:61 VarLocal :: Int
+                    310:63-310:77 Call :: List Int
+                      310:63-310:75 VarForeign :: Array Int -> List Int   callee: elm/core:Array.toList   instance: a := Int   sig#: 7d46edeb   subst: v0 := Int
+                      310:76-310:77 VarLocal :: Array Int
+        def b3 :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )    [297:21-297:23]   id: author/project:Fbip.b3@297:21   sig: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   kinds:    group: author/project:Fbip.b3@297:21 nonrec inferred
+          298:25-298:120 Call :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+            298:25-298:34 VarDebug :: String -> ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) ) -> ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   callee: elm/core:Debug.log   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   sig#: 6ecaa5dd   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+            298:35-298:45 Str :: String
+            298:46-298:120 Triple :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+              298:48-298:74 Call :: ( Int, Int, Int )
+                298:48-298:51 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                298:53-298:74 Call :: Array Int
+                  298:53-298:57 VarTopLevel :: Int -> Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.fill   use: gen
+                  298:58-298:59 Int :: Int
+                  298:60-298:63 Int :: Int
+                  298:64-298:65 Int :: Int
+                  298:66-298:74 VarTopLevel :: Array Int   callee: author/project:Fbip.constant   use: gen
+              298:77-298:103 Call :: ( Int, Int, Int )
+                298:77-298:80 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                298:82-298:103 Call :: Array Int
+                  298:82-298:92 VarForeign :: Int -> Array Int -> Array Int   callee: elm/core:Array.push   instance: a := Int   sig#: e0aea4e2   subst: v0 := Int
+                  298:93-298:94 Int :: Int
+                  298:95-298:103 VarTopLevel :: Array Int   callee: author/project:Fbip.constant   use: gen
+              298:106-298:118 Call :: ( Int, Int, Int )
+                298:106-298:109 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                298:110-298:118 VarTopLevel :: Array Int   callee: author/project:Fbip.constant   use: gen
+        def b2 :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )    [294:21-294:23]   id: author/project:Fbip.b2@294:21   sig: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   kinds:    group: author/project:Fbip.b2@294:21 nonrec inferred
+          295:25-295:108 Call :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+            295:25-295:34 VarDebug :: String -> ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) ) -> ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   callee: elm/core:Debug.log   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   sig#: 6ecaa5dd   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+            295:35-295:48 Str :: String
+            295:49-295:108 Triple :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+              295:51-295:70 Call :: ( Int, Int, Int )
+                295:51-295:54 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                295:56-295:70 Call :: Array Int
+                  295:56-295:60 VarTopLevel :: Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.grow   use: gen
+                  295:61-295:62 Int :: Int
+                  295:63-295:65 Int :: Int
+                  295:66-295:70 VarLocal :: Array Int   callee: author/project:Fbip.base@291:21   use: gen
+              295:73-295:95 Call :: ( Int, Int, Int )
+                295:73-295:76 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                295:78-295:95 Call :: Array Int
+                  295:78-295:88 VarForeign :: Int -> Array Int -> Array Int   callee: elm/core:Array.push   instance: a := Int   sig#: e0aea4e2   subst: v0 := Int
+                  295:89-295:90 Int :: Int
+                  295:91-295:95 VarLocal :: Array Int   callee: author/project:Fbip.base@291:21   use: gen
+              295:98-295:106 Call :: ( Int, Int, Int )
+                295:98-295:101 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                295:102-295:106 VarLocal :: Array Int   callee: author/project:Fbip.base@291:21   use: gen
+        def b1 :: ( ( Int, Int, Int ), ( Int, String ) )    [288:21-288:23]   id: author/project:Fbip.b1@288:21   sig: ( ( Int, Int, Int ), ( Int, String ) )   kinds:    group: author/project:Fbip.b1@288:21 nonrec inferred
+          289:25-289:115 Call :: ( ( Int, Int, Int ), ( Int, String ) )
+            289:25-289:34 VarDebug :: String -> ( ( Int, Int, Int ), ( Int, String ) ) -> ( ( Int, Int, Int ), ( Int, String ) )   callee: elm/core:Debug.log   instance: a := ( ( Int, Int, Int ), ( Int, String ) )   sig#: 6ecaa5dd   subst: v0 := ( ( Int, Int, Int ), ( Int, String ) )
+            289:35-289:48 Str :: String
+            289:49-289:115 Pair :: ( ( Int, Int, Int ), ( Int, String ) )
+              289:51-289:79 Call :: ( Int, Int, Int )
+                289:51-289:54 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                289:56-289:79 Call :: Array Int
+                  289:56-289:60 VarTopLevel :: Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.grow   use: gen
+                  289:61-289:62 Int :: Int
+                  289:63-289:67 Int :: Int
+                  289:68-289:79 VarForeign :: Array Int   callee: elm/core:Array.empty   instance: a := Int   sig#: d16a3311   subst: v0 := Int
+              289:82-289:112 Call :: ( Int, String )
+                289:82-289:86 VarTopLevel :: Array String -> ( Int, String )   callee: author/project:Fbip.sigS   use: gen
+                289:88-289:112 Call :: Array String
+                  289:88-289:93 VarTopLevel :: Int -> Int -> Array String -> Array String   callee: author/project:Fbip.growS   use: gen
+                  289:94-289:95 Int :: Int
+                  289:96-289:100 Int :: Int
+                  289:101-289:112 VarForeign :: Array String   callee: elm/core:Array.empty   instance: a := String   sig#: d16a3311   subst: v0 := String
+        def a9 :: ( Maybe ( Int, String ), Maybe ( Int, String ), Maybe ( Int, String ) )    [285:21-285:23]   id: author/project:Fbip.a9@285:21   sig: ( Maybe ( Int, String ), Maybe ( Int, String ), Maybe ( Int, String ) )   kinds:    group: author/project:Fbip.a9@285:21 nonrec inferred
+          286:25-286:190 Call :: ( Maybe ( Int, String ), Maybe ( Int, String ), Maybe ( Int, String ) )
+            286:25-286:34 VarDebug :: String -> ( Maybe ( Int, String ), Maybe ( Int, String ), Maybe ( Int, String ) ) -> ( Maybe ( Int, String ), Maybe ( Int, String ), Maybe ( Int, String ) )   callee: elm/core:Debug.log   instance: a := ( Maybe ( Int, String ), Maybe ( Int, String ), Maybe ( Int, String ) )   sig#: 6ecaa5dd   subst: v0 := ( Maybe ( Int, String ), Maybe ( Int, String ), Maybe ( Int, String ) )
+            286:35-286:42 Str :: String
+            286:43-286:190 Triple :: ( Maybe ( Int, String ), Maybe ( Int, String ), Maybe ( Int, String ) )
+              286:45-286:89 Call :: Maybe ( Int, String )
+                286:45-286:54 VarForeign :: Int -> Array ( Int, String ) -> Maybe ( Int, String )   callee: elm/core:Array.get   instance: a := ( Int, String )   sig#: bbadb997   subst: v0 := ( Int, String )
+                286:55-286:57 Int :: Int
+                286:59-286:89 Call :: Array ( Int, String )
+                  286:59-286:68 VarForeign :: Int -> ( Int, String ) -> Array ( Int, String ) -> Array ( Int, String )   callee: elm/core:Array.set   instance: a := ( Int, String )   sig#: 3119be98   subst: v0 := ( Int, String )
+                  286:69-286:71 Int :: Int
+                  286:72-286:83 Pair :: ( Int, String )
+                    286:74-286:76 Negate :: Int
+                      286:75-286:76 Int :: Int
+                    286:78-286:81 Str :: String
+                  286:84-286:89 VarLocal :: Array ( Int, String )   callee: author/project:Fbip.pairs@282:21   use: gen
+              286:92-286:110 Call :: Maybe ( Int, String )
+                286:92-286:101 VarForeign :: Int -> Array ( Int, String ) -> Maybe ( Int, String )   callee: elm/core:Array.get   instance: a := ( Int, String )   sig#: bbadb997   subst: v0 := ( Int, String )
+                286:102-286:104 Int :: Int
+                286:105-286:110 VarLocal :: Array ( Int, String )   callee: author/project:Fbip.pairs@282:21   use: gen
+              286:112-286:185 Call :: Maybe ( Int, String )
+                286:112-286:121 VarForeign :: Int -> Array ( Int, String ) -> Maybe ( Int, String )   callee: elm/core:Array.get   instance: a := ( Int, String )   sig#: bbadb997   subst: v0 := ( Int, String )
+                286:122-286:123 Int :: Int
+                286:125-286:185 Call :: Array ( Int, String )
+                  286:125-286:134 VarForeign :: Int -> ( Int, String ) -> Array ( Int, String ) -> Array ( Int, String )   callee: elm/core:Array.set   instance: a := ( Int, String )   sig#: 3119be98   subst: v0 := ( Int, String )
+                  286:135-286:136 Int :: Int
+                  286:137-286:147 Pair :: ( Int, String )
+                    286:139-286:140 Int :: Int
+                    286:142-286:145 Str :: String
+                  286:149-286:185 Call :: Array ( Int, String )
+                    286:149-286:165 VarForeign :: Int -> (Int -> ( Int, String )) -> Array ( Int, String )   callee: elm/core:Array.initialize   instance: a := ( Int, String )   sig#: 6241b1a2   subst: v0 := ( Int, String )
+                    286:166-286:167 Int :: Int
+                    286:169-286:185 Lambda :: Int -> ( Int, String )
+                      286:170-286:171 PVar i :: Int
+                      286:175-286:185 Pair :: ( Int, String )
+                        286:177-286:178 VarLocal :: Int
+                        286:180-286:183 Str :: String
+        def a8 :: ( List String, List String, List String )    [275:21-275:23]   id: author/project:Fbip.a8@275:21   sig: ( List String, List String, List String )   kinds:    group: author/project:Fbip.a8@275:21 nonrec inferred
+          276:25-280:30 Call :: ( List String, List String, List String )
+            276:25-276:34 VarDebug :: String -> ( List String, List String, List String ) -> ( List String, List String, List String )   callee: elm/core:Debug.log   instance: a := ( List String, List String, List String )   sig#: 6ecaa5dd   subst: v0 := ( List String, List String, List String )
+            276:35-276:43 Str :: String
+            277:29-280:30 Triple :: ( List String, List String, List String )
+              277:31-277:150 Call :: List String
+                277:31-277:39 VarForeign :: (Shape -> String) -> List Shape -> List String   callee: elm/core:List.map   instance: a := Shape, b := String   sig#: 6a702f63   subst: v0 := Shape, v1 := String
+                277:40-277:45 VarTopLevel :: Shape -> String   callee: author/project:Fbip.shape   use: gen
+                277:47-277:150 Call :: List Shape
+                  277:47-277:59 VarForeign :: Array Shape -> List Shape   callee: elm/core:Array.toList   instance: a := Shape   sig#: 7d46edeb   subst: v0 := Shape
+                  277:61-277:150 Call :: Array Shape
+                    277:61-277:70 VarForeign :: Int -> Shape -> Array Shape -> Array Shape   callee: elm/core:Array.set   instance: a := Shape   sig#: 3119be98   subst: v0 := Shape
+                    277:71-277:72 Int :: Int
+                    277:74-277:81 Call :: Shape
+                      277:74-277:77 VarCtor :: Int -> Int -> Shape   callee: author/project:Fbip.Box
+                      277:78-277:79 Int :: Int
+                      277:80-277:81 Int :: Int
+                    277:84-277:150 Call :: Array Shape
+                      277:84-277:93 VarForeign :: Int -> Shape -> Array Shape -> Array Shape   callee: elm/core:Array.set   instance: a := Shape   sig#: 3119be98   subst: v0 := Shape
+                      277:94-277:95 Int :: Int
+                      277:97-277:103 Call :: Shape
+                        277:97-277:101 VarCtor :: Int -> Shape   callee: author/project:Fbip.Line
+                        277:102-277:103 Int :: Int
+                      277:106-277:150 Call :: Array Shape
+                        277:106-277:120 VarForeign :: List Shape -> Array Shape   callee: elm/core:Array.fromList   instance: a := Shape   sig#: ad16019a   subst: v0 := Shape
+                        277:121-277:150 List :: List Shape
+                          277:123-277:126 VarCtor :: Shape   callee: author/project:Fbip.Dot
+                          277:128-277:134 Call :: Shape
+                            277:128-277:132 VarCtor :: Int -> Shape   callee: author/project:Fbip.Line
+                            277:133-277:134 Int :: Int
+                          277:136-277:143 Call :: Shape
+                            277:136-277:139 VarCtor :: Int -> Int -> Shape   callee: author/project:Fbip.Box
+                            277:140-277:141 Int :: Int
+                            277:142-277:143 Int :: Int
+                          277:145-277:148 VarCtor :: Shape   callee: author/project:Fbip.Dot
+              278:31-278:83 Call :: List String
+                278:31-278:39 VarForeign :: (Shape -> String) -> List Shape -> List String   callee: elm/core:List.map   instance: a := Shape, b := String   sig#: 6a702f63   subst: v0 := Shape, v1 := String
+                278:40-278:45 VarTopLevel :: Shape -> String   callee: author/project:Fbip.shape   use: gen
+                278:47-278:83 Call :: List Shape
+                  278:47-278:59 VarForeign :: Array Shape -> List Shape   callee: elm/core:Array.toList   instance: a := Shape   sig#: 7d46edeb   subst: v0 := Shape
+                  278:61-278:83 Call :: Array Shape
+                    278:61-278:70 VarForeign :: Int -> Shape -> Array Shape -> Array Shape   callee: elm/core:Array.set   instance: a := Shape   sig#: 3119be98   subst: v0 := Shape
+                    278:71-278:72 Int :: Int
+                    278:73-278:76 VarCtor :: Shape   callee: author/project:Fbip.Dot
+                    278:77-278:83 VarLocal :: Array Shape   callee: author/project:Fbip.shapes@272:21   use: gen
+              279:31-279:66 Call :: List String
+                279:31-279:39 VarForeign :: (Shape -> String) -> List Shape -> List String   callee: elm/core:List.map   instance: a := Shape, b := String   sig#: 6a702f63   subst: v0 := Shape, v1 := String
+                279:40-279:45 VarTopLevel :: Shape -> String   callee: author/project:Fbip.shape   use: gen
+                279:47-279:66 Call :: List Shape
+                  279:47-279:59 VarForeign :: Array Shape -> List Shape   callee: elm/core:Array.toList   instance: a := Shape   sig#: 7d46edeb   subst: v0 := Shape
+                  279:60-279:66 VarLocal :: Array Shape   callee: author/project:Fbip.shapes@272:21   use: gen
+        def a7 :: ( ( Int, String ), ( Int, String ), ( Int, String ) )    [269:21-269:23]   id: author/project:Fbip.a7@269:21   sig: ( ( Int, String ), ( Int, String ), ( Int, String ) )   kinds:    group: author/project:Fbip.a7@269:21 nonrec inferred
+          270:25-270:159 Call :: ( ( Int, String ), ( Int, String ), ( Int, String ) )
+            270:25-270:34 VarDebug :: String -> ( ( Int, String ), ( Int, String ), ( Int, String ) ) -> ( ( Int, String ), ( Int, String ), ( Int, String ) )   callee: elm/core:Debug.log   instance: a := ( ( Int, String ), ( Int, String ), ( Int, String ) )   sig#: 6ecaa5dd   subst: v0 := ( ( Int, String ), ( Int, String ), ( Int, String ) )
+            270:35-270:44 Str :: String
+            270:45-270:159 Triple :: ( ( Int, String ), ( Int, String ), ( Int, String ) )
+              270:47-270:119 Call :: ( Int, String )
+                270:47-270:51 VarTopLevel :: Array String -> ( Int, String )   callee: author/project:Fbip.sigS   use: gen
+                270:53-270:119 Call :: Array String
+                  270:53-270:58 VarTopLevel :: Int -> Int -> Array String -> Array String   callee: author/project:Fbip.fillS   use: gen
+                  270:59-270:60 Int :: Int
+                  270:61-270:65 Int :: Int
+                  270:67-270:119 Call :: Array String
+                    270:67-270:83 VarForeign :: Int -> (Int -> String) -> Array String   callee: elm/core:Array.initialize   instance: a := String   sig#: 6241b1a2   subst: v0 := String
+                    270:84-270:88 Int :: Int
+                    270:90-270:119 Lambda :: Int -> String
+                      270:91-270:92 PVar i :: Int
+                      270:96-270:119 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                        270:96-270:99 Str :: String
+                        270:103-270:119 Call :: String
+                          270:103-270:117 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                          270:118-270:119 VarLocal :: Int
+              270:124-270:145 Call :: ( Int, String )
+                270:124-270:128 VarTopLevel :: Array String -> ( Int, String )   callee: author/project:Fbip.sigS   use: gen
+                270:130-270:145 Call :: Array String
+                  270:130-270:135 VarTopLevel :: Int -> Int -> Array String -> Array String   callee: author/project:Fbip.fillS   use: gen
+                  270:136-270:137 Int :: Int
+                  270:138-270:140 Int :: Int
+                  270:141-270:145 VarLocal :: Array String   callee: author/project:Fbip.strs@266:21   use: gen
+              270:148-270:157 Call :: ( Int, String )
+                270:148-270:152 VarTopLevel :: Array String -> ( Int, String )   callee: author/project:Fbip.sigS   use: gen
+                270:153-270:157 VarLocal :: Array String   callee: author/project:Fbip.strs@266:21   use: gen
+        def a6 :: ( Int, Int )    [263:21-263:23]   id: author/project:Fbip.a6@263:21   sig: ( Int, Int )   kinds:    group: author/project:Fbip.a6@263:21 nonrec inferred
+          264:25-264:120 Call :: ( Int, Int )
+            264:25-264:34 VarDebug :: String -> ( Int, Int ) -> ( Int, Int )   callee: elm/core:Debug.log   instance: a := ( Int, Int )   sig#: 6ecaa5dd   subst: v0 := ( Int, Int )
+            264:35-264:45 Str :: String
+            264:46-264:120 Pair :: ( Int, Int )
+              264:48-264:81 Call :: Int
+                264:48-264:55 VarTopLevel :: Int -> Int -> Array Int -> Int -> Int   callee: author/project:Fbip.keepAll   use: gen
+                264:56-264:57 Int :: Int
+                264:58-264:60 Int :: Int
+                264:62-264:78 Call :: Array Int
+                  264:62-264:74 VarForeign :: Int -> Int -> Array Int   callee: elm/core:Array.repeat   instance: a := Int   sig#: 56f3bd0e   subst: v0 := Int
+                  264:75-264:76 Int :: Int
+                  264:77-264:78 Int :: Int
+                264:80-264:81 Int :: Int
+              264:83-264:118 Call :: Int
+                264:83-264:90 VarTopLevel :: Int -> Int -> Array Int -> Int -> Int   callee: author/project:Fbip.keepAll   use: gen
+                264:91-264:92 Int :: Int
+                264:93-264:95 Int :: Int
+                264:97-264:115 Call :: Array Int
+                  264:97-264:109 VarForeign :: Int -> Int -> Array Int   callee: elm/core:Array.repeat   instance: a := Int   sig#: 56f3bd0e   subst: v0 := Int
+                  264:110-264:113 Int :: Int
+                  264:114-264:115 Int :: Int
+                264:117-264:118 Int :: Int
+        def a5 :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )    [260:21-260:23]   id: author/project:Fbip.a5@260:21   sig: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   kinds:    group: author/project:Fbip.a5@260:21 nonrec inferred
+          261:25-261:158 Call :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+            261:25-261:34 VarDebug :: String -> ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) ) -> ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   callee: elm/core:Debug.log   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   sig#: 6ecaa5dd   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+            261:35-261:49 Str :: String
+            261:50-261:158 Triple :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+              261:52-261:116 Call :: ( Int, Int, Int )
+                261:52-261:55 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                261:57-261:116 Call :: Array Int
+                  261:57-261:61 VarTopLevel :: Int -> Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.fill   use: gen
+                  261:62-261:63 Int :: Int
+                  261:64-261:69 Int :: Int
+                  261:70-261:73 Int :: Int
+                  261:75-261:116 Call :: Array Int
+                    261:75-261:91 VarForeign :: Int -> (Int -> Int) -> Array Int   callee: elm/core:Array.initialize   instance: a := Int   sig#: 6241b1a2   subst: v0 := Int
+                    261:92-261:97 Int :: Int
+                    261:99-261:116 Lambda :: Int -> Int
+                      261:100-261:101 PVar i :: Int
+                      261:105-261:116 Call :: Int
+                        261:105-261:110 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+                        261:111-261:114 Int :: Int
+                        261:115-261:116 VarLocal :: Int
+              261:121-261:145 Call :: ( Int, Int, Int )
+                261:121-261:124 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                261:126-261:145 Call :: Array Int
+                  261:126-261:130 VarTopLevel :: Int -> Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.fill   use: gen
+                  261:131-261:132 Int :: Int
+                  261:133-261:136 Int :: Int
+                  261:137-261:140 Int :: Int
+                  261:141-261:145 VarLocal :: Array Int   callee: author/project:Fbip.deep@257:21   use: gen
+              261:148-261:156 Call :: ( Int, Int, Int )
+                261:148-261:151 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                261:152-261:156 VarLocal :: Array Int   callee: author/project:Fbip.deep@257:21   use: gen
+        def a4 :: ( Int, Int, Int )    [254:21-254:23]   id: author/project:Fbip.a4@254:21   sig: ( Int, Int, Int )   kinds:    group: author/project:Fbip.a4@254:21 nonrec inferred
+          255:25-255:100 Call :: ( Int, Int, Int )
+            255:25-255:34 VarDebug :: String -> ( Int, Int, Int ) -> ( Int, Int, Int )   callee: elm/core:Debug.log   instance: a := ( Int, Int, Int )   sig#: 6ecaa5dd   subst: v0 := ( Int, Int, Int )
+            255:35-255:47 Str :: String
+            255:49-255:100 Call :: ( Int, Int, Int )
+              255:49-255:52 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+              255:54-255:100 Call :: Array Int
+                255:54-255:58 VarTopLevel :: Int -> Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.fill   use: gen
+                255:59-255:60 Int :: Int
+                255:61-255:65 Int :: Int
+                255:66-255:68 Int :: Int
+                255:70-255:100 Call :: Array Int
+                  255:70-255:86 VarForeign :: Int -> (Int -> Int) -> Array Int   callee: elm/core:Array.initialize   instance: a := Int   sig#: 6241b1a2   subst: v0 := Int
+                  255:87-255:91 Int :: Int
+                  255:92-255:100 VarForeign :: Int -> Int   callee: elm/core:Basics.identity   instance: a := Int   sig#: 1f734da5   subst: v0 := Int
+        def a3 :: ( Int, Int, Int )    [251:21-251:23]   id: author/project:Fbip.a3@251:21   sig: ( Int, Int, Int )   kinds:    group: author/project:Fbip.a3@251:21 nonrec inferred
+          252:25-252:86 Call :: ( Int, Int, Int )
+            252:25-252:34 VarDebug :: String -> ( Int, Int, Int ) -> ( Int, Int, Int )   callee: elm/core:Debug.log   instance: a := ( Int, Int, Int )   sig#: 6ecaa5dd   subst: v0 := ( Int, Int, Int )
+            252:35-252:46 Str :: String
+            252:48-252:86 Call :: ( Int, Int, Int )
+              252:48-252:51 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+              252:53-252:86 Call :: Array Int
+                252:53-252:57 VarTopLevel :: Int -> Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.fill   use: gen
+                252:58-252:59 Int :: Int
+                252:60-252:64 Int :: Int
+                252:65-252:66 Int :: Int
+                252:68-252:86 Call :: Array Int
+                  252:68-252:80 VarForeign :: Int -> Int -> Array Int   callee: elm/core:Array.repeat   instance: a := Int   sig#: 56f3bd0e   subst: v0 := Int
+                  252:81-252:84 Int :: Int
+                  252:85-252:86 Int :: Int
+        def a2 :: ( ( Int, Int, Int ), ( Int, Int, Int ), List Int )    [248:21-248:23]   id: author/project:Fbip.a2@248:21   sig: ( ( Int, Int, Int ), ( Int, Int, Int ), List Int )   kinds:    group: author/project:Fbip.a2@248:21 nonrec inferred
+          249:25-249:122 Call :: ( ( Int, Int, Int ), ( Int, Int, Int ), List Int )
+            249:25-249:34 VarDebug :: String -> ( ( Int, Int, Int ), ( Int, Int, Int ), List Int ) -> ( ( Int, Int, Int ), ( Int, Int, Int ), List Int )   callee: elm/core:Debug.log   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), List Int )   sig#: 6ecaa5dd   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), List Int )
+            249:35-249:48 Str :: String
+            249:49-249:122 Triple :: ( ( Int, Int, Int ), ( Int, Int, Int ), List Int )
+              249:51-249:72 Call :: ( Int, Int, Int )
+                249:51-249:54 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                249:56-249:72 Call :: Array Int
+                  249:56-249:60 VarTopLevel :: Int -> Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.fill   use: gen
+                  249:61-249:62 Int :: Int
+                  249:63-249:64 Int :: Int
+                  249:65-249:66 Int :: Int
+                  249:67-249:72 VarLocal :: Array Int   callee: author/project:Fbip.small@242:21   use: gen
+              249:75-249:84 Call :: ( Int, Int, Int )
+                249:75-249:78 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+                249:79-249:84 VarLocal :: Array Int   callee: author/project:Fbip.small@242:21   use: gen
+              249:86-249:119 Call :: List Int
+                249:86-249:98 VarForeign :: Array Int -> List Int   callee: elm/core:Array.toList   instance: a := Int   sig#: 7d46edeb   subst: v0 := Int
+                249:100-249:119 Call :: Array Int
+                  249:100-249:109 VarForeign :: Int -> Int -> Array Int -> Array Int   callee: elm/core:Array.set   instance: a := Int   sig#: 3119be98   subst: v0 := Int
+                  249:110-249:111 Int :: Int
+                  249:112-249:113 Int :: Int
+                  249:114-249:119 VarLocal :: Array Int   callee: author/project:Fbip.small@242:21   use: gen
+        def a1 :: ( Int, Int, Int )    [245:21-245:23]   id: author/project:Fbip.a1@245:21   sig: ( Int, Int, Int )   kinds:    group: author/project:Fbip.a1@245:21 nonrec inferred
+          246:25-246:86 Call :: ( Int, Int, Int )
+            246:25-246:34 VarDebug :: String -> ( Int, Int, Int ) -> ( Int, Int, Int )   callee: elm/core:Debug.log   instance: a := ( Int, Int, Int )   sig#: 6ecaa5dd   subst: v0 := ( Int, Int, Int )
+            246:35-246:48 Str :: String
+            246:50-246:86 Call :: ( Int, Int, Int )
+              246:50-246:53 VarTopLevel :: Array Int -> ( Int, Int, Int )   callee: author/project:Fbip.sig   use: gen
+              246:55-246:86 Call :: Array Int
+                246:55-246:59 VarTopLevel :: Int -> Int -> Int -> Array Int -> Array Int   callee: author/project:Fbip.fill   use: gen
+                246:60-246:61 Int :: Int
+                246:62-246:65 Int :: Int
+                246:66-246:67 Int :: Int
+                246:69-246:86 Call :: Array Int
+                  246:69-246:81 VarForeign :: Int -> Int -> Array Int   callee: elm/core:Array.repeat   instance: a := Int   sig#: 56f3bd0e   subst: v0 := Int
+                  246:82-246:84 Int :: Int
+                  246:85-246:86 Int :: Int
+        353:17-357:37 If :: ( (), Cmd () )
+          353:20-353:221 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            353:20-353:217 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+              353:20-353:207 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                353:20-353:197 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  353:20-353:187 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                    353:20-353:177 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                      353:20-353:167 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                        353:20-353:157 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                          353:20-353:147 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                            353:20-353:137 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                              353:20-353:127 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                353:20-353:117 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                  353:20-353:107 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                    353:20-353:97 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                      353:20-353:87 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                        353:20-353:77 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                          353:20-353:67 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                            353:20-353:57 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                              353:20-353:47 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                                353:20-353:37 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                                                  353:20-353:27 Call :: Int
+                                                    353:20-353:24 VarTopLevel :: ( Int, Int, Int ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( Int, Int, Int )   sig#: 0ddc4b5e   subst: v0 := ( Int, Int, Int )
+                                                    353:25-353:27 VarLocal :: ( Int, Int, Int )   callee: author/project:Fbip.a1@245:21   use: gen
+                                                  353:30-353:37 Call :: Int
+                                                    353:30-353:34 VarTopLevel :: ( ( Int, Int, Int ), ( Int, Int, Int ), List Int ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), List Int )   sig#: 0ddc4b5e   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), List Int )
+                                                    353:35-353:37 VarLocal :: ( ( Int, Int, Int ), ( Int, Int, Int ), List Int )   callee: author/project:Fbip.a2@248:21   use: gen
+                                                353:40-353:47 Call :: Int
+                                                  353:40-353:44 VarTopLevel :: ( Int, Int, Int ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( Int, Int, Int )   sig#: 0ddc4b5e   subst: v0 := ( Int, Int, Int )
+                                                  353:45-353:47 VarLocal :: ( Int, Int, Int )   callee: author/project:Fbip.a3@251:21   use: gen
+                                              353:50-353:57 Call :: Int
+                                                353:50-353:54 VarTopLevel :: ( Int, Int, Int ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( Int, Int, Int )   sig#: 0ddc4b5e   subst: v0 := ( Int, Int, Int )
+                                                353:55-353:57 VarLocal :: ( Int, Int, Int )   callee: author/project:Fbip.a4@254:21   use: gen
+                                            353:60-353:67 Call :: Int
+                                              353:60-353:64 VarTopLevel :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   sig#: 0ddc4b5e   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+                                              353:65-353:67 VarLocal :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   callee: author/project:Fbip.a5@260:21   use: gen
+                                          353:70-353:77 Call :: Int
+                                            353:70-353:74 VarTopLevel :: ( Int, Int ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( Int, Int )   sig#: 0ddc4b5e   subst: v0 := ( Int, Int )
+                                            353:75-353:77 VarLocal :: ( Int, Int )   callee: author/project:Fbip.a6@263:21   use: gen
+                                        353:80-353:87 Call :: Int
+                                          353:80-353:84 VarTopLevel :: ( ( Int, String ), ( Int, String ), ( Int, String ) ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( ( Int, String ), ( Int, String ), ( Int, String ) )   sig#: 0ddc4b5e   subst: v0 := ( ( Int, String ), ( Int, String ), ( Int, String ) )
+                                          353:85-353:87 VarLocal :: ( ( Int, String ), ( Int, String ), ( Int, String ) )   callee: author/project:Fbip.a7@269:21   use: gen
+                                      353:90-353:97 Call :: Int
+                                        353:90-353:94 VarTopLevel :: ( List String, List String, List String ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( List String, List String, List String )   sig#: 0ddc4b5e   subst: v0 := ( List String, List String, List String )
+                                        353:95-353:97 VarLocal :: ( List String, List String, List String )   callee: author/project:Fbip.a8@275:21   use: gen
+                                    353:100-353:107 Call :: Int
+                                      353:100-353:104 VarTopLevel :: ( Maybe ( Int, String ), Maybe ( Int, String ), Maybe ( Int, String ) ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( Maybe ( Int, String ), Maybe ( Int, String ), Maybe ( Int, String ) )   sig#: 0ddc4b5e   subst: v0 := ( Maybe ( Int, String ), Maybe ( Int, String ), Maybe ( Int, String ) )
+                                      353:105-353:107 VarLocal :: ( Maybe ( Int, String ), Maybe ( Int, String ), Maybe ( Int, String ) )   callee: author/project:Fbip.a9@285:21   use: gen
+                                  353:110-353:117 Call :: Int
+                                    353:110-353:114 VarTopLevel :: ( ( Int, Int, Int ), ( Int, String ) ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( ( Int, Int, Int ), ( Int, String ) )   sig#: 0ddc4b5e   subst: v0 := ( ( Int, Int, Int ), ( Int, String ) )
+                                    353:115-353:117 VarLocal :: ( ( Int, Int, Int ), ( Int, String ) )   callee: author/project:Fbip.b1@288:21   use: gen
+                                353:120-353:127 Call :: Int
+                                  353:120-353:124 VarTopLevel :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   sig#: 0ddc4b5e   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+                                  353:125-353:127 VarLocal :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   callee: author/project:Fbip.b2@294:21   use: gen
+                              353:130-353:137 Call :: Int
+                                353:130-353:134 VarTopLevel :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   sig#: 0ddc4b5e   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+                                353:135-353:137 VarLocal :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   callee: author/project:Fbip.b3@297:21   use: gen
+                            353:140-353:147 Call :: Int
+                              353:140-353:144 VarTopLevel :: ( ( Int, List Int ), ( Int, List Int, ( Int, List Int ) ) ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( ( Int, List Int ), ( Int, List Int, ( Int, List Int ) ) )   sig#: 0ddc4b5e   subst: v0 := ( ( Int, List Int ), ( Int, List Int, ( Int, List Int ) ) )
+                              353:145-353:147 VarLocal :: ( ( Int, List Int ), ( Int, List Int, ( Int, List Int ) ) )   callee: author/project:Fbip.b4@303:21   use: gen
+                          353:150-353:157 Call :: Int
+                            353:150-353:154 VarTopLevel :: ( List String, List String, List String ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( List String, List String, List String )   sig#: 0ddc4b5e   subst: v0 := ( List String, List String, List String )
+                            353:155-353:157 VarLocal :: ( List String, List String, List String )   callee: author/project:Fbip.b5@316:21   use: gen
+                        353:160-353:167 Call :: Int
+                          353:160-353:164 VarTopLevel :: ( List Int, List Int, List Int ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( List Int, List Int, List Int )   sig#: 0ddc4b5e   subst: v0 := ( List Int, List Int, List Int )
+                          353:165-353:167 VarLocal :: ( List Int, List Int, List Int )   callee: author/project:Fbip.b6@322:21   use: gen
+                      353:170-353:177 Call :: Int
+                        353:170-353:174 VarTopLevel :: ( ( Int, Int, Int ), ( List Int, List Int ), ( Int, Int, Int ) ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( ( Int, Int, Int ), ( List Int, List Int ), ( Int, Int, Int ) )   sig#: 0ddc4b5e   subst: v0 := ( ( Int, Int, Int ), ( List Int, List Int ), ( Int, Int, Int ) )
+                        353:175-353:177 VarLocal :: ( ( Int, Int, Int ), ( List Int, List Int ), ( Int, Int, Int ) )   callee: author/project:Fbip.b7@331:21   use: gen
+                    353:180-353:187 Call :: Int
+                      353:180-353:184 VarTopLevel :: ( List Int, Int ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( List Int, Int )   sig#: 0ddc4b5e   subst: v0 := ( List Int, Int )
+                      353:185-353:187 VarLocal :: ( List Int, Int )   callee: author/project:Fbip.b8@337:21   use: gen
+                  353:190-353:197 Call :: Int
+                    353:190-353:194 VarTopLevel :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   sig#: 0ddc4b5e   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+                    353:195-353:197 VarLocal :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   callee: author/project:Fbip.c1@343:21   use: gen
+                353:200-353:207 Call :: Int
+                  353:200-353:204 VarTopLevel :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   sig#: 0ddc4b5e   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+                  353:205-353:207 VarLocal :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   callee: author/project:Fbip.c2@346:21   use: gen
+              353:210-353:217 Call :: Int
+                353:210-353:214 VarTopLevel :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) ) -> Int   callee: author/project:Fbip.seen   use: gen   instance: a := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   sig#: 0ddc4b5e   subst: v0 := ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )
+                353:215-353:217 VarLocal :: ( ( Int, Int, Int ), ( Int, Int, Int ), ( Int, Int, Int ) )   callee: author/project:Fbip.c3@349:21   use: gen
+            353:220-353:221 Int :: Int
+          354:21-354:37 Pair :: ( (), Cmd () )
+            354:23-354:25 Unit :: ()
+            354:27-354:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          357:21-357:37 Pair :: ( (), Cmd () )
+            357:23-357:25 Unit :: ()
+            357:27-357:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      358:20-358:43 Lambda :: () -> () -> ( (), Cmd () )
+        358:21-358:22 PAnything :: ()
+        358:23-358:24 PVar m :: ()
+        358:28-358:43 Pair :: ( (), Cmd () )
+          358:30-358:31 VarLocal :: ()
+          358:33-358:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      359:27-359:41 Lambda :: () -> Sub ()
+        359:28-359:29 PAnything :: ()
+        359:33-359:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Fbip.callTwice   kind: function   reads:    needs: 
+init: 1   id: author/project:Fbip.stepWrap   kind: function   reads:    needs: 
+init: 2   id: author/project:Fbip.loopWrap   kind: function   reads: author/project:Fbip.stepWrap   needs:    group: author/project:Fbip.loopWrap
+init: 3   id: author/project:Fbip.constant   kind: value   reads:    needs:    init-dep: no
+init: 4   id: author/project:Fbip.callOnce   kind: function   reads:    needs: 
+init: 5   id: author/project:Fbip.stepRec   kind: function   reads:    needs: 
+init: 6   id: author/project:Fbip.setCell   kind: function   reads:    needs: 
+init: 7   id: author/project:Fbip.loopGrid   kind: function   reads: author/project:Fbip.setCell   needs:    group: author/project:Fbip.loopGrid
+init: 8   id: author/project:Fbip.loopRec   kind: function   reads: author/project:Fbip.stepRec   needs:    group: author/project:Fbip.loopRec
+init: 9   id: author/project:Fbip.addAll   kind: function   reads:    needs: 
+init: 10   id: author/project:Fbip.shape   kind: function   reads:    needs: 
+init: 11   id: author/project:Fbip.growS   kind: function   reads:    needs:    group: author/project:Fbip.growS
+init: 12   id: author/project:Fbip.fillS   kind: function   reads:    needs:    group: author/project:Fbip.fillS
+init: 13   id: author/project:Fbip.fillD   kind: function   reads:    needs:    group: author/project:Fbip.fillD
+init: 14   id: author/project:Fbip.dropD   kind: function   reads:    needs:    group: author/project:Fbip.dropD
+init: 15   id: author/project:Fbip.bumpD   kind: function   reads:    needs:    group: author/project:Fbip.bumpD
+init: 16   id: author/project:Fbip.sumA   kind: function   reads:    needs: 
+init: 17   id: author/project:Fbip.keepAll   kind: function   reads: author/project:Fbip.sumA   needs:    group: author/project:Fbip.keepAll
+init: 18   id: author/project:Fbip.sigS   kind: function   reads:    needs: 
+init: 19   id: author/project:Fbip.sigD   kind: function   reads:    needs: 
+init: 20   id: author/project:Fbip.seen   kind: function   reads:    needs: 
+init: 21   id: author/project:Fbip.grow   kind: function   reads:    needs:    group: author/project:Fbip.grow
+init: 22   id: author/project:Fbip.fill   kind: function   reads:    needs:    group: author/project:Fbip.fill
+init: 23   id: author/project:Fbip.bind   kind: function   reads:    needs: 
+init: 24   id: author/project:Fbip.sig   kind: function   reads: author/project:Fbip.sumA   needs: 
+init: 25   id: author/project:Fbip.rep   kind: function   reads:    needs: 
+init: 26   id: author/project:Fbip.put   kind: function   reads:    needs: 
+init: 27   id: author/project:Fbip.loopPap   kind: function   reads: author/project:Fbip.callOnce,author/project:Fbip.bind,author/project:Fbip.put   needs:    group: author/project:Fbip.loopPap
+init: 28   id: author/project:Fbip.main   kind: value   reads: author/project:Fbip.callTwice,author/project:Fbip.stepWrap,author/project:Fbip.loopWrap,author/project:Fbip.constant,author/project:Fbip.callOnce,author/project:Fbip.stepRec,author/project:Fbip.loopGrid,author/project:Fbip.loopRec,author/project:Fbip.addAll,author/project:Fbip.shape,author/project:Fbip.growS,author/project:Fbip.fillS,author/project:Fbip.fillD,author/project:Fbip.dropD,author/project:Fbip.bumpD,author/project:Fbip.sumA,author/project:Fbip.keepAll,author/project:Fbip.sigS,author/project:Fbip.sigD,author/project:Fbip.seen,author/project:Fbip.grow,author/project:Fbip.fill,author/project:Fbip.bind,author/project:Fbip.sig,author/project:Fbip.rep,author/project:Fbip.put,author/project:Fbip.loopPap   needs: author/project:Fbip.constant   init-dep: yes

@@ -97,6 +97,12 @@ t(J + "unsafeGet", ['Array.get 1 (big 3)', 'let a = big 50 in ( ( Array.get 40 a
 t(J + "unsafeSet", ['Array.toList (Array.set 1 (mk 9) (big 3))', 'let a = big 3 in ( Array.toList (Array.set 0 (mk 8) a), Array.toList a )',
                     'let a = big 70 in ( Array.get 5 (Array.set 5 (mk 7) a), Array.get 5 a )', 'Array.toList (Array.set 9 (mk 6) (big 2))',
                     'let s = mk 5 in ( Array.toList (Array.set 0 s (Array.set 1 s (big 2))), s )'], needle="fic_ja_set")
+# S6: the take is made by the Rc pass from the unsafeGet of Array.setHelp and insertTailInTree (arrays with a tree: more than 32 elements)
+t(J + "unsafeTake", ['Array.get 40 (Array.set 40 (mk 9) (big 70))', 'let a = big 70 in ( Array.get 40 (Array.set 40 (mk 8) a), Array.get 40 a )',
+                     'Array.get 1500 (Array.set 1500 (mk 7) (big 2000))',
+                     'let a = big 2000 in ( Array.get 1100 (Array.set 1100 (mk 6) a), Array.get 1100 a, Array.length a )',
+                     'Array.length (List.foldl Array.push (big 1) (List.map mk (List.range 1 1100)))',
+                     'let a = big 1100 in ( Array.length (Array.push (mk 5) a), Array.get 1099 a )'], needle="fic_ja_take")
 t(J + "push", ['Array.toList (Array.push (mk 9) (big 2))', 'let a = big 2 in ( Array.toList (Array.push (mk 8) a), Array.toList a )',
                'Array.length (List.foldl Array.push (big 1) (List.map mk (List.range 1 80)))', 'let s = mk 7 in ( Array.toList (Array.push s (Array.push s Array.empty)), s )'],
   needle="fic_ja_push")
