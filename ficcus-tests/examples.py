@@ -11,8 +11,8 @@ Exit status 1 on any difference.
 import argparse, os, shutil, subprocess, sys, tempfile, difflib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "letunused", "jsondeep", "jsondeep1m", "indirectjson", "str2", "init2", "silly", "grow1", "grow2", "grow3", "lit", "dbg", "parse", "unres", "rand", "synt", "evo", "comp", "reuse", "letop", "fbip"]
-RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "letunused", "jsondeep", "jsondeep1m", "indirectjson", "str2", "init2", "silly", "grow3", "lit", "dbg", "parse", "unres", "rand", "synt", "evo", "comp", "reuse", "letop", "fbip"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
+NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "letunused", "jsondeep", "jsondeep1m", "indirectjson", "str2", "init2", "silly", "grow1", "grow2", "grow3", "lit", "dbg", "parse", "unres", "rand", "synt", "evo", "comp", "reuse", "letop", "fbip", "regexex"]
+RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "letunused", "jsondeep", "jsondeep1m", "indirectjson", "str2", "init2", "silly", "grow3", "lit", "dbg", "parse", "unres", "rand", "synt", "evo", "comp", "reuse", "letop", "fbip", "regexex"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
 
 
 NO_SAN = {"jsondeep1m"}      # too deep for the larger frames of AddressSanitizer

@@ -1,0 +1,24 @@
+contains: (True,False,False)
+invalid: [False,False,False,False,False,True,True]
+find: [(("1",1,1),[]),(("22",3,2),[]),(("333",6,3),[])]
+find-groups: [(("a",0,1),[Just "a",Nothing]),(("a",3,2),[Just "a",Nothing]),(("ab",5,3),[Just "a",Just "b"])]
+find-nested: [(("ab",0,1),[Just "ab",Just "a",Nothing]),(("abc",3,2),[Just "ab",Just "a",Just "c"])]
+find-atmost: ["1","22"]
+find-location: [("on a boat",[Just "boat"]),("in a lake",[Just "lake"])]
+greedy-lazy: (["abcabc"],["abc","abc"],["aaa","aaa"])
+alternation: (["a"],["ab"],["cats","dog"])
+classes: (["def"],["a-b","c"],["12 ab ","3 c"])
+anchors: (([0,9],1),(2,2))
+dot: [False,False,True,True]
+backref: (["aa"],["ll","oo"],["aA"])
+lookaround: ((["a"],[3]),(["b"],[4]))
+case: [True,False,True,True]
+escapes: [True,True,True,False,True]
+replace: ("EdUcAtIOn","rglr xprssn","snakeCaseName")
+replace-atmost: ("_d_cation","aaa")
+replace-match: ("me,host","a1:1b3:2c5:3")
+replace-none: ("","abc")
+split: ((["a","b","c","d"],["abc"]),([""],["","a",""]))
+split-atmost: (["a","b","c,d"],["a","b-c"],["a","b"])
+split-words: ["one","two","three","four"]
+options: ["ab","cd","12"]

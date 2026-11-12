@@ -1,0 +1,81 @@
+module RegexEx exposing (main)
+
+-- The Regex API (decision L24) on the behaviour that Elm 0.19.3 and Ficcus share: no empty matches, no empty captures, text of the BMP.
+-- The output must equal Elm's (expected/regexex.out, Elm 0.19.3, node). The cases where Elm differs by decision (empty matches, empty
+-- captures, `split` with an empty match, code point indexes) are in the library cases R-* and in ficcus-tests/regex/run_diff.py.
+
+import Regex exposing (Regex)
+
+
+rx : String -> Regex
+rx s =
+    Regex.fromString s |> Maybe.withDefault Regex.never
+
+
+rxi : String -> Regex
+rxi s =
+    Regex.fromStringWith { caseInsensitive = True, multiline = False } s |> Maybe.withDefault Regex.never
+
+
+rxm : String -> Regex
+rxm s =
+    Regex.fromStringWith { caseInsensitive = False, multiline = True } s |> Maybe.withDefault Regex.never
+
+
+fm : Regex.Match -> ( ( String, Int, Int ), List (Maybe String) )
+fm m =
+    ( ( m.match, m.index, m.number ), m.submatches )
+
+
+ok : String -> Bool
+ok s =
+    Regex.fromString s /= Nothing
+
+
+devowel : String -> String
+devowel s =
+    Regex.replace (rx "[aeiou]") (\_ -> "") s
+
+
+camel : String -> String
+camel s =
+    Regex.replace (rx "_([a-z])") (\m -> String.toUpper (Maybe.withDefault "" (Maybe.andThen Just (List.head (List.filterMap identity m.submatches))))) s
+
+
+main : Program () Int ()
+main =
+    Platform.worker
+        { init = \_ -> ( run (), Cmd.none )
+        , update = \_ model -> ( model, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : () -> Int
+run _ =
+    List.length
+        [ Debug.log "contains" ( Regex.contains (rx "[a-z]+") "123abc", Regex.contains (rx "^[a-z]+$") "123abc", Regex.contains Regex.never "abc" ) |> always ()
+        , Debug.log "invalid" [ ok "(.*", ok "[", ok "a{2,1}", ok "a**", ok "x)", ok "a(b)c", ok "[a-z]+" ] |> always ()
+        , Debug.log "find" (List.map fm (Regex.find (rx "[0-9]+") "a1b22c333")) |> always ()
+        , Debug.log "find-groups" (List.map fm (Regex.find (rx "(a)(b)?") "ac a ab")) |> always ()
+        , Debug.log "find-nested" (List.map fm (Regex.find (rx "((a)b)(c)?") "ab abc")) |> always ()
+        , Debug.log "find-atmost" (List.map (.match) (Regex.findAtMost 2 (rx "[0-9]+") "1 22 333 4444")) |> always ()
+        , Debug.log "find-location" (List.map (\m -> ( m.match, m.submatches )) (Regex.find (rx "[oi]n a (\\w+)") "I am on a boat in a lake.")) |> always ()
+        , Debug.log "greedy-lazy" ( List.map .match (Regex.find (rx "a.+c") "abcabc"), List.map .match (Regex.find (rx "a.+?c") "abcabc"), List.map .match (Regex.find (rx "a{2,3}") "aaaaaaa") ) |> always ()
+        , Debug.log "alternation" ( List.map .match (Regex.find (rx "a|ab") "ab"), List.map .match (Regex.find (rx "ab|a") "ab"), List.map .match (Regex.find (rx "(cat|dog)s?") "cats and a dog") ) |> always ()
+        , Debug.log "classes" ( List.map .match (Regex.find (rx "[^a-c]+") "abcdefabc"), List.map .match (Regex.find (rx "[\\w-]+") "a-b c"), List.map .match (Regex.find (rx "\\d+\\s\\D+") "12 ab 3 c") ) |> always ()
+        , Debug.log "anchors" ( ( List.map .index (Regex.find (rx "\\bfoo\\b") "foo xfoo foo"), List.length (Regex.find (rx "^a") "a\na") ), ( List.length (Regex.find (rxm "^a") "a\na"), List.length (Regex.find (rxm "a$") "a\na") ) ) |> always ()
+        , Debug.log "dot" [ Regex.contains (rx "a.b") "a\nb", Regex.contains (rx "a.b") "a\u{2028}b", Regex.contains (rx "a.b") "a\u{00A0}b", Regex.contains (rx "a[^]b") "a\nb" ] |> always ()
+        , Debug.log "backref" ( List.map .match (Regex.find (rx "(a)\\1") "aab"), List.map .match (Regex.find (rx "(\\w)\\1") "hello wood"), List.map .match (Regex.find (rxi "(a)\\1") "aA") ) |> always ()
+        , Debug.log "lookaround" ( ( List.map .match (Regex.find (rx "a(?=b)") "ab ac"), List.map .index (Regex.find (rx "a(?!b)") "ab ac") ), ( List.map .match (Regex.find (rx "(?<=a)b") "ab cb"), List.map .index (Regex.find (rx "(?<!a)b") "ab cb") ) ) |> always ()
+        , Debug.log "case" [ Regex.contains (rxi "abc") "xABCx", Regex.contains (rx "abc") "xABCx", Regex.contains (rxi "é") "É", List.length (Regex.find (rxi "[a-c]") "ABCabc") > 5 ] |> always ()
+        , Debug.log "escapes" [ Regex.contains (rx "\\u00e9") "é", Regex.contains (rx "\\x41") "A", Regex.contains (rx "a\\.b") "a.b", Regex.contains (rx "a\\.b") "axb", Regex.contains (rx "[\\]]") "]" ] |> always ()
+        , Debug.log "replace" ( Regex.replace (rx "[aeiou]") (\m -> String.toUpper m.match) "education", devowel "regular expression", camel "snake_case_name" ) |> always ()
+        , Debug.log "replace-atmost" ( Regex.replaceAtMost 2 (rx "[aeiou]") (\_ -> "_") "education", Regex.replaceAtMost 0 (rx "a") (\_ -> "b") "aaa" ) |> always ()
+        , Debug.log "replace-match" ( Regex.replace (rx "(\\w+)@(\\w+)") (\m -> String.join "," (List.map (Maybe.withDefault "?") m.submatches)) "me@host", Regex.replace (rx "x") (\m -> String.fromInt m.index ++ ":" ++ String.fromInt m.number) "axbxcx" ) |> always ()
+        , Debug.log "replace-none" ( Regex.replace (rx "x") (\_ -> "y") "", Regex.replace (rx "q") (\_ -> "y") "abc" ) |> always ()
+        , Debug.log "split" ( ( Regex.split (rx ", *") "a, b,c,   d", Regex.split (rx ",") "abc" ), ( Regex.split (rx ",") "", Regex.split (rx ",") ",a," ) ) |> always ()
+        , Debug.log "split-atmost" ( Regex.splitAtMost 2 (rx ",") "a,b,c,d", Regex.splitAtMost 1 (rx "-") "a-b-c", Regex.splitAtMost 9 (rx ",") "a,b" ) |> always ()
+        , Debug.log "split-words" (Regex.split (rx "\\s+") "one  two\tthree\nfour") |> always ()
+        , Debug.log "options" (List.map .match (Regex.find (rxm "^\\w+$") "ab\ncd\n12")) |> always ()
+        ]
