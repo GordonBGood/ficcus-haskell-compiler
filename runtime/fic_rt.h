@@ -47,6 +47,7 @@ typedef fic_hdr *fic_ref;
 static size_t fic_live_objects, fic_total_allocs;
 #ifdef FIC_STATS
 static size_t fic_n_dup, fic_n_drop, fic_n_free_slow, fic_n_reuse_hit, fic_n_reuse_miss, fic_peak_live;
+static size_t fic_n_inplace, fic_n_copied, fic_n_pap_steal;   /* S6: array updates in place and copied, partial applications taken apart */
 #  define FIC_STAT(x) (x)
 #else
 #  define FIC_STAT(x) ((void)0)
@@ -413,8 +414,9 @@ static int fic_shutdown(void) {
   }
 #endif
 #ifdef FIC_STATS
-  fprintf(stderr, "FIC_STATS: allocs %zu live %zu peak %zu dup %zu drop %zu free_slow %zu reuse_hit %zu reuse_miss %zu\n",
-          fic_total_allocs, fic_live_objects, fic_peak_live, fic_n_dup, fic_n_drop, fic_n_free_slow, fic_n_reuse_hit, fic_n_reuse_miss);
+  fprintf(stderr, "FIC_STATS: allocs %zu live %zu peak %zu dup %zu drop %zu free_slow %zu reuse_hit %zu reuse_miss %zu inplace %zu copied %zu pap_steal %zu\n",
+          fic_total_allocs, fic_live_objects, fic_peak_live, fic_n_dup, fic_n_drop, fic_n_free_slow, fic_n_reuse_hit, fic_n_reuse_miss,
+          fic_n_inplace, fic_n_copied, fic_n_pap_steal);
 #ifdef FIC_RC
   if (fic_live_objects != 0) bad = 1;          /* a counted program must have freed everything by now (the globals are dropped first) */
 #endif

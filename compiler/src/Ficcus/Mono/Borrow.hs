@@ -71,6 +71,7 @@ inferBorrow unions root clones0 = go (map start clones0)
            | MGlobal c <- mNode h, Just d <- Map.lookup c byId, mdKind d == Function, length args == length (mdParams d) ->
                [ (c, i) | (i, a, (_, pc)) <- zip3 [0 :: Int ..] args (mdParams d), mRep a /= pc ]
          _ -> [])
+    updates = updateParams clones0
     start d = d { mdOwn = [ if refClass c && not (Set.member (mdClone d, i) mismatched) then Borrowed else Owned | (i, (_, c)) <- zip [0 :: Int ..] (mdParams d) ] }
     go cs =
       let ctx = ownCtx caps cs
@@ -80,7 +81,8 @@ inferBorrow unions root clones0 = go (map start clones0)
       case mdBody d of
         Just body | mdKind d == Function, Just (mdClone d) /= root ->
           let consumed = Set.unions [ownedVars ctx body, tailBad ctx d, if projRule then projOwned ctx d else Set.empty, if reuseRule then reuseOwned ctx d else Set.empty,
-                                       if hybridRule then hybridOwned unions recTypes sccs ctx d else Set.empty]
+                                       if hybridRule then hybridOwned unions recTypes sccs ctx d else Set.empty,
+                                       if updateRule then Set.fromList [ n | (c, n) <- Set.toList updates, c == mdClone d ] else Set.empty]
               now = [ if o == Owned || Set.member n consumed then Owned else Borrowed | ((n, _), o) <- zip (mdParams d) (paramOwns d) ]
           in d { mdOwn = now }
         _ -> d
@@ -306,6 +308,51 @@ hybridOwned unions recTypes sccs ctx d =
          MCall h args | MGlobal c <- mNode h, Map.member c sccs -> [args]
          _ -> [])
       ++ concatMap recCalls (children e)
+
+
+{-# NOINLINE updateRule #-}
+-- | S6: the update rule is on unless `FICCUS_NO_UPDATE_RULE=1`
+updateRule :: Bool
+updateRule = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_UPDATE_RULE"))
+
+
+-- | S6, the update rule (docs/STAGE4-S6.md): a parameter is owned when it, a pattern variable taken from it (through any number of
+-- matches) or a field read from it is UPDATED: it is the array of `JsArray.unsafeSet` or `JsArray.push` (the kernels that write in place
+-- when their array is unique), or an argument for a parameter that is itself updated (so the rule follows the array through
+-- `Array.set`, `setHelp`, `push`, a user's wrapper type or a loop). Without it the hybrid rule leaves `Array.set arr` borrowed (a
+-- single match in a function that does not recurse), the caller keeps its count and every update copies.
+-- The result: the updated parameters of every clone (a fixed point over all clones, independent of the other rules).
+updateParams :: [MDef] -> Set.Set (CloneId, String)
+updateParams clones = go Set.empty
+  where
+    byId = Map.fromList [ (mdClone d, d) | d <- clones ]
+    go set =
+      let set' = Set.union set (Set.fromList [ (mdClone d, q) | d <- clones, mdKind d == Function, Just body <- [mdBody d]
+                                                               , q <- found set (Map.fromList [ (n, n) | (n, c) <- mdParams d, refClass c ]) body ])
+      in if Set.size set' == Set.size set then set else go set'
+    -- the parameters behind the expressions in an update position
+    found set env e =
+      let here =
+            case mNode e of
+              MCall h args
+                | MKernel name _ <- mNode h, Just i <- lookup name updateKernels, i < length args -> rootsOf env (args !! i)
+                | MGlobal c <- mNode h, Just d <- Map.lookup c byId, mdKind d == Function, length args == length (mdParams d) ->
+                    concat [ rootsOf env a | (a, (pn, pc)) <- zip args (mdParams d), refClass pc, mRep a == pc, Set.member (c, pn) set ]
+              _ -> []
+          below =
+            case mNode e of
+              MCase s bs
+                | MLocal n <- mNode s, Just q <- Map.lookup n env ->
+                    concat [ found set (foldr (\(v, _) m -> Map.insert v q m) env (patBinders p)) b | (p, b) <- bs ]
+              MLetVal n _ _ -> concatMap (found set (Map.delete n env)) (children e)
+              _ -> concatMap (found set env) (children e)
+      in here ++ below
+    rootsOf env a = [ q | Just n <- [viewRoot a], Just q <- [Map.lookup n env] ]
+
+
+-- | the kernels that update their array in place when it is unique, with the index of the array argument
+updateKernels :: [(String, Int)]
+updateKernels = [("elm/core:Elm.JsArray.unsafeSet", 2), ("elm/core:Elm.JsArray.push", 1)]
 
 
 {-# NOINLINE projRule #-}

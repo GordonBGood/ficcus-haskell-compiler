@@ -43,7 +43,7 @@ import Ficcus.Mono.Borrow
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
-import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig)
+import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig, takeKernel, unsafeGetKernel, unsafeSetKernel)
 import Ficcus.Mono.Layout (nptrOf, objSizeClass)
 import Ficcus.Mono.Reuse
 import System.Environment (lookupEnv)
@@ -71,6 +71,8 @@ data Ctx =
     , cCaps :: Map.Map CloneId [(String, Class)]
     , cOwn :: OwnCtx                         -- the question "which variables does this expression consume?" (Ficcus.Mono.Borrow)
     , cViews :: Map.Map String String        -- a pattern variable that is only a view into its scrutinee, and the owned variable that keeps it alive
+    , cLate :: Map.Map String Cell           -- S6: the owned scrutinee variables whose drop becomes a drop specialization where they die (`lateSpec`)
+    , cDeferred :: Set.Set String            -- S6: the pattern variables of those scrutinees: views that do not keep the scrutinee alive
     }
 
 
@@ -80,7 +82,7 @@ rcProgram program0 =
   let clones = inferBorrow (mpUnions program0) (mpMain program0) (mpClones program0)
       program = program0 { mpClones = clones }
       caps = captures clones
-      ctx = Ctx (Map.fromList [ (mdClone d, d) | d <- clones ]) caps (ownCtx caps clones) Map.empty
+      ctx = Ctx (Map.fromList [ (mdClone d, d) | d <- clones ]) caps (ownCtx caps clones) Map.empty Map.empty Set.empty
       (clones', errs) = evalState (do { cs <- mapM (rcDef ctx (mpMain program)) clones; es <- gets rsErrors; return (cs, es) }) (RS 0 [] "")
   in if null errs then Right program { mpClones = clones' } else Left (reverse errs)
 
@@ -116,7 +118,7 @@ fvOf ctx = freeVars (cCaps ctx)
 fvNames :: Ctx -> MExpr -> Set.Set String
 fvNames ctx e =
   let names = Map.keysSet (fvOf ctx e)
-  in Set.union names (Set.fromList [ r | n <- Set.toList names, Just r <- [Map.lookup n (cViews ctx)] ])
+  in Set.union names (Set.fromList [ r | n <- Set.toList names, not (Set.member n (cDeferred ctx)), Just r <- [Map.lookup n (cViews ctx)] ])
 
 
 -- | the expression, consuming every owned variable of `env` that is not in `live` (and using `live` without consuming it):
@@ -126,8 +128,79 @@ rc ctx env live e =
   do  let fvE = fvNames ctx e
       let dead = [ (n, c) | (n, c) <- Map.toList env, not (Set.member n fvE), not (Set.member n live) ]
       let env' = foldr (Map.delete . fst) env dead
-      e' <- rcNode ctx env' live e
-      return (if null dead then e' else MExpr (mRep e) (MDrop dead e'))
+      case [ (r, cell) | (r, _) <- dead, Just cell <- [Map.lookup r (cLate ctx)] ] of
+        (r, cell) : _ -> lateSpec ctx env live e r cell
+        [] ->
+          do  e' <- rcNode ctx env' live e
+              return (if null dead then e' else MExpr (mRep e) (MDrop dead e'))
+
+
+-- | S6, the late drop specialization (docs/STAGE4-S6.md). `r` is an owned variable that was matched against one constructor, some arm
+-- of the branch still used `r` itself (so the S4 specialization at the start of the branch was not possible) and `r` dies here, at the
+-- start of `e`. Instead of dup'ing the consumed pattern variables at the start of the branch and dropping `r` here, the drop is
+-- specialized here: a unique cell gives its fields to the pattern variables that `e` uses and becomes a reuse token (or is freed), a
+-- shared cell gives each of them a count. This is what makes `Array.set` (which returns its array unchanged when the index is out of
+-- range and rebuilds it otherwise) reuse the cell of a unique array.
+lateSpec :: Ctx -> Env -> Live -> MExpr -> String -> Cell -> RM MExpr
+lateSpec ctx env live e r cell =
+  do  let usedNames = Map.keysSet (fvOf ctx e)
+          usedRef = [ (i, v, c) | (i, v, c) <- cellVars cell, refClass c, Set.member v usedNames ]
+          binders = [ v | (_, v, c) <- cellVars cell, refClass c ]
+          ctx' = ctx { cLate = Map.delete r (cLate ctx), cDeferred = foldr Set.delete (cDeferred ctx) binders, cViews = foldr Map.delete (cViews ctx) binders }
+          placed t = if reuseOn then objSizeClass (cellFields cell) >>= \k -> placeToken t k e else Nothing
+      tok <- if isJust (placed "?") then fmap Just fresh else return Nothing
+      let e1 = maybe e id (tok >>= placed)
+          env' = Map.union (Map.fromList [ (v, c) | (_, v, c) <- usedRef ]) (Map.delete r env)
+      e2 <- rc ctx' env' live e1
+      return (MExpr (mRep e) (if null usedRef && tok == Nothing then MDrop [(r, CRef)] e2
+                              else MSpec r (cellFields cell) [ (v, c, i) | (i, v, c) <- usedRef ] tok e2))
+
+
+-- | can the drop of the owned scrutinee `r` be specialized where it dies (`lateSpec`)? `bset` are the reference variables its pattern
+-- binds. The body is followed along its tail positions: an expression that does not name `r` is where `r` dies (anything may happen to
+-- the pattern variables there); before that (a condition, the value of a `let`) `r` is not named and the pattern variables are only
+-- looked at; an expression that uses `r` in another way names no pattern variable.
+lateOk :: Ctx -> String -> Set.Set String -> MExpr -> Bool
+lateOk ctx r bset = go
+  where
+    uses e = Map.member r (fvOf ctx e)
+    usesB e = any (\v -> Set.member v bset) (Map.keys (fvOf ctx e))
+    quiet e = not (uses e) && Set.null (Set.intersection bset (ownedVars (cOwn ctx) e))
+    go e
+      | not (uses e) = True
+      | otherwise =
+          case mNode e of
+            MIf ((c, b) : rest) f -> quiet c && go b && go (if null rest then f else e { mNode = MIf rest f })     -- the rest of the chain is the else arm
+            MLetVal _ v b -> quiet v && go b
+            MSeq a b -> quiet a && go b
+            MCase sc bs
+              | MLocal n <- mNode sc -> if n == r then not (usesB e) else all (go . snd) bs
+              | otherwise -> quiet sc && all (go . snd) bs
+            _ -> not (usesB e)
+
+
+-- | the expression (as the specializer makes it: no nodes of the Rc pass) with the local variable `a` renamed to `n`
+renameLocal :: String -> String -> MExpr -> MExpr
+renameLocal a n = go
+  where
+    go e = e { mNode = node (mNode e) }
+    node x =
+      case x of
+        MLocal v | v == a -> MLocal n
+        MCall f as -> MCall (go f) (map go as)
+        MLam ps b -> MLam ps (go b)
+        MIf bs f -> MIf [ (go c, go b) | (c, b) <- bs ] (go f)
+        MLetVal v y b -> MLetVal v (go y) (go b)
+        MSeq y z -> MSeq (go y) (go z)
+        MCase sc bs -> MCase (go sc) [ (q, go b) | (q, b) <- bs ]
+        MAccess y f i -> MAccess (go y) f i
+        MUpdate y fs -> MUpdate (go y) [ (f, go v) | (f, v) <- fs ]
+        MRecord fs -> MRecord [ (f, go v) | (f, v) <- fs ]
+        MTuple xs -> MTuple (map go xs)
+        MList xs -> MList (map go xs)
+        MReuse t b -> MReuse t (go b)
+        MFreeTok t b -> MFreeTok t (go b)
+        other -> other
 
 
 -- | the owned variables that are still owned after something that needed `live`
@@ -159,6 +232,8 @@ rcNode ctx env live e =
     MCall h args -> rcCall ctx env live e h args
     MLam _ _ -> failRc "internal: a lambda reached the Rc pass" >> return e
     MIf bs final -> rcIf ctx env live cls bs final
+    MLetVal n v b
+      | Just v' <- takeCall ctx env v [b] -> rcNode ctx env live (node (MLetVal n v' b))
     MLetVal n v b ->
       do  let liveV = Set.union live (Set.delete n (fvNames ctx b))
           v' <- rc ctx env liveV v
@@ -388,8 +463,14 @@ rcIf ctx env0 live cls branches final =
           c' <- rc ctx env liveC c
           let env' = consumedAfter env liveC
           b' <- rc ctx env' live b
-          (restBs, f) <- go env' rest
-          return ((c', b') : restBs, f)
+          if null rest
+            then do { f <- rc ctx env' live final; return ([(c', b')], f) }
+            else
+              -- the rest of the chain is the else arm: what dies there is dropped (or specialized, S6) at its start, for all of it
+              do  r <- rc ctx env' live (MExpr cls (MIf rest final))
+                  case mNode r of
+                    MIf restBs f -> return ((c', b') : restBs, f)
+                    _ -> return ([(c', b')], r)
 
 
 -- | a case: the scrutinee is a variable (a temporary when it is an expression). A variable the pattern binds is
@@ -402,7 +483,9 @@ rcIf ctx env0 live cls branches final =
 rcCase :: Ctx -> Env -> Live -> Class -> MExpr -> [(MPat, MExpr)] -> RM MExpr
 rcCase ctx env live cls s bs =
   case mNode s of
+    MLocal n | any (aliased n) bs -> rcCase ctx env live cls s (map (unalias n) bs)
     MLocal n -> do { bs' <- branches (rootOf n) (if Map.member n env then Just n else Nothing) env; return (MExpr cls (MCase s bs')) }
+    _ | Just s' <- takeCall ctx env s (map snd bs) -> rcCase ctx env live cls s' bs
     _ ->
       do  t <- fresh
           let liveS = Set.union live (Set.unions [ Set.difference (fvNames ctx b) (Set.fromList (map fst (patBinders p))) | (p, b) <- bs ])
@@ -412,6 +495,16 @@ rcCase ctx env live cls s bs =
           bs' <- branches (if refClass (mRep s) then Just t else Nothing) (if refClass (mRep s) then Just t else Nothing) env2
           return (MExpr cls (MLetVal t s' (MExpr cls (MCase (MExpr (mRep s) (MLocal t)) bs'))))
   where
+    -- S6: `(C a b) as x` on a variable `n`: `x` is another name of `n` (when no lifted function captures `x`), so that the branch is
+    -- an ordinary constructor match that can be specialized
+    aliased n (p, b) =
+      case mpNode p of
+        PAlias _ a -> lateOn && a /= n && mpRep p == mRep s && and [ a `notElem` map fst (Map.findWithDefault [] c (cCaps ctx)) | c <- exprRefs b ]
+        _ -> False
+    unalias n (p, b) =
+      case mpNode p of
+        PAlias q a | aliased n (p, b) -> (q, renameLocal a n b)
+        _ -> (p, b)
     -- the owned variable that keeps the scrutinee alive, if there is one
     rootOf n
       | Just r <- Map.lookup n (cViews ctx) = Just r
@@ -429,7 +522,10 @@ rcCase ctx env live cls s bs =
                   do  spec <- specBranch self envB p b
                       case spec of
                         Just r -> return r
-                        Nothing -> viewBranch root envB p b)
+                        Nothing ->
+                          case lateBranch self envB p b of
+                            Just ctx' -> do { b' <- rc ctx' envB live b; return (p, b') }
+                            Nothing -> viewBranch root envB p b)
            bs
     -- the struct scrutinee is an owned variable that nothing uses after the match, and the pattern binds a variable to each field
     unpackable self b p =
@@ -473,6 +569,23 @@ rcCase ctx env live cls s bs =
             allConsumed = all (\(_, v, _) -> Set.member v consumed) usedRef
             placed t ce = if reuseOn then objSizeClass (cellFields ce) >>= \k -> placeToken t k b else Nothing
         _ -> return Nothing
+    -- S6: the scrutinee is an owned variable that some arm of the branch still uses, and the branch consumes pattern variables: they
+    -- stay views until the scrutinee dies, and its drop is specialized there (`lateSpec`)
+    lateBranch self envB p b =
+      case (self, mRep s, cellOfPat p) of
+        (Just r, CRef, Just cell)
+          | specOn, lateOn, Map.member r envB, not (Set.member r live), Set.member r (fvNames ctx b)
+          , all (\(i, _, c) -> c == cellFields cell !! i) usedRef
+          , not (null [ v | (_, v, _) <- usedRef, Set.member v (ownedVars (cOwn ctx) b) ])
+          , lateOk ctx r (Set.fromList binders) b ->
+              Just ctx { cViews = foldr (\v m -> Map.insert v r m) (cViews ctx) binders
+                       , cDeferred = foldr Set.insert (cDeferred ctx) binders
+                       , cLate = Map.insert r cell (cLate ctx) }
+          where
+            usedNames = Map.keysSet (fvOf ctx b)
+            usedRef = [ (i, v, c) | (i, v, c) <- cellVars cell, refClass c, Set.member v usedNames ]
+            binders = [ v | (_, v, c) <- cellVars cell, refClass c ]
+        _ -> Nothing
     viewBranch root envB p b =
               do  let used = Map.keysSet (fvOf ctx b)
                   let consumed = ownedVars (cOwn ctx) b
@@ -482,6 +595,54 @@ rcCase ctx env live cls s bs =
                   let ctx' = ctx { cViews = foldr (\v m -> maybe m (\r -> Map.insert v r m) root) (cViews ctx) views }
                   b' <- rc ctx' (Map.union (Map.fromList dups) envB) live b
                   return (p, if null dups then b' else MExpr (mRep b) (MDup dups b'))
+
+
+-- S6, TAKE (docs/STAGE4-S6.md). `unsafeGet i a` gives a counted copy of the element, so while the array holds its reference the element
+-- is shared and an update of it copies (`Array.setHelp`: the subtree is read, updated, and stored back at the same index). When
+--   * `a` is an owned variable and the element is a plain reference,
+--   * `i` is a variable or a literal,
+--   * in `rest` (what is evaluated after the read) every use of `a` is the array of `unsafeSet i _ a` with the same `i`, whose stored
+--     value does not use `a`, with at most one such update on a path and at least one in all,
+-- the read becomes `unsafeTake i a`: the element is moved out of a unique array, which then holds a placeholder at `i` that nothing can
+-- see (the update overwrites it, a path without the update only drops the array). `a` is only borrowed by the take.
+takeCall :: Ctx -> Env -> MExpr -> [MExpr] -> Maybe MExpr
+takeCall ctx env v rest =
+  case mNode v of
+    MCall h [i, a]
+      | takeOn, MKernel name key@(Key [ByClass CRef]) <- mNode h, name == unsafeGetKernel, mRep v == CRef
+      , MLocal t <- mNode a, Map.member t env, indexAtom i
+      , Just counts <- mapM (updatesOf t i) rest, maximum (0 : counts) == 1 ->
+          Just v { mNode = MCall h { mNode = MKernel takeKernel key } [i, a] }
+    _ -> Nothing
+  where
+    indexAtom i = case mNode i of { MLocal _ -> True; MLit _ -> True; _ -> False }
+    sameAtom i j = case (mNode i, mNode j) of { (MLocal x, MLocal y) -> x == y; (MLit x, MLit y) -> x == y; _ -> False }
+    uses t e = Map.member t (fvOf ctx e)
+    -- the largest number of updates of `t` at `i` on a path through `e`; Nothing when `t` is used in another way
+    updatesOf :: String -> MExpr -> MExpr -> Maybe Int
+    updatesOf t i e
+      | not (uses t e) = Just 0
+      | MCall h [j, x, a] <- mNode e, MKernel name _ <- mNode h, name == unsafeSetKernel, MLocal t' <- mNode a, t' == t =
+          if sameAtom i j && not (uses t x) then Just 1 else Nothing
+      | otherwise =
+          let one = updatesOf t i
+              atMostOne r = case r of { Just k | k <= 1 -> r; _ -> Nothing }
+          in atMostOne $
+             case mNode e of
+               MIf bs f -> do { cs <- mapM (one . fst) bs; xs <- mapM (one . snd) bs; y <- one f; return (sum cs + maximum (y : xs)) }
+               MCase sc bs -> do { c <- one sc; xs <- mapM (one . snd) bs; return (c + maximum (0 : xs)) }
+               _ | null (children e) -> Nothing
+                 | otherwise -> fmap sum (mapM one (children e))
+
+
+{-# NOINLINE lateOn #-}
+lateOn :: Bool
+lateOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_LATE_SPEC"))
+
+
+{-# NOINLINE takeOn #-}
+takeOn :: Bool
+takeOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_TAKE"))
 
 
 -- the S4 switches (experiments and the fault tests: the default is on, as the pass is meant to be used)

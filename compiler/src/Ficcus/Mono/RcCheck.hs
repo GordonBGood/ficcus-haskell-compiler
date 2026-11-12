@@ -36,7 +36,7 @@ import Ficcus.Mono.Borrow (viewExpr, viewRoot)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
-import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig)
+import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig, takeKernel, unsafeSetKernel)
 import Ficcus.Mono.Layout (leavesOf, objSizeClass)
 import Ficcus.Mono.Reuse
 
@@ -58,6 +58,7 @@ data Cx =
     , cxClones :: Map.Map CloneId MDef
     , cxCaps :: Map.Map CloneId [(String, Class)]
     , cxTokens :: Map.Map String (Maybe Int)     -- the reuse tokens in scope (S4) and the size class of their cell
+    , cxCells :: Map.Map String Cell             -- the variables that an enclosing case branch matched against one constructor (S4, S6)
     }
 
 
@@ -72,10 +73,12 @@ rcCheck program =
       byId = Map.fromList [ (mdClone d, d) | d <- clones ]
   in [ msg
      | d <- clones, Just (mdClone d) /= mpMain program, Just body <- [mdBody d]
-     , Left err <- [evalStateT (checkDef d caps body) (Cx Map.empty byId caps Map.empty)]
+     , Left err <- [evalStateT (checkDef d caps body) (Cx Map.empty byId caps Map.empty Map.empty)]
      , let msg = "rc check: " ++ mdName d ++ ": " ++ err ]
      ++ [ "rc check: " ++ mdName d ++ ": " ++ err
         | d <- clones, Just (mdClone d) /= mpMain program, Just body <- [mdBody d], err <- tailCheck byId d body ]
+     ++ [ "rc check: " ++ mdName d ++ ": " ++ err
+        | d <- clones, Just (mdClone d) /= mpMain program, Just body <- [mdBody d], err <- takeCheck caps body ]
 
 
 bad :: String -> CK a
@@ -203,7 +206,7 @@ owned e =
       do  forM_ vs (\(n, c) -> when (refClass c) (consume n))
           owned b
     MOwn b -> view b
-    MSpec _ _ _ _ _ -> bad "a drop specialization that is not the whole body of a case branch"
+    MSpec s fcs bs mt body -> specOf s fcs bs mt body
     MReuse t x ->
       do  tokens <- gets cxTokens
           case Map.lookup t tokens of
@@ -348,13 +351,24 @@ caseOf s bs =
     put' sc = modify' (\st -> st { cxScope = sc })
 
 
--- | the body of a case branch: an ordinary expression, or (S4) a drop specialization of the scrutinee
+-- | the body of a case branch; while it is checked, the scrutinee variable is known to be an object of the pattern's constructor
 branchBody :: Maybe String -> MPat -> MExpr -> CK ()
 branchBody root p b =
-  case mNode b of
-    MSpec s fcs bs mt body ->
-      do  when (root /= Just s) (bad "a drop specialization of something that is not the scrutinee variable of its case")
-          cell <- maybe (bad ("the pattern of the specialized branch (" ++ s ++ ") is not a constructor with variable arguments")) return (cellOfPat p)
+  case root of
+    Nothing -> owned b
+    Just r ->
+      do  old <- gets cxCells
+          modify' (\st -> st { cxCells = maybe (Map.delete r old) (\cell -> Map.insert r cell old) (cellOfPat p) })
+          owned b
+          modify' (\st -> st { cxCells = old })
+
+
+-- | a drop specialization (S4; S6: anywhere inside the branch of the case that matched the variable, where the variable dies): the
+-- variable is consumed, each listed pattern variable gets a count, a token is used or freed exactly once
+specOf :: String -> [Class] -> [(String, Class, Int)] -> Maybe String -> MExpr -> CK ()
+specOf s fcs bs mt body =
+      do  cells <- gets cxCells
+          cell <- maybe (bad ("a drop specialization of " ++ s ++ ", which is not the scrutinee of an enclosing case with a constructor pattern of variables")) return (Map.lookup s cells)
           when (fcs /= cellFields cell) (bad "a drop specialization with a different object layout than its pattern")
           forM_ bs $ \(v, c, i) ->
             unless ((i, v, c) `elem` cellVars cell && i < length fcs && fcs !! i == c && refClass c)
@@ -372,7 +386,6 @@ branchBody root p b =
                     Just x | vCount x /= 0 -> bad ("the reuse token " ++ t ++ " has " ++ show (vCount x) ++ " count(s) left at the end of its branch (never used or freed)")
                     _ -> return ()
                   modify' (\st -> st { cxScope = Map.delete t (cxScope st), cxTokens = Map.delete t (cxTokens st) })
-    _ -> owned b
 
 
 -- TAIL CALLS (STAGE4-PLAN 3.6, 13): a self tail call is a loop, which has no "after" in which something could be dropped, so a borrowed
@@ -411,3 +424,43 @@ tailCheck clones d = go (Map.fromList [ (n, o == Borrowed) | ((n, _), o) <- zip 
         MCtor _ _ _ -> True
         MGlobal c -> viewExpr clones a && maybe False ((== Value) . mdKind) (Map.lookup c clones)
         _ -> False
+
+
+-- TAKE (S6, docs/STAGE4-S6.md): `unsafeTake i a` moves the element out of a unique array and leaves a placeholder at `i`. Nothing may
+-- see the placeholder: the take must be the value of a `let`, `a` and `i` variables (or `i` a literal), and in the body of the `let`
+-- the array `a` may only be dropped, or be the array of `unsafeSet i _ a` with the same index and a stored value that does not use `a`.
+-- Any other occurrence (a read, a dup, an argument, a capture by a closure or a lifted function) is an error.
+
+takeCheck :: Map.Map CloneId [(String, Class)] -> MExpr -> [String]
+takeCheck caps = go
+  where
+    go e =
+      case mNode e of
+        MLetVal _ v b
+          | Just (i, a) <- takeOf v ->
+              (case (mNode i, mNode a) of
+                 (_, MLocal t) | atom i -> [ "after the take of an element of " ++ t ++ ": " ++ why | why <- seen t i b ]
+                 _ -> ["a take whose array is not a variable, or whose index is not a variable or a literal"])
+              ++ go b
+        MCall h _ | MKernel name _ <- mNode h, name == takeKernel -> ["a take that is not the value of a let"]
+        MKernel name _ | name == takeKernel -> ["a take that is not called"]
+        _ -> concatMap go (children e)
+    takeOf v = case mNode v of
+      MCall h [i, a] | MKernel name _ <- mNode h, name == takeKernel -> Just (i, a)
+      _ -> Nothing
+    atom i = case mNode i of { MLocal _ -> True; MLit _ -> True; _ -> False }
+    sameAtom i j = case (mNode i, mNode j) of { (MLocal x, MLocal y) -> x == y; (MLit x, MLit y) -> x == y; _ -> False }
+    -- the occurrences of `t` in `e` that could see the placeholder
+    seen :: String -> MExpr -> MExpr -> [String]
+    seen t i e =
+      case mNode e of
+        MLocal n -> [ "the array is read" | n == t ]
+        MGlobal c -> [ "the array is captured" | t `elem` map fst (Map.findWithDefault [] c caps) ]
+        MCall h [j, x, a]
+          | MKernel name _ <- mNode h, name == unsafeSetKernel, MLocal n <- mNode a, n == t ->
+              [ "the array is updated at another index" | not (sameAtom i j) ] ++ seen t i j ++ seen t i x
+        MDup vs b -> [ "the array is dup'd" | t `elem` map fst vs ] ++ seen t i b
+        MDrop _ b -> seen t i b                                                 -- a drop does not look at the elements
+        MUnpack s _ bs b -> [ "the array is unpacked" | s == t || t `elem` [ v | (v, _, _) <- bs ] ] ++ seen t i b
+        MSpec s _ bs _ b -> [ "the array is specialized" | s == t || t `elem` [ v | (v, _, _) <- bs ] ] ++ seen t i b
+        _ -> concatMap (seen t i) (children e)

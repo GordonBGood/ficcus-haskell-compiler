@@ -5,6 +5,7 @@ module Ficcus.Mono.Kernel
   , directKernelIds
   , kernelSig
   , kernelResultBorrowed
+  , takeKernel, unsafeGetKernel, unsafeSetKernel
   )
   where
 
@@ -46,6 +47,7 @@ kernelArity cid =
     , ("elm/core:Elm.JsArray.empty", 0), ("elm/core:Elm.JsArray.singleton", 1), ("elm/core:Elm.JsArray.length", 1)
     , ("elm/core:Elm.JsArray.initialize", 3), ("elm/core:Elm.JsArray.initializeFromList", 2)
     , ("elm/core:Elm.JsArray.unsafeGet", 2), ("elm/core:Elm.JsArray.unsafeSet", 3), ("elm/core:Elm.JsArray.push", 2)
+    , ("elm/core:Elm.JsArray.unsafeTake", 2)       -- not in elm/core: the Rc pass makes it from an unsafeGet (S6, `takeKernel`)
     , ("elm/core:Elm.JsArray.foldl", 3), ("elm/core:Elm.JsArray.foldr", 3), ("elm/core:Elm.JsArray.map", 2)
     , ("elm/core:Elm.JsArray.indexedMap", 3), ("elm/core:Elm.JsArray.slice", 3), ("elm/core:Elm.JsArray.appendN", 3)
     , ("elm/core:String.length", 1), ("elm/core:String.slice", 3), ("elm/core:String.cons", 2), ("elm/core:String.join", 2)
@@ -136,6 +138,8 @@ kernelSig cid key =
       , ("elm/core:Elm.JsArray.empty", ""), ("elm/core:Elm.JsArray.singleton", "o"), ("elm/core:Elm.JsArray.length", "b")
       , ("elm/core:Elm.JsArray.initialize", "ssb"), ("elm/core:Elm.JsArray.initializeFromList", "sb")
       , ("elm/core:Elm.JsArray.unsafeGet", "sb"), ("elm/core:Elm.JsArray.unsafeSet", "soo"), ("elm/core:Elm.JsArray.push", "oo")
+      -- unsafeTake (S6): the element is MOVED out of a unique array (the result is owned), the array is only borrowed
+      , ("elm/core:Elm.JsArray.unsafeTake", "sb")
       , ("elm/core:Elm.JsArray.foldl", "bob"), ("elm/core:Elm.JsArray.foldr", "bob"), ("elm/core:Elm.JsArray.map", "bb")
       , ("elm/core:Elm.JsArray.indexedMap", "bsb"), ("elm/core:Elm.JsArray.slice", "ssb"), ("elm/core:Elm.JsArray.appendN", "sbb")
       -- String and Char: every string is borrowed, the results are new strings (or counted copies)
@@ -201,3 +205,16 @@ scalarKernels =
 -- | kernels that return a reference they do not own (a counted element of an array): the caller adds the count
 kernelResultBorrowed :: String -> Bool
 kernelResultBorrowed cid = cid == "elm/core:Elm.JsArray.unsafeGet"
+
+
+-- | S6: `unsafeTake i a` replaces `unsafeGet i a` where the Rc pass sees that the only later use of the array `a` is
+-- `unsafeSet i _ a` (the same index): when `a` is unique the element is moved out and the slot holds a placeholder that the set
+-- overwrites, so the element (a subtree of an Array) is unique too and can itself be updated in place. Ficcus.Mono.RcCheck verifies
+-- the condition on the result of the pass.
+takeKernel :: String
+takeKernel = "elm/core:Elm.JsArray.unsafeTake"
+
+
+unsafeGetKernel, unsafeSetKernel :: String
+unsafeGetKernel = "elm/core:Elm.JsArray.unsafeGet"
+unsafeSetKernel = "elm/core:Elm.JsArray.unsafeSet"

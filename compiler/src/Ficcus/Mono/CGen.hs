@@ -1017,12 +1017,18 @@ jsArrayCall info cls op key args =
     ("unsafeGet", Key [ByClass c], [i, a]) ->
       do  vs <- atomsTo info [(i, CI64), (a, CRef)]
           adapt c cls ("fic_ja_get(" ++ List.intercalate ", " vs ++ ")" ++ wordSel c)
+    ("unsafeTake", Key [ByClass c], [i, a]) ->          -- S6 (only made by the Rc pass, for a plain reference element): the result is owned
+      do  vs <- atomsTo info [(i, CI64), (a, CRef)]
+          adaptOwn c cls ("fic_ja_take(" ++ List.intercalate ", " vs ++ ")" ++ wordSel c)
     ("unsafeSet", Key [ByClass c], [i, x, a]) ->
       do  avs <- atomsTo info [(i, CI64), (x, c), (a, CRef)]
           let i' = avs !! 0
               x' = avs !! 1
               a' = avs !! 2
-          return ("fic_ja_set(" ++ i' ++ ", " ++ wordMk c x' ++ ", " ++ a' ++ ")")
+          rcMode <- gets gRc
+          if rcMode
+            then checkedUpdate (updateCheck a) c i' (wordMk c x') a'
+            else return ("fic_ja_set(" ++ i' ++ ", " ++ wordMk c x' ++ ", " ++ a' ++ ")")       -- no counts: every update copies
     ("push", Key [ByClass c], [x, a]) ->
       do  avs <- atomsTo info [(x, c), (a, CRef)]
           let x' = avs !! 0
@@ -1055,6 +1061,44 @@ jsArrayCall info cls op key args =
   where
     -- bit i set when argument i of the closure is a reference
     maskOf cs = show (sum [ 2 ^ i | (i, c) <- zip [0 :: Int ..] cs, boxedClass c == CRef ] :: Int) ++ "u"
+
+
+-- THE CHECKED UPDATE (S6, docs/STAGE4-S6.md). `JsArray.unsafeSet i x a` of a counted program consumes the array. The test and the write
+-- are INLINE in the generated code: when the array is unique (count 1) and the index is in range the element is written in place (the
+-- element that was there loses its count); otherwise the slow path `fic_ja_set` is called, which copies a shared array.
+--
+-- `UpdateCheck` is the place where the two planned elisions of the test go (not implemented: `updateCheck` answers `CheckCount` for every
+-- update). Both would be decided by the Rc pass, marked on the array argument, and verified by RcCheck:
+--   (i)  the array is FRESH: created in this function (the result of a call that makes a new array) and never dup'd before the update;
+--   (ii) the update is in a self tail loop whose owned accumulator is the array, and the test was done once before the loop.
+data UpdateCheck
+  = CheckCount        -- test the count at run time
+  | KnownUnique       -- the compiler knows that the array is unique: no test of the count (the index is still tested)
+
+
+-- | how the update of this array expression is checked (today: always at run time)
+updateCheck :: MExpr -> UpdateCheck
+updateCheck _ = CheckCount
+
+
+-- | the statements of a checked update; the result is the variable that holds the updated array
+checkedUpdate :: UpdateCheck -> Class -> String -> String -> String -> CG String
+checkedUpdate check c i x a =
+  do  t <- fresh "upd"
+      k <- fresh "ix"
+      emit ("fic_ref " ++ t ++ " = " ++ a ++ ";")
+      emit ("int64_t " ++ k ++ " = " ++ i ++ ";")
+      let slot = "FIC_JA_DATA(" ++ t ++ ")[" ++ k ++ "]"
+          write =
+            if boxedClass c == CRef
+              then "fic_ref old_" ++ t ++ " = " ++ slot ++ ".p; " ++ slot ++ " = " ++ x ++ "; fic_drop(old_" ++ t ++ ");"
+              else slot ++ " = " ++ x ++ ";"
+          test = case check of
+                   CheckCount -> "FIC_JA_UNIQUE_AT(" ++ t ++ ", " ++ k ++ ")"
+                   KnownUnique -> "FIC_JA_IN_RANGE(FIC_CHECK_UNIQUE(" ++ t ++ "), " ++ k ++ ")"
+      emit ("if (" ++ test ++ ") { " ++ write ++ " FIC_STAT(fic_n_inplace++); }")
+      emit ("else " ++ t ++ " = fic_ja_set(" ++ k ++ ", " ++ x ++ ", " ++ t ++ ");")
+      return t
 
 
 kernelValue :: String -> Key -> CG String
