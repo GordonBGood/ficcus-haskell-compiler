@@ -117,16 +117,26 @@ def node_baseline(runs):
     return statistics.median(ts) if ts else 0.0
 
 
-def parse_hand(text):
-    """allocations of a hand written program: (total allocations or None)"""
-    tot = None
+def parse_hand(text, wall_ms):
+    """the hand written programs repeat the work N times and print `(N loops|runs in M milliseconds ...; A allocations per run ...)`:
+    -> (ms of ONE run, allocations of one run). The wall time of the whole process is shared between the lines in proportion to
+    the (coarse) milliseconds they print; a program that prints `(total A allocations ..., M milliseconds)` ran once."""
+    lines = []
     for l in text.replace("\r", "").split("\n"):
         m = HAND_TOTAL.search(l)
-        if m: tot = (tot or 0) + int(m.group(1))
+        if m: lines.append((1, 1, int(m.group(1))))                     # (runs, printed ms, allocations per run)
+            
         else:
-            m = HAND_RUN.search(l)
-            if m: tot = (tot or 0) + int(m.group(1)) * int(m.group(3))
-    return tot
+            m = re.search(r"(\d+) (?:loops|runs) in (\d+) milliseconds", l)
+            if m:
+                al = re.search(r"(\d+) allocations per run", l)
+                lines.append((int(m.group(1)), int(m.group(2)), int(al.group(1)) if al else None))
+    if not lines: return wall_ms, None
+    if len(lines) == 1 and lines[0][0] == 1: return wall_ms, lines[0][2]
+    tot = sum(ms for _, ms, _ in lines) or 1
+    scale = wall_ms / tot
+    allocs = [x for _, _, x in lines if x is not None]
+    return sum(ms * scale / n for n, ms, _ in lines), (sum(allocs) if allocs else None)
 
 
 def main():
@@ -174,11 +184,10 @@ def main():
         hexe, err = build_hand(a, cfg, t, a.out)
         if err: r["hand"] = {"error": err}
         else:
-            cargs = []
-            _, rc, out = run_timed([hexe] + cargs, timeout=a.timeout, cap=cap)
-            allocs = parse_hand(out.decode("utf-8", "replace"))
-            ms, why = median_runs([hexe] + cargs, a.runs, a.timeout, cap=cap)
-            r["hand"] = dict(ms=ms, error=why, allocs=allocs)
+            _, rc, out = run_timed([hexe], timeout=a.timeout, cap=cap)
+            ms, why = median_runs([hexe], a.runs, a.timeout, cap=cap)
+            one, allocs = (None, None) if ms is None else parse_hand(out.decode("utf-8", "replace"), ms)
+            r["hand"] = dict(ms=one, wall_ms=ms, error=why, allocs=allocs)
         # Elm under node
         for mode in modes:
             cmd_dir, err = build_elm(a, t, mode, a.out, elm_cache)
