@@ -317,7 +317,9 @@ class Gen:
                 v, w = self.fresh(), self.fresh()
                 return "(case ( Array.get (modBy 4 %s) %s, Array.get 1 %s ) of\n%s( Just %s, Just %s ) -> %s\n%s_ -> %s)" % (
                     g("Int"), g("Arr"), g("Arr"), " " * (ind + 8), v, w, self.gen("Int", env + [(v, "Int"), (w, "Int")], d - 1, ind + 12), " " * (ind + 8), str(r.randint(0, 9)))
-            if c == 19: return "(Maybe.withDefault 2 (Maybe.andThen (\\q -> Array.get q %s) (Array.get (modBy 3 %s) %s)))".replace("\\\\", "\\") % (g("Arr"), g("Int"), g("Arr"))
+            if c == 19:
+                q = self.fresh()
+                return "(Maybe.withDefault 2 (Maybe.andThen (\\%s -> Array.get %s %s) (Array.get (modBy 3 %s) %s)))" % (q, q, g("Arr"), g("Int"), g("Arr"))
             if c == 20: return "(Maybe.withDefault 0 (Maybe.map String.length (Array.get (modBy 3 %s) %s)))" % (g("Int"), g("ArrS"))
             if c == 21:
                 v = self.fresh()
