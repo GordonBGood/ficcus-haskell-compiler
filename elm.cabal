@@ -172,6 +172,7 @@ executable elm
         Ficcus.Mono.Reuse
         Ficcus.Mono.Borrow
         Ficcus.Mono.Rc
+        Ficcus.Mono.Inline
         Ficcus.Mono.RcCheck
         Ficcus.Mono.Ir
         Ficcus.Mono.Print

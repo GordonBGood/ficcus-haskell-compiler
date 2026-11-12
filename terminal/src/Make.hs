@@ -35,6 +35,7 @@ import qualified Ficcus.Mono.Modules as Modules
 import qualified Ficcus.Mono.Overlay as Overlay
 import qualified Ficcus.Mono.Print as Print
 import qualified Ficcus.Mono.Rc as Rc
+import qualified Ficcus.Mono.Inline as Inline
 import qualified Ficcus.Mono.RcCheck as RcCheck
 import qualified Ficcus.Mono.Spec as Spec
 import qualified File
@@ -199,7 +200,8 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag no
                                                       Just k -> maybe (Left ["FICCUS_RC_MUTATE: there is no dup or drop number " ++ show k]) Right (Rc.rcMutate False k prog)
                           -- FICCUS_RC_DUMP=text (debugging): print the counted clones whose definition name contains the text, before the check
                           dumpText <- Task.io (System.Environment.lookupEnv "FICCUS_RC_DUMP")
-                          let rced = if rcMode then Rc.rcProgram program >>= mutated else Right program
+                          -- S7: constructor values made by a small known function and matched at once are not built (counted builds only)
+                          let rced = if rcMode then Rc.rcProgram (Inline.inlineProgram program) >>= mutated else Right program
                           case (dumpText, rced) of
                             (Just pat, Right prog) ->
                               Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones prog, pat `List.isInfixOf` Mono.mdName d ]))
