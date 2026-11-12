@@ -1,4 +1,4 @@
--- module IndirectJson: problems=0 instances=16 instance-failures=0 defaulted=0
+-- module IndirectJson: problems=0 instances=20 instance-failures=0 defaulted=0
 -- equality-uses: total=0 at-function=0
 module author/project:IndirectJson
 def main :: Program () () ()    [9:1-9:5]   id: author/project:IndirectJson.main   sig: Program () () ()   kinds:    group: author/project:IndirectJson.main nonrec ann
@@ -32,11 +32,17 @@ def main :: Program () () ()    [9:1-9:5]   id: author/project:IndirectJson.main
                 15:97-15:98 Int :: Int
                 15:100-15:101 Int :: Int
         20:17-24:37 If :: ( (), Cmd () )
-          20:20-20:39 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
-            20:20-20:35 Call :: Int
-              20:20-20:33 VarForeign :: String -> Int   callee: elm/core:String.length
-              20:34-20:35 VarLocal :: String   callee: author/project:IndirectJson.a@14:21   use: gen
-            20:38-20:39 Int :: Int
+          20:20-20:74 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            20:20-20:69 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+              20:20-20:35 Call :: Int
+                20:20-20:33 VarForeign :: String -> Int   callee: elm/core:String.length
+                20:34-20:35 VarLocal :: String   callee: author/project:IndirectJson.a@14:21   use: gen
+              20:38-20:69 Call :: Int
+                20:38-20:51 VarForeign :: String -> Int   callee: elm/core:String.length
+                20:53-20:69 Call :: String
+                  20:53-20:67 VarDebug :: Result Error (List Int) -> String   callee: elm/core:Debug.toString   instance: a := Result Error (List Int)   sig#: d170fa67   subst: v0 := Result Error (List Int)
+                  20:68-20:69 VarLocal :: Result Error (List Int)   callee: author/project:IndirectJson.b@17:21   use: gen
+            20:73-20:74 Int :: Int
           21:21-21:37 Pair :: ( (), Cmd () )
             21:23-21:25 Unit :: ()
             21:27-21:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()

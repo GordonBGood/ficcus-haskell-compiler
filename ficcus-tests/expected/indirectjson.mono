@@ -248,8 +248,15 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
         Call :: enum
           Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
           Call :: i64
-            Kernel elm/core:String.length () :: ref
-            Local a@14:21 :: ref
+            Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+            Call :: i64
+              Kernel elm/core:String.length () :: ref
+              Local a@14:21 :: ref
+            Call :: i64
+              Kernel elm/core:String.length () :: ref
+              Call :: ref
+                Kernel elm/core:Debug.toString (v0=type (elm/core:Result.Result elm/json:Json.Decode.Error (elm/core:List.List elm/core:Basics.Int))) :: ref
+                Local b@17:21 :: ref
           Lit 0 :: i64
         Tuple :: struct(unit,unit)
           Lit () :: unit

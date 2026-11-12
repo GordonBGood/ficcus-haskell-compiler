@@ -17,7 +17,7 @@ main =
                     b =
                         Debug.log "decoded" (Codec.decodeString (Codec.list Codec.int) "[4,5]")
                 in
-                if String.length a > 0 then
+                if String.length a + String.length (Debug.toString b) > 0 then
                     ( (), Cmd.none )
 
                 else
