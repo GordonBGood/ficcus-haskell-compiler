@@ -16,7 +16,7 @@ of a function value turned into an ordinary call (the function is never consumed
 import argparse, os, random, subprocess, sys, shutil, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEFAULT = ["fib", "lists", "acc", "clo", "dict", "letnum", "str2"]
+DEFAULT = ["fib", "lists", "acc", "clo", "dict", "letnum", "str2", "inl"]      # inl: the output of Ficcus.Mono.Inline (S7)
 
 
 def compile_mutant(elm, home, work, mod, n, prefix=""):

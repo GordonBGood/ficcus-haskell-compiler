@@ -307,7 +307,23 @@ class Gen:
         k = r.random()
         if k < 0.34: return self.generic(t, env, d, ind)
         if t == "Int":
-            c = r.randint(0, 16)
+            c = r.randint(0, 22)
+            # S7 (Ficcus.Mono.Inline): a Maybe or Result made by a small function and matched at once
+            if c == 17:
+                v = self.fresh()
+                return "(case Array.get (modBy 6 %s) %s of\n%sJust %s -> %s\n%sNothing -> %s)" % (
+                    g("Int"), g("Arr"), " " * (ind + 8), v, self.gen("Int", env + [(v, "Int")], d - 1, ind + 12), " " * (ind + 8), g("Int"))
+            if c == 18:
+                v, w = self.fresh(), self.fresh()
+                return "(case ( Array.get (modBy 4 %s) %s, Array.get 1 %s ) of\n%s( Just %s, Just %s ) -> %s\n%s_ -> %s)" % (
+                    g("Int"), g("Arr"), g("Arr"), " " * (ind + 8), v, w, self.gen("Int", env + [(v, "Int"), (w, "Int")], d - 1, ind + 12), " " * (ind + 8), str(r.randint(0, 9)))
+            if c == 19: return "(Maybe.withDefault 2 (Maybe.andThen (\\q -> Array.get q %s) (Array.get (modBy 3 %s) %s)))".replace("\\\\", "\\") % (g("Arr"), g("Int"), g("Arr"))
+            if c == 20: return "(Maybe.withDefault 0 (Maybe.map String.length (Array.get (modBy 3 %s) %s)))" % (g("Int"), g("ArrS"))
+            if c == 21:
+                v = self.fresh()
+                return "(case List.head %s of\n%sJust %s -> String.length %s + %s\n%sNothing -> %s)" % (
+                    g("LStr"), " " * (ind + 8), v, v, g("Int"), " " * (ind + 8), g("Int"))
+            if c == 22: return "(Maybe.withDefault %s (Maybe.map %s (List.head %s)))" % (g("Int"), g("Fn"), g("LInt"))
             if c == 12: return "(sumArr %s)" % g("Arr")
             if c == 13: return "(Maybe.withDefault 0 (Array.get (modBy 5 %s) %s))" % (g("Int"), g("Arr"))
             if c == 14: return "(Dict.size %s)" % g("Dct")

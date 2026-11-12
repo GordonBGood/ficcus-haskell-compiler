@@ -1,0 +1,22 @@
+tuple logged: 0
+shared: ["oneone","xone"]
+loop: 328350
+other: "27"
+element evaluated: 1
+logged payload: "some"
+default evaluated: 7
+index evaluated: 1
+logged default: 1
+first: (4,"e","h")
+result map: [0,28]
+result: ["zero","14"]
+area: [0,27,24]
+bodies kept: [{ x = 1, name = "p" },{ x = 2, name = "q" }]
+bodies: [{ x = 1, name = "p" },{ x = 3, name = "q" }]
+sumAt: [5,-1,-1]
+pairs: ((2,"b"),(-1,"none"))
+kept: Just "two"
+andThen: [81,-5]
+map withDefault: [3,0]
+withDefault: ["zero","two","?"]
+case get: [-1,1,962,1025,1090,9802,-1]
