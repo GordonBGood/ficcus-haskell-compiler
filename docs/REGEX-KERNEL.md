@@ -1,6 +1,6 @@
 # The Regex kernel (elm/regex, decision L24) (REGEX session, 2026-11-12)
 
-Worktree `ficcus-haskell-compiler-regex`, branch `feat/regex` (from `ficcus` at `12ead7bf`), binaries `bin/elmficr1` and up. Not merged into
+Worktree `ficcus-haskell-compiler-regex`, branch `feat/regex` (rebased onto `ficcus` at `ff33c1ab`), binaries `bin/elmficr2` and up. Not merged into
 `ficcus`: the COMPILER session merges after S6. Files this branch adds or changes:
 
 | file | what |
@@ -23,7 +23,7 @@ backwards, as the standard says, so captures inside a lookbehind are taken right
 (with the empty iteration check and the reset of captures at each iteration of the standard), alternation in order (leftmost alternative, not the
 longest). The flags are the two Elm exposes: case insensitive and multiline.
 `fromString` gives `Nothing` for what node rejects (unbalanced parentheses and brackets, `a{2,1}`, nothing to repeat: `*`, `a**`, `^*`, `\b+`,
-a quantified lookbehind, `[z-a]`, a trailing backslash), and for what Ficcus does not support: named groups `(?<n>..)`, `\k`, `\p`, `\P`, inline
+a quantified lookbehind, `[z-a]`, a trailing backslash), and for what Ficcus does not support: `\p`, `\P`, inline
 flags `(?i)`, and a pattern nested deeper than 200 levels. Everything else that node accepts is accepted with the same meaning (`a{`, `]`, `}` and
 `{,2}` are literals, `\8` is `8`, `\c1` is the text `\c1`, `\u12` is `u12`, `\101` is `A`).
 
@@ -89,8 +89,19 @@ text is not a separator, and neither is an empty match where the current piece s
 2. **`split` of the empty text.** JavaScript gives `[]` when the pattern matches the empty text (`"".split(/(?:)/)`) and `[""]` otherwise; the
    overlay does the same (`Regex.split (rx "") ""` is `[]`, `Regex.split (rx ",") ""` is `[""]`, the case of R-docs). The literal matchAll rule
    would give `["",""]`.
-3. **Syntax that node accepts and Ficcus rejects**: `\k`, `\p`, `\P` (node reads them as the letters `k p P` when there are no named groups,
-   which is never what the author meant), named groups, inline flags, nesting beyond 200. All others follow node (Annex B forms above).
+3. **Named groups (decided by the planning chat after the first report)**: `(?<name>..)` is an ordinary capturing group (numbered with the others,
+   `submatches` has no names) and `\k<name>` a backreference to it, as in node; a repeated name, an invalid name, or `\k<x>` for an unknown
+   name (when the pattern has any named group) is `Nothing`; without named groups `\k` is an identity escape (the letter k), as in node.
+   **Rejected (documented deviation)**: `\p`, `\P` (node, without the u flag, reads them as the letters `p`, `P`: `\p{Letter}` is then a class
+   of those letters, never what the author meant), inline flags `(?i)`, nesting beyond 200. All others follow node (Annex B forms above).
+   Elm quirk: with a named group Elm's `replace`/`replaceAtMost` pass the callback a Match whose `index` is the subject text and whose
+   `submatches` has an extra entry (JavaScript hands the callback the groups object); Ficcus returns the correct Match, and the differential
+   test compares those two columns with the model only.
+   Corpus scan (1984 projects with Elm sources, 226 that mention Regex; regex literals in source only): named groups 0, `\k` 0, inline flags 0,
+   lookbehind 2 occurrences (1 project, edkelly303/elm-yafl, `(?<=Just )[^,]+`, supported), `\p{Letter}` 6 occurrences in 2 projects
+   (billstclair/elm-xml-eeue56, dillonkearns/elm-xml-encode: both a name check that Elm turns into a letters class; Ficcus gives `Nothing`).
+   Proposal: if exact Elm behaviour matters more than the author's meaning, make `\p`/`\P` identity escapes (one line in
+   `fic_re_char_escape`).
 4. **Case folding outside the BMP and of `ǅ`** as described in section 1.
 5. **`Regex` equality** is the equality of the compiled programs (same pattern and flags). Elm compares two `RegExp` objects as plain
    objects (always equal or an error); no program can depend on it.
@@ -112,20 +123,20 @@ empty match or capture) and checks the others against a model of the decided beh
 
 ## 4. Tests and results
 
-Binary `bin/elmficr1` (build `cabal build -j1 --ghc-options="+RTS -M6g -RTS"`; the heavy steps ran with more than 8 GB available).
+Binary `bin/elmficr2` (build `cabal build -j1 --ghc-options="+RTS -M6g -RTS"`; the heavy steps ran with more than 8 GB available).
 
 | gate | result |
 |---|---|
 | library cases R (9) | 9 of 9 PASS |
-| library suite, `--no-rc` / default flags / `--rc` ASan+UBSan (`libsuite.sh`) | 150 PASS in each; all 148 original cases pass. The 5 others (K-decoder-equality-constants, K-deep-nesting, K-lone-surrogate-json-text, K-number-int-float-equality, Y-decode-negative-width) are newer cases of the LIBRARY session whose expected result is "undecided"; none is Regex |
+| library suite, `--no-rc` / default flags / `--rc` ASan+UBSan (`libsuite.sh`) | 155 PASS in each (rebased on `ficcus` at `ff33c1ab`); all 148 original cases pass. The 7 others (K-decoder-equality-constants, K-deep-nesting, K-lone-surrogate-json-text, K-number-int-float-equality, Y-decode-negative-width) are newer cases of the LIBRARY session whose expected result is "undecided"; none is Regex |
 | kernel tests (`kernel_tests.py`, all kernels) | 124 of 124, 0 without a test, 0 live objects; the 9 new ones each reach their `fic_re_` function |
 | `runtime/test.sh` (gcc, clang) | `test_regex` ok on both, also under `SAN=1` (ASan+UBSan, `ulimit -s 256`). Under `SAN=1` the older no-RC tests test_runtime, test_closure, test_jsarray, test_ustring report leaks (they allocate without counts); unchanged by this branch |
-| examples plain / `FIC_DROP_ALL` / `FIC_RC=1 FIC_SAN=1` (gcc, clang) | 208 ok lines each, 0 failures; the new example `regexex` (27 Debug.log lines) equals the output of Elm 0.19.3 under node |
+| examples plain / `FIC_DROP_ALL` / `FIC_RC=1 FIC_SAN=1` (gcc, clang) | 224 ok lines each, 0 failures; the new example `regexex` (27 Debug.log lines) equals the output of Elm 0.19.3 under node |
 | `norc_identity.py` | 16 of 16 identical to the reference (`elmfic60`) |
-| `run_diff.py` seeds 1, 2, 3 (393, 893, 893 cases; seeds 2 and 3 with `--san`) | Ficcus equals the model on every case; equals Elm 0.19.3 on 305, 691 and 694 of the same number of cases (the others, 79 to 193, have an empty match or capture, where Elm differs by decision, and are checked against the model only); 9 cases rejected by design say Nothing; 0 live objects |
+| `run_diff.py` seeds 1, 2, 3 (507, 807, 807 cases, with the named-group cases; seeds 2 and 3 with `--san`) | Ficcus equals the model on every case; equals Elm 0.19.3 on 422, 677 and 663 of the same number of cases (the others, 81 to 140, have an empty match or capture, where Elm differs by decision, and are checked against the model only); 4 cases rejected by design (`\p`, `\P`, `(?i)`) say Nothing; 0 live objects |
 | engine level (`re_driver` against `ref.js`, matchAll of node's RegExp, 3 seeds of 10,185 cases) | 0 differences (once the NUL subject, which a C string cannot hold, was removed) |
 
-The differential test needs about 200 pairs against Elm itself: the default run has 305. `python3 ficcus-tests/regex/run_diff.py --elm bin/elmficr1
+The differential test needs about 200 pairs against Elm itself: the default run has 422. `python3 ficcus-tests/regex/run_diff.py --elm bin/elmficr2
 --elm-ref bin/elm0193 --elm-home H --work DIR --safe tools/safe [--san] [--seed N] [--random K]`. The random patterns are generated from the
 supported grammar with a few inserted errors; the hand written list has about 230 cases: empty matches, greedy and lazy quantifiers, alternation, classes,
 anchors, groups, backreferences, lookaround, escapes, case folding, and the syntax that must give Nothing.

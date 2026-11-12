@@ -14,7 +14,7 @@ F must equal B on every case. F must equal A on every case where Elm's own behav
 library cases R-find-empty-matches, R-capture-empty, R-split-*) when a match is empty or a capture is the empty string; those cases are not run
 under Elm (its split loops forever on an empty match) and are reported as "model only". Patterns that node accepts and Ficcus rejects by design
 (\\p, \\P, inline flags) are listed in UNSUPPORTED: F must say Nothing for them. Exit status 1 on any difference."""
-import argparse, json, os, subprocess, sys, shutil
+import argparse, json, os, re, subprocess, sys, shutil
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -151,6 +151,17 @@ def logs(text):
     return out
 
 
+NAMED = re.compile(r"\(\?<[A-Za-z_$]")
+LINE = re.compile(r"^([TF]) (\[.*?\]) (\[.*?\]) .* (\[.*?\]) (\[.*\])$")
+
+
+def no_replace(line):
+    """Elm's `replace` hands the callback the object of the named groups as one more argument (index and submatches of the Match are then
+    garbage): for patterns with named groups the two `replace` columns are compared with the model only"""
+    m = LINE.match(line or "")
+    return " ".join(m.groups()) if m else line
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--elm", required=True); ap.add_argument("--elm-ref", required=True); ap.add_argument("--elm-home", required=True)
@@ -225,7 +236,10 @@ def main():
         else:
             f_vs_b += 1
     for j, i in enumerate(elm_idx):
-        if ref.get(j) != got.get(i):
+        a_line, f_line = ref.get(j), got.get(i)
+        if NAMED.search(cases[i][1]):
+            a_line, f_line = no_replace(a_line), no_replace(f_line)
+        if a_line != f_line:
             bad += 1
             print("F != A  case %d %r\n   F: %s\n   A: %s" % (i, cases[i], got.get(i), ref.get(j)))
         else:
