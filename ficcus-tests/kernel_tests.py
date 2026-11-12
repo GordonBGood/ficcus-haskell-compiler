@@ -338,6 +338,48 @@ t(BO + "readString", ['BD.decode (BD.string 2) (bs [ 104, 105 ])', 'BD.decode (B
                       'let b = BE.encode (BE.string (mk 1 ++ "é😣")) in ( BD.decode (BD.string (Bytes.width b)) b, BD.decode (BD.string 3) b, Bytes.width b )',
                       'BD.decode (BD.string 0) (bs [])', 'BD.decode (BD.string -1) (bs [ 1 ])'], needle="fic_bytes_read_string", **bopt)
 
+# ---- elm/regex (runtime/fic_regex.h, overlay/FicOverlayRegex.elm): the nine kernels are reached through the API of Regex; every test has a
+# Regex that is shared (used twice), one that is unique, an invalid pattern and a search that finds nothing ----
+RGX = "import Regex exposing (Regex)"
+RDECL = """
+rx : String -> Regex
+rx s =
+    Regex.fromString s |> Maybe.withDefault Regex.never
+
+
+fm : Regex.Match -> ( ( String, Int, Int ), List (Maybe String) )
+fm m =
+    ( ( m.match, m.index, m.number ), m.submatches )
+"""
+ropt = dict(imports=RGX, decls=RDECL, deps=["elm/regex"])
+RO = "author/project:FicOverlayRegex."
+t(RO + "compile", ['Regex.contains (rx (mk 1)) (mk 1)', 'let p = mk 2 ++ "+" in ( Regex.contains (rx p) (mk 2 ++ "22"), p )', 'Maybe.map (always ()) (Regex.fromString (mk 3 ++ "("))',
+                   'Maybe.map (always ()) (Regex.fromStringWith { caseInsensitive = True, multiline = True } "[a-c]+")', 'Regex.contains Regex.never (mk 4)',
+                   'let r = rx "(a|b)*c" in ( ( Regex.contains r "abc", Regex.contains r "ab" ), ( r == r, r == rx "x" ) )',
+                   'Maybe.map (always ()) (Regex.fromString "(?<n>a)")', 'Maybe.map (always ()) (Regex.fromString "\\\\p{L}")', 'Maybe.map (always ()) (Regex.fromString "")'],
+  needle="fic_re_compile", **ropt)
+t(RO + "valid", ['Regex.fromString (mk 1 ++ ")") == Nothing', 'Regex.fromString (mk 1 ++ "[") == Nothing', 'Regex.fromString "a{2,1}" == Nothing',
+                 'Maybe.map (always 1) (Regex.fromString "a{2,1")', 'Regex.fromString "*" == Nothing', 'Regex.fromString "x" == Nothing'], needle="fic_re_valid", **ropt)
+t(RO + "groups", ['List.map fm (Regex.find (rx "(a)(b)?") (mk 1 ++ "a ab"))', 'List.map (.submatches >> List.length) (Regex.find (rx "((a)(b)(?:c)(d))") "abcd")',
+                  'let r = rx "(x)" in ( List.map fm (Regex.find r (mk 2 ++ "x")), List.map fm (Regex.find r "x") )', 'List.map fm (Regex.find (rx "a*") (mk 3))'],
+  needle="fic_re_groups", **ropt)
+t(RO + "exec", ['List.map fm (Regex.find (rx "[0-9]+") (mk 1 ++ "a22b333"))', 'let s = mk 2 ++ "ab" in ( List.map fm (Regex.find (rx "b") s), s )',
+                'List.map fm (Regex.find (rx "(a)|b") "ab")', 'List.map fm (Regex.findAtMost 1 (rx "a") "aaa")', 'List.map fm (Regex.find (rx "q") (mk 4))',
+                'List.map fm (Regex.find (rx "😣") "a😣b😣")', 'List.map fm (Regex.find (rx "(?<=a)b") "ab")', 'List.map fm (Regex.find (rx "(a)\\\\1") "aa")',
+                'Regex.contains (rx "(a*)*b") (String.repeat 16 "a")'], needle="fic_re_exec", **ropt)
+t(RO + "found", ['Regex.contains (rx "a") (mk 1)', 'Regex.contains (rx (mk 1 ++ "x")) (mk 1 ++ "x")', 'Regex.contains (rx "^$") ""', 'Regex.contains (rx "x") ""'],
+  needle="fic_re_found", **ropt)
+t(RO + "cap", ['List.map fm (Regex.find (rx "(\\\\w)(\\\\d)?") (mk 1))', 'List.map .index (Regex.find (rx "") "a😣b")', 'List.map fm (Regex.find (rx "(a)(?:(b)|c)") "ab ac")'],
+  needle="fic_re_cap", **ropt)
+t(RO + "slice", ['Regex.replace (rx "[aeiou]") (\\m -> String.toUpper m.match) (mk 1 ++ "education")', 'let s = mk 2 ++ "xaxbx" in ( Regex.replace (rx "[ab]") (\\_ -> "") s, s )',
+                 'Regex.replaceAtMost 1 (rx "a") (\\_ -> mk 3) "aaa"', 'Regex.replace (rx "(a)(x)?") (\\m -> String.fromInt m.index ++ String.join "," (List.map (Maybe.withDefault "?") m.submatches)) "a ab"',
+                 'Regex.replace (rx "q") (\\_ -> "z") (mk 5)', 'Regex.replace (rx "") (\\_ -> "-") "é😣"', 'Regex.split (rx ",") (mk 1 ++ ",b,,c")', 'Regex.splitAtMost 2 (rx ",") "a,b,c,d"',
+                 'Regex.split (rx ",") ""', 'Regex.split (rx "") "é😣a"', 'let s = mk 6 ++ "-x" in ( Regex.split (rx "-") s, s )'], needle="fic_re_slice", **ropt)
+t(RO + "size", ['Regex.split (rx "b") (mk 1 ++ "abc")', 'Regex.split (rx "") ""', 'Regex.split (rx "\\\\b") "foo bar"', 'Regex.split (rx "x*") "axb"', 'Regex.split (rx "x") "x"'],
+  needle="fic_re_size", **ropt)
+t(RO + "advance", ['List.map .index (Regex.find (rx "") (mk 1))', 'List.map .index (Regex.find (rx "") "é😣a")', 'Regex.replace (rx "x*") (\\_ -> "-") "aéb"', 'Regex.split (rx "\\\\b") "é a"'],
+  needle="fic_re_advance", **ropt)
+
 ELM_JSON = '''{"type": "application", "source-directories": ["src"], "elm-version": "0.19.3",
  "dependencies": {"direct": {"elm/core": "1.0.5"%s}, "indirect": {%s}}, "test-dependencies": {"direct": {}, "indirect": {}}}
 '''
@@ -380,7 +422,7 @@ def run_one(a, kernel, work):
     shutil.rmtree(work, ignore_errors=True)
     os.makedirs(os.path.join(work, "src"))
     deps = opt.get("deps", []) + (["elm/parser"] if opt.get("parser") else [])
-    versions = {"elm/parser": "1.1.0", "elm/json": "1.1.3", "elm/bytes": "1.0.8"}
+    versions = {"elm/parser": "1.1.0", "elm/json": "1.1.3", "elm/bytes": "1.0.8", "elm/regex": "1.0.0"}
     open(os.path.join(work, "elm.json"), "w").write(ELM_JSON % ("".join(', "%s": "%s"' % (d, versions[d]) for d in deps), "" if "elm/json" in deps else '"elm/json": "1.1.3"'))
     open(os.path.join(work, "src", "Main.fic"), "w").write(program(kernel))
     env = dict(os.environ, ELM_HOME=a.elm_home)

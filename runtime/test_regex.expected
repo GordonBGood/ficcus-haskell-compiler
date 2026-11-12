@@ -1,0 +1,45 @@
+compile and valid
+  valid 1 groups 2
+  (         valid 0
+  )         valid 0
+  [         valid 0
+  a{2,1}    valid 0
+  *         valid 0
+  a**       valid 0
+  (?<n>x)   valid 0
+  \p{L}     valid 0
+  \k<n>     valid 0
+  (?i)a     valid 0
+  x{1}{2}   valid 0
+  ^*        valid 0
+  \         valid 0
+  [z-a]     valid 0
+  (?<=a)*   valid 0
+exec, found, cap, slice, size, advance
+  /a ab b/ [0-1@0 'a' 'a' -][2-4@2 'ab' 'a' 'b']
+  // 
+  /xyz/ 
+  /ab 12 c/ [0-2@0 'ab'][2-2@2 ''][3-3@3 ''][4-4@4 ''][5-5@5 ''][6-7@6 'c'][7-7@7 '']
+  /é😣z/ [0-0@0 ''][2-2@1 ''][6-7@2 'z'][7-7@3 '']
+  /aé😣/ [0-0@0 ''][1-1@1 ''][3-3@2 ''][7-7@3 '']
+  /12x a/ [2-3@2 'x' '12' -][4-5@4 'a' - 'a']
+  /Ab B/ [0-1@0 'A' 'A'][1-2@1 'b' -][3-4@3 'B' -]
+  /a
+b
+a
+b/ [0-1@0 'a'][2-3@2 'b'][4-5@4 'a'][6-7@6 'b']
+  /abc/ [0-3@0 'abc' -]
+  /zaacbbbcac/ [0-10@0 'zaacbbbcac' 'z' 'ac' 'a' - 'c']
+  size 6 cps 3 advance 1 5 6 7 7
+  slice 1 5 '😣'
+  slice 5 end 'b'
+  slice 7 2 '' (0)
+  from beyond the end: found 0
+  from negative: found 0
+equality
+  same 1 different flags 0 different pattern 0 two invalid 1
+resource limits
+  catastrophic: step budget, found 0
+  deep stack: backtracking stack, found 0
+  long run: no limit, found 1
+live objects at the end: 0

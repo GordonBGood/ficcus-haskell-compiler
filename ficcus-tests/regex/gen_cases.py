@@ -98,4 +98,5 @@ def main():
         print("%d\t%s\t%s" % (f, esc(p), esc(s)))
 
 
-main()
+if __name__ == "__main__":
+    main()
