@@ -1,0 +1,72 @@
+-- module LetUnused: problems=0 instances=20 instance-failures=0 defaulted=0
+-- equality-uses: total=0 at-function=0
+module author/project:LetUnused
+def main :: Program () () ()    [9:1-9:5]   id: author/project:LetUnused.main   sig: Program () () ()   kinds:    group: author/project:LetUnused.main nonrec ann
+  10:5-42:10 Call :: Program () () ()
+    10:5-10:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    11:9-42:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      12:13-39:37 Lambda :: () -> ( (), Cmd () )
+        12:14-12:15 PAnything :: ()
+        def f :: number    [29:21-29:22]   id: author/project:LetUnused.f@29:21   sig: v0   kinds: v0:number   group: author/project:LetUnused.f@29:21 nonrec inferred
+          30:25-30:41 Call :: number
+            30:25-30:34 VarDebug :: String -> number -> number   callee: elm/core:Debug.log   instance: a := number   sig#: 6ecaa5dd   subst: v0 := <<author/project:LetUnused.f@29:21|v0>>
+            30:35-30:38 Str :: String
+            30:39-30:41 Int :: number
+        def g :: String    [32:21-32:22]   id: author/project:LetUnused.g@32:21   sig: String   kinds:    group: author/project:LetUnused.g@32:21 nonrec inferred
+          33:25-33:56 Call :: String
+            33:25-33:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            33:35-33:38 Str :: String
+            33:40-33:56 Call :: String
+              33:40-33:54 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+              33:55-33:56 VarLocal :: Int   callee: author/project:LetUnused.f@29:21   use: gen   instance: number := Int   sig#: 005979ab   subst: v0 := Int
+        def d :: number1    [23:21-23:22]   id: author/project:LetUnused.d@23:21   sig: v0   kinds: v0:number   group: author/project:LetUnused.d@23:21 nonrec inferred
+          24:25-24:41 Call :: number1
+            24:25-24:34 VarDebug :: String -> number1 -> number1   callee: elm/core:Debug.log   instance: a := number1   sig#: 6ecaa5dd   subst: v0 := <<author/project:LetUnused.d@23:21|v0>>
+            24:35-24:38 Str :: String
+            24:39-24:41 Int :: number1
+        def e :: number2    [26:21-26:22]   id: author/project:LetUnused.e@26:21   sig: v0   kinds: v0:number   group: author/project:LetUnused.e@26:21 nonrec inferred
+          27:25-27:45 Call :: number2
+            27:25-27:34 VarDebug :: String -> number2 -> number2   callee: elm/core:Debug.log   instance: a := number2   sig#: 6ecaa5dd   subst: v0 := <<author/project:LetUnused.e@26:21|v0>>
+            27:35-27:38 Str :: String
+            27:40-27:45 Binop :: number2   callee: elm/core:Basics.add   instance: number := number2   sig#: 08810ccc   subst: v0 := <<author/project:LetUnused.e@26:21|v0>>
+              27:40-27:41 VarLocal :: number2   callee: author/project:LetUnused.d@23:21   use: gen   instance: number1 := number2   sig#: 005979ab   subst: v0 := <<author/project:LetUnused.e@26:21|v0>>
+              27:44-27:45 Int :: number2
+        def c :: List t    [20:21-20:22]   id: author/project:LetUnused.c@20:21   sig: List v0   kinds: v0:any   group: author/project:LetUnused.c@20:21 nonrec inferred
+          21:25-21:41 Call :: List t
+            21:25-21:34 VarDebug :: String -> List t -> List t   callee: elm/core:Debug.log   instance: a := List t   sig#: 6ecaa5dd   subst: v0 := List <<author/project:LetUnused.c@20:21|v0>>
+            21:35-21:38 Str :: String
+            21:39-21:41 List :: List t
+        def b :: number3    [17:21-17:22]   id: author/project:LetUnused.b@17:21   sig: v0   kinds: v0:number   group: author/project:LetUnused.b@17:21 nonrec inferred
+          18:25-18:45 Call :: number3
+            18:25-18:34 VarDebug :: String -> number3 -> number3   callee: elm/core:Debug.log   instance: a := number3   sig#: 6ecaa5dd   subst: v0 := <<author/project:LetUnused.b@17:21|v0>>
+            18:35-18:38 Str :: String
+            18:40-18:45 Binop :: number3   callee: elm/core:Basics.add   instance: number := number3   sig#: 08810ccc   subst: v0 := <<author/project:LetUnused.b@17:21|v0>>
+              18:40-18:41 Int :: number3
+              18:44-18:45 Int :: number3
+        def a :: number4    [14:21-14:22]   id: author/project:LetUnused.a@14:21   sig: v0   kinds: v0:number   group: author/project:LetUnused.a@14:21 nonrec inferred
+          15:25-15:40 Call :: number4
+            15:25-15:34 VarDebug :: String -> number4 -> number4   callee: elm/core:Debug.log   instance: a := number4   sig#: 6ecaa5dd   subst: v0 := <<author/project:LetUnused.a@14:21|v0>>
+            15:35-15:38 Str :: String
+            15:39-15:40 Int :: number4
+        35:17-39:37 If :: ( (), Cmd () )
+          35:20-35:39 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            35:20-35:35 Call :: Int
+              35:20-35:33 VarForeign :: String -> Int   callee: elm/core:String.length
+              35:34-35:35 VarLocal :: String   callee: author/project:LetUnused.g@32:21   use: gen
+            35:38-35:39 Int :: Int
+          36:21-36:37 Pair :: ( (), Cmd () )
+            36:23-36:25 Unit :: ()
+            36:27-36:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          39:21-39:37 Pair :: ( (), Cmd () )
+            39:23-39:25 Unit :: ()
+            39:27-39:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      40:20-40:43 Lambda :: () -> () -> ( (), Cmd () )
+        40:21-40:22 PAnything :: ()
+        40:23-40:24 PVar m :: ()
+        40:28-40:43 Pair :: ( (), Cmd () )
+          40:30-40:31 VarLocal :: ()
+          40:33-40:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      41:27-41:41 Lambda :: () -> Sub ()
+        41:28-41:29 PAnything :: ()
+        41:33-41:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:LetUnused.main   kind: value   reads:    needs:    init-dep: no

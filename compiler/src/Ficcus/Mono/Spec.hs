@@ -705,6 +705,23 @@ specLet se defs isRec body@(A.At bregion _) =
       let hoistIds = [ (defIdOf ctx' (defKeyOf d), meK) | not isRec, [d] <- [defs], isFun d, null (defArgs d) ]
       modify' (\st -> st { sHoist = Set.union (Set.fromList hoistIds) (sHoist st) })
       b' <- specExpr se' body
+      -- a polymorphic value that the body never uses is still evaluated (Elm evaluates it): one instance at the default
+      -- type (`number` is Int), so that a `Debug.log` in it prints
+      _ <- forM [ (h, d) | not isRec, [d] <- [defs], h <- hoistIds ] $ \(h, d) ->
+        do  used <- gets (Map.findWithDefault Set.empty h . sHoisted)
+            when (Set.null used) $
+              case Map.lookup (defKeyOf d) (_defs (_typed ctx')) of
+                Nothing -> return ()
+                Just sch ->
+                  do  let kinds = kindList sch
+                      let isOuter n = Map.member n (seEnv se)
+                      let own = [ (n, i) | (n, i) <- canonVars sch, not (isOuter n) ]
+                      let sub = Map.fromList [ (n, defaultKind KNumber) | (n, i) <- own, i < length kinds, kinds !! i == "number" ]
+                      let did = defIdOf ctx' (defKeyOf d)
+                      key <- keyFor se' did sch sub isOuter
+                      c <- requestClone (CKey did (Just me) key) (srcFor locals' d)
+                      let CloneId k = c
+                      modify' (\st -> st { sHoisted = Map.insertWith Set.union h (Set.singleton k) (sHoisted st) })
       -- the clones the body needs (local functions, lambdas, other polymorphic values) are generated now, while the
       -- window is open, so that their uses of the value are variables too
       when (not (null hoistIds)) drain
@@ -712,7 +729,7 @@ specLet se defs isRec body@(A.At bregion _) =
       _ <- return bregion
       st <- gets id
       let pvs = [ k | h <- hoistIds, k <- Set.toList (Map.findWithDefault Set.empty h (sHoisted st)) ]
-          bind k acc = MExpr (mRep acc) (MLetVal ("_pv" ++ show k) (MExpr (Map.findWithDefault CRef ("_pv" ++ show k) (sPvClass st)) (MCall (MExpr CRef (MGlobal (CloneId k))) [])) acc)
+          bind k acc = MExpr (mRep acc) (MLetVal ("_pv" ++ show k) (MExpr (Map.findWithDefault (maybe CRef mdResult (Map.lookup (CloneId k) (sDone st))) ("_pv" ++ show k) (sPvClass st)) (MCall (MExpr CRef (MGlobal (CloneId k))) [])) acc)
       return (foldr bind (foldr (\(n, v) acc -> MExpr (mRep acc) (MLetVal n v acc)) b' binds) pvs)
 
 

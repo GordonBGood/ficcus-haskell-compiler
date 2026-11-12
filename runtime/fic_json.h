@@ -172,6 +172,22 @@ static void fic_json_put_string(fic_sb *b, fic_ref s) {
   fic_sb_putn(b, "\"", 1);
 }
 
+/* L41: nesting limit of the parser, printer and equality (each recurses once per level): 1,000,000 levels when `main` runs on the big
+   stack (fic_rt.h), the old 2000 where it does not; beyond it the parser fails (not valid JSON) and the printer and equality stop
+   the program with a message */
+#ifndef FIC_JSON_MAX_DEPTH
+#  if !defined(FIC_NO_BIG_STACK) && (defined(__unix__) || defined(__APPLE__))
+#    define FIC_JSON_MAX_DEPTH 1000000
+#  else
+#    define FIC_JSON_MAX_DEPTH 2000
+#  endif
+#endif
+
+static void fic_json_too_deep(const char *what) {
+  fprintf(stderr, "%s: the Json value is nested more than %d levels.\n", what, (int)FIC_JSON_MAX_DEPTH);
+  exit(1);
+}
+
 static void fic_json_put_indent(fic_sb *b, int64_t indent, int64_t depth) {
   int64_t i;
   fic_sb_putn(b, "\n", 1);
@@ -180,6 +196,7 @@ static void fic_json_put_indent(fic_sb *b, int64_t indent, int64_t depth) {
 
 static void fic_json_put(fic_sb *b, fic_ref v, int64_t indent, int64_t depth) {
   int64_t i, n;
+  if (depth > FIC_JSON_MAX_DEPTH) fic_json_too_deep("Json.Encode.encode");
   switch (v->tag) {
   case FIC_TAG_JNULL: fic_sb_puts(b, "null"); break;
   case FIC_TAG_JBOOL: fic_sb_puts(b, ((fic_jbool *)v)->b ? "true" : "false"); break;
@@ -237,9 +254,10 @@ static int64_t fic_json_find_key(fic_ref keys, fic_ref name) {
   return -1;
 }
 
-static uint8_t fic_json_eq(fic_ref a, fic_ref b) {
+static uint8_t fic_json_eq_d(fic_ref a, fic_ref b, int64_t depth) {
   int64_t i, n;
   if (a == b) return 1;
+  if (depth > FIC_JSON_MAX_DEPTH) fic_json_too_deep("Json equality");
   if ((a->tag == FIC_TAG_JINT || a->tag == FIC_TAG_JFLOAT) && (b->tag == FIC_TAG_JINT || b->tag == FIC_TAG_JFLOAT)) {
     if (a->tag == FIC_TAG_JINT && b->tag == FIC_TAG_JINT) return ((fic_jint *)a)->i == ((fic_jint *)b)->i;
     return (a->tag == FIC_TAG_JINT ? (double)((fic_jint *)a)->i : ((fic_jfloat *)a)->d)
@@ -253,7 +271,7 @@ static uint8_t fic_json_eq(fic_ref a, fic_ref b) {
   case FIC_TAG_VEC_REF:
     n = fic_json_len(a);
     if (n != fic_json_len(b)) return 0;
-    for (i = 0; i < n; i++) if (!fic_json_eq(fic_json_at(a, i), fic_json_at(b, i))) return 0;
+    for (i = 0; i < n; i++) if (!fic_json_eq_d(fic_json_at(a, i), fic_json_at(b, i), depth + 1)) return 0;
     return 1;
   case FIC_TAG_JOBJ: {
     fic_jobj *x = (fic_jobj *)a, *y = (fic_jobj *)b;
@@ -261,17 +279,17 @@ static uint8_t fic_json_eq(fic_ref a, fic_ref b) {
     if (n != fic_json_len(y->keys)) return 0;
     for (i = 0; i < n; i++) {
       int64_t j = fic_str_eq(fic_json_at(x->keys, i), fic_json_at(y->keys, i)) ? i : fic_json_find_key(y->keys, fic_json_at(x->keys, i));
-      if (j < 0 || !fic_json_eq(fic_json_at(x->vals, i), fic_json_at(y->vals, j))) return 0;
+      if (j < 0 || !fic_json_eq_d(fic_json_at(x->vals, i), fic_json_at(y->vals, j), depth + 1)) return 0;
     }
     return 1; }
   default: return 0;
   }
 }
+static uint8_t fic_json_eq(fic_ref a, fic_ref b) { return fic_json_eq_d(a, b, 0); }
 
 /* ---- the parser of JSON text (JSON.parse): NULL when the text is not valid JSON ---- */
 
 typedef struct fic_json_in { const unsigned char *p, *end; int depth; } fic_json_in;
-#define FIC_JSON_MAX_DEPTH 2000
 
 static void fic_json_ws(fic_json_in *in) {
   while (in->p < in->end && (*in->p == ' ' || *in->p == '\t' || *in->p == '\n' || *in->p == '\r')) in->p++;

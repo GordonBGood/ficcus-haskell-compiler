@@ -1,0 +1,263 @@
+-- mono: stage (iii) slice 3b, modules=23
+-- module author/project:IndirectJson (project)
+clone c0   def: author/project:IndirectJson.main   key: ()   kind: value   init: 0   needs: 
+-- program: 22 clones, reachable from main, dependencies first
+clone c15   def: miniBill/elm-codec:Codec.build   key: (v0=i64)   name: build__i64   kind: function   params: encoder_:ref decoder_:ref   result: ref
+  Call :: ref
+    Ctor Codec tag 0 (v0=ref) :: ref
+    Record decoder encoder :: struct(ref,ref)
+      Local decoder_ :: ref
+      Local encoder_ :: ref
+clone c16   def: miniBill/elm-codec:Codec.lambda@210:11   key: ()   kind: function   params: _pb16_0:i64   result: ref   lifted-from: c4
+  Call :: ref
+    Kernel elm/json:Json.Encode.int () :: ref
+    Local _pb16_0 :: i64
+clone c4   def: miniBill/elm-codec:Codec.int   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c15 :: ref
+    Global c16 :: ref
+    Kernel elm/json:Json.Decode.int () :: ref
+clone c23   def: elm/core:List.foldl   key: (v0=i64; v1=ref)   name: foldl__i64__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: ref
+        Global c23 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: i64
+          Local acc :: ref
+        Local xs :: ref
+clone c25   def: elm/core:List.lambda@261:9   key: ()   outer: c24 (v0=i64)   kind: function   params: _pb25_0:i64 _pb25_1:ref   result: ref   lifted-from: c24
+  Call :: ref
+    Kernel elm/core:List.cons (v0=i64) :: ref
+    Local _pb25_0 :: i64
+    Local _pb25_1 :: ref
+clone c24   def: elm/core:List.reverse   key: (v0=i64)   name: reverse__i64   kind: function   params: list:ref   result: ref
+  Call :: ref
+    Global c23 :: ref
+    Global c25 :: ref
+    List :: ref
+    Local list :: ref
+clone c22   def: elm/core:List.foldrHelper   key: (v0=i64; v1=ref)   name: foldrHelper__i64__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
+  Case :: ref
+    Local ls :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch a :: i64 :: r1 :: ref :: ref
+      Case :: ref
+        Local r1 :: ref
+        branch [] :: ref
+          Call :: ref
+            Local fn :: ref
+            Local a :: i64
+            Local acc :: ref
+        branch b :: i64 :: r2 :: ref :: ref
+          Case :: ref
+            Local r2 :: ref
+            branch [] :: ref
+              Call :: ref
+                Local fn :: ref
+                Local a :: i64
+                Call :: ref
+                  Local fn :: ref
+                  Local b :: i64
+                  Local acc :: ref
+            branch c :: i64 :: r3 :: ref :: ref
+              Case :: ref
+                Local r3 :: ref
+                branch [] :: ref
+                  Call :: ref
+                    Local fn :: ref
+                    Local a :: i64
+                    Call :: ref
+                      Local fn :: ref
+                      Local b :: i64
+                      Call :: ref
+                        Local fn :: ref
+                        Local c :: i64
+                        Local acc :: ref
+                branch d :: i64 :: r4 :: ref :: ref
+                  Let res@200:41 :: ref
+                    If :: ref
+                      Call :: enum
+                        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                        Local ctr :: i64
+                        Lit 500 :: i64
+                      Call :: ref
+                        Global c23 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: ref
+                          Global c24 :: ref
+                          Local r4 :: ref
+                      Call :: ref
+                        Global c22 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: i64
+                          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                          Local ctr :: i64
+                          Lit 1 :: i64
+                        Local r4 :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local a :: i64
+                      Call :: ref
+                        Local fn :: ref
+                        Local b :: i64
+                        Call :: ref
+                          Local fn :: ref
+                          Local c :: i64
+                          Call :: ref
+                            Local fn :: ref
+                            Local d :: i64
+                            Local res@200:41 :: ref
+clone c20   def: elm/core:List.foldr   key: (v0=i64; v1=ref)   name: foldr__i64__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
+  Call :: ref
+    Global c22 :: ref
+    Local fn :: ref
+    Local acc :: ref
+    Lit 0 :: i64
+    Local ls :: ref
+clone c21   def: elm/core:List.lambda@125:10   key: ()   outer: c19 (v0=i64; v1=ref)   kind: function   params: x:i64 acc:ref   result: ref   lifted-from: c19
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Call :: ref
+      Local f :: ref
+      Local x :: i64
+    Local acc :: ref
+clone c19   def: elm/core:List.map   key: (v0=i64; v1=ref)   name: map__i64__ref   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Global c20 :: ref
+    Global c21 :: ref
+    List :: ref
+    Local xs :: ref
+clone c12   def: author/project:FicOverlayJson.encodeList   key: (v0=i64)   name: encodeList__i64   kind: function   params: func:ref entries:ref   result: ref
+  Call :: ref
+    Kernel author/project:FicOverlayJson.arrayFrom () :: ref
+    Call :: ref
+      Global c19 :: ref
+      Local func :: ref
+      Local entries :: ref
+clone c13   def: miniBill/elm-codec:Codec.lambda@413:23   key: ()   outer: c3 (v0=i64)   kind: function   params: _pb13_0:ref   result: ref   lifted-from: c3
+  Call :: ref
+    Kernel elm/json:Json.Decode.list (v0=i64) :: ref
+    Local _pb13_0 :: ref
+clone c11   def: miniBill/elm-codec:Codec.composite   key: (v0=i64; v1=ref)   name: composite__i64__ref   kind: function   params: enc:ref dec:ref _p2:ref   result: ref
+  Case :: ref
+    Local _p2 :: ref
+    branch Codec #0 codec :: struct(ref,ref) :: ref
+      Call :: ref
+        Ctor Codec tag 0 (v0=ref) :: ref
+        Record decoder encoder :: struct(ref,ref)
+          Call :: ref
+            Local dec :: ref
+            Access .decoder #0 :: ref
+              Local codec :: struct(ref,ref)
+          Call :: ref
+            Local enc :: ref
+            Access .encoder #1 :: ref
+              Local codec :: struct(ref,ref)
+clone c14   def: miniBill/elm-codec:Codec.lambda@413:5   key: ()   outer: c3 (v0=i64)   kind: function   params: _pb14_0:ref   result: ref   lifted-from: c3
+  Call :: ref
+    Global c11 :: ref
+    Local _pa14_0 :: ref
+    Local _pa14_1 :: ref
+    Local _pb14_0 :: ref
+clone c3   def: miniBill/elm-codec:Codec.list   key: (v0=i64)   name: list__i64   kind: value   params:    result: ref
+  Let _pa14_0 :: ref
+    Global c12 :: ref
+    Let _pa14_1 :: ref
+      Global c13 :: ref
+      Global c14 :: ref
+clone c9   def: miniBill/elm-codec:Codec.decoder   key: (v0=ref)   name: decoder__ref   kind: function   params: _p0:ref   result: ref
+  Case :: ref
+    Local _p0 :: ref
+    branch Codec #0 m :: struct(ref,ref) :: ref
+      Access .decoder #0 :: ref
+        Local m :: struct(ref,ref)
+clone c10   def: miniBill/elm-codec:Codec.lambda@138:5   key: ()   outer: c2 (v0=ref)   kind: function   params: _pb10_0:ref   result: ref   lifted-from: c2
+  Call :: ref
+    Kernel elm/json:Json.Decode.decodeString (v0=ref) :: ref
+    Local _pa10_0 :: ref
+    Local _pb10_0 :: ref
+clone c2   def: miniBill/elm-codec:Codec.decodeString   key: (v0=ref)   name: decodeString__ref   kind: function   params: codec:ref   result: ref
+  Let _pa10_0 :: ref
+    Call :: ref
+      Global c9 :: ref
+      Local codec :: ref
+    Global c10 :: ref
+clone c17   def: miniBill/elm-codec:Codec.encoder   key: (v0=ref)   name: encoder__ref   kind: function   params: _p0:ref   result: ref
+  Case :: ref
+    Local _p0 :: ref
+    branch Codec #0 m :: struct(ref,ref) :: ref
+      Access .encoder #1 :: ref
+        Local m :: struct(ref,ref)
+clone c7   def: miniBill/elm-codec:Codec.encodeToString   key: (v0=ref)   name: encodeToString__ref   kind: function   params: indentation:i64 codec:ref v:ref   result: ref
+  Call :: ref
+    Kernel elm/json:Json.Encode.encode () :: ref
+    Local indentation :: i64
+    Let _oa18_0 :: ref
+      Local codec :: ref
+      Let _oa18_1 :: ref
+        Local v :: ref
+        Call :: ref
+          Call :: ref
+            Global c17 :: ref
+            Local _oa18_0 :: ref
+          Local _oa18_1 :: ref
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Let b@17:21 :: struct(unit,unit)
+    Call :: ref
+      Kernel elm/core:Debug.log (v0=type (elm/core:Result.Result elm/json:Json.Decode.Error (elm/core:List.List elm/core:Basics.Int))) :: ref
+      Lit "decoded" :: ref
+      Let _oa6_0 :: ref
+        Let _oa5_0 :: ref
+          Global c4 :: ref
+          Call :: ref
+            Global c3 :: ref
+            Local _oa5_0 :: ref
+        Let _oa6_1 :: ref
+          Lit "[4,5]" :: ref
+          Call :: ref
+            Call :: ref
+              Global c2 :: ref
+              Local _oa6_0 :: ref
+            Local _oa6_1 :: ref
+    Let a@14:21 :: struct(unit,unit)
+      Call :: ref
+        Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+        Lit "encoded" :: ref
+        Call :: ref
+          Global c7 :: ref
+          Lit 0 :: i64
+          Let _oa8_0 :: ref
+            Global c4 :: ref
+            Call :: ref
+              Global c3 :: ref
+              Local _oa8_0 :: ref
+          List :: ref
+            Lit 1 :: i64
+            Lit 2 :: i64
+            Lit 3 :: i64
+      If :: struct(unit,unit)
+        Call :: enum
+          Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+          Call :: i64
+            Kernel elm/core:String.length () :: ref
+            Local a@14:21 :: ref
+          Lit 0 :: i64
+        Tuple :: struct(unit,unit)
+          Lit () :: unit
+          Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+        Tuple :: struct(unit,unit)
+          Lit () :: unit
+          Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:IndirectJson.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

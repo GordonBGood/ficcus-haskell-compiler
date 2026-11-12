@@ -1,0 +1,27 @@
+module IndirectJson exposing (main)
+
+-- L42: elm/json is only an indirect dependency (reached through miniBill/elm-codec): the overlay of the Json kernel is still compiled. The output equals Elm 0.19.3 (node).
+
+import Codec
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    a =
+                        Debug.log "encoded" (Codec.encodeToString 0 (Codec.list Codec.int) [ 1, 2, 3 ])
+
+                    b =
+                        Debug.log "decoded" (Codec.decodeString (Codec.list Codec.int) "[4,5]")
+                in
+                if String.length a > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

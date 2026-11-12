@@ -1,0 +1,55 @@
+-- module IndirectJson: problems=0 instances=16 instance-failures=0 defaulted=0
+-- equality-uses: total=0 at-function=0
+module author/project:IndirectJson
+def main :: Program () () ()    [9:1-9:5]   id: author/project:IndirectJson.main   sig: Program () () ()   kinds:    group: author/project:IndirectJson.main nonrec ann
+  10:5-27:10 Call :: Program () () ()
+    10:5-10:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    11:9-27:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      12:13-24:37 Lambda :: () -> ( (), Cmd () )
+        12:14-12:15 PAnything :: ()
+        def b :: Result Error (List Int)    [17:21-17:22]   id: author/project:IndirectJson.b@17:21   sig: Result Error (List Int)   kinds:    group: author/project:IndirectJson.b@17:21 nonrec inferred
+          18:25-18:95 Call :: Result Error (List Int)
+            18:25-18:34 VarDebug :: String -> Result Error (List Int) -> Result Error (List Int)   callee: elm/core:Debug.log   instance: a := Result Error (List Int)   sig#: 6ecaa5dd   subst: v0 := Result Error (List Int)
+            18:35-18:44 Str :: String
+            18:46-18:95 Call :: Result Error (List Int)
+              18:46-18:64 VarForeign :: Codec (List Int) -> String -> Result Error (List Int)   callee: miniBill/elm-codec:Codec.decodeString   instance: a := List Int   sig#: 051d885c   subst: v0 := List Int
+              18:66-18:86 Call :: Codec (List Int)
+                18:66-18:76 VarForeign :: Codec Int -> Codec (List Int)   callee: miniBill/elm-codec:Codec.list   instance: a := Int   sig#: 283f4ad0   subst: v0 := Int
+                18:77-18:86 VarForeign :: Codec Int   callee: miniBill/elm-codec:Codec.int
+              18:88-18:95 Str :: String
+        def a :: String    [14:21-14:22]   id: author/project:IndirectJson.a@14:21   sig: String   kinds:    group: author/project:IndirectJson.a@14:21 nonrec inferred
+          15:25-15:103 Call :: String
+            15:25-15:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            15:35-15:44 Str :: String
+            15:46-15:103 Call :: String
+              15:46-15:66 VarForeign :: Int -> Codec (List Int) -> List Int -> String   callee: miniBill/elm-codec:Codec.encodeToString   instance: a := List Int   sig#: 7f59ae9c   subst: v0 := List Int
+              15:67-15:68 Int :: Int
+              15:70-15:90 Call :: Codec (List Int)
+                15:70-15:80 VarForeign :: Codec Int -> Codec (List Int)   callee: miniBill/elm-codec:Codec.list   instance: a := Int   sig#: 283f4ad0   subst: v0 := Int
+                15:81-15:90 VarForeign :: Codec Int   callee: miniBill/elm-codec:Codec.int
+              15:92-15:103 List :: List Int
+                15:94-15:95 Int :: Int
+                15:97-15:98 Int :: Int
+                15:100-15:101 Int :: Int
+        20:17-24:37 If :: ( (), Cmd () )
+          20:20-20:39 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            20:20-20:35 Call :: Int
+              20:20-20:33 VarForeign :: String -> Int   callee: elm/core:String.length
+              20:34-20:35 VarLocal :: String   callee: author/project:IndirectJson.a@14:21   use: gen
+            20:38-20:39 Int :: Int
+          21:21-21:37 Pair :: ( (), Cmd () )
+            21:23-21:25 Unit :: ()
+            21:27-21:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          24:21-24:37 Pair :: ( (), Cmd () )
+            24:23-24:25 Unit :: ()
+            24:27-24:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      25:20-25:43 Lambda :: () -> () -> ( (), Cmd () )
+        25:21-25:22 PAnything :: ()
+        25:23-25:24 PVar m :: ()
+        25:28-25:43 Pair :: ( (), Cmd () )
+          25:30-25:31 VarLocal :: ()
+          25:33-25:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      26:27-26:41 Lambda :: () -> Sub ()
+        26:28-26:29 PAnything :: ()
+        26:33-26:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:IndirectJson.main   kind: value   reads:    needs:    init-dep: no

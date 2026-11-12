@@ -1,0 +1,42 @@
+module LetUnused exposing (main)
+
+-- A let-bound value of a polymorphic type that nothing uses is still evaluated, as in Elm (the Debug.log prints): `number` is
+-- Int, other variables are unused. Also a value used only by another unused one, and one used once beside unused ones.
+-- The output must equal Elm's (expected/letunused.out, Elm 0.19.3, node).
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    a =
+                        Debug.log "a" 1
+
+                    b =
+                        Debug.log "b" (3 + 4)
+
+                    c =
+                        Debug.log "c" []
+
+                    d =
+                        Debug.log "d" 10
+
+                    e =
+                        Debug.log "e" (d + 1)
+
+                    f =
+                        Debug.log "f" 20
+
+                    g =
+                        Debug.log "g" (String.fromInt f)
+                in
+                if String.length g > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

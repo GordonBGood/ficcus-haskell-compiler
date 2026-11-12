@@ -1,0 +1,57 @@
+module JsonDeep1m exposing (main)
+
+-- L41: Json text nested 1,000,000 levels (the limit) is parsed, printed, compared, decoded and dropped (the C recursion uses the
+-- big stack of `main`). Not run under AddressSanitizer: its frames are several times larger and the 1 GB stack is not enough. There is no Elm reference: Elm (node) overflows its stack long
+-- before; the expected values are the sizes by construction.
+
+import Json.Decode as D
+import Json.Encode as E
+
+
+nested : Int -> String
+nested n =
+    String.repeat n "[" ++ String.repeat n "]"
+
+
+depth : D.Decoder Int
+depth =
+    D.list (D.lazy (\_ -> depth)) |> D.map (\xs -> 1 + List.foldl max 0 xs)
+
+
+check : Int -> String
+check n =
+    case ( D.decodeString D.value (nested n), D.decodeString D.value (nested n) ) of
+        ( Ok v, Ok w ) ->
+            let
+                s =
+                    E.encode 0 v
+            in
+            String.fromInt (String.length s)
+                ++ (if s == nested n then " printed" else " different")
+                ++ (if v == w then " equal" else " unequal")
+                ++ (case D.decodeValue depth v of
+                        Ok d -> " depth " ++ String.fromInt d
+                        Err _ -> " depth error"
+                   )
+
+        _ ->
+            "not valid JSON"
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    b =
+                        Debug.log "1000000" (check 1000000)
+                in
+                if String.length b > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

@@ -269,8 +269,14 @@ verifyApp writer env time outline@(Outline.AppOutline elmVersion srcDirs direct 
   then
     do  stated <- checkAppDeps outline
         actual <- verifyConstraints env (Map.map Con.exactly stated)
+        -- Ficcus (L42): the overlays of elm/json, elm/bytes, elm/parser and elm/random (Ficcus.Mono.Overlay) import the package, which an application that
+        -- reaches it only through another package lists as indirect: for a build to C (or `.mono`) these four count as direct, so
+        -- that their modules can be imported
+        promote <- Task.io Flags.getKeepModules
+        let overlayPkgs = Map.map (const ()) (Map.filterWithKey (\k _ -> Pkg.toChars k `elem` ["elm/json", "elm/bytes", "elm/parser", "elm/random"]) actual)
+        let directDeps = if promote then Map.union (Map.map (const ()) direct) overlayPkgs else Map.map (const ()) direct
         if Map.size stated == Map.size actual
-          then verifyDependencies writer env time (ValidApp srcDirs) actual direct
+          then verifyDependencies writer env time (ValidApp srcDirs) actual directDeps
           else Task.throw $ Exit.DetailsHandEditedDependencies
   else
     Task.throw $ Exit.DetailsBadElmInAppOutline elmVersion

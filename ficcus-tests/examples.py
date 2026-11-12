@@ -11,10 +11,11 @@ Exit status 1 on any difference.
 import argparse, os, shutil, subprocess, sys, tempfile, difflib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2", "init2", "silly", "grow1", "grow2", "grow3", "lit", "dbg", "parse", "unres", "rand", "synt", "evo", "comp", "reuse", "letop", "fbip"]
-RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "str2", "init2", "silly", "grow3", "lit", "dbg", "parse", "unres", "rand", "synt", "evo", "comp", "reuse", "letop", "fbip"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
+NAMES = ["fib", "poly", "rec", "init", "marks", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "letunused", "jsondeep", "jsondeep1m", "indirectjson", "str2", "init2", "silly", "grow1", "grow2", "grow3", "lit", "dbg", "parse", "unres", "rand", "synt", "evo", "comp", "reuse", "letop", "fbip"]
+RUN = ["fib", "log", "num", "poly3a", "groups", "clo", "lists", "bits", "order", "eqcmp", "dict", "nan", "eqfun", "ovl", "arr", "upd", "str", "rows", "acc", "letnum", "letunused", "jsondeep", "jsondeep1m", "indirectjson", "str2", "init2", "silly", "grow3", "lit", "dbg", "parse", "unres", "rand", "synt", "evo", "comp", "reuse", "letop", "fbip"]      # also compiled to C (--output=x.c), built with gcc and clang and run: expected/<name>.out
 
 
+NO_SAN = {"jsondeep1m"}      # too deep for the larger frames of AddressSanitizer
 CRASH = {"eqfun": "Trying to use `(==)` on functions."}      # programs that end with a run time error: exit status 1 and this text on stderr
 
 
@@ -78,7 +79,7 @@ def run_c(a, dst, name, mod):
         if shutil.which(cc) is None: continue
         exe = os.path.join(dst, "x_" + cc)
         b = subprocess.run([cc, "-std=c99", "-pedantic", "-Wall", "-Wextra", "-Wno-unused-function", "-ffp-contract=off", "-O2",
-                            *EXTRA, *(SAN_FLAGS[cc] if SAN else []), "-I", rt, os.path.join(dst, "x.c"), "-o", exe, "-lm"], capture_output=True)
+                            *EXTRA, *(SAN_FLAGS[cc] if SAN and name not in NO_SAN else []), "-I", rt, os.path.join(dst, "x.c"), "-o", exe, "-lm"], capture_output=True)
         if b.returncode != 0 or b.stderr:
             print("FAIL %s.c %s: %s" % (name, cc, b.stderr.decode()[-300:])); bad += 1; continue
         r = subprocess.run([exe], capture_output=True)

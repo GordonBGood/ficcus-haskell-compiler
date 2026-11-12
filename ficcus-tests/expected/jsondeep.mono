@@ -1,0 +1,202 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:JsonDeep (project)
+clone c0   def: author/project:JsonDeep.nested   key: ()   kind: function   init: 0   needs: 
+clone c1   def: author/project:JsonDeep.depth   key: ()   kind: value   init: 1   needs: 
+clone c2   def: author/project:JsonDeep.check   key: ()   kind: function   init: 2   needs: c1
+clone c3   def: author/project:JsonDeep.main   key: ()   kind: value   init: 3   needs: c1
+-- program: 12 clones, reachable from main, dependencies first
+clone c11   def: elm/core:String.repeatHelp   key: ()   kind: function   params: n:i64 chunk:ref result:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+      Local n :: i64
+      Lit 0 :: i64
+    Local result :: ref
+    Call :: ref
+      Global c11 :: ref
+      Call :: i64
+        Kernel elm/core:Bitwise.shiftRightBy () :: ref
+        Lit 1 :: i64
+        Local n :: i64
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Local chunk :: ref
+        Local chunk :: ref
+      If :: ref
+        Call :: enum
+          Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
+          Call :: i64
+            Kernel elm/core:Bitwise.and () :: ref
+            Local n :: i64
+            Lit 1 :: i64
+          Lit 0 :: i64
+        Local result :: ref
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Local result :: ref
+          Local chunk :: ref
+clone c5   def: elm/core:String.repeat   key: ()   kind: function   params: n:i64 chunk:ref   result: ref
+  Call :: ref
+    Global c11 :: ref
+    Local n :: i64
+    Local chunk :: ref
+    Lit "" :: ref
+clone c3   def: author/project:JsonDeep.nested   key: ()   kind: function   params: n:i64   result: ref
+  Call :: ref
+    Kernel elm/core:Basics.append (v0=app string) :: ref
+    Call :: ref
+      Global c5 :: ref
+      Local n :: i64
+      Lit "[" :: ref
+    Call :: ref
+      Global c5 :: ref
+      Local n :: i64
+      Lit "]" :: ref
+clone c7   def: elm/core:List.foldl   key: (v0=i64; v1=i64)   name: foldl__i64__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: i64
+        Global c7 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: i64
+          Local acc :: i64
+        Local xs :: ref
+clone c8   def: elm/core:Basics.max   key: (v0=type elm/core:Basics.Int)   name: max__i64   kind: function   params: x:i64 y:i64   result: i64
+  If :: i64
+    Call :: enum
+      Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+      Local x :: i64
+      Local y :: i64
+    Local x :: i64
+    Local y :: i64
+clone c6   def: author/project:JsonDeep.lambda@18:45   key: ()   kind: function   params: xs:ref   result: i64   lifted-from: c4
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Lit 1 :: i64
+    Call :: i64
+      Global c7 :: ref
+      Global c8 :: ref
+      Lit 0 :: i64
+      Local xs :: ref
+clone c9   def: elm/json:Json.Decode.lazy   key: (v0=i64)   name: lazy__i64   kind: function   params: thunk:ref   result: ref
+  Call :: ref
+    Kernel elm/json:Json.Decode.andThen (v0=unit; v1=i64) :: ref
+    Local thunk :: ref
+    Call :: ref
+      Kernel elm/json:Json.Decode.succeed (v0=unit) :: ref
+      Lit () :: unit
+clone c10   def: author/project:JsonDeep.lambda@18:21   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c4
+  Global c4 :: ref
+clone c4   def: author/project:JsonDeep.depth   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Kernel elm/json:Json.Decode.map (v0=ref; v1=i64) :: ref
+    Global c6 :: ref
+    Call :: ref
+      Kernel elm/json:Json.Decode.list (v0=i64) :: ref
+      Call :: ref
+        Global c9 :: ref
+        Global c10 :: ref
+clone c2   def: author/project:JsonDeep.check   key: ()   kind: function   params: n:i64   result: ref
+  Case :: ref
+    Tuple :: struct(ref,ref)
+      Call :: ref
+        Kernel elm/json:Json.Decode.decodeString (v0=ref) :: ref
+        Kernel elm/json:Json.Decode.value () :: ref
+        Call :: ref
+          Global c3 :: ref
+          Local n :: i64
+      Call :: ref
+        Kernel elm/json:Json.Decode.decodeString (v0=ref) :: ref
+        Kernel elm/json:Json.Decode.value () :: ref
+        Call :: ref
+          Global c3 :: ref
+          Local n :: i64
+    branch (Ok #0 v :: ref :: ref, Ok #0 w :: ref :: ref) :: struct(ref,ref)
+      Let s@26:17 :: ref
+        Call :: ref
+          Kernel elm/json:Json.Encode.encode () :: ref
+          Lit 0 :: i64
+          Local v :: ref
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Call :: ref
+            Kernel elm/core:String.fromInt () :: ref
+            Call :: i64
+              Kernel elm/core:String.length () :: ref
+              Local s@26:17 :: ref
+          Call :: ref
+            Kernel elm/core:Basics.append (v0=app string) :: ref
+            If :: ref
+              Call :: enum
+                Kernel elm/core:Basics.eq (v0=type elm/core:String.String) :: ref
+                Local s@26:17 :: ref
+                Call :: ref
+                  Global c3 :: ref
+                  Local n :: i64
+              Lit " printed" :: ref
+              Lit " different" :: ref
+            Call :: ref
+              Kernel elm/core:Basics.append (v0=app string) :: ref
+              If :: ref
+                Call :: enum
+                  Kernel elm/core:Basics.eq (v0=type elm/json:Json.Encode.Value) :: ref
+                  Local v :: ref
+                  Local w :: ref
+                Lit " equal" :: ref
+                Lit " unequal" :: ref
+              Case :: ref
+                Call :: ref
+                  Kernel elm/json:Json.Decode.decodeValue (v0=i64) :: ref
+                  Global c4 :: ref
+                  Local v :: ref
+                branch Ok #0 d :: i64 :: ref
+                  Call :: ref
+                    Kernel elm/core:Basics.append (v0=app string) :: ref
+                    Lit " depth " :: ref
+                    Call :: ref
+                      Kernel elm/core:String.fromInt () :: ref
+                      Local d :: i64
+                branch Err #1 _ :: ref :: ref
+                  Lit " depth error" :: ref
+    branch _ :: struct(ref,ref)
+      Lit "not valid JSON" :: ref
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Let c@50:21 :: struct(unit,unit)
+    Call :: ref
+      Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+      Lit "1000001" :: ref
+      Call :: ref
+        Global c2 :: ref
+        Lit 1000001 :: i64
+    Let a@47:21 :: struct(unit,unit)
+      Call :: ref
+        Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+        Lit "100000" :: ref
+        Call :: ref
+          Global c2 :: ref
+          Lit 100000 :: i64
+      If :: struct(unit,unit)
+        Call :: enum
+          Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+          Call :: i64
+            Kernel elm/core:String.length () :: ref
+            Call :: ref
+              Kernel elm/core:Basics.append (v0=app string) :: ref
+              Local a@47:21 :: ref
+              Local c@50:21 :: ref
+          Lit 0 :: i64
+        Tuple :: struct(unit,unit)
+          Lit () :: unit
+          Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+        Tuple :: struct(unit,unit)
+          Lit () :: unit
+          Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:JsonDeep.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

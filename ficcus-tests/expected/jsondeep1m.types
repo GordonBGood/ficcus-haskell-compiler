@@ -1,0 +1,137 @@
+-- module JsonDeep1m: problems=0 instances=42 instance-failures=0 defaulted=0
+-- equality-uses: total=2 at-function=0
+module author/project:JsonDeep1m
+def nested :: Int -> String    [12:1-12:7]   id: author/project:JsonDeep1m.nested   sig: Int -> String   kinds:    group: author/project:JsonDeep1m.nested nonrec ann
+  12:8-12:9 PVar n :: Int
+  13:5-13:47 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+    13:5-13:24 Call :: String
+      13:5-13:18 VarForeign :: Int -> String -> String   callee: elm/core:String.repeat
+      13:19-13:20 VarLocal :: Int
+      13:21-13:24 Str :: String
+    13:28-13:47 Call :: String
+      13:28-13:41 VarForeign :: Int -> String -> String   callee: elm/core:String.repeat
+      13:42-13:43 VarLocal :: Int
+      13:44-13:47 Str :: String
+def depth :: Decoder Int    [17:1-17:6]   id: author/project:JsonDeep1m.depth   sig: Decoder Int   kinds:    group: author/project:JsonDeep1m.depth rec ann
+  18:5-18:76 Binop :: Decoder Int   callee: elm/core:Basics.apR   instance: a := Decoder (List Int), b := Decoder Int   sig#: 742a0ff5   subst: v0 := Decoder (List Int), v1 := Decoder Int
+    18:5-18:32 Call :: Decoder (List Int)
+      18:5-18:11 VarForeign :: Decoder Int -> Decoder (List Int)   callee: elm/json:Json.Decode.list   instance: a := Int   sig#: 7be87de1   subst: v0 := Int
+      18:13-18:32 Call :: Decoder Int
+        18:13-18:19 VarForeign :: (() -> Decoder Int) -> Decoder Int   callee: elm/json:Json.Decode.lazy   instance: a := Int   sig#: aec64705   subst: v0 := Int
+        18:21-18:32 Lambda :: () -> Decoder Int
+          18:22-18:23 PAnything :: ()
+          18:27-18:32 VarTopLevel :: Decoder Int   callee: author/project:JsonDeep1m.depth   use: rec
+    18:38-18:75 Call :: Decoder (List Int) -> Decoder Int
+      18:38-18:43 VarForeign :: (List Int -> Int) -> Decoder (List Int) -> Decoder Int   callee: elm/json:Json.Decode.map   instance: a := List Int, value := Int   sig#: 9d6d68fd   subst: v0 := List Int, v1 := Int
+      18:45-18:75 Lambda :: List Int -> Int
+        18:46-18:48 PVar xs :: List Int
+        18:52-18:75 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          18:52-18:53 Int :: Int
+          18:56-18:75 Call :: Int
+            18:56-18:66 VarForeign :: (Int -> Int -> Int) -> Int -> List Int -> Int   callee: elm/core:List.foldl   instance: a := Int, b := Int   sig#: 8a8782c6   subst: v0 := Int, v1 := Int
+            18:67-18:70 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.max   instance: comparable := Int   sig#: 08810ccc   subst: v0 := Int
+            18:71-18:72 Int :: Int
+            18:73-18:75 VarLocal :: List Int
+def check :: Int -> String    [22:1-22:6]   id: author/project:JsonDeep1m.check   sig: Int -> String   kinds:    group: author/project:JsonDeep1m.check nonrec ann
+  22:7-22:8 PVar n :: Int
+  23:5-38:29 Case :: String
+    23:10-23:82 Pair :: ( Result Error Value, Result Error Value )
+      23:12-23:44 Call :: Result Error Value
+        23:12-23:26 VarForeign :: Decoder Value -> String -> Result Error Value   callee: elm/json:Json.Decode.decodeString   instance: a := Value   sig#: 5a99929a   subst: v0 := Value
+        23:27-23:34 VarForeign :: Decoder Value   callee: elm/json:Json.Decode.value
+        23:36-23:44 Call :: String
+          23:36-23:42 VarTopLevel :: Int -> String   callee: author/project:JsonDeep1m.nested   use: gen
+          23:43-23:44 VarLocal :: Int
+      23:47-23:79 Call :: Result Error Value
+        23:47-23:61 VarForeign :: Decoder Value -> String -> Result Error Value   callee: elm/json:Json.Decode.decodeString   instance: a := Value   sig#: 5a99929a   subst: v0 := Value
+        23:62-23:69 VarForeign :: Decoder Value   callee: elm/json:Json.Decode.value
+        23:71-23:79 Call :: String
+          23:71-23:77 VarTopLevel :: Int -> String   callee: author/project:JsonDeep1m.nested   use: gen
+          23:78-23:79 VarLocal :: Int
+    24:9-24:23 PPair :: ( Result Error Value, Result Error Value )
+      24:11-24:15 PCtor Ok :: Result Error Value
+        24:14-24:15 PVar v :: Value
+      24:17-24:21 PCtor Ok :: Result Error Value
+        24:20-24:21 PVar w :: Value
+    def s :: String    [26:17-26:18]   id: author/project:JsonDeep1m.s@26:17   sig: String   kinds:    group: author/project:JsonDeep1m.s@26:17 nonrec inferred
+      27:21-27:33 Call :: String
+        27:21-27:29 VarForeign :: Int -> Value -> String   callee: elm/json:Json.Encode.encode
+        27:30-27:31 Int :: Int
+        27:32-27:33 VarLocal :: Value
+    29:13-35:21 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      29:13-29:44 Call :: String
+        29:13-29:27 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+        29:29-29:44 Call :: Int
+          29:29-29:42 VarForeign :: String -> Int   callee: elm/core:String.length
+          29:43-29:44 VarLocal :: String   callee: author/project:JsonDeep1m.s@26:17   use: gen
+      30:21-34:48 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        30:21-30:71 If :: String
+          30:24-30:37 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := String   sig#: 2cdc0786   subst: v0 := String
+            30:24-30:25 VarLocal :: String   callee: author/project:JsonDeep1m.s@26:17   use: gen
+            30:29-30:37 Call :: String
+              30:29-30:35 VarTopLevel :: Int -> String   callee: author/project:JsonDeep1m.nested   use: gen
+              30:36-30:37 VarLocal :: Int
+          30:43-30:53 Str :: String
+          30:59-30:71 Str :: String
+        31:21-34:48 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+          31:21-31:60 If :: String
+            31:24-31:30 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Value   sig#: 2cdc0786   subst: v0 := Value
+              31:24-31:25 VarLocal :: Value
+              31:29-31:30 VarLocal :: Value
+            31:36-31:44 Str :: String
+            31:50-31:60 Str :: String
+          32:21-34:48 Case :: String
+            32:26-32:47 Call :: Result Error Int
+              32:26-32:39 VarForeign :: Decoder Int -> Value -> Result Error Int   callee: elm/json:Json.Decode.decodeValue   instance: a := Int   sig#: e84d476c   subst: v0 := Int
+              32:40-32:45 VarTopLevel :: Decoder Int   callee: author/project:JsonDeep1m.depth   use: gen
+              32:46-32:47 VarLocal :: Value
+            33:25-33:29 PCtor Ok :: Result Error Int
+              33:28-33:29 PVar d :: Int
+            33:33-33:62 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+              33:33-33:42 Str :: String
+              33:46-33:62 Call :: String
+                33:46-33:60 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+                33:61-33:62 VarLocal :: Int
+            34:25-34:30 PCtor Err :: Result Error Int
+              34:29-34:30 PAnything :: Error
+            34:34-34:48 Str :: String
+    37:9-37:10 PAnything :: ( Result Error Value, Result Error Value )
+    38:13-38:29 Str :: String
+def main :: Program () () ()    [42:1-42:5]   id: author/project:JsonDeep1m.main   sig: Program () () ()   kinds:    group: author/project:JsonDeep1m.main nonrec ann
+  43:5-57:10 Call :: Program () () ()
+    43:5-43:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    44:9-57:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      45:13-54:37 Lambda :: () -> ( (), Cmd () )
+        45:14-45:15 PAnything :: ()
+        def b :: String    [47:21-47:22]   id: author/project:JsonDeep1m.b@47:21   sig: String   kinds:    group: author/project:JsonDeep1m.b@47:21 nonrec inferred
+          48:25-48:59 Call :: String
+            48:25-48:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            48:35-48:44 Str :: String
+            48:46-48:59 Call :: String
+              48:46-48:51 VarTopLevel :: Int -> String   callee: author/project:JsonDeep1m.check   use: gen
+              48:52-48:59 Int :: Int
+        50:17-54:37 If :: ( (), Cmd () )
+          50:20-50:39 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            50:20-50:35 Call :: Int
+              50:20-50:33 VarForeign :: String -> Int   callee: elm/core:String.length
+              50:34-50:35 VarLocal :: String   callee: author/project:JsonDeep1m.b@47:21   use: gen
+            50:38-50:39 Int :: Int
+          51:21-51:37 Pair :: ( (), Cmd () )
+            51:23-51:25 Unit :: ()
+            51:27-51:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          54:21-54:37 Pair :: ( (), Cmd () )
+            54:23-54:25 Unit :: ()
+            54:27-54:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      55:20-55:43 Lambda :: () -> () -> ( (), Cmd () )
+        55:21-55:22 PAnything :: ()
+        55:23-55:24 PVar m :: ()
+        55:28-55:43 Pair :: ( (), Cmd () )
+          55:30-55:31 VarLocal :: ()
+          55:33-55:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      56:27-56:41 Lambda :: () -> Sub ()
+        56:28-56:29 PAnything :: ()
+        56:33-56:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:JsonDeep1m.nested   kind: function   reads:    needs: 
+init: 1   id: author/project:JsonDeep1m.depth   kind: value   reads:    needs:    init-dep: no   group: author/project:JsonDeep1m.depth
+init: 2   id: author/project:JsonDeep1m.check   kind: function   reads: author/project:JsonDeep1m.nested,author/project:JsonDeep1m.depth   needs: author/project:JsonDeep1m.depth
+init: 3   id: author/project:JsonDeep1m.main   kind: value   reads: author/project:JsonDeep1m.check   needs: author/project:JsonDeep1m.depth   init-dep: yes
