@@ -1,4 +1,4 @@
-/* The kernel of elm/json (Json.Encode, Json.Decode), decisions L20, L21, L27, L28; STAGE4-PLAN section 8. Needs the closure runtime
+/* The kernel of elm/json (Json.Encode, Json.Decode), decisions L20, L21, L27, L28, L35, L36; STAGE4-PLAN section 8. Needs the closure runtime
    (fic_word, fic_apN), fic_jsarray.h and fic_ustring.h; emitted only into programs that use a fic_json_ or fic_jd_ function.
 
    A Json value (`Json.Encode.Value`) is an ordinary counted tree:
@@ -7,8 +7,9 @@
      a number      FIC_TAG_JINT {int64} (Encode.int, an integer literal that fits 64 bits) or FIC_TAG_JFLOAT {double} (L21)
      a string      the string object itself (FIC_TAG_STRING)
      an array      a JsArray of references (FIC_TAG_VEC_REF, fic_jsarray.h)
-     an object     FIC_TAG_JOBJ with two references: the keys (a JsArray of strings) and the values (a JsArray), in insertion order,
-                   without duplicate keys (the last value wins and stays at the place of the first, as a JavaScript object)
+     an object     FIC_TAG_JOBJ with two references: the keys (a JsArray of strings) and the values (a JsArray), in the order of a
+                   JavaScript object (L35): first the keys that are canonical array indices ("0" to "4294967294") in numeric
+                   order, then the others in insertion order; no duplicate keys (the last value wins, at the place of the first)
    A decoder (`Json.Decode.Decoder a`) is a tree of fic_jdec nodes that fic_jd_run interprets. Values of the type `a` are words
    (fic_word, a struct boxed, as in a closure); a class code says what a word holds: 'p' a reference, 'i' Int, 'd' Float, 'c' Char,
    'e' an enumeration, Bool or unit. The primitive decoders are static objects.
@@ -59,7 +60,22 @@ static fic_ref fic_json_obj_new(fic_ref keys, fic_ref vals) {      /* consumes b
   return &o->h;
 }
 
-typedef struct fic_json_kv { fic_ref key; int64_t ix; } fic_json_kv;
+typedef struct fic_json_kv { fic_ref key; int64_t ix; int64_t num; } fic_json_kv;
+
+/* L35, L36: the number of a key that is a canonical array index of JavaScript ("0", or digits without a leading zero, at most
+   4294967294), -1 for every other key */
+static int64_t fic_json_index_key(fic_ref key) {
+  const char *s = FIC_STR(key)->data;
+  int64_t n = FIC_STR(key)->len, i, v = 0;
+  if (n < 1 || n > 10 || (s[0] == '0' && n > 1)) return -1;
+  for (i = 0; i < n; i++) { if (s[i] < '0' || s[i] > '9') return -1; v = v * 10 + (s[i] - '0'); }
+  return v <= 4294967294LL ? v : -1;
+}
+
+static int fic_json_kv_numcmp(const void *a, const void *b) {
+  const fic_json_kv *x = (const fic_json_kv *)a, *y = (const fic_json_kv *)b;
+  return x->num < y->num ? -1 : x->num > y->num ? 1 : 0;
+}
 static int fic_json_kv_cmp(const void *a, const void *b) {
   const fic_json_kv *x = (const fic_json_kv *)a, *y = (const fic_json_kv *)b;
   int c = fic_str_cmp(x->key, y->key);
@@ -70,7 +86,7 @@ static int fic_json_kv_cmp(const void *a, const void *b) {
    a key that occurs again replaces the value and keeps the place of its first occurrence */
 static fic_ref fic_json_obj_build(fic_ref *ks, fic_ref *vs, int64_t n) {
   fic_ref keys, vals;
-  int64_t i, m = 0;
+  int64_t i, m = 0, nix = 0;
   if (n > 1) {
     fic_json_kv *t = (fic_json_kv *)malloc((size_t)n * sizeof(fic_json_kv));
     if (t == NULL) abort();
@@ -98,6 +114,17 @@ static fic_ref fic_json_obj_build(fic_ref *ks, fic_ref *vs, int64_t n) {
   keys = fic_ja_new(m, FIC_TAG_VEC_REF);
   vals = fic_ja_new(m, FIC_TAG_VEC_REF);
   m = 0;
+  /* L35, the order of JavaScript objects: first the keys that are array indices, in ascending numeric order ... */
+  for (i = 0; i < n; i++) if (ks[i] != NULL && fic_json_index_key(ks[i]) >= 0) nix++;
+  if (nix > 0) {
+    fic_json_kv *t = (fic_json_kv *)malloc((size_t)nix * sizeof(fic_json_kv));
+    if (t == NULL) abort();
+    for (i = 0; i < n; i++) if (ks[i] != NULL) { int64_t x = fic_json_index_key(ks[i]); if (x >= 0) { t[m].key = ks[i]; t[m].ix = i; t[m].num = x; m++; } }
+    qsort(t, (size_t)nix, sizeof(fic_json_kv), fic_json_kv_numcmp);
+    for (m = 0; m < nix; m++) { fic_ja_data(keys)[m].p = ks[t[m].ix]; fic_ja_data(vals)[m].p = vs[t[m].ix]; ks[t[m].ix] = NULL; }
+    free(t);
+  }
+  /* ... then the other keys in the order of their first occurrence */
   for (i = 0; i < n; i++) if (ks[i] != NULL) { fic_ja_data(keys)[m].p = ks[i]; fic_ja_data(vals)[m].p = vs[i]; m++; }
   return fic_json_obj_new(keys, vals);
 }
@@ -610,6 +637,19 @@ static fic_ref fic_jd_run(fic_ref dec, fic_ref val, fic_word *out, char *code) {
   case FIC_JD_FIELD: {
     int64_t i = val->tag == FIC_TAG_JOBJ ? fic_json_find_key(((fic_jobj *)val)->keys, d->a) : -1;
     fic_ref err;
+    if (val->tag == FIC_TAG_VEC_REF) {                /* L36, as JavaScript: an array has the fields "length" and its indices */
+      int64_t ix = fic_json_index_key(d->a);
+      if (ix >= 0 && ix < fic_json_len(val)) {
+        err = fic_jd_run(d->b, fic_json_at(val, ix), out, code);
+        return err == NULL ? NULL : fic_jd_err_field(d->a, err);
+      }
+      if (FIC_STR(d->a)->len == 6 && memcmp(FIC_STR(d->a)->data, "length", 6) == 0) {
+        fic_ref len = fic_json_int(fic_json_len(val));
+        err = fic_jd_run(d->b, len, out, code);
+        FIC_RC_DROP(len);
+        return err == NULL ? NULL : fic_jd_err_field(d->a, err);
+      }
+    }
     if (i < 0) {
       fic_sb b;
       fic_sb_init(&b);
