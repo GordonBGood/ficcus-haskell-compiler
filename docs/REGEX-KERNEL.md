@@ -92,8 +92,9 @@ text is not a separator, and neither is an empty match where the current piece s
 3. **Named groups (decided by the planning chat after the first report)**: `(?<name>..)` is an ordinary capturing group (numbered with the others,
    `submatches` has no names) and `\k<name>` a backreference to it, as in node; a repeated name, an invalid name, or `\k<x>` for an unknown
    name (when the pattern has any named group) is `Nothing`; without named groups `\k` is an identity escape (the letter k), as in node.
-   **Rejected (documented deviation)**: `\p`, `\P` (node, without the u flag, reads them as the letters `p`, `P`: `\p{Letter}` is then a class
-   of those letters, never what the author meant), inline flags `(?i)`, nesting beyond 200. All others follow node (Annex B forms above).
+   `\p` and `\P` are identity escapes (the letters `p`, `P`), exactly as Elm under node, whose RegExp has no u flag: `\p{Letter}` is the
+   text `p{Letter}` (decided 12 Nov; two published packages use `\p{Letter}` and get what they get in Elm; before, Ficcus rejected the pattern).
+   **Rejected (documented deviation)**: inline flags `(?i)`, nesting beyond 200. All others follow node (Annex B forms above).
    Elm quirk: with a named group Elm's `replace`/`replaceAtMost` pass the callback a Match whose `index` is the subject text and whose
    `submatches` has an extra entry (JavaScript hands the callback the groups object); Ficcus returns the correct Match, and the differential
    test compares those two columns with the model only.

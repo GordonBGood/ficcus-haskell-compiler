@@ -5,6 +5,8 @@ module Ficcus.Flags
   , getKeepModules
   , setExtraSrcDir
   , getExtraSrcDir
+  , setOverlayOnlyPkgs
+  , getOverlayOnlyPkgs
   , ficcusChecks
   )
   where
@@ -70,6 +72,25 @@ setExtraSrcDir =
 getExtraSrcDir :: IO (Maybe FilePath)
 getExtraSrcDir =
   readIORef extraSrcDirRef
+
+
+-- L42: the packages that an application lists as indirect and that an overlay module (Ficcus.Mono.Overlay) imports. Elm.Details
+-- makes their modules importable for a build to C; Build lets only the overlay modules import them, so that Elm's rule (a module of a
+-- package that is not a direct dependency cannot be imported) still holds for the program. Written by Details.verifyApp.
+{-# NOINLINE overlayOnlyPkgsRef #-}
+overlayOnlyPkgsRef :: IORef [String]
+overlayOnlyPkgsRef =
+  unsafePerformIO (newIORef [])
+
+
+setOverlayOnlyPkgs :: [String] -> IO ()
+setOverlayOnlyPkgs =
+  writeIORef overlayOnlyPkgsRef
+
+
+getOverlayOnlyPkgs :: IO [String]
+getOverlayOnlyPkgs =
+  readIORef overlayOnlyPkgsRef
 
 
 -- the checks that only the C back end makes (decisions L2 and L9: an Int literal beyond 2^63-1 and a surrogate in a string

@@ -390,23 +390,30 @@ checkModule writer env@(Env _ _ stuff projectType _ _ _ _) foreigns resultsMVar 
 
     SChanged local@(Details.Local path time deps _ _ lastCompile) source modul@(Src.Module _ _ _ imports _ _ _ _ _) docsNeed ->
       do  results <- readMVar resultsMVar
-          depsStatus <- checkDeps stuff results deps lastCompile
-          case depsStatus of
-            DepsChange ifaces ->
-              compile writer env docsNeed local source ifaces modul
+          hidden <- overlayOnlyImports env path imports      -- Ficcus (L42)
+          depsStatus <- if null hidden then checkDeps stuff results deps lastCompile else return DepsBlock
+          case hidden of
+           h : hs ->
+            let (env', results') = withoutOverlayOnly env results (map fst (h : hs))
+            in return $ RProblem $ Error.Module name path time source $
+                 Error.BadImports (toImportErrors env' results' imports (NE.List h hs))
+           [] ->
+            case depsStatus of
+              DepsChange ifaces ->
+                compile writer env docsNeed local source ifaces modul
 
-            DepsSame same cached ->
-              do  maybeLoaded <- loadInterfaces stuff same cached
-                  case maybeLoaded of
-                    Nothing     -> return RBlocked
-                    Just ifaces -> compile writer env docsNeed local source ifaces modul
+              DepsSame same cached ->
+                do  maybeLoaded <- loadInterfaces stuff same cached
+                    case maybeLoaded of
+                      Nothing     -> return RBlocked
+                      Just ifaces -> compile writer env docsNeed local source ifaces modul
 
-            DepsBlock ->
-              return RBlocked
+              DepsBlock ->
+                return RBlocked
 
-            DepsNotFound problems ->
-              return $ RProblem $ Error.Module name path time source $
-                Error.BadImports (toImportErrors env results imports problems)
+              DepsNotFound problems ->
+                return $ RProblem $ Error.Module name path time source $
+                  Error.BadImports (toImportErrors env results imports problems)
 
     SBadImport importProblem ->
       return (RNotFound importProblem)
@@ -492,6 +499,34 @@ checkDepsHelp stuff results deps new same cached importProblems isBlocked lastDe
                 case maybeLoaded of
                   Nothing     -> return DepsBlock
                   Just ifaces -> return $ DepsChange $ Map.union (Map.fromList new) ifaces
+
+
+
+-- Ficcus (L42): the imports of a program module that name a module of a package which is importable only because an overlay
+-- module needs it (Elm.Details.verifyApp, Flags.getOverlayOnlyPkgs): for the program they are not found, as in Elm, with Elm's
+-- message. A module in the overlay directory may import them.
+overlayOnlyImports :: Env -> FilePath -> [Src.Import] -> IO [(Module.Name, Import.Problem)]
+overlayOnlyImports (Env _ _ _ _ _ _ _ foreigns) path imports =
+  do  pkgs <- Flags.getOverlayOnlyPkgs
+      extra <- Flags.getExtraSrcDir
+      let inOverlay = maybe False (\d -> FP.addTrailingPathSeparator d `List.isPrefixOf` path) extra
+      return
+        [ (n, Import.NotFound)
+        | not (null pkgs), not inOverlay
+        , n <- map Src.getImportName imports
+        , Just (Details.Foreign dep _) <- [Map.lookup n foreigns]
+        , Pkg.toChars dep `elem` pkgs
+        ]
+
+
+-- the environment and results as Elm sees them: without the modules of the overlay-only packages (for the suggestions of the message)
+withoutOverlayOnly :: Env -> ResultDict -> [Module.Name] -> (Env, ResultDict)
+withoutOverlayOnly env@(Env _ _ _ _ _ _ _ foreigns) results names =
+  let
+    pkgs = [ dep | n <- names, Just (Details.Foreign dep _) <- [Map.lookup n foreigns] ]
+    gone = Map.keysSet (Map.filter (\(Details.Foreign dep _) -> dep `elem` pkgs) foreigns)
+  in
+  ( env { _foreigns = Map.withoutKeys foreigns gone }, Map.withoutKeys results gone )
 
 
 

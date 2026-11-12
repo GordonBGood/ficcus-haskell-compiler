@@ -55,6 +55,16 @@ def main():
         print(("ok   " if ok else "FAIL ") + "rejects " + name); bad += 0 if ok else 1
         if not ok: print(text[-300:])
         shutil.rmtree(d, ignore_errors=True)
+    # L42: elm/json is only an indirect dependency (reached through miniBill/elm-codec, the project of the example indirectjson): the
+    # overlay may import it, the program may not (Elm's rule and Elm's message)
+    d = tempfile.mkdtemp(); os.makedirs(os.path.join(d, "src"))
+    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "indirectjson", "elm.json"), d)
+    open(os.path.join(d, "src", "Main.fic"), "w").write(HEAD.replace("\n\n\nmain :", "\n\nimport Codec\nimport Json.Decode\n\n\nmain :", 1))
+    c = subprocess.run([a.safe, a.elm, "make", "src/Main.fic", "--output=x.c"], cwd=d, env=dict(os.environ, ELM_HOME=a.elm_home), capture_output=True, text=True)
+    ok = c.returncode != 0 and "Running elm install elm/json should make it available" in c.stdout + c.stderr
+    print(("ok   " if ok else "FAIL ") + "rejects import-of-indirect-package"); bad += 0 if ok else 1
+    if not ok: print((c.stdout + c.stderr)[-300:])
+    shutil.rmtree(d, ignore_errors=True)
     return 1 if bad else 0
 
 if __name__ == "__main__": sys.exit(main())

@@ -192,7 +192,8 @@ static int64_t fic_re_char_escape(fic_re_cc *cc, int in_class) {
     }
     return v;
   case 'k': return cc->nnamed ? -1 : 'k';          /* with named groups only \k<name> (an atom) is valid; without, an identity escape */
-  case 'p': case 'P': return -1;                   /* Unicode properties: not supported (L24, documented deviation) */
+  /* \p and \P: identity escapes (the letters p, P), exactly as Elm under node, whose RegExp has no u flag: `\p{Letter}` is the
+     text "p{Letter}" (default below) */
   case 'b': if (in_class) return 8; return -1;
   case '8': case '9': return e;
   default: return e;                               /* identity escape */

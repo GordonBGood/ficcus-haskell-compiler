@@ -59,7 +59,7 @@ int main(void) {
   printf("compile and valid\n");
   re = comp("(a)(b)?", 0);
   printf("  valid %d groups %lld\n", fic_re_valid(re), (long long)fic_re_groups(re));
-  { const char *invalid[] = { "(", ")", "[", "a{2,1}", "*", "a**", "(?<n>x)(?<n>y)", "(?<n>x)\\k<m>", "(?<1>x)", "(?<n>x)\\k", "\\p{L}", "(?i)a", "x{1}{2}", "^*", "\\", "[z-a]", "(?<=a)*" };
+  { const char *invalid[] = { "(", ")", "[", "a{2,1}", "*", "a**", "(?<n>x)(?<n>y)", "(?<n>x)\\k<m>", "(?<1>x)", "(?<n>x)\\k", "(?i)a", "x{1}{2}", "^*", "\\", "[z-a]", "(?<=a)*" };
     size_t i;
     for (i = 0; i < sizeof invalid / sizeof *invalid; i++) {
       bad_re = comp(invalid[i], 0);

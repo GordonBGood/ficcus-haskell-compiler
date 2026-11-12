@@ -10,7 +10,6 @@ compile and valid
   (?<n>x)\k<m> valid 0
   (?<1>x)   valid 0
   (?<n>x)\k valid 0
-  \p{L}     valid 0
   (?i)a     valid 0
   x{1}{2}   valid 0
   ^*        valid 0

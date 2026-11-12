@@ -13,15 +13,16 @@ case it prints one line with `fromStringWith` (Nothing or not), `contains`, `fin
 F must equal B on every case. F must equal A on every case where Elm's own behaviour is the decided one: Elm differs (decisions L24, L30, and the
 library cases R-find-empty-matches, R-capture-empty, R-split-*) when a match is empty or a capture is the empty string; those cases are not run
 under Elm (its split loops forever on an empty match) and are reported as "model only". Patterns that node accepts and Ficcus rejects by design
-(\\p, \\P, inline flags) are listed in UNSUPPORTED: F must say Nothing for them. Exit status 1 on any difference."""
+(inline flags) are listed in UNSUPPORTED: F must say Nothing for them. Exit status 1 on any difference."""
 import argparse, json, os, re, subprocess, sys, shutil
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import gen_cases  # noqa: E402
 
-UNSUPPORTED = {"\\p{L}", "\\P{L}", "(?i)a", "\\p"}
-EXTRA = [(0, p, "ab a") for p in sorted(UNSUPPORTED)]
+UNSUPPORTED = {"(?i)a"}
+IDENTITY_P = ["\\p{L}", "\\P{L}", "\\p", "\\p{Letter}+", "[\\p{L}]"]      # \p, \P are identity escapes as in node without the u flag
+EXTRA = [(0, p, "ab a") for p in sorted(UNSUPPORTED)] + [(0, p, "ap{L} P{L} p{Letter}p L}") for p in IDENTITY_P]
 
 
 def elm_str(s):
