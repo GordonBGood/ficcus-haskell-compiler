@@ -68,7 +68,7 @@ kernelArity cid =
     , ("elm/core:Platform.worker", 1)
     , ("elm/core:Platform.Cmd.none", 0), ("elm/core:Platform.Sub.none", 0)
     ]
-    ++ jsonKernels ++ bytesKernels
+    ++ jsonKernels ++ bytesKernels ++ regexKernels
 
 
 -- elm/json (runtime/fic_json.h). The functions of Json.Encode and Json.Decode that are kernel functions in Elm are kernels here by the
@@ -97,6 +97,15 @@ bytesKernels =
       , ("author/project:FicOverlayBytes.readU16", 3), ("author/project:FicOverlayBytes.readI32", 3), ("author/project:FicOverlayBytes.readU32", 3)
       , ("author/project:FicOverlayBytes.readF32", 3), ("author/project:FicOverlayBytes.readF64", 3), ("author/project:FicOverlayBytes.readBytes", 3)
       , ("author/project:FicOverlayBytes.readString", 3) ]
+
+
+-- elm/regex (runtime/fic_regex.h). The functions of the package are written in Elm (overlay/FicOverlayRegex.elm) on the nine kernels
+-- declared there: the compiled program (a `Regex`), one search (`exec`, giving a vector of offsets) and text by byte offsets.
+regexKernels :: [(String, Int)]
+regexKernels =
+  [ ("author/project:FicOverlayRegex.compile", 2), ("author/project:FicOverlayRegex.valid", 1), ("author/project:FicOverlayRegex.groups", 1)
+  , ("author/project:FicOverlayRegex.exec", 4), ("author/project:FicOverlayRegex.found", 1), ("author/project:FicOverlayRegex.cap", 2)
+  , ("author/project:FicOverlayRegex.slice", 3), ("author/project:FicOverlayRegex.size", 1), ("author/project:FicOverlayRegex.advance", 2) ]
 
 
 -- | variables of kernel functions keyed by their exact type even though the scheme does not say so
@@ -186,6 +195,10 @@ kernelSig cid key =
       , ("author/project:FicOverlayBytes.readU32", "sbs"), ("author/project:FicOverlayBytes.readF32", "sbs")
       , ("author/project:FicOverlayBytes.readF64", "sbs"), ("author/project:FicOverlayBytes.readBytes", "sbs")
       , ("author/project:FicOverlayBytes.readString", "sbs") ]
+      -- elm/regex: the pattern, the text and the capture vector are borrowed (nothing is kept); the results are new objects
+      ++ [ ("author/project:FicOverlayRegex.compile", "sb"), ("author/project:FicOverlayRegex.valid", "b"), ("author/project:FicOverlayRegex.groups", "b")
+      , ("author/project:FicOverlayRegex.exec", "bbss"), ("author/project:FicOverlayRegex.found", "b"), ("author/project:FicOverlayRegex.cap", "bs")
+      , ("author/project:FicOverlayRegex.slice", "bss"), ("author/project:FicOverlayRegex.size", "b"), ("author/project:FicOverlayRegex.advance", "bs") ]
 
 
 -- the kernels whose arguments are never references

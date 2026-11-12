@@ -13,6 +13,7 @@ module Ficcus.Mono.Overlay
   , parserFileName
   , jsonSource, jsonFileName
   , bytesSource, bytesFileName
+  , regexSource, regexFileName
   )
   where
 
@@ -44,7 +45,7 @@ overlayModuleName = "FicOverlay"
 -- | the modules that are not part of the project in the listings (`x.mono`, `x.types`): the overlay of elm/core and the Elm parts of
 -- the Json and Bytes kernels, which are compiled into every project that lists the package
 supportModuleNames :: [String]
-supportModuleNames = [overlayModuleName, "FicOverlayJson", "FicOverlayBytes"]
+supportModuleNames = [overlayModuleName, "FicOverlayJson", "FicOverlayBytes", "FicOverlayRegex"]
 
 
 overlayFileName :: FilePath
@@ -69,6 +70,9 @@ overlayId cid =
           , n `elem` [ "decode", "signedInt8", "signedInt16", "signedInt32", "unsignedInt8", "unsignedInt16", "unsignedInt32", "float32", "float64"
                      , "bytes", "string", "map", "map2", "map3", "map4", "map5", "andThen", "succeed", "fail", "loop" ] ->
               Just ("author/project:FicOverlayBytes." ++ n)
+          | Just n <- List.stripPrefix "elm/regex:Regex." cid
+          , n `elem` [ "fromStringWith", "never", "contains", "find", "findAtMost", "replace", "replaceAtMost", "split", "splitAtMost" ] ->
+              Just ("author/project:FicOverlayRegex." ++ n)
         _ -> Nothing
   where
     table =
@@ -119,6 +123,16 @@ bytesSource =
 
 bytesFileName :: FilePath
 bytesFileName = "FicOverlayBytes.elm"
+
+
+-- the elm/regex overlay (overlay/FicOverlayRegex.elm): compiled only into projects that depend directly on elm/regex
+regexSource :: String
+regexSource =
+  $(embedFiles [ "overlay/FicOverlayRegex.elm" ])
+
+
+regexFileName :: FilePath
+regexFileName = "FicOverlayRegex.elm"
 
 
 -- the elm/random overlay (overlay/FicOverlayRandom.elm): compiled only into projects that depend on elm/random

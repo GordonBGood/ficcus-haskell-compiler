@@ -387,6 +387,8 @@ classOfName enums name _ =
     "elm/json:Json.Encode.Value" -> CRef      -- declared with one constructor without fields: built-ins (runtime/fic_json.h, fic_bytes.h)
     "elm/json:Json.Decode.Decoder" -> CRef
     "elm/bytes:Bytes.Bytes" -> CRef
+    "elm/regex:Regex.Regex" -> CRef            -- declared with one constructor without fields: the compiled program (runtime/fic_regex.h)
+    "author/project:FicOverlayRegex.Caps" -> CRef
     "elm/core:Platform.Cmd.Cmd" -> CUnit       -- commands are ignored by Platform.worker (STAGE3-PLAN R9)
     "elm/core:Platform.Sub.Sub" -> CUnit
     "elm/core:Platform.Program" -> CUnit

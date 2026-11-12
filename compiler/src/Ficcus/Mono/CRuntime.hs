@@ -8,6 +8,7 @@ module Ficcus.Mono.CRuntime
   , fdlibmRuntime
   , jsonRuntime
   , bytesRuntime
+  , regexRuntime
   )
   where
 
@@ -70,3 +71,9 @@ jsonRuntime =
 bytesRuntime :: String
 bytesRuntime =
   $(embedFiles [ "runtime/fic_bytes.h" ])
+
+
+-- the kernel of elm/regex (needs the String runtime and its case tables): emitted only by programs that use it
+regexRuntime :: String
+regexRuntime =
+  $(embedFiles [ "runtime/fic_regex.h" ])

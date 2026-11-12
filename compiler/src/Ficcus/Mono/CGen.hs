@@ -30,7 +30,7 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
-import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, prelude, stringRuntime)
+import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, prelude, regexRuntime, stringRuntime)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free (captures, refClass)
 import Ficcus.Mono.Ir
@@ -130,13 +130,14 @@ generate rcMode program =
               body = unlines (concatMap (\l -> if l == helperMark then extra else if l == "  /* PK_RELEASE */" then [ "  fic_pk_release();" | pkUsed ] else [l]) (reverse (gOut final)))
               pkUsed = any ("fic_pk_" `List.isInfixOf`) (gOut final)
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
-          in Right ((if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n" ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_"] then closureRuntime ++ "\n" else "")
+          in Right ((if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n" ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_"] then closureRuntime ++ "\n" else "")
                     ++ (if "fic_fd_" `List.isInfixOf` body then fdlibmRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_ja_", "fic_json_", "fic_jd_"] then jsArrayRuntime ++ "\n" else "")
-                    ++ (if any (`List.isInfixOf` body) ["fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_"] then stringRuntime ++ "\n" else "")
+                    ++ (if any (`List.isInfixOf` body) ["fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_"] then stringRuntime ++ "\n" else "")
                     -- the kernels of elm/json and elm/bytes, after the runtimes they are written with
                     ++ (if any (`List.isInfixOf` body) ["fic_json_", "fic_jd_"] then jsonRuntime ++ "\n" else "")
                     ++ (if "fic_bytes_" `List.isInfixOf` body then bytesRuntime ++ "\n" else "")
+                    ++ (if "fic_re_" `List.isInfixOf` body then regexRuntime ++ "\n" else "")
                     ++ "\n" ++ body)
         errs -> Left errs
 
@@ -1157,6 +1158,16 @@ jsonBytesCall info cls name key args =
     ("elm/json:Json.Decode.map2", [_, _, _]) | Just c <- lastClass -> callWith "fic_jd_map2" [codeOf c]
     ("elm/json:Json.Decode.decodeValue", [_, _]) | Just c <- lastClass -> Just (run "fic_jd_decode_value" c)
     ("elm/json:Json.Decode.decodeString", [_, _]) | Just c <- lastClass -> Just (run "fic_jd_decode_string" c)
+    -- elm/regex (overlay/FicOverlayRegex.elm): scalars, borrowed strings and vectors; the results are new objects or scalars
+    ("author/project:FicOverlayRegex.compile", [_, _]) -> call "fic_re_compile"
+    ("author/project:FicOverlayRegex.valid", [_]) -> call "fic_re_valid"
+    ("author/project:FicOverlayRegex.groups", [_]) -> call "fic_re_groups"
+    ("author/project:FicOverlayRegex.exec", [_, _, _, _]) -> call "fic_re_exec"
+    ("author/project:FicOverlayRegex.found", [_]) -> call "fic_re_found"
+    ("author/project:FicOverlayRegex.cap", [_, _]) -> call "fic_re_cap"
+    ("author/project:FicOverlayRegex.slice", [_, _, _]) -> call "fic_re_slice"
+    ("author/project:FicOverlayRegex.size", [_]) -> call "fic_re_size"
+    ("author/project:FicOverlayRegex.advance", [_, _]) -> call "fic_re_advance"
     ("elm/bytes:Bytes.width", [_]) -> call "fic_bytes_width"
     ("elm/bytes:Bytes.Encode.encode", [_]) -> call "fic_bytes_encode"
     ("elm/bytes:Bytes.Encode.getStringWidth", [_]) -> call "fic_bytes_string_width"
@@ -1552,6 +1563,7 @@ showStmt _ t sb v =
     -- Json values and decoders print as Elm's `<internals>`, Bytes as `<3 bytes>` (decision L29)
     TyCon "elm/json:Json.Encode.Value" [] -> emit ("fic_sb_puts(" ++ sb ++ ", \"<internals>\");")
     TyCon "elm/json:Json.Decode.Decoder" [_] -> emit ("fic_sb_puts(" ++ sb ++ ", \"<internals>\");")
+    TyCon "elm/regex:Regex.Regex" [] -> emit ("fic_sb_puts(" ++ sb ++ ", \"{}\");")      -- as Elm (decision L29)
     TyCon "elm/bytes:Bytes.Bytes" [] ->
       do  emit ("fic_sb_puts(" ++ sb ++ ", \"<\");")
           emit ("fic_sb_int(" ++ sb ++ ", fic_bytes_width(" ++ v ++ "));")
@@ -1740,6 +1752,7 @@ genHelper info k name =
         TyCon "elm/json:Json.Encode.Value" [] -> emit "return fic_json_eq(a, b);"
         TyCon "elm/json:Json.Decode.Decoder" [_] -> emit "return fic_jd_eq(a, b);"
         TyCon "elm/bytes:Bytes.Bytes" [] -> emit "return fic_bytes_eq(a, b);"
+        TyCon "elm/regex:Regex.Regex" [] -> emit "return fic_re_eq(a, b);"
         TyCon n args | Just ctors <- ctorsOf info n args, Map.member n (iUnions info) -> customEq n ctors
         _ -> failUnit ("equality at " ++ mtypeText t ++ " is not supported by the C generator yet") >> emit "return 0;"
 

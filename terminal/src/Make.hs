@@ -251,6 +251,7 @@ writeOverlay root =
       -- it as direct, so that the overlay can import it)
       let usesJson = "\"elm/json\"" `List.isInfixOf` jsonText
       let usesBytes = "\"elm/bytes\"" `List.isInfixOf` jsonText
+      let usesRegex = "\"elm/regex\"" `List.isInfixOf` jsonText
       let optional used name source =
             do  let f = dir FP.</> name
                 if used
@@ -262,7 +263,8 @@ writeOverlay root =
       randomFiles <- optional usesRandom Overlay.randomFileName Overlay.randomSource
       jsonFiles <- optional usesJson Overlay.jsonFileName Overlay.jsonSource
       bytesFiles <- optional usesBytes Overlay.bytesFileName Overlay.bytesSource
-      return (file : parserFiles ++ randomFiles ++ jsonFiles ++ bytesFiles)
+      regexFiles <- optional usesRegex Overlay.regexFileName Overlay.regexSource
+      return (file : parserFiles ++ randomFiles ++ jsonFiles ++ bytesFiles ++ regexFiles)
 
 
 readFileStrict :: FilePath -> IO String
