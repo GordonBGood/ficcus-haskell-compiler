@@ -64,6 +64,7 @@ typedef struct fic_re_cc {
   const unsigned char *p, *end;
   int ci, ml, err, depth;
   int total_groups, groups;                       /* in the whole pattern (prescan), allocated so far */
+  const unsigned char **nmp; int *nml, *nmi; int nnamed, ncapn; /* the named groups (prescan): name, length, group number */
   fic_re_node *nodes; size_t nn, ncap;
   uint32_t *pool; size_t np, pcap;                /* ranges of the classes: pairs lo, hi */
   uint32_t *tmp; size_t nt, tcap;                 /* the class being built */
@@ -190,7 +191,8 @@ static int64_t fic_re_char_escape(fic_re_cc *cc, int in_class) {
       if (lo >= 0xDC00 && lo <= 0xDFFF) { cc->p += 6; return 0x10000 + ((v - 0xD800) << 10) + (lo - 0xDC00); }
     }
     return v;
-  case 'k': case 'p': case 'P': return -1;         /* named groups and Unicode properties: not supported (L24) */
+  case 'k': return cc->nnamed ? -1 : 'k';          /* with named groups only \k<name> (an atom) is valid; without, an identity escape */
+  case 'p': case 'P': return -1;                   /* Unicode properties: not supported (L24, documented deviation) */
   case 'b': if (in_class) return 8; return -1;
   case '8': case '9': return e;
   default: return e;                               /* identity escape */
@@ -299,7 +301,12 @@ static int fic_re_parse_term(fic_re_cc *cc) {
       if (*cc->p == ':') { cc->p++; kind = 1; }
       else if (*cc->p == '=' || *cc->p == '!') { neg = *cc->p == '!'; cc->p++; kind = 2; }
       else if (*cc->p == '<' && cc->p + 1 < cc->end && (cc->p[1] == '=' || cc->p[1] == '!')) { neg = cc->p[1] == '!'; behind = 1; cc->p += 2; kind = 2; }
-      else { cc->err = 1; return -1; }              /* (?<name>..), (?i) and the like: not supported */
+      else if (*cc->p == '<') {                     /* (?<name>...): an ordinary capturing group (the name was read by the prescan) */
+        while (cc->p < cc->end && *cc->p != '>') cc->p++;
+        if (cc->p >= cc->end) { cc->err = 1; return -1; }
+        cc->p++; idx = ++cc->groups;
+      }
+      else { cc->err = 1; return -1; }              /* (?i) and the like: not supported */
     } else idx = ++cc->groups;
     body = fic_re_parse_disj(cc);
     if (cc->err) return -1;
@@ -316,6 +323,17 @@ static int fic_re_parse_term(fic_re_cc *cc) {
     if (e == 'b') { cc->p++; return fic_re_new(cc, N_WORDB); }
     if (e == 'B') { cc->p++; return fic_re_new(cc, N_NWORDB); }
     if (fic_re_is_escape_class((int)e)) { size_t from = cc->nt; cc->p++; fic_re_tescape(cc, (int)e); atom = fic_re_class_node(cc, from, 0); break; }
+    if (e == 'k' && cc->nnamed) {                    /* \k<name> */
+      const unsigned char *q = cc->p + 1, *st;
+      int k, found = -1;
+      if (q >= cc->end || *q != '<') { cc->err = 1; return -1; }
+      st = ++q;
+      while (q < cc->end && *q != '>') q++;
+      if (q >= cc->end) { cc->err = 1; return -1; }
+      for (k = 0; k < cc->nnamed; k++) if (cc->nml[k] == (int)(q - st) && memcmp(cc->nmp[k], st, (size_t)(q - st)) == 0) found = cc->nmi[k];
+      if (found < 0) { cc->err = 1; return -1; }
+      cc->p = q + 1; atom = fic_re_new(cc, N_BACKREF); FN(atom).a = found; break;
+    }
     if (e >= '1' && e <= '9') {                      /* backreference, or a legacy escape when the number is too large */
       const unsigned char *q = cc->p;
       int64_t v = 0;
@@ -369,15 +387,38 @@ static int fic_re_parse_disj(fic_re_cc *cc) {
   return FN(first).next < 0 ? first : alt;
 }
 
-/* the number of capture groups of the pattern: a `(` that is not escaped, not in a class and not followed by `?` */
-static int fic_re_count_groups(const unsigned char *p, const unsigned char *end) {
+/* the number of capture groups of the pattern: a `(` that is not escaped, not in a class and not followed by `?`, or followed by `?<` and a
+   name (the name is checked and recorded in cc; an invalid or repeated name is an error) */
+static int fic_re_count_groups(fic_re_cc *cc, const unsigned char *p, const unsigned char *end) {
   int n = 0, in_class = 0;
   while (p < end) {
     unsigned char c = *p++;
     if (c == '\\') { if (p < end) p++; }
     else if (in_class) { if (c == ']') in_class = 0; }
     else if (c == '[') in_class = 1;
-    else if (c == '(' && !(p < end && *p == '?')) n++;
+    else if (c == '(') {
+      if (!(p < end && *p == '?')) n++;
+      else if (p + 1 < end && p[1] == '<' && !(p + 2 < end && (p[2] == '=' || p[2] == '!'))) {
+        const unsigned char *st = p + 2, *q = st;
+        int k;
+        n++;
+        while (q < end && *q != '>') {
+          unsigned char d = *q;
+          if (!((d >= 'a' && d <= 'z') || (d >= 'A' && d <= 'Z') || d == '_' || d == '$' || d >= 0x80 || (q > st && d >= '0' && d <= '9'))) { cc->err = 1; return n; }
+          q++;
+        }
+        if (q >= end || q == st) { cc->err = 1; return n; }
+        for (k = 0; k < cc->nnamed; k++) if (cc->nml[k] == (int)(q - st) && memcmp(cc->nmp[k], st, (size_t)(q - st)) == 0) { cc->err = 1; return n; }
+        if (cc->nnamed == cc->ncapn) {
+          size_t cap = (size_t)cc->ncapn;
+          cc->nmp = (const unsigned char **)fic_re_grow((void *)cc->nmp, &cap, (size_t)cc->nnamed + 1, sizeof *cc->nmp);
+          cc->ncapn = (int)cap;
+          cc->nml = (int *)realloc(cc->nml, cap * sizeof(int)); cc->nmi = (int *)realloc(cc->nmi, cap * sizeof(int));
+          if (cc->nml == NULL || cc->nmi == NULL) abort();
+        }
+        cc->nmp[cc->nnamed] = st; cc->nml[cc->nnamed] = (int)(q - st); cc->nmi[cc->nnamed] = n; cc->nnamed++;
+      }
+    }
   }
   return n;
 }
@@ -545,7 +586,7 @@ static fic_ref fic_re_compile(int64_t flags, fic_ref pat) {
   memset(&cc, 0, sizeof cc);
   cc.p = (const unsigned char *)FIC_STR(pat)->data; cc.end = cc.p + FIC_STR(pat)->len;
   cc.ci = (flags & 1) != 0; cc.ml = (flags & 2) != 0;
-  cc.total_groups = fic_re_count_groups(cc.p, cc.end);
+  cc.total_groups = fic_re_count_groups(&cc, cc.p, cc.end);
   root = fic_re_parse_disj(&cc);
   if (!cc.err && cc.p != cc.end) cc.err = 1;                       /* a `)` without its `(` */
   memset(hdr, 0, sizeof hdr);
@@ -564,7 +605,7 @@ static fic_ref fic_re_compile(int64_t flags, fic_ref pat) {
   FIC_VEC(r)->len = (int64_t)bytes;
   memcpy(FIC_VEC(r)->data, hdr, sizeof hdr);
   if (!cc.err) memcpy(FIC_VEC(r)->data + sizeof hdr, cc.code, cc.nc * sizeof(int32_t));
-  free(cc.nodes); free(cc.pool); free(cc.tmp); free(cc.code);
+  free(cc.nodes); free(cc.pool); free(cc.tmp); free(cc.code); free((void *)cc.nmp); free(cc.nml); free(cc.nmi);
   return r;
 }
 

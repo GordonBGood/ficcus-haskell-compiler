@@ -59,7 +59,7 @@ int main(void) {
   printf("compile and valid\n");
   re = comp("(a)(b)?", 0);
   printf("  valid %d groups %lld\n", fic_re_valid(re), (long long)fic_re_groups(re));
-  { const char *invalid[] = { "(", ")", "[", "a{2,1}", "*", "a**", "(?<n>x)", "\\p{L}", "\\k<n>", "(?i)a", "x{1}{2}", "^*", "\\", "[z-a]", "(?<=a)*" };
+  { const char *invalid[] = { "(", ")", "[", "a{2,1}", "*", "a**", "(?<n>x)(?<n>y)", "(?<n>x)\\k<m>", "(?<1>x)", "(?<n>x)\\k", "\\p{L}", "(?i)a", "x{1}{2}", "^*", "\\", "[z-a]", "(?<=a)*" };
     size_t i;
     for (i = 0; i < sizeof invalid / sizeof *invalid; i++) {
       bad_re = comp(invalid[i], 0);
@@ -77,6 +77,8 @@ int main(void) {
   { fic_ref u = comp("[a-z]*", 0); all(u, "ab 12 c", 0); all(u, "é😣z", 0); fic_drop(u); }
   { fic_ref u = comp("", 0); all(u, "aé😣", 0); fic_drop(u); }
   { fic_ref u = comp("(?<=(\\d+))x|(?=(a))\\2?", 0); all(u, "12x a", 0); fic_drop(u); }
+  { fic_ref u = comp("(?<q>a)(?<r>b)?\\k<q>|\\k<q>x", 0); printf("  named valid %d groups %lld\n", fic_re_valid(u), (long long)fic_re_groups(u)); all(u, "aba aa x", 0); fic_drop(u); }
+  { fic_ref u = comp("\\k<n>", 0); all(u, "k<n>", 0); fic_drop(u); }
   { fic_ref u = comp("(a)|\\1b", 1); all(u, "Ab B", 0); fic_drop(u); }
   { fic_ref u = comp("^a|b$", 2); all(u, "a\nb\na\nb", 0); fic_drop(u); }
   { fic_ref u = comp("(?:(a)|b)+?c", 0); all(u, "abc", 0); fic_drop(u); }

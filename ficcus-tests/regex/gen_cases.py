@@ -43,6 +43,9 @@ HAND = [  # (flags 1=i 2=m, pattern, subject)
     # misc
     (0, "x*y+$", "xxxyyyz xxxyyy"), (0, "(\\d+)-(\\d+)", "10-20 30-40"), (0, "[0-9]+", "a1b22c333"), (0, "[oi]n a (\\w+)", "I am on a boat in a lake."),
     (0, "\\w+@\\w+", "me@host x@y"), (0, ", *", "a, b,c,   d"), (0, "a|b|", "xbz"),
+    (0, "(?<n>a)", "ab a"), (0, "(?<n>a)\\k<n>", "aa ab"), (0, "\\k<n>", "k<n>"), (0, "\\k", "ak"), (0, "(?<=a)(?<n>b)", "ab cb"), (0, "(?<y>\\d+)-(?<m>\\d+)", "10-20 30-40"),
+    (0, "(?<a>x)(?<b>y)?\\k<b>", "xy x"), (0, "\\k<n>(?<n>a)", "a"), (0, "(?<n>a)(?<n>b)", "ab"), (0, "(?<n>a)\\k<m>", "aa"), (0, "(?<n>a)\\k", "aa"), (0, "(?<n>a)[\\k]", "ak"),
+    (0, "(?<1a>x)", "x"), (0, "(?<>x)", "x"), (0, "(?<n", "x"), (0, "(?<_$a1>x)\\k<_$a1>", "xx"), (1, "(?<n>a)\\k<n>", "aA"), (0, "(?<n>a)|b\\k<n>", "b a"), (0, "(?<n>a)+\\k<n>?", "aaa"),
     (0, "(?:(?:a|b)*c)*d", "abcabcd"), (0, "((a)|(b))+", "ab"), (0, "(z)((a+)?(b+)?(c))*", "zaacbbbcac"),
 ]
 
@@ -61,13 +64,13 @@ def rnd_pat(r, depth=0):
             if k < 0.62 or depth > 2:
                 a = r.choice(ATOMS)
             elif k < 0.80:
-                a = "(" + rnd_pat(r, depth + 1) + ")"
+                a = ("(?<n%d>" % r.randint(1, 3) if r.random() < 0.2 else "(") + rnd_pat(r, depth + 1) + ")"
             elif k < 0.88:
                 a = "(?:" + rnd_pat(r, depth + 1) + ")"
             elif k < 0.94:
                 a = r.choice(["(?=", "(?!", "(?<=", "(?<!"]) + rnd_pat(r, depth + 1) + ")"
             else:
-                a = r.choice(["\\1", "\\2", "\\1", "\\3"])
+                a = r.choice(["\\1", "\\2", "\\1", "\\3", "\\k<n1>", "\\k<n2>"])
             if r.random() < 0.38 and a not in ("\\b", "\\B", "^", "$") and not a.startswith(("(?<=", "(?<!")):
                 a += r.choice(["*", "+", "?", "*?", "+?", "??", "{2}", "{1,2}", "{0,2}?", "{2,}"])
             seq += a
