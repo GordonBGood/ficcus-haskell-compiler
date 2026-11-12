@@ -93,7 +93,7 @@ inferBorrow unions root clones0 = go (map start clones0)
 
 -- | the variables an expression uses in an owned position (its value is consumed), by the conventions of the Rc pass
 ownedVars :: OwnCtx -> MExpr -> Set.Set String
-ownedVars ctx = owned
+ownedVars ctx e0 = Set.union (owned e0) (if stealRule then calledOnce e0 else Set.empty)
   where
     owned e =
       case mNode e of
@@ -146,6 +146,45 @@ ownedVars ctx = owned
                   | null (Map.findWithDefault [] c (ocCaps ctx)) -> Set.empty
         _ -> if refClass (mRep h) then borrowed h else Set.empty
     keyOf h = case mNode h of { MKernel _ k -> k; _ -> Key [] }
+
+
+{-# NOINLINE stealRule #-}
+-- | S6: the rule below is on unless `FICCUS_NO_STEAL=1`
+stealRule :: Bool
+stealRule = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_STEAL"))
+
+
+-- | S6, unique PAP stealing (docs/STAGE4-S6.md): the variables that the expression only CALLS, at most once on every path and at least
+-- once: the call can consume the function value (`fic_ap<n>_own`), so a parameter or a pattern variable used like this is owned and a
+-- partial application that nobody else holds gives its arguments to the function. A function value that is called several times (the
+-- function of `List.map`) or also passed on stays as it was.
+calledOnce :: MExpr -> Set.Set String
+calledOnce e0 = Set.fromList [ n | n <- heads e0, paths n e0 == Just 1 ]
+  where
+    heads e =
+      (case mNode e of
+         MCall h _ | MLocal n <- mNode h, mRep h == CRef -> [n]
+         _ -> [])
+      ++ concatMap heads (children e)
+    named n e =
+      case mNode e of
+        MLocal v -> v == n
+        _ -> any (named n) (children e)
+    -- the largest number of calls of `n` on a path through the expression; Nothing when `n` is used in another way, or called twice
+    paths :: String -> MExpr -> Maybe Int
+    paths n e
+      | not (named n e) = Just 0
+      | otherwise =
+          let one = paths n
+              atMostOne r = case r of { Just k | k <= 1 -> r; _ -> Nothing }
+          in atMostOne $
+             case mNode e of
+               MCall h args | MLocal v <- mNode h, v == n -> if any (named n) args then Nothing else Just 1
+               MIf bs f -> do { cs <- mapM (one . fst) bs; xs <- mapM (one . snd) bs; y <- one f; return (sum cs + maximum (y : xs)) }
+               MCase sc bs -> do { c <- one sc; xs <- mapM (one . snd) bs; return (c + maximum (0 : xs)) }
+               MLam _ _ -> Nothing
+               _ | null (children e) -> Nothing
+                 | otherwise -> fmap sum (mapM one (children e))
 
 
 -- | an expression that only reads a variable or something static: usable in a borrowed position without a temporary

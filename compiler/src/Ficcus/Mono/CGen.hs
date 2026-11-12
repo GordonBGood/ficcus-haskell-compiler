@@ -164,7 +164,7 @@ program' info root clones =
       emit "}"
       emit ""
       initFn <- workerInit info root
-      emit "int main(void) {"
+      emit "static int fic_main(void) {"
       indented $
         do  rcMode <- gets gRc
             emit "fic_init();"
@@ -186,6 +186,8 @@ program' info root clones =
             emit "#endif"
             emit "return 0;"
       emit "}"
+      emit ""
+      emit "int main(void) { return fic_run_main(fic_main); }       /* on a big stack (fic_rt.h, S6) */"
 
 
 isFunction :: MDef -> Bool
@@ -671,7 +673,12 @@ closureValue info d =
 
 -- a call of a value that is not a known clone: the function is evaluated first, then the arguments in order
 unknownCall :: Info -> MExpr -> MExpr -> [MExpr] -> CG String
-unknownCall info e h args =
+unknownCall info e h args = closureCall False info (mRep e) h args
+
+
+-- `own`: the call consumes the function value (S6, `fic_ap<n>_own`: a unique partial application gives up its arguments)
+closureCall :: Bool -> Info -> Class -> MExpr -> [MExpr] -> CG String
+closureCall own info cls h args =
   if null args || length args > maxArity
     then failWith ("a call of a function value with " ++ show (length args) ++ " arguments (the closure runtime has arities 1 to " ++ show maxArity ++ ")")
     else
@@ -682,9 +689,9 @@ unknownCall info e h args =
                       return t
           vals <- atomsTo info [ (a, abiClass (mRep a)) | a <- args ]
           let mask = sum [ 2 ^ i | (i, a) <- zip [0 :: Int ..] args, abiClass (mRep a) == CRef ] :: Int
-          let call = "fic_ap" ++ show (length args) ++ "(" ++ hr ++ ", " ++ show mask ++ "u, "
+          let call = "fic_ap" ++ show (length args) ++ (if own then "_own(" else "(") ++ hr ++ ", " ++ show mask ++ "u, "
                      ++ List.intercalate ", " [ wordMk (mRep a) v | (a, v) <- zip args vals ] ++ ")"
-          adaptOwn (abiClass (mRep e)) (mRep e) (call ++ wordSel (mRep e))
+          adaptOwn (abiClass cls) cls (call ++ wordSel cls)
 
 
 -- the field classes of a struct class (for the elements, if the class is not one)
@@ -1272,6 +1279,7 @@ kernelCall info cls name key args =
           do  vals <- atomsTo info [(h, c), (t, CRef)]
               allocObj [c, CRef] 1 vals
         _ -> failWith "internal: the key of (::) is not a class"
+    ("ficcus:applyOwn", f : rest) -> closureCall True info cls f rest
     _ | Just op <- List.stripPrefix "elm/core:Elm.JsArray." name -> jsArrayCall info cls op key args
     _ | name `elem` ["elm/core:String.foldl", "elm/core:String.foldr"], Key [ByClass cb] <- key, [f, acc, s] <- args ->
       do  avs <- atomsTo info [(f, CRef), (acc, cb), (s, CRef)]

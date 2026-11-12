@@ -95,4 +95,45 @@ for n in range(1, MAXA + 1):
     w("  abort();")
     w("}")
     w("")
+w("""/* fic_ap<n>_own below frees a partial application; inlined into a call of a closure that gcc knows is a static object, the branch
+   is dead (a static object is never a partial application with count 1), but gcc reports the free */
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ >= 11
+#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
+#endif
+""")
+# S6, unique PAP stealing: fic_ap<n>_own consumes f (the Rc pass uses it when the call is the last use of an owned function value).
+w("""/* S6 (STAGE4-PLAN section 6): fic_ap<n>_own(f, mask, a0..) is fic_ap<n> that CONSUMES f. When f is a partial application that nobody
+   else holds (count 1) and this call completes it, the arguments it holds are MOVED to the function (no counts are touched, so a
+   unique value held by the partial application is still unique in the function) and the partial application is freed before the
+   call; otherwise f is called as by fic_ap<n> and dropped afterwards. */""")
+for n in range(1, MAXA + 1):
+    w("static fic_word fic_ap%d_own(fic_ref f, uint32_t mask, %s) {" % (n, args(n)))
+    w("  fic_word r;")
+    if n < MAXA:
+        w("#ifdef FIC_RC")
+        w("  if (f->tag == FIC_TAG_PAP && f->rc == 1) {")
+        w("    fic_pap *p = (fic_pap *)f;")
+        w("    fic_ref g = p->fun;")
+        w("    const fic_code *c = FIC_CLO(g)->code;")
+        w("    if (c->arity == p->nargs + %du) {" % n)
+        w("      fic_word s[%d];" % (MAXA - n))
+        w("      unsigned i, j = p->nargs;")
+        w("      for (i = 0; i < j; i++) s[i] = p->args[i];")
+        w("      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */")
+        w("      FIC_STAT(fic_n_pap_steal++);")
+        w("      switch (j) {")
+        for j in range(1, MAXA - n + 1):
+            w("      case %du: r = ((fic_fn%d)c->fn)(g, %s, %s); break;" % (j, j + n, ", ".join("s[%d]" % i for i in range(j)), names(n)))
+        w("      default: abort();")
+        w("      }")
+        w("      fic_drop(g);")
+        w("      return r;")
+        w("    }")
+        w("  }")
+        w("#endif")
+    w("  r = fic_ap%d(f, mask, %s);" % (n, names(n)))
+    w("  FIC_RC_DROP(f);")
+    w("  return r;")
+    w("}")
+    w("")
 print("\n".join(out))

@@ -1,4 +1,4 @@
-FIC_STATS: allocs 1323168 live 0 peak 300000 dup 11151 drop 29 free_slow 23 reuse_hit 0 reuse_miss 0
+FIC_STATS: allocs 1323168 live 0 peak 300000 dup 11151 drop 29 free_slow 23 reuse_hit 0 reuse_miss 0 inplace 0 copied 0 pap_steal 0
 ok list of Ints
 ok list of strings
 ok list of lists

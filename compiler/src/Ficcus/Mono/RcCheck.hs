@@ -36,7 +36,7 @@ import Ficcus.Mono.Borrow (viewExpr, viewRoot)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
-import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig, takeKernel, unsafeSetKernel)
+import Ficcus.Mono.Kernel (applyOwnKernel, kernelResultBorrowed, kernelSig, takeKernel, unsafeSetKernel)
 import Ficcus.Mono.Layout (leavesOf, objSizeClass)
 import Ficcus.Mono.Reuse
 
@@ -256,6 +256,10 @@ view e =
 call :: MExpr -> MExpr -> [MExpr] -> CK ()
 call e h args =
   case mNode h of
+    MKernel name _
+      | name == applyOwnKernel ->                    -- S6: a call of a function value that consumes the function and every argument
+          do  when (null args) (bad "an owning call without a function")
+              mapM_ owned args
     MKernel name key ->
       do  when (kernelResultBorrowed name && refClass (mRep e)) (bad "a kernel result without a count in an owned position (not wrapped in Own)")
           unless (name `elem` ["elm/core:Basics.and", "elm/core:Basics.or"]) (kernelCallArgs' name key args)

@@ -425,6 +425,37 @@ static int fic_shutdown(void) {
   return bad;
 }
 
+/* ---- main on a big stack (STAGE4-PLAN 9.3, S6) -----------------------------------------
+   A deep recursion that is not a tail call (a fold over a long list written by hand, a deep tree) needs C stack. The generated
+   `main` runs the program (`fic_main`) on a thread with a stack of FIC_STACK_MB megabytes (default 1024; address space only, the
+   pages are used on demand), where POSIX threads are available; if the thread cannot be made, and on other systems, or with
+   -DFIC_NO_BIG_STACK, the program runs on the stack of `main`. Counts stay non-atomic: there is still one thread that runs Ficcus
+   code. (Windows: not done yet, `CreateThread` with a stack size is the same idea.) */
+#ifndef FIC_STACK_MB
+#  define FIC_STACK_MB 1024
+#endif
+#if !defined(FIC_NO_BIG_STACK) && (defined(__unix__) || defined(__APPLE__))
+#include <pthread.h>
+static int (*fic_main_fn)(void);
+static int fic_main_status;
+static void *fic_main_thread(void *arg) { (void)arg; fic_main_status = fic_main_fn(); return NULL; }
+static int fic_run_main(int (*f)(void)) {
+  pthread_attr_t attr;
+  pthread_t thread;
+  fic_main_fn = f;
+  if (pthread_attr_init(&attr) != 0) return f();
+  if (pthread_attr_setstacksize(&attr, (size_t)FIC_STACK_MB << 20) != 0 || pthread_create(&thread, &attr, fic_main_thread, NULL) != 0) {
+    pthread_attr_destroy(&attr);
+    return f();
+  }
+  pthread_attr_destroy(&attr);
+  if (pthread_join(thread, NULL) != 0) return 70;
+  return fic_main_status;
+}
+#else
+static int fic_run_main(int (*f)(void)) { return f(); }
+#endif
+
 /* ---- vectors (the Array standard library as a Vector) --------------------------------
    Parameters are owned (consumed) unless marked borrowed. An element is passed as a
    pointer to its bytes; for REF vectors the element is a fic_ref and ownership of that

@@ -536,3 +536,264 @@ static fic_word fic_ap9(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_
   abort();
 }
 
+/* fic_ap<n>_own below frees a partial application; inlined into a call of a closure that gcc knows is a static object, the branch
+   is dead (a static object is never a partial application with count 1), but gcc reports the free */
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ >= 11
+#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
+#endif
+
+/* S6 (STAGE4-PLAN section 6): fic_ap<n>_own(f, mask, a0..) is fic_ap<n> that CONSUMES f. When f is a partial application that nobody
+   else holds (count 1) and this call completes it, the arguments it holds are MOVED to the function (no counts are touched, so a
+   unique value held by the partial application is still unique in the function) and the partial application is freed before the
+   call; otherwise f is called as by fic_ap<n> and dropped afterwards. */
+static fic_word fic_ap1_own(fic_ref f, uint32_t mask, fic_word a0) {
+  fic_word r;
+#ifdef FIC_RC
+  if (f->tag == FIC_TAG_PAP && f->rc == 1) {
+    fic_pap *p = (fic_pap *)f;
+    fic_ref g = p->fun;
+    const fic_code *c = FIC_CLO(g)->code;
+    if (c->arity == p->nargs + 1u) {
+      fic_word s[8];
+      unsigned i, j = p->nargs;
+      for (i = 0; i < j; i++) s[i] = p->args[i];
+      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      FIC_STAT(fic_n_pap_steal++);
+      switch (j) {
+      case 1u: r = ((fic_fn2)c->fn)(g, s[0], a0); break;
+      case 2u: r = ((fic_fn3)c->fn)(g, s[0], s[1], a0); break;
+      case 3u: r = ((fic_fn4)c->fn)(g, s[0], s[1], s[2], a0); break;
+      case 4u: r = ((fic_fn5)c->fn)(g, s[0], s[1], s[2], s[3], a0); break;
+      case 5u: r = ((fic_fn6)c->fn)(g, s[0], s[1], s[2], s[3], s[4], a0); break;
+      case 6u: r = ((fic_fn7)c->fn)(g, s[0], s[1], s[2], s[3], s[4], s[5], a0); break;
+      case 7u: r = ((fic_fn8)c->fn)(g, s[0], s[1], s[2], s[3], s[4], s[5], s[6], a0); break;
+      case 8u: r = ((fic_fn9)c->fn)(g, s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], a0); break;
+      default: abort();
+      }
+      fic_drop(g);
+      return r;
+    }
+  }
+#endif
+  r = fic_ap1(f, mask, a0);
+  FIC_RC_DROP(f);
+  return r;
+}
+
+static fic_word fic_ap2_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1) {
+  fic_word r;
+#ifdef FIC_RC
+  if (f->tag == FIC_TAG_PAP && f->rc == 1) {
+    fic_pap *p = (fic_pap *)f;
+    fic_ref g = p->fun;
+    const fic_code *c = FIC_CLO(g)->code;
+    if (c->arity == p->nargs + 2u) {
+      fic_word s[7];
+      unsigned i, j = p->nargs;
+      for (i = 0; i < j; i++) s[i] = p->args[i];
+      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      FIC_STAT(fic_n_pap_steal++);
+      switch (j) {
+      case 1u: r = ((fic_fn3)c->fn)(g, s[0], a0, a1); break;
+      case 2u: r = ((fic_fn4)c->fn)(g, s[0], s[1], a0, a1); break;
+      case 3u: r = ((fic_fn5)c->fn)(g, s[0], s[1], s[2], a0, a1); break;
+      case 4u: r = ((fic_fn6)c->fn)(g, s[0], s[1], s[2], s[3], a0, a1); break;
+      case 5u: r = ((fic_fn7)c->fn)(g, s[0], s[1], s[2], s[3], s[4], a0, a1); break;
+      case 6u: r = ((fic_fn8)c->fn)(g, s[0], s[1], s[2], s[3], s[4], s[5], a0, a1); break;
+      case 7u: r = ((fic_fn9)c->fn)(g, s[0], s[1], s[2], s[3], s[4], s[5], s[6], a0, a1); break;
+      default: abort();
+      }
+      fic_drop(g);
+      return r;
+    }
+  }
+#endif
+  r = fic_ap2(f, mask, a0, a1);
+  FIC_RC_DROP(f);
+  return r;
+}
+
+static fic_word fic_ap3_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2) {
+  fic_word r;
+#ifdef FIC_RC
+  if (f->tag == FIC_TAG_PAP && f->rc == 1) {
+    fic_pap *p = (fic_pap *)f;
+    fic_ref g = p->fun;
+    const fic_code *c = FIC_CLO(g)->code;
+    if (c->arity == p->nargs + 3u) {
+      fic_word s[6];
+      unsigned i, j = p->nargs;
+      for (i = 0; i < j; i++) s[i] = p->args[i];
+      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      FIC_STAT(fic_n_pap_steal++);
+      switch (j) {
+      case 1u: r = ((fic_fn4)c->fn)(g, s[0], a0, a1, a2); break;
+      case 2u: r = ((fic_fn5)c->fn)(g, s[0], s[1], a0, a1, a2); break;
+      case 3u: r = ((fic_fn6)c->fn)(g, s[0], s[1], s[2], a0, a1, a2); break;
+      case 4u: r = ((fic_fn7)c->fn)(g, s[0], s[1], s[2], s[3], a0, a1, a2); break;
+      case 5u: r = ((fic_fn8)c->fn)(g, s[0], s[1], s[2], s[3], s[4], a0, a1, a2); break;
+      case 6u: r = ((fic_fn9)c->fn)(g, s[0], s[1], s[2], s[3], s[4], s[5], a0, a1, a2); break;
+      default: abort();
+      }
+      fic_drop(g);
+      return r;
+    }
+  }
+#endif
+  r = fic_ap3(f, mask, a0, a1, a2);
+  FIC_RC_DROP(f);
+  return r;
+}
+
+static fic_word fic_ap4_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3) {
+  fic_word r;
+#ifdef FIC_RC
+  if (f->tag == FIC_TAG_PAP && f->rc == 1) {
+    fic_pap *p = (fic_pap *)f;
+    fic_ref g = p->fun;
+    const fic_code *c = FIC_CLO(g)->code;
+    if (c->arity == p->nargs + 4u) {
+      fic_word s[5];
+      unsigned i, j = p->nargs;
+      for (i = 0; i < j; i++) s[i] = p->args[i];
+      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      FIC_STAT(fic_n_pap_steal++);
+      switch (j) {
+      case 1u: r = ((fic_fn5)c->fn)(g, s[0], a0, a1, a2, a3); break;
+      case 2u: r = ((fic_fn6)c->fn)(g, s[0], s[1], a0, a1, a2, a3); break;
+      case 3u: r = ((fic_fn7)c->fn)(g, s[0], s[1], s[2], a0, a1, a2, a3); break;
+      case 4u: r = ((fic_fn8)c->fn)(g, s[0], s[1], s[2], s[3], a0, a1, a2, a3); break;
+      case 5u: r = ((fic_fn9)c->fn)(g, s[0], s[1], s[2], s[3], s[4], a0, a1, a2, a3); break;
+      default: abort();
+      }
+      fic_drop(g);
+      return r;
+    }
+  }
+#endif
+  r = fic_ap4(f, mask, a0, a1, a2, a3);
+  FIC_RC_DROP(f);
+  return r;
+}
+
+static fic_word fic_ap5_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4) {
+  fic_word r;
+#ifdef FIC_RC
+  if (f->tag == FIC_TAG_PAP && f->rc == 1) {
+    fic_pap *p = (fic_pap *)f;
+    fic_ref g = p->fun;
+    const fic_code *c = FIC_CLO(g)->code;
+    if (c->arity == p->nargs + 5u) {
+      fic_word s[4];
+      unsigned i, j = p->nargs;
+      for (i = 0; i < j; i++) s[i] = p->args[i];
+      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      FIC_STAT(fic_n_pap_steal++);
+      switch (j) {
+      case 1u: r = ((fic_fn6)c->fn)(g, s[0], a0, a1, a2, a3, a4); break;
+      case 2u: r = ((fic_fn7)c->fn)(g, s[0], s[1], a0, a1, a2, a3, a4); break;
+      case 3u: r = ((fic_fn8)c->fn)(g, s[0], s[1], s[2], a0, a1, a2, a3, a4); break;
+      case 4u: r = ((fic_fn9)c->fn)(g, s[0], s[1], s[2], s[3], a0, a1, a2, a3, a4); break;
+      default: abort();
+      }
+      fic_drop(g);
+      return r;
+    }
+  }
+#endif
+  r = fic_ap5(f, mask, a0, a1, a2, a3, a4);
+  FIC_RC_DROP(f);
+  return r;
+}
+
+static fic_word fic_ap6_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4, fic_word a5) {
+  fic_word r;
+#ifdef FIC_RC
+  if (f->tag == FIC_TAG_PAP && f->rc == 1) {
+    fic_pap *p = (fic_pap *)f;
+    fic_ref g = p->fun;
+    const fic_code *c = FIC_CLO(g)->code;
+    if (c->arity == p->nargs + 6u) {
+      fic_word s[3];
+      unsigned i, j = p->nargs;
+      for (i = 0; i < j; i++) s[i] = p->args[i];
+      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      FIC_STAT(fic_n_pap_steal++);
+      switch (j) {
+      case 1u: r = ((fic_fn7)c->fn)(g, s[0], a0, a1, a2, a3, a4, a5); break;
+      case 2u: r = ((fic_fn8)c->fn)(g, s[0], s[1], a0, a1, a2, a3, a4, a5); break;
+      case 3u: r = ((fic_fn9)c->fn)(g, s[0], s[1], s[2], a0, a1, a2, a3, a4, a5); break;
+      default: abort();
+      }
+      fic_drop(g);
+      return r;
+    }
+  }
+#endif
+  r = fic_ap6(f, mask, a0, a1, a2, a3, a4, a5);
+  FIC_RC_DROP(f);
+  return r;
+}
+
+static fic_word fic_ap7_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4, fic_word a5, fic_word a6) {
+  fic_word r;
+#ifdef FIC_RC
+  if (f->tag == FIC_TAG_PAP && f->rc == 1) {
+    fic_pap *p = (fic_pap *)f;
+    fic_ref g = p->fun;
+    const fic_code *c = FIC_CLO(g)->code;
+    if (c->arity == p->nargs + 7u) {
+      fic_word s[2];
+      unsigned i, j = p->nargs;
+      for (i = 0; i < j; i++) s[i] = p->args[i];
+      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      FIC_STAT(fic_n_pap_steal++);
+      switch (j) {
+      case 1u: r = ((fic_fn8)c->fn)(g, s[0], a0, a1, a2, a3, a4, a5, a6); break;
+      case 2u: r = ((fic_fn9)c->fn)(g, s[0], s[1], a0, a1, a2, a3, a4, a5, a6); break;
+      default: abort();
+      }
+      fic_drop(g);
+      return r;
+    }
+  }
+#endif
+  r = fic_ap7(f, mask, a0, a1, a2, a3, a4, a5, a6);
+  FIC_RC_DROP(f);
+  return r;
+}
+
+static fic_word fic_ap8_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4, fic_word a5, fic_word a6, fic_word a7) {
+  fic_word r;
+#ifdef FIC_RC
+  if (f->tag == FIC_TAG_PAP && f->rc == 1) {
+    fic_pap *p = (fic_pap *)f;
+    fic_ref g = p->fun;
+    const fic_code *c = FIC_CLO(g)->code;
+    if (c->arity == p->nargs + 8u) {
+      fic_word s[1];
+      unsigned i, j = p->nargs;
+      for (i = 0; i < j; i++) s[i] = p->args[i];
+      fic_free_obj(f);                          /* the shell only: the function and the arguments are still counted */
+      FIC_STAT(fic_n_pap_steal++);
+      switch (j) {
+      case 1u: r = ((fic_fn9)c->fn)(g, s[0], a0, a1, a2, a3, a4, a5, a6, a7); break;
+      default: abort();
+      }
+      fic_drop(g);
+      return r;
+    }
+  }
+#endif
+  r = fic_ap8(f, mask, a0, a1, a2, a3, a4, a5, a6, a7);
+  FIC_RC_DROP(f);
+  return r;
+}
+
+static fic_word fic_ap9_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4, fic_word a5, fic_word a6, fic_word a7, fic_word a8) {
+  fic_word r;
+  r = fic_ap9(f, mask, a0, a1, a2, a3, a4, a5, a6, a7, a8);
+  FIC_RC_DROP(f);
+  return r;
+}
+

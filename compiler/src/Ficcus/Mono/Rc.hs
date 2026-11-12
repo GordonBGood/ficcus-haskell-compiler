@@ -43,7 +43,7 @@ import Ficcus.Mono.Borrow
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
-import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig, takeKernel, unsafeGetKernel, unsafeSetKernel)
+import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig, takeKernel, unsafeGetKernel, unsafeSetKernel, applyOwnKernel)
 import Ficcus.Mono.Layout (nptrOf, objSizeClass)
 import Ficcus.Mono.Reuse
 import System.Environment (lookupEnv)
@@ -419,8 +419,20 @@ rcApply ctx env live e h args =
         MGlobal c | Just d <- Map.lookup c (cClones ctx), mdKind d == Value -> UStatic         -- a global: read as it is
                   | null (Map.findWithDefault [] c (cCaps ctx)) -> UStatic                     -- a static closure
         _ -> if refClass (mRep h) then UBorrow else UScalar
-      uses = (hUse, h) : [ (if refClass (mRep a) then UOwn else UScalar, a) | a <- args ]
-  in withCall ctx env live cls uses Set.empty (\as -> case as of { f : rest -> MExpr cls (MCall f rest); [] -> e })
+      argUses = [ (if refClass (mRep a) then UOwn else UScalar, a) | a <- args ]
+      uses = (hUse, h) : argUses
+      -- S6, unique PAP stealing: the call is the last use of an owned function value (a variable that dies here, or a value that was
+      -- computed for this call): the call consumes it (`fic_ap<n>_own`), so a partial application that nobody else holds gives its
+      -- arguments to the function instead of sharing them
+      ownHead =
+        stealOn && mRep h == CRef &&
+        case mNode h of
+          MLocal n -> Map.member n env && not (Set.member n live) && not (any (Set.member n . fvNames ctx) args)
+          MGlobal _ -> False
+          _ -> not (isView ctx h)
+  in if ownHead
+       then withCall ctx env live cls ((UOwn, h) : argUses) Set.empty (\as -> MExpr cls (MCall (MExpr CUnit (MKernel applyOwnKernel (Key []))) as))
+       else withCall ctx env live cls uses Set.empty (\as -> case as of { f : rest -> MExpr cls (MCall f rest); [] -> e })
 
 
 -- | the arguments of a kernel call by the letters of its signature
@@ -633,6 +645,11 @@ takeCall ctx env v rest =
                MCase sc bs -> do { c <- one sc; xs <- mapM (one . snd) bs; return (c + maximum (0 : xs)) }
                _ | null (children e) -> Nothing
                  | otherwise -> fmap sum (mapM one (children e))
+
+
+{-# NOINLINE stealOn #-}
+stealOn :: Bool
+stealOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_STEAL"))
 
 
 {-# NOINLINE lateOn #-}

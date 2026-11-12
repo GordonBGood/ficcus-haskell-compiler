@@ -5,7 +5,7 @@ module Ficcus.Mono.Kernel
   , directKernelIds
   , kernelSig
   , kernelResultBorrowed
-  , takeKernel, unsafeGetKernel, unsafeSetKernel
+  , takeKernel, unsafeGetKernel, unsafeSetKernel, applyOwnKernel
   )
   where
 
@@ -218,3 +218,10 @@ takeKernel = "elm/core:Elm.JsArray.unsafeTake"
 unsafeGetKernel, unsafeSetKernel :: String
 unsafeGetKernel = "elm/core:Elm.JsArray.unsafeGet"
 unsafeSetKernel = "elm/core:Elm.JsArray.unsafeSet"
+
+
+-- | S6, unique PAP stealing: `MCall (MKernel applyOwnKernel _) (f : args)` is a call of the function value `f` that CONSUMES `f`
+-- (`fic_ap<n>_own`): the Rc pass makes it when the call is the last use of an owned function value. Every argument is owned. It is
+-- not in the kernel table (the specializer never sees it; any number of arguments).
+applyOwnKernel :: String
+applyOwnKernel = "ficcus:applyOwn"
