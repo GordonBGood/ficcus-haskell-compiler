@@ -149,9 +149,11 @@ ownedVars ctx e0 = Set.union (owned e0) (if stealRule then calledOnce e0 else Se
 
 
 {-# NOINLINE stealRule #-}
--- | S6: the rule below is on unless `FICCUS_NO_STEAL=1`
+-- | S6: the rule below is OFF by default (planning decision after S6: it makes a function value owned where there is nothing to steal,
+-- closure objects, and costs dups); `FICCUS_STEAL_RULE=1` turns it on. The owning calls themselves (`Rc.stealOn`, off with
+-- `FICCUS_NO_STEAL=1`) stay on for function values that are owned for another reason.
 stealRule :: Bool
-stealRule = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_STEAL"))
+stealRule = unsafePerformIO (fmap (== Just "1") (lookupEnv "FICCUS_STEAL_RULE"))
 
 
 -- | S6, unique PAP stealing (docs/STAGE4-S6.md): the variables that the expression only CALLS, at most once on every path and at least

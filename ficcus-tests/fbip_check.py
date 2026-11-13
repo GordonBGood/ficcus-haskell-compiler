@@ -159,7 +159,7 @@ def main():
         shutil.rmtree(d, ignore_errors=True); os.makedirs(os.path.join(d, "src"))
         shutil.copy(os.path.join(HERE, "fbip", "elm.json"), d)
         open(os.path.join(d, "src", "Main.fic"), "w").write(HEAD % (decls, expr))
-        rc, so, se = sh([safe, elm, "make", "src/Main.fic", "--output=x.c", "--rc"], cwd=d, env=dict(os.environ, ELM_HOME=a.elm_home))
+        rc, so, se = sh([safe, elm, "make", "src/Main.fic", "--output=x.c", "--rc"], cwd=d, env=dict(os.environ, ELM_HOME=a.elm_home, **({"FICCUS_STEAL_RULE": "1"} if name == "pap" else {})))  # the called-once rule is off by default since S7 part 2
         if rc != 0: print("FAIL %s: compile: %s" % (name, (so + se)[-400:])); bad += 1; continue
         rc, so, se = sh(["gcc", "-std=c99", "-O2", "-ffp-contract=off", "-w", "-DFIC_STATS", "-I", os.path.join(ROOT, "targets", "c"), "x.c", "-o", "x", "-lm"], cwd=d)
         if rc != 0: print("FAIL %s: C build: %s" % (name, se[-300:])); bad += 1; continue
