@@ -55,16 +55,19 @@ def main():
         print(("ok   " if ok else "FAIL ") + "rejects " + name); bad += 0 if ok else 1
         if not ok: print(text[-300:])
         shutil.rmtree(d, ignore_errors=True)
-    # L42: elm/json is only an indirect dependency (reached through miniBill/elm-codec, the project of the example indirectjson): the
-    # overlay may import it, the program may not (Elm's rule and Elm's message)
-    d = tempfile.mkdtemp(); os.makedirs(os.path.join(d, "src"))
-    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "indirectjson", "elm.json"), d)
-    open(os.path.join(d, "src", "Main.fic"), "w").write(HEAD.replace("\n\n\nmain :", "\n\nimport Codec\nimport Json.Decode\n\n\nmain :", 1))
-    c = subprocess.run([a.safe, a.elm, "make", "src/Main.fic", "--output=x.c"], cwd=d, env=dict(os.environ, ELM_HOME=a.elm_home), capture_output=True, text=True)
-    ok = c.returncode != 0 and "Running elm install elm/json should make it available" in c.stdout + c.stderr
-    print(("ok   " if ok else "FAIL ") + "rejects import-of-indirect-package"); bad += 0 if ok else 1
-    if not ok: print((c.stdout + c.stderr)[-300:])
-    shutil.rmtree(d, ignore_errors=True)
+    # L42: elm/json, elm/bytes, elm/regex are only indirect dependencies (reached through a package, the projects of the examples
+    # indirectjson, indirectbytes, indirectregex): the overlay may import them, the program may not (Elm's rule and Elm's message)
+    for proj, direct, module, pkg in [("indirectjson", "Codec", "Json.Decode", "elm/json"), ("indirectbytes", "Base64", "Bytes", "elm/bytes"),
+                                      ("indirectbytes", "Base64", "Bytes.Encode", "elm/bytes"), ("indirectregex", "String.Format", "Regex", "elm/regex")]:
+        d = tempfile.mkdtemp(); os.makedirs(os.path.join(d, "src"))
+        shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), proj, "elm.json"), d)
+        open(os.path.join(d, "src", "Main.fic"), "w").write(HEAD.replace("\n\n\nmain :", "\n\nimport %s\nimport %s\n\n\nmain :" % (direct, module), 1))
+        c = subprocess.run([a.safe, a.elm, "make", "src/Main.fic", "--output=x.c"], cwd=d, env=dict(os.environ, ELM_HOME=a.elm_home), capture_output=True, text=True)
+        text = c.stdout + c.stderr       # Elm 0.19.3's text: only elm/json has the install hint there, the others get the general "cannot find it"
+        ok = c.returncode != 0 and "MODULE NOT FOUND" in text and (("Running elm install %s should make it available" % pkg) if pkg == "elm/json" else "but I cannot find it!") in text
+        print(("ok   " if ok else "FAIL ") + "rejects import-of-indirect-package " + module); bad += 0 if ok else 1
+        if not ok: print((c.stdout + c.stderr)[-300:])
+        shutil.rmtree(d, ignore_errors=True)
     return 1 if bad else 0
 
 if __name__ == "__main__": sys.exit(main())

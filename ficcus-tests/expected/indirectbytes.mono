@@ -1,0 +1,1471 @@
+-- mono: stage (iii) slice 3b, modules=27
+-- module author/project:IndirectBytes (project)
+clone c0   def: author/project:IndirectBytes.main   key: ()   kind: value   init: 0   needs: 
+-- program: 78 clones, reachable from main, dependencies first
+clone c18   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: ref :: xs :: ref :: ref
+      Call :: ref
+        Global c18 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: ref
+          Local acc :: ref
+        Local xs :: ref
+clone c26   def: elm/core:List.lambda@261:9   key: ()   outer: c19 (v0=ref)   kind: function   params: _pb26_0:ref _pb26_1:ref   result: ref   lifted-from: c19
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Local _pb26_0 :: ref
+    Local _pb26_1 :: ref
+clone c19   def: elm/core:List.reverse   key: (v0=ref)   name: reverse__ref   kind: function   params: list:ref   result: ref
+  Call :: ref
+    Global c18 :: ref
+    Global c26 :: ref
+    List :: ref
+    Local list :: ref
+clone c12   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldrHelper__ref__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
+  Case :: ref
+    Local ls :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch a :: ref :: r1 :: ref :: ref
+      Case :: ref
+        Local r1 :: ref
+        branch [] :: ref
+          Call :: ref
+            Local fn :: ref
+            Local a :: ref
+            Local acc :: ref
+        branch b :: ref :: r2 :: ref :: ref
+          Case :: ref
+            Local r2 :: ref
+            branch [] :: ref
+              Call :: ref
+                Local fn :: ref
+                Local a :: ref
+                Call :: ref
+                  Local fn :: ref
+                  Local b :: ref
+                  Local acc :: ref
+            branch c :: ref :: r3 :: ref :: ref
+              Case :: ref
+                Local r3 :: ref
+                branch [] :: ref
+                  Call :: ref
+                    Local fn :: ref
+                    Local a :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local b :: ref
+                      Call :: ref
+                        Local fn :: ref
+                        Local c :: ref
+                        Local acc :: ref
+                branch d :: ref :: r4 :: ref :: ref
+                  Let res@200:41 :: ref
+                    If :: ref
+                      Call :: enum
+                        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                        Local ctr :: i64
+                        Lit 500 :: i64
+                      Call :: ref
+                        Global c18 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: ref
+                          Global c19 :: ref
+                          Local r4 :: ref
+                      Call :: ref
+                        Global c12 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: i64
+                          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                          Local ctr :: i64
+                          Lit 1 :: i64
+                        Local r4 :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local a :: ref
+                      Call :: ref
+                        Local fn :: ref
+                        Local b :: ref
+                        Call :: ref
+                          Local fn :: ref
+                          Local c :: ref
+                          Call :: ref
+                            Local fn :: ref
+                            Local d :: ref
+                            Local res@200:41 :: ref
+clone c8   def: elm/core:List.foldr   key: (v0=ref; v1=ref)   name: foldr__ref__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
+  Call :: ref
+    Global c12 :: ref
+    Local fn :: ref
+    Local acc :: ref
+    Lit 0 :: i64
+    Local ls :: ref
+clone c9   def: elm/core:List.lambda@125:10   key: ()   outer: c2 (v0=ref; v1=ref)   kind: function   params: x:ref acc:ref   result: ref   lifted-from: c2
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Call :: ref
+      Local f :: ref
+      Local x :: ref
+    Local acc :: ref
+clone c2   def: elm/core:List.map   key: (v0=ref; v1=ref)   name: map__ref__ref   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Global c8 :: ref
+    Global c9 :: ref
+    List :: ref
+    Local xs :: ref
+clone c4   def: elm/core:Maybe.andThen   key: (v0=ref; v1=ref)   name: andThen__ref__ref   kind: function   params: callback:ref maybeValue:ref   result: ref
+  Case :: ref
+    Local maybeValue :: ref
+    branch Just #0 value :: ref :: ref
+      Call :: ref
+        Local callback :: ref
+        Local value :: ref
+    branch Nothing #1 :: ref
+      Ctor Nothing tag 1 () :: ref
+clone c13   def: author/project:FicOverlayBytes.decode   key: (v0=ref)   name: decode__ref   kind: function   params: decoder:ref bs:ref   result: ref
+  Let run@111:9 :: ref
+    Call :: ref
+      Kernel author/project:FicOverlayBytes.unwrap (v0=ref) :: ref
+      Local decoder :: ref
+    Case :: ref
+      Call :: struct(i64,ref)
+        Local run@111:9 :: ref
+        Local bs :: ref
+        Lit 0 :: i64
+      branch (offset :: i64, a :: ref) :: struct(i64,ref)
+        If :: ref
+          Call :: enum
+            Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+            Local offset :: i64
+            Lit 0 :: i64
+          Ctor Nothing tag 1 () :: ref
+          Call :: ref
+            Ctor Just tag 0 (v0=ref) :: ref
+            Local a :: ref
+clone c27   def: author/project:FicOverlayBytes.loopHelp   key: (v0=ref; v1=ref)   name: loopHelp__ref__ref   kind: function   params: state:ref callback:ref bites:ref offset:i64   result: struct(i64,ref)
+  Let decoder@282:9 :: struct(i64,ref)
+    Call :: ref
+      Kernel author/project:FicOverlayBytes.unwrap (v0=ref) :: ref
+      Call :: ref
+        Local callback :: ref
+        Local state :: ref
+    Case :: struct(i64,ref)
+      Call :: struct(i64,ref)
+        Local decoder@282:9 :: ref
+        Local bites :: ref
+        Local offset :: i64
+      branch (newOffset :: i64, step :: ref) :: struct(i64,ref)
+        If :: struct(i64,ref)
+          Call :: enum
+            Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+            Local newOffset :: i64
+            Lit 0 :: i64
+          Call :: struct(i64,ref)
+            Kernel author/project:FicOverlayBytes.failure (v0=ref) :: ref
+            Lit () :: unit
+          Case :: struct(i64,ref)
+            Local step :: ref
+            branch Loop #0 newState :: ref :: ref
+              Call :: struct(i64,ref)
+                Global c27 :: ref
+                Local newState :: ref
+                Local callback :: ref
+                Local bites :: ref
+                Local newOffset :: i64
+            branch Done #1 result :: ref :: ref
+              Tuple :: struct(i64,ref)
+                Local newOffset :: i64
+                Local result :: ref
+clone c28   def: author/project:FicOverlayBytes.lambda@276:11   key: ()   outer: c20 (v0=ref; v1=ref)   kind: function   params: _pb28_0:ref _pb28_1:i64   result: struct(i64,ref)   lifted-from: c20
+  Call :: struct(i64,ref)
+    Global c27 :: ref
+    Local _pa28_0 :: ref
+    Local _pa28_1 :: ref
+    Local _pb28_0 :: ref
+    Local _pb28_1 :: i64
+clone c20   def: author/project:FicOverlayBytes.loop   key: (v0=ref; v1=ref)   name: loop__ref__ref   kind: function   params: state:ref callback:ref   result: ref
+  Call :: ref
+    Kernel author/project:FicOverlayBytes.wrap (v0=ref) :: ref
+    Let _pa28_0 :: ref
+      Local state :: ref
+      Let _pa28_1 :: ref
+        Local callback :: ref
+        Global c28 :: ref
+clone c46   def: author/project:FicOverlayBytes.lambda@181:10   key: ()   outer: c29 (v0=ref; v1=ref)   kind: function   params: bites:ref offset:i64   result: struct(i64,ref)   lifted-from: c29
+  Case :: struct(i64,ref)
+    Call :: struct(i64,ref)
+      Local decodeA@177:9 :: ref
+      Local bites :: ref
+      Local offset :: i64
+    branch (aOffset :: i64, a :: ref) :: struct(i64,ref)
+      If :: struct(i64,ref)
+        Call :: enum
+          Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+          Local aOffset :: i64
+          Lit 0 :: i64
+        Call :: struct(i64,ref)
+          Kernel author/project:FicOverlayBytes.failure (v0=ref) :: ref
+          Lit () :: unit
+        Tuple :: struct(i64,ref)
+          Local aOffset :: i64
+          Call :: ref
+            Local func :: ref
+            Local a :: ref
+clone c29   def: author/project:FicOverlayBytes.map   key: (v0=ref; v1=ref)   name: map__ref__ref   kind: function   params: func:ref decoderA:ref   result: ref
+  Let decodeA@177:9 :: ref
+    Call :: ref
+      Kernel author/project:FicOverlayBytes.unwrap (v0=ref) :: ref
+      Local decoderA :: ref
+    Call :: ref
+      Kernel author/project:FicOverlayBytes.wrap (v0=ref) :: ref
+      Global c46 :: ref
+clone c30   def: danfishgold/base64-bytes:Decode.lambda@43:18   key: ()   kind: function   params: result:ref   result: ref   lifted-from: c21
+  Call :: ref
+    Ctor Loop tag 0 (v0=ref) :: ref
+    Record string remaining :: struct(ref,i64)
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Local string :: ref
+        Local result :: ref
+      Call :: i64
+        Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+        Local remaining :: i64
+        Lit 18 :: i64
+clone c74   def: author/project:FicOverlayBytes.lambda@204:10   key: ()   outer: c51 (v0=ref; v1=i64; v2=ref)   kind: function   params: bites:ref offset:i64   result: struct(i64,ref)   lifted-from: c51
+  Case :: struct(i64,ref)
+    Call :: struct(i64,ref)
+      Local decodeA@197:9 :: ref
+      Local bites :: ref
+      Local offset :: i64
+    branch (aOffset :: i64, a :: ref) :: struct(i64,ref)
+      If :: struct(i64,ref)
+        Call :: enum
+          Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+          Local aOffset :: i64
+          Lit 0 :: i64
+        Call :: struct(i64,ref)
+          Kernel author/project:FicOverlayBytes.failure (v0=ref) :: ref
+          Lit () :: unit
+        Case :: struct(i64,ref)
+          Call :: struct(i64,i64)
+            Local decodeB@200:9 :: ref
+            Local bites :: ref
+            Local aOffset :: i64
+          branch (bOffset :: i64, b :: i64) :: struct(i64,i64)
+            If :: struct(i64,ref)
+              Call :: enum
+                Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+                Local bOffset :: i64
+                Lit 0 :: i64
+              Call :: struct(i64,ref)
+                Kernel author/project:FicOverlayBytes.failure (v0=ref) :: ref
+                Lit () :: unit
+              Tuple :: struct(i64,ref)
+                Local bOffset :: i64
+                Call :: ref
+                  Local func :: ref
+                  Local a :: ref
+                  Local b :: i64
+clone c51   def: author/project:FicOverlayBytes.map2   key: (v0=ref; v1=i64; v2=ref)   name: map2__ref__i64__ref   kind: function   params: func:ref decoderA:ref decoderB:ref   result: ref
+  Let decodeB@200:9 :: ref
+    Call :: ref
+      Kernel author/project:FicOverlayBytes.unwrap (v0=i64) :: ref
+      Local decoderB :: ref
+    Let decodeA@197:9 :: ref
+      Call :: ref
+        Kernel author/project:FicOverlayBytes.unwrap (v0=ref) :: ref
+        Local decoderA :: ref
+      Call :: ref
+        Kernel author/project:FicOverlayBytes.wrap (v0=ref) :: ref
+        Global c74 :: ref
+clone c52   def: elm/core:Basics.apL   key: (v0=i64; v1=ref)   name: apL__i64__ref   kind: function   params: f:ref x:i64   result: ref
+  Call :: ref
+    Local f :: ref
+    Local x :: i64
+clone c55   def: author/project:FicOverlayBytes.lambda@204:10   key: ()   outer: c36 (v0=i64; v1=i64; v2=ref)   kind: function   params: bites:ref offset:i64   result: struct(i64,ref)   lifted-from: c36
+  Case :: struct(i64,ref)
+    Call :: struct(i64,i64)
+      Local decodeA@197:9 :: ref
+      Local bites :: ref
+      Local offset :: i64
+    branch (aOffset :: i64, a :: i64) :: struct(i64,i64)
+      If :: struct(i64,ref)
+        Call :: enum
+          Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+          Local aOffset :: i64
+          Lit 0 :: i64
+        Call :: struct(i64,ref)
+          Kernel author/project:FicOverlayBytes.failure (v0=ref) :: ref
+          Lit () :: unit
+        Case :: struct(i64,ref)
+          Call :: struct(i64,i64)
+            Local decodeB@200:9 :: ref
+            Local bites :: ref
+            Local aOffset :: i64
+          branch (bOffset :: i64, b :: i64) :: struct(i64,i64)
+            If :: struct(i64,ref)
+              Call :: enum
+                Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+                Local bOffset :: i64
+                Lit 0 :: i64
+              Call :: struct(i64,ref)
+                Kernel author/project:FicOverlayBytes.failure (v0=ref) :: ref
+                Lit () :: unit
+              Tuple :: struct(i64,ref)
+                Local bOffset :: i64
+                Call :: ref
+                  Local func :: ref
+                  Local a :: i64
+                  Local b :: i64
+clone c36   def: author/project:FicOverlayBytes.map2   key: (v0=i64; v1=i64; v2=ref)   name: map2__i64__i64__ref   kind: function   params: func:ref decoderA:ref decoderB:ref   result: ref
+  Let decodeB@200:9 :: ref
+    Call :: ref
+      Kernel author/project:FicOverlayBytes.unwrap (v0=i64) :: ref
+      Local decoderB :: ref
+    Let decodeA@197:9 :: ref
+      Call :: ref
+        Kernel author/project:FicOverlayBytes.unwrap (v0=i64) :: ref
+        Local decoderA :: ref
+      Call :: ref
+        Kernel author/project:FicOverlayBytes.wrap (v0=ref) :: ref
+        Global c55 :: ref
+clone c32   def: author/project:FicOverlayBytes.map3   key: (v0=i64; v1=i64; v2=i64; v3=ref)   name: map3__i64__i64__i64__ref   kind: function   params: func:ref decoderA:ref decoderB:ref decoderC:ref   result: ref
+  Call :: ref
+    Global c51 :: ref
+    Global c52 :: ref
+    Call :: ref
+      Global c36 :: ref
+      Local func :: ref
+      Local decoderA :: ref
+      Local decoderB :: ref
+    Local decoderC :: ref
+clone c70   def: author/project:FicOverlayBytes.map4   key: (v0=i64; v1=i64; v2=i64; v3=i64; v4=ref)   name: map4__i64__i64__i64__i64__ref   kind: function   params: func:ref decoderA:ref decoderB:ref decoderC:ref decoderD:ref   result: ref
+  Call :: ref
+    Global c51 :: ref
+    Global c52 :: ref
+    Call :: ref
+      Global c32 :: ref
+      Local func :: ref
+      Local decoderA :: ref
+      Local decoderB :: ref
+      Local decoderC :: ref
+    Local decoderD :: ref
+clone c47   def: author/project:FicOverlayBytes.map5   key: (v0=i64; v1=i64; v2=i64; v3=i64; v4=i64; v5=ref)   name: map5__i64__i64__i64__i64__i64__ref   kind: function   params: func:ref decoderA:ref decoderB:ref decoderC:ref decoderD:ref decoderE:ref   result: ref
+  Call :: ref
+    Global c51 :: ref
+    Global c52 :: ref
+    Call :: ref
+      Global c70 :: ref
+      Local func :: ref
+      Local decoderA :: ref
+      Local decoderB :: ref
+      Local decoderC :: ref
+      Local decoderD :: ref
+    Local decoderE :: ref
+clone c57   def: danfishgold/base64-bytes:Decode.unsafeToChar   key: ()   kind: function   params: n:i64   result: u32
+  If :: u32
+    Call :: enum
+      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+      Local n :: i64
+      Lit 25 :: i64
+    Call :: u32
+      Kernel elm/core:Char.fromCode () :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Lit 65 :: i64
+        Local n :: i64
+    Call :: enum
+      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+      Local n :: i64
+      Lit 51 :: i64
+    Call :: u32
+      Kernel elm/core:Char.fromCode () :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Lit 97 :: i64
+        Call :: i64
+          Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+          Local n :: i64
+          Lit 26 :: i64
+    Call :: enum
+      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+      Local n :: i64
+      Lit 61 :: i64
+    Call :: u32
+      Kernel elm/core:Char.fromCode () :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Lit 48 :: i64
+        Call :: i64
+          Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+          Local n :: i64
+          Lit 52 :: i64
+    Case :: u32
+      Local n :: i64
+      branch 62 :: i64
+        Lit '43' :: u32
+      branch 63 :: i64
+        Lit '47' :: u32
+      branch _ :: i64
+        Lit '0' :: u32
+clone c58   def: danfishgold/base64-bytes:Decode.lowest6BitsMask   key: ()   kind: value   params:    result: i64
+  Lit 63 :: i64
+clone c71   def: danfishgold/base64-bytes:Decode.bitsToCharSpecialized   key: ()   kind: function   params: bits1:i64 bits2:i64 bits3:i64 accum:ref   result: ref
+  Let z@290:9 :: ref
+    Call :: u32
+      Global c57 :: ref
+      Call :: i64
+        Kernel elm/core:Bitwise.and () :: ref
+        Call :: i64
+          Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+          Lit 6 :: i64
+          Local bits3 :: i64
+        Global c58 :: i64
+    Let y@287:9 :: ref
+      Call :: u32
+        Global c57 :: ref
+        Call :: i64
+          Kernel elm/core:Bitwise.and () :: ref
+          Call :: i64
+            Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+            Lit 12 :: i64
+            Local bits3 :: i64
+          Global c58 :: i64
+      Let x@284:9 :: ref
+        Call :: u32
+          Global c57 :: ref
+          Call :: i64
+            Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+            Lit 18 :: i64
+            Local bits3 :: i64
+        Let w@293:9 :: ref
+          Call :: u32
+            Global c57 :: ref
+            Call :: i64
+              Kernel elm/core:Bitwise.and () :: ref
+              Local bits3 :: i64
+              Global c58 :: i64
+          Let s@267:9 :: ref
+            Call :: u32
+              Global c57 :: ref
+              Call :: i64
+                Kernel elm/core:Bitwise.and () :: ref
+                Local bits1 :: i64
+                Global c58 :: i64
+            Let r@264:9 :: ref
+              Call :: u32
+                Global c57 :: ref
+                Call :: i64
+                  Kernel elm/core:Bitwise.and () :: ref
+                  Call :: i64
+                    Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+                    Lit 6 :: i64
+                    Local bits1 :: i64
+                  Global c58 :: i64
+              Let q@261:9 :: ref
+                Call :: u32
+                  Global c57 :: ref
+                  Call :: i64
+                    Kernel elm/core:Bitwise.and () :: ref
+                    Call :: i64
+                      Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+                      Lit 12 :: i64
+                      Local bits1 :: i64
+                    Global c58 :: i64
+                Let p@258:9 :: ref
+                  Call :: u32
+                    Global c57 :: ref
+                    Call :: i64
+                      Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+                      Lit 18 :: i64
+                      Local bits1 :: i64
+                  Let d@280:9 :: ref
+                    Call :: u32
+                      Global c57 :: ref
+                      Call :: i64
+                        Kernel elm/core:Bitwise.and () :: ref
+                        Local bits2 :: i64
+                        Global c58 :: i64
+                    Let c@277:9 :: ref
+                      Call :: u32
+                        Global c57 :: ref
+                        Call :: i64
+                          Kernel elm/core:Bitwise.and () :: ref
+                          Call :: i64
+                            Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+                            Lit 6 :: i64
+                            Local bits2 :: i64
+                          Global c58 :: i64
+                      Let b@274:9 :: ref
+                        Call :: u32
+                          Global c57 :: ref
+                          Call :: i64
+                            Kernel elm/core:Bitwise.and () :: ref
+                            Call :: i64
+                              Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+                              Lit 12 :: i64
+                              Local bits2 :: i64
+                            Global c58 :: i64
+                        Let a@271:9 :: ref
+                          Call :: u32
+                            Global c57 :: ref
+                            Call :: i64
+                              Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+                              Lit 18 :: i64
+                              Local bits2 :: i64
+                          Call :: ref
+                            Kernel elm/core:String.cons () :: ref
+                            Local x@284:9 :: u32
+                            Call :: ref
+                              Kernel elm/core:String.cons () :: ref
+                              Local y@287:9 :: u32
+                              Call :: ref
+                                Kernel elm/core:String.cons () :: ref
+                                Local z@290:9 :: u32
+                                Call :: ref
+                                  Kernel elm/core:String.cons () :: ref
+                                  Local w@293:9 :: u32
+                                  Call :: ref
+                                    Kernel elm/core:String.cons () :: ref
+                                    Local a@271:9 :: u32
+                                    Call :: ref
+                                      Kernel elm/core:String.cons () :: ref
+                                      Local b@274:9 :: u32
+                                      Call :: ref
+                                        Kernel elm/core:String.cons () :: ref
+                                        Local c@277:9 :: u32
+                                        Call :: ref
+                                          Kernel elm/core:String.cons () :: ref
+                                          Local d@280:9 :: u32
+                                          Call :: ref
+                                            Kernel elm/core:String.cons () :: ref
+                                            Local p@258:9 :: u32
+                                            Call :: ref
+                                              Kernel elm/core:String.cons () :: ref
+                                              Local q@261:9 :: u32
+                                              Call :: ref
+                                                Kernel elm/core:String.cons () :: ref
+                                                Local r@264:9 :: u32
+                                                Call :: ref
+                                                  Kernel elm/core:String.cons () :: ref
+                                                  Local s@267:9 :: u32
+                                                  Local accum :: ref
+clone c48   def: danfishgold/base64-bytes:Decode.decode18Help   key: ()   kind: function   params: a:i64 b:i64 c:i64 d:i64 e:i64   result: ref
+  Let combined6@237:9 :: ref
+    Call :: i64
+      Kernel elm/core:Bitwise.or () :: ref
+      Call :: i64
+        Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+        Lit 16 :: i64
+        Call :: i64
+          Kernel elm/core:Bitwise.and () :: ref
+          Lit 255 :: i64
+          Local d :: i64
+      Local e :: i64
+    Let combined5@234:9 :: ref
+      Call :: i64
+        Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+        Lit 8 :: i64
+        Local d :: i64
+      Let combined4@231:9 :: ref
+        Call :: i64
+          Kernel elm/core:Bitwise.and () :: ref
+          Lit 16777215 :: i64
+          Local c :: i64
+        Let combined3@226:9 :: ref
+          Call :: i64
+            Kernel elm/core:Bitwise.or () :: ref
+            Call :: i64
+              Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+              Lit 8 :: i64
+              Call :: i64
+                Kernel elm/core:Bitwise.and () :: ref
+                Lit 65535 :: i64
+                Local b :: i64
+            Call :: i64
+              Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+              Lit 24 :: i64
+              Local c :: i64
+          Let combined2@221:9 :: ref
+            Call :: i64
+              Kernel elm/core:Bitwise.or () :: ref
+              Call :: i64
+                Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+                Lit 16 :: i64
+                Call :: i64
+                  Kernel elm/core:Bitwise.and () :: ref
+                  Lit 255 :: i64
+                  Local a :: i64
+              Call :: i64
+                Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+                Lit 16 :: i64
+                Local b :: i64
+            Let combined1@218:9 :: ref
+              Call :: i64
+                Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+                Lit 8 :: i64
+                Local a :: i64
+              Call :: ref
+                Global c71 :: ref
+                Local combined3@226:9 :: i64
+                Local combined2@221:9 :: i64
+                Local combined1@218:9 :: i64
+                Call :: ref
+                  Global c71 :: ref
+                  Local combined6@237:9 :: i64
+                  Local combined5@234:9 :: i64
+                  Local combined4@231:9 :: i64
+                  Lit "" :: ref
+clone c78   def: author/project:FicOverlayBytes.lambda@151:11   key: ()   kind: function   params: _pb78_0:ref _pb78_1:i64   result: struct(i64,i64)   lifted-from: c72
+  Call :: struct(i64,i64)
+    Kernel author/project:FicOverlayBytes.readU32 () :: ref
+    Local _pa78_0 :: enum
+    Local _pb78_0 :: ref
+    Local _pb78_1 :: i64
+clone c72   def: author/project:FicOverlayBytes.unsignedInt32   key: ()   kind: function   params: endianness:enum   result: ref
+  Call :: ref
+    Kernel author/project:FicOverlayBytes.wrap (v0=i64) :: ref
+    Let _pa78_0 :: ref
+      Call :: enum
+        Kernel elm/core:Basics.eq (v0=type elm/bytes:Bytes.Endianness) :: ref
+        Local endianness :: enum
+        Ctor LE tag 0 () :: enum
+      Global c78 :: ref
+clone c49   def: danfishgold/base64-bytes:Decode.u32BE   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c72 :: ref
+    Ctor BE tag 1 () :: enum
+clone c79   def: author/project:FicOverlayBytes.lambda@146:11   key: ()   kind: function   params: _pb79_0:ref _pb79_1:i64   result: struct(i64,i64)   lifted-from: c73
+  Call :: struct(i64,i64)
+    Kernel author/project:FicOverlayBytes.readU16 () :: ref
+    Local _pa79_0 :: enum
+    Local _pb79_0 :: ref
+    Local _pb79_1 :: i64
+clone c73   def: author/project:FicOverlayBytes.unsignedInt16   key: ()   kind: function   params: endianness:enum   result: ref
+  Call :: ref
+    Kernel author/project:FicOverlayBytes.wrap (v0=i64) :: ref
+    Let _pa79_0 :: ref
+      Call :: enum
+        Kernel elm/core:Basics.eq (v0=type elm/bytes:Bytes.Endianness) :: ref
+        Local endianness :: enum
+        Ctor LE tag 0 () :: enum
+      Global c79 :: ref
+clone c50   def: danfishgold/base64-bytes:Decode.u16BE   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c73 :: ref
+    Ctor BE tag 1 () :: enum
+clone c31   def: danfishgold/base64-bytes:Decode.decode18Bytes   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c47 :: ref
+    Global c48 :: ref
+    Global c49 :: ref
+    Global c49 :: ref
+    Global c49 :: ref
+    Global c49 :: ref
+    Global c50 :: ref
+clone c59   def: elm/core:String.fromChar   key: ()   kind: function   params: char:u32   result: ref
+  Call :: ref
+    Kernel elm/core:String.cons () :: ref
+    Local char :: u32
+    Lit "" :: ref
+clone c40   def: danfishgold/base64-bytes:Decode.bitsToChars   key: ()   kind: function   params: bits:i64 missing:i64   result: ref
+  Let s@125:9 :: ref
+    Call :: u32
+      Global c57 :: ref
+      Call :: i64
+        Kernel elm/core:Bitwise.and () :: ref
+        Local bits :: i64
+        Global c58 :: i64
+    Let r@122:9 :: ref
+      Call :: u32
+        Global c57 :: ref
+        Call :: i64
+          Kernel elm/core:Bitwise.and () :: ref
+          Call :: i64
+            Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+            Lit 6 :: i64
+            Local bits :: i64
+          Global c58 :: i64
+      Let q@119:9 :: ref
+        Call :: u32
+          Global c57 :: ref
+          Call :: i64
+            Kernel elm/core:Bitwise.and () :: ref
+            Call :: i64
+              Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+              Lit 12 :: i64
+              Local bits :: i64
+            Global c58 :: i64
+        Let p@116:9 :: ref
+          Call :: u32
+            Global c57 :: ref
+            Call :: i64
+              Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
+              Lit 18 :: i64
+              Local bits :: i64
+          Case :: ref
+            Local missing :: i64
+            branch 0 :: i64
+              Call :: ref
+                Kernel elm/core:String.cons () :: ref
+                Local p@116:9 :: u32
+                Call :: ref
+                  Kernel elm/core:String.cons () :: ref
+                  Local q@119:9 :: u32
+                  Call :: ref
+                    Kernel elm/core:String.cons () :: ref
+                    Local r@122:9 :: u32
+                    Call :: ref
+                      Global c59 :: ref
+                      Local s@125:9 :: u32
+            branch 1 :: i64
+              Call :: ref
+                Kernel elm/core:String.cons () :: ref
+                Local p@116:9 :: u32
+                Call :: ref
+                  Kernel elm/core:String.cons () :: ref
+                  Local q@119:9 :: u32
+                  Call :: ref
+                    Kernel elm/core:String.cons () :: ref
+                    Local r@122:9 :: u32
+                    Lit "=" :: ref
+            branch 2 :: i64
+              Call :: ref
+                Kernel elm/core:String.cons () :: ref
+                Local p@116:9 :: u32
+                Call :: ref
+                  Kernel elm/core:String.cons () :: ref
+                  Local q@119:9 :: u32
+                  Lit "==" :: ref
+            branch _ :: i64
+              Lit "" :: ref
+clone c33   def: danfishgold/base64-bytes:Decode.helper@52:13   key: (v0=ref)   name: helper@52:13__ref   kind: function   params: a:i64 b:i64 c:i64   result: ref   lifted-from: c21
+  Let combined@54:21 :: ref
+    Call :: i64
+      Kernel elm/core:Bitwise.or () :: ref
+      Call :: i64
+        Kernel elm/core:Bitwise.or () :: ref
+        Call :: i64
+          Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+          Lit 16 :: i64
+          Local a :: i64
+        Call :: i64
+          Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+          Lit 8 :: i64
+          Local b :: i64
+      Local c :: i64
+    Call :: ref
+      Ctor Loop tag 0 (v0=ref) :: ref
+      Record string remaining :: struct(ref,i64)
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Local string :: ref
+          Call :: ref
+            Global c40 :: ref
+            Local combined@54:21 :: i64
+            Lit 0 :: i64
+        Call :: i64
+          Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+          Local remaining :: i64
+          Lit 3 :: i64
+clone c53   def: author/project:FicOverlayBytes.lambda@141:10   key: ()   kind: function   params: _pb53_0:ref _pb53_1:i64   result: struct(i64,i64)   lifted-from: c34
+  Call :: struct(i64,i64)
+    Kernel author/project:FicOverlayBytes.readU8 () :: ref
+    Local _pb53_0 :: ref
+    Local _pb53_1 :: i64
+clone c34   def: author/project:FicOverlayBytes.unsignedInt8   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Kernel author/project:FicOverlayBytes.wrap (v0=i64) :: ref
+    Global c53 :: ref
+clone c54   def: author/project:FicOverlayBytes.lambda@266:11   key: ()   outer: c35 (v0=ref)   kind: function   params: _a0:ref offset:i64   result: struct(i64,ref)   lifted-from: c35
+  Tuple :: struct(i64,ref)
+    Local offset :: i64
+    Local a :: ref
+clone c35   def: author/project:FicOverlayBytes.succeed   key: (v0=ref)   name: succeed__ref   kind: function   params: a:ref   result: ref
+  Call :: ref
+    Kernel author/project:FicOverlayBytes.wrap (v0=ref) :: ref
+    Global c54 :: ref
+clone c37   def: danfishgold/base64-bytes:Decode.helper@72:13   key: (v0=ref)   name: helper@72:13__ref   kind: function   params: a:i64 b:i64   result: ref   lifted-from: c21
+  Let combined@74:21 :: ref
+    Call :: i64
+      Kernel elm/core:Bitwise.or () :: ref
+      Call :: i64
+        Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+        Lit 16 :: i64
+        Local a :: i64
+      Call :: i64
+        Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+        Lit 8 :: i64
+        Local b :: i64
+    Call :: ref
+      Ctor Done tag 1 (v0=ref) :: ref
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Local string :: ref
+        Call :: ref
+          Global c40 :: ref
+          Local combined@74:21 :: i64
+          Lit 1 :: i64
+clone c56   def: author/project:FicOverlayBytes.lambda@181:10   key: ()   outer: c38 (v0=i64; v1=ref)   kind: function   params: bites:ref offset:i64   result: struct(i64,ref)   lifted-from: c38
+  Case :: struct(i64,ref)
+    Call :: struct(i64,i64)
+      Local decodeA@177:9 :: ref
+      Local bites :: ref
+      Local offset :: i64
+    branch (aOffset :: i64, a :: i64) :: struct(i64,i64)
+      If :: struct(i64,ref)
+        Call :: enum
+          Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+          Local aOffset :: i64
+          Lit 0 :: i64
+        Call :: struct(i64,ref)
+          Kernel author/project:FicOverlayBytes.failure (v0=ref) :: ref
+          Lit () :: unit
+        Tuple :: struct(i64,ref)
+          Local aOffset :: i64
+          Call :: ref
+            Local func :: ref
+            Local a :: i64
+clone c38   def: author/project:FicOverlayBytes.map   key: (v0=i64; v1=ref)   name: map__i64__ref   kind: function   params: func:ref decoderA:ref   result: ref
+  Let decodeA@177:9 :: ref
+    Call :: ref
+      Kernel author/project:FicOverlayBytes.unwrap (v0=i64) :: ref
+      Local decoderA :: ref
+    Call :: ref
+      Kernel author/project:FicOverlayBytes.wrap (v0=ref) :: ref
+      Global c56 :: ref
+clone c39   def: danfishgold/base64-bytes:Decode.lambda@85:21   key: ()   kind: function   params: a:i64   result: ref   lifted-from: c21
+  Call :: ref
+    Ctor Done tag 1 (v0=ref) :: ref
+    Call :: ref
+      Kernel elm/core:Basics.append (v0=app string) :: ref
+      Local string :: ref
+      Call :: ref
+        Global c40 :: ref
+        Call :: i64
+          Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+          Lit 16 :: i64
+          Local a :: i64
+        Lit 2 :: i64
+clone c21   def: danfishgold/base64-bytes:Decode.loopHelp   key: ()   kind: function   params: _p0:struct(ref,i64)   result: ref
+  Case :: ref
+    Local _p0 :: struct(ref,i64)
+    branch {string#0:ref,remaining#1:i64} :: struct(ref,i64)
+      If :: ref
+        Call :: enum
+          Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
+          Local remaining :: i64
+          Lit 18 :: i64
+        Call :: ref
+          Global c29 :: ref
+          Global c30 :: ref
+          Global c31 :: ref
+        Call :: enum
+          Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
+          Local remaining :: i64
+          Lit 3 :: i64
+        Call :: ref
+          Global c32 :: ref
+          Global c33 :: ref
+          Global c34 :: ref
+          Global c34 :: ref
+          Global c34 :: ref
+        Call :: enum
+          Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
+          Local remaining :: i64
+          Lit 0 :: i64
+        Call :: ref
+          Global c35 :: ref
+          Call :: ref
+            Ctor Done tag 1 (v0=ref) :: ref
+            Local string :: ref
+        Call :: enum
+          Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
+          Local remaining :: i64
+          Lit 2 :: i64
+        Call :: ref
+          Global c36 :: ref
+          Global c37 :: ref
+          Global c34 :: ref
+          Global c34 :: ref
+        Call :: ref
+          Global c38 :: ref
+          Global c39 :: ref
+          Global c34 :: ref
+clone c14   def: danfishgold/base64-bytes:Decode.decoder   key: ()   kind: function   params: width:i64   result: ref
+  Call :: ref
+    Global c20 :: ref
+    Record string remaining :: struct(ref,i64)
+      Lit "" :: ref
+      Local width :: i64
+    Global c21 :: ref
+clone c10   def: danfishgold/base64-bytes:Decode.fromBytes   key: ()   kind: function   params: bytes:ref   result: ref
+  Call :: ref
+    Global c13 :: ref
+    Call :: ref
+      Global c14 :: ref
+      Call :: i64
+        Kernel elm/bytes:Bytes.width () :: ref
+        Local bytes :: ref
+    Local bytes :: ref
+clone c5   def: danfishgold/base64-bytes:Base64.fromBytes   key: ()   kind: value   params:    result: ref
+  Global c10 :: ref
+clone c15   def: elm/core:Maybe.map   key: (v0=ref; v1=ref)   name: map__ref__ref   kind: function   params: f:ref maybe:ref   result: ref
+  Case :: ref
+    Local maybe :: ref
+    branch Just #0 value :: ref :: ref
+      Call :: ref
+        Ctor Just tag 0 (v0=ref) :: ref
+        Call :: ref
+          Local f :: ref
+          Local value :: ref
+    branch Nothing #1 :: ref
+      Ctor Nothing tag 1 () :: ref
+clone c16   def: danfishgold/base64-bytes:Encode.lambda@10:15   key: ()   kind: function   params: _pb16_0:ref   result: ref   lifted-from: c11
+  Call :: ref
+    Kernel elm/bytes:Bytes.Encode.encode () :: ref
+    Local _pb16_0 :: ref
+clone c60   def: elm/bytes:Bytes.Encode.getWidth   key: ()   kind: function   params: builder:ref   result: i64
+  Case :: i64
+    Local builder :: ref
+    branch I8 #0 _ :: i64 :: ref
+      Lit 1 :: i64
+    branch I16 #1 _ :: enum _ :: i64 :: ref
+      Lit 2 :: i64
+    branch I32 #2 _ :: enum _ :: i64 :: ref
+      Lit 4 :: i64
+    branch U8 #3 _ :: i64 :: ref
+      Lit 1 :: i64
+    branch U16 #4 _ :: enum _ :: i64 :: ref
+      Lit 2 :: i64
+    branch U32 #5 _ :: enum _ :: i64 :: ref
+      Lit 4 :: i64
+    branch F32 #6 _ :: enum _ :: f64 :: ref
+      Lit 4 :: i64
+    branch F64 #7 _ :: enum _ :: f64 :: ref
+      Lit 8 :: i64
+    branch Seq #8 w :: i64 _ :: ref :: ref
+      Local w :: i64
+    branch Utf8 #9 w :: i64 _ :: ref :: ref
+      Local w :: i64
+    branch Bytes #10 bs :: ref :: ref
+      Call :: i64
+        Kernel elm/bytes:Bytes.width () :: ref
+        Local bs :: ref
+clone c41   def: elm/bytes:Bytes.Encode.getWidths   key: ()   kind: function   params: width:i64 builders:ref   result: i64
+  Case :: i64
+    Local builders :: ref
+    branch [] :: ref
+      Local width :: i64
+    branch b :: ref :: bs :: ref :: ref
+      Call :: i64
+        Global c41 :: ref
+        Call :: i64
+          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+          Local width :: i64
+          Call :: i64
+            Global c60 :: ref
+            Local b :: ref
+        Local bs :: ref
+clone c23   def: elm/bytes:Bytes.Encode.sequence   key: ()   kind: function   params: builders:ref   result: ref
+  Call :: ref
+    Ctor Seq tag 8 (v0=i64; v1=ref) :: ref
+    Call :: i64
+      Global c41 :: ref
+      Lit 0 :: i64
+      Local builders :: ref
+    Local builders :: ref
+clone c22   def: elm/core:Basics.composeR   key: (v0=ref; v1=ref; v2=ref)   name: composeR__ref__ref__ref   kind: function   params: f:ref g:ref x:ref   result: ref
+  Call :: ref
+    Local g :: ref
+    Call :: ref
+      Local f :: ref
+      Local x :: ref
+clone c24   def: danfishgold/base64-bytes:Encode.lambda@16:23   key: ()   kind: function   params: _pb24_0:ref   result: ref   lifted-from: c17
+  Call :: ref
+    Global c22 :: ref
+    Local _pa24_0 :: ref
+    Local _pa24_1 :: ref
+    Local _pb24_0 :: ref
+clone c61   def: elm/core:String.lambda@510:9   key: ()   kind: function   params: _pb61_0:u32 _pb61_1:ref   result: ref   lifted-from: c42
+  Call :: ref
+    Kernel elm/core:List.cons (v0=u32) :: ref
+    Local _pb61_0 :: u32
+    Local _pb61_1 :: ref
+clone c42   def: elm/core:String.toList   key: ()   kind: function   params: string:ref   result: ref
+  Call :: ref
+    Kernel elm/core:String.foldr (v0=ref) :: ref
+    Global c61 :: ref
+    List :: ref
+    Local string :: ref
+clone c43   def: elm/core:String.left   key: ()   kind: function   params: n:i64 string:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+      Local n :: i64
+      Lit 1 :: i64
+    Lit "" :: ref
+    Call :: ref
+      Kernel elm/core:String.slice () :: ref
+      Lit 0 :: i64
+      Local n :: i64
+      Local string :: ref
+clone c80   def: elm/core:Char.isLower   key: ()   kind: function   params: char:u32   result: enum
+  Let code@105:5 :: enum
+    Call :: i64
+      Kernel elm/core:Char.toCode () :: ref
+      Local char :: u32
+    Call :: enum
+      Kernel elm/core:Basics.and () :: ref
+      Call :: enum
+        Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+        Lit 97 :: i64
+        Local code@105:5 :: i64
+      Call :: enum
+        Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+        Local code@105:5 :: i64
+        Lit 122 :: i64
+clone c81   def: elm/core:Char.isUpper   key: ()   kind: function   params: char:u32   result: enum
+  Let code@84:5 :: enum
+    Call :: i64
+      Kernel elm/core:Char.toCode () :: ref
+      Local char :: u32
+    Call :: enum
+      Kernel elm/core:Basics.and () :: ref
+      Call :: enum
+        Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+        Local code@84:5 :: i64
+        Lit 90 :: i64
+      Call :: enum
+        Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+        Lit 65 :: i64
+        Local code@84:5 :: i64
+clone c82   def: elm/core:Char.isDigit   key: ()   kind: function   params: char:u32   result: enum
+  Let code@158:5 :: enum
+    Call :: i64
+      Kernel elm/core:Char.toCode () :: ref
+      Local char :: u32
+    Call :: enum
+      Kernel elm/core:Basics.and () :: ref
+      Call :: enum
+        Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+        Local code@158:5 :: i64
+        Lit 57 :: i64
+      Call :: enum
+        Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+        Lit 48 :: i64
+        Local code@158:5 :: i64
+clone c75   def: elm/core:Char.isAlphaNum   key: ()   kind: function   params: char:u32   result: enum
+  Call :: enum
+    Kernel elm/core:Basics.or () :: ref
+    Call :: enum
+      Global c80 :: ref
+      Local char :: u32
+    Call :: enum
+      Kernel elm/core:Basics.or () :: ref
+      Call :: enum
+        Global c81 :: ref
+        Local char :: u32
+      Call :: enum
+        Global c82 :: ref
+        Local char :: u32
+clone c62   def: danfishgold/base64-bytes:Encode.isValidChar   key: ()   kind: function   params: c:u32   result: enum
+  If :: enum
+    Call :: enum
+      Global c75 :: ref
+      Local c :: u32
+    Lit 1 :: enum
+    Case :: enum
+      Local c :: u32
+      branch '43' :: u32
+        Lit 1 :: enum
+      branch '47' :: u32
+        Lit 1 :: enum
+      branch _ :: u32
+        Lit 0 :: enum
+clone c63   def: danfishgold/base64-bytes:Encode.unsafeConvertChar   key: ()   kind: function   params: char:u32   result: i64
+  Let key@194:9 :: i64
+    Call :: i64
+      Kernel elm/core:Char.toCode () :: ref
+      Local char :: u32
+    If :: i64
+      Call :: enum
+        Kernel elm/core:Basics.and () :: ref
+        Call :: enum
+          Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
+          Local key@194:9 :: i64
+          Lit 65 :: i64
+        Call :: enum
+          Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+          Local key@194:9 :: i64
+          Lit 90 :: i64
+      Call :: i64
+        Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+        Local key@194:9 :: i64
+        Lit 65 :: i64
+      Call :: enum
+        Kernel elm/core:Basics.and () :: ref
+        Call :: enum
+          Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
+          Local key@194:9 :: i64
+          Lit 97 :: i64
+        Call :: enum
+          Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+          Local key@194:9 :: i64
+          Lit 122 :: i64
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+          Local key@194:9 :: i64
+          Lit 97 :: i64
+        Lit 26 :: i64
+      Call :: enum
+        Kernel elm/core:Basics.and () :: ref
+        Call :: enum
+          Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
+          Local key@194:9 :: i64
+          Lit 48 :: i64
+        Call :: enum
+          Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+          Local key@194:9 :: i64
+          Lit 57 :: i64
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+          Call :: i64
+            Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+            Local key@194:9 :: i64
+            Lit 48 :: i64
+          Lit 26 :: i64
+        Lit 26 :: i64
+      Case :: i64
+        Local char :: u32
+        branch '43' :: u32
+          Lit 62 :: i64
+        branch '47' :: u32
+          Lit 63 :: i64
+        branch _ :: u32
+          Call :: i64
+            Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+            Lit 1 :: i64
+clone c76   def: elm/bytes:Bytes.Encode.lambda@130:3   key: ()   kind: function   params: _pb76_0:i64   result: ref   lifted-from: c64
+  Call :: ref
+    Ctor U8 tag 3 (v0=i64) :: ref
+    Local _pb76_0 :: i64
+clone c64   def: elm/bytes:Bytes.Encode.unsignedInt8   key: ()   kind: value   params:    result: ref
+  Global c76 :: ref
+clone c77   def: elm/bytes:Bytes.Encode.lambda@137:3   key: ()   kind: function   params: _pb77_0:enum _pb77_1:i64   result: ref   lifted-from: c66
+  Call :: ref
+    Ctor U16 tag 4 (v0=enum; v1=i64) :: ref
+    Local _pb77_0 :: enum
+    Local _pb77_1 :: i64
+clone c66   def: elm/bytes:Bytes.Encode.unsignedInt16   key: ()   kind: value   params:    result: ref
+  Global c77 :: ref
+clone c44   def: danfishgold/base64-bytes:Encode.encodeCharacters   key: ()   kind: function   params: a:u32 b:u32 c:u32 d:u32   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.and () :: ref
+      Call :: enum
+        Global c62 :: ref
+        Local a :: u32
+      Call :: enum
+        Global c62 :: ref
+        Local b :: u32
+    Let n2@85:13 :: ref
+      Call :: i64
+        Global c63 :: ref
+        Local b :: u32
+      Let n1@82:13 :: ref
+        Call :: i64
+          Global c63 :: ref
+          Local a :: u32
+        Case :: ref
+          Local d :: u32
+          branch '61' :: u32
+            Case :: ref
+              Local c :: u32
+              branch '61' :: u32
+                Let n@95:29 :: ref
+                  Call :: i64
+                    Kernel elm/core:Bitwise.or () :: ref
+                    Call :: i64
+                      Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+                      Lit 18 :: i64
+                      Local n1@82:13 :: i64
+                    Call :: i64
+                      Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+                      Lit 12 :: i64
+                      Local n2@85:13 :: i64
+                  Let b1@100:29 :: ref
+                    Call :: i64
+                      Kernel elm/core:Bitwise.shiftRightBy () :: ref
+                      Lit 16 :: i64
+                      Local n@95:29 :: i64
+                    Call :: ref
+                      Ctor Just tag 0 (v0=ref) :: ref
+                      Let _oa65_0 :: ref
+                        Local b1@100:29 :: i64
+                        Call :: ref
+                          Global c64 :: ref
+                          Local _oa65_0 :: i64
+              branch _ :: u32
+                If :: ref
+                  Call :: enum
+                    Global c62 :: ref
+                    Local c :: u32
+                  Let n3@109:33 :: ref
+                    Call :: i64
+                      Global c63 :: ref
+                      Local c :: u32
+                    Let n@112:33 :: ref
+                      Call :: i64
+                        Kernel elm/core:Bitwise.or () :: ref
+                        Call :: i64
+                          Kernel elm/core:Bitwise.or () :: ref
+                          Call :: i64
+                            Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+                            Lit 18 :: i64
+                            Local n1@82:13 :: i64
+                          Call :: i64
+                            Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+                            Lit 12 :: i64
+                            Local n2@85:13 :: i64
+                        Call :: i64
+                          Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+                          Lit 6 :: i64
+                          Local n3@109:33 :: i64
+                      Let combined@117:33 :: ref
+                        Call :: i64
+                          Kernel elm/core:Bitwise.shiftRightBy () :: ref
+                          Lit 8 :: i64
+                          Local n@112:33 :: i64
+                        Call :: ref
+                          Ctor Just tag 0 (v0=ref) :: ref
+                          Let _oa67_0 :: ref
+                            Ctor BE tag 1 () :: enum
+                            Let _oa67_1 :: ref
+                              Local combined@117:33 :: i64
+                              Call :: ref
+                                Global c66 :: ref
+                                Local _oa67_0 :: enum
+                                Local _oa67_1 :: i64
+                  Ctor Nothing tag 1 () :: ref
+          branch _ :: u32
+            If :: ref
+              Call :: enum
+                Kernel elm/core:Basics.and () :: ref
+                Call :: enum
+                  Global c62 :: ref
+                  Local c :: u32
+                Call :: enum
+                  Global c62 :: ref
+                  Local d :: u32
+              Let n4@131:25 :: ref
+                Call :: i64
+                  Global c63 :: ref
+                  Local d :: u32
+                Let n3@128:25 :: ref
+                  Call :: i64
+                    Global c63 :: ref
+                    Local c :: u32
+                  Let n@134:25 :: ref
+                    Call :: i64
+                      Kernel elm/core:Bitwise.or () :: ref
+                      Call :: i64
+                        Kernel elm/core:Bitwise.or () :: ref
+                        Call :: i64
+                          Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+                          Lit 18 :: i64
+                          Local n1@82:13 :: i64
+                        Call :: i64
+                          Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+                          Lit 12 :: i64
+                          Local n2@85:13 :: i64
+                      Call :: i64
+                        Kernel elm/core:Bitwise.or () :: ref
+                        Call :: i64
+                          Kernel elm/core:Bitwise.shiftLeftBy () :: ref
+                          Lit 6 :: i64
+                          Local n3@128:25 :: i64
+                        Local n4@131:25 :: i64
+                    Let b3@139:25 :: ref
+                      Local n@134:25 :: i64
+                      Let combined@143:25 :: ref
+                        Call :: i64
+                          Kernel elm/core:Bitwise.shiftRightBy () :: ref
+                          Lit 8 :: i64
+                          Local n@134:25 :: i64
+                        Call :: ref
+                          Ctor Just tag 0 (v0=ref) :: ref
+                          Call :: ref
+                            Global c23 :: ref
+                            List :: ref
+                              Let _oa68_0 :: ref
+                                Ctor BE tag 1 () :: enum
+                                Let _oa68_1 :: ref
+                                  Local combined@143:25 :: i64
+                                  Call :: ref
+                                    Global c66 :: ref
+                                    Local _oa68_0 :: enum
+                                    Local _oa68_1 :: i64
+                              Let _oa69_0 :: ref
+                                Local b3@139:25 :: i64
+                                Call :: ref
+                                  Global c64 :: ref
+                                  Local _oa69_0 :: i64
+              Ctor Nothing tag 1 () :: ref
+    Ctor Nothing tag 1 () :: ref
+clone c45   def: elm/core:String.dropLeft   key: ()   kind: function   params: n:i64 string:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+      Local n :: i64
+      Lit 1 :: i64
+    Local string :: ref
+    Call :: ref
+      Kernel elm/core:String.slice () :: ref
+      Local n :: i64
+      Call :: i64
+        Kernel elm/core:String.length () :: ref
+        Local string :: ref
+      Local string :: ref
+clone c25   def: danfishgold/base64-bytes:Encode.encodeChunks   key: ()   kind: function   params: input:ref accum:ref   result: ref
+  Case :: ref
+    Call :: ref
+      Global c42 :: ref
+      Call :: ref
+        Global c43 :: ref
+        Lit 4 :: i64
+        Local input :: ref
+    branch [] :: ref
+      Call :: ref
+        Ctor Just tag 0 (v0=ref) :: ref
+        Local accum :: ref
+    branch a :: u32 :: b :: u32 :: c :: u32 :: d :: u32 :: [] :: ref :: ref :: ref :: ref :: ref
+      Case :: ref
+        Call :: ref
+          Global c44 :: ref
+          Local a :: u32
+          Local b :: u32
+          Local c :: u32
+          Local d :: u32
+        branch Just #0 enc :: ref :: ref
+          Call :: ref
+            Global c25 :: ref
+            Call :: ref
+              Global c45 :: ref
+              Lit 4 :: i64
+              Local input :: ref
+            Call :: ref
+              Kernel elm/core:List.cons (v0=ref) :: ref
+              Local enc :: ref
+              Local accum :: ref
+        branch Nothing #1 :: ref
+          Ctor Nothing tag 1 () :: ref
+    branch a :: u32 :: b :: u32 :: c :: u32 :: [] :: ref :: ref :: ref :: ref
+      Case :: ref
+        Call :: ref
+          Global c44 :: ref
+          Local a :: u32
+          Local b :: u32
+          Local c :: u32
+          Lit '61' :: u32
+        branch Nothing #1 :: ref
+          Ctor Nothing tag 1 () :: ref
+        branch Just #0 enc :: ref :: ref
+          Call :: ref
+            Ctor Just tag 0 (v0=ref) :: ref
+            Call :: ref
+              Kernel elm/core:List.cons (v0=ref) :: ref
+              Local enc :: ref
+              Local accum :: ref
+    branch a :: u32 :: b :: u32 :: [] :: ref :: ref :: ref
+      Case :: ref
+        Call :: ref
+          Global c44 :: ref
+          Local a :: u32
+          Local b :: u32
+          Lit '61' :: u32
+          Lit '61' :: u32
+        branch Nothing #1 :: ref
+          Ctor Nothing tag 1 () :: ref
+        branch Just #0 enc :: ref :: ref
+          Call :: ref
+            Ctor Just tag 0 (v0=ref) :: ref
+            Call :: ref
+              Kernel elm/core:List.cons (v0=ref) :: ref
+              Local enc :: ref
+              Local accum :: ref
+    branch _ :: ref
+      Ctor Nothing tag 1 () :: ref
+clone c17   def: danfishgold/base64-bytes:Encode.encoder   key: ()   kind: function   params: string:ref   result: ref
+  Call :: ref
+    Global c15 :: ref
+    Let _pa24_0 :: ref
+      Global c19 :: ref
+      Let _pa24_1 :: ref
+        Global c23 :: ref
+        Global c24 :: ref
+    Call :: ref
+      Global c25 :: ref
+      Local string :: ref
+      List :: ref
+clone c11   def: danfishgold/base64-bytes:Encode.toBytes   key: ()   kind: function   params: string:ref   result: ref
+  Call :: ref
+    Global c15 :: ref
+    Global c16 :: ref
+    Call :: ref
+      Global c17 :: ref
+      Local string :: ref
+clone c6   def: danfishgold/base64-bytes:Base64.toBytes   key: ()   kind: value   params:    result: ref
+  Global c11 :: ref
+clone c3   def: author/project:IndirectBytes.lambda@15:55   key: ()   kind: function   params: s:ref   result: ref   lifted-from: c1
+  Call :: ref
+    Global c4 :: ref
+    Global c5 :: ref
+    Let _oa7_0 :: ref
+      Local s :: ref
+      Call :: ref
+        Global c6 :: ref
+        Local _oa7_0 :: ref
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Let a@14:21 :: struct(unit,unit)
+    Call :: ref
+      Kernel elm/core:Debug.log (v0=type (elm/core:List.List (elm/core:Maybe.Maybe elm/core:String.String))) :: ref
+      Lit "result" :: ref
+      Call :: ref
+        Global c2 :: ref
+        Global c3 :: ref
+        List :: ref
+          Lit "aGVsbG8gd29ybGQ=" :: ref
+          Lit "Zmlj" :: ref
+          Lit "not base64!" :: ref
+    If :: struct(unit,unit)
+      Call :: enum
+        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Kernel elm/core:String.length () :: ref
+          Call :: ref
+            Kernel elm/core:Debug.toString (v0=type (elm/core:List.List (elm/core:Maybe.Maybe elm/core:String.String))) :: ref
+            Local a@14:21 :: ref
+        Lit 0 :: i64
+      Tuple :: struct(unit,unit)
+        Lit () :: unit
+        Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+      Tuple :: struct(unit,unit)
+        Lit () :: unit
+        Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:IndirectBytes.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

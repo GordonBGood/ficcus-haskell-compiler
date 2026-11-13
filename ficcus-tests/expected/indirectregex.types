@@ -1,0 +1,48 @@
+-- module IndirectRegex: problems=0 instances=13 instance-failures=0 defaulted=0
+-- equality-uses: total=0 at-function=0
+module author/project:IndirectRegex
+def main :: Program () () ()    [9:1-9:5]   id: author/project:IndirectRegex.main   sig: Program () () ()   kinds:    group: author/project:IndirectRegex.main nonrec ann
+  10:5-24:10 Call :: Program () () ()
+    10:5-10:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    11:9-24:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      12:13-21:37 Lambda :: () -> ( (), Cmd () )
+        12:14-12:15 PAnything :: ()
+        def a :: String    [14:21-14:22]   id: author/project:IndirectRegex.a@14:21   sig: String   kinds:    group: author/project:IndirectRegex.a@14:21 nonrec inferred
+          15:25-15:207 Call :: String
+            15:25-15:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+            15:35-15:43 Str :: String
+            15:45-15:207 Call :: String
+              15:45-15:64 VarForeign :: String -> String -> String   callee: jorgengranseth/elm-string-format:String.Format.value
+              15:65-15:73 Str :: String
+              15:75-15:207 Call :: String
+                15:75-15:99 VarForeign :: String -> String -> String -> String   callee: jorgengranseth/elm-string-format:String.Format.namedValue
+                15:100-15:106 Str :: String
+                15:107-15:113 Str :: String
+                15:115-15:207 Call :: String
+                  15:115-15:134 VarForeign :: String -> String -> String   callee: jorgengranseth/elm-string-format:String.Format.value
+                  15:135-15:142 Str :: String
+                  15:143-15:207 Str :: String
+        17:17-21:37 If :: ( (), Cmd () )
+          17:20-17:56 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            17:20-17:51 Call :: Int
+              17:20-17:33 VarForeign :: String -> Int   callee: elm/core:String.length
+              17:35-17:51 Call :: String
+                17:35-17:49 VarDebug :: String -> String   callee: elm/core:Debug.toString   instance: a := String   sig#: d170fa67   subst: v0 := String
+                17:50-17:51 VarLocal :: String   callee: author/project:IndirectRegex.a@14:21   use: gen
+            17:55-17:56 Int :: Int
+          18:21-18:37 Pair :: ( (), Cmd () )
+            18:23-18:25 Unit :: ()
+            18:27-18:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          21:21-21:37 Pair :: ( (), Cmd () )
+            21:23-21:25 Unit :: ()
+            21:27-21:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      22:20-22:43 Lambda :: () -> () -> ( (), Cmd () )
+        22:21-22:22 PAnything :: ()
+        22:23-22:24 PVar m :: ()
+        22:28-22:43 Pair :: ( (), Cmd () )
+          22:30-22:31 VarLocal :: ()
+          22:33-22:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      23:27-23:41 Lambda :: () -> Sub ()
+        23:28-23:29 PAnything :: ()
+        23:33-23:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:IndirectRegex.main   kind: value   reads:    needs:    init-dep: no

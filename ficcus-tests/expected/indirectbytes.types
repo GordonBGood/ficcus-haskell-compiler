@@ -1,0 +1,51 @@
+-- module IndirectBytes: problems=0 instances=14 instance-failures=0 defaulted=0
+-- equality-uses: total=0 at-function=0
+module author/project:IndirectBytes
+def main :: Program () () ()    [9:1-9:5]   id: author/project:IndirectBytes.main   sig: Program () () ()   kinds:    group: author/project:IndirectBytes.main nonrec ann
+  10:5-24:10 Call :: Program () () ()
+    10:5-10:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    11:9-24:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      12:13-21:37 Lambda :: () -> ( (), Cmd () )
+        12:14-12:15 PAnything :: ()
+        def a :: List (Maybe String)    [14:21-14:22]   id: author/project:IndirectBytes.a@14:21   sig: List (Maybe String)   kinds:    group: author/project:IndirectBytes.a@14:21 nonrec inferred
+          15:25-15:157 Call :: List (Maybe String)
+            15:25-15:34 VarDebug :: String -> List (Maybe String) -> List (Maybe String)   callee: elm/core:Debug.log   instance: a := List (Maybe String)   sig#: 6ecaa5dd   subst: v0 := List (Maybe String)
+            15:35-15:43 Str :: String
+            15:45-15:157 Call :: List (Maybe String)
+              15:45-15:53 VarForeign :: (String -> Maybe String) -> List String -> List (Maybe String)   callee: elm/core:List.map   instance: a := String, b := Maybe String   sig#: 6a702f63   subst: v0 := String, v1 := Maybe String
+              15:55-15:110 Lambda :: String -> Maybe String
+                15:56-15:57 PVar s :: String
+                15:61-15:109 Call :: Maybe String
+                  15:61-15:74 VarForeign :: (Bytes -> Maybe String) -> Maybe Bytes -> Maybe String   callee: elm/core:Maybe.andThen   instance: a := Bytes, b := String   sig#: 46395adb   subst: v0 := Bytes, v1 := String
+                  15:75-15:91 VarForeign :: Bytes -> Maybe String   callee: danfishgold/base64-bytes:Base64.fromBytes
+                  15:93-15:109 Call :: Maybe Bytes
+                    15:93-15:107 VarForeign :: String -> Maybe Bytes   callee: danfishgold/base64-bytes:Base64.toBytes
+                    15:108-15:109 VarLocal :: String
+              15:112-15:157 List :: List String
+                15:114-15:132 Str :: String
+                15:134-15:140 Str :: String
+                15:142-15:155 Str :: String
+        17:17-21:37 If :: ( (), Cmd () )
+          17:20-17:56 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            17:20-17:51 Call :: Int
+              17:20-17:33 VarForeign :: String -> Int   callee: elm/core:String.length
+              17:35-17:51 Call :: String
+                17:35-17:49 VarDebug :: List (Maybe String) -> String   callee: elm/core:Debug.toString   instance: a := List (Maybe String)   sig#: d170fa67   subst: v0 := List (Maybe String)
+                17:50-17:51 VarLocal :: List (Maybe String)   callee: author/project:IndirectBytes.a@14:21   use: gen
+            17:55-17:56 Int :: Int
+          18:21-18:37 Pair :: ( (), Cmd () )
+            18:23-18:25 Unit :: ()
+            18:27-18:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          21:21-21:37 Pair :: ( (), Cmd () )
+            21:23-21:25 Unit :: ()
+            21:27-21:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      22:20-22:43 Lambda :: () -> () -> ( (), Cmd () )
+        22:21-22:22 PAnything :: ()
+        22:23-22:24 PVar m :: ()
+        22:28-22:43 Pair :: ( (), Cmd () )
+          22:30-22:31 VarLocal :: ()
+          22:33-22:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      23:27-23:41 Lambda :: () -> Sub ()
+        23:28-23:29 PAnything :: ()
+        23:33-23:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:IndirectBytes.main   kind: value   reads:    needs:    init-dep: no

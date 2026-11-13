@@ -1,0 +1,428 @@
+-- mono: stage (iii) slice 3b, modules=23
+-- module author/project:IndirectRegex (project)
+clone c0   def: author/project:IndirectRegex.main   key: ()   kind: value   init: 0   needs: 
+-- program: 27 clones, reachable from main, dependencies first
+clone c24   def: author/project:FicOverlayRegex.fromStringWith   key: ()   kind: function   params: options:struct(enum,enum) string:ref   result: ref
+  Let re@99:9 :: ref
+    Call :: ref
+      Kernel author/project:FicOverlayRegex.compile () :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        If :: i64
+          Access .caseInsensitive #1 :: enum
+            Local options :: struct(enum,enum)
+          Lit 1 :: i64
+          Lit 0 :: i64
+        If :: i64
+          Access .multiline #0 :: enum
+            Local options :: struct(enum,enum)
+          Lit 2 :: i64
+          Lit 0 :: i64
+      Local string :: ref
+    If :: ref
+      Call :: enum
+        Kernel author/project:FicOverlayRegex.valid () :: ref
+        Local re@99:9 :: ref
+      Call :: ref
+        Ctor Just tag 0 (v0=ref) :: ref
+        Local re@99:9 :: ref
+      Ctor Nothing tag 1 () :: ref
+clone c17   def: elm/regex:Regex.fromString   key: ()   kind: function   params: string:ref   result: ref
+  Call :: ref
+    Global c24 :: ref
+    Record multiline caseInsensitive :: struct(enum,enum)
+      Lit 0 :: enum
+      Lit 0 :: enum
+    Local string :: ref
+clone c19   def: author/project:FicOverlayRegex.never   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Kernel author/project:FicOverlayRegex.compile () :: ref
+    Lit 0 :: i64
+    Lit ".^" :: ref
+clone c18   def: elm/core:Maybe.withDefault   key: (v0=ref)   name: withDefault__ref   kind: function   params: default:ref maybe:ref   result: ref
+  Case :: ref
+    Local maybe :: ref
+    branch Just #0 value :: ref :: ref
+      Local value :: ref
+    branch Nothing #1 :: ref
+      Local default :: ref
+clone c20   def: jorgengranseth/elm-string-format:String.Format.lambda@78:12   key: ()   kind: function   params: _pb20_0:ref   result: ref   lifted-from: c7
+  Call :: ref
+    Global c18 :: ref
+    Local _pa20_0 :: ref
+    Local _pb20_0 :: ref
+clone c16   def: elm/core:Basics.composeR   key: (v0=ref; v1=ref; v2=ref)   name: composeR__ref__ref__ref   kind: function   params: f:ref g:ref x:ref   result: ref
+  Call :: ref
+    Local g :: ref
+    Call :: ref
+      Local f :: ref
+      Local x :: ref
+clone c21   def: jorgengranseth/elm-string-format:String.Format.lambda@77:5   key: ()   kind: function   params: _pb21_0:ref   result: ref   lifted-from: c7
+  Call :: ref
+    Global c16 :: ref
+    Local _pa21_0 :: ref
+    Local _pa21_1 :: ref
+    Local _pb21_0 :: ref
+clone c7   def: jorgengranseth/elm-string-format:String.Format.regex   key: ()   kind: value   params:    result: ref
+  Let _pa21_0 :: ref
+    Global c17 :: ref
+    Let _pa21_1 :: ref
+      Let _pa20_0 :: ref
+        Global c19 :: ref
+        Global c20 :: ref
+      Global c21 :: ref
+clone c10   def: jorgengranseth/elm-string-format:String.Format.lambda@72:44   key: ()   kind: function   params: _a0:struct(i64,ref,i64,ref)   result: ref   lifted-from: c2
+  Local val :: ref
+clone c25   def: elm/core:String.concat   key: ()   kind: function   params: strings:ref   result: ref
+  Call :: ref
+    Kernel elm/core:String.join () :: ref
+    Lit "" :: ref
+    Local strings :: ref
+clone c29   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: ref :: xs :: ref :: ref
+      Call :: ref
+        Global c29 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: ref
+          Local acc :: ref
+        Local xs :: ref
+clone c30   def: elm/core:List.lambda@261:9   key: ()   outer: c26 (v0=ref)   kind: function   params: _pb30_0:ref _pb30_1:ref   result: ref   lifted-from: c26
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Local _pb30_0 :: ref
+    Local _pb30_1 :: ref
+clone c26   def: elm/core:List.reverse   key: (v0=ref)   name: reverse__ref   kind: function   params: list:ref   result: ref
+  Call :: ref
+    Global c29 :: ref
+    Global c30 :: ref
+    List :: ref
+    Local list :: ref
+clone c27   def: author/project:FicOverlayRegex.next   key: ()   kind: function   params: string:ref c:ref   result: struct(i64,i64)
+  If :: struct(i64,i64)
+    Call :: enum
+      Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
+      Call :: i64
+        Kernel author/project:FicOverlayRegex.cap () :: ref
+        Local c :: ref
+        Lit 1 :: i64
+      Call :: i64
+        Kernel author/project:FicOverlayRegex.cap () :: ref
+        Local c :: ref
+        Lit 0 :: i64
+    Tuple :: struct(i64,i64)
+      Call :: i64
+        Kernel author/project:FicOverlayRegex.advance () :: ref
+        Local string :: ref
+        Call :: i64
+          Kernel author/project:FicOverlayRegex.cap () :: ref
+          Local c :: ref
+          Lit 1 :: i64
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Kernel author/project:FicOverlayRegex.cap () :: ref
+          Local c :: ref
+          Lit 3 :: i64
+        Lit 1 :: i64
+    Tuple :: struct(i64,i64)
+      Call :: i64
+        Kernel author/project:FicOverlayRegex.cap () :: ref
+        Local c :: ref
+        Lit 1 :: i64
+      Call :: i64
+        Kernel author/project:FicOverlayRegex.cap () :: ref
+        Local c :: ref
+        Lit 3 :: i64
+clone c31   def: author/project:FicOverlayRegex.subs   key: ()   kind: function   params: c:ref string:ref g:i64 acc:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+      Local g :: i64
+      Lit 1 :: i64
+    Local acc :: ref
+    Let a@144:13 :: ref
+      Call :: i64
+        Kernel author/project:FicOverlayRegex.cap () :: ref
+        Local c :: ref
+        Call :: i64
+          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+          Lit 2 :: i64
+          Call :: i64
+            Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+            Lit 2 :: i64
+            Local g :: i64
+      Let sub@147:13 :: ref
+        If :: ref
+          Call :: enum
+            Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+            Local a@144:13 :: i64
+            Lit 0 :: i64
+          Ctor Nothing tag 1 () :: ref
+          Call :: ref
+            Ctor Just tag 0 (v0=ref) :: ref
+            Call :: ref
+              Kernel author/project:FicOverlayRegex.slice () :: ref
+              Local string :: ref
+              Local a@144:13 :: i64
+              Call :: i64
+                Kernel author/project:FicOverlayRegex.cap () :: ref
+                Local c :: ref
+                Call :: i64
+                  Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                  Lit 3 :: i64
+                  Call :: i64
+                    Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+                    Lit 2 :: i64
+                    Local g :: i64
+        Call :: ref
+          Global c31 :: ref
+          Local c :: ref
+          Local string :: ref
+          Call :: i64
+            Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+            Local g :: i64
+            Lit 1 :: i64
+          Call :: ref
+            Kernel elm/core:List.cons (v0=ref) :: ref
+            Local sub@147:13 :: ref
+            Local acc :: ref
+clone c28   def: author/project:FicOverlayRegex.toMatch   key: ()   kind: function   params: re:ref string:ref number:i64 c:ref   result: struct(i64,ref,i64,ref)
+  Record index match number submatches :: struct(i64,ref,i64,ref)
+    Call :: i64
+      Kernel author/project:FicOverlayRegex.cap () :: ref
+      Local c :: ref
+      Lit 2 :: i64
+    Call :: ref
+      Kernel author/project:FicOverlayRegex.slice () :: ref
+      Local string :: ref
+      Call :: i64
+        Kernel author/project:FicOverlayRegex.cap () :: ref
+        Local c :: ref
+        Lit 0 :: i64
+      Call :: i64
+        Kernel author/project:FicOverlayRegex.cap () :: ref
+        Local c :: ref
+        Lit 1 :: i64
+    Local number :: i64
+    Call :: ref
+      Global c31 :: ref
+      Local c :: ref
+      Local string :: ref
+      Call :: i64
+        Kernel author/project:FicOverlayRegex.groups () :: ref
+        Local re :: ref
+      List :: ref
+clone c22   def: author/project:FicOverlayRegex.replaceLoop   key: ()   kind: function   params: limit:i64 number:i64 re:ref f:ref string:ref from:i64 fromCp:i64 prev:i64 acc:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+      Local number :: i64
+      Local limit :: i64
+    Call :: ref
+      Global c25 :: ref
+      Call :: ref
+        Global c26 :: ref
+        Call :: ref
+          Kernel elm/core:List.cons (v0=ref) :: ref
+          Call :: ref
+            Kernel author/project:FicOverlayRegex.slice () :: ref
+            Local string :: ref
+            Local prev :: i64
+            Call :: i64
+              Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+              Lit 1 :: i64
+          Local acc :: ref
+    Let c@232:13 :: ref
+      Call :: ref
+        Kernel author/project:FicOverlayRegex.exec () :: ref
+        Local re :: ref
+        Local string :: ref
+        Local from :: i64
+        Local fromCp :: i64
+      If :: ref
+        Call :: enum
+          Kernel author/project:FicOverlayRegex.found () :: ref
+          Local c@232:13 :: ref
+        Case :: ref
+          Call :: struct(i64,i64)
+            Global c27 :: ref
+            Local string :: ref
+            Local c@232:13 :: ref
+          branch (from2 :: i64, cp2 :: i64) :: struct(i64,i64)
+            Call :: ref
+              Global c22 :: ref
+              Local limit :: i64
+              Call :: i64
+                Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                Local number :: i64
+                Lit 1 :: i64
+              Local re :: ref
+              Local f :: ref
+              Local string :: ref
+              Local from2 :: i64
+              Local cp2 :: i64
+              Call :: i64
+                Kernel author/project:FicOverlayRegex.cap () :: ref
+                Local c@232:13 :: ref
+                Lit 1 :: i64
+              Call :: ref
+                Kernel elm/core:List.cons (v0=ref) :: ref
+                Call :: ref
+                  Local f :: ref
+                  Call :: struct(i64,ref,i64,ref)
+                    Global c28 :: ref
+                    Local re :: ref
+                    Local string :: ref
+                    Local number :: i64
+                    Local c@232:13 :: ref
+                Call :: ref
+                  Kernel elm/core:List.cons (v0=ref) :: ref
+                  Call :: ref
+                    Kernel author/project:FicOverlayRegex.slice () :: ref
+                    Local string :: ref
+                    Local prev :: i64
+                    Call :: i64
+                      Kernel author/project:FicOverlayRegex.cap () :: ref
+                      Local c@232:13 :: ref
+                      Lit 0 :: i64
+                  Local acc :: ref
+        Call :: ref
+          Global c25 :: ref
+          Call :: ref
+            Global c26 :: ref
+            Call :: ref
+              Kernel elm/core:List.cons (v0=ref) :: ref
+              Call :: ref
+                Kernel author/project:FicOverlayRegex.slice () :: ref
+                Local string :: ref
+                Local prev :: i64
+                Call :: i64
+                  Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+                  Lit 1 :: i64
+              Local acc :: ref
+clone c9   def: author/project:FicOverlayRegex.replaceAtMost   key: ()   kind: function   params: n:i64 re:ref f:ref string:ref   result: ref
+  Call :: ref
+    Global c22 :: ref
+    Local n :: i64
+    Lit 1 :: i64
+    Local re :: ref
+    Local f :: ref
+    Local string :: ref
+    Lit 0 :: i64
+    Lit 0 :: i64
+    Lit 0 :: i64
+    List :: ref
+clone c11   def: jorgengranseth/elm-string-format:String.Format.lambda@72:9   key: ()   kind: function   params: _pb11_0:ref   result: ref   lifted-from: c2
+  Call :: ref
+    Global c9 :: ref
+    Local _pa11_0 :: i64
+    Local _pa11_1 :: ref
+    Local _pa11_2 :: ref
+    Local _pb11_0 :: ref
+clone c2   def: jorgengranseth/elm-string-format:String.Format.value   key: ()   kind: function   params: val:ref   result: ref
+  Let emptyBraces@69:9 :: ref
+    Let _oa8_0 :: ref
+      Lit "{{\\s*}}" :: ref
+      Call :: ref
+        Global c7 :: ref
+        Local _oa8_0 :: ref
+    Let _pa11_0 :: ref
+      Lit 1 :: i64
+      Let _pa11_1 :: ref
+        Local emptyBraces@69:9 :: ref
+        Let _pa11_2 :: ref
+          Global c10 :: ref
+          Global c11 :: ref
+clone c14   def: jorgengranseth/elm-string-format:String.Format.lambda@54:36   key: ()   kind: function   params: _a0:struct(i64,ref,i64,ref)   result: ref   lifted-from: c3
+  Local val :: ref
+clone c23   def: author/project:FicOverlayRegex.maxInt   key: ()   kind: value   params:    result: i64
+  Lit 9007199254740991 :: i64
+clone c13   def: author/project:FicOverlayRegex.replace   key: ()   kind: function   params: re:ref f:ref string:ref   result: ref
+  Call :: ref
+    Global c9 :: ref
+    Global c23 :: i64
+    Local re :: ref
+    Local f :: ref
+    Local string :: ref
+clone c15   def: jorgengranseth/elm-string-format:String.Format.lambda@54:9   key: ()   kind: function   params: _pb15_0:ref   result: ref   lifted-from: c3
+  Call :: ref
+    Global c13 :: ref
+    Local _pa15_0 :: ref
+    Local _pa15_1 :: ref
+    Local _pb15_0 :: ref
+clone c3   def: jorgengranseth/elm-string-format:String.Format.namedValue   key: ()   kind: function   params: name:ref val:ref   result: ref
+  Let placeholder@51:9 :: ref
+    Let _oa12_0 :: ref
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Lit "{{\\s*" :: ref
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Local name :: ref
+          Lit "\\s*}}" :: ref
+      Call :: ref
+        Global c7 :: ref
+        Local _oa12_0 :: ref
+    Let _pa15_0 :: ref
+      Local placeholder@51:9 :: ref
+      Let _pa15_1 :: ref
+        Global c14 :: ref
+        Global c15 :: ref
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Let a@14:21 :: struct(unit,unit)
+    Call :: ref
+      Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+      Lit "result" :: ref
+      Let _oa6_0 :: ref
+        Lit "second" :: ref
+        Let _oa6_1 :: ref
+          Let _oa5_0 :: ref
+            Lit "food" :: ref
+            Let _oa5_1 :: ref
+              Lit "cake" :: ref
+              Let _oa5_2 :: ref
+                Let _oa4_0 :: ref
+                  Lit "first" :: ref
+                  Let _oa4_1 :: ref
+                    Lit "{{ }} ate the {{ food }}, {{}} the {{food}}; {{ other }} stays" :: ref
+                    Call :: ref
+                      Call :: ref
+                        Global c2 :: ref
+                        Local _oa4_0 :: ref
+                      Local _oa4_1 :: ref
+                Call :: ref
+                  Call :: ref
+                    Global c3 :: ref
+                    Local _oa5_0 :: ref
+                    Local _oa5_1 :: ref
+                  Local _oa5_2 :: ref
+          Call :: ref
+            Call :: ref
+              Global c2 :: ref
+              Local _oa6_0 :: ref
+            Local _oa6_1 :: ref
+    If :: struct(unit,unit)
+      Call :: enum
+        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Kernel elm/core:String.length () :: ref
+          Call :: ref
+            Kernel elm/core:Debug.toString (v0=type elm/core:String.String) :: ref
+            Local a@14:21 :: ref
+        Lit 0 :: i64
+      Tuple :: struct(unit,unit)
+        Lit () :: unit
+        Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+      Tuple :: struct(unit,unit)
+        Lit () :: unit
+        Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:IndirectRegex.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

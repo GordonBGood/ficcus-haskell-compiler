@@ -1,0 +1,24 @@
+module IndirectBytes exposing (main)
+
+-- L42: elm/bytes is only an indirect dependency (reached through danfishgold/base64-bytes): the overlay of its kernel is still compiled. The output equals Elm 0.19.3 (node).
+
+import Base64
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    a =
+                        Debug.log "result" (List.map (\s -> Maybe.andThen Base64.fromBytes (Base64.toBytes s)) [ "aGVsbG8gd29ybGQ=", "Zmlj", "not base64!" ])
+                in
+                if String.length (Debug.toString a) > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

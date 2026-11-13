@@ -1,0 +1,24 @@
+module IndirectRegex exposing (main)
+
+-- L42: elm/regex is only an indirect dependency (reached through jorgengranseth/elm-string-format): the overlay of its kernel is still compiled. The output equals Elm 0.19.3 (node).
+
+import String.Format
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    a =
+                        Debug.log "result" (String.Format.value "second" (String.Format.namedValue "food" "cake" (String.Format.value "first" "{{ }} ate the {{ food }}, {{}} the {{food}}; {{ other }} stays")))
+                in
+                if String.length (Debug.toString a) > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
