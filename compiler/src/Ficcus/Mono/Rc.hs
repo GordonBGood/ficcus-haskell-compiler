@@ -498,6 +498,13 @@ rcCase :: Ctx -> Env -> Live -> Class -> MExpr -> [(MPat, MExpr)] -> RM MExpr
 rcCase ctx env live cls s bs =
   case mNode s of
     MLocal n | any (aliased n) bs -> rcCase ctx env live cls s (map (unalias n) bs)
+    -- S7 part 3: `(C a b) as x` on an owned variable `n` that dies at the match, where a lifted function captures `x` (so `x` cannot be
+    -- renamed to `n`): `x` takes over the count of `n` (a `let`, a move) and the match is an ordinary constructor match on `x`, which the
+    -- drop specializations (S4, S6) can take apart. Without this the alias and the consumed fields are dup'd and the cell is never reused.
+    MLocal n
+      | aliasLetOn, lateOn, [(p, b)] <- bs, PAlias q a <- mpNode p, a /= n, mpRep p == mRep s, mRep s == CRef, isJust (cellOfPat q)
+      , Map.member n env, not (Set.member n live), not (Set.member n (fvNames ctx b)) ->
+          rcNode ctx env live (MExpr cls (MLetVal a s (MExpr cls (MCase (MExpr (mRep s) (MLocal a)) [(q, b)]))))
     MLocal n -> do { bs' <- branches (rootOf n) (if Map.member n env then Just n else Nothing) env; return (MExpr cls (MCase s bs')) }
     _ | Just s' <- takeCall ctx env s (map snd bs) -> rcCase ctx env live cls s' bs
     _ ->
@@ -647,6 +654,12 @@ takeCall ctx env v rest =
                MCase sc bs -> do { c <- one sc; xs <- mapM (one . snd) bs; return (c + maximum (0 : xs)) }
                _ | null (children e) -> Nothing
                  | otherwise -> fmap sum (mapM one (children e))
+
+
+{-# NOINLINE aliasLetOn #-}
+-- | S7 part 3: the alias of a dying owned scrutinee becomes the owner (`rcCase`); off with `FICCUS_NO_ALIAS_LET=1`
+aliasLetOn :: Bool
+aliasLetOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_ALIAS_LET"))
 
 
 {-# NOINLINE stealOn #-}

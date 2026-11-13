@@ -319,7 +319,10 @@ hybridOwned unions recTypes sccs ctx d =
       let params = Set.fromList (map fst (mdParams d))
           rootOf = roots (Map.fromList [ (n, n) | n <- Set.toList params ]) body
           recData = Set.fromList [ n | (n, p) <- matches body, Set.member n params, recPat p ]
-          toRec = Set.fromList [ q | args <- recCalls body, a <- args, v <- Map.keys (freeVars (ocCaps ctx) a), Just q <- [Map.lookup v rootOf] ]
+          toRec = Set.fromList ([ q | args <- recCalls body, a <- args, v <- Map.keys (freeVars (ocCaps ctx) a), Just q <- [Map.lookup v rootOf] ]
+                                -- S7 part 3: or it is captured by a closure of a function of a recursive group (a stream: the thunk in the
+                                -- new cell holds the parts of the old one, `merge`); the closure takes a count on it in any case
+                                ++ (if hybridCloRule then [ q | c <- recClosures body, (v, vc) <- Map.findWithDefault [] c (ocCaps ctx), refClass vc, Just q <- [Map.lookup v rootOf] ] else []))
       in Set.intersection (projOwned ctx d) (Set.intersection recData toRec)
     _ -> Set.empty
   where
@@ -342,12 +345,24 @@ hybridOwned unions recTypes sccs ctx d =
         PCtor name tag ps ->
           or [ Set.member t recTypes | (t, u) <- Map.toList unions, (n, k, fs) <- usCtors u, n == name, k == tag, length fs == length ps ]
         _ -> False
+    -- the closure values of functions of a recursive group
+    recClosures e =
+      case mNode e of
+        MCall h args | MGlobal _ <- mNode h -> concatMap recClosures args
+        MGlobal c | Map.member c sccs -> [c]
+        _ -> concatMap recClosures (children e)
     -- the calls of recursive functions (this one included)
     recCalls e =
       (case mNode e of
          MCall h args | MGlobal c <- mNode h, Map.member c sccs -> [args]
          _ -> [])
       ++ concatMap recCalls (children e)
+
+
+{-# NOINLINE hybridCloRule #-}
+-- | S7 part 3: the closure clause of the hybrid rule is on unless `FICCUS_NO_HYBRID_CLO=1`
+hybridCloRule :: Bool
+hybridCloRule = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_HYBRID_CLO"))
 
 
 {-# NOINLINE updateRule #-}
