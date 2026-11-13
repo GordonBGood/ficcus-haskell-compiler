@@ -1,0 +1,627 @@
+-- module Clos: problems=0 instances=130 instance-failures=0 defaulted=13
+-- equality-uses: total=0 at-function=0
+module author/project:Clos
+type Stream   id: author/project:Clos.Stream   params: 1   ctors: 1   layout: normal
+  ctor Cons   id: author/project:Clos.Cons   tag: 0   arity: 2   fields: v0 ;; () -> Stream v0   sig: v0 -> (() -> Stream v0) -> Stream v0   kinds: v0:any
+def counterOf :: Dict String Int -> String -> Dict String Int    [117:1-117:10]   id: author/project:Clos.counterOf   sig: Dict String Int -> String -> Dict String Int   kinds:    group: author/project:Clos.counterOf nonrec ann
+  117:11-117:12 PVar d :: Dict String Int
+  118:5-118:67 Lambda :: String -> Dict String Int
+    118:6-118:7 PVar k :: String
+    118:11-118:67 Call :: Dict String Int
+      118:11-118:22 VarForeign :: String -> (Maybe Int -> Maybe Int) -> Dict String Int -> Dict String Int   callee: elm/core:Dict.update   instance: comparable := String, v := Int   sig#: 7f5c8ccc   subst: v0 := String, v1 := Int
+      118:23-118:24 VarLocal :: String
+      118:26-118:64 Lambda :: Maybe Int -> Maybe Int
+        118:27-118:28 PVar v :: Maybe Int
+        118:32-118:63 Call :: Maybe Int
+          118:32-118:36 VarCtor :: Int -> Maybe Int   callee: elm/core:Maybe.Just   instance: a := Int   sig#: c14b2381   subst: v0 := Int
+          118:38-118:63 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            118:38-118:59 Call :: Int
+              118:38-118:55 VarForeign :: Int -> Maybe Int -> Int   callee: elm/core:Maybe.withDefault   instance: a := Int   sig#: be843909   subst: v0 := Int
+              118:56-118:57 Int :: Int
+              118:58-118:59 VarLocal :: Maybe Int
+            118:62-118:63 Int :: Int
+      118:66-118:67 VarLocal :: Dict String Int
+def countAll :: List String -> Dict String Int -> Dict String Int    [122:1-122:9]   id: author/project:Clos.countAll   sig: List String -> Dict String Int -> Dict String Int   kinds:    group: author/project:Clos.countAll rec ann
+  122:10-122:12 PVar ws :: List String
+  122:13-122:14 PVar d :: Dict String Int
+  123:5-128:42 Case :: Dict String Int
+    123:10-123:12 VarLocal :: List String
+    124:9-124:11 PList :: List String
+    125:13-125:14 VarLocal :: Dict String Int
+    127:9-127:18 PCons :: List String
+      127:9-127:10 PVar w :: String
+      127:14-127:18 PVar rest :: List String
+    128:13-128:41 Call :: Dict String Int
+      128:13-128:21 VarTopLevel :: List String -> Dict String Int -> Dict String Int   callee: author/project:Clos.countAll   use: rec
+      128:22-128:26 VarLocal :: List String
+      128:28-128:41 Call :: Dict String Int
+        128:28-128:37 VarTopLevel :: Dict String Int -> String -> Dict String Int   callee: author/project:Clos.counterOf   use: gen
+        128:38-128:39 VarLocal :: Dict String Int
+        128:40-128:41 VarLocal :: String
+def applyAll :: List (Int -> Int) -> Int -> List Int    [137:1-137:9]   id: author/project:Clos.applyAll   sig: List (Int -> Int) -> Int -> List Int   kinds:    group: author/project:Clos.applyAll nonrec ann
+  137:10-137:12 PVar fs :: List (Int -> Int)
+  137:13-137:14 PVar x :: Int
+  138:5-138:28 Call :: List Int
+    138:5-138:13 VarForeign :: ((Int -> Int) -> Int) -> List (Int -> Int) -> List Int   callee: elm/core:List.map   instance: a := Int -> Int, b := Int   sig#: 6a702f63   subst: v0 := Int -> Int, v1 := Int
+    138:15-138:24 Lambda :: (Int -> Int) -> Int
+      138:16-138:17 PVar f :: Int -> Int
+      138:21-138:24 Call :: Int
+        138:21-138:22 VarLocal :: Int -> Int
+        138:23-138:24 VarLocal :: Int
+    138:26-138:28 VarLocal :: List (Int -> Int)
+def compose :: (a -> b) -> (b -> c) -> a -> c    [112:1-112:8]   id: author/project:Clos.compose   sig: (v0 -> v1) -> (v1 -> v2) -> v0 -> v2   kinds: v0:any,v1:any,v2:any   group: author/project:Clos.compose nonrec ann
+  112:9-112:10 PVar f :: a -> b
+  112:11-112:12 PVar g :: b -> c
+  113:5-113:18 Lambda :: a -> c
+    113:6-113:7 PVar x :: a
+    113:11-113:17 Call :: c
+      113:11-113:12 VarLocal :: b -> c
+      113:14-113:17 Call :: b
+        113:14-113:15 VarLocal :: a -> b
+        113:16-113:17 VarLocal :: a
+def unused :: List Int -> Int    [142:1-142:7]   id: author/project:Clos.unused   sig: List Int -> Int   kinds:    group: author/project:Clos.unused nonrec ann
+  142:8-142:10 PVar xs :: List Int
+  def f :: Int -> Int    [144:9-144:10]   id: author/project:Clos.f@144:9   sig: Int -> Int   kinds:    group: author/project:Clos.f@144:9 nonrec inferred
+    145:13-145:37 Lambda :: Int -> Int
+      145:14-145:15 PVar y :: Int
+      145:19-145:37 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        145:19-145:33 Call :: Int
+          145:19-145:30 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+          145:31-145:33 VarLocal :: List Int
+        145:36-145:37 VarLocal :: Int
+  147:5-151:23 If :: Int
+    147:8-147:23 Call :: Bool
+      147:8-147:20 VarForeign :: List Int -> Bool   callee: elm/core:List.isEmpty   instance: a := Int   sig#: 7c72915b   subst: v0 := Int
+      147:21-147:23 VarLocal :: List Int
+    148:9-148:12 Call :: Int
+      148:9-148:10 VarLocal :: Int -> Int   callee: author/project:Clos.f@144:9   use: gen
+      148:11-148:12 Int :: Int
+    151:9-151:23 Call :: Int
+      151:9-151:20 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+      151:21-151:23 VarLocal :: List Int
+def takeS :: Int -> Stream a -> List a    [22:1-22:6]   id: author/project:Clos.takeS   sig: Int -> Stream v0 -> List v0   kinds: v0:any   group: author/project:Clos.takeS rec ann
+  22:7-22:8 PVar k :: Int
+  22:9-22:10 PVar s :: Stream a
+  23:5-29:45 Case :: List a
+    23:10-23:11 VarLocal :: Stream a
+    24:9-24:20 PCtor Cons :: Stream a
+      24:14-24:15 PVar h :: a
+      24:16-24:20 PVar rest :: () -> Stream a
+    25:13-29:45 If :: List a
+      25:16-25:22 Binop :: Bool   callee: elm/core:Basics.le   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        25:16-25:17 VarLocal :: Int
+        25:21-25:22 Int :: Int
+      26:17-26:19 List :: List a
+      29:17-29:45 Binop :: List a   callee: elm/core:List.cons   instance: a := a   sig#: ddd4c5f2   subst: v0 := <<author/project:Clos.takeS|v0>>
+        29:17-29:18 VarLocal :: a
+        29:22-29:44 Call :: List a
+          29:22-29:27 VarTopLevel :: Int -> Stream a -> List a   callee: author/project:Clos.takeS   use: rec   sig#: b53c17a3   subst: v0 := <<author/project:Clos.takeS|v0>>
+          29:29-29:34 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            29:29-29:30 VarLocal :: Int
+            29:33-29:34 Int :: Int
+          29:37-29:44 Call :: Stream a
+            29:37-29:41 VarLocal :: () -> Stream a
+            29:42-29:44 Unit :: ()
+def twice :: Stream a -> ( List a, List a )    [48:1-48:6]   id: author/project:Clos.twice   sig: Stream v0 -> ( List v0, List v0 )   kinds: v0:any   group: author/project:Clos.twice nonrec ann
+  48:7-48:8 PVar s :: Stream a
+  49:5-51:53 Case :: ( List a, List a )
+    49:10-49:11 VarLocal :: Stream a
+    50:9-50:20 PCtor Cons :: Stream a
+      50:14-50:15 PAnything :: a
+      50:16-50:20 PVar rest :: () -> Stream a
+    51:13-51:53 Pair :: ( List a, List a )
+      51:15-51:31 Call :: List a
+        51:15-51:20 VarTopLevel :: Int -> Stream a -> List a   callee: author/project:Clos.takeS   use: gen   instance: a1 := a   sig#: b53c17a3   subst: v0 := <<author/project:Clos.twice|v0>>
+        51:21-51:22 Int :: Int
+        51:24-51:31 Call :: Stream a
+          51:24-51:28 VarLocal :: () -> Stream a
+          51:29-51:31 Unit :: ()
+      51:34-51:50 Call :: List a
+        51:34-51:39 VarTopLevel :: Int -> Stream a -> List a   callee: author/project:Clos.takeS   use: gen   instance: a1 := a   sig#: b53c17a3   subst: v0 := <<author/project:Clos.twice|v0>>
+        51:40-51:41 Int :: Int
+        51:43-51:50 Call :: Stream a
+          51:43-51:47 VarLocal :: () -> Stream a
+          51:48-51:50 Unit :: ()
+def greet :: String -> List String -> String -> String    [98:1-98:6]   id: author/project:Clos.greet   sig: String -> List String -> String -> String   kinds:    group: author/project:Clos.greet nonrec ann
+  98:7-98:15 PVar greeting :: String
+  98:16-98:21 PVar names :: List String
+  99:5-99:53 Lambda :: String -> String
+    99:6-99:9 PVar sep :: String
+    99:13-99:53 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+      99:13-99:21 VarLocal :: String
+      99:25-99:53 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        99:25-99:28 Str :: String
+        99:32-99:53 Call :: String
+          99:32-99:43 VarForeign :: String -> List String -> String   callee: elm/core:String.join
+          99:44-99:47 VarLocal :: String
+          99:48-99:53 VarLocal :: List String
+def adder :: Acc -> String -> Int -> Acc    [107:1-107:6]   id: author/project:Clos.adder   sig: Acc -> String -> Int -> Acc   kinds:    group: author/project:Clos.adder nonrec ann
+  107:7-107:10 PVar acc :: Acc
+  108:5-108:68 Lambda :: String -> Int -> Acc
+    108:6-108:10 PVar name :: String
+    108:11-108:12 PVar n :: Int
+    108:16-108:68 Record :: { names : List String, total : Int }
+      108:49-108:66 Binop :: List String   callee: elm/core:List.cons   instance: a := String   sig#: ddd4c5f2   subst: v0 := String
+        108:49-108:53 VarLocal :: String
+        108:57-108:66 Access :: List String
+          108:57-108:60 VarLocal :: { names : List String, total : Int }
+      108:26-108:39 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        108:26-108:35 Access :: Int
+          108:26-108:29 VarLocal :: { names : List String, total : Int }
+        108:38-108:39 VarLocal :: Int
+def zipS :: Stream a -> Stream b -> Stream ( a, b )    [40:1-40:5]   id: author/project:Clos.zipS   sig: Stream v0 -> Stream v1 -> Stream ( v0, v1 )   kinds: v0:any,v1:any   group: author/project:Clos.zipS rec ann
+  40:6-40:8 PVar xs :: Stream a
+  40:9-40:11 PVar ys :: Stream b
+  41:5-43:56 Case :: Stream ( a, b )
+    41:10-41:20 Pair :: ( Stream a, Stream b )
+      41:12-41:14 VarLocal :: Stream a
+      41:16-41:18 VarLocal :: Stream b
+    42:9-42:33 PPair :: ( Stream a, Stream b )
+      42:11-42:20 PCtor Cons :: Stream a
+        42:16-42:17 PVar x :: a
+        42:18-42:20 PVar xr :: () -> Stream a
+      42:22-42:31 PCtor Cons :: Stream b
+        42:27-42:28 PVar y :: b
+        42:29-42:31 PVar yr :: () -> Stream b
+    43:13-43:55 Call :: Stream ( a, b )
+      43:13-43:17 VarCtor :: ( a, b ) -> (() -> Stream ( a, b )) -> Stream ( a, b )   callee: author/project:Clos.Cons   instance: a := ( a, b )   sig#: 7ae0dcab   subst: v0 := ( <<author/project:Clos.zipS|v0>>, <<author/project:Clos.zipS|v1>> )
+      43:18-43:26 Pair :: ( a, b )
+        43:20-43:21 VarLocal :: a
+        43:23-43:24 VarLocal :: b
+      43:28-43:55 Lambda :: () -> Stream ( a, b )
+        43:29-43:31 PUnit :: ()
+        43:35-43:54 Call :: Stream ( a, b )
+          43:35-43:39 VarTopLevel :: Stream a -> Stream b -> Stream ( a, b )   callee: author/project:Clos.zipS   use: rec   sig#: 47f1cbde   subst: v0 := <<author/project:Clos.zipS|v0>>, v1 := <<author/project:Clos.zipS|v1>>
+          43:41-43:46 Call :: Stream a
+            43:41-43:43 VarLocal :: () -> Stream a
+            43:44-43:46 Unit :: ()
+          43:49-43:54 Call :: Stream b
+            43:49-43:51 VarLocal :: () -> Stream b
+            43:52-43:54 Unit :: ()
+def putL :: Array Int -> Int -> Int -> Array Int    [60:1-60:5]   id: author/project:Clos.putL   sig: Array Int -> Int -> Int -> Array Int   kinds:    group: author/project:Clos.putL nonrec ann
+  60:6-60:7 PVar a :: Array Int
+  61:5-61:47 Lambda :: Int -> Int -> Array Int
+    61:6-61:7 PVar i :: Int
+    61:8-61:9 PVar v :: Int
+    61:13-61:47 Call :: Array Int
+      61:13-61:22 VarForeign :: Int -> Int -> Array Int -> Array Int   callee: elm/core:Array.set   instance: a := Int   sig#: 3119be98   subst: v0 := Int
+      61:23-61:24 VarLocal :: Int
+      61:26-61:44 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        61:26-61:27 VarLocal :: Int
+        61:30-61:44 Call :: Int
+          61:30-61:42 VarForeign :: Array Int -> Int   callee: elm/core:Array.length   instance: a := Int   sig#: 46a433c9   subst: v0 := Int
+          61:43-61:44 VarLocal :: Array Int
+      61:46-61:47 VarLocal :: Array Int
+def once :: Int -> (Int -> Int -> Array Int) -> Array Int    [65:1-65:5]   id: author/project:Clos.once   sig: Int -> (Int -> Int -> Array Int) -> Array Int   kinds:    group: author/project:Clos.once nonrec ann
+  65:6-65:7 PVar i :: Int
+  65:8-65:9 PVar f :: Int -> Int -> Array Int
+  66:5-66:20 Call :: Array Int
+    66:5-66:6 VarLocal :: Int -> Int -> Array Int
+    66:8-66:17 Call :: Int
+      66:8-66:13 VarForeign :: Int -> Int -> Int   callee: elm/core:Basics.modBy
+      66:14-66:15 Int :: Int
+      66:16-66:17 VarLocal :: Int
+    66:19-66:20 VarLocal :: Int
+def fillL :: Int -> Int -> Array Int -> Array Int    [79:1-79:6]   id: author/project:Clos.fillL   sig: Int -> Int -> Array Int -> Array Int   kinds:    group: author/project:Clos.fillL rec ann
+  79:7-79:8 PVar i :: Int
+  79:9-79:10 PVar n :: Int
+  79:11-79:12 PVar a :: Array Int
+  80:5-84:42 If :: Array Int
+    80:8-80:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      80:8-80:9 VarLocal :: Int
+      80:13-80:14 VarLocal :: Int
+    81:9-81:10 VarLocal :: Array Int
+    84:9-84:40 Call :: Array Int
+      84:9-84:14 VarTopLevel :: Int -> Int -> Array Int -> Array Int   callee: author/project:Clos.fillL   use: rec
+      84:16-84:21 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        84:16-84:17 VarLocal :: Int
+        84:20-84:21 Int :: Int
+      84:23-84:24 VarLocal :: Int
+      84:26-84:40 Call :: Array Int
+        84:26-84:30 VarTopLevel :: Int -> (Int -> Int -> Array Int) -> Array Int   callee: author/project:Clos.once   use: gen
+        84:31-84:32 VarLocal :: Int
+        84:34-84:40 Call :: Int -> Int -> Array Int
+          84:34-84:38 VarTopLevel :: Array Int -> Int -> Int -> Array Int   callee: author/project:Clos.putL   use: gen
+          84:39-84:40 VarLocal :: Array Int
+def mapS :: (a -> b) -> Stream a -> Stream b    [33:1-33:5]   id: author/project:Clos.mapS   sig: (v0 -> v1) -> Stream v0 -> Stream v1   kinds: v0:any,v1:any   group: author/project:Clos.mapS rec ann
+  33:6-33:7 PVar f :: a -> b
+  33:8-33:9 PVar s :: Stream a
+  34:5-36:49 Case :: Stream b
+    34:10-34:11 VarLocal :: Stream a
+    35:9-35:20 PCtor Cons :: Stream a
+      35:14-35:15 PVar h :: a
+      35:16-35:20 PVar rest :: () -> Stream a
+    36:13-36:48 Call :: Stream b
+      36:13-36:17 VarCtor :: b -> (() -> Stream b) -> Stream b   callee: author/project:Clos.Cons   instance: a := b   sig#: 7ae0dcab   subst: v0 := <<author/project:Clos.mapS|v1>>
+      36:19-36:22 Call :: b
+        36:19-36:20 VarLocal :: a -> b
+        36:21-36:22 VarLocal :: a
+      36:25-36:48 Lambda :: () -> Stream b
+        36:26-36:28 PUnit :: ()
+        36:32-36:47 Call :: Stream b
+          36:32-36:36 VarTopLevel :: (a -> b) -> Stream a -> Stream b   callee: author/project:Clos.mapS   use: rec   sig#: 26aeeb98   subst: v0 := <<author/project:Clos.mapS|v0>>, v1 := <<author/project:Clos.mapS|v1>>
+          36:37-36:38 VarLocal :: a -> b
+          36:40-36:47 Call :: Stream a
+            36:40-36:44 VarLocal :: () -> Stream a
+            36:45-36:47 Unit :: ()
+def from :: Int -> List Int -> Stream ( Int, List Int )    [17:1-17:5]   id: author/project:Clos.from   sig: Int -> List Int -> Stream ( Int, List Int )   kinds:    group: author/project:Clos.from rec ann
+  17:6-17:7 PVar n :: Int
+  17:8-17:12 PVar seen :: List Int
+  18:5-18:66 Call :: Stream ( Int, List Int )
+    18:5-18:9 VarCtor :: ( Int, List Int ) -> (() -> Stream ( Int, List Int )) -> Stream ( Int, List Int )   callee: author/project:Clos.Cons   instance: a := ( Int, List Int )   sig#: 7ae0dcab   subst: v0 := ( Int, List Int )
+    18:10-18:21 Pair :: ( Int, List Int )
+      18:12-18:13 VarLocal :: Int
+      18:15-18:19 VarLocal :: List Int
+    18:23-18:66 Lambda :: () -> Stream ( Int, List Int )
+      18:24-18:26 PUnit :: ()
+      18:30-18:65 Call :: Stream ( Int, List Int )
+        18:30-18:34 VarTopLevel :: Int -> List Int -> Stream ( Int, List Int )   callee: author/project:Clos.from   use: rec
+        18:36-18:41 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          18:36-18:37 VarLocal :: Int
+          18:40-18:41 Int :: Int
+        18:44-18:65 Binop :: List Int   callee: elm/core:List.cons   instance: a := Int   sig#: ddd4c5f2   subst: v0 := Int
+          18:44-18:45 VarLocal :: Int
+          18:49-18:65 Call :: List Int
+            18:49-18:58 VarForeign :: Int -> List Int -> List Int   callee: elm/core:List.take   instance: a := Int   sig#: 7b4b0ecd   subst: v0 := Int
+            18:59-18:60 Int :: Int
+            18:61-18:65 VarLocal :: List Int
+def both :: Array Int -> ( Array Int, Array Int )    [89:1-89:5]   id: author/project:Clos.both   sig: Array Int -> ( Array Int, Array Int )   kinds:    group: author/project:Clos.both nonrec ann
+  89:6-89:7 PVar a :: Array Int
+  def f :: Int -> Int -> Array Int    [91:9-91:10]   id: author/project:Clos.f@91:9   sig: Int -> Int -> Array Int   kinds:    group: author/project:Clos.f@91:9 nonrec inferred
+    92:13-92:19 Call :: Int -> Int -> Array Int
+      92:13-92:17 VarTopLevel :: Array Int -> Int -> Int -> Array Int   callee: author/project:Clos.putL   use: gen
+      92:18-92:19 VarLocal :: Array Int
+  94:5-94:25 Pair :: ( Array Int, Array Int )
+    94:7-94:14 Call :: Array Int
+      94:7-94:8 VarLocal :: Int -> Int -> Array Int   callee: author/project:Clos.f@91:9   use: gen
+      94:9-94:10 Int :: Int
+      94:11-94:14 Int :: Int
+    94:16-94:23 Call :: Array Int
+      94:16-94:17 VarLocal :: Int -> Int -> Array Int   callee: author/project:Clos.f@91:9   use: gen
+      94:18-94:19 Int :: Int
+      94:20-94:23 Int :: Int
+def add3 :: List Int -> Int -> Int -> Int    [132:1-132:5]   id: author/project:Clos.add3   sig: List Int -> Int -> Int -> Int   kinds:    group: author/project:Clos.add3 nonrec ann
+  132:6-132:8 PVar xs :: List Int
+  132:9-132:10 PVar b :: Int
+  132:11-132:12 PVar c :: Int
+  133:5-133:24 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    133:5-133:20 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      133:5-133:16 Call :: Int
+        133:5-133:13 VarForeign :: List Int -> Int   callee: elm/core:List.sum   instance: number := Int   sig#: 78b59c50   subst: v0 := Int
+        133:14-133:16 VarLocal :: List Int
+      133:19-133:20 VarLocal :: Int
+    133:23-133:24 VarLocal :: Int
+def put :: Array Int -> Int -> Int -> Array Int    [55:1-55:4]   id: author/project:Clos.put   sig: Array Int -> Int -> Int -> Array Int   kinds:    group: author/project:Clos.put nonrec ann
+  55:5-55:6 PVar a :: Array Int
+  55:7-55:8 PVar i :: Int
+  55:9-55:10 PVar v :: Int
+  56:5-56:20 Call :: Array Int
+    56:5-56:14 VarForeign :: Int -> Int -> Array Int -> Array Int   callee: elm/core:Array.set   instance: a := Int   sig#: 3119be98   subst: v0 := Int
+    56:15-56:16 VarLocal :: Int
+    56:17-56:18 VarLocal :: Int
+    56:19-56:20 VarLocal :: Array Int
+def fill :: Int -> Int -> Array Int -> Array Int    [70:1-70:5]   id: author/project:Clos.fill   sig: Int -> Int -> Array Int -> Array Int   kinds:    group: author/project:Clos.fill rec ann
+  70:6-70:7 PVar i :: Int
+  70:8-70:9 PVar n :: Int
+  70:10-70:11 PVar a :: Array Int
+  71:5-75:40 If :: Array Int
+    71:8-71:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      71:8-71:9 VarLocal :: Int
+      71:13-71:14 VarLocal :: Int
+    72:9-72:10 VarLocal :: Array Int
+    75:9-75:38 Call :: Array Int
+      75:9-75:13 VarTopLevel :: Int -> Int -> Array Int -> Array Int   callee: author/project:Clos.fill   use: rec
+      75:15-75:20 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        75:15-75:16 VarLocal :: Int
+        75:19-75:20 Int :: Int
+      75:22-75:23 VarLocal :: Int
+      75:25-75:38 Call :: Array Int
+        75:25-75:29 VarTopLevel :: Int -> (Int -> Int -> Array Int) -> Array Int   callee: author/project:Clos.once   use: gen
+        75:30-75:31 VarLocal :: Int
+        75:33-75:38 Call :: Int -> Int -> Array Int
+          75:33-75:36 VarTopLevel :: Array Int -> Int -> Int -> Array Int   callee: author/project:Clos.put   use: gen
+          75:37-75:38 VarLocal :: Array Int
+def main :: Program () () ()    [155:1-155:5]   id: author/project:Clos.main   sig: Program () () ()   kinds:    group: author/project:Clos.main nonrec ann
+  156:5-220:10 Call :: Program () () ()
+    156:5-156:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    157:9-220:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      158:13-217:33 Lambda :: () -> ( (), Cmd () )
+        158:14-158:15 PAnything :: ()
+        def partial :: Int -> Int -> Int    [205:21-205:28]   id: author/project:Clos.partial@205:21   sig: Int -> Int -> Int   kinds:    group: author/project:Clos.partial@205:21 nonrec inferred
+          206:25-206:41 Call :: Int -> Int -> Int
+            206:25-206:29 VarTopLevel :: List Int -> Int -> Int -> Int   callee: author/project:Clos.add3   use: gen
+            206:30-206:41 List :: List Int
+              206:32-206:33 Int :: Int
+              206:35-206:36 Int :: Int
+              206:38-206:39 Int :: Int
+        def base :: Array number    [178:21-178:25]   id: author/project:Clos.base@178:21   sig: Array v0   kinds: v0:number   group: author/project:Clos.base@178:21 nonrec inferred
+          179:25-179:51 Call :: Array number
+            179:25-179:39 VarForeign :: List number -> Array number   callee: elm/core:Array.fromList   instance: a := number   sig#: ad16019a   subst: v0 := <<author/project:Clos.base@178:21|v0>>
+            179:40-179:51 List :: List number
+              179:42-179:43 Int :: number
+              179:45-179:46 Int :: number
+              179:48-179:49 Int :: number
+        def inc :: number1 -> number1    [196:21-196:24]   id: author/project:Clos.inc@196:21   sig: v0 -> v0   kinds: v0:number   group: author/project:Clos.inc@196:21 nonrec inferred
+          197:25-197:60 Call :: number1 -> number1
+            197:25-197:32 VarTopLevel :: (number1 -> List number1) -> (List number1 -> number1) -> number1 -> number1   callee: author/project:Clos.compose   use: gen   instance: a := number1, b := List number1, c := number1   sig#: 1a546f22   subst: v0 := <<author/project:Clos.inc@196:21|v0>>, v1 := List <<author/project:Clos.inc@196:21|v0>>, v2 := <<author/project:Clos.inc@196:21|v0>>
+            197:34-197:50 Lambda :: number1 -> List number1
+              197:35-197:36 PVar x :: number1
+              197:40-197:50 Binop :: List number1   callee: elm/core:List.cons   instance: a := number1   sig#: ddd4c5f2   subst: v0 := <<author/project:Clos.inc@196:21|v0>>
+                197:40-197:41 VarLocal :: number1
+                197:45-197:50 List :: List number1
+                  197:47-197:48 Int :: number1
+            197:52-197:60 VarForeign :: List number1 -> number1   callee: elm/core:List.sum   instance: number := number1   sig#: 78b59c50   subst: v0 := <<author/project:Clos.inc@196:21|v0>>
+        160:21-160:22 PAnything :: List ( Int, List Int )
+        161:25-161:63 Call :: List ( Int, List Int )
+          161:25-161:34 VarDebug :: String -> List ( Int, List Int ) -> List ( Int, List Int )   callee: elm/core:Debug.log   instance: a := List ( Int, List Int )   sig#: 6ecaa5dd   subst: v0 := List ( Int, List Int )
+          161:35-161:43 Str :: String
+          161:45-161:63 Call :: List ( Int, List Int )
+            161:45-161:50 VarTopLevel :: Int -> Stream ( Int, List Int ) -> List ( Int, List Int )   callee: author/project:Clos.takeS   use: gen   instance: a1 := ( Int, List Int )   sig#: b53c17a3   subst: v0 := ( Int, List Int )
+            161:51-161:52 Int :: Int
+            161:54-161:63 Call :: Stream ( Int, List Int )
+              161:54-161:58 VarTopLevel :: Int -> List Int -> Stream ( Int, List Int )   callee: author/project:Clos.from   use: gen
+              161:59-161:60 Int :: Int
+              161:61-161:63 List :: List Int
+        163:21-163:22 PAnything :: List Int
+        164:25-164:111 Call :: List Int
+          164:25-164:34 VarDebug :: String -> List Int -> List Int   callee: elm/core:Debug.log   instance: a := List Int   sig#: 6ecaa5dd   subst: v0 := List Int
+          164:35-164:41 Str :: String
+          164:43-164:111 Call :: List Int
+            164:43-164:48 VarTopLevel :: Int -> Stream Int -> List Int   callee: author/project:Clos.takeS   use: gen   instance: a1 := Int   sig#: b53c17a3   subst: v0 := Int
+            164:49-164:50 Int :: Int
+            164:52-164:111 Call :: Stream Int
+              164:52-164:56 VarTopLevel :: (( Int, List Int ) -> Int) -> Stream ( Int, List Int ) -> Stream Int   callee: author/project:Clos.mapS   use: gen   instance: a2 := ( Int, List Int ), b1 := Int   sig#: 26aeeb98   subst: v0 := ( Int, List Int ), v1 := Int
+              164:58-164:99 Lambda :: ( Int, List Int ) -> Int
+                164:59-164:70 PPair :: ( Int, List Int )
+                  164:61-164:62 PVar n :: Int
+                  164:64-164:68 PVar seen :: List Int
+                164:74-164:99 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  164:74-164:80 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                    164:74-164:75 VarLocal :: Int
+                    164:78-164:80 Int :: Int
+                  164:83-164:99 Call :: Int
+                    164:83-164:94 VarForeign :: List Int -> Int   callee: elm/core:List.length   instance: a := Int   sig#: 8f686fa0   subst: v0 := Int
+                    164:95-164:99 VarLocal :: List Int
+              164:102-164:111 Call :: Stream ( Int, List Int )
+                164:102-164:106 VarTopLevel :: Int -> List Int -> Stream ( Int, List Int )   callee: author/project:Clos.from   use: gen
+                164:107-164:108 Int :: Int
+                164:109-164:111 List :: List Int
+        166:21-166:22 PAnything :: List ( ( Int, List Int ), Int )
+        167:25-167:101 Call :: List ( ( Int, List Int ), Int )
+          167:25-167:34 VarDebug :: String -> List ( ( Int, List Int ), Int ) -> List ( ( Int, List Int ), Int )   callee: elm/core:Debug.log   instance: a := List ( ( Int, List Int ), Int )   sig#: 6ecaa5dd   subst: v0 := List ( ( Int, List Int ), Int )
+          167:35-167:41 Str :: String
+          167:43-167:101 Call :: List ( ( Int, List Int ), Int )
+            167:43-167:48 VarTopLevel :: Int -> Stream ( ( Int, List Int ), Int ) -> List ( ( Int, List Int ), Int )   callee: author/project:Clos.takeS   use: gen   instance: a1 := ( ( Int, List Int ), Int )   sig#: b53c17a3   subst: v0 := ( ( Int, List Int ), Int )
+            167:49-167:50 Int :: Int
+            167:52-167:101 Call :: Stream ( ( Int, List Int ), Int )
+              167:52-167:56 VarTopLevel :: Stream ( Int, List Int ) -> Stream Int -> Stream ( ( Int, List Int ), Int )   callee: author/project:Clos.zipS   use: gen   instance: a3 := ( Int, List Int ), b2 := Int   sig#: 47f1cbde   subst: v0 := ( Int, List Int ), v1 := Int
+              167:58-167:67 Call :: Stream ( Int, List Int )
+                167:58-167:62 VarTopLevel :: Int -> List Int -> Stream ( Int, List Int )   callee: author/project:Clos.from   use: gen
+                167:63-167:64 Int :: Int
+                167:65-167:67 List :: List Int
+              167:70-167:101 Call :: Stream Int
+                167:70-167:74 VarTopLevel :: (( Int, List Int ) -> Int) -> Stream ( Int, List Int ) -> Stream Int   callee: author/project:Clos.mapS   use: gen   instance: a2 := ( Int, List Int ), b1 := Int   sig#: 26aeeb98   subst: v0 := ( Int, List Int ), v1 := Int
+                167:75-167:86 VarForeign :: ( Int, List Int ) -> Int   callee: elm/core:Tuple.first   instance: a := Int, b := List Int   sig#: ee0f5e96   subst: v0 := Int, v1 := List Int
+                167:88-167:101 Call :: Stream ( Int, List Int )
+                  167:88-167:92 VarTopLevel :: Int -> List Int -> Stream ( Int, List Int )   callee: author/project:Clos.from   use: gen
+                  167:93-167:95 Int :: Int
+                  167:96-167:101 List :: List Int
+                    167:98-167:99 Int :: Int
+        169:21-169:22 PAnything :: ( List ( Int, List Int ), List ( Int, List Int ) )
+        170:25-170:69 Call :: ( List ( Int, List Int ), List ( Int, List Int ) )
+          170:25-170:34 VarDebug :: String -> ( List ( Int, List Int ), List ( Int, List Int ) ) -> ( List ( Int, List Int ), List ( Int, List Int ) )   callee: elm/core:Debug.log   instance: a := ( List ( Int, List Int ), List ( Int, List Int ) )   sig#: 6ecaa5dd   subst: v0 := ( List ( Int, List Int ), List ( Int, List Int ) )
+          170:35-170:42 Str :: String
+          170:44-170:69 Call :: ( List ( Int, List Int ), List ( Int, List Int ) )
+            170:44-170:49 VarTopLevel :: Stream ( Int, List Int ) -> ( List ( Int, List Int ), List ( Int, List Int ) )   callee: author/project:Clos.twice   use: gen   instance: a4 := ( Int, List Int )   sig#: 4538b962   subst: v0 := ( Int, List Int )
+            170:51-170:69 Call :: Stream ( Int, List Int )
+              170:51-170:55 VarTopLevel :: Int -> List Int -> Stream ( Int, List Int )   callee: author/project:Clos.from   use: gen
+              170:56-170:57 Int :: Int
+              170:58-170:69 List :: List Int
+                170:60-170:61 Int :: Int
+                170:63-170:64 Int :: Int
+                170:66-170:67 Int :: Int
+        172:21-172:22 PAnything :: List Int
+        173:25-173:84 Call :: List Int
+          173:25-173:34 VarDebug :: String -> List Int -> List Int   callee: elm/core:Debug.log   instance: a := List Int   sig#: 6ecaa5dd   subst: v0 := List Int
+          173:35-173:41 Str :: String
+          173:43-173:84 Call :: List Int
+            173:43-173:55 VarForeign :: Array Int -> List Int   callee: elm/core:Array.toList   instance: a := Int   sig#: 7d46edeb   subst: v0 := Int
+            173:57-173:84 Call :: Array Int
+              173:57-173:61 VarTopLevel :: Int -> Int -> Array Int -> Array Int   callee: author/project:Clos.fill   use: gen
+              173:62-173:63 Int :: Int
+              173:64-173:66 Int :: Int
+              173:68-173:84 Call :: Array Int
+                173:68-173:80 VarForeign :: Int -> Int -> Array Int   callee: elm/core:Array.repeat   instance: a := Int   sig#: 56f3bd0e   subst: v0 := Int
+                173:81-173:82 Int :: Int
+                173:83-173:84 Int :: Int
+        175:21-175:22 PAnything :: List Int
+        176:25-176:86 Call :: List Int
+          176:25-176:34 VarDebug :: String -> List Int -> List Int   callee: elm/core:Debug.log   instance: a := List Int   sig#: 6ecaa5dd   subst: v0 := List Int
+          176:35-176:42 Str :: String
+          176:44-176:86 Call :: List Int
+            176:44-176:56 VarForeign :: Array Int -> List Int   callee: elm/core:Array.toList   instance: a := Int   sig#: 7d46edeb   subst: v0 := Int
+            176:58-176:86 Call :: Array Int
+              176:58-176:63 VarTopLevel :: Int -> Int -> Array Int -> Array Int   callee: author/project:Clos.fillL   use: gen
+              176:64-176:65 Int :: Int
+              176:66-176:68 Int :: Int
+              176:70-176:86 Call :: Array Int
+                176:70-176:82 VarForeign :: Int -> Int -> Array Int   callee: elm/core:Array.repeat   instance: a := Int   sig#: 56f3bd0e   subst: v0 := Int
+                176:83-176:84 Int :: Int
+                176:85-176:86 Int :: Int
+        181:21-181:22 PAnything :: ( List Int, List Int )
+        182:25-182:93 Call :: ( List Int, List Int )
+          182:25-182:34 VarDebug :: String -> ( List Int, List Int ) -> ( List Int, List Int )   callee: elm/core:Debug.log   instance: a := ( List Int, List Int )   sig#: 6ecaa5dd   subst: v0 := ( List Int, List Int )
+          182:35-182:41 Str :: String
+          182:43-182:93 Call :: ( List Int, List Int )
+            182:43-182:56 VarForeign :: (Array Int -> List Int) -> (Array Int -> List Int) -> ( Array Int, Array Int ) -> ( List Int, List Int )   callee: elm/core:Tuple.mapBoth   instance: a := Array Int, b := Array Int, x := List Int, y := List Int   sig#: 328cf9e3   subst: v0 := Array Int, v1 := List Int, v2 := Array Int, v3 := List Int
+            182:57-182:69 VarForeign :: Array Int -> List Int   callee: elm/core:Array.toList   instance: a := Int   sig#: 7d46edeb   subst: v0 := Int
+            182:70-182:82 VarForeign :: Array Int -> List Int   callee: elm/core:Array.toList   instance: a := Int   sig#: 7d46edeb   subst: v0 := Int
+            182:84-182:93 Call :: ( Array Int, Array Int )
+              182:84-182:88 VarTopLevel :: Array Int -> ( Array Int, Array Int )   callee: author/project:Clos.both   use: gen
+              182:89-182:93 VarLocal :: Array Int   callee: author/project:Clos.base@178:21   use: gen   instance: number := Int   sig#: d16a3311   subst: v0 := Int
+        184:21-184:22 PAnything :: List Int   <= List number2
+        185:25-185:66 Call :: List Int   <= List number2
+          185:25-185:34 VarDebug :: String -> List Int -> List Int   <= String -> List number2 -> List number2   callee: elm/core:Debug.log   instance: a := List Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := List Int
+          185:35-185:47 Str :: String
+          185:49-185:66 Call :: List Int   <= List number2
+            185:49-185:61 VarForeign :: Array Int -> List Int   <= Array number2 -> List number2   callee: elm/core:Array.toList   instance: a := Int (defaulted)   sig#: 7d46edeb   subst: v0 := Int
+            185:62-185:66 VarLocal :: Array Int   <= Array number2   callee: author/project:Clos.base@178:21   use: gen   instance: number := Int (defaulted)   sig#: d16a3311   subst: v0 := Int
+        193:21-193:22 PAnything :: Acc
+        194:25-194:95 Call :: Acc
+          194:25-194:34 VarDebug :: String -> Acc -> Acc   callee: elm/core:Debug.log   instance: a := { names : List String, total : Int }   sig#: 6ecaa5dd   subst: v0 := { names : List String, total : Int }
+          194:35-194:42 Str :: String
+          194:44-194:95 Call :: Acc
+            194:44-194:49 VarTopLevel :: Acc -> String -> Int -> Acc   callee: author/project:Clos.adder   use: gen
+            194:51-194:88 Call :: Acc
+              194:51-194:56 VarTopLevel :: Acc -> String -> Int -> Acc   callee: author/project:Clos.adder   use: gen
+              194:57-194:82 Record :: Acc
+                194:78-194:80 List :: List String
+                194:67-194:68 Int :: Int
+              194:83-194:86 Str :: String
+              194:87-194:88 Int :: Int
+            194:90-194:93 Str :: String
+            194:94-194:95 Int :: Int
+        199:21-199:22 PAnything :: ( Int, String )   <= ( number3, String )
+        200:25-200:111 Call :: ( Int, String )   <= ( number3, String )
+          200:25-200:34 VarDebug :: String -> ( Int, String ) -> ( Int, String )   <= String -> ( number3, String ) -> ( number3, String )   callee: elm/core:Debug.log   instance: a := ( Int, String ) (defaulted)   sig#: 6ecaa5dd   subst: v0 := ( Int, String )
+          200:35-200:44 Str :: String
+          200:45-200:111 Pair :: ( Int, String )   <= ( number3, String )
+            200:47-200:52 Call :: Int   <= number3
+              200:47-200:50 VarLocal :: Int -> Int   <= number3 -> number3   callee: author/project:Clos.inc@196:21   use: gen   instance: number1 := Int (defaulted)   sig#: 1f734da5   subst: v0 := Int
+              200:51-200:52 Int :: Int   <= number3
+            200:54-200:109 Call :: String
+              200:54-200:61 VarTopLevel :: (Int -> String) -> (String -> String) -> Int -> String   callee: author/project:Clos.compose   use: gen   instance: a := Int, b := String, c := String   sig#: 1a546f22   subst: v0 := Int, v1 := String, v2 := String
+              200:63-200:89 Call :: Int -> String
+                200:63-200:70 VarTopLevel :: (Int -> Int) -> (Int -> String) -> Int -> String   callee: author/project:Clos.compose   use: gen   instance: a := Int, b := Int, c := String   sig#: 1a546f22   subst: v0 := Int, v1 := Int, v2 := String
+                200:71-200:74 VarLocal :: Int -> Int   callee: author/project:Clos.inc@196:21   use: gen   instance: number1 := Int   sig#: 1f734da5   subst: v0 := Int
+                200:75-200:89 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+              200:92-200:106 Lambda :: String -> String
+                200:93-200:94 PVar s :: String
+                200:98-200:106 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+                  200:98-200:99 VarLocal :: String
+                  200:103-200:106 Str :: String
+              200:108-200:109 Int :: Int
+        202:21-202:22 PAnything :: List ( String, Int )
+        203:25-203:109 Call :: List ( String, Int )
+          203:25-203:34 VarDebug :: String -> List ( String, Int ) -> List ( String, Int )   callee: elm/core:Debug.log   instance: a := List ( String, Int )   sig#: 6ecaa5dd   subst: v0 := List ( String, Int )
+          203:35-203:42 Str :: String
+          203:44-203:109 Call :: List ( String, Int )
+            203:44-203:55 VarForeign :: Dict String Int -> List ( String, Int )   callee: elm/core:Dict.toList   instance: k := String, v := Int   sig#: 99c914ae   subst: v0 := String, v1 := Int
+            203:57-203:109 Call :: Dict String Int
+              203:57-203:65 VarTopLevel :: List String -> Dict String Int -> Dict String Int   callee: author/project:Clos.countAll   use: gen
+              203:66-203:98 List :: List String
+                203:68-203:71 Str :: String
+                203:73-203:76 Str :: String
+                203:78-203:81 Str :: String
+                203:83-203:86 Str :: String
+                203:88-203:91 Str :: String
+                203:93-203:96 Str :: String
+              203:99-203:109 VarForeign :: Dict String Int   callee: elm/core:Dict.empty   instance: k := String, v := Int   sig#: dd8ed12a   subst: v0 := String, v1 := Int
+        208:21-208:22 PAnything :: ( Int, Int, List Int )
+        209:25-209:111 Call :: ( Int, Int, List Int )
+          209:25-209:34 VarDebug :: String -> ( Int, Int, List Int ) -> ( Int, Int, List Int )   callee: elm/core:Debug.log   instance: a := ( Int, Int, List Int )   sig#: 6ecaa5dd   subst: v0 := ( Int, Int, List Int )
+          209:35-209:44 Str :: String
+          209:45-209:111 Triple :: ( Int, Int, List Int )
+            209:47-209:60 Call :: Int
+              209:47-209:54 VarLocal :: Int -> Int -> Int   callee: author/project:Clos.partial@205:21   use: gen
+              209:55-209:57 Int :: Int
+              209:58-209:60 Int :: Int
+            209:63-209:78 Call :: Int
+              209:63-209:75 Call :: Int -> Int
+                209:63-209:67 VarTopLevel :: List Int -> Int -> Int -> Int   callee: author/project:Clos.add3   use: gen
+                209:68-209:73 List :: List Int
+                  209:70-209:71 Int :: Int
+                209:74-209:75 Int :: Int
+              209:77-209:78 Int :: Int
+            209:80-209:109 Call :: List Int
+              209:80-209:88 VarForeign :: (Int -> Int) -> List Int -> List Int   callee: elm/core:List.map   instance: a := Int, b := Int   sig#: 6a702f63   subst: v0 := Int, v1 := Int
+              209:90-209:99 Call :: Int -> Int
+                209:90-209:97 VarLocal :: Int -> Int -> Int   callee: author/project:Clos.partial@205:21   use: gen
+                209:98-209:99 Int :: Int
+              209:101-209:109 List :: List Int
+                209:103-209:104 Int :: Int
+                209:106-209:107 Int :: Int
+        211:21-211:22 PAnything :: List Int
+        212:25-212:98 Call :: List Int
+          212:25-212:34 VarDebug :: String -> List Int -> List Int   callee: elm/core:Debug.log   instance: a := List Int   sig#: 6ecaa5dd   subst: v0 := List Int
+          212:35-212:45 Str :: String
+          212:47-212:98 Call :: List Int
+            212:47-212:55 VarTopLevel :: List (Int -> Int) -> Int -> List Int   callee: author/project:Clos.applyAll   use: gen
+            212:56-212:96 List :: List (Int -> Int)
+              212:58-212:70 Call :: Int -> Int
+                212:58-212:62 VarTopLevel :: List Int -> Int -> Int -> Int   callee: author/project:Clos.add3   use: gen
+                212:63-212:68 List :: List Int
+                  212:65-212:66 Int :: Int
+                212:69-212:70 Int :: Int
+              212:72-212:83 Lambda :: Int -> Int
+                212:73-212:74 PVar x :: Int
+                212:78-212:83 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                  212:78-212:79 VarLocal :: Int
+                  212:82-212:83 Int :: Int
+              212:85-212:94 Call :: Int -> Int
+                212:85-212:92 VarLocal :: Int -> Int -> Int   callee: author/project:Clos.partial@205:21   use: gen
+                212:93-212:94 Int :: Int
+            212:97-212:98 Int :: Int
+        214:21-214:22 PAnything :: ( Int, Int )
+        215:25-215:74 Call :: ( Int, Int )
+          215:25-215:34 VarDebug :: String -> ( Int, Int ) -> ( Int, Int )   callee: elm/core:Debug.log   instance: a := ( Int, Int )   sig#: 6ecaa5dd   subst: v0 := ( Int, Int )
+          215:35-215:43 Str :: String
+          215:44-215:74 Pair :: ( Int, Int )
+            215:46-215:55 Call :: Int
+              215:46-215:52 VarTopLevel :: List Int -> Int   callee: author/project:Clos.unused   use: gen
+              215:53-215:55 List :: List Int
+            215:57-215:72 Call :: Int
+              215:57-215:63 VarTopLevel :: List Int -> Int   callee: author/project:Clos.unused   use: gen
+              215:64-215:72 List :: List Int
+                215:66-215:67 Int :: Int
+                215:69-215:70 Int :: Int
+        def g :: String -> String    [187:21-187:22]   id: author/project:Clos.g@187:21   sig: String -> String   kinds:    group: author/project:Clos.g@187:21 nonrec inferred
+          188:25-188:55 Call :: String -> String
+            188:25-188:30 VarTopLevel :: String -> List String -> String -> String   callee: author/project:Clos.greet   use: gen
+            188:31-188:38 Str :: String
+            188:39-188:55 List :: List String
+              188:41-188:46 Str :: String
+              188:48-188:53 Str :: String
+        190:21-190:22 PAnything :: ( String, String )
+        191:25-191:64 Call :: ( String, String )
+          191:25-191:34 VarDebug :: String -> ( String, String ) -> ( String, String )   callee: elm/core:Debug.log   instance: a := ( String, String )   sig#: 6ecaa5dd   subst: v0 := ( String, String )
+          191:35-191:42 Str :: String
+          191:43-191:64 Pair :: ( String, String )
+            191:45-191:51 Call :: String
+              191:45-191:46 VarLocal :: String -> String   callee: author/project:Clos.g@187:21   use: gen
+              191:47-191:51 Str :: String
+            191:53-191:62 Call :: String
+              191:53-191:54 VarLocal :: String -> String   callee: author/project:Clos.g@187:21   use: gen
+              191:55-191:62 Str :: String
+        217:17-217:33 Pair :: ( (), Cmd () )
+          217:19-217:21 Unit :: ()
+          217:23-217:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      218:20-218:43 Lambda :: () -> () -> ( (), Cmd () )
+        218:21-218:22 PAnything :: ()
+        218:23-218:24 PVar m :: ()
+        218:28-218:43 Pair :: ( (), Cmd () )
+          218:30-218:31 VarLocal :: ()
+          218:33-218:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      219:27-219:41 Lambda :: () -> Sub ()
+        219:28-219:29 PAnything :: ()
+        219:33-219:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Clos.counterOf   kind: function   reads:    needs: 
+init: 1   id: author/project:Clos.countAll   kind: function   reads: author/project:Clos.counterOf   needs:    group: author/project:Clos.countAll
+init: 2   id: author/project:Clos.applyAll   kind: function   reads:    needs: 
+init: 3   id: author/project:Clos.compose   kind: function   reads:    needs: 
+init: 4   id: author/project:Clos.unused   kind: function   reads:    needs: 
+init: 5   id: author/project:Clos.takeS   kind: function   reads:    needs:    group: author/project:Clos.takeS
+init: 6   id: author/project:Clos.twice   kind: function   reads: author/project:Clos.takeS   needs: 
+init: 7   id: author/project:Clos.greet   kind: function   reads:    needs: 
+init: 8   id: author/project:Clos.adder   kind: function   reads:    needs: 
+init: 9   id: author/project:Clos.zipS   kind: function   reads:    needs:    group: author/project:Clos.zipS
+init: 10   id: author/project:Clos.putL   kind: function   reads:    needs: 
+init: 11   id: author/project:Clos.once   kind: function   reads:    needs: 
+init: 12   id: author/project:Clos.fillL   kind: function   reads: author/project:Clos.putL,author/project:Clos.once   needs:    group: author/project:Clos.fillL
+init: 13   id: author/project:Clos.mapS   kind: function   reads:    needs:    group: author/project:Clos.mapS
+init: 14   id: author/project:Clos.from   kind: function   reads:    needs:    group: author/project:Clos.from
+init: 15   id: author/project:Clos.both   kind: function   reads: author/project:Clos.putL   needs: 
+init: 16   id: author/project:Clos.add3   kind: function   reads:    needs: 
+init: 17   id: author/project:Clos.put   kind: function   reads:    needs: 
+init: 18   id: author/project:Clos.fill   kind: function   reads: author/project:Clos.once,author/project:Clos.put   needs:    group: author/project:Clos.fill
+init: 19   id: author/project:Clos.main   kind: value   reads: author/project:Clos.countAll,author/project:Clos.applyAll,author/project:Clos.compose,author/project:Clos.unused,author/project:Clos.takeS,author/project:Clos.twice,author/project:Clos.greet,author/project:Clos.adder,author/project:Clos.zipS,author/project:Clos.fillL,author/project:Clos.mapS,author/project:Clos.from,author/project:Clos.both,author/project:Clos.add3,author/project:Clos.fill   needs:    init-dep: no

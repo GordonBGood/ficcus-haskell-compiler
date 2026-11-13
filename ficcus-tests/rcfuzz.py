@@ -255,6 +255,64 @@ bindA g a =
 callA : Int -> (Int -> Int -> Array Int) -> Array Int
 callA i f =
     f i (i + 1)
+
+
+-- S7 part 3 (Ficcus.Mono.Twin): closures that capture lists and arrays, called once (the object is taken apart) and several times
+-- (it must stay whole), and a stream of thunks
+type Stream
+    = Stream Int (List Int) (() -> Stream)
+
+
+streamFrom : Int -> List Int -> Stream
+streamFrom n seen =
+    Stream n seen (\() -> streamFrom (n + 1) (n :: List.take 2 seen))
+
+
+streamSum : Int -> Int -> Stream -> Int
+streamSum k acc s =
+    case s of
+        Stream h seen rest ->
+            if k <= 0 then
+                acc + List.length seen
+
+            else
+                streamSum (k - 1) (acc + h) (rest ())
+
+
+streamTwice : Stream -> Int
+streamTwice s =
+    case s of
+        Stream _ _ rest ->
+            streamSum 2 0 (rest ()) + streamSum 3 0 (rest ())
+
+
+putL : Array Int -> (Int -> Int -> Array Int)
+putL a =
+    \i v -> Array.set i v a
+
+
+bothA : (Int -> Int -> Array Int) -> Array Int
+bothA f =
+    if sumArr (f 0 1) > 3 then
+        f 1 2
+
+    else
+        f 2 3
+
+
+sumWith : List Int -> Array Int -> (Int -> Int)
+sumWith xs a =
+    \k -> k + List.length xs + Maybe.withDefault 0 (Array.get 0 a)
+
+
+applyOnce : (Int -> Int) -> Int -> Int
+applyOnce f x =
+    f x
+
+
+applyTwice : (Int -> Int) -> Int -> Int
+applyTwice f x =
+    f (f x)
 '''
 
 TYPES = ["Int", "Str", "Bool", "LInt", "LStr", "Tree", "MInt", "Res", "Pair", "Rec", "Fn", "Arr", "ArrS", "Dct"]
@@ -307,7 +365,7 @@ class Gen:
         k = r.random()
         if k < 0.34: return self.generic(t, env, d, ind)
         if t == "Int":
-            c = r.randint(0, 22)
+            c = r.randint(0, 26)
             # S7 (Ficcus.Mono.Inline): a Maybe or Result made by a small function and matched at once
             if c == 17:
                 v = self.fresh()
@@ -326,6 +384,10 @@ class Gen:
                 return "(case List.head %s of\n%sJust %s -> String.length %s + %s\n%sNothing -> %s)" % (
                     g("LStr"), " " * (ind + 8), v, v, g("Int"), " " * (ind + 8), g("Int"))
             if c == 22: return "(Maybe.withDefault %s (Maybe.map %s (List.head %s)))" % (g("Int"), g("Fn"), g("LInt"))
+            if c == 23: return "(streamSum (modBy 6 %s) 0 (streamFrom %s %s))" % (g("Int"), g("Int"), g("LInt"))
+            if c == 24: return "(streamTwice (streamFrom %s %s))" % (g("Int"), g("LInt"))
+            if c == 25: return "(applyOnce %s %s)" % (g("Fn"), g("Int"))
+            if c == 26: return "(applyTwice %s %s)" % (g("Fn"), g("Int"))
             if c == 12: return "(sumArr %s)" % g("Arr")
             if c == 13: return "(Maybe.withDefault 0 (Array.get (modBy 5 %s) %s))" % (g("Int"), g("Arr"))
             if c == 14: return "(Dict.size %s)" % g("Dct")
@@ -417,7 +479,9 @@ class Gen:
             else: upd = lambda i: "{ %s | s = %s ++ %s.s, a = %s.a + 1 }" % (v, self.gen("Str", env, d - 1, i), v, v)
             return self.let(v, "Rec", upd, env, d, ind)
         if t == "Arr":
-            c = r.randint(0, 10)
+            c = r.randint(0, 12)
+            if c == 11: return "(callA (modBy 3 %s) (putL %s))" % (g("Int"), g("Arr"))
+            if c == 12: return "(bothA (putL %s))" % g("Arr")
             if c == 0: return "(Array.set (modBy 4 %s) %s %s)" % (g("Int"), g("Int"), g("Arr"))
             if c == 1: return "(Array.set (modBy 70 %s) %s %s)" % (g("Int"), g("Int"), g("Arr"))
             if c == 2: return "(Array.push %s %s)" % (g("Int"), g("Arr"))
@@ -445,8 +509,9 @@ class Gen:
             if c == 4: return "(Dict.union %s %s)" % (g("Dct"), g("Dct"))
             return "(Dict.insert %s %s (Dict.insert %s %s %s))" % (g("Int"), g("Int"), g("Int"), g("Int"), g("Dct"))
         if t == "Fn":
-            c = r.randint(0, 4)
+            c = r.randint(0, 5)
             if c == 4: return "(getAt %s)" % g("Arr")
+            if c == 5: return "(sumWith %s %s)" % (g("LInt"), g("Arr"))
             w = self.fresh()
             if c == 0: return "(\\%s -> %s)" % (w, self.gen("Int", env + [(w, "Int")], d - 1, ind + 8))
             if c == 1: return "(add3 %s %s)" % (g("Int"), g("Int"))
