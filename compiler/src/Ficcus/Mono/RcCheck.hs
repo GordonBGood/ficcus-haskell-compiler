@@ -91,7 +91,8 @@ checkDef d caps body =
       let params = [ (n, o) | ((n, c), o) <- zip (mdParams d) (paramOwns d), refClass c ]
       -- an owned parameter has one count; a borrowed one is readable for the whole call and has none
       modify' (\s -> s { cxScope = Map.fromList ([ (n, if o == Owned then V True 1 Nothing else V False 0 Nothing) | (n, o) <- params ]
-                                                 ++ [ (n, V False 0 Nothing) | n <- capVars ]) })
+                                                 -- a captured variable is readable for the whole call; in a twin (Ficcus.Mono.Twin) it is owned
+                                                 ++ [ (n, if mdCapsOwned d then V True 1 Nothing else V False 0 Nothing) | n <- capVars ]) })
       owned body
       sc <- gets cxScope
       forM_ (Map.toList sc) $ \(n, v) ->

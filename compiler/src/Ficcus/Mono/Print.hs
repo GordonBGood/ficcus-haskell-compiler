@@ -60,7 +60,7 @@ renderProgram allModules program =
       )
       where
         cloneOf _ n i =
-          (i, MDef (CloneId n) (ifId i) (Key []) (if ifValue i then Value else Function) [] CRef Nothing (Just (ifIndex i)) [] Nothing [0 ..] [])
+          (i, MDef (CloneId n) (ifId i) (Key []) (if ifValue i then Value else Function) [] CRef Nothing (Just (ifIndex i)) [] Nothing [0 ..] [] Nothing False)
 
 
 markLine :: Marks -> DefFact -> Maybe String

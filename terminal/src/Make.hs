@@ -36,6 +36,7 @@ import qualified Ficcus.Mono.Overlay as Overlay
 import qualified Ficcus.Mono.Print as Print
 import qualified Ficcus.Mono.Rc as Rc
 import qualified Ficcus.Mono.Inline as Inline
+import qualified Ficcus.Mono.Twin as Twin
 import qualified Ficcus.Mono.RcCheck as RcCheck
 import qualified Ficcus.Mono.Spec as Spec
 import qualified File
@@ -201,7 +202,11 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag no
                           -- FICCUS_RC_DUMP=text (debugging): print the counted clones whose definition name contains the text, before the check
                           dumpText <- Task.io (System.Environment.lookupEnv "FICCUS_RC_DUMP")
                           -- S7: constructor values made by a small known function and matched at once are not built (counted builds only)
-                          let rced = if rcMode then Rc.rcProgram (Inline.inlineProgram program) >>= mutated else Right program
+                          let rced = if rcMode then Rc.rcProgram (Twin.twinProgram (Inline.inlineProgram program)) >>= mutated else Right program
+                          twinStatsOn <- Task.io (System.Environment.lookupEnv "FICCUS_TWIN_STATS")
+                          case (twinStatsOn, rced) of
+                            (Just "1", Right _) | rcMode -> Task.io (hPutStrLn stderr ("FICCUS_TWIN_STATS: (twins, twins that build a cell of their closure's size class) = " ++ show (Twin.twinStats (Twin.twinProgram (Inline.inlineProgram program)))))
+                            _ -> return ()
                           case (dumpText, rced) of
                             (Just pat, Right prog) ->
                               Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones prog, pat `List.isInfixOf` Mono.mdName d ]))

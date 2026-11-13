@@ -93,7 +93,8 @@ rcDef ctx root d =
   case mdBody d of
     Just body | Just (mdClone d) /= root ->
       do  modify' (\s -> s { rsWhere = mdName d })
-          let env = Map.fromList [ (n, c) | ((n, c), o) <- zip (mdParams d) (paramOwns d), refClass c, o == Owned ]
+          let ownedCaps = if mdCapsOwned d then [ (n, c) | (n, c) <- Map.findWithDefault [] (mdClone d) (cCaps ctx), refClass c ] else []   -- a twin (Ficcus.Mono.Twin)
+          let env = Map.fromList ([ (n, c) | ((n, c), o) <- zip (mdParams d) (paramOwns d), refClass c, o == Owned ] ++ ownedCaps)
           body' <- rc ctx env Set.empty body
           return d { mdBody = Just body' }
     _ -> return d

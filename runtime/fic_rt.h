@@ -47,7 +47,7 @@ typedef fic_hdr *fic_ref;
 static size_t fic_live_objects, fic_total_allocs;
 #ifdef FIC_STATS
 static size_t fic_n_dup, fic_n_drop, fic_n_free_slow, fic_n_reuse_hit, fic_n_reuse_miss, fic_peak_live;
-static size_t fic_n_inplace, fic_n_copied, fic_n_pap_steal;   /* S6: array updates in place and copied, partial applications taken apart */
+static size_t fic_n_inplace, fic_n_copied, fic_n_pap_steal, fic_n_clo_steal;   /* S6: array updates in place and copied, partial applications taken apart */
 #  define FIC_STAT(x) (x)
 #else
 #  define FIC_STAT(x) ((void)0)
@@ -55,7 +55,15 @@ static size_t fic_n_inplace, fic_n_copied, fic_n_pap_steal;   /* S6: array updat
 
 /* ---- the words of a closure, shared by the closure runtime and the generic drop ---- */
 typedef union fic_word { int64_t i; double d; uint32_t c; uint8_t b; fic_ref p; } fic_word;
+/* `own` (counted programs only, S7 part 3): the entry of a call that consumes a closure object nobody else holds (it takes the
+   captured values out of the object and frees it), or 0 */
+#ifdef FIC_RC
+typedef struct fic_code { void (*fn)(void); unsigned arity; void (*own)(void); } fic_code;
+#define FIC_CODE_OWN0 , 0
+#else
 typedef struct fic_code { void (*fn)(void); unsigned arity; } fic_code;
+#define FIC_CODE_OWN0
+#endif
 typedef struct fic_clo { fic_hdr h; const fic_code *code; } fic_clo;
 typedef struct fic_pap { fic_hdr h; const fic_code *code; fic_ref fun; uint32_t mask; uint32_t nargs; fic_word args[]; } fic_pap;
 
@@ -414,9 +422,9 @@ static int fic_shutdown(void) {
   }
 #endif
 #ifdef FIC_STATS
-  fprintf(stderr, "FIC_STATS: allocs %zu live %zu peak %zu dup %zu drop %zu free_slow %zu reuse_hit %zu reuse_miss %zu inplace %zu copied %zu pap_steal %zu\n",
+  fprintf(stderr, "FIC_STATS: allocs %zu live %zu peak %zu dup %zu drop %zu free_slow %zu reuse_hit %zu reuse_miss %zu inplace %zu copied %zu pap_steal %zu clo_steal %zu\n",
           fic_total_allocs, fic_live_objects, fic_peak_live, fic_n_dup, fic_n_drop, fic_n_free_slow, fic_n_reuse_hit, fic_n_reuse_miss,
-          fic_n_inplace, fic_n_copied, fic_n_pap_steal);
+          fic_n_inplace, fic_n_copied, fic_n_pap_steal, fic_n_clo_steal);
 #ifdef FIC_RC
   if (fic_live_objects != 0) bad = 1;          /* a counted program must have freed everything by now (the globals are dropped first) */
 #endif

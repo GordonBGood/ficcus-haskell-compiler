@@ -12,7 +12,7 @@ import argparse, os, re, shutil, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-STATS = re.compile(r"FIC_STATS: allocs (\d+) live (\d+) peak (\d+) dup (\d+) drop (\d+) free_slow \d+ reuse_hit (\d+) reuse_miss (\d+) inplace (\d+) copied (\d+) pap_steal (\d+)")
+STATS = re.compile(r"FIC_STATS: allocs (\d+) live (\d+) peak (\d+) dup (\d+) drop (\d+) free_slow \d+ reuse_hit (\d+) reuse_miss (\d+) inplace (\d+) copied (\d+) pap_steal (\d+)(?: clo_steal (\d+))?")
 
 HEAD = '''module Main exposing (main)
 
@@ -118,6 +118,89 @@ loop i n a =
         loop (i + 1) n (once i (bind put a))
 ''', "Array.foldl (+) 0 (loop 0 %d (Array.repeat 20 0))" % N, None,
      "pap_steal == %d and copied == 0 and allocs <= %d + 40" % (N, N)),     # one partial application object per round
+    # S7 part 3 (Ficcus.Mono.Twin): a closure object that nobody else holds gives its captured values to the call that consumes it
+    ("clo-lambda", FILL.replace("fill", "unused") + """
+
+put : Array Int -> (Int -> Int -> Array Int)
+put a =
+    \\i v -> Array.set i v a
+
+
+once : Int -> (Int -> Int -> Array Int) -> Array Int
+once i f =
+    f (modBy 20 i) i
+
+
+loop : Int -> Int -> Array Int -> Array Int
+loop i n a =
+    if i >= n then
+        a
+
+    else
+        loop (i + 1) n (once i (put a))
+""", "Array.foldl (+) 0 (loop 0 %d (Array.repeat 20 0))" % N, None,
+     "clo_steal == %d and copied == 0 and inplace == %d and allocs <= %d + 40" % (N, N, N)),     # one closure object per round, the array is never copied
+    ("clo-known-pap", FILL.replace("fill", "unused") + """
+
+put : Array Int -> Int -> Int -> Array Int
+put a i v =
+    Array.set i v a
+
+
+once : Int -> (Int -> Int -> Array Int) -> Array Int
+once i f =
+    f (modBy 20 i) i
+
+
+loop : Int -> Int -> Array Int -> Array Int
+loop i n a =
+    if i >= n then
+        a
+
+    else
+        loop (i + 1) n (once i (put a))
+""", "Array.foldl (+) 0 (loop 0 %d (Array.repeat 20 0))" % N, None,
+     "clo_steal + pap_steal == %d and copied == 0 and inplace == %d and allocs <= %d + 40" % (N, N, N)),     # a partial application of a known function
+    ("clo-thunks", """type Stream
+    = Stream Int (List Int) (() -> Stream)
+
+
+from : Int -> List Int -> Stream
+from n seen =
+    Stream n seen (\\() -> from (n + 1) (n :: List.take 3 seen))
+
+
+walk : Int -> Int -> Stream -> Int
+walk k acc s =
+    case s of
+        Stream h seen rest ->
+            if k <= 0 then
+                acc + List.sum seen
+
+            else
+                walk (k - 1) (acc + h) (rest ())
+""", "walk %d 0 (from 0 [])" % N, str(N * (N - 1) // 2 + (N - 1) + (N - 2) + (N - 3) + (N - 4)),
+     "clo_steal == %d and peak <= 40" % N),       # every thunk is called once, by its only holder
+    ("clo-shared", FILL.replace("fill", "unused") + """
+
+put : Array Int -> (Int -> Int -> Array Int)
+put a =
+    \\i v -> Array.set i v a
+
+
+loop : Int -> Int -> Array Int -> Array Int
+loop i n a =
+    if i >= n then
+        a
+
+    else
+        let
+            f =
+                put a
+        in
+        loop (i + 1) n (if Array.length (f 0 i) > 0 then f 1 i else a)
+""", "Array.foldl (+) 0 (loop 0 %d (Array.repeat 20 0))" % (N // 100), str(N // 100 - 1),
+     "copied >= %d and clo_steal <= %d" % (N // 100, N // 100)),     # a closure called twice: the first call must not take the array
     ("dict-insert", '''fill : Int -> Int -> Dict Int Int -> Dict Int Int
 fill i n d =
     if i >= n then
@@ -152,7 +235,7 @@ def main():
     work = a.out or tempfile.mkdtemp(prefix="fbip")
     elm, safe = os.path.abspath(a.elm), os.path.abspath(a.safe)
     bad = 0
-    print("%-20s %-5s %10s %10s %10s %10s %8s" % ("check", "", "allocs", "inplace", "copied", "pap_steal", "peak"))
+    print("%-20s %-5s %10s %10s %10s %10s %10s %8s" % ("check", "", "allocs", "inplace", "copied", "pap_steal", "clo_steal", "peak"))
     for name, decls, expr, want, bounds in CHECKS:
         if only and name not in only: continue
         d = os.path.join(work, name)
@@ -166,10 +249,10 @@ def main():
         rc, so, se = sh([safe, "./x"], cwd=d)
         m = STATS.search(se)
         if rc != 0 or not m: print("FAIL %s: exit %d %s" % (name, rc, se[-300:])); bad += 1; continue
-        allocs, live, peak, dup, drop, reuse_hit, reuse_miss, inplace, copied, pap_steal = map(int, m.groups())
+        allocs, live, peak, dup, drop, reuse_hit, reuse_miss, inplace, copied, pap_steal, clo_steal = [ int(g or 0) for g in m.groups() ]
         got = so.strip().split("result: ", 1)[-1]
         ok = live == 0 and eval(bounds) and (want is None or got == want)
-        print("%-20s %-5s %10d %10d %10d %10d %8d   %s%s" % (name, "ok" if ok else "FAIL", allocs, inplace, copied, pap_steal, peak, bounds,
+        print("%-20s %-5s %10d %10d %10d %10d %10d %8d   %s%s" % (name, "ok" if ok else "FAIL", allocs, inplace, copied, pap_steal, clo_steal, peak, bounds,
                                                          "" if want is None or got == want else "   output %s, expected %s" % (got, want)))
         bad += 0 if ok else 1
     print("%d failure(s)" % bad)

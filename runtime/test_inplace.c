@@ -25,8 +25,32 @@ static fic_word add3(fic_ref self, fic_word a, fic_word b, fic_word c) {
   fic_drop(a.p);
   return fic_w_i(r);
 }
-static const fic_code add3_code = { (void (*)(void))add3, 3u };
+static const fic_code add3_code = { (void (*)(void))add3, 3u FIC_CODE_OWN0 };
 static fic_clo add3_clo = { { FIC_IMMORTAL, FIC_TAG_CLOSURE, 0, 0 }, &add3_code };
+
+/* S7 part 3: a closure object { header, code, one captured box } with a second entry. `held x b = x + b`: the ordinary entry reads the
+   captured box (the object keeps its count), the own entry takes it out of the object, frees the object and consumes the box */
+typedef struct { fic_hdr h; const fic_code *code; fic_ref r0; } held;
+static fic_word held_entry(fic_ref self, fic_word b) {
+  printf("     held: the ordinary entry, the count of the captured box is %u\n", (unsigned)((held *)self)->r0->rc);
+  return fic_w_i(unbox(((held *)self)->r0) + b.i);
+}
+static fic_word held_own(fic_ref self, fic_word b) {
+  fic_ref x = ((held *)self)->r0;
+  int64_t r;
+  FIC_STAT(fic_n_clo_steal++);
+  fic_free_obj(self);
+  printf("     held: the own entry, the count of the captured box is %u\n", (unsigned)x->rc);
+  r = unbox(x) + b.i;
+  fic_drop(x);
+  return fic_w_i(r);
+}
+static const fic_code held_code = { (void (*)(void))held_entry, 1u, (void (*)(void))held_own };
+static fic_ref mkheld(fic_ref x) {
+  held *k = (held *)fic_alloc(sizeof(held), FIC_TAG_CLOSURE, 1);
+  k->code = &held_code; k->r0 = x;
+  return &k->h;
+}
 
 int main(void) {
   fic_ref a, b, c, x, y, pap;
@@ -114,6 +138,22 @@ int main(void) {
   w = fic_ap1_own(y, 0u, fic_w_i(7));
   CHECK("completed through both, both stolen (the count printed above is 1)", w.i == 18 && fic_n_pap_steal == 4);
   CHECK("closures: nothing is live", fic_live_objects == live0);
+
+  /* fic_ap<n>_own on a closure object with a second entry (S7 part 3) */
+  y = mkheld(box(100));
+  w = fic_ap1_own(y, 0u, fic_w_i(5));
+  CHECK("unique closure: the own entry ran, the object and the box are gone", w.i == 105 && fic_n_clo_steal == 1 && fic_live_objects == live0);
+  x = box(200);
+  y = mkheld(x);
+  fic_dup(y);
+  w = fic_ap1_own(y, 0u, fic_w_i(5));
+  CHECK("shared closure: the ordinary entry ran, the object lost one count and keeps the box", w.i == 205 && fic_n_clo_steal == 1 && y->rc == 1 && x->rc == 1);
+  w = fic_ap1(y, 0u, fic_w_i(6));
+  CHECK("a borrowing call never takes the box", w.i == 206 && fic_n_clo_steal == 1 && y->rc == 1 && x->rc == 1);
+  pap = fic_ap1(&add3_clo.h, 1u, fic_w_p(box(1))).p;       /* an under-applied call of a unique closure is not its own entry */
+  fic_drop(pap);
+  w = fic_ap1_own(y, 0u, fic_w_i(7));
+  CHECK("then unique: taken", w.i == 207 && fic_n_clo_steal == 2 && fic_live_objects == live0);
 
   printf("%d failure(s)\n", failures);
   return failures != 0 || fic_shutdown() != 0;

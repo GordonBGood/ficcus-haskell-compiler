@@ -647,7 +647,36 @@ closureSection info ds =
                   r <- adaptOwn (mdResult d) (abiClass (mdResult d)) res
                   emit ("return " ++ wordMk (mdResult d) r ++ ";")
             emit "}"
-            emit ("static const fic_code " ++ codeName d ++ " = { (void (*)(void))" ++ stubName d ++ ", " ++ show (length ps) ++ "u };")
+            rcMode <- gets gRc
+            -- S7 part 3 (Ficcus.Mono.Twin): the entry of a call that consumes a closure object nobody else holds: the captured values are
+            -- taken out of the object (their counts pass to the twin, which owns them), the object is freed (its shell only), the twin runs
+            ownEntry <-
+              case mdTwin d >>= \t -> Map.lookup t (iClones info) of
+                Just twin | rcMode, not (null layout) ->
+                  do  emit ("static fic_word " ++ stubName d ++ "_own(fic_ref self" ++ concat [ ", fic_word a" ++ show i | (i, _) <- zip [0 :: Int ..] ps ] ++ ") {")
+                      indented $
+                        do  emit (capType layout ++ " *s = (" ++ capType layout ++ " *)self;")
+                            capVals <- forM caps $ \(n, cc) ->
+                              case [ i | (i, (m, _, _)) <- zip [0 :: Int ..] layout, m == n ] of
+                                i : _ -> do { t <- fresh "cv"; emit (classType cc ++ " " ++ t ++ " = " ++ fieldRead classType [ fc | (_, _, fc) <- layout ] i "s" ++ ";"); return t }
+                                [] -> failWith "internal: a captured variable is not in the closure layout"
+                            emit "FIC_STAT(fic_n_clo_steal++);"
+                            emit "fic_free_obj(self);"
+                            let owns = zip3 [0 :: Int ..] (mdParams twin) (paramOwns twin)
+                            vals <- forM owns (\(i, (_, pc), o) ->
+                                      let w = "a" ++ show i ++ wordSel pc
+                                      in if o == Borrowed then adapt (abiClass pc) pc w else adaptOwn (abiClass pc) pc w)
+                            let drops = [ "fic_drop(a" ++ show i ++ ".p);" | (i, (_, pc), o) <- owns, o == Borrowed, abiClass pc == CRef ]
+                            let call = functionName twin ++ "(" ++ List.intercalate ", " (capVals ++ vals) ++ ")"
+                            res <-
+                              if null drops then return call
+                              else do { rv <- fresh "rv"; emit (classType (mdResult twin) ++ " " ++ rv ++ " = " ++ call ++ ";"); mapM_ emit drops; return rv }
+                            r <- adaptOwn (mdResult twin) (abiClass (mdResult twin)) res
+                            emit ("return " ++ wordMk (mdResult twin) r ++ ";")
+                      emit "}"
+                      return ("(void (*)(void))" ++ stubName d ++ "_own")
+                _ -> return "0"
+            emit ("static const fic_code " ++ codeName d ++ " = { (void (*)(void))" ++ stubName d ++ ", " ++ show (length ps) ++ "u" ++ (if rcMode then ", " ++ ownEntry else "") ++ " };")
             when (null layout) $
               emit ("static fic_clo " ++ cloName d ++ " = { { FIC_IMMORTAL, FIC_TAG_CLOSURE, 0, 0 }, &" ++ codeName d ++ " };")
             emit ""

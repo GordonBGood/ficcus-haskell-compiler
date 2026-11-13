@@ -1,4 +1,4 @@
-FIC_STATS: allocs 30 live 0 peak 8 dup 20 drop 26 free_slow 13 reuse_hit 0 reuse_miss 0 inplace 12 copied 9 pap_steal 4
+FIC_STATS: allocs 36 live 0 peak 8 dup 22 drop 30 free_slow 16 reuse_hit 0 reuse_miss 0 inplace 12 copied 9 pap_steal 4 clo_steal 2
 ok   push on a unique array: 6 elements, capacity 8
 ok   set on a unique array is in place
 ok   set on a shared array copies
@@ -29,4 +29,12 @@ ok   one more argument: a partial application of the partial application
      add3: the count of the boxed argument is 1
 ok   completed through both, both stolen (the count printed above is 1)
 ok   closures: nothing is live
+     held: the own entry, the count of the captured box is 1
+ok   unique closure: the own entry ran, the object and the box are gone
+     held: the ordinary entry, the count of the captured box is 1
+ok   shared closure: the ordinary entry ran, the object lost one count and keeps the box
+     held: the ordinary entry, the count of the captured box is 1
+ok   a borrowing call never takes the box
+     held: the own entry, the count of the captured box is 1
+ok   then unique: taken
 0 failure(s)

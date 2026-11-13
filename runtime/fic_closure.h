@@ -380,16 +380,16 @@ static fic_word fic_pap_9_8(fic_ref self, fic_word b0) {
 }
 
 static const fic_code fic_pap_code[10][10] = {
-  { { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_2_1, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_3_1, 2u }, { (void (*)(void))fic_pap_3_2, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_4_1, 3u }, { (void (*)(void))fic_pap_4_2, 2u }, { (void (*)(void))fic_pap_4_3, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_5_1, 4u }, { (void (*)(void))fic_pap_5_2, 3u }, { (void (*)(void))fic_pap_5_3, 2u }, { (void (*)(void))fic_pap_5_4, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_6_1, 5u }, { (void (*)(void))fic_pap_6_2, 4u }, { (void (*)(void))fic_pap_6_3, 3u }, { (void (*)(void))fic_pap_6_4, 2u }, { (void (*)(void))fic_pap_6_5, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_7_1, 6u }, { (void (*)(void))fic_pap_7_2, 5u }, { (void (*)(void))fic_pap_7_3, 4u }, { (void (*)(void))fic_pap_7_4, 3u }, { (void (*)(void))fic_pap_7_5, 2u }, { (void (*)(void))fic_pap_7_6, 1u }, { 0, 0u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_8_1, 7u }, { (void (*)(void))fic_pap_8_2, 6u }, { (void (*)(void))fic_pap_8_3, 5u }, { (void (*)(void))fic_pap_8_4, 4u }, { (void (*)(void))fic_pap_8_5, 3u }, { (void (*)(void))fic_pap_8_6, 2u }, { (void (*)(void))fic_pap_8_7, 1u }, { 0, 0u }, { 0, 0u } },
-  { { 0, 0u }, { (void (*)(void))fic_pap_9_1, 8u }, { (void (*)(void))fic_pap_9_2, 7u }, { (void (*)(void))fic_pap_9_3, 6u }, { (void (*)(void))fic_pap_9_4, 5u }, { (void (*)(void))fic_pap_9_5, 4u }, { (void (*)(void))fic_pap_9_6, 3u }, { (void (*)(void))fic_pap_9_7, 2u }, { (void (*)(void))fic_pap_9_8, 1u }, { 0, 0u } },
+  { { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 } },
+  { { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 } },
+  { { 0, 0u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_2_1, 1u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 } },
+  { { 0, 0u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_3_1, 2u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_3_2, 1u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 } },
+  { { 0, 0u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_4_1, 3u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_4_2, 2u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_4_3, 1u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 } },
+  { { 0, 0u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_5_1, 4u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_5_2, 3u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_5_3, 2u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_5_4, 1u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 } },
+  { { 0, 0u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_6_1, 5u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_6_2, 4u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_6_3, 3u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_6_4, 2u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_6_5, 1u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 } },
+  { { 0, 0u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_7_1, 6u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_7_2, 5u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_7_3, 4u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_7_4, 3u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_7_5, 2u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_7_6, 1u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 } },
+  { { 0, 0u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_8_1, 7u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_8_2, 6u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_8_3, 5u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_8_4, 4u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_8_5, 3u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_8_6, 2u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_8_7, 1u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 } },
+  { { 0, 0u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_9_1, 8u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_9_2, 7u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_9_3, 6u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_9_4, 5u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_9_5, 4u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_9_6, 3u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_9_7, 2u FIC_CODE_OWN0 }, { (void (*)(void))fic_pap_9_8, 1u FIC_CODE_OWN0 }, { 0, 0u FIC_CODE_OWN0 } },
 };
 
 static fic_ref fic_mkpap(fic_ref f, unsigned k, unsigned j, uint32_t mask, const fic_word *a) {
@@ -559,6 +559,12 @@ static fic_word fic_ap9_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, 
 static fic_word fic_ap1_own(fic_ref f, uint32_t mask, fic_word a0) {
   fic_word r;
 #ifdef FIC_RC
+  if (f->tag == FIC_TAG_CLOSURE && f->rc == 1) {
+    const fic_code *c = FIC_CLO(f)->code;
+    if (c->arity == 1u && c->own != 0) return ((fic_fn1)c->own)(f, a0);
+  }
+#endif
+#ifdef FIC_RC
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
@@ -591,6 +597,12 @@ static fic_word fic_ap1_own(fic_ref f, uint32_t mask, fic_word a0) {
 static fic_word fic_ap2_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1) {
   fic_word r;
 #ifdef FIC_RC
+  if (f->tag == FIC_TAG_CLOSURE && f->rc == 1) {
+    const fic_code *c = FIC_CLO(f)->code;
+    if (c->arity == 2u && c->own != 0) return ((fic_fn2)c->own)(f, a0, a1);
+  }
+#endif
+#ifdef FIC_RC
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
@@ -622,6 +634,12 @@ static fic_word fic_ap2_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1) 
 static fic_word fic_ap3_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2) {
   fic_word r;
 #ifdef FIC_RC
+  if (f->tag == FIC_TAG_CLOSURE && f->rc == 1) {
+    const fic_code *c = FIC_CLO(f)->code;
+    if (c->arity == 3u && c->own != 0) return ((fic_fn3)c->own)(f, a0, a1, a2);
+  }
+#endif
+#ifdef FIC_RC
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
@@ -652,6 +670,12 @@ static fic_word fic_ap3_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, 
 static fic_word fic_ap4_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3) {
   fic_word r;
 #ifdef FIC_RC
+  if (f->tag == FIC_TAG_CLOSURE && f->rc == 1) {
+    const fic_code *c = FIC_CLO(f)->code;
+    if (c->arity == 4u && c->own != 0) return ((fic_fn4)c->own)(f, a0, a1, a2, a3);
+  }
+#endif
+#ifdef FIC_RC
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
@@ -681,6 +705,12 @@ static fic_word fic_ap4_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, 
 static fic_word fic_ap5_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4) {
   fic_word r;
 #ifdef FIC_RC
+  if (f->tag == FIC_TAG_CLOSURE && f->rc == 1) {
+    const fic_code *c = FIC_CLO(f)->code;
+    if (c->arity == 5u && c->own != 0) return ((fic_fn5)c->own)(f, a0, a1, a2, a3, a4);
+  }
+#endif
+#ifdef FIC_RC
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
@@ -709,6 +739,12 @@ static fic_word fic_ap5_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, 
 static fic_word fic_ap6_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4, fic_word a5) {
   fic_word r;
 #ifdef FIC_RC
+  if (f->tag == FIC_TAG_CLOSURE && f->rc == 1) {
+    const fic_code *c = FIC_CLO(f)->code;
+    if (c->arity == 6u && c->own != 0) return ((fic_fn6)c->own)(f, a0, a1, a2, a3, a4, a5);
+  }
+#endif
+#ifdef FIC_RC
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
@@ -736,6 +772,12 @@ static fic_word fic_ap6_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, 
 static fic_word fic_ap7_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4, fic_word a5, fic_word a6) {
   fic_word r;
 #ifdef FIC_RC
+  if (f->tag == FIC_TAG_CLOSURE && f->rc == 1) {
+    const fic_code *c = FIC_CLO(f)->code;
+    if (c->arity == 7u && c->own != 0) return ((fic_fn7)c->own)(f, a0, a1, a2, a3, a4, a5, a6);
+  }
+#endif
+#ifdef FIC_RC
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
@@ -762,6 +804,12 @@ static fic_word fic_ap7_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, 
 static fic_word fic_ap8_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4, fic_word a5, fic_word a6, fic_word a7) {
   fic_word r;
 #ifdef FIC_RC
+  if (f->tag == FIC_TAG_CLOSURE && f->rc == 1) {
+    const fic_code *c = FIC_CLO(f)->code;
+    if (c->arity == 8u && c->own != 0) return ((fic_fn8)c->own)(f, a0, a1, a2, a3, a4, a5, a6, a7);
+  }
+#endif
+#ifdef FIC_RC
   if (f->tag == FIC_TAG_PAP && f->rc == 1) {
     fic_pap *p = (fic_pap *)f;
     fic_ref g = p->fun;
@@ -786,6 +834,12 @@ static fic_word fic_ap8_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, 
 
 static fic_word fic_ap9_own(fic_ref f, uint32_t mask, fic_word a0, fic_word a1, fic_word a2, fic_word a3, fic_word a4, fic_word a5, fic_word a6, fic_word a7, fic_word a8) {
   fic_word r;
+#ifdef FIC_RC
+  if (f->tag == FIC_TAG_CLOSURE && f->rc == 1) {
+    const fic_code *c = FIC_CLO(f)->code;
+    if (c->arity == 9u && c->own != 0) return ((fic_fn9)c->own)(f, a0, a1, a2, a3, a4, a5, a6, a7, a8);
+  }
+#endif
   r = fic_ap9(f, mask, a0, a1, a2, a3, a4, a5, a6, a7, a8);
   FIC_RC_DROP(f);
   return r;

@@ -130,6 +130,9 @@ data MDef =
     , mdVars :: [Int]                      -- the scheme variable index of each part of the key (own variables only:
                                            -- the variables of an enclosing definition belong to the owner's key)
     , mdOwn :: [Own]                       -- ownership of each parameter (S3, Ficcus.Mono.Borrow); empty: all owned (the specializer's output)
+    , mdTwin :: Maybe CloneId              -- S7 part 3 (Ficcus.Mono.Twin): the copy of this lifted clone that OWNS its captured variables; the
+                                           -- closure object enters it when the call consumes a closure that nobody else holds
+    , mdCapsOwned :: Bool                  -- this clone is such a copy: its captured variables are owned (they are borrowed in every other clone)
     }
   deriving (Show)
 

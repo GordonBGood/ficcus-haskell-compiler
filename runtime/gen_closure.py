@@ -64,7 +64,7 @@ w("static const fic_code fic_pap_code[%d][%d] = {" % (MAXA + 1, MAXA + 1))
 for k in range(MAXA + 1):
     row = []
     for j in range(MAXA + 1):
-        row.append("{ (void (*)(void))fic_pap_%d_%d, %du }" % (k, j, k - j) if 2 <= k and 1 <= j < k else "{ 0, 0u }")
+        row.append("{ (void (*)(void))fic_pap_%d_%d, %du FIC_CODE_OWN0 }" % (k, j, k - j) if 2 <= k and 1 <= j < k else "{ 0, 0u FIC_CODE_OWN0 }")
     w("  { " + ", ".join(row) + " },")
 w("};")
 w("""
@@ -112,6 +112,13 @@ w("")
 for n in range(1, MAXA + 1):
     w("static fic_word fic_ap%d_own(fic_ref f, uint32_t mask, %s) {" % (n, args(n)))
     w("  fic_word r;")
+    # S7 part 3: a closure object that nobody else holds, called with exactly its arity: its second entry takes the captured values out
+    w("#ifdef FIC_RC")
+    w("  if (f->tag == FIC_TAG_CLOSURE && f->rc == 1) {")
+    w("    const fic_code *c = FIC_CLO(f)->code;")
+    w("    if (c->arity == %du && c->own != 0) return ((fic_fn%d)c->own)(f, %s);" % (n, n, names(n)))
+    w("  }")
+    w("#endif")
     if n < MAXA:
         w("#ifdef FIC_RC")
         w("  if (f->tag == FIC_TAG_PAP && f->rc == 1) {")
