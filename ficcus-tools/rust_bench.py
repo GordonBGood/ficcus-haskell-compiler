@@ -29,6 +29,7 @@ PROGRAMS = [
     ("nbody",     "nbody.rs",    "nbody.txt",      "nbody",      [], 1, {"unchecked": "unchecked"}),
     ("mandel",    "mandel.rs",   "mandel.txt",     "mandel",     [], 1, {}),
     ("bintree",   "bintree.rs",  "bintree.txt",    "bintree",    [], 1, {"rc": "rc"}),
+    ("bintree_arena", "bintree_arena.rs", "bintree.txt", "bintree", [], 1, {"bump": "bump"}),
     ("wordfreq",  "wordfreq.rs", "wordfreq.txt",   "wordfreq",   [], 1, {"hashmap": "hashmap", "owned": "owned"}),
 ]
 

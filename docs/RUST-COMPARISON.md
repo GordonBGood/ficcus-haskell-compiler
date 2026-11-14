@@ -120,7 +120,8 @@ Ficcus (gcc -O2) against safe Rust (O3), same algorithm, Rust over Ficcus time r
 | hamheap (persistent heap) | 160.3 | 212.4 | **0.75** | 1.33 |
 | sievepq (persistent heap + stream) | 179.0 | 281.0 (BinaryHeap 199.2) | **0.64** (0.90) | 1.28 |
 | sievestream (closures) | 231.3 | 528.1 | **0.44** | 1.42 |
-| bintree (allocation) | 179.9 | 679.5 (Rc 624.5) | **0.26** | 1.20 |
+| bintree (allocation), Box | 179.9 | 679.5 (Rc 624.5) | **0.26** | 1.20 |
+| bintree, ARENA (nodes in a Vec, indices) | 179.9 | 144.5 (BUMP 146.2) | **1.25** | 1.17 (hand C 154.4) |
 
 - **The gap to Rust is a Vector gap.** Wherever the algorithm mutates a flat array in place (sieve, hamvec, fannkuch, nbody, spectral) safe Rust is 2.9 to 26 times faster than Ficcus. Where the algorithm is persistent (heap, stream of closures, allocation of trees) Rust written in the same style is *slower* than Ficcus, by 1.3 to 3.8 times, and still 1.1 times slower with an in-place BinaryHeap in sievepq; the Ficcus compiler is within 1.2 to 1.4 of the best hand C there. The first report, whose sieve was start-up dominated and whose hand C unrolled sieve could not be compared, did not show this.
 - **The sieve is the largest gap (26) and the clearest.** Ficcus is 4.4 times the *hand C plain* sieve, which uses the same runtime vector (so that part is the compiler: what it emits around the vector calls), and the hand C plain is itself 6 times Rust (a runtime call with bounds and uniqueness tests per byte against a checked index that the optimizer reduces to a loop). hamvec has the same shape (4.9 against hand C, 6.5 against Rust).
@@ -128,3 +129,16 @@ Ficcus (gcc -O2) against safe Rust (O3), same algorithm, Rust over Ficcus time r
 - **UNCHECKED still gains nothing** (sieve 13.5 to 12.5 ms, spectral equal, fannkuch and nbody slower): no bounds check is the bottleneck in safe Rust.
 
 What looks improvable in the Ficcus numbers (from the data above, not new analysis): (1) the `Array` of Ints, Floats and flat records as an unboxed, in-place Vector, which is what the five Vector-like rows measure (the S7 profiles, already recorded, put the cost in `Array.get`/`set` walks and per-update uniqueness checks, the boxed nbody elements and `foldl` closures); (2) code emitted around the vector calls, shown by the sieve: Ficcus 353 ms against 80 ms for the hand C using the same runtime; (3) wordfreq, 2.4 to 2.8 times Rust with a BTreeMap and 1.3 times the hand C. Nothing in the persistent-structure rows (heaps, streams, trees) is behind Rust.
+
+## 4. bintree: arena and bump variants, and how much of the gap is the allocator
+
+`targets/rust/bintree_arena.rs` (safe, std only, default global allocator; output equals the golden file; same measurement as above, `--only bintree,bintree_arena`): nodes are `Node { l: u32, i: i64, r: u32 }` in a `Vec`, links are indices. **ARENA** (default build): one Vec per tree with the exact capacity, freed by dropping it (one malloc and one free per tree, not per node). **BUMP** (`--cfg bump`, hand written, 5 lines): one scratch Vec reused for every short-lived tree, `clear()` resets the allocation pointer, so after the first tree the allocator is never called; the long-lived, shared (both links the same index, 21 nodes) and map-test trees are ordinary arenas. Map over a unique tree is in place on the arena, over a tree in use a copy into a new arena.
+
+| bintree | O3 ms | O2 ms | O3 / Ficcus (179.9) | O3 / hand C pool (154.4 to 156.8) |
+|---|---|---|---|---|
+| Box (one malloc/free per node) | 684.1 | 682.9 | 3.80 | 4.36 |
+| Box + Rc for the shared tree | 613.0 | 613.1 | 3.41 | 3.91 |
+| ARENA | 144.5 | 145.0 | **0.80** | 0.92 |
+| BUMP | 146.2 | 148.4 | 0.81 | 0.93 |
+
+**How much of the gap is the allocator.** Of the 504 ms by which the Box program is slower than Ficcus (684 against 180), the arena removes 540 ms (79 % of the Box time): with the per-node malloc/free gone, safe Rust takes 144.5 ms, 0.80 of Ficcus and 0.92 of the best hand C. So essentially the whole gap is the per-node allocation (glibc malloc and free, plus the loss of locality that comes with it) and none of it is the language or the optimizer; Ficcus and the hand C avoid it with the runtime's size-class pool (hand C with plain glibc malloc: 518 ms, with the pool 154 ms). The BUMP variant, which calls the allocator not at all for the short-lived trees, is no faster than ARENA (146 against 144.5 ms): one malloc per tree is already negligible, so what remains in the 145 ms is the work itself. The Rc variant helps only by 11 % (it shares the depth-20 tree, 21 nodes instead of 2 M); an arena shares it in the same way, so ARENA includes that saving too.
