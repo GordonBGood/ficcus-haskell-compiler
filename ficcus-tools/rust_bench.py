@@ -29,7 +29,7 @@ PROGRAMS = [
     ("nbody",     "nbody.rs",    "nbody.txt",      "nbody",      [], 1, {"unchecked": "unchecked"}),
     ("mandel",    "mandel.rs",   "mandel.txt",     "mandel",     [], 1, {}),
     ("bintree",   "bintree.rs",  "bintree.txt",    "bintree",    [], 1, {"rc": "rc"}),
-    ("wordfreq",  "wordfreq.rs", "wordfreq.txt",   "wordfreq",   [], 1, {"hashmap": "hashmap"}),
+    ("wordfreq",  "wordfreq.rs", "wordfreq.txt",   "wordfreq",   [], 1, {"hashmap": "hashmap", "owned": "owned"}),
 ]
 
 
@@ -86,10 +86,10 @@ SCALED_DIR = os.path.join(os.path.dirname(HERE), "targets", "scaled")
 # name, directory, Elm main, [(label, hand C file)], Rust file or None, Rust variants {label: cfg}
 SCALED = [
     ("sieve",       "sieve",       "src/Sieve.elm",         [("hand C plain", "sieve_plain.c"), ("hand C unrolled", "primebench_unrolled.c")], "sieve.rs", {"unchecked": "unchecked"}),
-    ("sievestream", "sievestream", "src/SieveStream.elm",   [("hand C", "sievestream.c")], None, {}),
-    ("sievepq",     "sievepq",     "src/SievePQ.elm",       [("hand C", "sievepq.c")], None, {}),
-    ("hamvec",      "hamvec",      "src/HammingVec.elm",    [("hand C", "hamvec.c")], None, {}),
-    ("hamheap",     "hamheap",     "src/HammingHeap.elm",   [("hand C", "hamheap.c")], None, {}),
+    ("sievestream", "sievestream", "src/SieveStream.elm",   [("hand C", "sievestream.c")], "sievestream.rs", {}),
+    ("sievepq",     "sievepq",     "src/SievePQ.elm",       [("hand C", "sievepq.c")], "sievepq.rs", {"binheap": "binheap"}),
+    ("hamvec",      "hamvec",      "src/HammingVec.elm",    [("hand C", "hamvec.c")], "hamvec.rs", {}),
+    ("hamheap",     "hamheap",     "src/HammingHeap.elm",   [("hand C", "hamheap.c")], "hamheap.rs", {}),
 ]
 
 
@@ -175,6 +175,10 @@ def scaled_set(a, cap, only):
             "%.1f (%s)" % h2 if h2[0] else "-", "%.1f" % r["safe_O3"] if r.get("safe_O3") else "-", "%.1f" % r["safe_O2"] if r.get("safe_O2") else "-",
             "%.1f" % r["unchecked_O3"] if r.get("unchecked_O3") else "-", "%.0f" % el if isinstance(el, float) else el,
             rt(f, h1[0]), rt(r.get("safe_O3"), h1[0]), rt(r.get("safe_O3"), f), "yes" if r["agree"] else "NO"))
+    print("\nlabelled Rust variants of the scaled programs (O3 ms):")
+    for name, r in res.items():
+        for k, v in r.items():
+            if k.endswith("_O3") and k not in ("safe_O3", "unchecked_O3") and isinstance(v, float): print("  %s %s: %.1f" % (name, k[:-3], v))
 
 
 def run_timed_cwd(cmd, cwd, timeout):

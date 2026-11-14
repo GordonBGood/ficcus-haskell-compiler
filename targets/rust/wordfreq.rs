@@ -9,12 +9,14 @@
 // structure), updated with get_mut / insert (no allocation on a hit, like Dict.update).
 // Variant `--cfg hashmap` (labelled HashMap, NOT equivalent to Dict: unordered, SipHash, amortized resize):
 // HashMap<&str, i64>; the result is the same because the entries are fully sorted afterwards.
+// Variant `--cfg owned`: OWNED Strings in BTreeMap<String, usize>, see main below.
 // Sorting: slice sort_by (stable merge sort, like List.sortWith); string order is byte order, equal to the
 // UTF-16 order of JavaScript for the Basic Multilingual Plane text used here. text length = chars().count()
 // (UTF-16 length of the BMP text). Case mapping with to_lowercase/to_uppercase (Unicode, same results here).
 #![forbid(unsafe_code)]
 use std::cmp::Ordering;
 
+#[cfg(not(owned))]
 #[cfg(not(hashmap))]
 type Dict<'a> = std::collections::BTreeMap<&'a str, i64>;
 #[cfg(hashmap)]
@@ -69,10 +71,26 @@ fn word_hash(w: &str) -> i64 {
     w.chars().fold(7, |h, c| (h * 31 + c as i64) % 1000003)
 }
 
+fn report(text_len: usize, nwords: usize, distinct: usize, sorted: &[(&str, i64)]) {
+    println!("text length: {}", text_len);
+    println!("words: {}", nwords);
+    println!("distinct: {}", distinct);
+    for (i, (w, n)) in sorted.iter().take(10).enumerate() { println!("  {}. {} {}", i + 1, w, n); }
+    let mut acc = 0i64;
+    for (i, (w, n)) in sorted.iter().enumerate() { acc = (acc + (i as i64 + 1) * n + word_hash(w)) % 1000000007; }
+    println!("checksum: {}", acc);
+    let least: Vec<String> = sorted.iter().rev().take(3).map(|(w, n)| format!("{} {}", w, n)).collect();
+    println!("least frequent: {}", least.join(", "));
+}
+
+fn lowered_text(text: &str) -> String {
+    text.to_lowercase().chars().map(|c| if c == ' ' || c == ',' || c == '.' || c == '\n' { ' ' } else { c }).collect()
+}
+
+#[cfg(not(owned))]
 fn main() {
     let text = generate();
-    let lowered: String = text.to_lowercase()
-        .chars().map(|c| if c == ' ' || c == ',' || c == '.' || c == '\n' { ' ' } else { c }).collect();
+    let lowered = lowered_text(&text);
     let ws: Vec<&str> = lowered.split_whitespace().collect();
     let mut dict = Dict::new();
     for w in &ws {
@@ -80,13 +98,24 @@ fn main() {
     }
     let mut sorted: Vec<(&str, i64)> = dict.iter().map(|(w, n)| (*w, *n)).collect();
     sorted.sort_by(|(a, na), (b, nb)| match nb.cmp(na) { Ordering::Equal => a.cmp(b), o => o });
-    println!("text length: {}", text.chars().count());
-    println!("words: {}", ws.len());
-    println!("distinct: {}", dict.len());
-    for (i, (w, n)) in sorted.iter().take(10).enumerate() { println!("  {}. {} {}", i + 1, w, n); }
-    let mut acc = 0i64;
-    for (i, (w, n)) in sorted.iter().enumerate() { acc = (acc + (i as i64 + 1) * n + word_hash(w)) % 1000000007; }
-    println!("checksum: {}", acc);
-    let least: Vec<String> = sorted.iter().rev().take(3).map(|(w, n)| format!("{} {}", w, n)).collect();
-    println!("least frequent: {}", least.join(", "));
+    report(text.chars().count(), ws.len(), dict.len(), &sorted);
+}
+
+// Variant `--cfg owned` (labelled OWNED): like for like with our Dict, whose keys are strings of their own:
+// the words are collected as owned Strings (one allocation per word, like the List String of Elm) and the
+// dictionary is BTreeMap<String, usize>, a key moved in on the first occurrence and dropped otherwise.
+#[cfg(owned)]
+fn main() {
+    use std::collections::BTreeMap;
+    let text = generate();
+    let lowered = lowered_text(&text);
+    let ws: Vec<String> = lowered.split_whitespace().map(String::from).collect();
+    let nwords = ws.len();
+    let mut dict: BTreeMap<String, usize> = BTreeMap::new();
+    for w in ws { *dict.entry(w).or_insert(0) += 1; }
+    let distinct = dict.len();
+    let mut owned: Vec<(String, usize)> = dict.into_iter().collect();
+    owned.sort_by(|(a, na), (b, nb)| match nb.cmp(na) { Ordering::Equal => a.cmp(b), o => o });
+    let sorted: Vec<(&str, i64)> = owned.iter().map(|(w, n)| (w.as_str(), *n as i64)).collect();
+    report(text.chars().count(), nwords, distinct, &sorted);
 }
