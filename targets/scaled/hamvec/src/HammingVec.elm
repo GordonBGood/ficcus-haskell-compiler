@@ -1,0 +1,115 @@
+-- Problem: find the number of Hamming numbers up to a limit inclusive...
+-- compile with elm make src/HammingVec.elm --output=hamvec.js
+{-
+   The memoized lazy merge of the Haskell version needs shared, lazily extended lists.
+   The memo is just the sequence produced so far, so keep it in a growable array and
+   read it with three cursors, one each for the multiples of 2, 3 and 5 (Dijkstra's
+   algorithm): next = the smallest of 2 * h[i2], 3 * h[i3], 5 * h[i5], and every
+   cursor that produced it moves on. No thunks, Dict or IORef emulation are needed.
+-}
+
+
+module HammingVec exposing (main)
+
+import Array exposing (Array)
+
+
+
+-- pretend Array is a Vector (push appends in place)
+
+
+limit : number
+limit =
+    2 ^ 53 - 1
+
+
+countHamsTo : Int -> Int
+countHamsTo n =
+    let
+        at i arr =
+            Maybe.withDefault 0 (Array.get i arr)
+
+        loop arr i2 i3 i5 =
+            let
+                x2 =
+                    2 * at i2 arr
+
+                x3 =
+                    3 * at i3 arr
+
+                x5 =
+                    5 * at i5 arr
+
+                m =
+                    min x2 (min x3 x5)
+            in
+            if m > n then
+                Array.length arr
+
+            else
+                loop (Array.push m arr)
+                    (if x2 == m then
+                        i2 + 1
+
+                     else
+                        i2
+                    )
+                    (if x3 == m then
+                        i3 + 1
+
+                     else
+                        i3
+                    )
+                    (if x5 == m then
+                        i5 + 1
+
+                     else
+                        i5
+                    )
+    in
+    loop (Array.fromList [ 1 ]) 0 0 0
+
+
+
+reps : Int
+reps =
+    1000
+
+
+{-| SCALED: the count to (limit - k) for k = 1 .. reps, summed. The counts are all equal (n = 7715 numbers: the
+numbers of Hamming are 53 bit exact here and no Hamming number lies within reps of limit), but a different limit each
+time stops a compiler from computing it once. The number of Hamming numbers below 2^63 is only about 13,000, so n itself
+cannot be scaled with 64 bit Ints (nor beyond 2^53 with Elm's exact Ints); the work is scaled by repetition.
+-}
+repeatCount : Int -> Int -> Int
+repeatCount k acc =
+    if k > reps then
+        acc
+
+    else
+        repeatCount (k + 1) (acc + countHamsTo (limit - k))
+
+
+-- main is a simple test framework using debug mode for output...
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    answer =
+                        "Found "
+                            ++ String.fromInt (repeatCount 1 0)
+                            ++ " Hamming numbers to "
+                            ++ String.fromInt limit
+                            ++ " inclusive."
+
+                    _ =
+                        Debug.log answer ()
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
