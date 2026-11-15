@@ -12,7 +12,8 @@ reuse (MReuse) and of a token free (MFreeTok). There are few of them, so they ar
 covers only the dup/drop sites; STAGE4-PLAN 14: sample 0.05, seed 1).
 
 S6 (FICCUS_RC_MUTATE=sK), also always in full: a take whose index is changed (the placeholder it leaves could be seen) and an owning call
-of a function value turned into an ordinary call (the function is never consumed). The example `fbip` has them."""
+of a function value turned into an ordinary call (the function is never consumed). The example `fbip` has them; `vec` (V1) has the
+takes of `Vector.update` (elements with references)."""
 import argparse, os, random, subprocess, sys, shutil, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))

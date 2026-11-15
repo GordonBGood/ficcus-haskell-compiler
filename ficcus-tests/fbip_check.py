@@ -12,12 +12,13 @@ import argparse, os, re, shutil, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-STATS = re.compile(r"FIC_STATS: allocs (\d+) live (\d+) peak (\d+) dup (\d+) drop (\d+) free_slow \d+ reuse_hit (\d+) reuse_miss (\d+) inplace (\d+) copied (\d+) pap_steal (\d+)(?: clo_steal (\d+))?")
+STATS = re.compile(r"FIC_STATS: allocs (\d+) live (\d+) peak (\d+) dup (\d+) drop (\d+) free_slow \d+ reuse_hit (\d+) reuse_miss (\d+) inplace (\d+) copied (\d+) pap_steal (\d+)(?: clo_steal (\d+))?(?: vec_copy (\d+))?")
 
 HEAD = '''module Main exposing (main)
 
 import Array exposing (Array)
 import Dict exposing (Dict)
+import Vector exposing (Vector)
 
 
 %s
@@ -45,6 +46,34 @@ fill i n a =
 
     else
         fill (i + 1) n (Array.set (modBy (Array.length a) (i * 7)) i a)
+'''
+
+VFILL = '''fill : Int -> Int -> Vector Int -> Vector Int
+fill i n v =
+    if i >= n then
+        v
+
+    else
+        fill (i + 1) n (Vector.set (modBy (Vector.length v) (i * 7)) i v)
+
+
+grow : Int -> Int -> Vector Int -> Vector Int
+grow i n v =
+    if i >= n then
+        v
+
+    else
+        grow (i + 1) n (Vector.push i v)
+
+
+sumV : Int -> Int -> Vector Int -> Int
+sumV i acc v =
+    case Vector.get i v of
+        Just x ->
+            sumV (i + 1) (acc + x) v
+
+        Nothing ->
+            acc
 '''
 
 N = 100000
@@ -201,6 +230,93 @@ loop i n a =
         loop (i + 1) n (if Array.length (f 0 i) > 0 then f 1 i else a)
 """, "Array.foldl (+) 0 (loop 0 %d (Array.repeat 20 0))" % (N // 100), str(N // 100 - 1),
      "copied >= %d and clo_steal <= %d" % (N // 100, N // 100)),     # a closure called twice: the first call must not take the array
+    # V1 (docs/STAGE4-V1.md): the flat Vector. `vec_copy` counts the updates that copied a SHARED vector (the diagnostic of decision D3);
+    # `copied` also counts the moves of a growing unique vector (about log2 n of them)
+    ("vec-set", VFILL, "sumV 0 0 (fill 0 %d (grow 0 1000 (Vector.withCapacity 1000)))" % N, None,
+     "allocs <= 4 and copied == 0 and vec_copy == 0 and inplace == %d + 1000" % N),
+    ("vec-set-shared", VFILL + '''
+
+keep : Int -> Int -> Vector Int -> Int -> Int
+keep i n v acc =
+    if i >= n then
+        acc
+
+    else
+        let
+            w =
+                Vector.set (modBy 20 i) i v
+        in
+        keep (i + 1) n w (acc + Vector.length v)
+''', "keep 0 1000 (grow 0 20 Vector.empty) 0", "20000", "vec_copy == 1000 and copied >= 1000"),
+    ("vec-set-global", VFILL + '''
+
+table : Vector Int
+table =
+    grow 0 20 Vector.empty
+''', "( sumV 0 0 (fill 0 1000 table), sumV 0 0 table )", None, "vec_copy == 1 and inplace >= 999"),
+    ("vec-push", VFILL, "Vector.length (grow 0 %d Vector.empty)" % N, str(N),
+     "allocs <= 24 and vec_copy == 0 and copied <= 20 and inplace >= %d - 20" % N),       # amortized: 16 moves for 100,000 pushes
+    ("vec-swap", VFILL + '''
+
+rev : Int -> Int -> Vector Int -> Vector Int
+rev i j v =
+    if i >= j then
+        v
+
+    else
+        rev (i + 1) (j - 1) (Vector.swap i j v)
+
+
+many : Int -> Vector Int -> Vector Int
+many k v =
+    if k <= 0 then
+        v
+
+    else
+        many (k - 1) (rev 0 (Vector.length v - 1) v)
+''', "sumV 0 0 (many 200 (grow 0 1000 Vector.empty))", None, "vec_copy == 0 and inplace >= %d" % N),
+    ("vec-update-strings", '''bump : Int -> Int -> Vector String -> Vector String
+bump i n v =
+    if i >= n then
+        v
+
+    else
+        bump (i + 1) n (Vector.update (modBy (Vector.length v) (i * 7)) (\\s -> String.fromInt (String.length s + i)) v)
+''', "String.length (String.concat (Vector.toList (bump 0 %d (Vector.fromList (List.map String.fromInt (List.range 1 100))))))" % N, None,
+     "vec_copy == 0 and copied == 0 and inplace == %d and peak <= 420" % N),
+    ("vec-update-records", '''type alias R =
+    { name : String, n : Int, tags : List Int }
+
+
+bump : Int -> Int -> Vector R -> Vector R
+bump i n v =
+    if i >= n then
+        v
+
+    else
+        bump (i + 1) n (Vector.update (modBy (Vector.length v) (i * 7)) (\\r -> { r | n = r.n + i }) v)
+''', "List.sum (List.map .n (Vector.toList (bump 0 %d (Vector.fromList (List.map (\\i -> R (String.fromInt i) i [ i ]) (List.range 1 100))))))" % N, None,
+     "vec_copy == 0 and copied == 0 and inplace == %d and peak <= 620" % N),       # the element is taken out, changed and put back: the vector is never copied
+    ("vec-of-vectors", VFILL + '''
+
+rows : Int -> Vector (Vector Int) -> Vector (Vector Int)
+rows k vv =
+    if k <= 0 then
+        vv
+
+    else
+        rows (k - 1) (Vector.push (grow 0 50 Vector.empty) vv)
+
+
+poke : Int -> Int -> Vector (Vector Int) -> Vector (Vector Int)
+poke i n vv =
+    if i >= n then
+        vv
+
+    else
+        poke (i + 1) n (Vector.update (modBy 40 i) (Vector.set (modBy 50 (i * 3)) i) vv)
+''', "List.sum (List.map (sumV 0 0) (Vector.toList (poke 0 %d (rows 40 Vector.empty))))" % N, None,
+     "vec_copy == 0 and inplace >= %d * 2 and allocs <= %d + 400" % (N, N)),       # the inner vector is unique while it is out of the outer one; one closure (the partial application of Vector.set) per round
     ("dict-insert", '''fill : Int -> Int -> Dict Int Int -> Dict Int Int
 fill i n d =
     if i >= n then
@@ -235,7 +351,7 @@ def main():
     work = a.out or tempfile.mkdtemp(prefix="fbip")
     elm, safe = os.path.abspath(a.elm), os.path.abspath(a.safe)
     bad = 0
-    print("%-20s %-5s %10s %10s %10s %10s %10s %8s" % ("check", "", "allocs", "inplace", "copied", "pap_steal", "clo_steal", "peak"))
+    print("%-20s %-5s %10s %10s %10s %10s %10s %9s %8s" % ("check", "", "allocs", "inplace", "copied", "pap_steal", "clo_steal", "vec_copy", "peak"))
     for name, decls, expr, want, bounds in CHECKS:
         if only and name not in only: continue
         d = os.path.join(work, name)
@@ -249,10 +365,10 @@ def main():
         rc, so, se = sh([safe, "./x"], cwd=d)
         m = STATS.search(se)
         if rc != 0 or not m: print("FAIL %s: exit %d %s" % (name, rc, se[-300:])); bad += 1; continue
-        allocs, live, peak, dup, drop, reuse_hit, reuse_miss, inplace, copied, pap_steal, clo_steal = [ int(g or 0) for g in m.groups() ]
+        allocs, live, peak, dup, drop, reuse_hit, reuse_miss, inplace, copied, pap_steal, clo_steal, vec_copy = [ int(g or 0) for g in m.groups() ]
         got = so.strip().split("result: ", 1)[-1]
         ok = live == 0 and eval(bounds) and (want is None or got == want)
-        print("%-20s %-5s %10d %10d %10d %10d %10d %8d   %s%s" % (name, "ok" if ok else "FAIL", allocs, inplace, copied, pap_steal, clo_steal, peak, bounds,
+        print("%-20s %-5s %10d %10d %10d %10d %10d %9d %8d   %s%s" % (name, "ok" if ok else "FAIL", allocs, inplace, copied, pap_steal, clo_steal, vec_copy, peak, bounds,
                                                          "" if want is None or got == want else "   output %s, expected %s" % (got, want)))
         bad += 0 if ok else 1
     print("%d failure(s)" % bad)

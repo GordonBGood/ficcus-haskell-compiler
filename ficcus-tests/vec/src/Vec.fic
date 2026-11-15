@@ -1,0 +1,357 @@
+module Vec exposing (main)
+
+import Vector exposing (Vector)
+
+-- V1 (docs/STAGE4-V1.md): the primitives of the flat Vector. Every update is done once on a vector that nobody else holds (in place
+-- when counted) and once on a vector that is still used afterwards (it must be copied: the old vector is printed after the update).
+-- Element layouts: Int, Float, Char, Bool (raw scalars), a record of scalars (raw struct), String and a custom type (one reference),
+-- a record and a tuple with references (pointer map), vectors of vectors. Push with growth and with a given capacity; slice and append
+-- with every kind of index; a top level vector; a vector inside a custom type and a record; closures that hold a vector, called once
+-- and twice. Only lists and scalars are printed, so the output must equal that of Elm 0.19.3 running the same source with the
+-- stand-in module ficcus-tests/vecshim/Vector.elm (expected/vec.out).
+
+
+type Shape
+    = Dot
+    | Line Int
+    | Box Int Int
+
+
+type Wrap
+    = Wrap Int (Vector Int)
+
+
+type alias P =
+    { x : Float, y : Float, on : Bool }
+
+
+type alias N =
+    { name : String, n : Int, tags : List String }
+
+
+type alias Rec =
+    { k : Int, v : Vector String }
+
+
+shape : Shape -> String
+shape s =
+    case s of
+        Dot ->
+            "."
+
+        Line n ->
+            "L" ++ String.fromInt n
+
+        Box a b ->
+            "B" ++ String.fromInt a ++ "x" ++ String.fromInt b
+
+
+grow : Int -> Int -> Vector Int -> Vector Int
+grow i n v =
+    if i >= n then
+        v
+
+    else
+        grow (i + 1) n (Vector.push (i * i) v)
+
+
+sumFrom : Int -> Int -> Vector Int -> Int
+sumFrom i acc v =
+    case Vector.get i v of
+        Just x ->
+            sumFrom (i + 1) (acc + x) v
+
+        Nothing ->
+            acc
+
+
+sig : Vector Int -> ( Int, Int, List Int )
+sig v =
+    ( Vector.length v, sumFrom 0 0 v, Vector.toList (Vector.slice 0 5 v) )
+
+
+fill : Int -> Int -> Int -> Vector Int -> Vector Int
+fill i n k v =
+    if i >= n then
+        v
+
+    else
+        fill (i + 1) n k (Vector.set (modBy (Vector.length v) (i * k)) i v)
+
+
+rev : Int -> Int -> Vector a -> Vector a
+rev i j v =
+    if i >= j then
+        v
+
+    else
+        rev (i + 1) (j - 1) (Vector.swap i j v)
+
+
+reverse : Vector a -> Vector a
+reverse v =
+    rev 0 (Vector.length v - 1) v
+
+
+strs : Int -> Vector String
+strs n =
+    Vector.fromList (List.map (\i -> "s" ++ String.fromInt i) (List.range 1 n))
+
+
+names : Int -> Vector N
+names n =
+    Vector.fromList (List.map (\i -> { name = "n" ++ String.fromInt i, n = i, tags = [ String.fromInt (i * 10) ] }) (List.range 1 n))
+
+
+showN : N -> String
+showN r =
+    r.name ++ ":" ++ String.fromInt r.n ++ ":" ++ String.join "," r.tags
+
+
+showP : P -> String
+showP p =
+    String.fromFloat p.x
+        ++ "/"
+        ++ String.fromFloat p.y
+        ++ (if p.on then
+                "+"
+
+            else
+                "-"
+           )
+
+
+bumpAll : Int -> Vector N -> Vector N
+bumpAll i v =
+    if i >= Vector.length v then
+        v
+
+    else
+        bumpAll (i + 1) (Vector.update i (\r -> { r | n = r.n + 100, tags = r.name :: r.tags }) v)
+
+
+-- the sieve of Eratosthenes on a Vector Bool (True: composite)
+cull : Int -> Int -> Int -> Vector Bool -> Vector Bool
+cull j step limit v =
+    if j > limit then
+        v
+
+    else
+        cull (j + step) step limit (Vector.set j True v)
+
+
+sieve : Int -> Int -> Vector Bool -> Vector Bool
+sieve p limit v =
+    if p * p > limit then
+        v
+
+    else
+        case Vector.get p v of
+            Just False ->
+                sieve (p + 1) limit (cull (p * p) p limit v)
+
+            _ ->
+                sieve (p + 1) limit v
+
+
+falses : Int -> Vector Bool -> Vector Bool
+falses n v =
+    if n <= 0 then
+        v
+
+    else
+        falses (n - 1) (Vector.push False v)
+
+
+primes : Int -> Int -> Vector Bool -> List Int -> List Int
+primes i limit v acc =
+    if i < 2 then
+        acc
+
+    else
+        primes (i - 1)
+            limit
+            v
+            (case Vector.get i v of
+                Just False ->
+                    i :: acc
+
+                _ ->
+                    acc
+            )
+
+
+table : Vector Int
+table =
+    Vector.fromList [ 5, 5, 5, 5, 5, 5, 5, 5, 5, 5 ]
+
+
+stepWrap : Wrap -> Wrap
+stepWrap (Wrap n v) =
+    Wrap (n + 1) (Vector.set (modBy 4 n) (n * 3) v)
+
+
+wrapN : Int -> Wrap -> Wrap
+wrapN k w =
+    if k <= 0 then
+        w
+
+    else
+        wrapN (k - 1) (stepWrap w)
+
+
+showWrap : Wrap -> ( Int, List Int )
+showWrap (Wrap n v) =
+    ( n, Vector.toList v )
+
+
+putter : Vector Int -> (Int -> Int -> Vector Int)
+putter v =
+    \i x -> Vector.set i x v
+
+
+once : Int -> (Int -> Int -> Vector Int) -> Vector Int
+once i f =
+    f i (i * 11)
+
+
+twice : (Int -> Int -> Vector Int) -> ( List Int, List Int )
+twice f =
+    ( Vector.toList (f 0 70), Vector.toList (f 1 71) )
+
+
+pushIn : Int -> Int -> Vector (Vector Int) -> Vector (Vector Int)
+pushIn i x vv =
+    Vector.update i (Vector.push x) vv
+
+
+nested : Vector (Vector Int) -> List (List Int)
+nested vv =
+    List.map Vector.toList (Vector.toList vv)
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    v10 =
+                        grow 0 10 Vector.empty
+
+                    a1 =
+                        Debug.log "push from empty" (sig (grow 0 1000 Vector.empty))
+
+                    a2 =
+                        Debug.log "push with capacity" (sig (grow 0 100 (Vector.withCapacity 100)))
+
+                    a3 =
+                        Debug.log "push shared" ( sig (Vector.push 7 v10), sig v10, sig (Vector.push 8 v10) )
+
+                    b1 =
+                        Debug.log "set unique" (sig (fill 0 500 7 (grow 0 20 Vector.empty)))
+
+                    b2 =
+                        Debug.log "set shared" ( Vector.toList (Vector.set 3 -1 v10), Vector.toList v10 )
+
+                    b3 =
+                        Debug.log "set out of range" ( Vector.toList (Vector.set 10 1 v10), Vector.toList (Vector.set -1 1 v10), Vector.toList (Vector.set 0 1 Vector.empty) )
+
+                    b4 =
+                        Debug.log "get" ( ( Vector.get 0 v10, Vector.get 9 v10 ), ( Vector.get 10 v10, Vector.get -1 v10 ), Vector.get 0 (Vector.slice 3 3 v10) )
+
+                    c1 =
+                        Debug.log "update Int" ( Vector.toList (Vector.update 2 (\x -> x + 1000) (grow 0 5 Vector.empty)), Vector.toList (Vector.update 9 negate v10), Vector.toList (Vector.update 10 negate v10) )
+
+                    s5 =
+                        strs 5
+
+                    c2 =
+                        Debug.log "update String" ( Vector.toList (Vector.update 1 (\s -> s ++ "!") (strs 3)), Vector.toList (Vector.update 4 String.toUpper s5), Vector.toList s5 )
+
+                    n3 =
+                        names 3
+
+                    c3 =
+                        Debug.log "update record unique" (List.map showN (Vector.toList (bumpAll 0 (names 4))))
+
+                    c4 =
+                        Debug.log "update record shared" ( List.map showN (Vector.toList (bumpAll 0 n3)), List.map showN (Vector.toList n3) )
+
+                    c5 =
+                        Debug.log "set record" (List.map showN (Vector.toList (Vector.set 1 { name = "new", n = 0, tags = [] } (names 3))))
+
+                    d1 =
+                        Debug.log "swap unique" ( Vector.toList (reverse (grow 0 7 Vector.empty)), Vector.toList (reverse (strs 4)), List.map showN (Vector.toList (reverse (names 3))) )
+
+                    d2 =
+                        Debug.log "swap shared" ( Vector.toList (Vector.swap 0 9 v10), Vector.toList v10, Vector.toList (Vector.swap 4 4 v10) )
+
+                    d3 =
+                        Debug.log "swap out of range" ( Vector.toList (Vector.swap 0 10 v10), Vector.toList (Vector.swap -1 0 v10), Vector.toList (Vector.swap 0 0 (strs 0)) )
+
+                    e1 =
+                        Debug.log "slice" ( ( Vector.toList (Vector.slice 2 5 v10), Vector.toList (Vector.slice -3 10 v10), Vector.toList (Vector.slice 0 -8 v10) ), ( Vector.toList (Vector.slice 5 2 v10), Vector.toList (Vector.slice -50 50 v10), Vector.toList (Vector.slice 10 12 v10) ), Vector.toList (Vector.slice 1 3 s5) )
+
+                    e2 =
+                        Debug.log "append" ( ( Vector.toList (Vector.append (strs 2) (strs 3)), Vector.toList (Vector.append s5 s5), Vector.toList s5 ), ( Vector.toList (Vector.append Vector.empty v10), Vector.toList (Vector.append v10 Vector.empty) ), sig (Vector.append (grow 0 3 (Vector.withCapacity 50)) (grow 0 40 Vector.empty)) )
+
+                    f1 =
+                        Debug.log "floats and chars" ( Vector.toList (Vector.set 1 2.5 (Vector.fromList [ 0.5, 1.5, 1.0e-7 ])), Vector.toList (reverse (Vector.fromList [ 'a', 'é', '😣' ])), Vector.toList (Vector.push () (Vector.fromList [ () ])) )
+
+                    f2 =
+                        Debug.log "records of scalars" (List.map showP (Vector.toList (Vector.update 1 (\p -> { p | on = True, y = p.y * 2 }) (Vector.fromList [ P 1 2 False, P 3 4.5 False, P 5 6 True ]))))
+
+                    f3 =
+                        Debug.log "custom type and tuples" ( List.map shape (Vector.toList (Vector.set 0 (Box 2 3) (Vector.fromList [ Dot, Line 4, Dot ]))), Vector.toList (Vector.update 0 (\( n, s ) -> ( n + 1, s ++ s )) (Vector.fromList [ ( 1, "a" ), ( 2, "b" ) ])), Vector.toList (Vector.push (Just 3) (Vector.fromList [ Nothing, Just 1 ])) )
+
+                    g1 =
+                        Debug.log "primes below 100" (primes 100 100 (sieve 2 100 (falses 101 Vector.empty)) [])
+
+                    h1 =
+                        Debug.log "top level vector" ( sig (fill 0 100 3 table), Vector.toList table )
+
+                    w0 =
+                        Wrap 0 (Vector.fromList [ 0, 0, 0, 0 ])
+
+                    h2 =
+                        Debug.log "in a custom type" ( showWrap (wrapN 10 (Wrap 0 (Vector.fromList [ 0, 0, 0, 0 ]))), showWrap (stepWrap w0), showWrap w0 )
+
+                    r0 =
+                        { k = 1, v = strs 2 }
+
+                    r1 =
+                        { r0 | v = Vector.push "more" r0.v }
+
+                    h3 =
+                        Debug.log "in a record" ( Vector.toList r0.v, Vector.toList r1.v, r1.k )
+
+                    i1 =
+                        Debug.log "closure called once" (Vector.toList (once 2 (putter (grow 0 4 Vector.empty))))
+
+                    i2 =
+                        Debug.log "closure called twice" (twice (putter (grow 0 3 Vector.empty)))
+
+                    vv =
+                        Vector.fromList [ Vector.fromList [ 1 ], Vector.empty, Vector.fromList [ 2, 3 ] ]
+
+                    j1 =
+                        Debug.log "vector of vectors unique" (nested (pushIn 2 9 (pushIn 1 8 (pushIn 1 7 (Vector.fromList [ Vector.fromList [ 1 ], Vector.empty, Vector.fromList [ 2, 3 ] ])))))
+
+                    j2 =
+                        Debug.log "vector of vectors shared" ( nested (pushIn 0 5 vv), nested vv, nested (Vector.swap 0 2 vv) )
+
+                    j3 =
+                        Debug.log "equality" ( ( Vector.fromList [ 1, 2 ] == Vector.fromList [ 1, 2 ], Vector.fromList [ 1, 2 ] == Vector.fromList [ 1, 3 ] ), ( strs 2 == strs 2, strs 2 == strs 3 ), names 2 == names 2 )
+
+                    used =
+                        List.length [ a1 ] + List.length [ a2 ] + List.length [ a3 ] + List.length [ b1 ] + List.length [ b2 ] + List.length [ b3 ] + List.length [ b4 ] + List.length [ c1 ] + List.length [ c2 ] + List.length [ c3 ] + List.length [ c4 ] + List.length [ c5 ] + List.length [ d1 ] + List.length [ d2 ] + List.length [ d3 ] + List.length [ e1 ] + List.length [ e2 ] + List.length [ f1 ] + List.length [ f2 ] + List.length [ f3 ] + List.length [ g1 ] + List.length [ h1 ] + List.length [ h2 ] + List.length [ h3 ] + List.length [ i1 ] + List.length [ i2 ] + List.length [ j1 ] + List.length [ j2 ] + List.length [ j3 ]
+                in
+                if used > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
