@@ -79,7 +79,7 @@ data Resolution
 -- | `prefix.name`: a member of the type `prefix`.  Elm's first rule has priority: when `prefix` is a
 -- module or alias that has `name`, this is not a member reference.
 resolve :: Env.Env -> Module.Prefix -> N.Name -> Resolution
-resolve (Env.Env _ vs ts _ _ qvs qts _) prefix name =
+resolve (Env.Env _ vs _ _ _ qvs _ _) prefix name =
   let
     chars = Module.prefixToChars prefix
     mangled = Members.mangle (tname chars) name
@@ -87,7 +87,7 @@ resolve (Env.Env _ vs ts _ _ qvs qts _) prefix name =
     isNamed k = fmap snd (Members.split k) == Just name
     inModule = case Map.lookup prefix qvs of { Just q -> Map.member name q ; Nothing -> False }
   in
-  if '$' `elem` chars || inModule then
+  if inModule || '$' `elem` chars then
     NotMember
 
   else
@@ -108,22 +108,10 @@ resolve (Env.Env _ vs ts _ _ qvs qts _) prefix name =
                 | otherwise -> UnknownMember chars (List.sort (Members.membersOf' (Map.keys qualified)))
 
           Nothing ->
-            if not isModule && typeInScope ts qts chars
-            then UnknownMember chars (List.sort (Members.membersOf chars (Map.keys vs)))
-            else NotMember
-
-
--- | the type with this name is in scope, unqualified (`Money`) or qualified (`Alias.Money`)
-typeInScope :: Env.Exposed T.Name Env.Type -> Env.Qualified T.Name Env.Type -> String -> Bool
-typeInScope ts qts chars =
-  case break (== '.') (reverse chars) of
-    (revType, []) ->
-      not (null revType) && Map.member (tname (reverse revType)) ts
-
-    (revType, _:revQual) ->
-      case Map.lookup (Module.toPrefix (Module.fromString (S.fromChars (reverse revQual)))) qts of
-        Just types -> Map.member (tname (reverse revType)) types
-        Nothing    -> False
+            -- only a type that has members here gets the member error: for any other prefix Elm's own error stays
+            case List.sort (Members.membersOf chars (Map.keys vs)) of
+              []      -> NotMember
+              members -> if isModule then NotMember else UnknownMember chars members
 
 
 tname :: String -> T.Name

@@ -1,7 +1,7 @@
 # ATTACH A1: functions attached to custom types (stage A1 of docs/ABILITIES-PROPOSAL.md)
 
-Branch `feat/attach` (worktree `ficcus-haskell-compiler-attach`), binary `bin/elmficA3` (and later). Tests: `tests/attach/` in the workspace
-(`python3 tests/attach/attach.py --elm bin/elmficA3`, table `tests/attach/expected.tsv`). Not in A1: `where` after signatures, constraints,
+Branch `feat/attach` (worktree `ficcus-haskell-compiler-attach`), binary `bin/elmficA4`. Tests: `tests/attach/` in the workspace
+(`python3 tests/attach/attach.py --elm bin/elmficA4`, table `tests/attach/expected.tsv`). Not in A1: `where` after signatures, constraints,
 well known members, `derive`, operators.
 
 The rules below are what the compiler does now. Items marked **(review)** are choices the user should confirm before A2.
@@ -50,9 +50,10 @@ In this order, the first that applies:
    module's last name part is the type's name (`import Finance.Money` makes `Finance.Money.add` reach `Money.add`; so does
    `import Finance.Money as Fm` with `Fm.add`). **(review)** The last rule is my reading of the proposal's "`Finance.Money.add` for a
    clash"; the form that always works is `Finance.Money.Money.add`.
-4. Otherwise Elm's own error (NAMING ERROR, "I cannot find a `P` module"); except that when `P` names a type in scope and is not
-   a module, the error is the member error: "I cannot find a `Money.foo` member", followed by the members the type has (or "has no
-   members that I can see here" with the `Money(..)` hint).
+4. Otherwise Elm's own error (NAMING ERROR, "I cannot find a `P` module"), unchanged, also when `P` is a type without members. Only
+   when `P` is a type that has members visible here (and is not a module) and `f` is none of them, the error is the member
+   error: "I cannot find a `Money.foo` member", followed by the members the type has. (A type exported closed has no members for
+   importers, so there the module error of Elm stays.)
 
 Two imported types of one name that both have `f`, both in scope as `T`: AMBIGUOUS NAME (the text says "import A as T / import B as T",
 it names the modules). **(review)** wording.
@@ -85,7 +86,7 @@ Local before imported: a type declared in the module hides an imported type of t
 | the same from a package built separately | `.elmi`/interface carries the members (`cross-package`) |
 | module `Money` exposing `add : Int -> Int -> Int` and imported type `Money` with members `add`, `only`: `Money.add 1 2`, `Money.only 7`, `Types.Money.add a b` | rule 1 wins for `add`; `only` falls to the type (rule 3); the full name reaches the type's `add` (`qualified-clash`) |
 | local module `Money` with `double`, local type `Money` with `add`: `Money.double 4`, `Money.add a b` | rule 1 for `double`, rule 2 for `add` (`local-module-shadow`) |
-| `T.fop` where `T` has `foo`, `bar` | NAMING ERROR, "The `T` type has these members: T.bar, T.foo" (`unknown-member`) |
+| `T.fop` where `T` has `foo`, `bar` | NAMING ERROR, "The `T` type has these members: T.bar, T.foo" (`unknown-member`); `T.fop` for a type without members: Elm's error, unchanged (`unknown-no-members`) |
 | `type alias Meters = Float where ...` | MEMBERS ON A TYPE ALIAS (`alias-where`) |
 
 ## 6. Changes to upstream files (all small; new logic is in the new modules)
