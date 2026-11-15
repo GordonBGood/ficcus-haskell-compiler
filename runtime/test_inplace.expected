@@ -1,4 +1,4 @@
-FIC_STATS: allocs 36 live 0 peak 8 dup 22 drop 30 free_slow 16 reuse_hit 0 reuse_miss 0 inplace 12 copied 9 pap_steal 4 clo_steal 2
+FIC_STATS: allocs 36 live 0 peak 8 dup 22 drop 30 free_slow 16 reuse_hit 0 reuse_miss 0 inplace 12 copied 9 pap_steal 4 clo_steal 2 vec_copy 0
 ok   push on a unique array: 6 elements, capacity 8
 ok   set on a unique array is in place
 ok   set on a shared array copies

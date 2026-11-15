@@ -1,0 +1,45 @@
+FIC_STATS: allocs 4060 live 0 peak 2002 dup 37 drop 36 free_slow 24 reuse_hit 0 reuse_miss 0 inplace 1260 copied 2024 pap_steal 0 clo_steal 0 vec_copy 8
+ok   an empty vector: length 0, a leaf for the drop
+ok   100 pushes: length 100, capacity 128, the elements
+ok   growth is amortized: 6 moves (4, 8, .. 128), 94 pushes in place, no copy of a shared vector
+ok   set on a unique vector is in place
+ok   set on a shared vector copies; the original is unchanged and unique again
+ok   the copy has no spare capacity
+ok   set out of range changes nothing
+ok   swap on a unique vector is in place
+ok   swap out of range, or of an element with itself, changes nothing
+ok   swap on a shared vector copies
+ok   push on a shared vector copies, with room to grow
+ok   slice 10 20: ten elements, a new vector
+ok   slice -3 1000: the last three
+ok   slice 50 40: empty
+ok   append to a unique empty vector moves into a larger one
+ok   append v v: the vector is shared for the call, so it is copied; the elements are doubled
+ok   append on a shared vector copies
+ok   Int vectors: nothing is live
+ok   a vector of 1000 bytes with capacity given: no growth, 143 set
+ok   a vector of structs of scalars: stored flat, swapped whole
+ok   raw vectors: nothing is live
+ok   a vector of references is not a leaf
+ok   set in place drops the old element
+ok   the copy of a shared vector counts the elements it shares
+ok   set out of range releases the element
+ok   after the copy is dropped the elements are unique again
+ok   take from a unique vector moves the element out and leaves a placeholder
+ok   the set after the take puts it back in place
+ok   a vector with a placeholder can be dropped
+ok   take from a shared vector gives a counted copy
+ok   the set after it copies the vector
+ok   a slice counts its elements
+ok   append counts the elements it takes from the borrowed vector
+ok   reference vectors: nothing is live
+ok   a vector of structs with references: 6 elements, 12 objects held
+ok   set in place drops both references of the old element
+ok   a copy counts exactly the reference words
+ok   take from a unique vector of structs: both references moved, placeholders left
+ok   and put back in place
+ok   the elements of the copy are unique after the original is dropped
+ok   struct vectors: nothing is live
+ok   a chain of 2000 nested vectors is dropped
+ok   copies of shared vectors so far
+0 failures

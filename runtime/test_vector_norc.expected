@@ -1,0 +1,9 @@
+ok   an empty vector: length 0, a leaf for the drop
+ok   100 pushes: length 100, the elements
+ok   no counts: set copies
+ok   no counts: push copies
+ok   no counts: swap copies
+ok   no counts: append copies
+ok   slice
+ok   no counts: take is a read
+0 failures

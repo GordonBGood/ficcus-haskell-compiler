@@ -31,6 +31,7 @@ typedef fic_hdr *fic_ref;
 #define FIC_TAG_VEC_RAW     0xFFFEu   /* a vector without references */
 #define FIC_TAG_CLOSURE     0xFFFDu   /* header, code pointer, nptr captured references, captured scalars */
 #define FIC_TAG_PAP         0xFFFCu   /* header, code, fun, mask, nargs, args (words): released through the mask */
+#define FIC_TAG_VECTOR      0xFFFBu   /* a Vector (fic_vector, fic_vector.h): flat elements; nptr is 1 when the elements hold references */
 #define FIC_TAG_STRING      0xFFF0u   /* header, byte length, code point length, bytes, NUL */
 #define FIC_TAG_BOX         0xFFF1u   /* a struct held where a single word is needed (an object with the struct flattened) */
 
@@ -48,6 +49,7 @@ static size_t fic_live_objects, fic_total_allocs;
 #ifdef FIC_STATS
 static size_t fic_n_dup, fic_n_drop, fic_n_free_slow, fic_n_reuse_hit, fic_n_reuse_miss, fic_peak_live;
 static size_t fic_n_inplace, fic_n_copied, fic_n_pap_steal, fic_n_clo_steal;   /* S6: array updates in place and copied, partial applications taken apart */
+static size_t fic_n_vcopy;          /* V1 (decision D3): updates of a Vector that copied it because it was shared (count above 1) */
 #  define FIC_STAT(x) (x)
 #else
 #  define FIC_STAT(x) ((void)0)
@@ -249,6 +251,15 @@ static inline void fic_free_obj(void *o) {
 typedef struct fic_vec { fic_hdr h; int64_t len; int64_t cap; size_t esize; unsigned char data[]; } fic_vec;
 #define FIC_VEC(r) ((fic_vec *)(r))
 
+/* The Vector of the language (V1, decisions D1 to D8; the operations are in fic_vector.h). Elements are stored flat, `esize` bytes each.
+   `desc` is NULL when an element holds no reference (RAW: scalars and structs of scalars); otherwise it lists the byte offsets of the
+   reference words inside one element (a single reference: one offset 0; a struct with references: its pointer map), and the drop, the
+   copy and the layout check walk exactly those. The header's nptr is 1 when there is a descriptor and 0 when not, so a RAW vector is
+   a leaf for the generic drop. */
+typedef struct fic_vdesc { uint32_t nref; const uint16_t *off; } fic_vdesc;
+typedef struct fic_vector { fic_hdr h; uint32_t esize; uint32_t spare; int64_t len; int64_t cap; const fic_vdesc *desc; unsigned char data[]; } fic_vector;
+#define FIC_VECTOR(r) ((fic_vector *)(r))
+
 static void fic_free_slow(fic_ref o);
 
 /* a new reference to o: o is not consumed */
@@ -341,6 +352,17 @@ static void fic_free_slow(fic_ref o) {            /* o->rc has just reached 0 */
       break; }
     case FIC_TAG_VEC_RAW: case FIC_TAG_STRING:
       break;
+    case FIC_TAG_VECTOR: {
+      fic_vector *v = FIC_VECTOR(o);
+      const fic_vdesc *d = v->desc;
+      if (d != NULL) {
+        unsigned char *e = v->data;
+        int64_t i;
+        uint32_t k;
+        for (i = 0; i < v->len; i++, e += v->esize)
+          for (k = 0; k < d->nref; k++) FIC_RELEASE_CHILD(*(fic_ref *)(void *)(e + d->off[k]));
+      }
+      break; }
     case FIC_TAG_PAP: {
       fic_pap *p = (fic_pap *)o;
       uint32_t i;
@@ -379,6 +401,17 @@ static size_t fic_check_object(const fic_hdr *o) {
     for (i = 0; i < (size_t)v->len; i++) bad += fic_check_child(o, ((fic_ref const *)v->data)[i], i);
     break; }
   case FIC_TAG_VEC_RAW: break;
+  case FIC_TAG_VECTOR: {
+    const fic_vector *v = (const fic_vector *)o;
+    const fic_vdesc *d = v->desc;
+    if (v->len < 0 || v->len > v->cap || v->esize == 0 || (d != NULL) != (o->nptr != 0)) {
+      fprintf(stderr, "FIC_DROP_ALL: vector %p: length %lld capacity %lld element size %u\n", (const void *)o, (long long)v->len, (long long)v->cap, (unsigned)v->esize); bad++; break; }
+    if (d != NULL) {
+      size_t k;
+      for (i = 0; i < (size_t)v->len; i++)
+        for (k = 0; k < d->nref; k++) bad += fic_check_child(o, *(fic_ref const *)(const void *)(v->data + i * v->esize + d->off[k]), i);
+    }
+    break; }
   case FIC_TAG_STRING: {
     const fic_hdr *s = o;
     const int64_t *len = (const int64_t *)(s + 1);
@@ -422,9 +455,9 @@ static int fic_shutdown(void) {
   }
 #endif
 #ifdef FIC_STATS
-  fprintf(stderr, "FIC_STATS: allocs %zu live %zu peak %zu dup %zu drop %zu free_slow %zu reuse_hit %zu reuse_miss %zu inplace %zu copied %zu pap_steal %zu clo_steal %zu\n",
+  fprintf(stderr, "FIC_STATS: allocs %zu live %zu peak %zu dup %zu drop %zu free_slow %zu reuse_hit %zu reuse_miss %zu inplace %zu copied %zu pap_steal %zu clo_steal %zu vec_copy %zu\n",
           fic_total_allocs, fic_live_objects, fic_peak_live, fic_n_dup, fic_n_drop, fic_n_free_slow, fic_n_reuse_hit, fic_n_reuse_miss,
-          fic_n_inplace, fic_n_copied, fic_n_pap_steal, fic_n_clo_steal);
+          fic_n_inplace, fic_n_copied, fic_n_pap_steal, fic_n_clo_steal, fic_n_vcopy);
 #ifdef FIC_RC
   if (fic_live_objects != 0) bad = 1;          /* a counted program must have freed everything by now (the globals are dropped first) */
 #endif
