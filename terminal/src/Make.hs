@@ -246,6 +246,7 @@ writeOverlay root =
       same <- if old then (== Overlay.overlaySource) <$> readFileStrict file else return False
       if same then return () else writeFile file Overlay.overlaySource
       writeFile (dir FP.</> Overlay.bitwise64FileName) Overlay.bitwise64Source
+      writeFile (dir FP.</> Overlay.vectorFileName) Overlay.vectorSource
       Flags.setExtraSrcDir (Just dir)
       -- the elm/parser overlay is a root module of the projects that depend on elm/parser
       let elmJson = R.toAbsolutePath root (R.Relative "elm.json")

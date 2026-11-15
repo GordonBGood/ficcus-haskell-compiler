@@ -44,8 +44,8 @@ import Ficcus.Mono.Borrow
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
-import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig, takeKernel, unsafeGetKernel, unsafeSetKernel, applyOwnKernel)
-import Ficcus.Mono.Layout (nptrOf, objSizeClass)
+import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig, unsafeGetKernel, applyOwnKernel, takeFor, isTakeKernel)
+import Ficcus.Mono.Layout (leavesOf, nptrOf, objSizeClass)
 import Ficcus.Mono.Reuse
 import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
@@ -630,23 +630,28 @@ takeCall :: Ctx -> Env -> MExpr -> [MExpr] -> Maybe MExpr
 takeCall ctx env v rest =
   case mNode v of
     MCall h [i, a]
-      | takeOn, MKernel name key@(Key [ByClass CRef]) <- mNode h, name == unsafeGetKernel, mRep v == CRef
+      | takeOn, MKernel name key <- mNode h, Just (takeName, setName) <- takeFor name, elemOk name key
       , MLocal t <- mNode a, Map.member t env, indexAtom i
-      , Just counts <- mapM (updatesOf t i) rest, maximum (0 : counts) == 1 ->
-          Just v { mNode = MCall h { mNode = MKernel takeKernel key } [i, a] }
+      , Just counts <- mapM (updatesOf setName t i) rest, maximum (0 : counts) == 1 ->
+          Just v { mNode = MCall h { mNode = MKernel takeName key } [i, a] }
     _ -> Nothing
   where
+    -- a JsArray holds words: only a plain reference is taken. A Vector (V1) holds its elements flat: a reference, or a struct with
+    -- reference components (a struct of scalars is copied by the read, there is nothing to take)
+    elemOk name key
+      | name == unsafeGetKernel = key == Key [ByClass CRef] && mRep v == CRef
+      | otherwise = CRef `elem` leavesOf (mRep v)
     indexAtom i = case mNode i of { MLocal _ -> True; MLit _ -> True; _ -> False }
     sameAtom i j = case (mNode i, mNode j) of { (MLocal x, MLocal y) -> x == y; (MLit x, MLit y) -> x == y; _ -> False }
     uses t e = Map.member t (fvOf ctx e)
     -- the largest number of updates of `t` at `i` on a path through `e`; Nothing when `t` is used in another way
-    updatesOf :: String -> MExpr -> MExpr -> Maybe Int
-    updatesOf t i e
+    updatesOf :: String -> String -> MExpr -> MExpr -> Maybe Int
+    updatesOf setName t i e
       | not (uses t e) = Just 0
-      | MCall h [j, x, a] <- mNode e, MKernel name _ <- mNode h, name == unsafeSetKernel, MLocal t' <- mNode a, t' == t =
+      | MCall h [j, x, a] <- mNode e, MKernel name _ <- mNode h, name == setName, MLocal t' <- mNode a, t' == t =
           if sameAtom i j && not (uses t x) then Just 1 else Nothing
       | otherwise =
-          let one = updatesOf t i
+          let one = updatesOf setName t i
               atMostOne r = case r of { Just k | k <= 1 -> r; _ -> Nothing }
           in atMostOne $
              case mNode e of
@@ -769,7 +774,7 @@ rcMutateS6 n program =
     mut :: MExpr -> State Int MExpr
     mut e =
       case mNode e of
-        MCall h [i, a] | MKernel name _ <- mNode h, name == takeKernel ->
+        MCall h [i, a] | MKernel name _ <- mNode h, isTakeKernel name ->
           do  broken <- hit
               return (if broken then e { mNode = MCall h [i { mNode = MLit (LInt 4095) }, a] } else e)
         MCall h (f : rest) | MKernel name _ <- mNode h, name == applyOwnKernel ->

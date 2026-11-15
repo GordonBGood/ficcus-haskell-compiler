@@ -17,6 +17,10 @@ def table():
     bw = [("and", 2), ("or", 2), ("xor", 2), ("complement", 1), ("shiftLeftBy", 2), ("shiftRightBy", 2), ("shiftRightZfBy", 2)]
     for pre in ("Bitwise", "Bitwise64"):
         for n, a in bw: sig["elm/core:%s.%s" % (pre, n)] = "s" * a
+    # the Vector intrinsics (V1): one list of (name, arity, signature)
+    vk = k[k.index("vectorKernels ::"):k.index("vectorKernelId ::")]
+    for n, a, sg in re.findall(r'\("(\w+)", (\d+), "([sbo]*)"\)', vk):
+        ar["elm/core:Vector." + n] = int(a); sig["elm/core:Vector." + n] = sg
     return ar, sig
 
 
@@ -27,7 +31,7 @@ def main():
         print("| kernel | arity | signature | note |\n|---|---|---|---|")
         for c in ar:
             s = "bb (string), bo (list)" if c == "elm/core:Basics.append" else sig.get(c, "?")
-            note = "result is a borrowed element: the pass adds the count" if c == "elm/core:Elm.JsArray.unsafeGet" else ""
+            note = "result is a borrowed element: the pass adds the count" if c in ("elm/core:Elm.JsArray.unsafeGet", "elm/core:Vector.unsafeGet") else ""
             print("| %s | %d | `%s` | %s |" % (c, ar[c], s, note))
     print(("FAIL kernel signatures: " + ", ".join(bad)) if bad else "ok   kernel signatures: %d kernels, all have a signature of the right length" % len(ar), file=sys.stderr)
     return 1 if bad else 0

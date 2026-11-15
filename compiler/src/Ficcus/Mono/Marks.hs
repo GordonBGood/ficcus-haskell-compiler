@@ -18,6 +18,9 @@ module Ficcus.Mono.Marks
 --     (propagated to the owner of every variable in the instance type; a fixpoint), or
 --   * it is *Printed*: the same, from the roots `Debug.toString` and `Debug.log` (only matters in builds
 --     with Debug, STAGE3-DESIGN review addition 1).
+--   * it is an *Element* (V1, docs/STAGE4-V1.md): the element type of a flat Vector, from the roots that are the intrinsics of the
+--     overlay module `Vector` (overlay/Vector.elm). The elements are stored in the layout of their exact type, so every function
+--     that reads, writes or creates elements needs it; a function that only passes a vector on does not.
 -- `row` variables are listed by kind (keyed by layout, not by type).
 -- The equatable fixpoint is the one of `ficcus-tests/scheme_stats.py`, which counted it on 4.6 million
 -- instances; `ficcus-tests/marks_check.py` compares the two.
@@ -27,9 +30,11 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
 import Ficcus.Mono.Facts
+import Ficcus.Mono.Kernel (vectorKernels)
+import Ficcus.Mono.Overlay (vectorModuleId)
 
 
-data Mark = Equatable | Printed
+data Mark = Equatable | Printed | Element
   deriving (Eq, Ord, Show)
 
 
@@ -39,7 +44,7 @@ type Marks = Map.Map (String, Int) (Set.Set Mark)
 
 compute :: [ModuleFacts] -> Marks
 compute modules =
-  Map.unionWith Set.union (fixpoint Equatable equatableRoots) (fixpoint Printed printedRoots)
+  Map.unionsWith Set.union [fixpoint Equatable equatableRoots, fixpoint Printed printedRoots, fixpoint Element elementRoots]
   where
     uses = concatMap mfUses modules
     byCallee = Map.fromListWith (++) [ (ufCallee u, [u]) | u <- uses ]
@@ -47,6 +52,7 @@ compute modules =
 
     equatableRoots = [ ("elm/core:Basics.eq", 0), ("elm/core:Basics.neq", 0) ]
     printedRoots = [ ("elm/core:Debug.toString", 0), ("elm/core:Debug.log", 0) ]
+    elementRoots = [ (vectorModuleId ++ n, 0) | (n, _, _) <- vectorKernels ]
 
     fixpoint mark roots =
       let reached = go (Set.fromList roots) roots

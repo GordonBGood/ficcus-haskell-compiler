@@ -380,6 +380,108 @@ t(RO + "size", ['Regex.split (rx "b") (mk 1 ++ "abc")', 'Regex.split (rx "") ""'
 t(RO + "advance", ['List.map .index (Regex.find (rx "") (mk 1))', 'List.map .index (Regex.find (rx "") "é😣a")', 'Regex.replace (rx "x*") (\\_ -> "-") "aéb"', 'Regex.split (rx "\\\\b") "é a"'],
   needle="fic_re_advance", **ropt)
 
+# V1 (docs/STAGE4-V1.md): the intrinsics of the flat Vector, each with the three element layouts: RAW (Int, and a record of scalars),
+# REF (String) and MAP (a record with references)
+V = "elm/core:Vector."
+VDECL = '''
+type alias P =
+    { x : Float, on : Bool, n : Int }
+
+
+type alias N =
+    { name : String, n : Int, tags : List String }
+
+
+vi : Int -> Vector Int
+vi n =
+    Vector.fromList (List.range 1 n)
+
+
+vs : Int -> Vector String
+vs n =
+    Vector.fromList (List.map mk (List.range 1 n))
+
+
+vp : Int -> Vector P
+vp n =
+    Vector.fromList (List.map (\\i -> P (toFloat i / 2) (modBy 2 i == 0) i) (List.range 1 n))
+
+
+vn : Int -> Vector N
+vn n =
+    Vector.fromList (List.map (\\i -> N (mk i) i [ mk (i * 10), mk (i * 100) ]) (List.range 1 n))
+
+
+noV : Vector String
+noV =
+    Vector.empty
+
+
+noI : Vector Int
+noI =
+    Vector.empty
+
+
+capP : Vector P
+capP =
+    Vector.withCapacity -5
+
+
+pushAll : List a -> Vector a -> Vector a
+pushAll xs v =
+    case xs of
+        [] ->
+            v
+
+        x :: rest ->
+            pushAll rest (Vector.push x v)
+'''
+vopt = dict(imports="import Vector exposing (Vector)", decls=VDECL)
+t(V + "empty", ['Vector.toList noV', 'Vector.length (Vector.push (mk 1) Vector.empty)', 'Vector.toList (Vector.push (N (mk 1) 1 []) Vector.empty)',
+                'let e = Vector.empty in ( Vector.toList (Vector.push 1 e), Vector.length e )'], needle="fic_vector_new(0", **vopt)
+t(V + "withCapacity", ['Vector.toList (pushAll [ mk 1, mk 2, mk 3 ] (Vector.withCapacity 2))', 'Vector.toList (pushAll [ 1, 2, 3 ] (Vector.withCapacity 100))',
+                       'Vector.length capP', 'let w = Vector.withCapacity 4 in ( Vector.toList (Vector.push (mk 1) w), Vector.toList (Vector.push (mk 2) w) )'],
+  needle="fic_vector_new(", **vopt)
+t(V + "length", ['Vector.length (vs 5)', 'let a = vn 40 in ( Vector.length a, Vector.get 39 a )', 'Vector.length noI'], needle="FIC_VECTOR_LEN", **vopt)
+t(V + "unsafeGet", ['Vector.get 1 (vs 3)', 'let a = vs 50 in ( ( Vector.get 40 a, Vector.get 2 a ), Vector.get 99 a, Vector.length a )', 'Vector.get 0 noV',
+                    'Vector.get 2 (vi 3)', '( Vector.get 3 (vi 3), Vector.get -1 (vi 3) )', 'Vector.get 1 (vp 3)', 'let a = vn 3 in ( ( Vector.get 0 a, Vector.get 2 a ), Vector.get 3 a, a )'],
+  needle="FIC_VECTOR_GET", **vopt)
+# the take is made by the Rc pass from the unsafeGet of Vector.update (elements with references)
+t(V + "unsafeTake", ['Vector.toList (Vector.update 1 (\\s -> s ++ "!") (vs 3))', 'let a = vs 3 in ( Vector.toList (Vector.update 0 (\\s -> s ++ "?") a), Vector.toList a )',
+                     'Vector.toList (Vector.update 2 (\\r -> { r | name = r.name ++ "+", tags = mk 0 :: r.tags }) (vn 3))',
+                     'let a = vn 3 in ( Vector.toList (Vector.update 0 (\\r -> { r | tags = [] }) a), a )',
+                     'Vector.toList (Vector.update 7 (\\s -> s ++ "!") (vs 3))', 'Vector.toList (Vector.update -1 (\\r -> { r | n = 0 }) (vn 2))',
+                     'Vector.toList (Vector.update 1 (\\n -> n * 10) (vi 3))', 'Vector.toList (Vector.update 1 (\\s -> mk (String.length s)) (vs 2))',
+                     'let k = mk 5 in ( Vector.toList (Vector.update 0 (\\_ -> k) (vs 2)), k )'], needle="fic_nil()", **vopt)
+t(V + "set", ['Vector.toList (Vector.set 1 (mk 9) (vs 3))', 'let a = vs 3 in ( Vector.toList (Vector.set 0 (mk 8) a), Vector.toList a )',
+              'Vector.toList (Vector.set 9 (mk 6) (vs 2))', 'Vector.toList (Vector.set -1 (mk 6) (vs 2))', 'let s = mk 5 in ( Vector.toList (Vector.set 0 s (Vector.set 1 s (vs 2))), s )',
+              'Vector.toList (Vector.set 2 77 (vi 4))', 'let a = vi 4 in ( Vector.toList (Vector.set 3 0 a), Vector.toList a, Vector.toList (Vector.set 4 0 a) )',
+              'Vector.toList (Vector.set 0 (P 9.5 True 9) (vp 2))', 'let a = vn 3 in ( Vector.toList (Vector.set 1 (N (mk 7) 7 [ mk 8 ]) a), Vector.toList a )',
+              'Vector.toList (Vector.set 5 (N (mk 7) 7 [ mk 8 ]) (vn 2))', 'Vector.toList (Vector.set 0 True (Vector.fromList [ False, False ]))'], needle="fic_vector_set", **vopt)
+t(V + "swap", ['Vector.toList (Vector.swap 0 2 (vs 3))', 'let a = vs 3 in ( Vector.toList (Vector.swap 0 1 a), Vector.toList a )', 'Vector.toList (Vector.swap 0 3 (vs 3))',
+               'Vector.toList (Vector.swap -1 0 (vi 3))', 'Vector.toList (Vector.swap 1 1 (vi 3))', 'Vector.toList (Vector.swap 0 4 (vp 5))',
+               'let a = vn 3 in ( Vector.toList (Vector.swap 2 0 a), Vector.toList a )', 'Vector.toList (Vector.swap 1 0 (vn 2))'], needle="fic_vector_swap", **vopt)
+t(V + "push", ['Vector.toList (Vector.push (mk 9) (vs 2))', 'let a = vs 2 in ( Vector.toList (Vector.push (mk 8) a), Vector.toList a )',
+               'Vector.length (pushAll (List.map mk (List.range 1 80)) (vs 1))', 'let s = mk 7 in ( Vector.toList (Vector.push s (Vector.push s Vector.empty)), s )',
+               'Vector.toList (pushAll (List.range 1 40) Vector.empty)', 'Vector.toList (Vector.push (P 1.5 False 3) (vp 1))',
+               'let a = vn 2 in ( Vector.toList (Vector.push (N (mk 3) 3 []) a), a )', 'Vector.length (pushAll (List.map (\\i -> N (mk i) i [ mk i ]) (List.range 1 70)) Vector.empty)'],
+  needle="fic_vector_push", **vopt)
+t(V + "slice", ['Vector.toList (Vector.slice 1 3 (vs 5))', 'let a = vs 5 in ( Vector.toList (Vector.slice -2 5 a), Vector.toList a )', 'Vector.toList (Vector.slice 3 1 (vs 5))',
+                'Vector.toList (Vector.slice 0 99 (vi 4))', 'Vector.toList (Vector.slice -99 -1 (vi 4))', 'Vector.toList (Vector.slice 1 2 (vp 3))',
+                'let a = vn 4 in ( Vector.toList (Vector.slice 1 3 a), Vector.length a )', 'Vector.toList (Vector.slice 0 0 (vn 2))'], needle="fic_vector_slice", **vopt)
+t(V + "append", ['Vector.toList (Vector.append (vs 2) (vs 3))', 'let a = vs 2 in ( Vector.toList (Vector.append a a), Vector.toList a )',
+                 'let a = vs 2 in let b = vs 1 in ( Vector.toList (Vector.append a b), Vector.toList (Vector.append b a), Vector.toList a )',
+                 'Vector.toList (Vector.append Vector.empty (vs 2))', 'Vector.toList (Vector.append (vs 2) Vector.empty)', 'Vector.toList (Vector.append (vi 3) (vi 2))',
+                 'Vector.toList (Vector.append (pushAll [ 1, 2 ] (Vector.withCapacity 10)) (vi 3))', 'Vector.toList (Vector.append (vp 1) (vp 2))',
+                 'let a = vn 2 in ( Vector.toList (Vector.append (vn 1) a), Vector.toList (Vector.append a (vn 1)), a )'], needle="fic_vector_append", **vopt)
+t(V + "fromList", ['Vector.toList (Vector.fromList [ mk 1, mk 2 ])', 'let l = List.map mk (List.range 1 70) in ( Vector.length (Vector.fromList l), List.length l )',
+                   'Vector.toList (Vector.fromList noS)', 'Vector.fromList [ 1, 2, 3 ]', 'Vector.fromList [ \'a\', \'b\' ]', 'Vector.fromList [ 1.5, -0.25 ]',
+                   'Vector.fromList [ ( 1, mk 2 ), ( 3, mk 4 ) ]', 'let l = [ N (mk 1) 1 [ mk 2 ] ] in ( Vector.fromList l, l )', 'Vector.fromList [ vs 1, vs 2, Vector.empty ]',
+                   'Vector.fromList [ [ mk 1 ], [] ]', 'Vector.fromList [ Just (mk 1), Nothing ]', 'Vector.fromList [ (), () ]'], needle="fic_vfl_", **vopt)
+t(V + "toList", ['Vector.toList (vs 3)', 'let a = vs 3 in ( Vector.toList a, Vector.toList a, a )', 'Vector.toList noV', 'Vector.toList (vi 3)',
+                 'Vector.toList (vp 2)', 'let a = vn 2 in ( Vector.toList a, a )', 'List.map Vector.toList (Vector.toList (Vector.fromList [ vi 1, vi 2 ]))',
+                 'vn 2 == vn 2', 'vs 2 == vs 3', 'vp 3 == Vector.set 1 (P 0 False 0) (vp 3)', 'Vector.fromList [ vi 1, vi 2 ] == Vector.fromList [ vi 1, vi 2 ]'], needle="fic_vtl_", **vopt)
+
 ELM_JSON = '''{"type": "application", "source-directories": ["src"], "elm-version": "0.19.3",
  "dependencies": {"direct": {"elm/core": "1.0.5"%s}, "indirect": {%s}}, "test-dependencies": {"direct": {}, "indirect": {}}}
 '''
@@ -393,7 +495,8 @@ def needed():
     ref_result = {"elm/core:String.fromInt", "elm/core:String.fromFloat", "elm/core:Elm.JsArray.empty", "elm/core:Platform.Cmd.none", "elm/core:Platform.Sub.none",
                   "elm/json:Json.Encode.int", "elm/json:Json.Encode.float", "elm/json:Json.Encode.bool", "elm/json:Json.Encode.null", "elm/json:Json.Decode.string",
                   "elm/json:Json.Decode.bool", "elm/json:Json.Decode.int", "elm/json:Json.Decode.float", "elm/json:Json.Decode.value",
-                  "author/project:FicOverlayJson.objectKeys", "author/project:FicOverlayBytes.failure"}
+                  "author/project:FicOverlayJson.objectKeys", "author/project:FicOverlayBytes.failure",
+                  "elm/core:Vector.empty", "elm/core:Vector.withCapacity"}
     out = []
     for c in ar:
         s = "bb" if c == "elm/core:Basics.append" else sig.get(c, "")

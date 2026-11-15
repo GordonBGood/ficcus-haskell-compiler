@@ -9,6 +9,7 @@ module Ficcus.Mono.CRuntime
   , jsonRuntime
   , bytesRuntime
   , regexRuntime
+  , vectorRuntime
   )
   where
 
@@ -77,3 +78,9 @@ bytesRuntime =
 regexRuntime :: String
 regexRuntime =
   $(embedFiles [ "runtime/fic_regex.h" ])
+
+
+-- the flat Vector (V1; needs only the prelude): emitted only by programs that use it
+vectorRuntime :: String
+vectorRuntime =
+  $(embedFiles [ "runtime/fic_vector.h" ])

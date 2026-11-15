@@ -6,6 +6,7 @@ module Ficcus.Mono.Kernel
   , kernelSig
   , kernelResultBorrowed
   , takeKernel, unsafeGetKernel, unsafeSetKernel, applyOwnKernel
+  , vectorKernels, vectorKernelId, takeFor, isTakeKernel, setOfTake, updateKernels
   )
   where
 
@@ -68,7 +69,7 @@ kernelArity cid =
     , ("elm/core:Platform.worker", 1)
     , ("elm/core:Platform.Cmd.none", 0), ("elm/core:Platform.Sub.none", 0)
     ]
-    ++ jsonKernels ++ bytesKernels ++ regexKernels
+    ++ jsonKernels ++ bytesKernels ++ regexKernels ++ [ (vectorKernelId n, k) | (n, k, _) <- vectorKernels ]
 
 
 -- elm/json (runtime/fic_json.h). The functions of Json.Encode and Json.Decode that are kernel functions in Elm are kernels here by the
@@ -108,11 +109,30 @@ regexKernels =
   , ("author/project:FicOverlayRegex.slice", 3), ("author/project:FicOverlayRegex.size", 1), ("author/project:FicOverlayRegex.advance", 2) ]
 
 
+-- The flat Vector (V1, docs/STAGE4-V1.md; runtime/fic_vector.h; the Elm side is overlay/Vector.elm): name, arity and ownership
+-- signature of each intrinsic. Every one has a single type variable, the element type, and is keyed by the EXACT element type
+-- (`forcedExact`; the `Element` mark of Ficcus.Mono.Marks carries that to every function that touches the elements), because the
+-- elements are stored flat in the layout of that type.
+--   set, swap, push consume the vector (in place when unique) and the element they store; append consumes its first vector and
+--   borrows the second; unsafeGet returns a borrowed element (`kernelResultBorrowed`); unsafeTake is made by the Rc pass from an
+--   unsafeGet (`takeFor`): the element is moved out of a unique vector, the result is owned, the vector is only borrowed.
+vectorKernels :: [(String, Int, String)]
+vectorKernels =
+  [ ("empty", 0, ""), ("withCapacity", 1, "s"), ("length", 1, "b"), ("unsafeGet", 2, "sb"), ("unsafeTake", 2, "sb")
+  , ("set", 3, "soo"), ("swap", 3, "sso"), ("push", 2, "oo"), ("slice", 3, "ssb"), ("append", 2, "ob")
+  , ("fromList", 1, "b"), ("toList", 1, "b") ]
+
+
+vectorKernelId :: String -> String
+vectorKernelId n = "elm/core:Vector." ++ n
+
+
 -- | variables of kernel functions keyed by their exact type even though the scheme does not say so
--- (the Printed roots of Ficcus.Mono.Marks: a printer is generated per type)
+-- (the Printed roots of Ficcus.Mono.Marks: a printer is generated per type; the element type of a Vector intrinsic)
 forcedExact :: String -> Int -> Bool
 forcedExact cid ix =
   (cid, ix) `elem` [("elm/core:Debug.log", 0), ("elm/core:Debug.toString", 0)]
+  || (ix == 0 && cid `elem` [ vectorKernelId n | (n, _, _) <- vectorKernels ])
 
 
 -- | the table ids that `Elm.Kernel.<module>.<name>` written directly in a package body may stand for (the wrappers of elm/core
@@ -176,6 +196,7 @@ kernelSig cid key =
       , ("elm/core:Basics.lt", "bb"), ("elm/core:Basics.le", "bb"), ("elm/core:Basics.compare", "bb")
       ]
       ++ [ (n, replicate k 's') | (n, k) <- scalarKernels ]
+      ++ [ (vectorKernelId n, sig) | (n, _, sig) <- vectorKernels ]
       -- elm/json: a function that builds a decoder consumes what it stores (decoders, closures, the constant of succeed and null,
       -- the message of fail, the list of oneOf); running a decoder borrows it and the value; Encode.string returns its argument
       ++ [ ("elm/json:Json.Encode.encode", "sb"), ("elm/json:Json.Encode.string", "o"), ("elm/json:Json.Encode.int", "s"), ("elm/json:Json.Encode.float", "s")
@@ -217,7 +238,7 @@ scalarKernels =
 
 -- | kernels that return a reference they do not own (a counted element of an array): the caller adds the count
 kernelResultBorrowed :: String -> Bool
-kernelResultBorrowed cid = cid == "elm/core:Elm.JsArray.unsafeGet"
+kernelResultBorrowed cid = cid == "elm/core:Elm.JsArray.unsafeGet" || cid == vectorKernelId "unsafeGet"
 
 
 -- | S6: `unsafeTake i a` replaces `unsafeGet i a` where the Rc pass sees that the only later use of the array `a` is
@@ -231,6 +252,36 @@ takeKernel = "elm/core:Elm.JsArray.unsafeTake"
 unsafeGetKernel, unsafeSetKernel :: String
 unsafeGetKernel = "elm/core:Elm.JsArray.unsafeGet"
 unsafeSetKernel = "elm/core:Elm.JsArray.unsafeSet"
+
+
+-- | the families of (read, take, update at an index): `Elm.JsArray` and `Vector` (V1). The take of a family replaces its read where
+-- the only later use of the array is its update at the same index.
+takeFamilies :: [(String, String, String)]
+takeFamilies =
+  [ (unsafeGetKernel, takeKernel, unsafeSetKernel)
+  , (vectorKernelId "unsafeGet", vectorKernelId "unsafeTake", vectorKernelId "set") ]
+
+
+-- | for a read: its take and the update that must follow
+takeFor :: String -> Maybe (String, String)
+takeFor name = case [ (t, u) | (g, t, u) <- takeFamilies, g == name ] of { r : _ -> Just r; [] -> Nothing }
+
+
+isTakeKernel :: String -> Bool
+isTakeKernel name = any (\(_, t, _) -> t == name) takeFamilies
+
+
+-- | the update that puts back what this take took out
+setOfTake :: String -> Maybe String
+setOfTake name = case [ u | (_, t, u) <- takeFamilies, t == name ] of { u : _ -> Just u; [] -> Nothing }
+
+
+-- | the kernels that update their array in place when it is unique, with the index of the array argument (the update rule of
+-- Ficcus.Mono.Borrow: a parameter that reaches one of them is owned)
+updateKernels :: [(String, Int)]
+updateKernels =
+  [ ("elm/core:Elm.JsArray.unsafeSet", 2), ("elm/core:Elm.JsArray.push", 1)
+  , (vectorKernelId "set", 2), (vectorKernelId "swap", 2), (vectorKernelId "push", 1), (vectorKernelId "append", 0) ]
 
 
 -- | S6, unique PAP stealing: `MCall (MKernel applyOwnKernel _) (f : args)` is a call of the function value `f` that CONSUMES `f`

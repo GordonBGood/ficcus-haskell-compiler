@@ -38,7 +38,7 @@ import System.IO.Unsafe (unsafePerformIO)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
-import Ficcus.Mono.Kernel (kernelSig)
+import Ficcus.Mono.Kernel (kernelSig, updateKernels)
 import Ficcus.Mono.Layout (objSizeClass)
 import Ficcus.Mono.Reuse
 
@@ -405,9 +405,6 @@ updateParams clones = go Set.empty
     rootsOf env a = [ q | Just n <- [viewRoot a], Just q <- [Map.lookup n env] ]
 
 
--- | the kernels that update their array in place when it is unique, with the index of the array argument
-updateKernels :: [(String, Int)]
-updateKernels = [("elm/core:Elm.JsArray.unsafeSet", 2), ("elm/core:Elm.JsArray.push", 1)]
 
 
 {-# NOINLINE projRule #-}

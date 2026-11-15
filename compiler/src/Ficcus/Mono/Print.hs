@@ -69,6 +69,7 @@ markLine marks d =
       shown (i, kind, ms) = "v" ++ show i ++ "=" ++ kind ++ concatMap markWord (Set.toList ms)
       markWord Equatable = "+equatable"
       markWord Printed = "+printed"
+      markWord Element = "+element"
       interesting (_, kind, ms) = kind == "row" || isKeyed kind ms
   in
   if any interesting parts

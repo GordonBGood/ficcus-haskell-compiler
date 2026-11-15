@@ -10,7 +10,9 @@ Program number N is made from random.Random(N) alone (fixed seeds: the same N is
 does not change). Each program has a fixed prelude (recursive functions on lists and trees, a pair builder, loops) and generated
 functions and outputs that use: let, case on lists, trees, tuples, Maybe and Result, closures and partial applications, records and
 record updates, self tail calls (loops), strings, and (S6) arrays and dictionaries: Array.set, push, append, slice, map on arrays with
-and without a tree, shared and not shared, Dict.insert, update, remove and union, partial applications that hold an array.
+and without a tree, shared and not shared, Dict.insert, update, remove and union, partial applications that hold an array, and (V1)
+flat vectors: Vector Int, Vector String, Vector Rec (records with references: a pointer map) and Vector (Vector Int), with set,
+update, swap, push (growth), append, slice, fromList and toList on values that are shared and that are not, and closures that hold one.
 
 For each program:
   1. the no-RC build (`elm make --no-rc`, gcc -O1) is run: its output is the oracle;
@@ -29,6 +31,7 @@ PRELUDE = '''module Main exposing (main)
 
 import Array exposing (Array)
 import Dict exposing (Dict)
+import Vector exposing (Vector)
 
 
 type Tree
@@ -313,13 +316,113 @@ applyOnce f x =
 applyTwice : (Int -> Int) -> Int -> Int
 applyTwice f x =
     f (f x)
+
+
+-- V1 (docs/STAGE4-V1.md): flat vectors. Updates in place when the vector is not shared, copies when it is; push grows; a vector of
+-- records with references; a vector of vectors (the inner one is taken out by `update` and put back)
+sumVecFrom : Int -> Int -> Vector Int -> Int
+sumVecFrom i acc v =
+    case Vector.get i v of
+        Just x ->
+            sumVecFrom (i + 1) (acc + x) v
+
+        Nothing ->
+            acc
+
+
+sumVec : Vector Int -> Int
+sumVec v =
+    sumVecFrom 0 (Vector.length v) v
+
+
+szVecS : Vector String -> Int
+szVecS v =
+    String.length (joinS (Vector.toList v))
+
+
+szVecR : Vector Rec -> Int
+szVecR v =
+    List.foldl (\\r n -> n + szRec r) (Vector.length v) (Vector.toList v)
+
+
+szVecV : Vector (Vector Int) -> Int
+szVecV v =
+    List.foldl (\\w n -> n + sumVec w) (Vector.length v) (Vector.toList v)
+
+
+setAllV : Int -> Vector Int -> Vector Int
+setAllV i v =
+    if i <= 0 then
+        v
+
+    else
+        setAllV (i - 1) (Vector.set (modBy (1 + Vector.length v) (i * 7)) i v)
+
+
+growVec : Int -> Vector Int -> Vector Int
+growVec i v =
+    if i <= 0 then
+        v
+
+    else
+        growVec (i - 1) (Vector.push i v)
+
+
+revVec : Int -> Int -> Vector Int -> Vector Int
+revVec i j v =
+    if i >= j then
+        v
+
+    else
+        revVec (i + 1) (j - 1) (Vector.swap i j v)
+
+
+bumpR : Int -> Vector Rec -> Vector Rec
+bumpR i v =
+    Vector.update i (\\r -> { r | a = r.a + 1, xs = i :: r.xs }) v
+
+
+pushIn : Int -> Int -> Vector (Vector Int) -> Vector (Vector Int)
+pushIn i x v =
+    Vector.update i (Vector.push x) v
+
+
+getVAt : Vector Int -> Int -> Int
+getVAt v i =
+    Maybe.withDefault i (Vector.get i v)
+
+
+putVL : Vector Int -> (Int -> Int -> Vector Int)
+putVL v =
+    \\i x -> Vector.set i x v
+
+
+callV : Int -> (Int -> Int -> Vector Int) -> Vector Int
+callV i f =
+    f i (i + 1)
+
+
+bothV : (Int -> Int -> Vector Int) -> Vector Int
+bothV f =
+    if sumVec (f 0 1) > 3 then
+        f 1 2
+
+    else
+        f 2 3
+
+
+noRec : Rec
+noRec =
+    { a = 0, s = "none", xs = [] }
 '''
 
-TYPES = ["Int", "Str", "Bool", "LInt", "LStr", "Tree", "MInt", "Res", "Pair", "Rec", "Fn", "Arr", "ArrS", "Dct"]
+TYPES = ["Int", "Str", "Bool", "LInt", "LStr", "Tree", "MInt", "Res", "Pair", "Rec", "Fn", "Arr", "ArrS", "Dct", "Vec", "VecS", "VecR", "VecV"]
 ELM = {"Int": "Int", "Str": "String", "Bool": "Bool", "LInt": "List Int", "LStr": "List String", "Tree": "Tree", "MInt": "Maybe Int",
-       "Res": "Result String Int", "Pair": "Pair", "Rec": "Rec", "Fn": "(Int -> Int)", "Arr": "Array Int", "ArrS": "Array String", "Dct": "Dict Int Int"}
+       "Res": "Result String Int", "Pair": "Pair", "Rec": "Rec", "Fn": "(Int -> Int)", "Arr": "Array Int", "ArrS": "Array String", "Dct": "Dict Int Int",
+       "Vec": "Vector Int", "VecS": "Vector String", "VecR": "Vector Rec", "VecV": "Vector (Vector Int)"}
 SIZE = {"Int": "%s", "Str": "String.length %s", "Bool": "szB %s", "LInt": "List.length %s", "LStr": "String.length (joinS %s)", "Tree": "treeSum %s",
-        "MInt": "szM %s", "Res": "szR %s", "Pair": "szP %s", "Rec": "szRec %s", "Fn": "%s 3", "Arr": "sumArr %s", "ArrS": "szArrS %s", "Dct": "szDct %s"}
+        "MInt": "szM %s", "Res": "szR %s", "Pair": "szP %s", "Rec": "szRec %s", "Fn": "%s 3", "Arr": "sumArr %s", "ArrS": "szArrS %s", "Dct": "szDct %s",
+        "Vec": "sumVec %s", "VecS": "szVecS %s", "VecR": "szVecR %s", "VecV": "szVecV %s"}
 
 
 class Gen:
@@ -355,6 +458,11 @@ class Gen:
         if t == "Arr": return r.choice(["Array.empty", "(Array.fromList [ 1, 2, 3 ])", "(Array.repeat 40 2)", "(Array.initialize 70 identity)"])
         if t == "ArrS": return r.choice(["Array.empty", '(Array.fromList [ "a", "b" ])', '(Array.repeat 35 "s")'])
         if t == "Dct": return r.choice(["Dict.empty", "(Dict.fromList [ ( 1, 2 ), ( 3, 4 ) ])", "(fillD 20 Dict.empty)"])
+        if t == "Vec": return r.choice(["Vector.empty", "(Vector.fromList [ 1, 2, 3 ])", "(growVec 40 Vector.empty)", "(growVec 5 (Vector.withCapacity 16))"])
+        if t == "VecS": return r.choice(["Vector.empty", '(Vector.fromList [ "a", "b" ])', '(Vector.push "s" (Vector.fromList [ "p", "q", "r" ]))'])
+        if t == "VecR": return r.choice(["Vector.empty", '(Vector.fromList [ { a = 1, s = "r", xs = [] }, { a = 4, s = "", xs = [ 1, 2 ] } ])',
+                                         '(Vector.push { a = 7, s = "t", xs = [ 3 ] } Vector.empty)'])
+        if t == "VecV": return r.choice(["Vector.empty", "(Vector.fromList [ Vector.fromList [ 1, 2 ], Vector.empty ])", "(Vector.push (growVec 6 Vector.empty) Vector.empty)"])
         raise ValueError(t)
 
     # an expression of type t; `ind` is the indentation of the line it starts on (continuation lines are indented more)
@@ -365,7 +473,18 @@ class Gen:
         k = r.random()
         if k < 0.34: return self.generic(t, env, d, ind)
         if t == "Int":
-            c = r.randint(0, 26)
+            c = r.randint(0, 34)
+            if c == 27: return "(sumVec %s)" % g("Vec")
+            if c == 28: return "(Maybe.withDefault 0 (Vector.get (modBy 5 %s) %s))" % (g("Int"), g("Vec"))
+            if c == 29: return "(Vector.length %s + szVecS %s)" % (g("Vec"), g("VecS"))
+            if c == 30: return "(szVecR %s)" % g("VecR")
+            if c == 31: return "(szVecV %s)" % g("VecV")
+            if c == 32:
+                v = self.fresh()
+                return "(case Vector.get (modBy 6 %s) %s of\n%sJust %s -> %s\n%sNothing -> %s)" % (
+                    g("Int"), g("Vec"), " " * (ind + 8), v, self.gen("Int", env + [(v, "Int")], d - 1, ind + 12), " " * (ind + 8), g("Int"))
+            if c == 33: return "(Maybe.withDefault 0 (Maybe.map sumVec (Vector.get (modBy 3 %s) %s)))" % (g("Int"), g("VecV"))
+            if c == 34: return "(Maybe.withDefault 1 (Maybe.map szRec (Vector.get (modBy 3 %s) %s)))" % (g("Int"), g("VecR"))
             # S7 (Ficcus.Mono.Inline): a Maybe or Result made by a small function and matched at once
             if c == 17:
                 v = self.fresh()
@@ -408,7 +527,9 @@ class Gen:
             if c == 10: return "(add3 %s %s %s)" % (g("Int"), g("Int"), g("Int"))
             return "(szM %s)" % g("MInt")
         if t == "Str":
-            c = r.randint(0, 5)
+            c = r.randint(0, 7)
+            if c == 6: return "(Maybe.withDefault \"no\" (Vector.get (modBy 3 %s) %s))" % (g("Int"), g("VecS"))
+            if c == 7: return "(getS (Maybe.withDefault noRec (Vector.get (modBy 3 %s) %s)))" % (g("Int"), g("VecR"))
             if c == 5: return "(Maybe.withDefault \"none\" (Array.get (modBy 3 %s) %s))" % (g("Int"), g("ArrS"))
             if c == 0: return "(%s ++ %s)" % (g("Str"), g("Str"))
             if c == 1: return "(String.fromInt %s)" % g("Int")
@@ -424,7 +545,9 @@ class Gen:
             if c == 4: return "(%s && %s)" % (g("Bool"), g("Bool"))
             return "(%s || List.isEmpty %s)" % (g("Bool"), g("LInt"))
         if t == "LInt":
-            c = r.randint(0, 14)
+            c = r.randint(0, 16)
+            if c == 15: return "(Vector.toList %s)" % g("Vec")
+            if c == 16: return "(getXs (Maybe.withDefault noRec (Vector.get (modBy 3 %s) %s)))" % (g("Int"), g("VecR"))
             if c == 12: return "(Array.toList %s)" % g("Arr")
             if c == 13: return "(Dict.keys %s)" % g("Dct")
             if c == 14: return "(Dict.values %s)" % g("Dct")
@@ -443,7 +566,8 @@ class Gen:
             if c == 10: return "(getXs %s)" % g("Rec")
             return "(inc (inc %s))" % g("LInt")
         if t == "LStr":
-            c = r.randint(0, 3)
+            c = r.randint(0, 4)
+            if c == 4: return "(Vector.toList %s)" % g("VecS")
             if c == 3: return "(Array.toList %s)" % g("ArrS")
             if c == 0: return "(%s :: %s)" % (g("Str"), g("LStr"))
             if c == 1: return "(List.map String.fromInt %s)" % g("LInt")
@@ -455,7 +579,8 @@ class Gen:
             if c == 2: return "(fromList %s)" % g("LInt")
             return "(insert %s (insert %s %s))" % (g("Int"), g("Int"), g("Tree"))
         if t == "MInt":
-            c = r.randint(0, 4)
+            c = r.randint(0, 5)
+            if c == 5: return "(Vector.get (modBy 6 %s) %s)" % (g("Int"), g("Vec"))
             if c == 3: return "(Array.get (modBy 6 %s) %s)" % (g("Int"), g("Arr"))
             if c == 4: return "(Dict.get %s %s)" % (g("Int"), g("Dct"))
             if c == 0: return "(Just %s)" % g("Int")
@@ -470,7 +595,8 @@ class Gen:
             if c == 0: return "( %s, %s )" % (g("Int"), g("LInt"))
             return "(splitL %s)" % g("LInt")
         if t == "Rec":
-            c = r.randint(0, 3)
+            c = r.randint(0, 4)
+            if c == 4: return "(Maybe.withDefault noRec (Vector.get (modBy 3 %s) %s))" % (g("Int"), g("VecR"))
             if c == 0: return "{ a = %s, s = %s, xs = %s }" % (g("Int"), g("Str"), g("LInt"))
             v = self.fresh()
             e2 = env + [(v, "Rec")]
@@ -508,8 +634,62 @@ class Gen:
             if c == 3: return "(fillD (modBy 30 %s) %s)" % (g("Int"), g("Dct"))
             if c == 4: return "(Dict.union %s %s)" % (g("Dct"), g("Dct"))
             return "(Dict.insert %s %s (Dict.insert %s %s %s))" % (g("Int"), g("Int"), g("Int"), g("Int"), g("Dct"))
+        if t == "Vec":
+            c = r.randint(0, 15)
+            if c == 0: return "(Vector.set (modBy 4 %s) %s %s)" % (g("Int"), g("Int"), g("Vec"))
+            if c == 1: return "(Vector.set (%s - 2) %s %s)" % (g("Int"), g("Int"), g("Vec"))
+            if c == 2: return "(Vector.push %s %s)" % (g("Int"), g("Vec"))
+            if c == 3: return "(Vector.update (modBy 5 %s) %s %s)" % (g("Int"), g("Fn"), g("Vec"))
+            if c == 4: return "(Vector.fromList %s)" % g("LInt")
+            if c == 5: return "(setAllV (modBy 9 %s) %s)" % (g("Int"), g("Vec"))
+            if c == 6: return "(Vector.append %s %s)" % (g("Vec"), g("Vec"))
+            if c == 7: return "(Vector.slice (%s - 3) (modBy 50 %s) %s)" % (g("Int"), g("Int"), g("Vec"))
+            if c == 8: return "(growVec (modBy 40 %s) %s)" % (g("Int"), g("Vec"))
+            if c == 9: return "(callV (modBy 3 %s) (putVL %s))" % (g("Int"), g("Vec"))
+            if c == 10: return "(bothV (putVL %s))" % g("Vec")
+            if c == 11: return "(Vector.swap (modBy 4 %s) %s %s)" % (g("Int"), g("Int"), g("Vec"))
+            if c == 12: return "(Maybe.withDefault Vector.empty (Vector.get (modBy 3 %s) %s))" % (g("Int"), g("VecV"))
+            if c == 13:
+                v = self.fresh()
+                return self.let(v, "Vec", lambda i: "(revVec 0 (Vector.length %s - 1) %s)" % (v, v), env, d, ind)
+            if c == 14: return "(growVec (modBy 20 %s) (Vector.withCapacity %s))" % (g("Int"), g("Int"))
+            return "(Vector.set 0 %s (Vector.set 1 %s %s))" % (g("Int"), g("Int"), g("Vec"))
+        if t == "VecS":
+            c = r.randint(0, 7)
+            if c == 0: return "(Vector.set (modBy 3 %s) %s %s)" % (g("Int"), g("Str"), g("VecS"))
+            if c == 1: return "(Vector.set (modBy 40 %s) %s %s)" % (g("Int"), g("Str"), g("VecS"))
+            if c == 2: return "(Vector.push %s %s)" % (g("Str"), g("VecS"))
+            if c == 3:
+                w = self.fresh()
+                return "(Vector.update (modBy 4 %s) (\\%s -> %s ++ %s) %s)" % (g("Int"), w, w, g("Str"), g("VecS"))
+            if c == 4: return "(Vector.append %s %s)" % (g("VecS"), g("VecS"))
+            if c == 5: return "(Vector.swap 0 (modBy 3 %s) %s)" % (g("Int"), g("VecS"))
+            if c == 6: return "(Vector.slice 1 (modBy 5 %s) %s)" % (g("Int"), g("VecS"))
+            return "(Vector.fromList %s)" % g("LStr")
+        if t == "VecR":
+            c = r.randint(0, 7)
+            if c == 0: return "(Vector.set (modBy 3 %s) %s %s)" % (g("Int"), g("Rec"), g("VecR"))
+            if c == 1: return "(Vector.push %s %s)" % (g("Rec"), g("VecR"))
+            if c == 2: return "(bumpR (modBy 3 %s) %s)" % (g("Int"), g("VecR"))
+            if c == 3:
+                w = self.fresh()
+                return "(Vector.update (modBy 3 %s) (\\%s -> { %s | s = %s, xs = %s }) %s)" % (g("Int"), w, w, g("Str"), g("LInt"), g("VecR"))
+            if c == 4: return "(Vector.swap 0 (modBy 3 %s) %s)" % (g("Int"), g("VecR"))
+            if c == 5: return "(Vector.append %s %s)" % (g("VecR"), g("VecR"))
+            if c == 6: return "(Vector.fromList [ %s, %s ])" % (g("Rec"), g("Rec"))
+            return "(Vector.slice 0 (modBy 4 %s) %s)" % (g("Int"), g("VecR"))
+        if t == "VecV":
+            c = r.randint(0, 6)
+            if c == 0: return "(Vector.push %s %s)" % (g("Vec"), g("VecV"))
+            if c == 1: return "(Vector.set (modBy 3 %s) %s %s)" % (g("Int"), g("Vec"), g("VecV"))
+            if c == 2: return "(pushIn (modBy 3 %s) %s %s)" % (g("Int"), g("Int"), g("VecV"))
+            if c == 3: return "(Vector.update (modBy 3 %s) (setAllV (modBy 6 %s)) %s)" % (g("Int"), g("Int"), g("VecV"))
+            if c == 4: return "(Vector.fromList [ %s, %s ])" % (g("Vec"), g("Vec"))
+            if c == 5: return "(Vector.swap 0 (modBy 3 %s) %s)" % (g("Int"), g("VecV"))
+            return "(Vector.append %s %s)" % (g("VecV"), g("VecV"))
         if t == "Fn":
-            c = r.randint(0, 5)
+            c = r.randint(0, 6)
+            if c == 6: return "(getVAt %s)" % g("Vec")
             if c == 4: return "(getAt %s)" % g("Arr")
             if c == 5: return "(sumWith %s %s)" % (g("LInt"), g("Arr"))
             w = self.fresh()
@@ -526,7 +706,7 @@ class Gen:
         p = self.pad
         val = self.gen(vt, env, d - 1, base + 8)
         body = body_of(base + 8)
-        ann = (p(base + 5) + v + " : " + ELM[vt].strip("()")) if self.annotate else ""
+        ann = (p(base + 5) + v + " : " + (ELM[vt][1:-1] if vt == "Fn" else ELM[vt])) if self.annotate else ""
         # a let may be directly an operand of a binary operator (fixed in elmfic56: "internal: no scheme for elm/core:Basics.add" before;
         # the example `letop` is the case)
         return "(" + p(base) + "(let" + ann + p(base + 5) + v + " =" + p(base + 9) + val + p(base + 1) + "in" + p(base + 5) + body + "))"
@@ -653,10 +833,12 @@ def check(a, text, work, settings):
     env = dict(os.environ, ELM_HOME=a.elm_home)
     for k in ("FICCUS_BORROW_PROJ", "FICCUS_BORROW_REUSE", "FICCUS_BORROW_S3", "FICCUS_NO_SPEC", "FICCUS_NO_REUSE"): env.pop(k, None)
     elm = os.path.abspath(a.elm)
-    if a.elm_check:
+    if a.elm_check:      # Elm has no module Vector: the stand-in written on Array (ficcus-tests/vecshim) is put beside the program for this check only
         shutil.copy(os.path.join(work, "src", "Main.fic"), os.path.join(work, "src", "Main.elm"))
+        shutil.copy(os.path.join(HERE, "vecshim", "Vector.elm"), os.path.join(work, "src", "Vector.elm"))
         rc, so, se = sh([a.safe, os.path.abspath(a.elm_check), "make", "src/Main.elm", "--output=/dev/null"], cwd=work, env=env)
-        os.remove(os.path.join(work, "src", "Main.elm"))
+        os.remove(os.path.join(work, "src", "Main.elm")); os.remove(os.path.join(work, "src", "Vector.elm"))
+        shutil.rmtree(os.path.join(work, "elm-stuff"), ignore_errors=True)
         if rc != 0: return [("generator", "not valid Elm 0.19.3: " + (so + se)[-600:])]
     rc, so, se = sh([a.safe, elm, "make", "src/Main.fic", "--output=norc.c", "--no-rc"], cwd=work, env=env)
     if rc != 0: return [("generator", "the no-RC compile failed: " + (so + se)[-600:])]

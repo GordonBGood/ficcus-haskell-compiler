@@ -36,7 +36,7 @@ import Ficcus.Mono.Borrow (viewExpr, viewRoot)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
-import Ficcus.Mono.Kernel (applyOwnKernel, kernelResultBorrowed, kernelSig, takeKernel, unsafeSetKernel)
+import Ficcus.Mono.Kernel (applyOwnKernel, kernelResultBorrowed, kernelSig, isTakeKernel, setOfTake)
 import Ficcus.Mono.Layout (leavesOf, objSizeClass)
 import Ficcus.Mono.Reuse
 
@@ -442,30 +442,30 @@ takeCheck caps = go
     go e =
       case mNode e of
         MLetVal _ v b
-          | Just (i, a) <- takeOf v ->
+          | Just (setName, i, a) <- takeOf v ->
               (case (mNode i, mNode a) of
-                 (_, MLocal t) | atom i -> [ "after the take of an element of " ++ t ++ ": " ++ why | why <- seen t i b ]
+                 (_, MLocal t) | atom i -> [ "after the take of an element of " ++ t ++ ": " ++ why | why <- seen setName t i b ]
                  _ -> ["a take whose array is not a variable, or whose index is not a variable or a literal"])
               ++ go b
-        MCall h _ | MKernel name _ <- mNode h, name == takeKernel -> ["a take that is not the value of a let"]
-        MKernel name _ | name == takeKernel -> ["a take that is not called"]
+        MCall h _ | MKernel name _ <- mNode h, isTakeKernel name -> ["a take that is not the value of a let"]
+        MKernel name _ | isTakeKernel name -> ["a take that is not called"]
         _ -> concatMap go (children e)
     takeOf v = case mNode v of
-      MCall h [i, a] | MKernel name _ <- mNode h, name == takeKernel -> Just (i, a)
+      MCall h [i, a] | MKernel name _ <- mNode h, Just setName <- setOfTake name -> Just (setName, i, a)
       _ -> Nothing
     atom i = case mNode i of { MLocal _ -> True; MLit _ -> True; _ -> False }
     sameAtom i j = case (mNode i, mNode j) of { (MLocal x, MLocal y) -> x == y; (MLit x, MLit y) -> x == y; _ -> False }
     -- the occurrences of `t` in `e` that could see the placeholder
-    seen :: String -> MExpr -> MExpr -> [String]
-    seen t i e =
+    seen :: String -> String -> MExpr -> MExpr -> [String]
+    seen setName t i e =
       case mNode e of
         MLocal n -> [ "the array is read" | n == t ]
         MGlobal c -> [ "the array is captured" | t `elem` map fst (Map.findWithDefault [] c caps) ]
         MCall h [j, x, a]
-          | MKernel name _ <- mNode h, name == unsafeSetKernel, MLocal n <- mNode a, n == t ->
-              [ "the array is updated at another index" | not (sameAtom i j) ] ++ seen t i j ++ seen t i x
-        MDup vs b -> [ "the array is dup'd" | t `elem` map fst vs ] ++ seen t i b
-        MDrop _ b -> seen t i b                                                 -- a drop does not look at the elements
-        MUnpack s _ bs b -> [ "the array is unpacked" | s == t || t `elem` [ v | (v, _, _) <- bs ] ] ++ seen t i b
-        MSpec s _ bs _ b -> [ "the array is specialized" | s == t || t `elem` [ v | (v, _, _) <- bs ] ] ++ seen t i b
-        _ -> concatMap (seen t i) (children e)
+          | MKernel name _ <- mNode h, name == setName, MLocal n <- mNode a, n == t ->
+              [ "the array is updated at another index" | not (sameAtom i j) ] ++ seen setName t i j ++ seen setName t i x
+        MDup vs b -> [ "the array is dup'd" | t `elem` map fst vs ] ++ seen setName t i b
+        MDrop _ b -> seen setName t i b                                         -- a drop does not look at the elements
+        MUnpack s _ bs b -> [ "the array is unpacked" | s == t || t `elem` [ v | (v, _, _) <- bs ] ] ++ seen setName t i b
+        MSpec s _ bs _ b -> [ "the array is specialized" | s == t || t `elem` [ v | (v, _, _) <- bs ] ] ++ seen setName t i b
+        _ -> concatMap (seen setName t i) (children e)

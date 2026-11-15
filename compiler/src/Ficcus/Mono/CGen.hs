@@ -30,7 +30,8 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
-import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, prelude, regexRuntime, stringRuntime)
+import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, prelude, regexRuntime, stringRuntime, vectorRuntime)
+import Ficcus.Mono.Overlay (vectorMarker, vectorTypeName)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free (captures, refClass)
 import Ficcus.Mono.Ir
@@ -61,6 +62,8 @@ data G =
     , gNullary :: Set.Set Int          -- tags whose static nullary object (fic_nulN) is used
     , gRc :: Bool                      -- the program has counts (--rc): the generated code owns, dups and drops (STAGE4-PLAN)
     , gStrings :: Map.Map String Int   -- the static string literals, by text
+    , gVecDescs :: Set.Set [Class]     -- V1: the struct classes with references that are elements of a Vector (a static descriptor each)
+    , gSite :: String                  -- V1: the Elm name of the definition being generated (the FIC_WARN_COPY line names it)
     }
 
 
@@ -118,19 +121,21 @@ generate rcMode program =
         clones = mpClones program
         info = Info (Map.fromList [ (mdClone d, d) | d <- clones ]) (captures clones) (mpUnions program)
                     (Set.fromList (allObjects clones)) (Set.fromList (structsOf clones))
-        g0 = G [] 0 0 [] Nothing [] False "" Map.empty [] [] Set.empty Set.empty Set.empty rcMode Map.empty
+        g0 = G [] 0 0 [] Nothing [] False "" Map.empty [] [] Set.empty Set.empty Set.empty rcMode Map.empty Set.empty ""
         final = execState (program' info root clones) g0
       in
       case reverse (gErrors final) of
         [] ->
           let extra = concatMap structDef (Set.toList (gExtraStructs final))
-                      ++ map objectDef (Set.toList (gExtraObjs final)) ++ reverse (gProtos final)
+                      ++ map objectDef (Set.toList (gExtraObjs final)) ++ concatMap vecDescDef (Set.toList (gVecDescs final)) ++ reverse (gProtos final)
                       ++ [ "static fic_hdr fic_nul" ++ show t ++ " = { FIC_IMMORTAL, " ++ show t ++ "u, 0, 0 };" | t <- Set.toList (gNullary final), t > 1 ]
                       ++ [ staticString str i | (str, i) <- Map.toList (gStrings final) ]
               body = unlines (concatMap (\l -> if l == helperMark then extra else if l == "  /* PK_RELEASE */" then [ "  fic_pk_release();" | pkUsed ] else [l]) (reverse (gOut final)))
               pkUsed = any ("fic_pk_" `List.isInfixOf`) (gOut final)
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
-          in Right ((if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n" ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_"] then closureRuntime ++ "\n" else "")
+          in Right ((if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n"
+                    ++ (if any (`List.isInfixOf` body) ["fic_vector_", "FIC_VECTOR_"] then vectorRuntime ++ "\n" else "")
+                    ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_"] then closureRuntime ++ "\n" else "")
                     ++ (if "fic_fd_" `List.isInfixOf` body then fdlibmRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_ja_", "fic_json_", "fic_jd_"] then jsArrayRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_"] then stringRuntime ++ "\n" else "")
@@ -335,7 +340,7 @@ cloneComment d =
 
 genFunction :: Info -> MDef -> CG ()
 genFunction info d =
-  do  modify' (\g -> g { gWhere = functionName d })
+  do  modify' (\g -> g { gWhere = functionName d, gSite = siteName d })
       emit (cloneComment d)
       emit (signature info d ++ " {")
       modify' (\g -> g { gSelf = Just (mdClone d), gSelfParams = map fst (mdParams d), gLooped = False })
@@ -364,7 +369,7 @@ genFunction info d =
 
 genValue :: Info -> MDef -> CG ()
 genValue info d =
-  do  modify' (\g -> g { gWhere = valueName d })
+  do  modify' (\g -> g { gWhere = valueName d, gSite = siteName d })
       emit (cloneComment d)
       emit ("static " ++ classType (mdResult d) ++ " " ++ valueName d ++ "(void) {")
       modify' (\g -> g { gSelf = Nothing, gSelfParams = [], gLooped = False })
@@ -470,7 +475,7 @@ genExpr info e =
         Just d | not (isFunction d) -> adapt (mdResult d) (mRep e) (globalName d)
         Just d -> closureValue info d
         Nothing -> failWith "internal: a reference to an unknown clone"
-    MKernel name key -> kernelValue name key
+    MKernel name key -> kernelValue info name key
     MCall (MExpr _ (MKernel name key)) args -> kernelCall info (mRep e) name key args
     MCall (MExpr _ (MGlobal c)) args | Just d <- Map.lookup c (iClones info), isFunction d, length args == length (mdParams d) ->
       do  vals <- atomsTo info (zip args (map snd (mdParams d)))
@@ -616,7 +621,7 @@ closureSection info ds =
   do  forM_ (capLayouts info ds) $ \l ->
         emit (objectDefWith "const fic_code *code; " (capType l) [ fc | (_, _, fc) <- l ])
       forM_ ds $ \d ->
-        do  modify' (\g -> g { gWhere = functionName d })
+        do  modify' (\g -> g { gWhere = functionName d, gSite = siteName d })
             let caps = Map.findWithDefault [] (mdClone d) (iCaptured info)
             let layout = capLayout caps
             let ps = mdParams d
@@ -1138,9 +1143,169 @@ checkedUpdate check c i x a =
       return t
 
 
-kernelValue :: String -> Key -> CG String
-kernelValue name key =
+-- THE FLAT VECTOR (V1, docs/STAGE4-V1.md; runtime/fic_vector.h). The intrinsics are specialized by the layout of the element: the
+-- key of each is the exact element type, its class `c` gives the C type `T` of an element (a scalar, `fic_ref`, or the struct of a
+-- record or tuple), the element size `sizeof(T)` and the descriptor (NULL: no references; `fic_vd_ref`: one reference; a static
+-- `fic_vd_<struct>` with the offsets of the reference fields: the pointer map).
+--   read      `T g = FIC_VECTOR_GET(v, T, i);`                       inline (the bounds test is the Elm code of `Vector.get`)
+--   update    `if (FIC_VECTOR_UNIQUE_AT(v, i)) { write } else v = fic_vector_set(i, &x, v, where);`   the checked update (as S6)
+--   swap, push: the same shape; slice, append, fromList, toList: calls
+-- `UpdateCheck` (above) is shared with the arrays: `KnownUnique` drops the test of the count from each fast path, so the two planned
+-- elisions (fresh value, loop invariant) need no change here or in the runtime. Without counts (`--no-rc`) every update is the call,
+-- which copies. `where` is the name of the function, for the FIC_WARN_COPY line.
+
+
+-- | the element class of a Vector intrinsic
+vecElem :: Info -> Key -> Class
+vecElem info key =
+  case key of
+    Key [ByType m] -> clsOf info m
+    Key [ByClass c] -> c
+    _ -> CRef
+
+
+vecHasRefs :: Class -> Bool
+vecHasRefs c = CRef `elem` leavesOf c
+
+
+-- | the descriptor of a vector with elements of this class (a C expression)
+vecDesc :: Info -> Class -> CG String
+vecDesc info c =
+  do  needClass info c
+      case c of
+        CRef -> return "&fic_vd_ref"
+        CStruct fs | vecHasRefs c ->
+          do  modify' (\g -> g { gVecDescs = Set.insert fs (gVecDescs g) })
+              return ("&fic_vd_" ++ concatMap classTag fs)
+        _ -> return "NULL"
+
+
+-- the static descriptor of a struct class: the offsets of its reference fields (the fields of a struct are scalars and references)
+vecDescDef :: [Class] -> [String]
+vecDescDef fs =
+  let tag = concatMap classTag fs
+      ty = classType (CStruct fs)
+      offs = [ "(uint16_t)offsetof(" ++ ty ++ ", f" ++ show i ++ ")" | (i, CRef) <- zip [0 :: Int ..] fs ]
+  in [ "static const uint16_t fic_vo_" ++ tag ++ "[" ++ show (length offs) ++ "] = { " ++ List.intercalate ", " offs ++ " };"
+     , "static const fic_vdesc fic_vd_" ++ tag ++ " = { " ++ show (length offs) ++ "u, fic_vo_" ++ tag ++ " };" ]
+
+
+-- the name of a definition as the user wrote it (`Main.step`; a lifted function has the name of its definition)
+siteName :: MDef -> String
+siteName d =
+  let n = mdName d
+  in maybe n id (List.stripPrefix "author/project:" n)
+
+
+isVectorType :: Info -> String -> Bool
+isVectorType info n =
+  n == vectorTypeName && maybe False (\u -> [ c | (c, _, _) <- usCtors u ] == [vectorMarker]) (Map.lookup n (iUnions info))
+
+
+vectorCall :: Info -> Class -> String -> Key -> [MExpr] -> CG String
+vectorCall info cls op key args =
+  do  let c = vecElem info key
+          ty = classType c
+          esize = "(uint32_t)sizeof(" ++ ty ++ ")"
+          at v i = "FIC_VECTOR_AT(" ++ v ++ ", " ++ ty ++ ", " ++ i ++ ")"
+      desc <- vecDesc info c
+      rcMode <- gets gRc
+      w <- gets gSite
+      let wh = "\"" ++ fst (cString w) ++ "\""
+          -- the vector of an update in a variable of its own (the result of the update)
+          target a = do { t <- fresh "upd"; emit ("fic_ref " ++ t ++ " = " ++ a ++ ";"); return t }
+          -- the element to store, in a variable (the slow path takes its address)
+          stored x = do { t <- fresh "vx"; emit (ty ++ " " ++ t ++ " = " ++ x ++ ";"); return t }
+          unique check t = case check of { CheckCount -> t ++ "->rc == 1 && "; KnownUnique -> "" }
+          subject check t = case check of { CheckCount -> t; KnownUnique -> "FIC_CHECK_UNIQUE(" ++ t ++ ")" }
+      case (op, args) of
+        ("withCapacity", [n]) ->
+          do  vs <- atomsTo info [(n, CI64)]
+              return ("fic_vector_new(" ++ (vs !! 0) ++ ", " ++ esize ++ ", " ++ desc ++ ")")
+        ("length", [v]) ->
+          do  vs <- atomsTo info [(v, CRef)]
+              return ("FIC_VECTOR_LEN(" ++ (vs !! 0) ++ ")")
+        ("unsafeGet", [i, v]) ->
+          do  vs <- atomsTo info [(i, CI64), (v, CRef)]
+              g <- fresh "vg"
+              emit (ty ++ " " ++ g ++ " = FIC_VECTOR_GET(" ++ (vs !! 1) ++ ", " ++ ty ++ ", " ++ (vs !! 0) ++ ");")
+              adapt c cls g
+        ("unsafeTake", [i, v]) ->                 -- only made by the Rc pass: the result is owned
+          do  vs <- atomsTo info [(i, CI64), (v, CRef)]
+              let i' = vs !! 0
+                  v' = vs !! 1
+              g <- fresh "vg"
+              emit (ty ++ " " ++ g ++ " = FIC_VECTOR_GET(" ++ v' ++ ", " ++ ty ++ ", " ++ i' ++ ");")
+              when (rcMode && vecHasRefs c) $
+                do  emit ("if (" ++ v' ++ "->rc == 1) { " ++ concat [ p ++ " = fic_nil(); " | p <- refPaths c (at v' i') ] ++ "}")
+                    emit ("else { " ++ concat [ "fic_dup(" ++ p ++ "); " | p <- refPaths c g ] ++ "}")
+              adapt c cls g
+        ("set", [i, x, v]) ->
+          do  vs <- atomsTo info [(i, CI64), (x, c), (v, CRef)]
+              let i' = vs !! 0
+              val <- stored (vs !! 1)
+              t <- target (vs !! 2)
+              if rcMode
+                then
+                  do  let check = updateCheck v
+                          write =
+                            if vecHasRefs c
+                              then ty ++ " old_" ++ t ++ " = " ++ at t i' ++ "; " ++ at t i' ++ " = " ++ val ++ "; "
+                                   ++ concat [ "fic_drop(" ++ p ++ "); " | p <- refPaths c ("old_" ++ t) ]
+                              else at t i' ++ " = " ++ val ++ "; "
+                      emit ("if (" ++ unique check t ++ "FIC_VECTOR_IN_RANGE(" ++ subject check t ++ ", " ++ i' ++ ")) { " ++ write ++ "FIC_STAT(fic_n_inplace++); }")
+                      emit ("else " ++ t ++ " = fic_vector_set(" ++ i' ++ ", &" ++ val ++ ", " ++ t ++ ", " ++ wh ++ ");")
+                else emit (t ++ " = fic_vector_set(" ++ i' ++ ", &" ++ val ++ ", " ++ t ++ ", " ++ wh ++ ");")     -- no counts: every update copies
+              return t
+        ("swap", [i, j, v]) ->
+          do  vs <- atomsTo info [(i, CI64), (j, CI64), (v, CRef)]
+              let i' = vs !! 0
+                  j' = vs !! 1
+              t <- target (vs !! 2)
+              if rcMode
+                then
+                  do  let check = updateCheck v
+                      emit ("if (" ++ unique check t ++ "FIC_VECTOR_IN_RANGE(" ++ subject check t ++ ", " ++ i' ++ ") && FIC_VECTOR_IN_RANGE(" ++ t ++ ", " ++ j' ++ ")) { "
+                            ++ ty ++ " sw_" ++ t ++ " = " ++ at t i' ++ "; " ++ at t i' ++ " = " ++ at t j' ++ "; " ++ at t j' ++ " = sw_" ++ t ++ "; FIC_STAT(fic_n_inplace++); }")
+                      emit ("else " ++ t ++ " = fic_vector_swap(" ++ i' ++ ", " ++ j' ++ ", " ++ t ++ ", " ++ wh ++ ");")
+                else emit (t ++ " = fic_vector_swap(" ++ i' ++ ", " ++ j' ++ ", " ++ t ++ ", " ++ wh ++ ");")
+              return t
+        ("push", [x, v]) ->
+          do  vs <- atomsTo info [(x, c), (v, CRef)]
+              val <- stored (vs !! 0)
+              t <- target (vs !! 1)
+              if rcMode
+                then
+                  do  let check = updateCheck v
+                      emit ("if (" ++ unique check t ++ "FIC_VECTOR_ROOM(" ++ subject check t ++ ")) { "
+                            ++ at t ("FIC_VECTOR_LEN(" ++ t ++ ")") ++ " = " ++ val ++ "; FIC_VECTOR_LEN(" ++ t ++ ")++; FIC_STAT(fic_n_inplace++); }")
+                      emit ("else " ++ t ++ " = fic_vector_push(&" ++ val ++ ", " ++ t ++ ", " ++ wh ++ ");")
+                else emit (t ++ " = fic_vector_push(&" ++ val ++ ", " ++ t ++ ", " ++ wh ++ ");")
+              return t
+        ("slice", [from, to, v]) ->
+          do  vs <- atomsTo info [(from, CI64), (to, CI64), (v, CRef)]
+              return ("fic_vector_slice(" ++ List.intercalate ", " vs ++ ")")
+        ("append", [a, b]) ->
+          do  vs <- atomsTo info [(a, CRef), (b, CRef)]
+              return ("fic_vector_append(" ++ List.intercalate ", " vs ++ ", " ++ wh ++ ")")
+        ("fromList", [xs]) ->
+          do  vs <- atomsTo info [(xs, CRef)]
+              h <- helper (HVecFromList c)
+              return (h ++ "(" ++ (vs !! 0) ++ ")")
+        ("toList", [v]) ->
+          do  vs <- atomsTo info [(v, CRef)]
+              h <- helper (HVecToList c)
+              return (h ++ "(" ++ (vs !! 0) ++ ")")
+        _ -> failWith ("the Vector intrinsic " ++ op ++ " (with " ++ show (length args) ++ " arguments) is not supported by the C generator")
+
+
+kernelValue :: Info -> String -> Key -> CG String
+kernelValue info name key =
   case name of
+    "elm/core:Vector.empty" ->
+      do  let c = vecElem info key
+          desc <- vecDesc info c
+          return ("fic_vector_new(0, (uint32_t)sizeof(" ++ classType c ++ "), " ++ desc ++ ")")
     "elm/core:Elm.JsArray.empty" | Key [ByClass c] <- key -> return ("fic_ja_empty(" ++ vecTag c ++ ")")
     "elm/core:Basics.e" -> return "2.718281828459045"
     "elm/core:Basics.pi" -> return "3.141592653589793"
@@ -1321,6 +1486,7 @@ kernelCall info cls name key args =
         _ -> failWith "internal: the key of (::) is not a class"
     ("ficcus:applyOwn", f : rest) -> closureCall True info cls f rest
     _ | Just op <- List.stripPrefix "elm/core:Elm.JsArray." name -> jsArrayCall info cls op key args
+    _ | Just op <- List.stripPrefix "elm/core:Vector." name -> vectorCall info cls op key args
     _ | name `elem` ["elm/core:String.foldl", "elm/core:String.foldr"], Key [ByClass cb] <- key, [f, acc, s] <- args ->
       do  avs <- atomsTo info [(f, CRef), (acc, cb), (s, CRef)]
           let fn = if name == "elm/core:String.foldl" then "fic_us_foldl" else "fic_us_foldr"
@@ -1627,6 +1793,8 @@ data HKey
   | HFromList Class
   | HShow MType
   | HShowTree MType
+  | HVecFromList Class         -- V1: a Vector of this element class from a list, and back
+  | HVecToList Class
   deriving (Eq, Ord)
 
 
@@ -1655,6 +1823,8 @@ helper k =
         HCmp _ -> "fic_cmp_"
         HApp _ -> "fic_app_"
         HFromList _ -> "fic_jafl_"
+        HVecFromList _ -> "fic_vfl_"
+        HVecToList _ -> "fic_vtl_"
         HShow _ -> "fic_show_"
         HShowTree _ -> "fic_showtree_"
 
@@ -1756,6 +1926,8 @@ genHelper info k name =
     HShow t -> withProto ("static void " ++ name ++ "(fic_sb *b, " ++ classType (clsOf info t) ++ " x)") (needClass info (clsOf info t) >> emit "(void)x;" >> showBody t)
     HShowTree e -> withProto ("static void " ++ name ++ "(fic_sb *b, fic_ref x, int *first)") (showTreeBody e)
     HFromList c -> withProto ("static fic_ref " ++ name ++ "(int64_t max, fic_ref xs, fic_ref *rest)") (fromListBody c)
+    HVecFromList c -> withProto ("static fic_ref " ++ name ++ "(fic_ref xs)") (vecFromListBody c)
+    HVecToList c -> withProto ("static fic_ref " ++ name ++ "(fic_ref v)") (vecToListBody c)
   where
     withProto sig body =
       do  modify' (\g -> g { gProtos = (sig ++ ";") : gProtos g })
@@ -1776,6 +1948,7 @@ genHelper info k name =
         TyCon "ref" [] -> emit "(void)a; (void)b;" >> emit "return 1;"
         TyCon "elm/core:List.List" [e] -> listEq e
         TyCon "elm/core:Elm.JsArray.JsArray" [e] -> jsArrayEq e
+        TyCon n [e] | isVectorType info n -> vectorEq e
         TyCon "elm/core:Dict.Dict" [kt, vt] -> dictEq kt vt
         -- the built-in types of elm/json and elm/bytes: structural equality in the runtime
         TyCon "elm/json:Json.Encode.Value" [] -> emit "return fic_json_eq(a, b);"
@@ -1793,6 +1966,68 @@ genHelper info k name =
                 e <- eqExpr info ty x y
                 emit ("if (!" ++ e ++ ") return 0;")
           emit "return 1;"
+
+    -- V1: two Vectors are equal when they have the same length and equal elements
+    vectorEq e =
+      do  let ec = clsOf info e
+          needClass info ec
+          emit "int64_t i, n;"
+          emit "if (a == b) return 1;"
+          emit "n = FIC_VECTOR_LEN(a);"
+          emit "if (n != FIC_VECTOR_LEN(b)) return 0;"
+          emit "for (i = 0; i < n; i++) {"
+          indented $
+            do  emit (classType ec ++ " xe = FIC_VECTOR_AT(a, " ++ classType ec ++ ", i);")
+                emit (classType ec ++ " ye = FIC_VECTOR_AT(b, " ++ classType ec ++ ", i);")
+                en <- eqExpr info e "xe" "ye"
+                emit ("if (!" ++ en ++ ") return 0;")
+          emit "}"
+          emit "return 1;"
+
+    -- V1: the elements of a list, in order, as a new Vector (the list is borrowed: the elements get counts of their own)
+    vecFromListBody c =
+      do  let fcs = [boxedClass c, CRef]
+              ty = classType c
+              cell = "((" ++ objType fcs ++ " *)p)"
+          needObj fcs
+          needClass info c
+          desc <- vecDesc info c
+          rcMode <- gets gRc
+          emit "int64_t n = 0, i;"
+          emit "fic_ref p = xs, r;"
+          emit ("while (" ++ tagOf "p" ++ " != 0u) { n++; p = " ++ fl fcs 1 cell ++ "; }")
+          emit ("r = fic_vector_new(n, (uint32_t)sizeof(" ++ ty ++ "), " ++ desc ++ ");")
+          emit "p = xs;"
+          emit "for (i = 0; i < n; i++) {"
+          indented $
+            do  x <- readF fcs 0 cell c
+                emit (ty ++ " el = " ++ x ++ ";")
+                when rcMode (dupVars' c "el")
+                emit ("FIC_VECTOR_AT(r, " ++ ty ++ ", i) = el;")
+                emit ("p = " ++ fl fcs 1 cell ++ ";")
+          emit "}"
+          emit "FIC_VECTOR_LEN(r) = n;"
+          emit "return r;"
+
+    -- V1: the elements of a (borrowed) Vector as a list
+    vecToListBody c =
+      do  let bc = boxedClass c
+              ty = classType c
+          needObj [bc, CRef]
+          needClass info c
+          rcMode <- gets gRc
+          emit "int64_t i;"
+          nil <- nullaryOwned 0
+          emit ("fic_ref r = " ++ nil ++ ";")
+          emit "for (i = FIC_VECTOR_LEN(v) - 1; i >= 0; i--) {"
+          indented $
+            do  emit (ty ++ " el = FIC_VECTOR_AT(v, " ++ ty ++ ", i);")
+                when rcMode (dupVars' c "el")
+                b <- adapt c bc "el"
+                o <- allocObj [bc, CRef] 1 [b, "r"]
+                emit ("r = " ++ o ++ ";")
+          emit "}"
+          emit "return r;"
 
     -- two JsArrays are equal when they have the same length and equal elements (Elm: `_Utils_eq` on JavaScript arrays)
     jsArrayEq e =
@@ -1977,6 +2212,19 @@ genHelper info k name =
               v <- adapt (boxedClass ec) ec ("fic_ja_data(" ++ fl afcs 3 "a" ++ ")[i]" ++ wordSel ec)
               indented (indented (showStmt info e "b" v))
               emit "  } }"
+              emit "fic_sb_puts(b, \"]\");"
+        -- V1: a Vector prints as `Vector.fromList [..]` (as Elm prints an Array)
+        TyCon n [e] | isVectorType info n ->
+          do  let ec = clsOf info e
+              needClass info ec
+              emit "int64_t i, n = FIC_VECTOR_LEN(x);"
+              emit "fic_sb_puts(b, \"Vector.fromList [\");"
+              emit "for (i = 0; i < n; i++) {"
+              indented $
+                do  emit "if (i > 0) fic_sb_puts(b, \",\");"
+                    emit (classType ec ++ " el = FIC_VECTOR_AT(x, " ++ classType ec ++ ", i);")
+                    showStmt info e "b" "el"
+              emit "}"
               emit "fic_sb_puts(b, \"]\");"
         TyCon n args | Just ctors <- ctorsOf info n args, Map.member n (iUnions info) -> customShow n ctors
         _ -> emit "fic_sb_puts(b, \"{}\");"          -- an opaque value (Regex): Elm prints {} (decision L29)

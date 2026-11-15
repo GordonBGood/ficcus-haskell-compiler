@@ -9,6 +9,7 @@ module Ficcus.Mono.Overlay
   , randomSource, randomFileName, randomOverlayPrefix
   , bitwise64Source
   , bitwise64FileName
+  , vectorSource, vectorFileName, vectorModuleId, vectorTypeName, vectorMarker
   , parserSource
   , parserFileName
   , jsonSource, jsonFileName
@@ -93,6 +94,25 @@ bitwise64Source =
 
 bitwise64FileName :: FilePath
 bitwise64FileName = "Bitwise64.elm"
+
+
+-- the Vector module (overlay/Vector.elm; V1, docs/STAGE4-V1.md): written beside FicOverlay.elm like Bitwise64; a project module of the
+-- same name comes first in the source directories and wins
+vectorSource :: String
+vectorSource =
+  $(embedFiles [ "overlay/Vector.elm" ])
+
+
+vectorFileName :: FilePath
+vectorFileName = "Vector.elm"
+
+
+-- | the id prefix of its definitions, the name of its type, and the constructor that tells the overlay's type from a type `Vector` in
+-- a module `Vector` of the project
+vectorModuleId, vectorTypeName, vectorMarker :: String
+vectorModuleId = "author/project:Vector."
+vectorTypeName = "author/project:Vector.Vector"
+vectorMarker = "FicVectorBuiltin"
 
 
 -- the elm/parser overlay (overlay/FicOverlayParser.elm): compiled only into projects that depend on elm/parser

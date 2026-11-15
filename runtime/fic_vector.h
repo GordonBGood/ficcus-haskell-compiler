@@ -26,6 +26,8 @@
 #ifndef FIC_VECTOR_H
 #define FIC_VECTOR_H
 
+#include <stddef.h>
+
 #define FIC_VECTOR_LEN(v)            (FIC_VECTOR(v)->len)
 #define FIC_VECTOR_AT(v, T, i)       (((T *)(void *)FIC_VECTOR(v)->data)[i])
 #define FIC_VECTOR_IN_RANGE(v, i)    ((uint64_t)(i) < (uint64_t)FIC_VECTOR(v)->len)
@@ -34,6 +36,17 @@
 /* the fast path of push: unique and room for one more */
 #define FIC_VECTOR_ROOM(v)           (FIC_VECTOR(v)->len < FIC_VECTOR(v)->cap)
 #define FIC_VECTOR_UNIQUE_ROOM(v)    ((v)->rc == 1 && FIC_VECTOR_ROOM(v))
+
+/* a read at an index that the Elm code has tested (`Vector.get`); with -DFIC_CHECK the runtime tests it again */
+#ifdef FIC_CHECK
+static inline int64_t fic_vector_checked(fic_ref v, int64_t i) {
+  if (!FIC_VECTOR_IN_RANGE(v, i)) { fprintf(stderr, "FIC_CHECK: vector index %lld out of range (length %lld)\n", (long long)i, (long long)FIC_VECTOR(v)->len); abort(); }
+  return i;
+}
+#  define FIC_VECTOR_GET(v, T, i)    FIC_VECTOR_AT(v, T, fic_vector_checked((v), (i)))
+#else
+#  define FIC_VECTOR_GET(v, T, i)    FIC_VECTOR_AT(v, T, i)
+#endif
 
 /* the descriptor of a vector of single references */
 static const uint16_t fic_vd_ref_off[1] = { 0 };

@@ -49,7 +49,7 @@ import qualified Elm.String as ES
 import Ficcus.Mono.Class
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel
-import Ficcus.Mono.Overlay (overlayId, randomOverlayPrefix)
+import Ficcus.Mono.Overlay (overlayId, randomOverlayPrefix, vectorMarker, vectorModuleId, vectorTypeName)
 import Ficcus.Mono.Marks (Marks)
 import qualified Ficcus.Mono.Marks as Marks
 import Ficcus.Mono.Modules
@@ -139,6 +139,7 @@ data S =
     , sHoist :: Set.Set (String, Int)                   -- local polymorphic values whose let body is being specialized
     , sHoisted :: Map.Map (String, Int) (Set.Set Int)    -- their clones that the body uses (evaluated once at the binding)
     , sPvClass :: Map.Map String Class            -- the class of the variable that holds such a clone's value
+    , sVector :: Bool                             -- the program has the overlay's built-in `Vector` (V1): its functions are intrinsics
     }
 
 
@@ -180,14 +181,19 @@ specialize modules marks =
       Just $
       let
         tops = Map.fromList [ (defIdOf (mmCtx m') (defKeyOf d'), Src (mmCtx m') d' Map.empty Map.empty Nothing) | m' <- modules, d' <- mmDefs m' ]
-        enums = Map.fromList (concatMap mmEnums modules)
-        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty
+        -- V1: the module `Vector` of the overlay declares the built-in vector as a type with one constructor (`vectorMarker`) that is
+        -- never built: a reference class, not an enumeration. A module `Vector` of the project does not have it and is ordinary code
+        vecOn = or [ n == vectorTypeName && [ c | (c, _, _) <- usCtors u ] == [vectorMarker] | m' <- modules, (n, u) <- mmUnions m' ]
+        builtin = if vecOn then Map.insert vectorTypeName False else id
+        unions = (if vecOn then Map.adjust (\u -> u { usEnum = False }) vectorTypeName else id) (Map.fromList (concatMap mmUnions modules))
+        enums = builtin (Map.fromList (concatMap mmEnums modules))
+        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn
         mainId = defIdOf (mmCtx m) (defKeyOf d)
         final = execState (requestRoot mainId >>= \r0 -> drain >> return r0) start
         root = Map.lookup (CKey mainId Nothing (Key [])) (sClones final)
       in
       case (reverse (sErrors final), root) of
-        ([], Just r) -> Right (MProgram (ordered (sDone final) r) (Just r) (Map.fromList (concatMap mmUnions modules)))
+        ([], Just r) -> Right (MProgram (ordered (sDone final) r) (Just r) unions)
         ([], Nothing) -> Left [ "internal: main was not requested" ]
         (errs, _) -> Left errs
 
@@ -983,6 +989,7 @@ resolve se region e =
 
     foreignOrTop cid00 =
       do  tops0 <- gets sTops
+          vecOn <- gets sVector
           -- Random.peel (decision L31): the Int product is rounded to a double like Elm's (JavaScript's) `*`, the fork's roundTo53
           let cid0 = if cid00 == "elm/core:Basics.mul" && "elm/random:Random.peel" `List.isPrefixOf` seDid se then "elm/core:Basics.mulRound53" else cid00
           -- a kernel function written in Elm in the overlay (Ficcus.Mono.Overlay) is an ordinary definition (the overlay's own
@@ -992,6 +999,8 @@ resolve se region e =
             Nothing
               -- the Bitwise64 module of the overlay: its functions are the kernel functions of the same name
               | Just n <- List.stripPrefix "author/project:Bitwise64." cid0 -> foreignOrTop' ("elm/core:Bitwise64." ++ n)
+              -- the Vector module of the overlay (V1): the functions of its first section are the intrinsics of the same name
+              | vecOn, Just n <- List.stripPrefix vectorModuleId cid0, n `elem` [ k | (k, _, _) <- vectorKernels ] -> foreignOrTop' (vectorKernelId n)
               | otherwise -> foreignOrTop' cid0
 
     foreignOrTop' cid =
