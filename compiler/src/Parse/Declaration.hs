@@ -20,6 +20,7 @@ import qualified AST.Prim.TypeVar as T
 import qualified Parse.Expression as Expr
 import qualified Parse.Pattern as Pattern
 import qualified Parse.Keyword as Keyword
+import qualified Parse.Members as Members
 import qualified Parse.Space as Space
 import qualified Parse.Symbol as Symbol
 import qualified Parse.Type as Type
@@ -37,6 +38,7 @@ import qualified Reporting.Error.Syntax as E
 data Decl
   = Value (Maybe Src.Comment) (A.Located Src.Value)
   | Union (Maybe Src.Comment) (A.Located Src.Union)
+  | UnionWith (Maybe Src.Comment) (A.Located Src.Union) [A.Located Src.Value]   -- Ficcus (ATTACH A1): with a `where` block; the values have mangled names
   | Alias (Maybe Src.Comment) (A.Located Src.Alias)
   | Port (Maybe Src.Comment) Src.Port
 
@@ -74,7 +76,14 @@ chompDocComment =
 
 {-# INLINE valueDecl #-}
 valueDecl :: Maybe Src.Comment -> A.Position -> Space.Parser E.Decl Decl
-valueDecl maybeDocs start =
+valueDecl =
+  valueDeclWith (Space.checkFreshLine E.DeclDefNameRepeat)
+
+
+-- the check that the repeated name of an annotated definition starts its line is a parameter (a member in a
+-- `where` block is aligned with its siblings, not at column 0)
+valueDeclWith :: Parser E.DeclDef () -> Maybe Src.Comment -> A.Position -> Space.Parser E.Decl Decl
+valueDeclWith checkLine maybeDocs start =
   do  name <- Var.lower N.fromAddr E.DeclStart
       end <- getPosition
       specialize (E.DeclDef name) $
@@ -84,13 +93,37 @@ valueDecl maybeDocs start =
                 do  word1 0x3A#Word8 {-:-} E.DeclDefEquals
                     Space.chompAndCheckIndent E.DeclDefSpace E.DeclDefIndentType
                     (tipe, _) <- specialize E.DeclDefType Type.expression
-                    Space.checkFreshLine E.DeclDefNameRepeat
+                    checkLine
                     defName <- chompMatchingName name
                     Space.chompAndCheckIndent E.DeclDefSpace E.DeclDefIndentEquals
                     chompDefArgsAndBody maybeDocs start defName (Just tipe) []
               ,
                 chompDefArgsAndBody maybeDocs start (A.at start end name) Nothing []
               ]
+
+
+-- like chompDocComment, but the next member is aligned with its siblings instead of at column 0
+chompMemberDocComment :: Parser E.Decl (Maybe Src.Comment)
+chompMemberDocComment =
+  oneOfWithFallback
+    [
+      do  docComment <- Space.docComment E.DeclStart E.DeclSpace
+          Space.chomp E.DeclSpace
+          Space.checkAligned (\_ cur -> E.DeclFreshLineAfterDocComment cur)
+          return (Just docComment)
+    ]
+    Nothing
+
+
+-- Ficcus (ATTACH A1): one member of a `where` block, an ordinary definition (its documentation comment is ignored)
+memberDecl :: Space.Parser E.Decl (A.Located Src.Value)
+memberDecl =
+  do  maybeDocs <- chompMemberDocComment
+      start <- getPosition
+      (decl, end) <- valueDeclWith (Space.checkAligned (\_ cur -> E.DeclDefNameRepeat cur)) maybeDocs start
+      case decl of
+        Value _ value -> return (value, end)
+        _ -> P.Parser $ \_ (P.State _ _ _ cur) _ _ _ eerr -> eerr cur E.DeclStart
 
 
 chompDefArgsAndBody :: Maybe Src.Comment -> A.Position -> A.Located N.Name -> Maybe Src.Type -> [Src.Pattern] -> Space.Parser E.DeclDef Decl
@@ -143,15 +176,21 @@ typeDecl maybeDocs start =
               do  Space.chompAndCheckIndent E.AliasSpace E.AliasIndentEquals
                   (name, args) <- chompAliasNameToEquals
                   (tipe, end) <- specialize E.AliasBody Type.expression
+                  Members.noWhere end
                   let alias = A.at start end (Src.Alias name args tipe)
                   return (Alias maybeDocs alias, end)
           ,
             specialize E.DT_Union $
               do  (name, args) <- chompCustomNameToEquals
                   (firstVariant, firstEnd) <- Type.variant
-                  (variants, end) <- chompVariants [firstVariant] firstEnd
-                  let union = A.at start end (Src.Union name args variants)
-                  return (Union maybeDocs union, end)
+                  (variants, variantsEnd) <- chompVariants [firstVariant] firstEnd
+                  (members, end) <- Members.whereBlock memberDecl variantsEnd
+                  let union = A.at start variantsEnd (Src.Union name args variants)
+                  case members of
+                    [] -> return (Union maybeDocs union, end)
+                    _  ->
+                      let A.At _ tname = name in
+                      return (UnionWith maybeDocs union (map (Members.mangleMember tname) members), end)
           ]
 
 

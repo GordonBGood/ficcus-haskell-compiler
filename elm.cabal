@@ -141,6 +141,7 @@ executable elm
         -- from compiler/
         AST.Canonical
         AST.Optimized
+        AST.Members
         AST.Source
         AST.Prim.Module
         AST.Prim.Name
@@ -204,6 +205,7 @@ executable elm
         Parse.Declaration
         Parse.Expression
         Parse.Keyword
+        Parse.Members
         Parse.Keyword_TH
         Parse.Module
         Parse.Number

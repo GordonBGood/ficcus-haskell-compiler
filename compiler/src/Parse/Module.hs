@@ -150,6 +150,7 @@ categorizeDecls values unions aliases ports decls =
       case decl of
         Decl.Value _ value -> categorizeDecls (value:values) unions aliases ports otherDecls
         Decl.Union _ union -> categorizeDecls values (union:unions) aliases ports otherDecls
+        Decl.UnionWith _ union members -> categorizeDecls (reverse members ++ values) (union:unions) aliases ports otherDecls
         Decl.Alias _ alias -> categorizeDecls values unions (alias:aliases) ports otherDecls
         Decl.Port  _ port_ -> categorizeDecls values unions aliases (port_:ports) otherDecls
 
@@ -173,6 +174,7 @@ toDocs comment decls0 =
             Decl.Port  c (       (Src.Port  n _    )) -> go overview ds (cons c n vs) ts
             Decl.Value c (A.At _ (Src.Value n _ _ _)) -> go overview ds (cons c n vs) ts
             Decl.Union c (A.At _ (Src.Union n _ _  )) -> go overview ds vs (cons c n ts)
+            Decl.UnionWith c (A.At _ (Src.Union n _ _  )) _ -> go overview ds vs (cons c n ts)
             Decl.Alias c (A.At _ (Src.Alias n _ _  )) -> go overview ds vs (cons c n ts)
 
     cons maybeComment (A.At _ n) comments =

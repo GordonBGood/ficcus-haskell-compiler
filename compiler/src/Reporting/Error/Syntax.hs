@@ -188,6 +188,7 @@ data TypeAlias
   --
   | AliasIndentEquals Cursor
   | AliasIndentBody Cursor
+  | AliasWhere Cursor                 -- Ficcus (ATTACH A1): a type alias cannot carry members
 
 
 data CustomType
@@ -202,6 +203,9 @@ data CustomType
   | CT_IndentBar Cursor
   | CT_IndentAfterBar Cursor
   | CT_IndentAfterEquals Cursor
+  --
+  | CT_Member Decl Cursor             -- Ficcus (ATTACH A1): a member in the `where` block
+  | CT_IndentMember Cursor
 
 
 
@@ -1982,6 +1986,33 @@ toTypeAliasReport source typeAlias startCur =
           )
 
 
+    AliasWhere cur ->
+      let
+        surroundings = A.Region startCur cur
+        region = toRegion cur
+      in
+      Report.Report "MEMBERS ON A TYPE ALIAS" region [] $
+        Code.toSnippet source surroundings (Just region)
+          (
+            D.reflow $
+              "I am parsing a type alias, but I got stuck at this `where`:"
+          ,
+            D.stack
+              [ D.reflow $
+                  "A type alias is only another name for an existing type, so it cannot carry\
+                  \ members of its own. Two names for one type would have to share one set of members."
+              , D.reflow $
+                  "If you want a type with its own functions, wrap the type in a custom type:"
+              , D.indent 4 $ D.vcat
+                  [ D.fillSep [D.cyan "type","Meters","=","Meters","Float"]
+                  , D.indent 4 $ D.fillSep [D.cyan "where"]
+                  , D.indent 8 $ D.fillSep ["add",":","Meters","->","Meters","->","Meters"]
+                  , D.indent 8 $ D.fillSep ["add","(Meters a)","(Meters b)","=","Meters","(a + b)"]
+                  ]
+              ]
+          )
+
+
 typeAliasNote :: D.Doc
 typeAliasNote =
   D.stack
@@ -2179,6 +2210,34 @@ toCustomTypeReport source customType startCur =
               [ D.reflow $
                   "I just saw an equals sign, so I was expecting to see the first variant defined next."
               , customTypeNote
+              ]
+          )
+
+
+    CT_Member decl _ ->
+      toDeclarationsReport source decl
+
+    CT_IndentMember cur ->
+      let
+        surroundings = A.Region startCur cur
+        region = toRegion cur
+      in
+      Report.Report "UNFINISHED CUSTOM TYPE" region [] $
+        Code.toSnippet source surroundings (Just region)
+          (
+            D.reflow $
+              "I am partway through parsing a custom type, but I got stuck here:"
+          ,
+            D.stack
+              [ D.reflow $
+                  "I just saw the word `where`, so I was expecting to see the members of the type\
+                  \ next: functions and values, indented under the type and lined up with each other."
+              , D.indent 4 $ D.vcat
+                  [ D.fillSep [D.cyan "type","Money","=","Money","Int"]
+                  , D.indent 4 $ D.fillSep [D.cyan "where"]
+                  , D.indent 8 $ D.fillSep ["zero",":","Money"]
+                  , D.indent 8 $ D.fillSep ["zero","=","Money","0"]
+                  ]
               ]
           )
 
