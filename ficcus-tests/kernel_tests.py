@@ -438,7 +438,8 @@ pushAll xs v =
 '''
 vopt = dict(imports="import Vector exposing (Vector)", decls=VDECL)
 t(V + "empty", ['Vector.toList noV', 'Vector.length (Vector.push (mk 1) Vector.empty)', 'Vector.toList (Vector.push (N (mk 1) 1 []) Vector.empty)',
-                'let e = Vector.empty in ( Vector.toList (Vector.push 1 e), Vector.length e )'], needle="fic_vector_new(0", **vopt)
+                'let e = Vector.empty in ( Vector.toList (Vector.push 1 e), Vector.length e )',
+                'Vector.length (Debug.log "e" Vector.empty)', 'Vector.toList (Vector.push (mk 2) (Debug.log "e" noV))'], needle="fic_vector_new(0", **vopt)
 t(V + "withCapacity", ['Vector.toList (pushAll [ mk 1, mk 2, mk 3 ] (Vector.withCapacity 2))', 'Vector.toList (pushAll [ 1, 2, 3 ] (Vector.withCapacity 100))',
                        'Vector.length capP', 'let w = Vector.withCapacity 4 in ( Vector.toList (Vector.push (mk 1) w), Vector.toList (Vector.push (mk 2) w) )'],
   needle="fic_vector_new(", **vopt)

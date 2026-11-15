@@ -1305,7 +1305,8 @@ kernelValue info name key =
     "elm/core:Vector.empty" ->
       do  let c = vecElem info key
           desc <- vecDesc info c
-          return ("fic_vector_new(0, (uint32_t)sizeof(" ++ classType c ++ "), " ++ desc ++ ")")
+          -- a fresh object, so it is bound: callers may mention an atom more than once (Debug.log shows it and returns it)
+          variable CRef ("fic_vector_new(0, (uint32_t)sizeof(" ++ classType c ++ "), " ++ desc ++ ")")
     "elm/core:Elm.JsArray.empty" | Key [ByClass c] <- key -> return ("fic_ja_empty(" ++ vecTag c ++ ")")
     "elm/core:Basics.e" -> return "2.718281828459045"
     "elm/core:Basics.pi" -> return "3.141592653589793"

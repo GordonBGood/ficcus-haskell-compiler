@@ -673,7 +673,7 @@ class Gen:
             if c == 2: return "(bumpR (modBy 3 %s) %s)" % (g("Int"), g("VecR"))
             if c == 3:
                 w = self.fresh()
-                return "(Vector.update (modBy 3 %s) (\\%s -> { %s | s = %s, xs = %s }) %s)" % (g("Int"), w, w, g("Str"), g("LInt"), g("VecR"))
+                return "(Vector.update (modBy 3 %s) (\\%s -> { a = %s.a, s = %s, xs = %s }) %s)" % (g("Int"), w, w, g("Str"), g("LInt"), g("VecR"))
             if c == 4: return "(Vector.swap 0 (modBy 3 %s) %s)" % (g("Int"), g("VecR"))
             if c == 5: return "(Vector.append %s %s)" % (g("VecR"), g("VecR"))
             if c == 6: return "(Vector.fromList [ %s, %s ])" % (g("Rec"), g("Rec"))
