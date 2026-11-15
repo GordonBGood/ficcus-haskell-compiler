@@ -22,6 +22,7 @@ import Prelude hiding (round)
 import qualified Data.Map as Map
 
 import qualified AST.Canonical as Can
+import qualified AST.Members as Members
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.Operator as Op
 import qualified AST.Prim.TypeName as T
@@ -194,11 +195,11 @@ toReport source localizer err =
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "While checking `" <> N.toChars name <> "`, I found a type that would have to contain itself:"
+              "While checking `" <> Members.displayName name <> "`, I found a type that would have to contain itself:"
           ,
             D.stack
               [ D.reflow $
-                  "It is not part of the type of `" <> N.toChars name <> "`, so I cannot show it, but somewhere in this definition a type variable ends up equal to a type that contains that same variable, like `m` and `OnePlus m` at once. There is no finite type that fits."
+                  "It is not part of the type of `" <> Members.displayName name <> "`, so I cannot show it, but somewhere in this definition a type variable ends up equal to a type that contains that same variable, like `m` and `OnePlus m` at once. There is no finite type that fits."
               , D.toSimpleHint
                   "Phantom types are a common source of this. Check the types of the values that are\
                   \ compared or combined here."
@@ -228,10 +229,10 @@ toPatternReport source localizer patternRegion category tipe expected =
         case context of
           PTypedArg name index ->
             ( D.reflow $
-                "The " <> D.ordinal index <> " argument to `" <> N.toChars name <> "` is weird."
+                "The " <> D.ordinal index <> " argument to `" <> Members.displayName name <> "` is weird."
             , patternTypeComparison localizer tipe expectedType
                 (addPatternCategory "The argument is a pattern that matches" category)
-                ( "But the type annotation on `" <> N.toChars name
+                ( "But the type annotation on `" <> Members.displayName name
                   <> "` says the " <> D.ordinal index <> " argument should be:"
                 )
                 []
@@ -265,10 +266,10 @@ toPatternReport source localizer patternRegion category tipe expected =
 
           PCtorArg name index ->
             ( D.reflow $
-                "The " <> D.ordinal index <> " argument to `" <> N.toChars name <> "` is weird."
+                "The " <> D.ordinal index <> " argument to `" <> Members.displayName name <> "` is weird."
             , patternTypeComparison localizer tipe expectedType
                 (addPatternCategory "It is trying to match" category)
-                ( "But `" <> N.toChars name <> "` needs its "
+                ( "But `" <> Members.displayName name <> "` needs its "
                   <> D.ordinal index <> " argument to be:"
                 )
                 []
@@ -326,7 +327,7 @@ addPatternCategory iAmTryingToMatch category =
       PUnit -> " unit values:"
       PTuple -> " tuples of type:"
       PList -> " lists of type:"
-      PCtor name -> " `" <> N.toChars name <> "` values of type:"
+      PCtor name -> " `" <> Members.displayName name <> "` values of type:"
       PInt -> " integers:"
       PStr -> " strings:"
       PChr -> " characters:"
@@ -370,11 +371,11 @@ loneType localizer actual expected iAmSeeing furtherDetails =
 addCategory :: String -> Category -> String
 addCategory thisIs category =
   case category of
-    Local n      -> "This `" <> N.toChars n <> "` value is a:"
-    Foreign n    -> "This `" <> N.toChars n <> "` value is a:"
+    Local n      -> "This `" <> Members.displayName n <> "` value is a:"
+    Foreign n    -> "This `" <> Members.displayName n <> "` value is a:"
     Operator op  -> "This (" <> Op.toChars op <> ") operator is a:"
-    Access f     -> "The value at ." <> N.toChars f <> " is a:"
-    Accessor f   -> "This ." <> N.toChars f <> " field access function has type:"
+    Access f     -> "The value at ." <> Members.displayName f <> " is a:"
+    Accessor f   -> "This ." <> Members.displayName f <> " field access function has type:"
     If           -> "This `if` expression produces:"
     Case         -> "This `case` expression produces:"
     List         -> thisIs <> " a list of type:"
@@ -391,8 +392,8 @@ addCategory thisIs category =
     CallResult m ->
       case m of
         NoName     -> thisIs <> ":"
-        FuncName n -> "This `" <> N.toChars n <> "` call produces:"
-        CtorName n -> "This `" <> N.toChars n <> "` call produces:"
+        FuncName n -> "This `" <> Members.displayName n <> "` call produces:"
+        CtorName n -> "This `" <> Members.displayName n <> "` call produces:"
         OpName   _ -> thisIs <> ":"
 
 
@@ -531,7 +532,7 @@ problemToHint problem =
 
 
     T.FieldTypo typo possibilities ->
-      case Suggest.sort (N.toChars typo) N.toChars possibilities of
+      case Suggest.sort (Members.displayName typo) Members.displayName possibilities of
         [] ->
           []
 
@@ -696,7 +697,7 @@ toExprReport source localizer exprRegion category tipe expected =
           case subContext of
             TypedIfBranch index   -> D.ordinal index <> " branch of this `if` expression:"
             TypedCaseBranch index -> D.ordinal index <> " branch of this `case` expression:"
-            TypedBody             -> "body of the `" <> N.toChars name <> "` definition:"
+            TypedBody             -> "body of the `" <> Members.displayName name <> "` definition:"
 
         itIs =
           case subContext of
@@ -709,7 +710,7 @@ toExprReport source localizer exprRegion category tipe expected =
           ( D.reflow ("Something is off with the " <> thing)
           , typeComparison localizer tipe expectedType
               (addCategory itIs category)
-              ("But the type annotation on `" <> N.toChars name <> "` says it should be:")
+              ("But the type annotation on `" <> Members.displayName name <> "` says it should be:")
               []
           )
 
@@ -821,8 +822,8 @@ toExprReport source localizer exprRegion category tipe expected =
                 thisValue =
                   case maybeFuncName of
                     NoName        -> "This value"
-                    FuncName name -> "The `" <> N.toChars name <> "` value"
-                    CtorName name -> "The `" <> N.toChars name <> "` value"
+                    FuncName name -> "The `" <> Members.displayName name <> "` value"
+                    CtorName name -> "The `" <> Members.displayName name <> "` value"
                     OpName op     -> "The (" <> Op.toChars op <> ") operator"
               in
               ( D.reflow $ thisValue <> " is not a function, but it was given " <> D.args numGivenArgs <> "."
@@ -834,8 +835,8 @@ toExprReport source localizer exprRegion category tipe expected =
                 thisFunction =
                   case maybeFuncName of
                     NoName        -> "This function"
-                    FuncName name -> "The `" <> N.toChars name <> "` function"
-                    CtorName name -> "The `" <> N.toChars name <> "` constructor"
+                    FuncName name -> "The `" <> Members.displayName name <> "` function"
+                    CtorName name -> "The `" <> Members.displayName name <> "` constructor"
                     OpName op     -> "The (" <> Op.toChars op <> ") operator"
               in
               ( D.reflow $ thisFunction <> " expects " <> D.args n <> ", but it got " <> show numGivenArgs <> " instead."
@@ -849,8 +850,8 @@ toExprReport source localizer exprRegion category tipe expected =
             thisFunction =
               case maybeFuncName of
                 NoName        -> "this function"
-                FuncName name -> "`" <> N.toChars name <> "`"
-                CtorName name -> "`" <> N.toChars name <> "`"
+                FuncName name -> "`" <> Members.displayName name <> "`"
+                CtorName name -> "`" <> Members.displayName name <> "`"
                 OpName op     -> "(" <> Op.toChars op <> ")"
           in
           mismatch
@@ -875,9 +876,9 @@ toExprReport source localizer exprRegion category tipe expected =
               custom (Just fieldRegion)
                 ( D.reflow $
                     "This "
-                    <> maybe "" (\n -> "`" <> N.toChars n <> "`") maybeName
-                    <> " record does not have a `" <> N.toChars field <> "` field:"
-                , case Suggest.sort (N.toChars field) (N.toChars . fst) (Map.toList fields) of
+                    <> maybe "" (\n -> "`" <> Members.displayName n <> "`") maybeName
+                    <> " record does not have a `" <> Members.displayName field <> "` field:"
+                , case Suggest.sort (Members.displayName field) (Members.displayName . fst) (Map.toList fields) of
                     [] ->
                       D.reflow "In fact, it is a record with NO fields!"
 
@@ -885,7 +886,7 @@ toExprReport source localizer exprRegion category tipe expected =
                       D.stack
                         [ D.reflow $
                             "This is usually a typo. Here are the "
-                            <> maybe "" (\n -> "`" <> N.toChars n <> "`") maybeName
+                            <> maybe "" (\n -> "`" <> Members.displayName n <> "`") maybeName
                             <> " fields that are most similar:"
                         , toNearbyRecord localizer f fs ext
                         , D.fillSep
@@ -915,7 +916,7 @@ toExprReport source localizer exprRegion category tipe expected =
                   mismatch
                   ( Nothing
                   , "Something is off with this record update:"
-                  , "The `" <> N.toChars record <> "` record is"
+                  , "The `" <> Members.displayName record <> "` record is"
                   , "But this update needs it to be compatable with:"
                   , [ D.reflow
                         "Do you mind creating an <http://sscce.org/> that produces this error message and\
@@ -926,13 +927,13 @@ toExprReport source localizer exprRegion category tipe expected =
 
                 Just (field, Can.FieldUpdate fieldRegion _) ->
                   let
-                    rStr = "`" <> N.toChars record <> "`"
-                    fStr = "`" <> N.toChars field <> "`"
+                    rStr = "`" <> Members.displayName record <> "`"
+                    fStr = "`" <> Members.displayName field <> "`"
                   in
                   custom (Just fieldRegion)
                     ( D.reflow $
                         "The " <> rStr <> " record does not have a " <> fStr <> " field:"
-                    , case Suggest.sort (N.toChars field) (N.toChars . fst) (Map.toList actualFields) of
+                    , case Suggest.sort (Members.displayName field) (Members.displayName . fst) (Map.toList actualFields) of
                         [] ->
                           D.reflow $ "In fact, " <> rStr <> " is a record with NO fields!"
 
@@ -960,8 +961,8 @@ toExprReport source localizer exprRegion category tipe expected =
         RecordUpdateValue field ->
           mismatch
           ( Just exprRegion
-          , "I cannot update the `" <> N.toChars field <> "` field like this:"
-          , "You are trying to update `" <> N.toChars field <> "` to be"
+          , "I cannot update the `" <> Members.displayName field <> "` field like this:"
+          , "You are trying to update `" <> Members.displayName field <> "` to be"
           , "But it should be:"
           , [ D.toSimpleNote
                 "The record update syntax does not allow you to change the type of fields.\
@@ -1629,12 +1630,12 @@ toRigidEscapeReport source region name var =
     Code.toSnippet source region Nothing
       (
         D.reflow $
-          "The type annotation for `" <> N.toChars name <> "` says the type variable `"
+          "The type annotation for `" <> Members.displayName name <> "` says the type variable `"
           <> var <> "` can be any type, but the definition ties it to something outside:"
       ,
         D.stack
           [ D.reflow $
-              "The body of `" <> N.toChars name <> "` uses a value that is defined in the code around it,\
+              "The body of `" <> Members.displayName name <> "` uses a value that is defined in the code around it,\
               \ and the type of that value is not generalized there. So `" <> var
               <> "` cannot stand for any type here."
           , D.toSimpleHint $
@@ -1687,7 +1688,7 @@ toInfiniteReport source localizer region name overallType =
     Code.toSnippet source region Nothing
       (
         D.reflow $
-          "I am inferring a weird self-referential type for " <> N.toChars name <> ":"
+          "I am inferring a weird self-referential type for " <> Members.displayName name <> ":"
       ,
         D.stack
           [ D.reflow $

@@ -32,6 +32,7 @@ import qualified Bytes.Encode as E
 import qualified Crash
 
 import qualified AST.Canonical as Can
+import qualified AST.Members as Members
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.Operator as Op
 import qualified AST.Prim.TypeName as T
@@ -100,8 +101,16 @@ restrictValues exports dict =
     Can.ExportEverything _ ->
       dict
 
-    Can.Export _ values _ ->
-      Map.intersection dict values
+    Can.Export types values _ ->
+      -- Ficcus (ATTACH A1): `Money(..)` exports the members of Money (names `Money$$add`) with its variants
+      let
+        openTypes = [ T.nameToChars name | (name, (_, Can.ExportUnionOpen)) <- Map.toList types ]
+        isOpenMember name =
+          case Members.split name of
+            Just (tipe, _) -> tipe `elem` openTypes
+            Nothing        -> False
+      in
+      Map.union (Map.intersection dict values) (Map.filterWithKey (\name _ -> isOpenMember name) dict)
 
 
 restrictUnions :: Can.Exports -> Map.Map T.Name Can.Union -> Map.Map T.Name Union

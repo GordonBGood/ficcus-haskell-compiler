@@ -29,6 +29,8 @@ import qualified AST.Prim.Operator as Op
 import qualified AST.Utils.Type as Type
 import qualified Canonicalize.Environment as Env
 import qualified Canonicalize.Environment.Dups as Dups
+import qualified AST.Members as Members_
+import qualified Canonicalize.Members as Members
 import qualified Canonicalize.Pattern as Pattern
 import qualified Canonicalize.Type as Type
 import qualified Data.Index as Index
@@ -748,7 +750,27 @@ findVar region (Env.Env localHome vs _ _ _ qvs _ _) name =
 
 
 findVarQual :: A.Region -> Env.Env -> Module.Prefix -> N.Name -> Result FreeLocals w Can.Expr_
-findVarQual region (Env.Env localHome vs _ _ _ qvs _ _) prefix name =
+findVarQual region env@(Env.Env localHome _ _ _ _ _ _ _) prefix name =
+  -- Ficcus (ATTACH A1): a module or alias path wins; if it does not name `name`, a member of the type `prefix`
+  case Members.resolve env prefix name of
+    Members.NotMember ->
+      findVarQualModule region env prefix name
+
+    Members.LocalMember mangled ->
+      logVar mangled (Can.VarTopLevel localHome mangled)
+
+    Members.ForeignMember home mangled annotation ->
+      Result.ok (Can.VarForeign home mangled annotation)
+
+    Members.AmbiguousMember h hs ->
+      Result.throw (Error.AmbiguousVar region (Just prefix) name h hs)
+
+    Members.UnknownMember tipe members ->
+      Result.throw (Error.NotFoundMember region tipe name members)
+
+
+findVarQualModule :: A.Region -> Env.Env -> Module.Prefix -> N.Name -> Result FreeLocals w Can.Expr_
+findVarQualModule region (Env.Env localHome vs _ _ _ qvs _ _) prefix name =
   case Map.lookup prefix qvs of
     Just qualified ->
       case Map.lookup name qualified of
@@ -774,7 +796,10 @@ findVarQual region (Env.Env localHome vs _ _ _ qvs _ _) prefix name =
 
 toPossibleNames :: Map.Map N.Name Env.Var -> Env.Qualified N.Name Can.Annotation -> Error.PossibleNames N.Name
 toPossibleNames exposed qualified =
-  Error.PossibleNames (Map.keysSet exposed) (Map.map Map.keysSet qualified)
+  -- Ficcus (ATTACH A1): the mangled names of members and the keys of their types are not names a program can write
+  Error.PossibleNames
+    (Map.keysSet (Map.filterWithKey (\n _ -> not (Members_.isMember n)) exposed))
+    (Map.map Map.keysSet (Map.filterWithKey (\p _ -> not ('$' `elem` Module.prefixToChars p)) qualified))
 
 
 

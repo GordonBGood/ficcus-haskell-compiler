@@ -19,6 +19,7 @@ import qualified AST.Prim.Name as N
 import qualified AST.Prim.Operator as Op
 import qualified AST.Prim.TypeName as T
 import qualified Canonicalize.Environment as Env
+import qualified Canonicalize.Members as Members
 import qualified Elm.Interface as I
 import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Package as Pkg
@@ -119,11 +120,23 @@ addImport ifaces (State vs ts cs bs qvs qts qcs) (Src.Import (A.At _ name) maybe
       then Map.insert T.list (Env.Union 1 ModuleName.list, Map.empty) rawTypeInfo0
       else rawTypeInfo0
 
-    !vars = Map.map (Env.Specific home) defs
+    -- Ficcus (ATTACH A1): the members of types are not plain values; they are reached through their type
+    (plainDefs, memberDefs) = Members.partitionDefs defs
+    !vars = Map.map (Env.Specific home) plainDefs
     !types = Map.map (Env.Specific home . fst) rawTypeInfo
     !ctors = Map.foldr (addExposed . snd) Map.empty rawTypeInfo
 
-    !qvs2 = addQualified prefix vars qvs
+    !memberInfo =
+      Map.mapMaybeWithKey
+        (\tname _ -> Map.map (Env.Specific home) <$> Map.lookup (T.nameToChars tname) memberDefs)
+        types
+
+    !qvs2 =
+      Map.foldrWithKey
+        (\tname ms q -> foldr (\key -> addQualified key ms) q (Members.importKeys prefix name tname))
+        (addQualified prefix vars qvs)
+        memberInfo
+
     !qts2 = addQualified prefix types qts
     !qcs2 = addQualified prefix ctors qcs
   in
@@ -134,12 +147,13 @@ addImport ifaces (State vs ts cs bs qvs qts qcs) (Src.Import (A.At _ name) maybe
         !ts2 = addExposed ts types
         !cs2 = addExposed cs ctors
         !bs2 = addExposed bs (Map.mapWithKey (binopToBinop home) binops)
+        !qvs3 = Map.foldrWithKey (\tname ms q -> addQualified (Members.exposedKey tname) ms q) qvs2 memberInfo
       in
-      Result.ok (State vs2 ts2 cs2 bs2 qvs2 qts2 qcs2)
+      Result.ok (State vs2 ts2 cs2 bs2 qvs3 qts2 qcs2)
 
     Src.Explicit exposedList ->
       foldM
-        (addExposedValue home vars rawTypeInfo binops)
+        (addExposedValue home vars rawTypeInfo memberInfo binops)
         (State vs ts cs bs qvs2 qts2 qcs2)
         exposedList
 
@@ -222,11 +236,12 @@ addExposedValue
   :: ModuleName.Canonical
   -> Env.Exposed N.Name Can.Annotation
   -> Map.Map T.Name (Env.Type, Env.Exposed N.Name Env.Ctor)
+  -> Map.Map T.Name (Env.Exposed N.Name Can.Annotation)
   -> Map.Map Op.Name I.Binop
   -> State
   -> Src.Exposed
   -> Result i w State
-addExposedValue home vars types binops (State vs ts cs bs qvs qts qcs) exposed =
+addExposedValue home vars types memberInfo binops (State vs ts cs bs qvs qts qcs) exposed =
   case exposed of
     Src.Lower (A.At region name) ->
       case Map.lookup name vars of
@@ -245,8 +260,9 @@ addExposedValue home vars types binops (State vs ts cs bs qvs qts qcs) exposed =
                 Env.Union _ _ ->
                   let
                     !ts2 = Map.insert name (Env.Specific home tipe) ts
+                    !qvs2 = exposeMembers name memberInfo qvs
                   in
-                  Result.ok (State vs ts2 cs bs qvs qts qcs)
+                  Result.ok (State vs ts2 cs bs qvs2 qts qcs)
 
                 Env.Alias _ _ _ _ ->
                   let
@@ -271,8 +287,9 @@ addExposedValue home vars types binops (State vs ts cs bs qvs qts qcs) exposed =
                   let
                     !ts2 = Map.insert name (Env.Specific home tipe) ts
                     !cs2 = addExposed cs ctors
+                    !qvs2 = exposeMembers name memberInfo qvs
                   in
-                  Result.ok (State vs ts2 cs2 bs qvs qts qcs)
+                  Result.ok (State vs ts2 cs2 bs qvs2 qts qcs)
 
                 Env.Alias _ _ _ _ ->
                   Result.throw (Error.ImportOpenAlias dotDotRegion name)
@@ -290,6 +307,14 @@ addExposedValue home vars types binops (State vs ts cs bs qvs qts qcs) exposed =
 
         Nothing ->
           Result.throw (Error.ImportExposedBinopNotFound region home op (Map.keys binops))
+
+
+-- Ficcus (ATTACH A1): the type is exposed by name, so `Name.member` reaches its members
+exposeMembers :: T.Name -> Map.Map T.Name (Env.Exposed N.Name Can.Annotation) -> Env.Qualified N.Name Can.Annotation -> Env.Qualified N.Name Can.Annotation
+exposeMembers name memberInfo qvs =
+  case Map.lookup name memberInfo of
+    Just ms -> addQualified (Members.exposedKey name) ms qvs
+    Nothing -> qvs
 
 
 checkForCtorMistake :: N.Name -> Map.Map T.Name (Env.Type, Env.Exposed N.Name Env.Ctor) -> [T.Name]

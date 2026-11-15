@@ -20,6 +20,7 @@ import qualified Data.Set as Set
 import qualified Graph
 
 import qualified AST.Canonical as Can
+import qualified AST.Members as Members
 import qualified AST.Source as Src
 import qualified AST.Prim.Module as Module
 import qualified AST.Prim.Name as N
@@ -75,6 +76,7 @@ data Error
   | ImportExposedTypeNotFound A.Region ModuleName.Canonical T.Name [T.Name]
   | ImportExposedBinopNotFound A.Region ModuleName.Canonical Op.Name [Op.Name]
   | NotFoundVar A.Region (Maybe Module.Prefix) N.Name (PossibleNames N.Name)
+  | NotFoundMember A.Region String N.Name [N.Name]    -- Ficcus (ATTACH A1): type, member, the members the type has
   | NotFoundType A.Region (Maybe Module.Prefix) T.Name (PossibleNames T.Name)
   | NotFoundVariant A.Region (Maybe Module.Prefix) N.Name (PossibleNames N.Name)
   | NotFoundBinop A.Region Op.Name (Set.Set Op.Name)
@@ -171,7 +173,9 @@ toReport source err =
 
     DuplicateDecl name r1 r2 ->
       nameClash source r1 r2 $
-        "This file has multiple `" <> N.toChars name <> "` declarations."
+        case Members.split name of
+          Just (tipe, member) -> "The `" <> tipe <> "` type has multiple `" <> N.toChars member <> "` members."
+          Nothing             -> "This file has multiple `" <> N.toChars name <> "` declarations."
 
     DuplicateType name r1 r2 ->
       nameClash source r1 r2 $
@@ -294,6 +298,7 @@ toReport source err =
 
     NotFoundVar     r p n ns -> notFound source r p n "variable" ns N.toChars
     NotFoundType    r p n ns -> notFound source r p n "type"     ns T.nameToChars
+    NotFoundMember  r t n ms -> notFoundMember source r t n ms
     NotFoundVariant r p n ns -> notFound source r p n "variant"  ns N.toChars
 
     NotFoundBinop region op locals ->
@@ -977,6 +982,34 @@ badArity source region name expected actual toChars thing =
 
 
 -- NOT FOUND
+
+
+-- Ficcus (ATTACH A1)
+notFoundMember :: Code.Source -> A.Region -> String -> N.Name -> [N.Name] -> Report.Report
+notFoundMember source region tipe member members =
+  let
+    nearby = take 4 (Suggest.sort (N.toChars member) N.toChars members)
+  in
+  Report.Report "NAMING ERROR" region (map N.toChars nearby) $
+    Code.toSnippet source region Nothing
+      (
+        D.reflow $
+          "I cannot find a `" ++ tipe ++ "." ++ N.toChars member ++ "` member:"
+      ,
+        case members of
+          [] ->
+            D.reflow $
+              "The `" ++ tipe ++ "` type has no members that I can see here. Members are defined in a `where` block\
+              \ under the type declaration, and an imported type shows them only if its module exports it as `"
+              ++ tipe ++ "(..)`."
+
+          _ ->
+            D.stack
+              [ D.reflow $
+                  "The `" ++ tipe ++ "` type has these members:"
+              , D.indent 4 $ D.vcat $ map (D.dullyellow . D.fromChars . (\m -> tipe ++ "." ++ N.toChars m)) members
+              ]
+      )
 
 
 notFound :: Code.Source -> A.Region -> Maybe Module.Prefix -> name -> String -> PossibleNames name -> (name -> String) -> Report.Report

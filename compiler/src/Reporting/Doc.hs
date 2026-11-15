@@ -57,6 +57,7 @@ import qualified Text.PrettyPrint.ANSI.Leijen as P
 import qualified Crash
 import qualified Graph
 
+import qualified AST.Members as Members
 import qualified AST.Prim.Module as Module
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.Operator as Op
@@ -75,7 +76,7 @@ import qualified Json.String as Json
 
 
 fromChars   :: String        -> P.Doc; fromChars     = P.text
-fromName    :: N.Name        -> P.Doc; fromName    n = P.text (N.toChars n)
+fromName    :: N.Name        -> P.Doc; fromName    n = P.text (Members.displayName n)   -- Ficcus (ATTACH A1): a member `Money$$add` is shown as `Money.add`
 fromType    :: T.Name        -> P.Doc; fromType    t = P.text (T.nameToChars t)
 fromVar     :: T.Var         -> P.Doc; fromVar     v = P.text (T.varToChars v)
 fromModule  :: Module.Name   -> P.Doc; fromModule  h = P.text (Module.toChars h)

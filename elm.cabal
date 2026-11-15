@@ -160,6 +160,7 @@ executable elm
         Canonicalize.Environment.Local
         Canonicalize.Expression
         Canonicalize.Kind
+        Canonicalize.Members
         Canonicalize.Module
         Canonicalize.Pattern
         Canonicalize.Type
