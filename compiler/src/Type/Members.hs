@@ -17,6 +17,7 @@ module Type.Members
   ( Table
   , emptyTable
   , toTable
+  , embedded
   , wrapAnnotations
   , Obligation
   , Tools(..)
@@ -41,9 +42,9 @@ import qualified AST.Prim.TypeName as T
 import qualified AST.Prim.TypeVar as TV
 import qualified Elm.Interface as I
 import qualified Elm.ModuleName as ModuleName
+import qualified Elm.Package as Pkg
 import qualified Reporting.Annotation as A
 import qualified Reporting.Error.Type as Error
-import qualified String as S
 import Type.Type as Type
 import qualified Type.Unify as Unify
 import qualified Type.UnionFind as UF
@@ -53,9 +54,12 @@ import qualified Type.UnionFind as UF
 -- THE MEMBER TABLE
 
 
--- | the members a module can see, by type; Nothing: a member of this module without a signature
+-- | the members a module can see, by type id (`pkg:Module.Type`, AST.Members.typeId); Nothing: a member of
+-- this module without a signature.  A member is found through the module that defines its type (the
+-- interface of an import, or the members that an import carries for the types it mentions), so the
+-- module that uses a constrained function does not have to import the module of the type.
 type Table =
-  Map.Map (ModuleName.Canonical, T.Name) (Map.Map N.Name (Maybe Can.Annotation))
+  Map.Map String (Map.Map N.Name (Maybe Can.Annotation))
 
 
 emptyTable :: Table
@@ -63,27 +67,25 @@ emptyTable =
   Map.empty
 
 
--- | from the interfaces of the imports (the values `T$$m`, there when `T` is exported with `(..)`) and
--- the definitions of the module itself
+-- | from the interfaces of the imports (the values `T$$m`, there when `T` is exported with `(..)`; and the
+-- values `pkg:Module.T$$m` that an interface carries) and the definitions of the module itself
 toTable :: Map.Map Module.Name I.Interface -> Can.Module -> Table
 toTable ifaces (Can.Module home _ _ decls _ _ _ _) =
-  let
-    foreign =
-      [ ((ModuleName.Canonical (I._home iface) name, tname tipe), Map.singleton member (Just annotation))
+  Map.fromListWith Map.union (local ++ imported)
+  where
+    imported =
+      [ (tipeId, Map.singleton member (Just annotation))
       | (name, iface) <- Map.toList ifaces
       , (value, annotation) <- Map.toList (I._values iface)
       , Just (tipe, member) <- [Members.split value]
+      , let tipeId = if ':' `elem` tipe then tipe else Members.homeChars (ModuleName.Canonical (I._home iface) name) ++ "." ++ tipe
       ]
 
     local =
-      [ ((home, tname tipe), Map.singleton member (annotationOf def))
+      [ (Members.homeChars home ++ "." ++ tipe, Map.singleton member (annotationOf def))
       | def <- defsOf decls
       , Just (tipe, member) <- [Members.split (nameOf def)]
       ]
-  in
-  Map.fromListWith Map.union (local ++ foreign)
-  where
-    tname = T.nameFromString . S.fromChars
 
     annotationOf def =
       case def of
@@ -91,6 +93,19 @@ toTable ifaces (Can.Module home _ _ decls _ _ _ _) =
         Can.TypedDef _ freeVars args _ result ->
           Just (Constraints.wrapDef def (Can.Forall freeVars (foldr (\(_, t) acc -> Can.TLambda t acc) result args)))
 
+
+-- | the members of other modules' types that the module saw, as the values an interface can carry
+-- (`pkg:Module.T$$m`): Compile adds them to the annotations, `Elm.Interface.fromModule` keeps those that
+-- the exports of the module mention
+embedded :: Map.Map Module.Name I.Interface -> Map.Map N.Name Can.Annotation
+embedded ifaces =
+  Map.fromList
+    [ (Members.foreignName tipeId member, annotation)
+    | (name, iface) <- Map.toList ifaces
+    , (value, annotation) <- Map.toList (I._values iface)
+    , Just (tipe, member) <- [Members.split value]
+    , let tipeId = if ':' `elem` tipe then tipe else Members.homeChars (ModuleName.Canonical (I._home iface) name) ++ "." ++ tipe
+    ]
 
 
 defsOf :: Can.Decls -> [Can.Def]
@@ -197,7 +212,7 @@ resolve tools table env obligation@(Obligation region function member subject ti
       do  (Descriptor content _ _ _) <- UF.get var
           case content of
             Structure (App1 home name _) ->
-              case Map.lookup (home, name) table of
+              case Map.lookup (Members.typeId home name) table of
                 Just members | Just entry <- Map.lookup member members ->
                   case entry of
                     Just annotation ->
@@ -209,10 +224,10 @@ resolve tools table env obligation@(Obligation region function member subject ti
                       return (Done [] [Error.MemberNeedsSignature region function member (T.nameToChars name)])
 
                 maybeMembers ->
-                  noMember (maybe [] Map.keys maybeMembers)
+                  noMember (isBuiltin home) (maybe [] Map.keys maybeMembers)
 
             Structure _ ->
-              noMember []
+              noMember True []
 
             Alias _ _ _ real ->
               go real
@@ -251,10 +266,14 @@ resolve tools table env obligation@(Obligation region function member subject ti
             Unify.Runaway isCycle ->
               return (Done [] [Error.Runaway region isCycle])
 
-    noMember members =
+    noMember builtin members =
       do  subjectType <- Type.toErrorType subject
           neededType <- Type.toErrorType tipe
-          return (Done [] [Error.NoMember region function subjectType members [(member, neededType)]])
+          return (Done [] [Error.NoMember region function subjectType members builtin [(member, neededType)]])
+
+    -- the types of the packages by `elm` (core, json, ...) are the built-in ones
+    isBuiltin (ModuleName.Canonical pkg _) =
+      take 4 (Pkg.toChars pkg) == "elm/"
       where _ = obligation
 
 
@@ -280,7 +299,7 @@ sweep pending =
                       RigidVar name -> Error.MissingConstraint region function (TV.varToChars name) [(member, neededType)] : errors
                       RigidSuper _ name -> Error.MissingConstraint region function (TV.varToChars name) [(member, neededType)] : errors
                       Error -> errors
-                      _ -> Error.UnknownMemberType region function [(member, neededType)] : errors
+                      _ -> Error.UnknownMemberType region function (kindOf content) [(member, neededType)] : errors
 
 
 -- the generalized flexible variables in a type get the rank `rank`; a budget guards against cyclic types
@@ -313,7 +332,26 @@ pin rank start =
 -- | at the end of the module
 leftovers :: [Obligation] -> IO [Error.Error]
 leftovers pending =
-  traverse (\(Obligation region function member _ tipe) -> (\t -> Error.UnknownMemberType region function [(member, t)]) <$> Type.toErrorType tipe) pending
+  traverse leftover pending
+  where
+    leftover (Obligation region function member subject tipe) =
+      do  (Descriptor content _ _ _) <- UF.get subject
+          t <- Type.toErrorType tipe
+          return (Error.UnknownMemberType region function (kindOf content) [(member, t)])
+
+
+-- the kind of a variable of Elm's own (`number`, `comparable`, ...)
+kindOf :: Content -> Maybe String
+kindOf content =
+  case content of
+    FlexSuper super _ ->
+      Just $
+        case super of
+          Number -> "number"
+          Comparable -> "comparable"
+          Appendable -> "appendable"
+          CompAppend -> "compappend"
+    _ -> Nothing
 
 
 -- | one error for one use: the errors of the same kind at the same place are put together (in the order
@@ -331,12 +369,12 @@ merge errors =
 
     add acc err =
       case err of
-        Error.NoMember r f t ms needed | Just rest <- pick (\e -> case e of { Error.NoMember r2 _ _ _ n | r2 == r -> Just n; _ -> Nothing }) acc ->
-          place (Error.NoMember r f t ms (fst rest ++ needed)) (snd rest)
+        Error.NoMember r f t ms b needed | Just rest <- pick (\e -> case e of { Error.NoMember r2 _ _ _ _ n | r2 == r -> Just n; _ -> Nothing }) acc ->
+          place (Error.NoMember r f t ms b (fst rest ++ needed)) (snd rest)
         Error.MissingConstraint r f v needed | Just rest <- pick (\e -> case e of { Error.MissingConstraint r2 _ v2 n | r2 == r && v2 == v -> Just n; _ -> Nothing }) acc ->
           place (Error.MissingConstraint r f v (fst rest ++ needed)) (snd rest)
-        Error.UnknownMemberType r f needed | Just rest <- pick (\e -> case e of { Error.UnknownMemberType r2 _ n | r2 == r -> Just n; _ -> Nothing }) acc ->
-          place (Error.UnknownMemberType r f (fst rest ++ needed)) (snd rest)
+        Error.UnknownMemberType r f k needed | Just rest <- pick (\e -> case e of { Error.UnknownMemberType r2 _ _ n | r2 == r -> Just n; _ -> Nothing }) acc ->
+          place (Error.UnknownMemberType r f k (fst rest ++ needed)) (snd rest)
         _ ->
           acc ++ [err]
 

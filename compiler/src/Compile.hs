@@ -86,7 +86,7 @@ typeCheck :: Map.Map Module.Name I.Interface -> Src.Module -> Can.Module -> Eith
 typeCheck ifaces modul canonical =
   case unsafePerformIO (Type.runWith (Members.toTable ifaces canonical) =<< Type.constrain Nothing canonical) of
     Right annotations ->
-      Right (Members.wrapAnnotations canonical annotations)
+      Right (Map.union (Members.wrapAnnotations canonical annotations) (Members.embedded ifaces))
 
     Left errors ->
       Left (E.BadTypes (Localizer.fromModule modul) errors)
@@ -113,7 +113,7 @@ typeCheckTypedIO ifaces canonical =
 
         Right annotations ->
           do  typed <- Readout.readout recorder
-              return (Right (Members.wrapAnnotations canonical annotations, typed))
+              return (Right (Map.union (Members.wrapAnnotations canonical annotations) (Members.embedded ifaces), typed))
 
 
 nitpick :: Can.Module -> Either E.Error ()

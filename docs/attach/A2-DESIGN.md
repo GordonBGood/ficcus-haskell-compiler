@@ -1,6 +1,6 @@
 # ATTACH A2: constraints on type variables (design; stage A2 of docs/ABILITIES-PROPOSAL.md, sections 3.2, 4, 5)
 
-Branch `feat/attach`, binary `bin/elmficA7`. Written before the implementation; section 9 lists what changed while implementing,
+Branch `feat/attach`, binary `bin/elmficA8`. Written before the implementation; section 9 lists what changed while implementing,
 section 10 has worked examples (all are cases of `tests/attach`), section 11 the known limits.
 
 ```elm
@@ -57,9 +57,16 @@ are not touched. An obligation is `(region, function, member name, subject varia
   ("the signature must say `a has add : ...`"); for a flexible one UNKNOWN MEMBER TYPE ("I cannot tell which type's `add` to use; a
   function that is to work for every such type needs a signature with a `where`"). This is the rule "a constrained function needs
   its signature": constraints are never inferred. What is left at the end of the module is reported the same way.
-- **The member table** is built in `Compile` from what the module can see: for each imported interface, its values named `T$$m`
-  (present only when `T` was exported with `(..)`, the A1 rule), and the members of the module's own types that have a signature.
-  A member without a signature cannot satisfy a constraint in its own module (error says: add a signature).
+- **The member table** is keyed by the id of the type (`pkg:Module.Type`) and built in `Compile`: for each imported interface, its
+  values named `T$$m` (present only when `T` was exported with `(..)`) and the values named `pkg:Module.T$$m` that the interface
+  carries (below), plus the members of the module's own types that have a signature. A member without a signature cannot satisfy
+  a constraint in its own module (error says: add a signature).
+- **Visibility is by export, not by import** (decided 16 Nov): the member of a type is found through the module that defines the
+  type, wherever the type is known. An interface carries, besides its own members, the members of every foreign type that its
+  exports mention (in value types, constructor fields, alias bodies, and the types of those members, to a fixpoint), as
+  `pkg:Module.T$$m` entries of the same `Map Name Annotation`. So `Main` can use `Algebra.sum` on a `Money` that arrived through
+  `Wrap.mk` without importing `Types`, also through a package module that is not exposed. A type exported without `(..)` has no
+  members for anyone else. No change of the encoding; a program without members gives the same bytes.
 
 **`number`, `comparable`, `appendable`, `compappend` are untouched.** They stay `FlexSuper`/`RigidSuper` contents handled by
 `Type.Unify`; no obligation is ever created for them, and a program without a `where` signature never creates an obligation, so the
@@ -163,16 +170,15 @@ New: `AST.Constraints` (names, the hidden parameters, the wrapped scheme), `Pars
 
 1. No constraints on `let` definitions (clear error).
 2. Only custom types have members. `sum [ 1, 2 ]` (a `number`), `String`, records, tuples and functions are NO MEMBER or UNKNOWN MEMBER
-   TYPE until A3 gives the built-in types their members.
-3. A member can satisfy a constraint only where it is visible: the module of the type must be imported by the module that uses the
-   constrained function, and must export the type with `(..)`. A type that only flows through (a value of `M.T` obtained from a
-   third module, `M` not imported) gives NO MEMBER with that hint. In its own module a member needs a signature to count.
+   TYPE until A3 gives the built-in types their members; the messages say so ("the built-in types do not have members yet").
+3. A member satisfies a constraint wherever the type is known, unless its module exports the type without `(..)` (then NO MEMBER with
+   that hint). In its own module a member needs a signature to count.
 4. A member is found by name and type only ("satisfied by accident", as the proposal says of Roc).
 5. (closed while implementing, see section 9: a pending obligation keeps the variables of its member type at the level of its
    subject, cases `constraint-let-mono`, `constraint-let-poly`.) A rigid variable of an inner annotated `let` in such a member
    type cannot be kept back; I have no program that reaches this.
-6. In messages about the body, the hidden parameters count: "the 2nd argument" of a constrained function with one constraint is
-   the first written one (annotation arity errors and argument positions). Not fixed in A2.
+6. (closed 16 Nov: the hidden parameters are not counted in "the 2nd argument" of a definition's patterns nor in the counts of BAD TYPE
+   ANNOTATION; the arguments of a call of a constrained function were never affected.)
 7. `docs.json` (`elm make --docs`, `elm diff`, `elm publish`) would show the wrapped scheme of a constrained function; not handled.
 8. The `.types` dump shows a constrained definition with its hidden parameters.
 9. The JS refusal names every constrained function of the program and its packages, used or not.

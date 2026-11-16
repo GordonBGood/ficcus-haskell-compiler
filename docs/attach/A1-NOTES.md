@@ -1,7 +1,7 @@
 # ATTACH A1: functions attached to custom types (stage A1 of docs/ABILITIES-PROPOSAL.md)
 
 Branch `feat/attach` (worktree `ficcus-haskell-compiler-attach`), binary `bin/elmficA5` (A1 with the accepted changes A1b) or later.
-Tests: `tests/attach/` in the workspace (`python3 tests/attach/attach.py --elm bin/elmficA7`, table `tests/attach/expected.tsv`). Not in A1: `where` after signatures, constraints,
+Tests: `tests/attach/` in the workspace (`python3 tests/attach/attach.py --elm bin/elmficA8`, table `tests/attach/expected.tsv`). Not in A1: `where` after signatures, constraints,
 well known members, `derive`, operators.
 
 The rules below are what the compiler does now. They were reviewed after A1; the accepted changes (A1b, 15 Nov 2026) are

@@ -16,6 +16,8 @@ import qualified AST.Prim.Operator as Op
 import qualified AST.Prim.TypeName as T
 import qualified AST.Prim.TypeVar as T
 import qualified AST.Utils.Shader as Shader
+import qualified AST.Constraints as Constraints
+import qualified Data.Maybe as Maybe
 import qualified Data.Index as Index
 import qualified Elm.ModuleName as ModuleName
 import qualified Reporting.Annotation as A
@@ -823,6 +825,14 @@ argsHelp maybeRec args state =
 -- CONSTRAIN TYPED ARGS
 
 
+-- Ficcus (ATTACH A2): the hidden parameters of a constrained definition are not counted in "the 2nd argument"
+isHidden :: Can.Pattern -> Bool
+isHidden (A.At _ pattern) =
+  case pattern of
+    Can.PAlias (A.At _ (Can.PVar marker)) _ -> Maybe.isJust (Constraints.splitMarker marker)
+    _ -> False
+
+
 data TypedArgs =
   TypedArgs
     { _t_type :: Type
@@ -848,7 +858,7 @@ typedArgsHelp maybeRec rtv name index args srcResultType state =
           let expected = PFromContext region (PTypedArg name index) argType
 
           (TypedArgs tipe resultType newState) <-
-            typedArgsHelp maybeRec rtv name (Index.next index) otherArgs srcResultType =<<
+            typedArgsHelp maybeRec rtv name (if isHidden pattern then index else Index.next index) otherArgs srcResultType =<<
               Pattern.add maybeRec pattern expected state
 
           return (TypedArgs (FunN argType tipe) resultType newState)

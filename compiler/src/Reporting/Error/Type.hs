@@ -52,11 +52,11 @@ data Error
   | Runaway A.Region Bool               -- unification does not terminate; True: an infinite type
   | HiddenCycle A.Region N.Name         -- a cyclic type among the variables of a definition, not in its own type
   -- Ficcus (ATTACH A2): the constrained function that was used, the member it needs
-  | NoMember A.Region N.Name T.Type [N.Name] [(N.Name, T.Type)]   -- the type, the members it has, the members needed
+  | NoMember A.Region N.Name T.Type [N.Name] Bool [(N.Name, T.Type)]   -- the type, the members it has, is it a built-in type, the members needed
   | BadMember A.Region N.Name N.Name MemberOwner T.Type T.Type    -- the type the member has, the type needed
   | MemberNeedsSignature A.Region N.Name N.Name String            -- the type whose member has no signature
   | MissingConstraint A.Region N.Name String [(N.Name, T.Type)]   -- the type variable, the members needed
-  | UnknownMemberType A.Region N.Name [(N.Name, T.Type)]          -- the members needed
+  | UnknownMemberType A.Region N.Name (Maybe String) [(N.Name, T.Type)]   -- the kind of the variable (number, comparable, ...), the members needed
 
 
 data MemberOwner
@@ -203,7 +203,7 @@ toReport source localizer err =
     Runaway region isCycle ->
       toRunawayReport source region isCycle
 
-    NoMember region function tipe members needed ->
+    NoMember region function tipe members builtin needed ->
       Report.Report "NO MEMBER" region [] $
         Code.toSnippet source region Nothing
           (
@@ -214,11 +214,14 @@ toReport source localizer err =
             D.stack $
               [ D.indent 4 (D.dullyellow (T.toDoc localizer RT.None tipe))
               , case members of
+                  [] | builtin ->
+                    D.reflow builtinNote
+
                   [] ->
                     D.reflow $
                       "That type has no members that I can see here. Members are defined in a `where` block\
-                      \ under a custom type declaration; an imported type shows them only if its module is\
-                      \ imported here and exports the type with `(..)`."
+                      \ under a custom type declaration, and a module that defines a type must export it\
+                      \ with `(..)` to share its members."
 
                   _ ->
                     D.stack
@@ -283,7 +286,7 @@ toReport source localizer err =
               ]
           )
 
-    UnknownMemberType region function needed ->
+    UnknownMemberType region function kind needed ->
       Report.Report "UNKNOWN MEMBER TYPE" region [] $
         Code.toSnippet source region Nothing
           (
@@ -291,7 +294,7 @@ toReport source localizer err =
               "This use of `" <> Members.displayName function <> "` needs a type that has "
               <> memberWords needed <> ", but I cannot tell which type that is:"
           ,
-            D.stack
+            D.stack $
               [ memberLines localizer Nothing needed
               , D.reflow $
                   "The type is not determined here. If this definition is meant to work for every type\
@@ -302,7 +305,8 @@ toReport source localizer err =
                   , D.indent 4 $ D.vcat [ "a has " <> D.fromName member <> " : ..." | (member, _) <- needed ]
                   ]
               , D.reflow "Otherwise a type annotation on the value that is used here will settle it."
-              ]
+              ] ++
+              [ D.reflow ("The type is a `" <> k <> "` variable, which only the built-in types can be. " <> builtinNote) | Just k <- [kind] ]
           )
 
     HiddenCycle region name ->
@@ -321,6 +325,13 @@ toReport source localizer err =
               ]
           )
 
+
+
+-- Ficcus (ATTACH A2)
+builtinNote :: String
+builtinNote =
+  "The built-in types (`Int`, `Float`, `String`, `List`, records, tuples, ...) do not have members yet; they get them\
+  \ in a later version. For now a constraint can only be met by a custom type that defines the member in its `where` block."
 
 
 -- Ficcus (ATTACH A2): "the member `zero`", "the members `zero` and `add`"

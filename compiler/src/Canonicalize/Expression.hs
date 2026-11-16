@@ -22,6 +22,7 @@ import qualified Graph
 import qualified String as S
 
 import qualified AST.Canonical as Can
+import qualified AST.Constraints as Constraints_
 import qualified AST.Source as Src
 import qualified AST.Prim.Module as Module
 import qualified AST.Prim.Name as N
@@ -546,8 +547,12 @@ gatherTypedArgs env name srcArgs tipe index revTypedArgs =
 
         _ ->
           let (A.At start _, A.At end _) = (head srcArgs, last srcArgs) in
+          -- (ATTACH A2) the hidden parameters of a constrained definition are not counted
+          let hidden = length [ () | (A.At _ (Can.PAlias (A.At _ (Can.PVar m)) _), _) <- revTypedArgs, Maybe.isJust (Constraints_.splitMarker m) ]
+              shown = iterate Index.next Index.first !! (Index.toMachine index - hidden)
+          in
           Result.throw $
-            Error.AnnotationTooShort (A.mergeRegions start end) name index (length srcArgs)
+            Error.AnnotationTooShort (A.mergeRegions start end) name shown (length srcArgs)
 
 
 

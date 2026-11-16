@@ -26,6 +26,7 @@ import Data.Coerce (coerce)
 import qualified Data.Map.Strict as Map
 import qualified Data.Map.Merge.Strict as Map
 import qualified Data.Map.Utils as Map
+import qualified Data.Set as Set
 
 import qualified Bytes.Decode as D
 import qualified Bytes.Encode as E
@@ -86,13 +87,64 @@ data Binop =
 
 fromModule :: Pkg.Name -> Can.Module -> Map.Map N.Name Can.Annotation -> Interface
 fromModule home (Can.Module _ exports _ _ unions aliases binops _) annotations =
+  let
+    -- Ficcus (ATTACH A2): the members of foreign types that the exports mention travel with the interface
+    (foreignAll, ownAnnotations) = Map.partitionWithKey (\name _ -> Members.isForeign name) annotations
+    exportedUnions = restrictUnions exports unions
+    exportedAliases = restrictAliases exports aliases
+    ownValues = restrictValues exports ownAnnotations
+    carried = carriedMembers ownValues exportedUnions exportedAliases foreignAll
+  in
   Interface
     { _home    = home
-    , _values  = restrictValues  exports annotations
-    , _unions  = restrictUnions  exports unions
-    , _aliases = restrictAliases exports aliases
+    , _values  = Map.union ownValues carried
+    , _unions  = exportedUnions
+    , _aliases = exportedAliases
     , _binops  = restrictBinops  exports (Map.map (toOp annotations) binops)
     }
+
+
+-- the foreign members whose type the interface mentions, directly or through the types of those members
+carriedMembers :: Map.Map N.Name Can.Annotation -> Map.Map T.Name Union -> Map.Map T.Name Alias -> Map.Map N.Name Can.Annotation -> Map.Map N.Name Can.Annotation
+carriedMembers values unions aliases foreignAll =
+  if Map.null foreignAll then Map.empty else
+    let
+      roots =
+        Set.fromList $
+          concat
+            [ concatMap annotationTypes (Map.elems values)
+            , concat [ concatMap (\(Can.Ctor _ _ _ args) -> concatMap typeIds args) alts | OpenUnion (Can.Union _ alts _ _) <- Map.elems unions ]
+            , concat [ typeIds t | PublicAlias (Can.Alias _ t) <- Map.elems aliases ]
+            ]
+
+      byType = Map.fromListWith (++) [ (t, [(name, ann)]) | (name, ann) <- Map.toList foreignAll, Just (t, _) <- [Members.split name] ]
+
+      close seen =
+        let
+          new = Set.fromList (concat [ concatMap (annotationTypes . snd) entries | (t, entries) <- Map.toList byType, Set.member t seen ])
+          seen' = Set.union seen new
+        in
+        if Set.size seen' == Set.size seen then seen else close seen'
+
+      keep = close roots
+    in
+    Map.fromList [ (name, ann) | (t, entries) <- Map.toList byType, Set.member t keep, (name, ann) <- entries ]
+  where
+    annotationTypes (Can.Forall _ t) = typeIds t
+
+
+typeIds :: Can.Type -> [String]
+typeIds tipe =
+  case tipe of
+    Can.TLambda a b -> typeIds a ++ typeIds b
+    Can.TVar _ -> []
+    Can.TType home name args -> Members.typeId home name : concatMap typeIds args
+    Can.TRecord fields _ -> concat [ typeIds t | Can.FieldType _ t <- Map.elems fields ]
+    Can.TUnit -> []
+    Can.TPair a b -> typeIds a ++ typeIds b
+    Can.TTriple a b c -> typeIds a ++ typeIds b ++ typeIds c
+    Can.TAlias home name args aliased ->
+      Members.typeId home name : concatMap (typeIds . snd) args ++ (case aliased of { Can.Filled t -> typeIds t ; Can.Holey t -> typeIds t })
 
 
 restrictValues :: Can.Exports -> Map.Map N.Name Can.Annotation -> Map.Map N.Name Can.Annotation

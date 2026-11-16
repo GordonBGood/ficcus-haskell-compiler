@@ -13,6 +13,10 @@ module AST.Members
   , typeKey
   , typeKeyOf
   , displayName
+  , homeChars
+  , typeId
+  , isForeign
+  , foreignName
   )
   where
 
@@ -22,6 +26,8 @@ import qualified Data.List as List
 import qualified AST.Prim.Module as Module
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
+import qualified Elm.ModuleName as ModuleName
+import qualified Elm.Package as Pkg
 import qualified String as S
 
 
@@ -87,6 +93,40 @@ displayName name =
   case split name of
     Just (tipe, member) -> tipe ++ "." ++ N.toChars member
     Nothing             -> N.toChars name
+
+
+
+-- MEMBERS OF TYPES FROM OTHER MODULES
+--
+-- (A2) A constraint at a type needs the members of that type wherever the type is known, not only where its
+-- module is imported.  An interface therefore also carries, for the types its own exports mention, the
+-- members of those types under the name `pkg:Module.Type$$member`.  Such a name has a `:` before the `$$`,
+-- and is never a plain value or a member of a type of the interface's own module.
+
+
+-- | `elm/core:Basics`, the id the specializer and the solver table use for a module
+homeChars :: ModuleName.Canonical -> String
+homeChars (ModuleName.Canonical pkg name) =
+  Pkg.toChars pkg ++ ":" ++ Module.toChars name
+
+
+-- | `pkg:Module.Type`
+typeId :: ModuleName.Canonical -> T.Name -> String
+typeId home tipe =
+  homeChars home ++ "." ++ T.nameToChars tipe
+
+
+-- | a name of the form `pkg:Module.Type$$member`
+isForeign :: N.Name -> Bool
+isForeign name =
+  case split name of
+    Just (tipe, _) -> ':' `elem` tipe
+    Nothing        -> False
+
+
+foreignName :: String -> N.Name -> N.Name
+foreignName tipeId member =
+  fromChars (tipeId ++ separator ++ N.toChars member)
 
 
 
