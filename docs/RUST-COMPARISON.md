@@ -94,7 +94,7 @@ Copies of the Elm, C and Rust sources with larger parameters, so that Ficcus run
 
 | program | Ficcus ms (gcc -O2) | Ficcus best build | hand C best (build) | hand C unrolled best (build) | Rust safe O3 | Rust safe O2 | Rust UNCHECKED O3 | Elm node ms | Ficcus/best hand | Rust O3/best hand | Rust O3/Ficcus | answers agree |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| sieve | 353.1 | 325.3 (gcc -O2) | 80.4 (clang -O3) | 9.2 (clang -O3) | 13.5 | 12.2 | 12.5 | 4374 | 4.39 | 0.17 | 0.04 | yes |
+| sieve | 353.1 | 325.3 (gcc -O2) | 43.1 (clang -O2) [was 80.4: two runs, see the correction] | 9.2 (clang -O3) | 13.5 | 12.2 | 12.5 | 4374 | 8.19 | 0.31 | 0.04 | yes |
 | sievestream | 231.3 | 228.0 (gcc -O3) | 163.1 (gcc -O3) | - | 528.1 | 517.1 | - | 655 | 1.42 | 3.24 | 2.28 | yes |
 | sievepq | 179.0 | 162.1 (clang -O3) | 139.9 (clang -O2) | - | 281.0 | 284.4 | - | 561 | 1.28 | 2.01 | 1.57 | yes |
 | hamvec | 171.4 | 167.8 (gcc -O2) | 35.1 (gcc -O2) | - | 26.5 | 26.4 | - | 910 | 4.88 | 0.76 | 0.15 | yes |
@@ -110,7 +110,7 @@ Ficcus (gcc -O2) against safe Rust (O3), same algorithm, Rust over Ficcus time r
 
 | scenario | Ficcus ms | Rust safe O3 ms | Ficcus / Rust | Ficcus / best hand C |
 |---|---|---|---|---|
-| sieve, 1 MB buffer (Vector-like) | 353.1 | 13.5 | **26** | 4.4 (hand C plain 80.4; unrolled 9.2) |
+| sieve, 1 MB buffer (Vector-like) | 353.1 | 13.5 | **26** | 8.2 (hand C plain 43.1, one run; unrolled 9.2) |
 | hamvec, 1000 repetitions (Vector-like) | 171.4 | 26.5 | **6.5** | 4.9 |
 | fannkuch (Vector-like) | 738.9 | 117.0 | **6.3** | 4.1 |
 | nbody (Vector-like, record elements) | 266.9 | 47.2 | **5.7** | 1.45 |
@@ -124,7 +124,7 @@ Ficcus (gcc -O2) against safe Rust (O3), same algorithm, Rust over Ficcus time r
 | bintree, ARENA (nodes in a Vec, indices) | 179.9 | 144.5 (BUMP 146.2) | **1.25** | 1.17 (hand C 154.4) |
 
 - **The gap to Rust is a Vector gap.** Wherever the algorithm mutates a flat array in place (sieve, hamvec, fannkuch, nbody, spectral) safe Rust is 2.9 to 26 times faster than Ficcus. Where the algorithm is persistent (heap, stream of closures, allocation of trees) Rust written in the same style is *slower* than Ficcus, by 1.3 to 3.8 times, and still 1.1 times slower with an in-place BinaryHeap in sievepq; the Ficcus compiler is within 1.2 to 1.4 of the best hand C there. The first report, whose sieve was start-up dominated and whose hand C unrolled sieve could not be compared, did not show this.
-- **The sieve is the largest gap (26) and the clearest.** Ficcus is 4.4 times the *hand C plain* sieve, which uses the same runtime vector (so that part is the compiler: what it emits around the vector calls), and the hand C plain is itself 6 times Rust (a runtime call with bounds and uniqueness tests per byte against a checked index that the optimizer reduces to a loop). hamvec has the same shape (4.9 against hand C, 6.5 against Rust).
+- **The sieve is the largest gap (26) and the clearest.** Ficcus (Array) is 8.2 times the *hand C plain* sieve, which uses the old runtime vector, and the hand C plain is itself 3.2 times Rust (a runtime call with bounds and uniqueness tests per byte against a checked index that the optimizer reduces to a loop; the call copies the byte with a `memcpy` of a run-time size, see the correction). hamvec has the same shape (4.9 against hand C, 6.5 against Rust).
 - **The compiler choice for C (gcc or clang, -O2 or -O3) moves hand C by at most 15 % and the Ficcus C by at most 17 %**, and nothing reorders; allocation-heavy bintree is best with gcc -O3, and Ficcus beats Rust there because Rust used glibc malloc (hand C with glibc malloc: 518 ms; with the runtime pool 154).
 - **UNCHECKED still gains nothing** (sieve 13.5 to 12.5 ms, spectral equal, fannkuch and nbody slower): no bounds check is the bottleneck in safe Rust.
 
@@ -142,3 +142,7 @@ What looks improvable in the Ficcus numbers (from the data above, not new analys
 | BUMP | 146.2 | 148.4 | 0.81 | 0.93 |
 
 **How much of the gap is the allocator.** Of the 504 ms by which the Box program is slower than Ficcus (684 against 180), the arena removes 540 ms (79 % of the Box time): with the per-node malloc/free gone, safe Rust takes 144.5 ms, 0.80 of Ficcus and 0.92 of the best hand C. So essentially the whole gap is the per-node allocation (glibc malloc and free, plus the loss of locality that comes with it) and none of it is the language or the optimizer; Ficcus and the hand C avoid it with the runtime's size-class pool (hand C with plain glibc malloc: 518 ms, with the pool 154 ms). The BUMP variant, which calls the allocator not at all for the short-lived trees, is no faster than ARENA (146 against 144.5 ms): one malloc per tree is already negligible, so what remains in the 145 ms is the work itself. The Rc variant helps only by 11 % (it shares the depth-20 tree, 21 nodes instead of 2 M); an arena shares it in the same way, so ARENA includes that saving too.
+
+## Correction (V3, 16 Nov 2026): the hand C plain sieve figure
+
+`sieve_plain.c` does the work once for the answer and then `NUMLOOPS` (default 1) more times, so the "80.4 ms" of the scaled table (hand C plain, clang -O3) was **two runs**. One run (`-DNUMLOOPS=0`, the same work as the Ficcus and Rust programs), median of 5, whole process: gcc -O2 46.2, gcc -O3 46.3, clang -O2 43.1, clang -O3 45.2 ms; best 43.1 (clang -O2). The table rows above are corrected accordingly (Ficcus Array / hand C plain 8.2, Rust / hand C plain 0.31; the other columns of the sieve row were not changed). Why the plain hand C is slower than the Ficcus Vector sieve (29.6 ms in V1): docs/STAGE4-V3.md section 1 (the runtime's `fic_vec_set` and `fic_vec_repeat` copy each element with a `memcpy` of a run-time element size: a library call per culled byte).

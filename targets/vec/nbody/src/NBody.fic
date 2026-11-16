@@ -1,0 +1,252 @@
+-- N-body: the Computer Language Benchmarks Game program (Jovian planets and the Sun).
+-- compile with elm make src/NBody.elm --output=nbody.js
+{-
+   Five bodies in a Vector of records of seven Floats (a vector of flat structs: no
+   references inside, so in C a vector of 56 byte values). Each step: every pair of
+   bodies attracts (10 pairs, velocities updated with Vector.get / Vector.set), then every
+   body moves (Vector.map). Only + - * / and sqrt are used on Floats, so the results are
+   bit for bit the same in JavaScript and in C built with -ffp-contract=off.
+   Expected (published) energies for the first 1000 steps: -0.169075164 and -0.169087605.
+-}
+
+
+module NBody exposing (main)
+
+import Vector exposing (Vector)
+
+
+steps : Int
+steps =
+    1000000
+
+
+dt : Float
+dt =
+    0.01
+
+
+pi : Float
+pi =
+    3.141592653589793
+
+
+solarMass : Float
+solarMass =
+    4 * pi * pi
+
+
+daysPerYear : Float
+daysPerYear =
+    365.24
+
+
+type alias Body =
+    { x : Float
+    , y : Float
+    , z : Float
+    , vx : Float
+    , vy : Float
+    , vz : Float
+    , mass : Float
+    }
+
+
+initialBodies : Vector Body
+initialBodies =
+    Vector.fromList
+        [ { x = 0, y = 0, z = 0, vx = 0, vy = 0, vz = 0, mass = solarMass }
+        , { x = 4.8414314424647209e0
+          , y = -1.16032004402742839e0
+          , z = -1.03622044471123109e-1
+          , vx = 1.66007664274403694e-3 * daysPerYear
+          , vy = 7.69901118419740425e-3 * daysPerYear
+          , vz = -6.90460016972063023e-5 * daysPerYear
+          , mass = 9.54791938424326609e-4 * solarMass
+          }
+        , { x = 8.34336671824457987e0
+          , y = 4.12479856412430479e0
+          , z = -4.03523417114321381e-1
+          , vx = -2.76742510726862411e-3 * daysPerYear
+          , vy = 4.99852801234917238e-3 * daysPerYear
+          , vz = 2.30417297573763929e-5 * daysPerYear
+          , mass = 2.85885980666130812e-4 * solarMass
+          }
+        , { x = 1.28943695621391310e1
+          , y = -1.51111514016986312e1
+          , z = -2.23307578892655734e-1
+          , vx = 2.96460137564761618e-3 * daysPerYear
+          , vy = 2.37847173959480950e-3 * daysPerYear
+          , vz = -2.96589568540237556e-5 * daysPerYear
+          , mass = 4.36624404335156298e-5 * solarMass
+          }
+        , { x = 1.53796971148509165e1
+          , y = -2.59193146099879641e1
+          , z = 1.79258772950371181e-1
+          , vx = 2.68067772490389322e-3 * daysPerYear
+          , vy = 1.62824170038242295e-3 * daysPerYear
+          , vz = -9.51592254519715870e-5 * daysPerYear
+          , mass = 5.15138902046611451e-5 * solarMass
+          }
+        ]
+
+
+{-| Give the Sun the momentum that makes the total momentum zero. -}
+offsetMomentum : Vector Body -> Vector Body
+offsetMomentum bodies =
+    let
+        add b ( px, py, pz ) =
+            ( px + b.vx * b.mass, py + b.vy * b.mass, pz + b.vz * b.mass )
+
+        ( mx, my, mz ) =
+            Vector.foldl add ( 0.0, 0.0, 0.0 ) bodies
+    in
+    case Vector.get 0 bodies of
+        Just sun ->
+            Vector.set 0 { sun | vx = -mx / solarMass, vy = -my / solarMass, vz = -mz / solarMass } bodies
+
+        Nothing ->
+            bodies
+
+
+pairs : List ( Int, Int )
+pairs =
+    [ ( 0, 1 ), ( 0, 2 ), ( 0, 3 ), ( 0, 4 ), ( 1, 2 ), ( 1, 3 ), ( 1, 4 ), ( 2, 3 ), ( 2, 4 ), ( 3, 4 ) ]
+
+
+interact : ( Int, Int ) -> Vector Body -> Vector Body
+interact ( i, j ) bodies =
+    case ( Vector.get i bodies, Vector.get j bodies ) of
+        ( Just bi, Just bj ) ->
+            let
+                dx =
+                    bi.x - bj.x
+
+                dy =
+                    bi.y - bj.y
+
+                dz =
+                    bi.z - bj.z
+
+                d2 =
+                    dx * dx + dy * dy + dz * dz
+
+                mag =
+                    dt / (d2 * sqrt d2)
+            in
+            bodies
+                |> Vector.set i
+                    { bi
+                        | vx = bi.vx - dx * bj.mass * mag
+                        , vy = bi.vy - dy * bj.mass * mag
+                        , vz = bi.vz - dz * bj.mass * mag
+                    }
+                |> Vector.set j
+                    { bj
+                        | vx = bj.vx + dx * bi.mass * mag
+                        , vy = bj.vy + dy * bi.mass * mag
+                        , vz = bj.vz + dz * bi.mass * mag
+                    }
+
+        _ ->
+            bodies
+
+
+move : Body -> Body
+move b =
+    { b | x = b.x + dt * b.vx, y = b.y + dt * b.vy, z = b.z + dt * b.vz }
+
+
+advance : Vector Body -> Vector Body
+advance bodies =
+    List.foldl interact bodies pairs |> Vector.map move
+
+
+energy : Vector Body -> Float
+energy bodies =
+    let
+        n =
+            Vector.length bodies
+
+        kinetic i e =
+            case Vector.get i bodies of
+                Just b ->
+                    e + 0.5 * b.mass * (b.vx * b.vx + b.vy * b.vy + b.vz * b.vz)
+
+                Nothing ->
+                    e
+
+        potential ( i, j ) e =
+            case ( Vector.get i bodies, Vector.get j bodies ) of
+                ( Just bi, Just bj ) ->
+                    let
+                        dx =
+                            bi.x - bj.x
+
+                        dy =
+                            bi.y - bj.y
+
+                        dz =
+                            bi.z - bj.z
+                    in
+                    e - (bi.mass * bj.mass) / sqrt (dx * dx + dy * dy + dz * dz)
+
+                _ ->
+                    e
+    in
+    List.foldl kinetic 0.0 (List.range 0 (n - 1))
+        |> (\e -> List.foldl potential e pairs)
+
+
+run : Int -> Vector Body -> Vector Body
+run n bodies =
+    if n <= 0 then
+        bodies
+
+    else
+        run (n - 1) (advance bodies)
+
+
+tell : String -> ()
+tell s =
+    Debug.log s ()
+
+
+bodyLine : String -> Int -> Vector Body -> String
+bodyLine name i bodies =
+    case Vector.get i bodies of
+        Just b ->
+            name ++ ": " ++ String.join " " (List.map String.fromFloat [ b.x, b.y, b.z, b.vx, b.vy, b.vz ])
+
+        Nothing ->
+            name ++ ": missing"
+
+
+report : () -> List String
+report () =
+    let
+        start =
+            offsetMomentum initialBodies
+
+        after1000 =
+            run 1000 start
+
+        final =
+            run steps start
+    in
+    [ "bodies: " ++ String.fromInt (Vector.length start)
+    , "energy at start: " ++ String.fromFloat (energy start)
+    , "energy after 1000 steps: " ++ String.fromFloat (energy after1000)
+    , "energy after " ++ String.fromInt steps ++ " steps: " ++ String.fromFloat (energy final)
+    , bodyLine "sun" 0 final
+    , bodyLine "jupiter" 1 final
+    , bodyLine "neptune" 4 final
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( List.foldl (\s () -> tell s) () (report ()), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
