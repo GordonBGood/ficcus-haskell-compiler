@@ -255,7 +255,16 @@ crawlModule :: Env -> MVar StatusDict -> DocsNeed -> Module.Name -> IO Status
 crawlModule env@(Env _ root _ projectType srcDirs buildID locals foreigns) mvar docsNeed name =
   do  let baseName = Module.toFilePath name
 
-      paths <- concat <$> traverse (\d -> map AbsoluteElm <$> File.existingModuleFiles (coerce (toAbsoluteElm d baseName))) srcDirs
+      paths0 <- concat <$> traverse (\d -> map AbsoluteElm <$> File.existingModuleFiles (coerce (toAbsoluteElm d baseName))) srcDirs
+
+      -- Ficcus (module rule, V2): a module that Ficcus adds to the core library (the overlay directory: Vector, Bitwise64, ...) yields to
+      -- a module of the project and to a module of a package of the same name, so that Elm's "ambiguous module" error does not appear
+      -- in builds to C for a program that has its own `Vector`
+      extraDir <- Flags.getExtraSrcDir
+      let inOverlay (AbsoluteElm p) = maybe False (\d -> FP.addTrailingPathSeparator d `List.isPrefixOf` p) extraDir
+          (overlayPaths, otherPaths) = List.partition inOverlay paths0
+          paths =
+            if not (null otherPaths) || Map.member name foreigns then otherPaths else overlayPaths
 
       case paths of
         [elm@(AbsoluteElm path)] ->

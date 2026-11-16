@@ -1,0 +1,28 @@
+module Main exposing (main)
+
+import Vector exposing (Vector(..))
+
+
+v : Vector Int
+v =
+    Vector [ 1, 2, 3 ]
+
+
+size : Vector a -> Int
+size (Vector xs) =
+    List.length xs
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ =
+                        Debug.log "package Vector" (size v)
+                in
+                ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

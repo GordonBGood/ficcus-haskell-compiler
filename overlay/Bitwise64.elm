@@ -47,3 +47,10 @@ shiftRightBy _ a =
 shiftRightZfBy : Int -> Int -> Int
 shiftRightZfBy _ a =
     a
+
+
+{-| not exposed: tells the compiler that this is the overlay's module and not a module `Bitwise64` of the project or of a package
+-}
+ficBitwise64Overlay : Int
+ficBitwise64Overlay =
+    0

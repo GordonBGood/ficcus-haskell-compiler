@@ -52,7 +52,8 @@ compute modules =
 
     equatableRoots = [ ("elm/core:Basics.eq", 0), ("elm/core:Basics.neq", 0) ]
     printedRoots = [ ("elm/core:Debug.toString", 0), ("elm/core:Debug.log", 0) ]
-    elementRoots = [ (vectorModuleId ++ n, 0) | (n, _, _) <- vectorKernels ]
+    -- only for the overlay's module Vector (it has the marker definition), not for a module of that name of the project or of a package
+    elementRoots = [ (vectorModuleId ++ n, 0) | Set.member (vectorModuleId ++ "ficVectorOverlay") known, (n, _, _) <- vectorKernels ]
 
     fixpoint mark roots =
       let reached = go (Set.fromList roots) roots

@@ -998,7 +998,7 @@ resolve se region e =
             Just (o, src) -> viaClone src o
             Nothing
               -- the Bitwise64 module of the overlay: its functions are the kernel functions of the same name
-              | Just n <- List.stripPrefix "author/project:Bitwise64." cid0 -> foreignOrTop' ("elm/core:Bitwise64." ++ n)
+              | Just n <- List.stripPrefix "author/project:Bitwise64." cid0, Map.member "author/project:Bitwise64.ficBitwise64Overlay" tops0 -> foreignOrTop' ("elm/core:Bitwise64." ++ n)
               -- the Vector module of the overlay (V1): the functions of its first section are the intrinsics of the same name
               | vecOn, Just n <- List.stripPrefix vectorModuleId cid0, n `elem` [ k | (k, _, _) <- vectorKernels ] -> foreignOrTop' (vectorKernelId n)
               | otherwise -> foreignOrTop' cid0

@@ -1,14 +1,17 @@
 module Vector exposing
     ( Vector
-    , empty, withCapacity, fromList, toList
-    , length, get
+    , empty, singleton, initialize, repeat, withCapacity, fromList, toList
+    , isEmpty, length, get
     , set, update, swap, push
-    , slice, append
+    , append, slice
+    , map, indexedMap, foldl, foldr, filter, toIndexedList
     )
 
-{-| Ficcus: the flat `Vector` (decisions D1 to D8 of 12 Nov; docs/STAGE4-V1.md). THE MINIMAL MODULE OF STEP V1: only the primitives, so
-that programs can be written for testing. V2 completes the API (`initialize`, `repeat`, `map`, `indexedMap`, `foldl`, `foldr`,
-`filter`, `toIndexedList`, `isEmpty`, written in Elm on these) and the module rule.
+{-| Ficcus: the flat `Vector` (decisions D1 to D8 of 12 Nov; docs/STAGE4-V1.md). The primitives of step V1 are the first section; the rest of the API of `Array`
+(`singleton`, `initialize`, `repeat`, `isEmpty`, `map`, `indexedMap`, `foldl`, `foldr`, `filter`, `toIndexedList`; step V2) is written in
+Elm on them, with the semantics of `Array` (an index out of range: `get` is `Nothing`, `set` returns the vector unchanged, a negative
+length gives the empty vector), and the loops keep the vector that they build unique, so every `push` is in place.
+Module rule: a module `Vector` of the project or of a package of the same name wins over this one (Build.crawlModule).
 
 A vector is an immutable value. Its elements are stored flat by layout: `Int`, `Float`, `Char`, `Bool` and records or tuples of
 those inline, a reference as one pointer, a record or tuple that contains references inline with a pointer map. An update (`set`,
@@ -31,6 +34,13 @@ type Vector a
 
 
 -- KERNEL FUNCTIONS (types only)
+
+
+{-| not exposed: tells the compiler that this is the overlay's module and not a module `Vector` of the project or of a package
+-}
+ficVectorOverlay : Int
+ficVectorOverlay =
+    0
 
 
 {-| A vector without elements.
@@ -133,3 +143,151 @@ update i f v =
 
     else
         v
+
+
+{-| A vector with one element.
+-}
+singleton : a -> Vector a
+singleton x =
+    push x (withCapacity 1)
+
+
+isEmpty : Vector a -> Bool
+isEmpty v =
+    length v == 0
+
+
+{-| `initialize n f` is the vector of `f 0` to `f (n - 1)`, evaluated in this order; the empty vector when `n` is not positive.
+-}
+initialize : Int -> (Int -> a) -> Vector a
+initialize n f =
+    if n <= 0 then
+        empty
+
+    else
+        initializeHelp 0 n f (withCapacity n)
+
+
+initializeHelp : Int -> Int -> (Int -> a) -> Vector a -> Vector a
+initializeHelp i n f acc =
+    if i >= n then
+        acc
+
+    else
+        initializeHelp (i + 1) n f (push (f i) acc)
+
+
+{-| `repeat n x` has `n` copies of `x`; the empty vector when `n` is not positive.
+-}
+repeat : Int -> a -> Vector a
+repeat n x =
+    if n <= 0 then
+        empty
+
+    else
+        repeatHelp n x (withCapacity n)
+
+
+repeatHelp : Int -> a -> Vector a -> Vector a
+repeatHelp n x acc =
+    if length acc >= n then
+        acc
+
+    else
+        repeatHelp n x (push x acc)
+
+
+map : (a -> b) -> Vector a -> Vector b
+map f v =
+    mapHelp 0 (length v) f v (withCapacity (length v))
+
+
+mapHelp : Int -> Int -> (a -> b) -> Vector a -> Vector b -> Vector b
+mapHelp i n f v acc =
+    if i >= n then
+        acc
+
+    else
+        mapHelp (i + 1) n f v (push (f (unsafeGet i v)) acc)
+
+
+indexedMap : (Int -> a -> b) -> Vector a -> Vector b
+indexedMap f v =
+    indexedMapHelp 0 (length v) f v (withCapacity (length v))
+
+
+indexedMapHelp : Int -> Int -> (Int -> a -> b) -> Vector a -> Vector b -> Vector b
+indexedMapHelp i n f v acc =
+    if i >= n then
+        acc
+
+    else
+        indexedMapHelp (i + 1) n f v (push (f i (unsafeGet i v)) acc)
+
+
+{-| Reduce from the first element to the last: `foldl f b v` is `f x_n (... (f x_1 b))`.
+-}
+foldl : (a -> b -> b) -> b -> Vector a -> b
+foldl f acc v =
+    foldlHelp 0 (length v) f acc v
+
+
+foldlHelp : Int -> Int -> (a -> b -> b) -> b -> Vector a -> b
+foldlHelp i n f acc v =
+    if i >= n then
+        acc
+
+    else
+        foldlHelp (i + 1) n f (f (unsafeGet i v) acc) v
+
+
+{-| Reduce from the last element to the first.
+-}
+foldr : (a -> b -> b) -> b -> Vector a -> b
+foldr f acc v =
+    foldrHelp (length v - 1) f acc v
+
+
+foldrHelp : Int -> (a -> b -> b) -> b -> Vector a -> b
+foldrHelp i f acc v =
+    if i < 0 then
+        acc
+
+    else
+        foldrHelp (i - 1) f (f (unsafeGet i v) acc) v
+
+
+{-| The elements for which the function is `True`, in order.
+-}
+filter : (a -> Bool) -> Vector a -> Vector a
+filter p v =
+    filterHelp 0 (length v) p v empty
+
+
+filterHelp : Int -> Int -> (a -> Bool) -> Vector a -> Vector a -> Vector a
+filterHelp i n p v acc =
+    if i >= n then
+        acc
+
+    else
+        let
+            x =
+                unsafeGet i v
+        in
+        filterHelp (i + 1) n p v (if p x then push x acc else acc)
+
+
+{-| The elements with their indices, in order.
+-}
+toIndexedList : Vector a -> List ( Int, a )
+toIndexedList v =
+    toIndexedHelp (length v - 1) v []
+
+
+toIndexedHelp : Int -> Vector a -> List ( Int, a ) -> List ( Int, a )
+toIndexedHelp i v acc =
+    if i < 0 then
+        acc
+
+    else
+        toIndexedHelp (i - 1) v (( i, unsafeGet i v ) :: acc)
