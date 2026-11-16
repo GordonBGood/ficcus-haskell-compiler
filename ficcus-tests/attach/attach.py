@@ -15,7 +15,7 @@ The expected results are the table expected.tsv (tab separated: id, outcome, err
 Packages of the cases (ficcus/*) live in packages/<author>/<name>/<version>/ and are entered in a private ELM_HOME (mkhome.py),
 so nothing is downloaded and the real ELM_HOME is not touched.
 Exit status 1 when any case differs from the table."""
-import argparse, concurrent.futures as cf, difflib, json, os, re, shutil, subprocess, sys, tempfile
+import signal, argparse, concurrent.futures as cf, difflib, json, os, re, shutil, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 def _find_root():
@@ -112,7 +112,11 @@ def one(case, elm, home, want):
                     elif " live 0 " not in r.stderr: problems.append("rc+asan: live objects at the end: %s" % r.stderr[-200:])
         return ("RUN", want[1]) if not problems else ("RUN-FAIL", "; ".join(problems)), not problems, out
     finally:
-        shutil.rmtree(work, ignore_errors=True)
+        if not KEEP: shutil.rmtree(work, ignore_errors=True)
+        else: print("KEEP=1: %s kept" % work)
+
+
+KEEP = bool(os.environ.get("KEEP"))       # KEEP=1: the private ELM_HOME and the work directories of the cases stay, for a look at a failure
 
 
 def main():
@@ -124,6 +128,7 @@ def main():
     global RC_SAN
     RC_SAN = a.rc
     elm = os.path.abspath(a.elm)
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))      # so that the finally clauses (the removal of the private ELM_HOME and of the work directories) run
     table = {}
     for line in open(os.path.join(HERE, "expected.tsv"), encoding="utf-8"):
         if line.startswith("#") or not line.strip(): continue
@@ -147,7 +152,8 @@ def main():
                     bad += 1
                     if a.v: print("      " + out.strip().replace("\n", "\n      ")[:1500])
     finally:
-        shutil.rmtree(home, ignore_errors=True)
+        if not KEEP: shutil.rmtree(home, ignore_errors=True)
+        else: print("KEEP=1: %s kept" % home)
     print("%d cases, %d differ from expected.tsv" % (len(ids), bad))
     return 1 if bad else 0
 

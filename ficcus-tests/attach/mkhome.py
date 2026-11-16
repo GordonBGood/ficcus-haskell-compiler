@@ -43,12 +43,25 @@ def write_registry(path, count, entries):
     open(path, "wb").write(bytes(b))
 
 
+def clone(src, dst):
+    """copy a file by a reflink where the file system has them (btrfs: no disk space, copy on write, so a compiler that
+    rewrites the file does not touch the original), else an ordinary copy. Not a hard link: elm rewrites artifacts.dat in place."""
+    try:
+        import fcntl
+        with open(src, "rb") as f, open(dst, "wb") as g:
+            fcntl.ioctl(g.fileno(), 0x40049409, f.fileno())         # FICLONE
+        shutil.copystat(src, dst)
+        return dst
+    except OSError:
+        return shutil.copy2(src, dst)
+
+
 def make(dest):
     pk = os.path.join(dest, "0.19.3", "packages")
     shutil.rmtree(dest, ignore_errors=True)
     os.makedirs(os.path.join(pk, "elm"))
     for name in ("core", "json"):
-        shutil.copytree(os.path.join(SRC, "elm", name), os.path.join(pk, "elm", name), ignore=shutil.ignore_patterns("artifacts.dat"))
+        shutil.copytree(os.path.join(SRC, "elm", name), os.path.join(pk, "elm", name), ignore=shutil.ignore_patterns("artifacts.dat"), copy_function=clone)
     count, entries = read_registry(os.path.join(SRC, "registry.dat"))
     entries = [e for e in entries if (e[0], e[1]) in {(b"elm", b"core"), (b"elm", b"json")}]
     count = len(entries)
