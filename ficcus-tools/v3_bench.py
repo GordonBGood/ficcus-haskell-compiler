@@ -76,6 +76,16 @@ def answer(text):
     return lines
 
 
+def stage(a, src, tag):
+    """a copy of the source in its own project with elm-version 0.19.3 (the targets/elm projects say 0.19.1)"""
+    d = os.path.join(a.out, "proj_" + tag)
+    os.makedirs(os.path.join(d, "src"), exist_ok=True)
+    open(os.path.join(d, "elm.json"), "w").write(open(os.path.join(VEC, "nbody", "elm.json")).read())
+    dst = os.path.join(d, "src", os.path.basename(src))
+    open(dst, "w").write(open(src).read())
+    return dst
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--elm", required=True); ap.add_argument("--elm-home", required=True); ap.add_argument("--out", required=True)
@@ -93,6 +103,7 @@ def main():
         base = lambda s: os.path.join(a.out, "p%d_%s" % (k, s))
         genv = lambda extra=None: dict(os.environ, FICCUS_ELM=os.path.abspath(a.elm), FICCUS_FLAGS="--rc", ELM_HOME=os.path.abspath(a.elm_home), **(extra or {}))
         # Ficcus: (label, source, compiler env, cc, opt)
+        arr = stage(a, arr, "p%d_array" % k)
         variants = [("Array", arr, {}, "gcc", "-O2"), ("Vector", vec, {}, "gcc", "-O2")]
         if a.experiments:
             variants += [("Vector", vec, {}, "gcc", "-O3"), ("Vector", vec, {}, "clang", "-O2"), ("Vector", vec, {}, "clang", "-O3"),
