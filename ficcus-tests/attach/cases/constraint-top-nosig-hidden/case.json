@@ -1,0 +1,3 @@
+{
+ "desc": "B3: the second obligation is about a variable that the type of the definition lacks: a signature could not say it either (UNKNOWN MEMBER TYPE, not a hint that would not compile)"
+}

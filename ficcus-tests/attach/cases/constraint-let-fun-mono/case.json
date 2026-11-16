@@ -1,0 +1,3 @@
+{
+ "desc": "B3: a local function without a signature is monomorphic in the constrained variable (used at T and at W)"
+}

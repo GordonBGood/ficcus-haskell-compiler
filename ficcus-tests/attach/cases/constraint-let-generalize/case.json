@@ -1,0 +1,3 @@
+{
+ "desc": "B3: the let value takes the constrained variable from the enclosing definition; the definition is polymorphic in the other variable"
+}

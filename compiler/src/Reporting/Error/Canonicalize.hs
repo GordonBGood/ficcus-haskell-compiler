@@ -80,7 +80,7 @@ data Error
   | ConstraintTwice String N.Name A.Region A.Region            -- Ficcus (ATTACH A2): variable, member
   | ConstraintNameTwice N.Name String N.Name A.Region A.Region  -- local name, variable, member
   | ConstraintShadows N.Name String N.Name A.Region A.Region    -- local name, variable, member; the top level definition, the constraint
-  | ConstraintVarUnused A.Region String N.Name N.Name          -- variable, member, the definition
+  | AmbiguousConstraint A.Region String N.Name String N.Name   -- the variable and the member of the constraint, the variable that the type lacks, the definition
   | AmbiguousMember A.Region String N.Name ModuleName.Canonical (OneOrMore.OneOrMore ModuleName.Canonical)   -- Ficcus (ATTACH A1b): type, member, the modules of the types
   | NotFoundType A.Region (Maybe Module.Prefix) T.Name (PossibleNames T.Name)
   | NotFoundVariant A.Region (Maybe Module.Prefix) N.Name (PossibleNames N.Name)
@@ -318,18 +318,22 @@ toReport source err =
       constraintClash source r1 r2 local var member $
         "The constraint gives the name `" <> N.toChars local <> "`, but that is already the name of a definition."
 
-    ConstraintVarUnused region var member name ->
-      Report.Report "UNUSED CONSTRAINT VARIABLE" region [] $
+    AmbiguousConstraint region var member missing name ->
+      Report.Report "AMBIGUOUS CONSTRAINT" region [] $
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "This constraint is about the type variable `" <> var <> "`, but `" <> var
-              <> "` does not occur in the type of `" <> Members.displayName name <> "`:"
+              "The constraint `" <> var <> " has " <> N.toChars member <> "` mentions the type variable `" <> missing
+              <> "`, but `" <> missing <> "` does not occur in the type of `" <> Members.displayName name <> "`:"
           ,
-            D.reflow $
-              "No use of `" <> Members.displayName name <> "` could ever say which type `" <> var
-              <> "` is, so I could not find its `" <> N.toChars member
-              <> "`. Use the variable in the type, or remove the constraint."
+            D.stack
+              [ D.reflow $
+                  "A constraint is solved from the types at each use of `" <> Members.displayName name
+                  <> "`, so every type variable in it has to be part of the type of the function. Here no use of `"
+                  <> Members.displayName name <> "` could say what `" <> missing <> "` is."
+              , D.reflow $
+                  "Use `" <> missing <> "` in the type of `" <> Members.displayName name <> "` (an argument or the result), or remove the constraint."
+              ]
           )
     NotFoundVariant r p n ns -> notFound source r p n "variant"  ns Members.displayName
 

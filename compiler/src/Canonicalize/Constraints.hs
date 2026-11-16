@@ -66,7 +66,7 @@ register env values =
           do  checkNames (Members.memberEnv name env) hidden
               annotation@(Can.Forall _ full) <- Type.toAnnotation env srcType
               let Can.Forall freeVars wrapped = Constraints.wrap [ Constraints.Hidden v m l | Hidden _ v m (A.At _ l) <- hidden ] annotation
-              checkVars name (realType (length hidden) full) hidden
+              checkVars name full hidden
               Result.ok (insert (Constraints.whereKey name) (Can.Forall freeVars wrapped) acc)
 
         _ ->
@@ -74,13 +74,6 @@ register env values =
 
     insert key annotation (Env.Env home vs ts cs bs qvs qts qcs) =
       Env.Env home (Map.insert key (Env.Foreign home annotation) vs) ts cs bs qvs qts qcs
-
-
-realType :: Int -> Can.Type -> Can.Type
-realType n tipe =
-  case tipe of
-    Can.TLambda _ result | n > 0 -> realType (n - 1) result
-    _ -> tipe
 
 
 -- the names of the constraints: one name once, one `var has member` once, and no name of a top level
@@ -105,16 +98,33 @@ checkNames (Env.Env _ vs _ _ _ _ _ _) hidden =
           go (Map.insert local localRegion locals) (Map.insert (var, member) region pairs) rest
 
 
--- a constrained variable must occur in the type of the signature
+-- every type variable of a constraint (the variable it is about and the variables of the type of the member)
+-- must occur in the type of the function: the constraint is solved from the types at each use
 checkVars :: N.Name -> Can.Type -> [Hidden] -> Result i w ()
-checkVars name real hidden =
-  let vars = typeVars real in
-  case [ h | h <- hidden, not (Set.member (_var h) vars) ] of
-    Hidden region var member _ : _ ->
-      Result.throw (Error.ConstraintVarUnused region var member name)
+checkVars name full hidden =
+  let
+    (memberTypes, real) = peel (length hidden) full
+    vars = typeVars real
+    missing =
+      [ (region, var, member, v)
+      | (Hidden region var member _, memberType) <- zip hidden memberTypes
+      , v <- var : Set.toList (typeVars memberType)
+      , not (Set.member v vars)
+      ]
+  in
+  case missing of
+    (region, var, member, v) : _ ->
+      Result.throw (Error.AmbiguousConstraint region var member v name)
 
     [] ->
       Result.ok ()
+
+
+peel :: Int -> Can.Type -> ([Can.Type], Can.Type)
+peel n tipe =
+  case tipe of
+    Can.TLambda a result | n > 0 -> let (as, r) = peel (n - 1) result in (a : as, r)
+    _ -> ([], tipe)
 
 
 typeVars :: Can.Type -> Set.Set String

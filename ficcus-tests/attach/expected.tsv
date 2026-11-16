@@ -43,12 +43,12 @@ constraint-builtin	REJECT	NO MEMBER	built-in types (`Int`
 constraint-record	REJECT	NO MEMBER	built-in types (`Int`
 constraint-wrong-type	REJECT	MEMBER TYPE MISMATCH	T.add
 constraint-missing	REJECT	MISSING CONSTRAINT	a has add : a -> a -> a
-constraint-no-signature	REJECT	UNKNOWN MEMBER TYPE	constraint is never inferred
+constraint-no-signature	REJECT	MISSING CONSTRAINT	a has add : a -> a -> a
 constraint-given-mismatch	REJECT	MEMBER TYPE MISMATCH;MEMBER TYPE MISMATCH	the constraint `a has add`
 constraint-clash-top	REJECT	NAME CLASH	a has add as add_
 constraint-clash-two	REJECT	NAME CLASH	b has add as add_
 constraint-twice	REJECT	NAME CLASH	The constraint `a has add` is written twice
-constraint-unused-var	REJECT	UNUSED CONSTRAINT VARIABLE	`b` does not occur in the
+constraint-unused-var	REJECT	AMBIGUOUS CONSTRAINT	mentions the type variable `b`
 constraint-syntax	REJECT	PROBLEM IN CONSTRAINT	a has add as plus
 constraint-empty	REJECT	UNFINISHED CONSTRAINTS	has
 constraint-member-unsigned	REJECT	MEMBER WITHOUT TYPE ANNOTATION	T.zero
@@ -62,3 +62,16 @@ constraint-flow-package	RUN	c
 constraint-arg-pattern	REJECT	TYPE MISMATCH	1st argument
 constraint-arg-count	REJECT	BAD TYPE ANNOTATION	can accept 1 argument
 package-imports-vector	REJECT	PROBLEM BUILDING DEPENDENCIES	
+constraint-ambiguous	REJECT	AMBIGUOUS CONSTRAINT	mentions the type variable `z`
+constraint-ambiguous-subject	REJECT	AMBIGUOUS CONSTRAINT	mentions the type variable `b`
+constraint-var-in-type	RUN	c	
+constraint-let-generalize	RUN	c	
+constraint-let-generalize-later	RUN	c	
+constraint-let-fun-mono	REJECT	TYPE MISMATCH	
+constraint-let-fun-one	RUN	c	
+constraint-top-nosig-type	REJECT	MISSING CONSTRAINT	a has f : a -> b
+constraint-order	RUN	c	
+constraint-order-bad-nested	REJECT	TYPE MISMATCH	
+constraint-order-bad-pipe	REJECT	TYPE MISMATCH	
+constraint-order-bad-two	REJECT	TYPE MISMATCH	
+constraint-top-nosig-hidden	REJECT	UNKNOWN MEMBER TYPE;UNKNOWN MEMBER TYPE	I cannot tell

@@ -23,6 +23,7 @@ module Type.Members
   , Tools(..)
   , use
   , discharge
+  , hold
   , sweep
   , leftovers
   , merge
@@ -30,7 +31,7 @@ module Type.Members
   where
 
 
-import Control.Monad (foldM)
+import Control.Monad (foldM, forM_)
 import qualified Data.Map.Strict as Map
 
 import qualified AST.Canonical as Can
@@ -45,6 +46,7 @@ import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Package as Pkg
 import qualified Reporting.Annotation as A
 import qualified Reporting.Error.Type as Error
+import qualified Type.Error as ET
 import Type.Type as Type
 import qualified Type.Unify as Unify
 import qualified Type.UnionFind as UF
@@ -277,43 +279,120 @@ resolve tools table env obligation@(Obligation region function member subject ti
       where _ = obligation
 
 
--- | after a generalization: an obligation whose subject was generalized cannot be discharged any more.
--- An obligation that stays pending (its subject belongs to an outer definition) keeps its member type at the
--- level of the subject: the variables of the member type that were just generalized are made variables of
--- that level again (returned with their rank, for the pools).  Otherwise a `let` value whose type comes from
--- the member (`let y = get t in ...`, `t` not yet known) would be polymorphic before the member says what it is.
-sweep :: [Obligation] -> IO ([Obligation], [Error.Error], [(Int, [Variable])])
-sweep pending =
-  foldM check ([], [], []) (reverse pending)
+-- | before the generalization of a definition (`outer` is the rank of its context, `young` the rank of the
+-- variables it would generalize, `header` the names it defines with their types).  Called after the
+-- obligations that can be discharged were.
+--
+--   * a local definition (`let`): the variables that the pending obligations are about (the subjects and the
+--     variables of the member types) are not generalized: they get the rank of the context, so the definition
+--     is monomorphic in them and they are settled by the enclosing definition, where the obligations are
+--     discharged when the type of the subject is known, whatever the order of the source.
+--   * a top level definition: a pending obligation about a variable that would be generalized is an error.
+--     When the variable occurs in the type of the definition it is MISSING CONSTRAINT, with the type
+--     annotation to write; otherwise UNKNOWN MEMBER TYPE.
+hold :: Int -> Int -> Map.Map N.Name (A.Located Variable) -> [Obligation] -> IO ([Obligation], [Error.Error])
+hold outer young header pending
+  | null pending = return ([], [])
+  | outer > outermostRank =
+      do  forM_ pending $ \(Obligation _ _ _ subject tipe) ->
+            do  vars <- flexVariables subject
+                vars2 <- flexVariables tipe
+                forM_ (vars ++ vars2) $ \var ->
+                  do  (Descriptor content rank mark copy) <- UF.get var
+                      if rank >= young then UF.set var (Descriptor content outer mark copy) else return ()
+          return (pending, [])
+  | otherwise =
+      do  flags <- traverse isYoung pending
+          let bad = [ o | (o, True) <- zip pending flags ]
+          let ok = [ o | (o, False) <- zip pending flags ]
+          if null bad then return (pending, []) else
+            do  errors <- report (reverse bad)
+                return (ok, errors)
   where
-    check (kept, errors, pinned) obligation@(Obligation region function member subject tipe) =
+    isYoung (Obligation _ _ _ subject _) =
       do  (Descriptor content rank _ _) <- UF.get subject
-          if rank /= noRank
-            then
-              do  vars <- pin rank tipe
-                  return (obligation : kept, errors, if null vars then pinned else (rank, vars) : pinned)
-            else
-              do  neededType <- Type.toErrorType tipe
-                  return $ (\errs -> (kept, errs, pinned)) $
-                    case content of
-                      RigidVar name -> Error.MissingConstraint region function (TV.varToChars name) [(member, neededType)] : errors
-                      RigidSuper _ name -> Error.MissingConstraint region function (TV.varToChars name) [(member, neededType)] : errors
-                      Error -> errors
-                      _ -> Error.UnknownMemberType region function (kindOf content) [(member, neededType)] : errors
+          return $
+            case content of
+              FlexVar _ -> rank >= young
+              FlexSuper _ _ -> rank >= young
+              _ -> False
+
+    report bad =
+      nameTogether (concat [ [subject, tipe] | Obligation _ _ _ subject tipe <- bad ] ++ map A.toValue (Map.elems header)) >>
+      report' bad
+
+    report' bad =
+      case Map.toList header of
+        [] -> traverse unknown bad
+        (name, A.At region defVar) : _ ->
+          do  defVars <- flexVariables defVar
+              -- only an obligation whose variables are all variables of the type of the definition can be written as a constraint
+              inDef <- traverse (\o -> do vars <- (++) <$> flexVariables (_subject o) <*> flexVariables (_type o)
+                                          allM (\v -> anyM (UF.equivalent v) defVars) vars) bad
+              let shown = [ o | (o, True) <- zip bad inDef ]
+              let hidden = [ o | (o, False) <- zip bad inDef ]
+              missing <-
+                case shown of
+                  [] -> return []
+                  Obligation _ function _ _ _ : _ ->
+                    do  defType <- Type.toErrorType defVar      -- first: it names the variables that the constraints then use
+                        groups <- traverse describe shown
+                        return [Error.MissingSignature region function name defType (group groups)]
+              others <- traverse unknown hidden
+              return (missing ++ others)
+
+    describe (Obligation _ _ member subject tipe) =
+      do  subjectType <- Type.toErrorType subject
+          neededType <- Type.toErrorType tipe
+          let var = case subjectType of
+                ET.FlexVar n -> TV.varToChars n
+                ET.FlexSuper _ n -> TV.varToChars n
+                _ -> "a"
+          return (var, (member, neededType))
+
+    group items =
+      foldl (\acc (var, entry) -> case lookup var acc of
+                Just _ -> [ if v == var then (v, es ++ [entry]) else (v, es) | (v, es) <- acc ]
+                Nothing -> acc ++ [(var, [entry])]) [] items
+
+    unknown (Obligation region function member subject tipe) =
+      do  (Descriptor content _ _ _) <- UF.get subject
+          t <- Type.toErrorType tipe
+          return (Error.UnknownMemberType region function (kindOf content) [(member, t)])
+
+    allM p xs =
+      case xs of
+        [] -> return True
+        x : rest -> p x >>= \b -> if b then allM p rest else return False
+
+    anyM p xs =
+      case xs of
+        [] -> return False
+        x : rest -> p x >>= \b -> if b then return True else anyM p rest
 
 
--- the generalized flexible variables in a type get the rank `rank`; a budget guards against cyclic types
-pin :: Int -> Variable -> IO [Variable]
-pin rank start =
-  snd <$> go (2000 :: Int, []) start
+-- give the variables of several types their names (a, b, ...) in one go, so that the names of the types that are
+-- then shown in one message do not clash (each conversion alone only avoids the names inside its own type)
+nameTogether :: [Variable] -> IO ()
+nameTogether vars =
+  do  unit <- UF.fresh (Descriptor (Structure Unit1) noRank noMark Nothing)
+      together <- foldM (\acc var -> UF.fresh (Descriptor (Structure (Pair1 var acc)) noRank noMark Nothing)) unit vars
+      _ <- Type.toErrorType together
+      return ()
+
+
+-- the flexible variables in a type (a budget guards against cyclic types)
+flexVariables :: Variable -> IO [Variable]
+flexVariables start =
+  (reverse . snd) <$> go (2000 :: Int, []) start
   where
     go (fuel, acc) var
       | fuel <= 0 = return (fuel, acc)
       | otherwise =
-          do  (Descriptor content r mark copy) <- UF.get var
+          do  (Descriptor content _ _ _) <- UF.get var
               case content of
-                FlexVar _ | r == noRank -> UF.set var (Descriptor content rank mark copy) >> return (fuel - 1, var : acc)
-                FlexSuper _ _ | r == noRank -> UF.set var (Descriptor content rank mark copy) >> return (fuel - 1, var : acc)
+                FlexVar _ -> return (fuel - 1, var : acc)
+                FlexSuper _ _ -> return (fuel - 1, var : acc)
                 Structure flat -> foldM go (fuel - 1, acc) (children flat)
                 Alias _ _ args real -> foldM go (fuel - 1, acc) (real : map snd args)
                 _ -> return (fuel - 1, acc)
@@ -327,6 +406,26 @@ pin rank start =
         Unit1 -> []
         Pair1 a b -> [a, b]
         Triple1 a b c -> [a, b, c]
+
+
+-- | after a generalization: an obligation whose subject was generalized can never be discharged.  Only a
+-- rigid subject is left here (the signature does not give the constraint): `hold` reported the flexible ones.
+sweep :: [Obligation] -> IO ([Obligation], [Error.Error])
+sweep pending =
+  foldM check ([], []) (reverse pending)
+  where
+    check (kept, errors) obligation@(Obligation region function member subject tipe) =
+      do  (Descriptor content rank _ _) <- UF.get subject
+          if rank /= noRank
+            then return (obligation : kept, errors)
+            else
+              do  neededType <- Type.toErrorType tipe
+                  return $ (,) kept $
+                    case content of
+                      RigidVar name -> Error.MissingConstraint region function (TV.varToChars name) [(member, neededType)] : errors
+                      RigidSuper _ name -> Error.MissingConstraint region function (TV.varToChars name) [(member, neededType)] : errors
+                      Error -> errors
+                      _ -> Error.UnknownMemberType region function (kindOf content) [(member, neededType)] : errors
 
 
 -- | at the end of the module

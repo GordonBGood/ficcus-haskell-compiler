@@ -1,0 +1,3 @@
+{
+ "desc": "B4: two obligations in one let are solved at the end of the definition: nested, piped, two bindings, no let: all accepted"
+}

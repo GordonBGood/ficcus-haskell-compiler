@@ -231,6 +231,9 @@ solve env rank pools state constraint =
           (State savedEnv mark errors table pending0) <-
             discharge env nextRank nextPools =<< solve env nextRank nextPools state headerCon
 
+          -- (ATTACH A2c) before the generalization: what the pending member obligations are about is not generalized
+          (pendingHeld, holdErrors) <- Members.hold rank nextRank locals pending0
+
           let youngMark = mark
           let visitMark = nextMark youngMark
           let finalMark = nextMark visitMark
@@ -253,12 +256,9 @@ solve env rank pools state constraint =
                   _ -> []
           -- (ATTACH A2) an obligation whose subject was generalized can never be discharged
           (pending, memberErrors) <-
-            case pending0 of
-              [] -> return ([], [])
-              _  ->
-                do  (kept, errs, pinned) <- Members.sweep pending0
-                    forM_ pinned $ \(r, pinnedVars) -> MVector.modify nextPools (pinnedVars ++) r
-                    return (kept, errs)
+            case pendingHeld of
+              [] -> return ([], holdErrors)
+              _  -> (\(kept, errs) -> (kept, errs ++ holdErrors)) <$> Members.sweep pendingHeld
           let tempState = State savedEnv grayMark (memberErrors ++ cycles ++ escapes ++ errors) table pending
           newState <- discharge newEnv rank nextPools =<< solve newEnv rank nextPools tempState subCon
 

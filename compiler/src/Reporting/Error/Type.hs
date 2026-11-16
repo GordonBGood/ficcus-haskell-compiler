@@ -56,6 +56,7 @@ data Error
   | BadMember A.Region N.Name N.Name MemberOwner T.Type T.Type    -- the type the member has, the type needed
   | MemberNeedsSignature A.Region N.Name N.Name String            -- the type whose member has no signature
   | MissingConstraint A.Region N.Name String [(N.Name, T.Type)]   -- the type variable, the members needed
+  | MissingSignature A.Region N.Name N.Name T.Type [(String, [(N.Name, T.Type)])]   -- the function used, the definition without annotation, its type, the constraints by variable
   | UnknownMemberType A.Region N.Name (Maybe String) [(N.Name, T.Type)]   -- the kind of the variable (number, comparable, ...), the members needed
 
 
@@ -282,6 +283,28 @@ toReport source localizer err =
               , D.indent 4 $ D.vcat
                   [ D.cyan "where"
                   , memberLines localizer (Just var) needed
+                  ]
+              ]
+          )
+
+    MissingSignature region function name defType constraints ->
+      Report.Report "MISSING CONSTRAINT" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "The type of `" <> Members.displayName name <> "` would need constraints, because it uses `"
+              <> Members.displayName function <> "`, but it has no type annotation:"
+          ,
+            D.stack
+              [ D.reflow $
+                  "I never infer constraints. A definition that needs a type to have members needs a type\
+                  \ annotation with a `where` block that says so. This one:"
+              , D.indent 4 $ D.vcat $
+                  [ D.dullyellow (D.fromName name <> " : " <> T.toDoc localizer RT.None defType)
+                  , D.indent 4 $ D.cyan "where"
+                  ] ++
+                  [ D.indent 8 $ D.green (D.fromChars var <> " has " <> D.fromName member <> " : " <> T.toDoc localizer RT.None tipe)
+                  | (var, entries) <- constraints, (member, tipe) <- entries
                   ]
               ]
           )
