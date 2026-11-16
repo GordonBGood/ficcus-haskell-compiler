@@ -296,7 +296,7 @@ bump i n v =
     else
         bump (i + 1) n (Vector.update (modBy (Vector.length v) (i * 7)) (\\r -> { r | n = r.n + i }) v)
 ''', "List.sum (List.map .n (Vector.toList (bump 0 %d (Vector.fromList (List.map (\\i -> R (String.fromInt i) i [ i ]) (List.range 1 100))))))" % N, None,
-     "vec_copy == 0 and copied == 0 and inplace == %d and peak <= 620" % N),       # the element is taken out, changed and put back: the vector is never copied
+     "vec_copy == 0 and copied == 0 and inplace == %d and peak <= 620 and allocs <= 1000" % N),       # the element is taken out, changed and put back: the vector is never copied
     ("vec-of-vectors", VFILL + '''
 
 rows : Int -> Vector (Vector Int) -> Vector (Vector Int)
@@ -317,6 +317,51 @@ poke i n vv =
         poke (i + 1) n (Vector.update (modBy 40 i) (Vector.set (modBy 50 (i * 3)) i) vv)
 ''', "List.sum (List.map (sumV 0 0) (Vector.toList (poke 0 %d (rows 40 Vector.empty))))" % N, None,
      "vec_copy == 0 and inplace >= %d * 2 and allocs <= %d + 400" % (N, N)),       # the inner vector is unique while it is out of the outer one; one closure (the partial application of Vector.set) per round
+    # V2: the functions written in Elm on the primitives build their result by `push` into a vector with room, so they allocate the result only
+    ("vec-initialize", "", "Vector.length (Vector.initialize %d (\\i -> i * 2))" % N, str(N), "allocs <= 10 and vec_copy == 0 and copied == 0 and inplace >= %d" % N),
+    ("vec-repeat-fold", "", "( Vector.foldl (+) 0 (Vector.indexedMap (\\i x -> i + x) (Vector.repeat %d 1)), Vector.foldr (\\x acc -> x + acc) 0 (Vector.repeat 10 2) )" % N,
+     "(5000050000,20)", "allocs <= 20 and vec_copy == 0 and copied == 0 and inplace >= %d" % N),
+    ("vec-map-rounds", VFILL + '''
+
+rounds : Int -> Vector Int -> Vector Int
+rounds k v =
+    if k <= 0 then
+        v
+
+    else
+        rounds (k - 1) (Vector.map (\\x -> x + 1) v)
+''', "sumV 0 0 (rounds 100 (grow 0 1000 Vector.empty))", "599500", "allocs <= 140 and vec_copy == 0 and copied <= 12 and inplace >= 100 * 1000"),       # one new vector per map, never a copy
+    ("vec-filter", VFILL, "Vector.length (Vector.filter (\\x -> modBy 3 x == 0) (grow 0 %d Vector.empty))" % N, "33334", "allocs <= 60 and vec_copy == 0 and inplace >= %d" % N),
+    ("vec-append-loop", VFILL + '''
+
+app : Int -> Int -> Vector Int -> Vector Int
+app i n v =
+    if i >= n then
+        v
+
+    else
+        app (i + 1) n (Vector.append v (Vector.singleton i))
+''', "Vector.length (app 0 %d Vector.empty)" % 20000, "20000", "vec_copy == 0 and inplace >= 20000"),       # the singletons are the allocations
+    ("vec-update-kept", '''keep : Int -> Int -> Vector Int -> Int -> Int
+keep i n v acc =
+    if i >= n then
+        acc
+
+    else
+        let
+            w =
+                Vector.update (modBy 20 i) (\\x -> x + i) v
+        in
+        keep (i + 1) n w (acc + Vector.length v)
+''', "keep 0 1000 (Vector.repeat 20 0) 0", "20000", "vec_copy == 1000 and copied >= 1000"),       # the old vector is used again: every update copies
+    ("vec-update-unique", '''bump : Int -> Int -> Vector Int -> Vector Int
+bump i n v =
+    if i >= n then
+        v
+
+    else
+        bump (i + 1) n (Vector.update (modBy (Vector.length v) (i * 7)) (\\x -> x + i) v)
+''', "Vector.foldl (+) 0 (bump 0 %d (Vector.repeat 100 0))" % N, "4999950000", "allocs <= 20 and vec_copy == 0 and copied == 0 and inplace >= %d" % N),
     ("dict-insert", '''fill : Int -> Int -> Dict Int Int -> Dict Int Int
 fill i n d =
     if i >= n then

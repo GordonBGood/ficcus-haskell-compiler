@@ -62,6 +62,8 @@ data Tab =
     , tProd :: Set.Set CloneId             -- producers
     , tLifted :: Set.Set CloneId           -- lifted clones (they use variables of their owner by name)
     , tQuiet :: Set.Set CloneId            -- clones that cannot print (no `Debug` kernel, no call of an unknown function, transitively)
+    , tOwner :: Map.Map CloneId CloneId    -- the owner of each lifted clone
+    , tCur :: Maybe CloneId                -- the clone whose body is being rewritten
     }
 
 
@@ -82,7 +84,10 @@ inlineStats program
       let clones = mpClones program
           tab = table clones
           (clones', (_, a, b)) = runState (mapM (inlineDef tab (mpMain program)) clones) (0, 0, 0)
-      in (program { mpClones = clones' }, (a, b))
+          -- the clones of `Vector.update` that rule (U) wrote out everywhere are dropped (nothing else refers to them)
+          referenced = Set.fromList (concat [ exprRefs bd | d <- clones', Just bd <- [mdBody d] ] ++ concatMap mdNeeds clones' ++ maybe [] pure (mpMain program))
+          live d = mdName d /= updateName || Set.member (mdClone d) referenced
+      in (program { mpClones = filter live clones' }, (a, b))
 
 
 table :: [MDef] -> Tab
@@ -106,7 +111,7 @@ table clones =
       shrink qs =
         let qs' = Set.fromList [ mdClone d | d <- clones, Set.member (mdClone d) qs, Just b <- [mdBody d], quietIn qs b ]
         in if qs' == qs then qs else shrink qs'
-  in Tab defs prod lifted (shrink quiet0)
+  in Tab defs prod lifted (shrink quiet0) (Map.fromList [ (mdClone d, o) | d <- clones, Just o <- [mdLifted d] ]) Nothing
 
 
 -- | an expression that prints nothing and calls no unknown function (so it may be skipped when its value is not needed)
@@ -187,7 +192,7 @@ inlineDef :: Tab -> Maybe CloneId -> MDef -> M MDef
 inlineDef tab root d =
   case mdBody d of
     Just body | Just (mdClone d) /= root ->
-      do  body' <- rw tab body
+      do  body' <- rw tab { tCur = Just (mdClone d) } body
           return d { mdBody = Just body' }
     _ -> return d
 
@@ -211,6 +216,16 @@ rw tab (MExpr cls node) =
               case r of
                 Just e' -> do { (k, a, b) <- get; put (k, a + 1, b); return e' }
                 Nothing -> put saved >> return e
+        -- rule (U): `Vector.update i f v` with a lambda `f` of the same definition is written out, so that `f x` is a direct call
+        MCall (MExpr _ (MGlobal c)) [ai, MExpr _ (MGlobal l), av]
+          | Just def <- Map.lookup c (tDefs tab), mdName def == updateName, Just body <- mdBody def, [(pi', _), (pf, _), (pv, _)] <- mdParams def
+          , mdResult def == cls, canCallDirect tab l ->
+          do  binds <- forM [ (pi', ai), (pv, av) ] $ \(q, a) -> if atom a then return (q, Left a) else do { q' <- fresh q; return (q, Right (q', a)) }
+              let env = Map.fromList ([ (q, either mNode (\(q', _) -> MLocal q') b) | (q, b) <- binds ] ++ [ (pf, MGlobal l) ])
+              body' <- freshen env body
+              (n, a, b) <- get
+              put (n, a + 1, b)
+              return (foldr (\(_, b') acc -> case b' of { Left _ -> acc; Right (q', x) -> MExpr (mRep acc) (MLetVal q' x acc) }) body' binds)
         MCall (MExpr _ (MGlobal c)) args | Just def <- Map.lookup c (tDefs tab), Just (k, bs) <- consumerOf def
                                          , length args == length (mdParams def), candidate tab (args !! k) ->
           do  saved <- get
@@ -221,6 +236,19 @@ rw tab (MExpr cls node) =
         _ -> return e
   where
     sub = descend (rw tab)
+
+
+-- the definition that rule (U) writes out
+updateName :: String
+updateName = "author/project:Vector.update"
+
+
+-- a lifted lambda may be called by name where its owner's variables are in scope: in the body of its owner
+canCallDirect :: Tab -> CloneId -> Bool
+canCallDirect tab l =
+  case Map.lookup l (tOwner tab) of
+    Nothing -> True
+    Just o -> Just o == tCur tab
 
 
 -- an expression that rule (A) can take apart: a call of a producer, or constructor applications (or producer calls) on every path,
