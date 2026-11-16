@@ -77,6 +77,10 @@ data Error
   | ImportExposedBinopNotFound A.Region ModuleName.Canonical Op.Name [Op.Name]
   | NotFoundVar A.Region (Maybe Module.Prefix) N.Name (PossibleNames N.Name)
   | NotFoundMember A.Region String N.Name [N.Name]    -- Ficcus (ATTACH A1): type, member, the members the type has
+  | ConstraintTwice String N.Name A.Region A.Region            -- Ficcus (ATTACH A2): variable, member
+  | ConstraintNameTwice N.Name String N.Name A.Region A.Region  -- local name, variable, member
+  | ConstraintShadows N.Name String N.Name A.Region A.Region    -- local name, variable, member; the top level definition, the constraint
+  | ConstraintVarUnused A.Region String N.Name N.Name          -- variable, member, the definition
   | AmbiguousMember A.Region String N.Name ModuleName.Canonical (OneOrMore.OneOrMore ModuleName.Canonical)   -- Ficcus (ATTACH A1b): type, member, the modules of the types
   | NotFoundType A.Region (Maybe Module.Prefix) T.Name (PossibleNames T.Name)
   | NotFoundVariant A.Region (Maybe Module.Prefix) N.Name (PossibleNames N.Name)
@@ -301,6 +305,32 @@ toReport source err =
     NotFoundType    r p n ns -> notFound source r p n "type"     ns T.nameToChars
     NotFoundMember  r t n ms -> notFoundMember source r t n ms
     AmbiguousMember r t n h hs -> ambiguousMember source r t n h hs
+
+    ConstraintTwice var member r1 r2 ->
+      nameClash source r1 r2 $
+        "The constraint `" <> var <> " has " <> N.toChars member <> "` is written twice."
+
+    ConstraintNameTwice local var member r1 r2 ->
+      constraintClash source r1 r2 local var member $
+        "Two constraints of this type annotation give the name `" <> N.toChars local <> "`."
+
+    ConstraintShadows local var member r1 r2 ->
+      constraintClash source r1 r2 local var member $
+        "The constraint gives the name `" <> N.toChars local <> "`, but that is already the name of a definition."
+
+    ConstraintVarUnused region var member name ->
+      Report.Report "UNUSED CONSTRAINT VARIABLE" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "This constraint is about the type variable `" <> var <> "`, but `" <> var
+              <> "` does not occur in the type of `" <> Members.displayName name <> "`:"
+          ,
+            D.reflow $
+              "No use of `" <> Members.displayName name <> "` could ever say which type `" <> var
+              <> "` is, so I could not find its `" <> N.toChars member
+              <> "`. Use the variable in the type, or remove the constraint."
+          )
     NotFoundVariant r p n ns -> notFound source r p n "variant"  ns Members.displayName
 
     NotFoundBinop region op locals ->
@@ -984,6 +1014,29 @@ badArity source region name expected actual toChars thing =
 
 
 -- NOT FOUND
+
+
+-- Ficcus (ATTACH A2): the name a constraint gives is taken; `as` gives it another one
+constraintClash :: Code.Source -> A.Region -> A.Region -> N.Name -> String -> N.Name -> String -> Report.Report
+constraintClash source r1 r2 local var member message =
+  let
+    advice =
+      D.stack
+        [ D.reflow $
+            "Inside the definition the name could mean either one, so give the member another name here with `as`:"
+        , D.indent 4 $ D.fillSep
+            [ D.fromChars var, D.cyan "has", D.fromName member, D.cyan "as"
+            , D.green (D.fromChars (N.toChars local ++ "_")), ":", "..."
+            ]
+        ]
+  in
+  Report.Report "NAME CLASH" r2 [] $
+    Code.toPair source r1 r2
+      ( D.reflow message, advice )
+      ( D.reflow (message <> " The name is first defined here:")
+      , "And the constraint is here:"
+      , advice
+      )
 
 
 -- Ficcus (ATTACH A1b): two imported types of one name are in scope and both have the member

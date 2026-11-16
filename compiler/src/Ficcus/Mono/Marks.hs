@@ -3,6 +3,7 @@ module Ficcus.Mono.Marks
   ( Mark(..)
   , Marks
   , compute
+  , computeWith
   , marksOf
   , isKeyed
   )
@@ -43,8 +44,15 @@ type Marks = Map.Map (String, Int) (Set.Set Mark)
 
 
 compute :: [ModuleFacts] -> Marks
-compute modules =
-  Map.unionsWith Set.union [fixpoint Equatable equatableRoots, fixpoint Printed printedRoots, fixpoint Element elementRoots]
+compute =
+  computeWith []
+
+
+-- | with extra roots that are keyed by their exact type (Ficcus.Mono.Members.exactRoots: the variables of the
+-- constraints of constrained definitions); they propagate to the callers like the equatable ones
+computeWith :: [(String, Int)] -> [ModuleFacts] -> Marks
+computeWith exactRoots modules =
+  Map.unionsWith Set.union [fixpoint Equatable (equatableRoots ++ exactRoots), fixpoint Printed printedRoots, fixpoint Element elementRoots]
   where
     uses = concatMap mfUses modules
     byCallee = Map.fromListWith (++) [ (ufCallee u, [u]) | u <- uses ]

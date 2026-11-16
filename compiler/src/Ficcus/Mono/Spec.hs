@@ -40,6 +40,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 
 import qualified AST.Canonical as Can
+import qualified AST.Constraints as Constraints
 import qualified AST.Prim.Module as Module
 import qualified String
 import qualified AST.Prim.Name as N
@@ -52,6 +53,7 @@ import Ficcus.Mono.Kernel
 import Ficcus.Mono.Overlay (overlayId, randomOverlayPrefix, vectorMarker, vectorModuleId, vectorTypeName)
 import Ficcus.Mono.Marks (Marks)
 import qualified Ficcus.Mono.Marks as Marks
+import qualified Ficcus.Mono.Members as Members
 import Ficcus.Mono.Modules
 import qualified Reporting.Annotation as A
 import Type.Dump (Ctx(..), bindDefs, calleeId, canonVars, defIdOf, defKeyOf, kindList, moduleChars, regionText, schemeOf)
@@ -122,6 +124,7 @@ data Src =
     , srcOuter :: Env
     , srcLocals :: Map.Map String Src
     , srcOwner :: Maybe CloneId
+    , srcMembers :: Map.Map String Ref     -- (ATTACH A2) the members that the names of the constraints stand for, inherited by local definitions
     }
 
 
@@ -153,6 +156,7 @@ data SEnv =
     , seLocals :: Map.Map String Src
     , seClone :: CloneId
     , seDid :: String        -- the id of the definition being specialized
+    , seMembers :: Map.Map String Ref     -- (ATTACH A2) see srcMembers
     }
 
 
@@ -180,7 +184,7 @@ specialize modules marks =
     (m, d) : _ ->
       Just $
       let
-        tops = Map.fromList [ (defIdOf (mmCtx m') (defKeyOf d'), Src (mmCtx m') d' Map.empty Map.empty Nothing) | m' <- modules, d' <- mmDefs m' ]
+        tops = Map.fromList [ (defIdOf (mmCtx m') (defKeyOf d'), Src (mmCtx m') d' Map.empty Map.empty Nothing Map.empty) | m' <- modules, d' <- mmDefs m' ]
         -- V1: the module `Vector` of the overlay declares the built-in vector as a type with one constructor (`vectorMarker`) that is
         -- never built: a reference class, not an enumeration. A module `Vector` of the project does not have it and is ordinary code
         vecOn = or [ n == vectorTypeName && [ c | (c, _, _) <- usCtors u ] == [vectorMarker] | m' <- modules, (n, u) <- mmUnions m' ]
@@ -277,15 +281,77 @@ genClone cid (CKey did _ key@(Key parts)) src =
       when (length own /= length parts) $
         report ("internal: " ++ did ++ " has " ++ show (length own) ++ " own variables, the key has " ++ show (length parts))
       let env = Map.union (Map.fromList (zip own parts)) (srcOuter src)
-      let se = SEnv ctx env (srcLocals src) cid did
-      params <- forM (zip [0 :: Int ..] args) (param se)
+      -- (ATTACH A2) the hidden parameters of a constrained definition are not parameters of the clone: each is the
+      -- member function of the exact type of its variable (docs/attach/A2-DESIGN.md section 4)
+      let hidden = Constraints.hiddenOfDef def
+      members <-
+        if null hidden
+          then return (srcMembers src)
+          else Map.union <$> hiddenMembers did def scheme env hidden <*> pure (srcMembers src)
+      let args' = drop (length hidden) args
+      let se = SEnv ctx env (srcLocals src) cid did members
+      params <- forM (zip [0 :: Int ..] args') (param se)
       body0 <- specExpr se body
-      body' <- wrapParams se (zip args params) body0
+      body' <- wrapParams se (zip args' params) body0
       return MDef
         { mdClone = cid, mdName = did, mdKey = key
-        , mdKind = if null args && srcOwner src == Nothing then Value else Function
+        , mdKind = if null args && srcOwner src == Nothing then Value else Function     -- (a constrained value is a function without parameters)
         , mdParams = params, mdResult = mRep body', mdBody = Just body'
         , mdInit = Nothing, mdNeeds = [], mdLifted = srcOwner src, mdVars = map snd ownIx, mdOwn = [], mdTwin = Nothing, mdCapsOwned = False }
+
+
+-- (ATTACH A2) the clone of the member function for each hidden parameter, under the name the body uses
+hiddenMembers :: String -> Can.Def -> TType -> Env -> [Constraints.Hidden] -> SM (Map.Map String Ref)
+hiddenMembers did def scheme env hidden =
+  do  let (types, _) = Members.peel (length hidden) scheme
+      refs <- forM (zip3 hidden (Members.subjectNames def scheme) types) $ \(Constraints.Hidden var member local, subject, tipe) ->
+        do  let what = "the constraint `" ++ var ++ " has " ++ N.toChars member ++ "` of " ++ did
+            case (subject >>= \n -> Map.lookup n env, mtypeOf env tipe) of
+              (Just (ByType (TyCon tid _)), Right mtype) ->
+                do  let mid = tid ++ "$$" ++ N.toChars member
+                    tops <- gets sTops
+                    case Map.lookup mid tops of
+                      Nothing -> report ("cannot specialize " ++ what ++ ": the type " ++ tid ++ " has no such member") >> return (N.toChars local, RNone)
+                      Just msrc ->
+                        do  let mdef = srcDef msrc
+                            let mhidden = Constraints.hiddenCount mdef
+                            case Map.lookup (defKeyOf mdef) (_defs (_typed (srcCtx msrc))) of
+                              Nothing -> report ("no scheme recorded for " ++ mid) >> return (N.toChars local, RNone)
+                              Just mscheme ->
+                                case Members.matchM (snd (Members.peel mhidden mscheme)) mtype of
+                                  Left why -> report ("cannot specialize " ++ what ++ ": " ++ why) >> return (N.toChars local, RNone)
+                                  Right subst ->
+                                    do  key <- keyForM mid mscheme subst
+                                        c <- requestClone (CKey mid Nothing key) msrc
+                                        let arity = length (defArgs mdef) - mhidden
+                                        return (N.toChars local, RClone c arity (arity == 0 && mhidden == 0))
+              (_, Left why) -> report ("cannot specialize " ++ what ++ ": " ++ why) >> return (N.toChars local, RNone)
+              _ -> report ("cannot specialize " ++ what ++ ": the type of `" ++ var ++ "` is not known exactly here") >> return (N.toChars local, RNone)
+      return (Map.fromList refs)
+
+
+-- the key of a definition for the exact types of its variables (`keyFor` for types without variables)
+keyForM :: String -> TType -> Map.Map String MType -> SM Key
+keyForM cid scheme subst =
+  do  marks <- gets sMarks
+      enums <- gets sEnums
+      let kinds = kindList scheme
+      parts <- forM (canonVars scheme) $ \(n, i) ->
+        do  let kind = if i < length kinds then kinds !! i else "any"
+            let marked = not (Set.null (Marks.marksOf marks cid i)) || forcedExact cid i
+            let exact = kind `elem` ["number", "comparable", "compappend"] || marked
+            case Map.lookup n subst of
+              Nothing
+                | exact -> return (ByType (TyCon "ref" []))
+                | kind == "appendable" -> return (ByApp AStr)
+                | otherwise -> return (ByClass CRef)
+              Just m
+                | kind == "row" -> report ("cannot key the row variable v" ++ show i ++ " of the member " ++ cid) >> return (ByLayout [])
+                | exact -> return (ByType m)
+                | kind == "appendable" ->
+                    return (ByApp (case m of { TyCon "elm/core:List.List" [e] -> AList (boxed (classOfM enums e)); _ -> AStr }))
+                | otherwise -> return (ByClass (boxed (classOfM enums m)))
+      return (Key parts)
 
 
 param :: SEnv -> (Int, Can.Pattern) -> SM (String, Class)
@@ -702,7 +768,7 @@ specLet :: SEnv -> [Can.Def] -> Bool -> Can.Expr -> SM MExpr
 specLet se defs isRec body@(A.At bregion _) =
   do  let ctx' = bindDefs (seCtx se) isRec defs
       let me = seClone se
-      let srcFor locals d = Src ctx' d (seEnv se) locals (Just me)
+      let srcFor locals d = Src ctx' d (seEnv se) locals (Just me) (seMembers se)
       let isFun d = not (null (defArgs d)) || polyValue ctx' (seEnv se) d
       let funs = [ d | d <- defs, isFun d ]
       let locals' = Map.union (Map.fromList [ (defIdOf ctx' (defKeyOf d), srcFor locals' d) | d <- funs ]) (seLocals se)
@@ -931,6 +997,7 @@ specLambda se region pats body =
 resolve :: SEnv -> A.Region -> Can.Expr_ -> SM Ref
 resolve se region e =
   case e of
+    Can.VarLocal name | Just ref <- Map.lookup (N.toChars name) (seMembers se) -> return ref      -- (ATTACH A2) the name of a constraint
     Can.VarLocal name ->
       case Map.lookup name (_vals ctx) of
         Just (Left key) ->
@@ -1028,7 +1095,9 @@ resolve se region e =
             Just (scheme, s) ->
               do  key <- keyFor se did scheme s (\n -> Map.member n (srcOuter src))
                   c <- requestClone (CKey did (srcOwner src) key) src
-                  return (RClone c (length (defArgs (srcDef src))) (null (defArgs (srcDef src)) && srcOwner src == Nothing))
+                  -- (ATTACH A2) the hidden parameters of a constrained definition are not arguments of its clones
+                  let hiddenN = Constraints.hiddenCount (srcDef src)
+                  return (RClone c (length (defArgs (srcDef src)) - hiddenN) (null (defArgs (srcDef src)) && srcOwner src == Nothing))
 
 
 -- Platform.worker { init = \flags -> ..., ... }: the init lambda becomes a clone of its own; update and

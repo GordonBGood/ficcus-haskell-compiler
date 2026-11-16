@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Reporting.Error.Type
   ( Error(..)
+  , MemberOwner(..)
   -- expectations
   , Expected(..)
   , Context(..)
@@ -19,6 +20,7 @@ module Reporting.Error.Type
 
 
 import Prelude hiding (round)
+import qualified Data.List as List
 import qualified Data.Map as Map
 
 import qualified AST.Canonical as Can
@@ -49,6 +51,17 @@ data Error
   | RigidEscape A.Region N.Name String  -- annotated definition, type variable of its annotation
   | Runaway A.Region Bool               -- unification does not terminate; True: an infinite type
   | HiddenCycle A.Region N.Name         -- a cyclic type among the variables of a definition, not in its own type
+  -- Ficcus (ATTACH A2): the constrained function that was used, the member it needs
+  | NoMember A.Region N.Name T.Type [N.Name] [(N.Name, T.Type)]   -- the type, the members it has, the members needed
+  | BadMember A.Region N.Name N.Name MemberOwner T.Type T.Type    -- the type the member has, the type needed
+  | MemberNeedsSignature A.Region N.Name N.Name String            -- the type whose member has no signature
+  | MissingConstraint A.Region N.Name String [(N.Name, T.Type)]   -- the type variable, the members needed
+  | UnknownMemberType A.Region N.Name [(N.Name, T.Type)]          -- the members needed
+
+
+data MemberOwner
+  = MemberOfType String         -- the member of a custom type
+  | MemberOfVariable String     -- the constraint of the enclosing signature on this type variable
 
 
 
@@ -190,6 +203,108 @@ toReport source localizer err =
     Runaway region isCycle ->
       toRunawayReport source region isCycle
 
+    NoMember region function tipe members needed ->
+      Report.Report "NO MEMBER" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "This use of `" <> Members.displayName function <> "` needs a type that has "
+              <> memberWords needed <> ", but it is used with:"
+          ,
+            D.stack $
+              [ D.indent 4 (D.dullyellow (T.toDoc localizer RT.None tipe))
+              , case members of
+                  [] ->
+                    D.reflow $
+                      "That type has no members that I can see here. Members are defined in a `where` block\
+                      \ under a custom type declaration; an imported type shows them only if its module is\
+                      \ imported here and exports the type with `(..)`."
+
+                  _ ->
+                    D.stack
+                      [ D.reflow "That type has these members:"
+                      , D.indent 4 $ D.vcat $ map (D.dullyellow . D.fromName) members
+                      ]
+              , D.reflow $ "`" <> Members.displayName function <> "` needs:"
+              , memberLines localizer Nothing needed
+              ]
+          )
+
+    BadMember region function member owner actual needed ->
+      Report.Report "MEMBER TYPE MISMATCH" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "This use of `" <> Members.displayName function <> "` needs the member `" <> N.toChars member
+              <> "` with this type:"
+          ,
+            D.stack
+              [ D.indent 4 $ D.green $ T.toDoc localizer RT.None needed
+              , D.reflow $
+                  case owner of
+                    MemberOfType tipe ->
+                      "But `" <> tipe <> "." <> N.toChars member <> "` is:"
+                    MemberOfVariable var ->
+                      "But the constraint `" <> var <> " has " <> N.toChars member <> "` of this type annotation says:"
+              , D.indent 4 $ D.dullyellow $ T.toDoc localizer RT.None actual
+              ]
+          )
+
+    MemberNeedsSignature region function member tipe ->
+      Report.Report "MEMBER WITHOUT TYPE ANNOTATION" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "This use of `" <> Members.displayName function <> "` needs `" <> tipe <> "." <> N.toChars member
+              <> "`, which is defined in this module without a type annotation."
+          ,
+            D.reflow $
+              "I look up a member that satisfies a constraint by its type annotation. Add one to `"
+              <> tipe <> "." <> N.toChars member <> "` in the `where` block of `" <> tipe <> "`."
+          )
+
+    MissingConstraint region function var needed ->
+      Report.Report "MISSING CONSTRAINT" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "This use of `" <> Members.displayName function <> "` needs the type `" <> var <> "` to have "
+              <> memberWords needed <> ", but the type annotation of this definition does not say so."
+          ,
+            D.stack
+              [ D.reflow $
+                  "`" <> var <> "` can be any type here. If every such type must have "
+                  <> (case needed of { [_] -> "the member"; _ -> "these members" })
+                  <> ", say it in a `where` block after the type annotation:"
+              , D.indent 4 $ D.vcat
+                  [ D.cyan "where"
+                  , memberLines localizer (Just var) needed
+                  ]
+              ]
+          )
+
+    UnknownMemberType region function needed ->
+      Report.Report "UNKNOWN MEMBER TYPE" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "This use of `" <> Members.displayName function <> "` needs a type that has "
+              <> memberWords needed <> ", but I cannot tell which type that is:"
+          ,
+            D.stack
+              [ memberLines localizer Nothing needed
+              , D.reflow $
+                  "The type is not determined here. If this definition is meant to work for every type\
+                  \ that has " <> (case needed of { [_] -> "the member"; _ -> "these members" })
+                  <> ", it needs a type annotation with a `where` block (a constraint is never inferred):"
+              , D.indent 4 $ D.vcat
+                  [ D.cyan "where"
+                  , D.indent 4 $ D.vcat [ "a has " <> D.fromName member <> " : ..." | (member, _) <- needed ]
+                  ]
+              , D.reflow "Otherwise a type annotation on the value that is used here will settle it."
+              ]
+          )
+
     HiddenCycle region name ->
       Report.Report "INFINITE TYPE" region [] $
         Code.toSnippet source region Nothing
@@ -205,6 +320,24 @@ toReport source localizer err =
                   \ compared or combined here."
               ]
           )
+
+
+
+-- Ficcus (ATTACH A2): "the member `zero`", "the members `zero` and `add`"
+memberWords :: [(N.Name, T.Type)] -> String
+memberWords needed =
+  case map (\(member, _) -> "`" <> N.toChars member <> "`") needed of
+    [one] -> "the member " <> one
+    names -> "the members " <> List.intercalate ", " (init names) <> " and " <> last names
+
+
+-- the lines `zero : T` or, with a variable, `a has zero : T`
+memberLines :: L.Localizer -> Maybe String -> [(N.Name, T.Type)] -> D.Doc
+memberLines localizer maybeVar needed =
+  D.indent 4 $ D.vcat
+    [ D.green $ maybe "" (\var -> D.fromChars var <> " has ") maybeVar <> D.fromName member <> " : " <> T.toDoc localizer RT.None tipe
+    | (member, tipe) <- needed
+    ]
 
 
 

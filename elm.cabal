@@ -142,6 +142,12 @@ executable elm
         AST.Canonical
         AST.Optimized
         AST.Members
+        AST.Constraints
+        Parse.Constraints
+        Canonicalize.Constraints
+        Type.Members
+        Ficcus.Mono.Members
+        Nitpick.Constraints
         AST.Source
         AST.Prim.Module
         AST.Prim.Name

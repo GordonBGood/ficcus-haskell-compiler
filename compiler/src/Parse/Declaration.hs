@@ -17,6 +17,7 @@ import qualified AST.Prim.Name as N
 import qualified AST.Prim.Operator as Op
 import qualified AST.Prim.TypeName as T
 import qualified AST.Prim.TypeVar as T
+import qualified Parse.Constraints as Constraints
 import qualified Parse.Expression as Expr
 import qualified Parse.Pattern as Pattern
 import qualified Parse.Keyword as Keyword
@@ -92,11 +93,13 @@ valueDeclWith checkLine maybeDocs start =
               [
                 do  word1 0x3A#Word8 {-:-} E.DeclDefEquals
                     Space.chompAndCheckIndent E.DeclDefSpace E.DeclDefIndentType
-                    (tipe, _) <- specialize E.DeclDefType Type.expression
+                    (tipe0, typeEnd) <- specialize E.DeclDefType Type.expression
+                    -- Ficcus (ATTACH A2): a `where` block of constraints makes hidden leading parameters
+                    (tipe, hidden) <- Constraints.signatureWhere typeEnd tipe0
                     checkLine
                     defName <- chompMatchingName name
                     Space.chompAndCheckIndent E.DeclDefSpace E.DeclDefIndentEquals
-                    chompDefArgsAndBody maybeDocs start defName (Just tipe) []
+                    chompDefArgsAndBody maybeDocs start defName (Just tipe) (reverse hidden)
               ,
                 chompDefArgsAndBody maybeDocs start (A.at start end name) Nothing []
               ]

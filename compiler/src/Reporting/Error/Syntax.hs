@@ -153,6 +153,8 @@ data DeclDef
   | DeclDefNameMatch N.Name Cursor
   --
   | DeclDefIndentType Cursor
+  | DeclDefConstraint Cursor           -- Ficcus (ATTACH A2): a line of the `where` block of a signature
+  | DeclDefIndentConstraint Cursor
   | DeclDefIndentEquals Cursor
   | DeclDefIndentBody Cursor
 
@@ -344,6 +346,7 @@ data Def
   | DefIndentType Cursor
   | DefIndentBody Cursor
   | DefAlignment Indent Cursor
+  | DefWhere Cursor                    -- Ficcus (ATTACH A2): a `where` block on the signature of a local definition
 
 
 data Destruct
@@ -2266,6 +2269,34 @@ customTypeNote =
 -- DECL DEF
 
 
+-- Ficcus (ATTACH A2)
+constraintReport :: Code.Source -> N.Name -> Cursor -> Cursor -> [Char.Char] -> Report.Report
+constraintReport source name startCur cur title =
+  let
+    surroundings = A.Region startCur cur
+    region = toRegion cur
+  in
+  Report.Report title region [] $
+    Code.toSnippet source surroundings (Just region)
+      (
+        D.reflow $
+          "I got stuck while parsing the `where` block of the `" ++ N.toChars name ++ "` type annotation:"
+      ,
+        D.stack
+          [ D.reflow $
+              "I was expecting a constraint: a type variable, the word `has`, the name of the member that the type must have (optionally `as` and another name to use for it here), a colon and the type of the member. The constraints are aligned, one per line, like this:"
+          , D.indent 4 $ D.vcat
+              [ "sum : List a -> a"
+              , D.indent 4 $ D.cyan "where"
+              , D.indent 8 $ "a " <> D.cyan "has" <> " zero : a"
+              , D.indent 8 $ "a " <> D.cyan "has" <> " add " <> D.cyan "as" <> " plus : a -> a -> a"
+              , "sum xs ="
+              , "    List.foldl plus zero xs"
+              ]
+          ]
+      )
+
+
 toDeclDefReport :: Code.Source -> N.Name -> DeclDef -> Cursor -> Report.Report
 toDeclDefReport source name declDef startCur =
   case declDef of
@@ -2430,6 +2461,12 @@ toDeclDefReport source name declDef startCur =
                   [D.dullyellow (D.fromName defName),"->",D.green (D.fromName name)]
               ]
           )
+
+    DeclDefConstraint cur ->
+      constraintReport source name startCur cur "PROBLEM IN CONSTRAINT"
+
+    DeclDefIndentConstraint cur ->
+      constraintReport source name startCur cur "UNFINISHED CONSTRAINTS"
 
     DeclDefIndentType cur ->
       let
@@ -3613,6 +3650,22 @@ toLetDefReport source name def startCur =
                   "I was expecting to see an argument or an equals sign next."
               , defNote
               ]
+          )
+
+    DefWhere cur ->
+      let
+        surroundings = A.Region startCur cur
+        region = toRegion cur
+      in
+      Report.Report "CONSTRAINTS ON A LOCAL DEFINITION" region [] $
+        Code.toSnippet source surroundings (Just region)
+          (
+            D.reflow $
+              "The type annotation of `" ++ N.toChars name ++ "` is in a `let`, but I got stuck at this `where`:"
+          ,
+            D.reflow $
+              "Only a top-level definition (or a member in the `where` block of a type) can have\
+              \ constraints on its type variables. Move `" ++ N.toChars name ++ "` to the top level to give it a `where` block."
           )
 
     DefIndentType cur ->

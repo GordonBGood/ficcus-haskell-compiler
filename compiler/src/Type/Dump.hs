@@ -49,6 +49,7 @@ import Data.Word (Word64)
 import GHC.Word (Word64(..))
 
 import qualified AST.Canonical as Can
+import qualified AST.Constraints as Constraints
 import qualified Data.Index as Index
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.Operator as Op
@@ -813,7 +814,7 @@ schemeOf ctx e raw =
   case e of
     Can.VarLocal name -> local name
     Can.VarTopLevel _ name -> local name
-    Can.VarForeign _ _ ann -> Just (annotation ann, raw)
+    Can.VarForeign _ _ ann -> Just (constrained ann)
     Can.VarCtor _ _ _ _ ann -> Just (annotation ann, raw)
     Can.VarDebug _ _ ann -> Just (annotation ann, raw)
     Can.VarOperator _ _ _ ann -> Just (annotation ann, raw)
@@ -833,7 +834,38 @@ schemeOf ctx e raw =
 
     annotation (Can.Forall _ tipe) = canToTType tipe
 
+    -- Ficcus (ATTACH A2): the scheme of a constrained function is its type with the hidden parameters (the type
+    -- its definition has); the instance gets the types of the members at this use in front
+    constrained ann@(Can.Forall _ tipe) =
+      case Constraints.unwrap tipe of
+        Nothing -> (annotation ann, raw)
+        Just (real, required) ->
+          let
+            realScheme = canToTType real
+            members = [ canToTType t | Constraints.Required _ _ t <- required ]
+            subst = either (const Map.empty) id (matchT realScheme raw)
+          in
+          (foldr TFun realScheme members, foldr (\m acc -> TFun (substT subst m) acc) raw members)
+
     nodeType (A.At r x) = Map.lookup (Recorder.valueKey r x) (_nodes (_typed ctx))   -- valueKey: an operand may be a `let`
+
+
+-- replace the variables of a scheme by what they are bound to
+substT :: Subst -> TType -> TType
+substT s t =
+  case t of
+    TCon h n args -> TCon h n (map go args)
+    TFun a b -> TFun (go a) (go b)
+    TRecord fields ext -> TRecord (Map.map go fields) (fmap go ext)
+    TUnit -> t
+    TPair a b -> TPair (go a) (go b)
+    TTriple a b c -> TTriple (go a) (go b) (go c)
+    TVar n _ _ -> Map.findWithDefault t n s
+    TAlias h n args real -> TAlias h n [ (v, go x) | (v, x) <- args ] (go real)
+    TRef _ -> t
+    TError -> t
+  where
+    go = substT s
 
 
 -- a direct use of ==, /= or compare (Basics)

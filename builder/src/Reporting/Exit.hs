@@ -1957,6 +1957,7 @@ toModuleNameConventionTable srcDir names =
 data Generate
   = GenerateCannotLoadArtifacts
   | GenerateCannotOptimizeDebugValues Module.Name [Module.Name]
+  | GenerateConstrainedFunctions [String]     -- Ficcus (ATTACH A2)
 
 
 toGenerateReport :: Generate -> Help.Report
@@ -1964,6 +1965,20 @@ toGenerateReport problem =
   case problem of
     GenerateCannotLoadArtifacts ->
       corruptCacheReport
+
+    GenerateConstrainedFunctions names ->
+      Help.report "CONSTRAINED FUNCTIONS" Nothing
+        "This program has functions whose type annotation has a `where` block of constraints:"
+        [ D.indent 4 $ D.red $ D.vcat $ map D.fromChars names
+        , D.reflow
+            "They are not supported in the JavaScript output yet: the member functions that such a\
+            \ function needs would have to be passed to it when the program runs, and how the\
+            \ JavaScript output does that is not decided."
+        , D.reflow
+            "The C output supports them (every use is compiled for its own types, so the members are\
+            \ called directly). Compile with an output file that ends in `.c`:"
+        , D.indent 4 $ D.green "elm make src/Main.elm --output=main.c"
+        ]
 
     GenerateCannotOptimizeDebugValues m ms ->
       Help.report "DEBUG REMNANTS" Nothing

@@ -11,6 +11,7 @@ import GHC.Base (UnliftedType)
 import qualified AST.Source as Src
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.Operator as Op
+import qualified Parse.Constraints as Constraints
 import qualified Parse.Keyword as Keyword
 import qualified Parse.Number as Number
 import qualified Parse.Pattern as Pattern
@@ -519,7 +520,8 @@ definition =
               [
                 do  word1 0x3A#Word8 {-:-} E.DefEquals
                     Space.chompAndCheckIndent E.DefSpace E.DefIndentType
-                    (tipe, _) <- specialize E.DefType Type.expression
+                    (tipe, typeEnd) <- specialize E.DefType Type.expression
+                    Constraints.noLocalWhere typeEnd      -- Ficcus (ATTACH A2): no constraints on a local definition
                     Space.checkAligned E.DefAlignment
                     defName <- chompMatchingName name
                     Space.chompAndCheckIndent E.DefSpace E.DefIndentEquals

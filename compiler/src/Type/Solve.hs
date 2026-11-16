@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, TemplateHaskell #-}
 module Type.Solve
   ( run
+  , runWith
   )
   where
 
@@ -16,10 +17,12 @@ import qualified Data.Vector.Mutable as MVector
 import qualified Crash
 
 import qualified AST.Canonical as Can
+import qualified AST.Constraints as Constraints
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeVar as T
 import qualified Reporting.Annotation as A
 import qualified Reporting.Error.Type as Error
+import qualified Type.Members as Members
 import qualified Type.Occurs as Occurs
 import Type.Type as Type
 import qualified Type.Unify as Unify
@@ -31,13 +34,24 @@ import qualified Type.UnionFind as UF
 
 
 run :: Constraint -> IO (Either (NE.List Error.Error) (Map.Map N.Name Can.Annotation))
-run constraint =
+run =
+  runWith Members.emptyTable
+
+
+-- Ficcus (ATTACH A2): with the table of the members that the module can see (Type.Members)
+runWith :: Members.Table -> Constraint -> IO (Either (NE.List Error.Error) (Map.Map N.Name Can.Annotation))
+runWith table constraint =
   do  pools <- MVector.replicate 8 []
 
-      (State env _ errors) <-
-        solve Map.empty outermostRank pools emptyState constraint
+      (State env _ errors0 _ pending) <-
+        solve Map.empty outermostRank pools (emptyState { _table = table }) constraint
 
-      case errors of
+      errors <-
+        case pending of
+          [] -> return errors0
+          _  -> (++ errors0) <$> Members.leftovers pending
+
+      case Members.merge errors of
         [] ->
           Right <$> traverse Type.toAnnotation env
 
@@ -49,7 +63,7 @@ run constraint =
 {-# NOINLINE emptyState #-}
 emptyState :: State
 emptyState =
-  State Map.empty (nextMark noMark) []
+  State Map.empty (nextMark noMark) [] Members.emptyTable []
 
 
 
@@ -69,6 +83,8 @@ data State =
     { _env :: Env
     , _mark :: Mark
     , _errors :: [Error.Error]
+    , _table :: Members.Table             -- Ficcus (ATTACH A2): the members the module can see
+    , _pending :: [Members.Obligation]    -- the member obligations not yet discharged
     }
 
 
@@ -118,20 +134,28 @@ solve env rank pools state constraint =
                       Error.typeReplace expectation expectedType
 
     CForeign region name (Can.Forall freeVars srcType) expectation ->
-      do  actual <- srcTypeToVariable rank pools freeVars srcType
+      do  actual0 <- srcTypeToVariable rank pools freeVars srcType
+          -- Ficcus (ATTACH A2): a constrained scheme leaves an obligation for each required member
+          (actual, state1) <-
+            if Constraints.isWrapped srcType
+              then
+                do  (real, obligations) <- Members.use region name actual0
+                    return (real, state { _pending = obligations ++ _pending state })
+              else
+                return (actual0, state)
           expected <- expectedToVariable rank pools expectation
           answer <- Unify.unify actual expected
           case answer of
             Unify.Ok vars ->
               do  introduce rank pools vars
-                  return state
+                  return state1
 
             Unify.Runaway isCycle ->
-              return $ addError state (Error.Runaway region isCycle)
+              return $ addError state1 (Error.Runaway region isCycle)
 
             Unify.Err vars actualType expectedType ->
               do  introduce rank pools vars
-                  return $ addError state $
+                  return $ addError state1 $
                     Error.BadExpr region (Error.Foreign name) actualType $
                       Error.typeReplace expectation expectedType
 
@@ -182,7 +206,7 @@ solve env rank pools state constraint =
       do  state1 <- solve env rank pools state headerCon
           locals <- traverse (A.traverse (typeToVariable rank pools)) header
           let newEnv = Map.union env (Map.map A.toValue locals)
-          state2 <- solve newEnv rank pools state1 subCon
+          state2 <- discharge newEnv rank pools =<< solve newEnv rank pools state1 subCon
           foldM occurs state2 $ Map.toList locals
 
     CLet rigids flexs header headerCon subCon ->
@@ -204,8 +228,8 @@ solve env rank pools state constraint =
 
           -- run solver in next pool
           locals <- traverse (A.traverse (typeToVariable nextRank nextPools)) header
-          (State savedEnv mark errors) <-
-            solve env nextRank nextPools state headerCon
+          (State savedEnv mark errors table pending0) <-
+            discharge env nextRank nextPools =<< solve env nextRank nextPools state headerCon
 
           let youngMark = mark
           let visitMark = nextMark youngMark
@@ -227,8 +251,16 @@ solve env rank pools state constraint =
                 case Map.toList header of
                   (name, A.At region _) : _ | hiddenCycle && null errors && null escapes -> [Error.HiddenCycle region name]
                   _ -> []
-          let tempState = State savedEnv grayMark (cycles ++ escapes ++ errors)
-          newState <- solve newEnv rank nextPools tempState subCon
+          -- (ATTACH A2) an obligation whose subject was generalized can never be discharged
+          (pending, memberErrors) <-
+            case pending0 of
+              [] -> return ([], [])
+              _  ->
+                do  (kept, errs, pinned) <- Members.sweep pending0
+                    forM_ pinned $ \(r, pinnedVars) -> MVector.modify nextPools (pinnedVars ++) r
+                    return (kept, errs)
+          let tempState = State savedEnv grayMark (memberErrors ++ cycles ++ escapes ++ errors) table pending
+          newState <- discharge newEnv rank nextPools =<< solve newEnv rank nextPools tempState subCon
 
           foldM occurs newState (Map.toList locals)
 
@@ -292,8 +324,24 @@ patternExpectationToVariable rank pools expectation =
 
 
 addError :: State -> Error.Error -> State
-addError (State savedEnv rank errors) err =
-  State savedEnv rank (err:errors)
+addError state err =
+  state { _errors = err : _errors state }
+
+
+-- Ficcus (ATTACH A2): discharge the member obligations whose subject is known by now (Type.Members)
+discharge :: Env -> Int -> Pools -> State -> IO State
+discharge env rank pools state =
+  case _pending state of
+    [] ->
+      return state
+
+    pending ->
+      do  let tools =
+                Members.Tools
+                  (\(Can.Forall freeVars srcType) -> srcTypeToVariable rank pools freeVars srcType)
+                  (introduce rank pools)
+          (pending', errors) <- Members.discharge tools (_table state) env pending
+          return (state { _pending = pending', _errors = errors ++ _errors state })
 
 
 

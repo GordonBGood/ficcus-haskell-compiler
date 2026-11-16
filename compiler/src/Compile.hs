@@ -25,6 +25,7 @@ import qualified Reporting.Error.Type as Error
 import qualified Reporting.Result as R
 import qualified Reporting.Render.Type.Localizer as Localizer
 import qualified Type.Constrain.Module as Type
+import qualified Type.Members as Members
 import qualified Type.Readout as Readout
 import qualified Type.Recorder as Recorder
 import qualified Type.Solve as Type
@@ -47,7 +48,7 @@ data Artifacts =
 compile :: Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Either E.Error Artifacts
 compile pkg ifaces modul =
   do  canonical   <- canonicalize pkg ifaces modul
-      annotations <- typeCheck modul canonical
+      annotations <- typeCheck ifaces modul canonical
       ()          <- nitpick canonical
       objects     <- optimize modul annotations canonical
       return (Artifacts canonical annotations objects)
@@ -59,7 +60,7 @@ compile pkg ifaces modul =
 compileTyped :: Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Either E.Error (Artifacts, Readout.Typed)
 compileTyped pkg ifaces modul =
   do  canonical   <- canonicalize pkg ifaces modul
-      (annotations, typed) <- typeCheckTyped modul canonical
+      (annotations, typed) <- typeCheckTyped ifaces modul canonical
       ()          <- nitpick canonical
       objects     <- optimize modul annotations canonical
       return (Artifacts canonical annotations objects, typed)
@@ -79,19 +80,21 @@ canonicalize pkg ifaces modul =
       Left $ E.BadNames errors
 
 
-typeCheck :: Src.Module -> Can.Module -> Either E.Error (Map.Map N.Name Can.Annotation)
-typeCheck modul canonical =
-  case unsafePerformIO (Type.run =<< Type.constrain Nothing canonical) of
+-- Ficcus (ATTACH A2): the solver gets the table of the members the module can see, and the annotation of a
+-- constrained definition becomes its constrained scheme (Type.Members, AST.Constraints)
+typeCheck :: Map.Map Module.Name I.Interface -> Src.Module -> Can.Module -> Either E.Error (Map.Map N.Name Can.Annotation)
+typeCheck ifaces modul canonical =
+  case unsafePerformIO (Type.runWith (Members.toTable ifaces canonical) =<< Type.constrain Nothing canonical) of
     Right annotations ->
-      Right annotations
+      Right (Members.wrapAnnotations canonical annotations)
 
     Left errors ->
       Left (E.BadTypes (Localizer.fromModule modul) errors)
 
 
-typeCheckTyped :: Src.Module -> Can.Module -> Either E.Error (Map.Map N.Name Can.Annotation, Readout.Typed)
-typeCheckTyped modul canonical =
-  case unsafePerformIO (typeCheckTypedIO canonical) of
+typeCheckTyped :: Map.Map Module.Name I.Interface -> Src.Module -> Can.Module -> Either E.Error (Map.Map N.Name Can.Annotation, Readout.Typed)
+typeCheckTyped ifaces modul canonical =
+  case unsafePerformIO (typeCheckTypedIO ifaces canonical) of
     Right result ->
       Right result
 
@@ -99,18 +102,18 @@ typeCheckTyped modul canonical =
       Left (E.BadTypes (Localizer.fromModule modul) errors)
 
 
-typeCheckTypedIO :: Can.Module -> IO (Either (NE.List Error.Error) (Map.Map N.Name Can.Annotation, Readout.Typed))
-typeCheckTypedIO canonical =
+typeCheckTypedIO :: Map.Map Module.Name I.Interface -> Can.Module -> IO (Either (NE.List Error.Error) (Map.Map N.Name Can.Annotation, Readout.Typed))
+typeCheckTypedIO ifaces canonical =
   do  recorder <- Recorder.new
       constraint <- Type.constrain (Just recorder) canonical
-      result <- Type.run constraint
+      result <- Type.runWith (Members.toTable ifaces canonical) constraint
       case result of
         Left errors ->
           return (Left errors)
 
         Right annotations ->
           do  typed <- Readout.readout recorder
-              return (Right (annotations, typed))
+              return (Right (Members.wrapAnnotations canonical annotations, typed))
 
 
 nitpick :: Can.Module -> Either E.Error ()

@@ -22,6 +22,7 @@ import qualified Canonicalize.Environment as Env
 import qualified Canonicalize.Environment.Foreign as Foreign
 import qualified Canonicalize.Environment.Local as Local
 import qualified Canonicalize.Expression as Expr
+import qualified Canonicalize.Constraints as Constraints
 import qualified Canonicalize.Members as Members
 import qualified Canonicalize.Pattern as Pattern
 import qualified Canonicalize.Type as Type
@@ -83,8 +84,9 @@ canonicalizeBinop (A.At _ (Src.Infix op associativity precedence func)) =
 
 
 canonicalizeValues :: Env.Env -> [A.Located Src.Value] -> Result i [W.Warning] Can.Decls
-canonicalizeValues env values =
-  do  nodes <- traverse (toNodeOne env) values
+canonicalizeValues env0 values =
+  do  env <- Constraints.register env0 values     -- Ficcus (ATTACH A2): the constrained schemes of this module
+      nodes <- traverse (toNodeOne env) values
       detectCycles (Graph.toSCC nodes)
 
 

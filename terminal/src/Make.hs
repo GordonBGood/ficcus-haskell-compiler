@@ -30,6 +30,7 @@ import qualified Ficcus.Flags as Flags
 import qualified Ficcus.Mono.CGen as CGen
 import qualified Ficcus.Mono.Facts as Facts
 import qualified Ficcus.Mono.Ir as Mono
+import qualified Ficcus.Mono.Members as MonoMembers
 import qualified Ficcus.Mono.Marks as Marks
 import qualified Ficcus.Mono.Modules as Modules
 import qualified Ficcus.Mono.Overlay as Overlay
@@ -176,14 +177,14 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag no
                       Task.io (File.writeBuilder writer (FP.replaceExtension target ".types") typesBuilder)
                       facts <- Task.io Facts.takeAll
                       mods <- Task.io Modules.takeAll
-                      let program = if null mods then Nothing else Spec.specialize mods (Marks.compute facts)
+                      let program = if null mods then Nothing else Spec.specialize mods (Marks.computeWith (MonoMembers.exactRoots mods) facts)
                       generate writer style target (B.stringUtf8 (unlines (Print.renderProgram facts program))) (Build.getRootNames artifacts)
 
                 Just (FicC target) ->
                   -- Ficcus stage (iii): specialize, then generate C
                   do  facts <- Task.io Facts.takeAll
                       mods <- Task.io Modules.takeAll
-                      case Spec.specialize mods (Marks.compute facts) of
+                      case Spec.specialize mods (Marks.computeWith (MonoMembers.exactRoots mods) facts) of
                         Nothing -> failWith ["no `main` in the project"]
                         Just (Left errs) -> failWith errs
                         Just (Right program) -> do

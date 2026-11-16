@@ -29,6 +29,7 @@ import qualified AST.Prim.Operator as Op
 import qualified AST.Utils.Type as Type
 import qualified Canonicalize.Environment as Env
 import qualified Canonicalize.Environment.Dups as Dups
+import qualified Canonicalize.Constraints as Constraints
 import qualified Canonicalize.Members as Members
 import qualified Canonicalize.Pattern as Pattern
 import qualified Canonicalize.Type as Type
@@ -733,8 +734,9 @@ findVar region (Env.Env localHome vs _ _ _ qvs _ _) name =
 
         Env.TopLevel _ ->
           -- Ficcus (ATTACH A1b): inside a `where` block a plain name may be a member of the type
+          -- (ATTACH A2): a constrained definition is used with its constrained scheme
           let real = Members.siblingName vs name in
-          logVar real (Can.VarTopLevel localHome real)
+          logVar real (Constraints.localVar vs localHome real)
 
         Env.Foreign home annotation ->
           Result.ok $
@@ -751,14 +753,14 @@ findVar region (Env.Env localHome vs _ _ _ qvs _ _) name =
 
 
 findVarQual :: A.Region -> Env.Env -> Module.Prefix -> N.Name -> Result FreeLocals w Can.Expr_
-findVarQual region env@(Env.Env localHome _ _ _ _ _ _ _) prefix name =
+findVarQual region env@(Env.Env localHome vs _ _ _ _ _ _) prefix name =
   -- Ficcus (ATTACH A1): a module or alias path wins; if it does not name `name`, a member of the type `prefix`
   case Members.resolve env prefix name of
     Members.NotMember ->
       findVarQualModule region env prefix name
 
     Members.LocalMember mangled ->
-      logVar mangled (Can.VarTopLevel localHome mangled)
+      logVar mangled (Constraints.localVar vs localHome mangled)
 
     Members.ForeignMember home mangled annotation ->
       Result.ok (Can.VarForeign home mangled annotation)

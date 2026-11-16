@@ -24,6 +24,7 @@ import qualified System.FilePath as FP
 
 import qualified ThreadSafe.Fork as Fork
 
+import qualified AST.Members as Members
 import qualified AST.Optimized as Opt
 import qualified AST.Prim.Module as Module
 import qualified AST.Prim.Name as N
@@ -38,6 +39,7 @@ import qualified File
 import qualified Generate.C as GC
 import qualified Generate.JavaScript as JS
 import qualified Generate.Mode as Mode
+import qualified Nitpick.Constraints as NitpickConstraints
 import qualified Nitpick.Debug as Nitpick
 import qualified Reporting.Exit as Exit
 import qualified Reporting.Task as Task
@@ -62,6 +64,7 @@ debug stuff details (Build.Artifacts pkg ifaces roots modules) =
   do  loading <- loadObjects stuff details modules
       types   <- loadTypes stuff ifaces modules
       objects <- finalizeObjects loading
+      checkForConstraints objects
       let mode = Mode.Dev (Just types)
       let graph = objectsToGlobalGraph objects
       let mains = gatherMains pkg objects roots
@@ -71,6 +74,7 @@ debug stuff details (Build.Artifacts pkg ifaces roots modules) =
 dev :: R.Stuff -> Details.Details -> Build.Artifacts -> Task B.Builder
 dev stuff details (Build.Artifacts pkg _ roots modules) =
   do  objects <- finalizeObjects =<< loadObjects stuff details modules
+      checkForConstraints objects
       let mode = Mode.Dev Nothing
       let graph = objectsToGlobalGraph objects
       let mains = gatherMains pkg objects roots
@@ -81,6 +85,7 @@ prod :: R.Stuff -> Details.Details -> Build.Artifacts -> Task B.Builder
 prod stuff details (Build.Artifacts pkg _ roots modules) =
   do  objects <- finalizeObjects =<< loadObjects stuff details modules
       checkForDebugUses objects
+      checkForConstraints objects
       let graph = objectsToGlobalGraph objects
       let mode = Mode.Prod (Mode.shortenFieldNames graph)
       let mains = gatherMains pkg objects roots
@@ -173,6 +178,18 @@ checkForDebugUses (Objects _ locals) =
   case Map.keys (Map.filter Nitpick.hasDebugUses locals) of
     []   -> return ()
     m:ms -> Task.throw (Exit.GenerateCannotOptimizeDebugValues m ms)
+
+
+
+-- Ficcus (ATTACH A2): a constrained function (AST.Constraints) cannot be called from JavaScript yet
+checkForConstraints :: Objects -> Task ()
+checkForConstraints (Objects (Opt.GlobalGraph foreignNodes _) locals) =
+  case concatMap NitpickConstraints.constrainedNodes (foreignNodes : map (\(Opt.LocalGraph _ nodes _) -> nodes) (Map.elems locals)) of
+    [] -> return ()
+    globals -> Task.throw (Exit.GenerateConstrainedFunctions (List.sort (map toChars globals)))
+  where
+    toChars (Opt.Global (ModuleName.Canonical _ home) name) =
+      Module.toChars home ++ "." ++ Members.displayName name
 
 
 
