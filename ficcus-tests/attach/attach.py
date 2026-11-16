@@ -31,6 +31,7 @@ SAFE = os.path.join(ROOT, "tools", "safe")
 CASES = os.path.join(HERE, "cases")
 TITLE_RE = re.compile(r"-- ([A-Z][A-Z0-9 '\-/]+?) -{10,}")
 RT = os.path.join(ROOT, "targets", "c")
+RC_SAN = False
 sys.path.insert(0, HERE)
 import mkhome
 
@@ -96,6 +97,19 @@ def one(case, elm, home, want):
                     if b.returncode != 0 or b.stderr: problems.append("c %s: %s" % (cc, b.stderr[-300:])); continue
                     r = subprocess.run([exe], capture_output=True, text=True)
                     if r.stdout != exp or r.returncode != 0: problems.append("c %s: exit %d, output %r" % (cc, r.returncode, (r.stdout + r.stderr)[:300]))
+        if "c" in kinds and RC_SAN and not problems:
+            # counted build under ASan+UBSan with the counters: same output, clean exit, 0 live objects at the end
+            rc, cout = run([elm, "make", main, "--output=xr.c", "--rc"], dst, env)
+            if rc != 0: problems.append("rc: compiler exit %d: %s" % (rc, cout.strip()[-300:]))
+            else:
+                exe = os.path.join(dst, "x_rcsan")
+                b = subprocess.run(["gcc", "-std=c99", "-O1", "-ffp-contract=off", "-w", "-DFIC_STATS", "-DFIC_NO_POOL", "-fsanitize=address,undefined",
+                                    "-fno-sanitize-recover=undefined", "-g", "-I", RT, os.path.join(dst, "xr.c"), "-o", exe, "-lm"], capture_output=True, text=True)
+                if b.returncode != 0: problems.append("rc cc: %s" % b.stderr[-300:])
+                else:
+                    r = subprocess.run([exe], capture_output=True, text=True, timeout=120)
+                    if r.stdout != exp or r.returncode != 0: problems.append("rc+asan: exit %d, output %r" % (r.returncode, (r.stdout + r.stderr)[:300]))
+                    elif " live 0 " not in r.stderr: problems.append("rc+asan: live objects at the end: %s" % r.stderr[-200:])
         return ("RUN", want[1]) if not problems else ("RUN-FAIL", "; ".join(problems)), not problems, out
     finally:
         shutil.rmtree(work, ignore_errors=True)
@@ -104,8 +118,11 @@ def one(case, elm, home, want):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--elm", required=True); ap.add_argument("--only"); ap.add_argument("-j", type=int, default=2)
+    ap.add_argument("--rc", action="store_true", help="also build every C RUN case counted (--rc) under ASan+UBSan with FIC_STATS: same output, 0 live")
     ap.add_argument("-v", action="store_true", help="show the compiler output of failing cases")
     a = ap.parse_args()
+    global RC_SAN
+    RC_SAN = a.rc
     elm = os.path.abspath(a.elm)
     table = {}
     for line in open(os.path.join(HERE, "expected.tsv"), encoding="utf-8"):
