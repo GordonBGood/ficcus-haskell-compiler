@@ -1,9 +1,10 @@
 module Vector exposing
     ( Vector
-    , empty, withCapacity, fromList, toList
-    , length, get
+    , empty, singleton, initialize, repeat, withCapacity, fromList, toList
+    , isEmpty, length, get
     , set, update, swap, push
-    , slice, append
+    , append, slice
+    , map, indexedMap, foldl, foldr, filter, toIndexedList
     )
 
 {-| A stand-in for the Ficcus module `Vector` (overlay/Vector.elm, V1) written on `Array`, so that a program that uses the Vector
@@ -88,3 +89,53 @@ slice from to (Vector a) =
 append : Vector a -> Vector a -> Vector a
 append (Vector a) (Vector b) =
     Vector (Array.append a b)
+
+
+singleton : a -> Vector a
+singleton x =
+    Vector (Array.fromList [ x ])
+
+
+isEmpty : Vector a -> Bool
+isEmpty (Vector a) =
+    Array.isEmpty a
+
+
+initialize : Int -> (Int -> a) -> Vector a
+initialize n f =
+    Vector (Array.initialize n f)
+
+
+repeat : Int -> a -> Vector a
+repeat n x =
+    Vector (Array.repeat n x)
+
+
+map : (a -> b) -> Vector a -> Vector b
+map f (Vector a) =
+    Vector (Array.map f a)
+
+
+indexedMap : (Int -> a -> b) -> Vector a -> Vector b
+indexedMap f (Vector a) =
+    Vector (Array.indexedMap f a)
+
+
+foldl : (a -> b -> b) -> b -> Vector a -> b
+foldl f b (Vector a) =
+    Array.foldl f b a
+
+
+foldr : (a -> b -> b) -> b -> Vector a -> b
+foldr f b (Vector a) =
+    Array.foldr f b a
+
+
+filter : (a -> Bool) -> Vector a -> Vector a
+filter p (Vector a) =
+    Vector (Array.filter p a)
+
+
+toIndexedList : Vector a -> List ( Int, a )
+toIndexedList (Vector a) =
+    Array.toIndexedList a

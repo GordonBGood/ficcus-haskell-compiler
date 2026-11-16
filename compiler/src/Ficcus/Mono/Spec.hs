@@ -636,6 +636,9 @@ fitPat :: Class -> MPat -> MPat
 fitPat c p =
   case (c, mpNode p) of
     (CStruct fs, PTuple ps) | length fs == length ps -> MPat c (PTuple (zipWith fitPat fs ps))
+    -- a boxed field (a record or tuple inside a tuple is a reference there) bound to a variable whose own class is the struct: the
+    -- pattern compiler unboxes it (found by the V2 differential test: `let ( r, st1 ) = f x in ( r, st1 )` with a record `st1`)
+    (CRef, PVar _) | CStruct _ <- mpRep p -> p
     (_, PVar n) -> MPat c (PVar n)
     (_, PWild) -> MPat c PWild
     (_, PAlias q n) -> MPat c (PAlias (fitPat c q) n)
