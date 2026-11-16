@@ -307,6 +307,20 @@ objectsOfPat (MPat _ n) =
     _ -> []
 
 
+-- | a value of a class that carries no data (the unit, an empty record): a variable of it may never be read, and C would warn
+voidClass :: Class -> Bool
+voidClass c = case c of { CUnit -> True; CStruct fs -> null fs; _ -> False }
+
+
+unusedOk :: Class -> String
+unusedOk c = if voidClass c then " FIC_UNUSED" else ""
+
+
+-- | the same for the generic variable helper: only the empty struct (a variable of the unit class is never declared unused there)
+unusedOkS :: Class -> String
+unusedOkS c = case c of { CStruct [] -> " FIC_UNUSED"; _ -> "" }
+
+
 boxedClass :: Class -> Class
 boxedClass c = case c of { CStruct _ -> CRef; _ -> c }
 
@@ -764,8 +778,9 @@ adapt from to v
   | CStruct _ <- from, CRef <- to =
       do  t <- variable from v
           allocObj' [from] "FIC_TAG_BOX" [t]
-  | CRef <- from, CStruct _ <- to =
+  | CRef <- from, CStruct fs <- to =
       do  t <- variable from v
+          when (null fs) (emit ("(void)" ++ t ++ ";"))          -- an empty struct reads nothing from the box
           return (unboxExpr to t)
   | otherwise = failWith ("internal: no conversion from " ++ classTag from ++ " to " ++ classTag to)
 
@@ -847,7 +862,7 @@ variable c v
   | not (null v) && all (\ch -> isAlphaNum ch || ch == '_') v = return v
   | otherwise =
       do  t <- fresh "u"
-          emit ((if c == CRef then "fic_ref" else classType c) ++ " " ++ t ++ " = " ++ v ++ ";")
+          emit ((if c == CRef then "fic_ref" else classType c) ++ " " ++ t ++ unusedOkS c ++ " = " ++ v ++ ";")
           return t
 
 
@@ -1228,14 +1243,14 @@ vectorCall info cls op key args =
         ("unsafeGet", [i, v]) ->
           do  vs <- atomsTo info [(i, CI64), (v, CRef)]
               g <- fresh "vg"
-              emit (ty ++ " " ++ g ++ " = FIC_VECTOR_GET(" ++ (vs !! 1) ++ ", " ++ ty ++ ", " ++ (vs !! 0) ++ ");")
+              emit (ty ++ " " ++ g ++ unusedOk c ++ " = FIC_VECTOR_GET(" ++ (vs !! 1) ++ ", " ++ ty ++ ", " ++ (vs !! 0) ++ ");")
               adapt c cls g
         ("unsafeTake", [i, v]) ->                 -- only made by the Rc pass: the result is owned
           do  vs <- atomsTo info [(i, CI64), (v, CRef)]
               let i' = vs !! 0
                   v' = vs !! 1
               g <- fresh "vg"
-              emit (ty ++ " " ++ g ++ " = FIC_VECTOR_GET(" ++ v' ++ ", " ++ ty ++ ", " ++ i' ++ ");")
+              emit (ty ++ " " ++ g ++ unusedOk c ++ " = FIC_VECTOR_GET(" ++ v' ++ ", " ++ ty ++ ", " ++ i' ++ ");")
               when (rcMode && vecHasRefs c) $
                 do  emit ("if (" ++ v' ++ "->rc == 1) { " ++ concat [ p ++ " = fic_nil(); " | p <- refPaths c (at v' i') ] ++ "}")
                     emit ("else { " ++ concat [ "fic_dup(" ++ p ++ "); " | p <- refPaths c g ] ++ "}")
@@ -2224,7 +2239,7 @@ genHelper info k name =
               emit "for (i = 0; i < n; i++) {"
               indented $
                 do  emit "if (i > 0) fic_sb_puts(b, \",\");"
-                    emit (classType ec ++ " el = FIC_VECTOR_AT(x, " ++ classType ec ++ ", i);")
+                    emit (classType ec ++ " el" ++ unusedOk ec ++ " = FIC_VECTOR_AT(x, " ++ classType ec ++ ", i);")
                     showStmt info e "b" "el"
               emit "}"
               emit "fic_sb_puts(b, \"]\");"

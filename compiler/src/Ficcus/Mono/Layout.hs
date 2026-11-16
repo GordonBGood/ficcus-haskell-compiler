@@ -114,8 +114,9 @@ fieldRead typeOf cs i p =
   where
     names = leafNames cs !! i
     head' ns = case ns of { n : _ -> n; [] -> "r0" }
+    nonEmpty t = if null t then "0" else t       -- an empty struct has a pad member: C99 has no empty initializer
     -- nested braces for the struct members of a struct
-    build c ns = "{ " ++ fst (inner c ns) ++ " }"
+    build c ns = "{ " ++ nonEmpty (fst (inner c ns)) ++ " }"
     inner c ns =
       case c of
         CStruct fs -> let (parts, rest) = parts' fs ns in (List.intercalate ", " parts, rest)
@@ -123,7 +124,7 @@ fieldRead typeOf cs i p =
     parts' [] ns = ([], ns)
     parts' (f : fs) ns =
       let (txt, rest) = case f of
-                          CStruct _ -> let (t, r) = inner f ns in ("{ " ++ t ++ " }", r)
+                          CStruct _ -> let (t, r) = inner f ns in ("{ " ++ nonEmpty t ++ " }", r)
                           _ -> inner f ns
           (more, rest') = parts' fs rest
       in (txt : more, rest')
