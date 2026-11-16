@@ -133,7 +133,7 @@ addImport ifaces (State vs ts cs bs qvs qts qcs) (Src.Import (A.At _ name) maybe
 
     !qvs2 =
       Map.foldrWithKey
-        (\tname ms q -> foldr (\key -> addQualified key ms) q (Members.importKeys prefix name tname))
+        (\tname ms q -> foldr (\key -> addQualified key ms) q (Members.importKeys prefix tname))
         (addQualified prefix vars qvs)
         memberInfo
 

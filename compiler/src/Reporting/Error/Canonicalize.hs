@@ -77,6 +77,7 @@ data Error
   | ImportExposedBinopNotFound A.Region ModuleName.Canonical Op.Name [Op.Name]
   | NotFoundVar A.Region (Maybe Module.Prefix) N.Name (PossibleNames N.Name)
   | NotFoundMember A.Region String N.Name [N.Name]    -- Ficcus (ATTACH A1): type, member, the members the type has
+  | AmbiguousMember A.Region String N.Name ModuleName.Canonical (OneOrMore.OneOrMore ModuleName.Canonical)   -- Ficcus (ATTACH A1b): type, member, the modules of the types
   | NotFoundType A.Region (Maybe Module.Prefix) T.Name (PossibleNames T.Name)
   | NotFoundVariant A.Region (Maybe Module.Prefix) N.Name (PossibleNames N.Name)
   | NotFoundBinop A.Region Op.Name (Set.Set Op.Name)
@@ -140,7 +141,7 @@ toReport source err =
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "The type annotation for `" <> N.toChars name <> "` says it can accept "
+              "The type annotation for `" <> Members.displayName name <> "` says it can accept "
               <> D.args numTypeArgs <> ", but the definition says it has "
               <> D.args numDefArgs <> ":"
           ,
@@ -150,15 +151,15 @@ toReport source err =
               <> " be deleted? Maybe some parentheses are missing?"
           )
 
-    AmbiguousVar     r p n h hs -> ambiguousName source r p n h hs "variable" N.toChars
+    AmbiguousVar     r p n h hs -> ambiguousName source r p n h hs "variable" Members.displayName
     AmbiguousType    r p n h hs -> ambiguousName source r p n h hs "type" T.nameToChars
-    AmbiguousVariant r p n h hs -> ambiguousName source r p n h hs "variant" N.toChars
+    AmbiguousVariant r p n h hs -> ambiguousName source r p n h hs "variant" Members.displayName
     AmbiguousBinop   r   n h hs -> ambiguousName source r Nothing n h hs "operator" Op.toChars
 
     KindProblem region problem -> Kind.toReport source region problem
 
     BadArity_Type    r n e a -> badArity source r n e a T.nameToChars "type"
-    BadArity_Pattern r n e a -> badArity source r n e a N.toChars "variant"
+    BadArity_Pattern r n e a -> badArity source r n e a Members.displayName "variant"
 
     Binop region op1 op2 ->
       Report.Report "INFIX PROBLEM" region [] $
@@ -174,8 +175,8 @@ toReport source err =
     DuplicateDecl name r1 r2 ->
       nameClash source r1 r2 $
         case Members.split name of
-          Just (tipe, member) -> "The `" <> tipe <> "` type has multiple `" <> N.toChars member <> "` members."
-          Nothing             -> "This file has multiple `" <> N.toChars name <> "` declarations."
+          Just (tipe, member) -> "The `" <> tipe <> "` type has multiple `" <> Members.displayName member <> "` members."
+          Nothing             -> "This file has multiple `" <> Members.displayName name <> "` declarations."
 
     DuplicateType name r1 r2 ->
       nameClash source r1 r2 $
@@ -183,7 +184,7 @@ toReport source err =
 
     DuplicateCtor name r1 r2 ->
       nameClash source r1 r2 $
-        "This file defines multiple `" <> N.toChars name <> "` type constructors."
+        "This file defines multiple `" <> Members.displayName name <> "` type constructors."
 
     DuplicateBinop op r1 r2 ->
       nameClash source r1 r2 $
@@ -191,7 +192,7 @@ toReport source err =
 
     DuplicateField name r1 r2 ->
       nameClash source r1 r2 $
-        "This record has multiple `" <> N.toChars name <> "` fields."
+        "This record has multiple `" <> Members.displayName name <> "` fields."
 
     DuplicateAliasArg typeName name r1 r2 ->
       nameClash source r1 r2 $
@@ -204,11 +205,11 @@ toReport source err =
     DuplicatePattern context name r1 r2 ->
       nameClash source r1 r2 $
         case context of
-          DPLambdaArgs -> "This anonymous function has multiple `" <> N.toChars name <> "` arguments."
-          DPFuncArgs f -> "The `" <> N.toChars f <> "` function has multiple `" <> N.toChars name <> "` arguments."
-          DPCaseBranch -> "This `case` pattern has multiple `" <> N.toChars name <> "` variables."
-          DPLetBinding -> "This `let` expression defines `" <> N.toChars name <> "` more than once!"
-          DPDestruct   -> "This pattern contains multiple `" <> N.toChars name <> "` variables."
+          DPLambdaArgs -> "This anonymous function has multiple `" <> Members.displayName name <> "` arguments."
+          DPFuncArgs f -> "The `" <> Members.displayName f <> "` function has multiple `" <> Members.displayName name <> "` arguments."
+          DPCaseBranch -> "This `case` pattern has multiple `" <> Members.displayName name <> "` variables."
+          DPLetBinding -> "This `let` expression defines `" <> Members.displayName name <> "` more than once!"
+          DPDestruct   -> "This pattern contains multiple `" <> Members.displayName name <> "` variables."
 
     EffectNotFound region name ->
       Report.Report "EFFECT PROBLEM" region [] $
@@ -226,17 +227,17 @@ toReport source err =
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "This kind of effect module must define a `" ++ N.toChars name ++ "` function."
+              "This kind of effect module must define a `" ++ Members.displayName name ++ "` function."
           ,
             D.reflow $
-              "But I cannot find `" ++ N.toChars name ++ "` in this file!"
+              "But I cannot find `" ++ Members.displayName name ++ "` in this file!"
           )
 
     ExportDuplicate_Op   n r1 r2 -> exportDuplicate source n r1 r2 Op.toChars
-    ExportDuplicate_Var  n r1 r2 -> exportDuplicate source n r1 r2 N.toChars
+    ExportDuplicate_Var  n r1 r2 -> exportDuplicate source n r1 r2 Members.displayName
     ExportDuplicate_Type n r1 r2 -> exportDuplicate source n r1 r2 T.nameToChars
     ExportNotFound_Op    r n  ns -> exportNotFound  source r n  ns Op.toChars    badOp
-    ExportNotFound_Var   r n  ns -> exportNotFound  source r n  ns N.toChars     badVar
+    ExportNotFound_Var   r n  ns -> exportNotFound  source r n  ns Members.displayName     badVar
     ExportNotFound_Type  r n  ns -> exportNotFound  source r n  ns T.nameToChars badType
 
     ExportOpenAlias region name ->
@@ -256,7 +257,7 @@ toReport source err =
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "You are trying to import the `" <> N.toChars ctor
+              "You are trying to import the `" <> Members.displayName ctor
               <> "` variant by name:"
           ,
             D.fillSep
@@ -292,14 +293,15 @@ toReport source err =
               "Remove the (..) and it should work."
           )
 
-    ImportExposedValueNotFound r h n xs -> importNotFound source r h n xs N.toChars
+    ImportExposedValueNotFound r h n xs -> importNotFound source r h n xs Members.displayName
     ImportExposedTypeNotFound  r h n xs -> importNotFound source r h n xs T.nameToChars
     ImportExposedBinopNotFound r h n xs -> importNotFound source r h n xs Op.toChars
 
-    NotFoundVar     r p n ns -> notFound source r p n "variable" ns N.toChars
+    NotFoundVar     r p n ns -> notFound source r p n "variable" ns Members.displayName
     NotFoundType    r p n ns -> notFound source r p n "type"     ns T.nameToChars
     NotFoundMember  r t n ms -> notFoundMember source r t n ms
-    NotFoundVariant r p n ns -> notFound source r p n "variant"  ns N.toChars
+    AmbiguousMember r t n h hs -> ambiguousMember source r t n h hs
+    NotFoundVariant r p n ns -> notFound source r p n "variant"  ns Members.displayName
 
     NotFoundBinop region op locals ->
       if op == "===" then
@@ -403,7 +405,7 @@ toReport source err =
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "You can construct records by using `" <> N.toChars name
+              "You can construct records by using `" <> Members.displayName name
               <> "` as a function, but it is not available in pattern matching like this:"
           ,
             D.reflow $
@@ -417,7 +419,7 @@ toReport source err =
             Code.toSnippet source region Nothing
               (
                 D.reflow $
-                  "The `" <> N.toChars portName <> "` port is trying to transmit " <> aBadKindOfThing <> ":"
+                  "The `" <> Members.displayName portName <> "` port is trying to transmit " <> aBadKindOfThing <> ":"
               ,
                 D.stack
                   [ elaboration
@@ -495,7 +497,7 @@ toReport source err =
         case portProblem of
           CmdNoArg ->
             (
-              "The `" <> N.toChars name <> "` port cannot be just a command."
+              "The `" <> Members.displayName name <> "` port cannot be just a command."
             ,
               D.reflow $
                 "It can be (() -> Cmd msg) if you just need to trigger a JavaScript\
@@ -504,7 +506,7 @@ toReport source err =
 
           CmdExtraArgs n ->
             (
-              "The `" <> N.toChars name <> "` port can only send ONE value out to JavaScript."
+              "The `" <> Members.displayName name <> "` port can only send ONE value out to JavaScript."
             ,
               let
                 theseItemsInSomething
@@ -518,7 +520,7 @@ toReport source err =
 
           CmdBadMsg ->
             (
-              "The `" <> N.toChars name <> "` port cannot send any messages to the `update` function."
+              "The `" <> Members.displayName name <> "` port cannot send any messages to the `update` function."
             ,
               D.reflow $
                 "It must produce a (Cmd msg) type. Notice the lower case `msg` type\
@@ -527,13 +529,13 @@ toReport source err =
             )
 
           SubBad ->
-            ( "There is something off about this `" <> N.toChars name <> "` port declaration."
+            ( "There is something off about this `" <> Members.displayName name <> "` port declaration."
             ,
               D.stack
                 [ D.reflow $
                     "To receive messages from JavaScript, you need to define a port like this:"
                 , D.indent 4 $ D.dullyellow $ D.fromChars $
-                    "port " <> N.toChars name <> " : (Int -> msg) -> Sub msg"
+                    "port " <> Members.displayName name <> " : (Int -> msg) -> Sub msg"
                 , D.reflow $
                     "Now every time JS sends an `Int` to this port, it is converted to a `msg`.\
                     \ And if you subscribe, those `msg` values will be piped into your `update`\
@@ -543,7 +545,7 @@ toReport source err =
 
           NotCmdOrSub ->
             (
-              "I am confused about the `" <> N.toChars name <> "` port declaration."
+              "I am confused about the `" <> Members.displayName name <> "` port declaration."
             ,
               D.reflow $
                 "Ports need to produce a command (Cmd) or a subscription (Sub) but\
@@ -564,16 +566,16 @@ toReport source err =
           then
               (
                 D.reflow $
-                  "The `" <> N.toChars name <> "` value is defined directly in terms of itself, causing an infinite loop."
+                  "The `" <> Members.displayName name <> "` value is defined directly in terms of itself, causing an infinite loop."
               ,
                 D.stack
                   [ makeTheory "Are you trying to mutate a variable?" $
-                      "Elm does not have mutation, so when I see " ++ N.toChars name
-                      ++ " defined in terms of " ++ N.toChars name
+                      "Elm does not have mutation, so when I see " ++ Members.displayName name
+                      ++ " defined in terms of " ++ Members.displayName name
                       ++ ", I treat it as a recursive definition. Try giving the new value a new name!"
                   , makeTheory "Maybe you DO want a recursive value?" $
-                      "To define " ++ N.toChars name ++ " we need to know what " ++ N.toChars name
-                      ++ " is, so let’s expand it. Wait, but now we need to know what " ++ N.toChars name
+                      "To define " ++ Members.displayName name ++ " we need to know what " ++ Members.displayName name
+                      ++ " is, so let’s expand it. Wait, but now we need to know what " ++ Members.displayName name
                       ++ " is, so let’s expand it... This will keep going infinitely!"
                   , D.link "Hint"
                       "The root problem is often a typo in some variable name, but I recommend reading"
@@ -585,11 +587,11 @@ toReport source err =
           else
               (
                 D.reflow $
-                  "The `" <> N.toChars name <> "` definition is causing a very tricky infinite loop."
+                  "The `" <> Members.displayName name <> "` definition is causing a very tricky infinite loop."
               ,
                 D.stack
                   [ D.reflow $
-                      "The `" <> N.toChars name
+                      "The `" <> Members.displayName name
                       <> "` value depends on itself through the following chain of definitions:"
                   , D.cycle cycle D.fromName
                   , D.link "Hint"
@@ -610,16 +612,16 @@ toReport source err =
               in
                 (
                   D.reflow $
-                    "The `" <> N.toChars name <> "` value is defined directly in terms of itself, causing an infinite loop."
+                    "The `" <> Members.displayName name <> "` value is defined directly in terms of itself, causing an infinite loop."
                 ,
                   D.stack
                     [ makeTheory "Are you trying to mutate a variable?" $
-                        "Elm does not have mutation, so when I see " ++ N.toChars name
-                        ++ " defined in terms of " ++ N.toChars name
+                        "Elm does not have mutation, so when I see " ++ Members.displayName name
+                        ++ " defined in terms of " ++ Members.displayName name
                         ++ ", I treat it as a recursive definition. Try giving the new value a new name!"
                     , makeTheory "Maybe you DO want a recursive value?" $
-                        "To define " ++ N.toChars name ++ " we need to know what " ++ N.toChars name
-                        ++ " is, so let’s expand it. Wait, but now we need to know what " ++ N.toChars name
+                        "To define " ++ Members.displayName name ++ " we need to know what " ++ Members.displayName name
+                        ++ " is, so let’s expand it. Wait, but now we need to know what " ++ Members.displayName name
                         ++ " is, so let’s expand it... This will keep going infinitely!"
                     , D.link "Hint"
                         "The root problem is often a typo in some variable name, but I recommend reading"
@@ -635,7 +637,7 @@ toReport source err =
                 ,
                   D.stack
                     [ D.reflow $
-                        "The `" <> N.toChars name
+                        "The `" <> Members.displayName name
                         <> "` value depends on itself through the following chain of definitions:"
                     , D.cycle cycle D.fromName
                     , D.link "Hint"
@@ -651,7 +653,7 @@ toReport source err =
           ( "These variables cannot have the same name:"
           , advice
           )
-          ( D.reflow $ "The name `" <> N.toChars name <> "` is first defined here:"
+          ( D.reflow $ "The name `" <> Members.displayName name <> "` is first defined here:"
           , "But then it is defined AGAIN over here:"
           , advice
           )
@@ -984,17 +986,43 @@ badArity source region name expected actual toChars thing =
 -- NOT FOUND
 
 
+-- Ficcus (ATTACH A1b): two imported types of one name are in scope and both have the member
+ambiguousMember :: Code.Source -> A.Region -> String -> N.Name -> ModuleName.Canonical -> OneOrMore.OneOrMore ModuleName.Canonical -> Report.Report
+ambiguousMember source region tipe member h hs =
+  let
+    homes = List.sort (map (Module.toChars . ModuleName._module) (h : OneOrMore.destruct (:) hs))
+    full = tipe ++ "." ++ Members.displayName member
+    fromList =
+      case homes of
+        [a, b] -> "from `" ++ a ++ "` and from `" ++ b ++ "`"
+        _      -> "from " ++ List.intercalate ", " (map (\m -> "`" ++ m ++ "`") homes)
+  in
+  Report.Report "AMBIGUOUS NAME" region [] $
+    Code.toSnippet source region Nothing
+      (
+        D.reflow $
+          "This usage of `" ++ full ++ "` is ambiguous: two types named `" ++ tipe ++ "` are in scope, " ++ fromList
+          ++ ", and each has a `" ++ Members.displayName member ++ "` member."
+      ,
+        D.stack
+          [ D.reflow $
+              "Say which type you mean with the name of its module (or of the alias you gave the module in its import):"
+          , D.indent 4 $ D.vcat $ map (\m -> D.dullyellow (D.fromChars (m ++ "." ++ full))) homes
+          ]
+      )
+
+
 -- Ficcus (ATTACH A1)
 notFoundMember :: Code.Source -> A.Region -> String -> N.Name -> [N.Name] -> Report.Report
 notFoundMember source region tipe member members =
   let
-    nearby = take 4 (Suggest.sort (N.toChars member) N.toChars members)
+    nearby = take 4 (Suggest.sort (Members.displayName member) Members.displayName members)
   in
-  Report.Report "NAMING ERROR" region (map N.toChars nearby) $
+  Report.Report "NAMING ERROR" region (map Members.displayName nearby) $
     Code.toSnippet source region Nothing
       (
         D.reflow $
-          "I cannot find a `" ++ tipe ++ "." ++ N.toChars member ++ "` member:"
+          "I cannot find a `" ++ tipe ++ "." ++ Members.displayName member ++ "` member:"
       ,
         case members of
           [] ->
@@ -1007,7 +1035,7 @@ notFoundMember source region tipe member members =
             D.stack
               [ D.reflow $
                   "The `" ++ tipe ++ "` type has these members:"
-              , D.indent 4 $ D.vcat $ map (D.dullyellow . D.fromChars . (\m -> tipe ++ "." ++ N.toChars m)) members
+              , D.indent 4 $ D.vcat $ map (D.dullyellow . D.fromChars . (\m -> tipe ++ "." ++ Members.displayName m)) members
               ]
       )
 
@@ -1251,7 +1279,7 @@ _argMismatchReport source region kind name expected actual =
       Code.toSnippet source region Nothing
         (
           D.reflow $
-            kind <> " " <> N.toChars name <> " has " <> numArgs <> "."
+            kind <> " " <> Members.displayName name <> " has " <> numArgs <> "."
         ,
           D.reflow $
             "Expecting " <> show expected <> ", but got " <> show actual <> "."

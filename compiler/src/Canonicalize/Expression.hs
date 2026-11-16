@@ -29,7 +29,6 @@ import qualified AST.Prim.Operator as Op
 import qualified AST.Utils.Type as Type
 import qualified Canonicalize.Environment as Env
 import qualified Canonicalize.Environment.Dups as Dups
-import qualified AST.Members as Members_
 import qualified Canonicalize.Members as Members
 import qualified Canonicalize.Pattern as Pattern
 import qualified Canonicalize.Type as Type
@@ -733,7 +732,9 @@ findVar region (Env.Env localHome vs _ _ _ qvs _ _) name =
           logVar name (Can.VarLocal name)
 
         Env.TopLevel _ ->
-          logVar name (Can.VarTopLevel localHome name)
+          -- Ficcus (ATTACH A1b): inside a `where` block a plain name may be a member of the type
+          let real = Members.siblingName vs name in
+          logVar real (Can.VarTopLevel localHome real)
 
         Env.Foreign home annotation ->
           Result.ok $
@@ -762,8 +763,8 @@ findVarQual region env@(Env.Env localHome _ _ _ _ _ _ _) prefix name =
     Members.ForeignMember home mangled annotation ->
       Result.ok (Can.VarForeign home mangled annotation)
 
-    Members.AmbiguousMember h hs ->
-      Result.throw (Error.AmbiguousVar region (Just prefix) name h hs)
+    Members.AmbiguousMember tipe h hs ->
+      Result.throw (Error.AmbiguousMember region tipe name h hs)
 
     Members.UnknownMember tipe members ->
       Result.throw (Error.NotFoundMember region tipe name members)
@@ -798,7 +799,7 @@ toPossibleNames :: Map.Map N.Name Env.Var -> Env.Qualified N.Name Can.Annotation
 toPossibleNames exposed qualified =
   -- Ficcus (ATTACH A1): the mangled names of members and the keys of their types are not names a program can write
   Error.PossibleNames
-    (Map.keysSet (Map.filterWithKey (\n _ -> not (Members_.isMember n)) exposed))
+    (Map.keysSet (Map.filterWithKey (\n _ -> not ('$' `elem` N.toChars n)) exposed))
     (Map.map Map.keysSet (Map.filterWithKey (\p _ -> not ('$' `elem` Module.prefixToChars p)) qualified))
 
 

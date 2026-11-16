@@ -9,6 +9,8 @@
 module Canonicalize.Members
   ( partitionDefs
   , importKeys
+  , memberEnv
+  , siblingName
   , exposedKey
   , Resolution(..)
   , resolve
@@ -45,16 +47,11 @@ partitionDefs defs =
         Just (tipe, _)         -> (plain, Map.insertWith Map.union tipe (Map.singleton name value) members)
 
 
--- | the keys under which the members of the type `tipe`, of a module imported as `prefix`, are
--- reachable: `Prefix.Type`, and `Prefix` itself when the type is named like the last part of the module
-importKeys :: Module.Prefix -> Module.Name -> T.Name -> [Module.Prefix]
-importKeys prefix moduleName tipe =
-  let
-    tipeChars = T.nameToChars tipe
-    lastPart = reverse (takeWhile (/= '.') (reverse (Module.toChars moduleName)))
-  in
-  Members.typeKeyOf prefix tipeChars
-    : [ Members.typeKey (Module.prefixToChars prefix) | lastPart == tipeChars ]
+-- | the key under which the members of the type `tipe`, of a module imported as `prefix`, are
+-- reachable: `Prefix.Type` (`Finance.Money.Money.add`, or `FM.Money.add` with `import Finance.Money as FM`)
+importKeys :: Module.Prefix -> T.Name -> [Module.Prefix]
+importKeys prefix tipe =
+  [ Members.typeKeyOf prefix (T.nameToChars tipe) ]
 
 
 
@@ -72,7 +69,7 @@ data Resolution
   = NotMember                                 -- not a reference to a member: Elm's own lookup goes on
   | LocalMember N.Name                        -- the mangled name of a member of a type of this module
   | ForeignMember ModuleName.Canonical N.Name Can.Annotation   -- the mangled name
-  | AmbiguousMember ModuleName.Canonical (OneOrMore.OneOrMore ModuleName.Canonical)
+  | AmbiguousMember String ModuleName.Canonical (OneOrMore.OneOrMore ModuleName.Canonical)   -- the name of the type
   | UnknownMember String [N.Name]             -- the type is in scope but has no such member: the members it has
 
 
@@ -100,9 +97,8 @@ resolve (Env.Env _ vs _ _ _ qvs _ _) prefix name =
           Just qualified ->
             case [ (k, info) | (k, info) <- Map.toList qualified, isNamed k ] of
               [(k, Env.Specific home annotation)] -> ForeignMember home k annotation
-              (_, Env.Specific h1 _) : (_, Env.Specific h2 _) : _ -> AmbiguousMember h1 (OneOrMore.one h2)
-              (_, Env.Specific h1 _) : (_, Env.Ambiguous h2 _) : _ -> AmbiguousMember h1 (OneOrMore.one h2)
-              (_, Env.Ambiguous h hs) : _         -> AmbiguousMember h hs
+              (_, Env.Ambiguous h hs) : _         -> AmbiguousMember (lastPart chars) h hs
+              (_, Env.Specific h _) : _ : _       -> AmbiguousMember (lastPart chars) h (OneOrMore.one h)   -- (one key holds one type name: not reached)
               []
                 | isModule  -> NotMember
                 | otherwise -> UnknownMember chars (List.sort (Members.membersOf' (Map.keys qualified)))
@@ -112,6 +108,54 @@ resolve (Env.Env _ vs _ _ _ qvs _ _) prefix name =
             case List.sort (Members.membersOf chars (Map.keys vs)) of
               []      -> NotMember
               members -> if isModule then NotMember else UnknownMember chars members
+
+
+lastPart :: String -> String
+lastPart chars =
+  reverse (takeWhile (/= '.') (reverse chars))
+
+
+
+-- SIBLINGS (A1b)
+--
+-- Inside the `where` block of the type T the members of T are visible under their plain names, and win
+-- over a top level function or an imported name that is spelled the same.  While a member is canonicalized,
+-- its environment maps each plain sibling name to a top level entry, and the entry `$` says which type the
+-- block belongs to; `siblingName` then gives the real (mangled) name of a top level name.
+
+
+markerName :: N.Name
+markerName =
+  N.fromString (S.fromChars "$")
+
+
+-- | the environment for the body of the definition `name`: changed only when it is a member
+memberEnv :: N.Name -> Env.Env -> Env.Env
+memberEnv name env@(Env.Env home vs ts cs bs qvs qts qcs) =
+  case Members.split name of
+    Nothing ->
+      env
+
+    Just (tipe, _) ->
+      let
+        siblings = [ (member, var) | (k, var@(Env.TopLevel _)) <- Map.toList vs, Just (t, member) <- [Members.split k], t == tipe ]
+        marker = Env.Foreign home (Can.Forall Map.empty (Can.TType home (tname tipe) []))
+        vs2 = Map.insert markerName marker (foldr (\(member, var) -> Map.insert member var) vs siblings)
+      in
+      Env.Env home vs2 ts cs bs qvs qts qcs
+
+
+-- | the top level definition that the plain name `name` means: the member of the type whose `where`
+-- block is being canonicalized, if it has one of this name
+siblingName :: Map.Map N.Name Env.Var -> N.Name -> N.Name
+siblingName vs name =
+  case Map.lookup markerName vs of
+    Just (Env.Foreign _ (Can.Forall _ (Can.TType _ tipe _))) ->
+      let mangled = Members.mangle tipe name in
+      if Map.member mangled vs then mangled else name
+
+    _ ->
+      name
 
 
 tname :: String -> T.Name

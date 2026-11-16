@@ -22,6 +22,7 @@ import qualified Canonicalize.Environment as Env
 import qualified Canonicalize.Environment.Foreign as Foreign
 import qualified Canonicalize.Environment.Local as Local
 import qualified Canonicalize.Expression as Expr
+import qualified Canonicalize.Members as Members
 import qualified Canonicalize.Pattern as Pattern
 import qualified Canonicalize.Type as Type
 import qualified Data.Index as Index
@@ -141,7 +142,9 @@ type NodeTwo = Graph.Node N.Name Can.Def
 
 
 toNodeOne :: Env.Env -> A.Located Src.Value -> Result i [W.Warning] NodeOne
-toNodeOne env (A.At _ (Src.Value aname@(A.At _ name) srcArgs body maybeType)) =
+toNodeOne env0 (A.At _ (Src.Value aname@(A.At _ name) srcArgs body maybeType)) =
+  -- Ficcus (ATTACH A1b): a member sees the other members of its type under their plain names
+  let env = Members.memberEnv name env0 in
   case maybeType of
     Nothing ->
       do  (args, argBindings) <-
