@@ -29,6 +29,8 @@ import Data.Char (isAlphaNum, ord)
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
+import System.Environment (lookupEnv)
+import System.IO.Unsafe (unsafePerformIO)
 
 import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, prelude, regexRuntime, stringRuntime, vectorRuntime)
 import Ficcus.Mono.Overlay (vectorMarker, vectorTypeName)
@@ -1197,6 +1199,14 @@ siteName d =
   in maybe n id (List.stripPrefix "author/project:" n)
 
 
+-- | V3 experiment, off by default (`FICCUS_RESTRICT=1`): the in-place writes of `Vector.set`, `swap` and `push` go through a
+-- `restrict` pointer to the element data of the vector, which is unique at that point (the count is 1, tested in the same `if`).
+-- The scope of the pointer is the one write, so the gain is what the optimizer makes of the stores not aliasing the vector header.
+restrictOn :: Bool
+restrictOn = unsafePerformIO (fmap (== Just "1") (lookupEnv "FICCUS_RESTRICT"))
+{-# NOINLINE restrictOn #-}
+
+
 isVectorType :: Info -> String -> Bool
 isVectorType info n =
   n == vectorTypeName && maybe False (\u -> [ c | (c, _, _) <- usCtors u ] == [vectorMarker]) (Map.lookup n (iUnions info))
@@ -1208,6 +1218,10 @@ vectorCall info cls op key args =
           ty = classType c
           esize = "(uint32_t)sizeof(" ++ ty ++ ")"
           at v i = "FIC_VECTOR_AT(" ++ v ++ ", " ++ ty ++ ", " ++ i ++ ")"
+          -- the write path (FICCUS_RESTRICT=1): a block with a restrict pointer to the data of the vector, which is unique there
+          wopen v = if restrictOn then "{ " ++ ty ++ " *restrict rd_ = (" ++ ty ++ " *)(void *)FIC_VECTOR(" ++ v ++ ")->data; " else ""
+          wclose = if restrictOn then "} " else ""
+          wat v i = if restrictOn then "rd_[" ++ i ++ "]" else at v i
       desc <- vecDesc info c
       rcMode <- gets gRc
       w <- gets gSite
@@ -1248,11 +1262,11 @@ vectorCall info cls op key args =
               if rcMode
                 then
                   do  let check = updateCheck v
-                          write =
-                            if vecHasRefs c
-                              then ty ++ " old_" ++ t ++ " = " ++ at t i' ++ "; " ++ at t i' ++ " = " ++ val ++ "; "
+                          write = wopen t ++
+                            (if vecHasRefs c
+                              then ty ++ " old_" ++ t ++ " = " ++ wat t i' ++ "; " ++ wat t i' ++ " = " ++ val ++ "; "
                                    ++ concat [ "fic_drop(" ++ p ++ "); " | p <- refPaths c ("old_" ++ t) ]
-                              else at t i' ++ " = " ++ val ++ "; "
+                              else wat t i' ++ " = " ++ val ++ "; ") ++ wclose
                       emit ("if (" ++ unique check t ++ "FIC_VECTOR_IN_RANGE(" ++ subject check t ++ ", " ++ i' ++ ")) { " ++ write ++ "FIC_STAT(fic_n_inplace++); }")
                       emit ("else " ++ t ++ " = fic_vector_set(" ++ i' ++ ", &" ++ val ++ ", " ++ t ++ ", " ++ wh ++ ");")
                 else emit (t ++ " = fic_vector_set(" ++ i' ++ ", &" ++ val ++ ", " ++ t ++ ", " ++ wh ++ ");")     -- no counts: every update copies
@@ -1266,7 +1280,7 @@ vectorCall info cls op key args =
                 then
                   do  let check = updateCheck v
                       emit ("if (" ++ unique check t ++ "FIC_VECTOR_IN_RANGE(" ++ subject check t ++ ", " ++ i' ++ ") && FIC_VECTOR_IN_RANGE(" ++ t ++ ", " ++ j' ++ ")) { "
-                            ++ ty ++ " sw_" ++ t ++ " = " ++ at t i' ++ "; " ++ at t i' ++ " = " ++ at t j' ++ "; " ++ at t j' ++ " = sw_" ++ t ++ "; FIC_STAT(fic_n_inplace++); }")
+                            ++ wopen t ++ ty ++ " sw_" ++ t ++ " = " ++ wat t i' ++ "; " ++ wat t i' ++ " = " ++ wat t j' ++ "; " ++ wat t j' ++ " = sw_" ++ t ++ "; " ++ wclose ++ "FIC_STAT(fic_n_inplace++); }")
                       emit ("else " ++ t ++ " = fic_vector_swap(" ++ i' ++ ", " ++ j' ++ ", " ++ t ++ ", " ++ wh ++ ");")
                 else emit (t ++ " = fic_vector_swap(" ++ i' ++ ", " ++ j' ++ ", " ++ t ++ ", " ++ wh ++ ");")
               return t
@@ -1278,7 +1292,7 @@ vectorCall info cls op key args =
                 then
                   do  let check = updateCheck v
                       emit ("if (" ++ unique check t ++ "FIC_VECTOR_ROOM(" ++ subject check t ++ ")) { "
-                            ++ at t ("FIC_VECTOR_LEN(" ++ t ++ ")") ++ " = " ++ val ++ "; FIC_VECTOR_LEN(" ++ t ++ ")++; FIC_STAT(fic_n_inplace++); }")
+                            ++ wopen t ++ wat t ("FIC_VECTOR_LEN(" ++ t ++ ")") ++ " = " ++ val ++ "; " ++ wclose ++ "FIC_VECTOR_LEN(" ++ t ++ ")++; FIC_STAT(fic_n_inplace++); }")
                       emit ("else " ++ t ++ " = fic_vector_push(&" ++ val ++ ", " ++ t ++ ", " ++ wh ++ ");")
                 else emit (t ++ " = fic_vector_push(&" ++ val ++ ", " ++ t ++ ", " ++ wh ++ ");")
               return t
