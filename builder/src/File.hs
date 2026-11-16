@@ -30,8 +30,10 @@ module File
 
 
 import Control.Concurrent (forkIO)
-import Control.Concurrent.MVar (MVar, newEmptyMVar, newMVar, putMVar, takeMVar)
-import Control.Exception (catch)
+import Control.Concurrent.MVar (MVar, modifyMVar, newEmptyMVar, newMVar, putMVar, takeMVar)
+import Control.Exception (catch, finally)
+import qualified Data.Map.Strict as Map
+import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Internal as BS
 import qualified Data.ByteString.Builder as B
@@ -106,6 +108,12 @@ withWriter callback =
 
 writeBuilder :: Writer t -> FilePath -> B.Builder -> IO ()
 writeBuilder _ path builder =
+  do  lock <- lockPath path
+      writeBody path builder `finally` unlockPath lock
+
+
+writeBody :: FilePath -> B.Builder -> IO ()
+writeBody path builder =
   do  let dir = FP.dropFileName path
       Dir.createDirectoryIfMissing True dir
       IO.withBinaryFile path IO.WriteMode $ \handle ->
@@ -114,12 +122,40 @@ writeBuilder _ path builder =
 
 
 writeBuilder_ :: Writer t -> FilePath -> B.Builder -> IO ()
-writeBuilder_ writer@(Writer workList) path builder =
+writeBuilder_ (Writer workList) path builder =
   do  mvar <- newEmptyMVar
-      _ <- forkIO (writeBuilder writer path builder >> putMVar mvar ())
+      -- the lock of the path is taken here, before the write is forked: a later write of the same path
+      -- (the final `d.dat` of a build after the one `Details.generate` started) waits for this one
+      lock <- lockPath path
+      _ <- forkIO ((writeBody path builder `finally` unlockPath lock) >> putMVar mvar ())
       oldWork <- takeMVar workList
       let !newWork = mvar:oldWork
       putMVar workList newWork
+
+
+-- Ficcus: GHC lets one process open a file for writing only once at a time ("resource busy (file is locked)"),
+-- and `Details.generate` starts the write of `d.dat` in a thread while the build may write it again. One lock
+-- per path, taken in the order in which the writes are asked for, makes the two writes follow each other.
+{-# NOINLINE pathLocks #-}
+pathLocks :: MVar (Map.Map FilePath (MVar ()))
+pathLocks =
+  unsafePerformIO (newMVar Map.empty)
+
+
+lockPath :: FilePath -> IO (MVar ())
+lockPath path =
+  do  lock <-
+        modifyMVar pathLocks $ \locks ->
+          case Map.lookup path locks of
+            Just lock -> return (locks, lock)
+            Nothing   -> do { lock <- newMVar () ; return (Map.insert path lock locks, lock) }
+      takeMVar lock
+      return lock
+
+
+unlockPath :: MVar () -> IO ()
+unlockPath lock =
+  putMVar lock ()
 
 
 
@@ -218,12 +254,8 @@ writeBytes writer path func value =
 
 
 writeBytes_ :: Writer t -> FilePath -> (a -> B.Builder) -> a -> IO ()
-writeBytes_ writer@(Writer workList) path func value =
-  do  mvar <- newEmptyMVar
-      _ <- forkIO (writeBuilder writer path (func value) >> putMVar mvar ())
-      oldWork <- takeMVar workList
-      let !newWork = mvar:oldWork
-      putMVar workList newWork
+writeBytes_ writer path func value =
+  writeBuilder_ writer path (func value)
 
 
 
