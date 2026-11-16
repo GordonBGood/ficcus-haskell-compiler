@@ -369,7 +369,10 @@ callArgs ctx env0 live uses extra =
                             return (env', bs ++ [(t, mRep a, v)], as ++ [MExpr (mRep a) (MLocal t)], ts ++ [(t, mRep a)])
                   _ ->
                     do  v <- rc ctx env liveA a
-                        if needTemps && not (isAtom a)
+                        -- an owned atom that gets a count (`MDup`) is bound too: a later borrowed argument bound to a temporary
+                        -- may consume the variable before the call, and the count must be taken before that (B1 of REVIEW-1)
+                        let dupped = case mNode v of { MDup _ _ -> True; _ -> False }
+                        if needTemps && (not (isAtom a) || dupped)
                           then do { t <- fresh; return (env', bs ++ [(t, mRep a, v)], as ++ [MExpr (mRep a) (MLocal t)], ts) }
                           else return (env', bs, as ++ [v], ts)
       (envEnd, binds, args', temps) <- foldM step (env0, [], [], []) (zip uses later)

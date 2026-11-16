@@ -1,0 +1,810 @@
+-- module Vector: problems=0 instances=105 instance-failures=0 defaulted=0
+-- equality-uses: total=1 at-function=0
+module author/project:Vector
+type Vector   id: author/project:Vector.Vector   params: 1   ctors: 1   layout: enum
+  ctor FicVectorBuiltin   id: author/project:Vector.FicVectorBuiltin   tag: 0   arity: 0   fields:    sig: Vector v0   kinds: v0:any
+def ficVectorOverlay :: Int    [42:1-42:17]   id: author/project:Vector.ficVectorOverlay   sig: Int   kinds:    group: author/project:Vector.ficVectorOverlay nonrec ann
+  43:5-43:6 Int :: Int
+def withCapacity :: Int -> Vector a    [57:1-57:13]   id: author/project:Vector.withCapacity   sig: Int -> Vector v0   kinds: v0:any   group: author/project:Vector.withCapacity rec ann
+  57:14-57:15 PVar n :: Int
+  58:5-58:19 Call :: Vector a
+    58:5-58:17 VarTopLevel :: Int -> Vector a   callee: author/project:Vector.withCapacity   use: rec   sig#: ba4bfc0f   subst: v0 := <<author/project:Vector.withCapacity|v0>>
+    58:18-58:19 VarLocal :: Int
+def unsafeGet :: Int -> Vector a -> a    [69:1-69:10]   id: author/project:Vector.unsafeGet   sig: Int -> Vector v0 -> v0   kinds: v0:any   group: author/project:Vector.unsafeGet rec ann
+  69:11-69:12 PVar i :: Int
+  69:13-69:14 PVar v :: Vector a
+  70:5-70:18 Call :: a
+    70:5-70:14 VarTopLevel :: Int -> Vector a -> a   callee: author/project:Vector.unsafeGet   use: rec   sig#: 430fd360   subst: v0 := <<author/project:Vector.unsafeGet|v0>>
+    70:15-70:16 VarLocal :: Int
+    70:17-70:18 VarLocal :: Vector a
+def toIndexedHelp :: Int -> Vector a -> List ( Int, a ) -> List ( Int, a )    [302:1-302:14]   id: author/project:Vector.toIndexedHelp   sig: Int -> Vector v0 -> List ( Int, v0 ) -> List ( Int, v0 )   kinds: v0:any   group: author/project:Vector.toIndexedHelp rec ann
+  302:15-302:16 PVar i :: Int
+  302:17-302:18 PVar v :: Vector a
+  302:19-302:22 PVar acc :: List ( Int, a )
+  303:5-307:62 If :: List ( Int, a )
+    303:8-303:13 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      303:8-303:9 VarLocal :: Int
+      303:12-303:13 Int :: Int
+    304:9-304:12 VarLocal :: List ( Int, a )
+    307:9-307:61 Call :: List ( Int, a )
+      307:9-307:22 VarTopLevel :: Int -> Vector a -> List ( Int, a ) -> List ( Int, a )   callee: author/project:Vector.toIndexedHelp   use: rec   sig#: ce3e9cdb   subst: v0 := <<author/project:Vector.toIndexedHelp|v0>>
+      307:24-307:29 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        307:24-307:25 VarLocal :: Int
+        307:28-307:29 Int :: Int
+      307:31-307:32 VarLocal :: Vector a
+      307:34-307:61 Binop :: List ( Int, a )   callee: elm/core:List.cons   instance: a := ( Int, a )   sig#: ddd4c5f2   subst: v0 := ( Int, <<author/project:Vector.toIndexedHelp|v0>> )
+        307:34-307:54 Pair :: ( Int, a )
+          307:36-307:37 VarLocal :: Int
+          307:39-307:52 Call :: a
+            307:39-307:48 VarTopLevel :: Int -> Vector a -> a   callee: author/project:Vector.unsafeGet   use: gen   instance: a1 := a   sig#: 430fd360   subst: v0 := <<author/project:Vector.toIndexedHelp|v0>>
+            307:49-307:50 VarLocal :: Int
+            307:51-307:52 VarLocal :: Vector a
+        307:58-307:61 VarLocal :: List ( Int, a )
+def foldrHelp :: Int -> (a -> b -> b) -> b -> Vector a -> b    [252:1-252:10]   id: author/project:Vector.foldrHelp   sig: Int -> (v0 -> v1 -> v1) -> v1 -> Vector v0 -> v1   kinds: v0:any,v1:any   group: author/project:Vector.foldrHelp rec ann
+  252:11-252:12 PVar i :: Int
+  252:13-252:14 PVar f :: a -> b -> b
+  252:15-252:18 PVar acc :: b
+  252:19-252:20 PVar v :: Vector a
+  253:5-257:54 If :: b
+    253:8-253:13 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      253:8-253:9 VarLocal :: Int
+      253:12-253:13 Int :: Int
+    254:9-254:12 VarLocal :: b
+    257:9-257:54 Call :: b
+      257:9-257:18 VarTopLevel :: Int -> (a -> b -> b) -> b -> Vector a -> b   callee: author/project:Vector.foldrHelp   use: rec   sig#: 0002ad9b   subst: v0 := <<author/project:Vector.foldrHelp|v0>>, v1 := <<author/project:Vector.foldrHelp|v1>>
+      257:20-257:25 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        257:20-257:21 VarLocal :: Int
+        257:24-257:25 Int :: Int
+      257:27-257:28 VarLocal :: a -> b -> b
+      257:30-257:51 Call :: b
+        257:30-257:31 VarLocal :: a -> b -> b
+        257:33-257:46 Call :: a
+          257:33-257:42 VarTopLevel :: Int -> Vector a -> a   callee: author/project:Vector.unsafeGet   use: gen   instance: a1 := a   sig#: 430fd360   subst: v0 := <<author/project:Vector.foldrHelp|v0>>
+          257:43-257:44 VarLocal :: Int
+          257:45-257:46 VarLocal :: Vector a
+        257:48-257:51 VarLocal :: b
+      257:53-257:54 VarLocal :: Vector a
+def foldlHelp :: Int -> Int -> (a -> b -> b) -> b -> Vector a -> b    [236:1-236:10]   id: author/project:Vector.foldlHelp   sig: Int -> Int -> (v0 -> v1 -> v1) -> v1 -> Vector v0 -> v1   kinds: v0:any,v1:any   group: author/project:Vector.foldlHelp rec ann
+  236:11-236:12 PVar i :: Int
+  236:13-236:14 PVar n :: Int
+  236:15-236:16 PVar f :: a -> b -> b
+  236:17-236:20 PVar acc :: b
+  236:21-236:22 PVar v :: Vector a
+  237:5-241:56 If :: b
+    237:8-237:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      237:8-237:9 VarLocal :: Int
+      237:13-237:14 VarLocal :: Int
+    238:9-238:12 VarLocal :: b
+    241:9-241:56 Call :: b
+      241:9-241:18 VarTopLevel :: Int -> Int -> (a -> b -> b) -> b -> Vector a -> b   callee: author/project:Vector.foldlHelp   use: rec   sig#: 1114ee5d   subst: v0 := <<author/project:Vector.foldlHelp|v0>>, v1 := <<author/project:Vector.foldlHelp|v1>>
+      241:20-241:25 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        241:20-241:21 VarLocal :: Int
+        241:24-241:25 Int :: Int
+      241:27-241:28 VarLocal :: Int
+      241:29-241:30 VarLocal :: a -> b -> b
+      241:32-241:53 Call :: b
+        241:32-241:33 VarLocal :: a -> b -> b
+        241:35-241:48 Call :: a
+          241:35-241:44 VarTopLevel :: Int -> Vector a -> a   callee: author/project:Vector.unsafeGet   use: gen   instance: a1 := a   sig#: 430fd360   subst: v0 := <<author/project:Vector.foldlHelp|v0>>
+          241:45-241:46 VarLocal :: Int
+          241:47-241:48 VarLocal :: Vector a
+        241:50-241:53 VarLocal :: b
+      241:55-241:56 VarLocal :: Vector a
+def fromList :: List a -> Vector a    [108:1-108:9]   id: author/project:Vector.fromList   sig: List v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.fromList rec ann
+  108:10-108:12 PVar xs :: List a
+  109:5-109:16 Call :: Vector a
+    109:5-109:13 VarTopLevel :: List a -> Vector a   callee: author/project:Vector.fromList   use: rec   sig#: 87d340af   subst: v0 := <<author/project:Vector.fromList|v0>>
+    109:14-109:16 VarLocal :: List a
+def toList :: Vector a -> List a    [113:1-113:7]   id: author/project:Vector.toList   sig: Vector v0 -> List v0   kinds: v0:any   group: author/project:Vector.toList rec ann
+  113:8-113:9 PVar v :: Vector a
+  114:5-114:13 Call :: List a
+    114:5-114:11 VarTopLevel :: Vector a -> List a   callee: author/project:Vector.toList   use: rec   sig#: 7ff6eeb5   subst: v0 := <<author/project:Vector.toList|v0>>
+    114:12-114:13 VarLocal :: Vector a
+def length :: Vector a -> Int    [62:1-62:7]   id: author/project:Vector.length   sig: Vector v0 -> Int   kinds: v0:any   group: author/project:Vector.length rec ann
+  62:8-62:9 PVar v :: Vector a
+  63:5-63:13 Call :: Int
+    63:5-63:11 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: rec   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.length|v0>>
+    63:12-63:13 VarLocal :: Vector a
+def isEmpty :: Vector a -> Bool    [156:1-156:8]   id: author/project:Vector.isEmpty   sig: Vector v0 -> Bool   kinds: v0:any   group: author/project:Vector.isEmpty nonrec ann
+  156:9-156:10 PVar v :: Vector a
+  157:5-157:18 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Int   sig#: 2cdc0786   subst: v0 := Int
+    157:5-157:13 Call :: Int
+      157:5-157:11 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: gen   instance: a1 := a   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.isEmpty|v0>>
+      157:12-157:13 VarLocal :: Vector a
+    157:17-157:18 Int :: Int
+def toIndexedList :: Vector a -> List ( Int, a )    [297:1-297:14]   id: author/project:Vector.toIndexedList   sig: Vector v0 -> List ( Int, v0 )   kinds: v0:any   group: author/project:Vector.toIndexedList nonrec ann
+  297:15-297:16 PVar v :: Vector a
+  298:5-298:38 Call :: List ( Int, a )
+    298:5-298:18 VarTopLevel :: Int -> Vector a -> List ( Int, a ) -> List ( Int, a )   callee: author/project:Vector.toIndexedHelp   use: gen   instance: a1 := a   sig#: ce3e9cdb   subst: v0 := <<author/project:Vector.toIndexedList|v0>>
+    298:20-298:32 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      298:20-298:28 Call :: Int
+        298:20-298:26 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: gen   instance: a2 := a   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.toIndexedList|v0>>
+        298:27-298:28 VarLocal :: Vector a
+      298:31-298:32 Int :: Int
+    298:34-298:35 VarLocal :: Vector a
+    298:36-298:38 List :: List ( Int, a )
+def append :: Vector a -> Vector a -> Vector a    [103:1-103:7]   id: author/project:Vector.append   sig: Vector v0 -> Vector v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.append rec ann
+  103:8-103:9 PVar a :: Vector a
+  103:10-103:11 PVar b :: Vector a
+  104:5-104:15 Call :: Vector a
+    104:5-104:11 VarTopLevel :: Vector a -> Vector a -> Vector a   callee: author/project:Vector.append   use: rec   sig#: 6766b6a4   subst: v0 := <<author/project:Vector.append|v0>>
+    104:12-104:13 VarLocal :: Vector a
+    104:14-104:15 VarLocal :: Vector a
+def slice :: Int -> Int -> Vector a -> Vector a    [98:1-98:6]   id: author/project:Vector.slice   sig: Int -> Int -> Vector v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.slice rec ann
+  98:7-98:11 PVar from :: Int
+  98:12-98:14 PVar to :: Int
+  98:15-98:16 PVar v :: Vector a
+  99:5-99:20 Call :: Vector a
+    99:5-99:10 VarTopLevel :: Int -> Int -> Vector a -> Vector a   callee: author/project:Vector.slice   use: rec   sig#: 76b7d331   subst: v0 := <<author/project:Vector.slice|v0>>
+    99:11-99:15 VarLocal :: Int
+    99:16-99:18 VarLocal :: Int
+    99:19-99:20 VarLocal :: Vector a
+def foldr :: (a -> b -> b) -> b -> Vector a -> b    [247:1-247:6]   id: author/project:Vector.foldr   sig: (v0 -> v1 -> v1) -> v1 -> Vector v0 -> v1   kinds: v0:any,v1:any   group: author/project:Vector.foldr nonrec ann
+  247:7-247:8 PVar f :: a -> b -> b
+  247:9-247:12 PVar acc :: b
+  247:13-247:14 PVar v :: Vector a
+  248:5-248:37 Call :: b
+    248:5-248:14 VarTopLevel :: Int -> (a -> b -> b) -> b -> Vector a -> b   callee: author/project:Vector.foldrHelp   use: gen   instance: a1 := a, b1 := b   sig#: 0002ad9b   subst: v0 := <<author/project:Vector.foldr|v0>>, v1 := <<author/project:Vector.foldr|v1>>
+    248:16-248:28 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      248:16-248:24 Call :: Int
+        248:16-248:22 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: gen   instance: a2 := a   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.foldr|v0>>
+        248:23-248:24 VarLocal :: Vector a
+      248:27-248:28 Int :: Int
+    248:30-248:31 VarLocal :: a -> b -> b
+    248:32-248:35 VarLocal :: b
+    248:36-248:37 VarLocal :: Vector a
+def foldl :: (a -> b -> b) -> b -> Vector a -> b    [231:1-231:6]   id: author/project:Vector.foldl   sig: (v0 -> v1 -> v1) -> v1 -> Vector v0 -> v1   kinds: v0:any,v1:any   group: author/project:Vector.foldl nonrec ann
+  231:7-231:8 PVar f :: a -> b -> b
+  231:9-231:12 PVar acc :: b
+  231:13-231:14 PVar v :: Vector a
+  232:5-232:35 Call :: b
+    232:5-232:14 VarTopLevel :: Int -> Int -> (a -> b -> b) -> b -> Vector a -> b   callee: author/project:Vector.foldlHelp   use: gen   instance: a1 := a, b1 := b   sig#: 1114ee5d   subst: v0 := <<author/project:Vector.foldl|v0>>, v1 := <<author/project:Vector.foldl|v1>>
+    232:15-232:16 Int :: Int
+    232:18-232:26 Call :: Int
+      232:18-232:24 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: gen   instance: a2 := a   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.foldl|v0>>
+      232:25-232:26 VarLocal :: Vector a
+    232:28-232:29 VarLocal :: a -> b -> b
+    232:30-232:33 VarLocal :: b
+    232:34-232:35 VarLocal :: Vector a
+def empty :: Vector a    [49:1-49:6]   id: author/project:Vector.empty   sig: Vector v0   kinds: v0:any   group: author/project:Vector.empty nonrec ann
+  50:5-50:21 VarCtor :: Vector a   callee: author/project:Vector.FicVectorBuiltin   instance: a := a   sig#: 36ada11f   subst: v0 := <<author/project:Vector.empty|v0>>
+def swap :: Int -> Int -> Vector a -> Vector a    [83:1-83:5]   id: author/project:Vector.swap   sig: Int -> Int -> Vector v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.swap rec ann
+  83:6-83:7 PVar i :: Int
+  83:8-83:9 PVar j :: Int
+  83:10-83:11 PVar v :: Vector a
+  84:5-84:15 Call :: Vector a
+    84:5-84:9 VarTopLevel :: Int -> Int -> Vector a -> Vector a   callee: author/project:Vector.swap   use: rec   sig#: 76b7d331   subst: v0 := <<author/project:Vector.swap|v0>>
+    84:10-84:11 VarLocal :: Int
+    84:12-84:13 VarLocal :: Int
+    84:14-84:15 VarLocal :: Vector a
+def reverseInPlace :: Int -> Vector a -> Vector a    [282:1-282:15]   id: author/project:Vector.reverseInPlace   sig: Int -> Vector v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.reverseInPlace rec ann
+  282:16-282:17 PVar i :: Int
+  282:18-282:19 PVar v :: Vector a
+  def j :: Int    [284:9-284:10]   id: author/project:Vector.j@284:9   sig: Int   kinds:    group: author/project:Vector.j@284:9 nonrec inferred
+    285:13-285:29 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      285:13-285:25 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        285:13-285:21 Call :: Int
+          285:13-285:19 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: gen   instance: a1 := a   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.reverseInPlace|v0>>
+          285:20-285:21 VarLocal :: Vector a
+        285:24-285:25 Int :: Int
+      285:28-285:29 VarLocal :: Int
+  287:5-291:44 If :: Vector a
+    287:8-287:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      287:8-287:9 VarLocal :: Int
+      287:13-287:14 VarLocal :: Int   callee: author/project:Vector.j@284:9   use: gen
+    288:9-288:10 VarLocal :: Vector a
+    291:9-291:43 Call :: Vector a
+      291:9-291:23 VarTopLevel :: Int -> Vector a -> Vector a   callee: author/project:Vector.reverseInPlace   use: rec   sig#: 6c156ea3   subst: v0 := <<author/project:Vector.reverseInPlace|v0>>
+      291:25-291:30 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        291:25-291:26 VarLocal :: Int
+        291:29-291:30 Int :: Int
+      291:33-291:43 Call :: Vector a
+        291:33-291:37 VarTopLevel :: Int -> Int -> Vector a -> Vector a   callee: author/project:Vector.swap   use: gen   instance: a2 := a   sig#: 76b7d331   subst: v0 := <<author/project:Vector.reverseInPlace|v0>>
+        291:38-291:39 VarLocal :: Int
+        291:40-291:41 VarLocal :: Int   callee: author/project:Vector.j@284:9   use: gen
+        291:42-291:43 VarLocal :: Vector a
+def push :: a -> Vector a -> Vector a    [90:1-90:5]   id: author/project:Vector.push   sig: v0 -> Vector v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.push rec ann
+  90:6-90:7 PVar x :: a
+  90:8-90:9 PVar v :: Vector a
+  91:5-91:13 Call :: Vector a
+    91:5-91:9 VarTopLevel :: a -> Vector a -> Vector a   callee: author/project:Vector.push   use: rec   sig#: dd6303d9   subst: v0 := <<author/project:Vector.push|v0>>
+    91:10-91:11 VarLocal :: a
+    91:12-91:13 VarLocal :: Vector a
+def mapHelp :: Int -> Int -> (a -> b) -> Vector a -> Vector b -> Vector b    [206:1-206:8]   id: author/project:Vector.mapHelp   sig: Int -> Int -> (v0 -> v1) -> Vector v0 -> Vector v1 -> Vector v1   kinds: v0:any,v1:any   group: author/project:Vector.mapHelp rec ann
+  206:9-206:10 PVar i :: Int
+  206:11-206:12 PVar n :: Int
+  206:13-206:14 PVar f :: a -> b
+  206:15-206:16 PVar v :: Vector a
+  206:17-206:20 PVar acc :: Vector b
+  207:5-211:61 If :: Vector b
+    207:8-207:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      207:8-207:9 VarLocal :: Int
+      207:13-207:14 VarLocal :: Int
+    208:9-208:12 VarLocal :: Vector b
+    211:9-211:60 Call :: Vector b
+      211:9-211:16 VarTopLevel :: Int -> Int -> (a -> b) -> Vector a -> Vector b -> Vector b   callee: author/project:Vector.mapHelp   use: rec   sig#: c3ae0231   subst: v0 := <<author/project:Vector.mapHelp|v0>>, v1 := <<author/project:Vector.mapHelp|v1>>
+      211:18-211:23 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        211:18-211:19 VarLocal :: Int
+        211:22-211:23 Int :: Int
+      211:25-211:26 VarLocal :: Int
+      211:27-211:28 VarLocal :: a -> b
+      211:29-211:30 VarLocal :: Vector a
+      211:32-211:60 Call :: Vector b
+        211:32-211:36 VarTopLevel :: b -> Vector b -> Vector b   callee: author/project:Vector.push   use: gen   instance: a1 := b   sig#: dd6303d9   subst: v0 := <<author/project:Vector.mapHelp|v1>>
+        211:38-211:54 Call :: b
+          211:38-211:39 VarLocal :: a -> b
+          211:41-211:54 Call :: a
+            211:41-211:50 VarTopLevel :: Int -> Vector a -> a   callee: author/project:Vector.unsafeGet   use: gen   instance: a2 := a   sig#: 430fd360   subst: v0 := <<author/project:Vector.mapHelp|v0>>
+            211:51-211:52 VarLocal :: Int
+            211:53-211:54 VarLocal :: Vector a
+        211:57-211:60 VarLocal :: Vector b
+def singleton :: a -> Vector a    [151:1-151:10]   id: author/project:Vector.singleton   sig: v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.singleton nonrec ann
+  151:11-151:12 PVar x :: a
+  152:5-152:27 Call :: Vector a
+    152:5-152:9 VarTopLevel :: a -> Vector a -> Vector a   callee: author/project:Vector.push   use: gen   instance: a1 := a   sig#: dd6303d9   subst: v0 := <<author/project:Vector.singleton|v0>>
+    152:10-152:11 VarLocal :: a
+    152:13-152:27 Call :: Vector a
+      152:13-152:25 VarTopLevel :: Int -> Vector a   callee: author/project:Vector.withCapacity   use: gen   instance: a2 := a   sig#: ba4bfc0f   subst: v0 := <<author/project:Vector.singleton|v0>>
+      152:26-152:27 Int :: Int
+def filterHelp :: Int -> (a -> Bool) -> Vector a -> Vector a -> Vector a    [269:1-269:11]   id: author/project:Vector.filterHelp   sig: Int -> (v0 -> Bool) -> Vector v0 -> Vector v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.filterHelp rec ann
+  269:12-269:13 PVar i :: Int
+  269:14-269:15 PVar p :: a -> Bool
+  269:16-269:17 PVar v :: Vector a
+  269:18-269:21 PVar acc :: Vector a
+  270:5-278:65 If :: Vector a
+    270:8-270:13 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      270:8-270:9 VarLocal :: Int
+      270:12-270:13 Int :: Int
+    271:9-271:12 VarLocal :: Vector a
+    def x :: a    [275:13-275:14]   id: author/project:Vector.x@275:13   sig: <<author/project:Vector.filterHelp|v0>>   kinds: v0:any   group: author/project:Vector.x@275:13 nonrec inferred
+      276:17-276:30 Call :: a
+        276:17-276:26 VarTopLevel :: Int -> Vector a -> a   callee: author/project:Vector.unsafeGet   use: gen   instance: a1 := a   sig#: 430fd360   subst: v0 := <<author/project:Vector.filterHelp|v0>>
+        276:27-276:28 VarLocal :: Int
+        276:29-276:30 VarLocal :: Vector a
+    278:9-278:64 Call :: Vector a
+      278:9-278:19 VarTopLevel :: Int -> (a -> Bool) -> Vector a -> Vector a -> Vector a   callee: author/project:Vector.filterHelp   use: rec   sig#: b7e1cac0   subst: v0 := <<author/project:Vector.filterHelp|v0>>
+      278:21-278:26 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        278:21-278:22 VarLocal :: Int
+        278:25-278:26 Int :: Int
+      278:28-278:29 VarLocal :: a -> Bool
+      278:30-278:31 VarLocal :: Vector a
+      278:33-278:64 If :: Vector a
+        278:36-278:39 Call :: Bool
+          278:36-278:37 VarLocal :: a -> Bool
+          278:38-278:39 VarLocal :: a   callee: author/project:Vector.x@275:13   use: gen
+        278:45-278:55 Call :: Vector a
+          278:45-278:49 VarTopLevel :: a -> Vector a -> Vector a   callee: author/project:Vector.push   use: gen   instance: a2 := a   sig#: dd6303d9   subst: v0 := <<author/project:Vector.filterHelp|v0>>
+          278:50-278:51 VarLocal :: a   callee: author/project:Vector.x@275:13   use: gen
+          278:52-278:55 VarLocal :: Vector a
+        278:61-278:64 VarLocal :: Vector a
+def filter :: (a -> Bool) -> Vector a -> Vector a    [264:1-264:7]   id: author/project:Vector.filter   sig: (v0 -> Bool) -> Vector v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.filter nonrec ann
+  264:8-264:9 PVar p :: a -> Bool
+  264:10-264:11 PVar v :: Vector a
+  265:5-265:58 Call :: Vector a
+    265:5-265:19 VarTopLevel :: Int -> Vector a -> Vector a   callee: author/project:Vector.reverseInPlace   use: gen   instance: a1 := a   sig#: 6c156ea3   subst: v0 := <<author/project:Vector.filter|v0>>
+    265:20-265:21 Int :: Int
+    265:23-265:58 Call :: Vector a
+      265:23-265:33 VarTopLevel :: Int -> (a -> Bool) -> Vector a -> Vector a -> Vector a   callee: author/project:Vector.filterHelp   use: gen   instance: a2 := a   sig#: b7e1cac0   subst: v0 := <<author/project:Vector.filter|v0>>
+      265:35-265:47 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        265:35-265:43 Call :: Int
+          265:35-265:41 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: gen   instance: a3 := a   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.filter|v0>>
+          265:42-265:43 VarLocal :: Vector a
+        265:46-265:47 Int :: Int
+      265:49-265:50 VarLocal :: a -> Bool
+      265:51-265:52 VarLocal :: Vector a
+      265:53-265:58 VarTopLevel :: Vector a   callee: author/project:Vector.empty   use: gen   instance: a4 := a   sig#: 36ada11f   subst: v0 := <<author/project:Vector.filter|v0>>
+def repeatHelp :: Int -> a -> Vector a -> Vector a    [192:1-192:11]   id: author/project:Vector.repeatHelp   sig: Int -> v0 -> Vector v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.repeatHelp rec ann
+  192:12-192:13 PVar n :: Int
+  192:14-192:15 PVar x :: a
+  192:16-192:19 PVar acc :: Vector a
+  193:5-197:36 If :: Vector a
+    193:8-193:23 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      193:8-193:18 Call :: Int
+        193:8-193:14 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: gen   instance: a1 := a   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.repeatHelp|v0>>
+        193:15-193:18 VarLocal :: Vector a
+      193:22-193:23 VarLocal :: Int
+    194:9-194:12 VarLocal :: Vector a
+    197:9-197:35 Call :: Vector a
+      197:9-197:19 VarTopLevel :: Int -> a -> Vector a -> Vector a   callee: author/project:Vector.repeatHelp   use: rec   sig#: f4fb5478   subst: v0 := <<author/project:Vector.repeatHelp|v0>>
+      197:20-197:21 VarLocal :: Int
+      197:22-197:23 VarLocal :: a
+      197:25-197:35 Call :: Vector a
+        197:25-197:29 VarTopLevel :: a -> Vector a -> Vector a   callee: author/project:Vector.push   use: gen   instance: a2 := a   sig#: dd6303d9   subst: v0 := <<author/project:Vector.repeatHelp|v0>>
+        197:30-197:31 VarLocal :: a
+        197:32-197:35 VarLocal :: Vector a
+def repeat :: Int -> a -> Vector a    [183:1-183:7]   id: author/project:Vector.repeat   sig: Int -> v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.repeat nonrec ann
+  183:8-183:9 PVar n :: Int
+  183:10-183:11 PVar x :: a
+  184:5-188:40 If :: Vector a
+    184:8-184:14 Binop :: Bool   callee: elm/core:Basics.le   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      184:8-184:9 VarLocal :: Int
+      184:13-184:14 Int :: Int
+    185:9-185:14 VarTopLevel :: Vector a   callee: author/project:Vector.empty   use: gen   instance: a1 := a   sig#: 36ada11f   subst: v0 := <<author/project:Vector.repeat|v0>>
+    188:9-188:39 Call :: Vector a
+      188:9-188:19 VarTopLevel :: Int -> a -> Vector a -> Vector a   callee: author/project:Vector.repeatHelp   use: gen   instance: a2 := a   sig#: f4fb5478   subst: v0 := <<author/project:Vector.repeat|v0>>
+      188:20-188:21 VarLocal :: Int
+      188:22-188:23 VarLocal :: a
+      188:25-188:39 Call :: Vector a
+        188:25-188:37 VarTopLevel :: Int -> Vector a   callee: author/project:Vector.withCapacity   use: gen   instance: a3 := a   sig#: ba4bfc0f   subst: v0 := <<author/project:Vector.repeat|v0>>
+        188:38-188:39 VarLocal :: Int
+def indexedMapHelp :: Int -> Int -> (Int -> a -> b) -> Vector a -> Vector b -> Vector b    [220:1-220:15]   id: author/project:Vector.indexedMapHelp   sig: Int -> Int -> (Int -> v0 -> v1) -> Vector v0 -> Vector v1 -> Vector v1   kinds: v0:any,v1:any   group: author/project:Vector.indexedMapHelp rec ann
+  220:16-220:17 PVar i :: Int
+  220:18-220:19 PVar n :: Int
+  220:20-220:21 PVar f :: Int -> a -> b
+  220:22-220:23 PVar v :: Vector a
+  220:24-220:27 PVar acc :: Vector b
+  221:5-225:70 If :: Vector b
+    221:8-221:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      221:8-221:9 VarLocal :: Int
+      221:13-221:14 VarLocal :: Int
+    222:9-222:12 VarLocal :: Vector b
+    225:9-225:69 Call :: Vector b
+      225:9-225:23 VarTopLevel :: Int -> Int -> (Int -> a -> b) -> Vector a -> Vector b -> Vector b   callee: author/project:Vector.indexedMapHelp   use: rec   sig#: 93d29975   subst: v0 := <<author/project:Vector.indexedMapHelp|v0>>, v1 := <<author/project:Vector.indexedMapHelp|v1>>
+      225:25-225:30 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        225:25-225:26 VarLocal :: Int
+        225:29-225:30 Int :: Int
+      225:32-225:33 VarLocal :: Int
+      225:34-225:35 VarLocal :: Int -> a -> b
+      225:36-225:37 VarLocal :: Vector a
+      225:39-225:69 Call :: Vector b
+        225:39-225:43 VarTopLevel :: b -> Vector b -> Vector b   callee: author/project:Vector.push   use: gen   instance: a1 := b   sig#: dd6303d9   subst: v0 := <<author/project:Vector.indexedMapHelp|v1>>
+        225:45-225:63 Call :: b
+          225:45-225:46 VarLocal :: Int -> a -> b
+          225:47-225:48 VarLocal :: Int
+          225:50-225:63 Call :: a
+            225:50-225:59 VarTopLevel :: Int -> Vector a -> a   callee: author/project:Vector.unsafeGet   use: gen   instance: a2 := a   sig#: 430fd360   subst: v0 := <<author/project:Vector.indexedMapHelp|v0>>
+            225:60-225:61 VarLocal :: Int
+            225:62-225:63 VarLocal :: Vector a
+        225:66-225:69 VarLocal :: Vector b
+def indexedMap :: (Int -> a -> b) -> Vector a -> Vector b    [215:1-215:11]   id: author/project:Vector.indexedMap   sig: (Int -> v0 -> v1) -> Vector v0 -> Vector v1   kinds: v0:any,v1:any   group: author/project:Vector.indexedMap nonrec ann
+  215:12-215:13 PVar f :: Int -> a -> b
+  215:14-215:15 PVar v :: Vector a
+  216:5-216:60 Call :: Vector b
+    216:5-216:19 VarTopLevel :: Int -> Int -> (Int -> a -> b) -> Vector a -> Vector b -> Vector b   callee: author/project:Vector.indexedMapHelp   use: gen   instance: a1 := a, b1 := b   sig#: 93d29975   subst: v0 := <<author/project:Vector.indexedMap|v0>>, v1 := <<author/project:Vector.indexedMap|v1>>
+    216:20-216:21 Int :: Int
+    216:23-216:31 Call :: Int
+      216:23-216:29 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: gen   instance: a2 := a   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.indexedMap|v0>>
+      216:30-216:31 VarLocal :: Vector a
+    216:33-216:34 VarLocal :: Int -> a -> b
+    216:35-216:36 VarLocal :: Vector a
+    216:38-216:60 Call :: Vector b
+      216:38-216:50 VarTopLevel :: Int -> Vector b   callee: author/project:Vector.withCapacity   use: gen   instance: a3 := b   sig#: ba4bfc0f   subst: v0 := <<author/project:Vector.indexedMap|v1>>
+      216:52-216:60 Call :: Int
+        216:52-216:58 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: gen   instance: a2 := a   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.indexedMap|v0>>
+        216:59-216:60 VarLocal :: Vector a
+def initializeHelp :: Int -> Int -> (Int -> a) -> Vector a -> Vector a    [172:1-172:15]   id: author/project:Vector.initializeHelp   sig: Int -> Int -> (Int -> v0) -> Vector v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.initializeHelp rec ann
+  172:16-172:17 PVar i :: Int
+  172:18-172:19 PVar n :: Int
+  172:20-172:21 PVar f :: Int -> a
+  172:22-172:25 PVar acc :: Vector a
+  173:5-177:52 If :: Vector a
+    173:8-173:14 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      173:8-173:9 VarLocal :: Int
+      173:13-173:14 VarLocal :: Int
+    174:9-174:12 VarLocal :: Vector a
+    177:9-177:51 Call :: Vector a
+      177:9-177:23 VarTopLevel :: Int -> Int -> (Int -> a) -> Vector a -> Vector a   callee: author/project:Vector.initializeHelp   use: rec   sig#: fd6a3d30   subst: v0 := <<author/project:Vector.initializeHelp|v0>>
+      177:25-177:30 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        177:25-177:26 VarLocal :: Int
+        177:29-177:30 Int :: Int
+      177:32-177:33 VarLocal :: Int
+      177:34-177:35 VarLocal :: Int -> a
+      177:37-177:51 Call :: Vector a
+        177:37-177:41 VarTopLevel :: a -> Vector a -> Vector a   callee: author/project:Vector.push   use: gen   instance: a1 := a   sig#: dd6303d9   subst: v0 := <<author/project:Vector.initializeHelp|v0>>
+        177:43-177:46 Call :: a
+          177:43-177:44 VarLocal :: Int -> a
+          177:45-177:46 VarLocal :: Int
+        177:48-177:51 VarLocal :: Vector a
+def initialize :: Int -> (Int -> a) -> Vector a    [163:1-163:11]   id: author/project:Vector.initialize   sig: Int -> (Int -> v0) -> Vector v0   kinds: v0:any   group: author/project:Vector.initialize nonrec ann
+  163:12-163:13 PVar n :: Int
+  163:14-163:15 PVar f :: Int -> a
+  164:5-168:46 If :: Vector a
+    164:8-164:14 Binop :: Bool   callee: elm/core:Basics.le   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      164:8-164:9 VarLocal :: Int
+      164:13-164:14 Int :: Int
+    165:9-165:14 VarTopLevel :: Vector a   callee: author/project:Vector.empty   use: gen   instance: a1 := a   sig#: 36ada11f   subst: v0 := <<author/project:Vector.initialize|v0>>
+    168:9-168:45 Call :: Vector a
+      168:9-168:23 VarTopLevel :: Int -> Int -> (Int -> a) -> Vector a -> Vector a   callee: author/project:Vector.initializeHelp   use: gen   instance: a2 := a   sig#: fd6a3d30   subst: v0 := <<author/project:Vector.initialize|v0>>
+      168:24-168:25 Int :: Int
+      168:26-168:27 VarLocal :: Int
+      168:28-168:29 VarLocal :: Int -> a
+      168:31-168:45 Call :: Vector a
+        168:31-168:43 VarTopLevel :: Int -> Vector a   callee: author/project:Vector.withCapacity   use: gen   instance: a3 := a   sig#: ba4bfc0f   subst: v0 := <<author/project:Vector.initialize|v0>>
+        168:44-168:45 VarLocal :: Int
+def set :: Int -> a -> Vector a -> Vector a    [76:1-76:4]   id: author/project:Vector.set   sig: Int -> v0 -> Vector v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.set rec ann
+  76:5-76:6 PVar i :: Int
+  76:7-76:8 PVar x :: a
+  76:9-76:10 PVar v :: Vector a
+  77:5-77:14 Call :: Vector a
+    77:5-77:8 VarTopLevel :: Int -> a -> Vector a -> Vector a   callee: author/project:Vector.set   use: rec   sig#: f4fb5478   subst: v0 := <<author/project:Vector.set|v0>>
+    77:9-77:10 VarLocal :: Int
+    77:11-77:12 VarLocal :: a
+    77:13-77:14 VarLocal :: Vector a
+def update :: Int -> (a -> a) -> Vector a -> Vector a    [136:1-136:7]   id: author/project:Vector.update   sig: Int -> (v0 -> v0) -> Vector v0 -> Vector v0   kinds: v0:any   group: author/project:Vector.update nonrec ann
+  136:8-136:9 PVar i :: Int
+  136:10-136:11 PVar f :: a -> a
+  136:12-136:13 PVar v :: Vector a
+  137:5-145:10 If :: Vector a
+    137:8-137:30 Binop :: Bool   callee: elm/core:Basics.and
+      137:8-137:14 Binop :: Bool   callee: elm/core:Basics.le   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        137:8-137:9 Int :: Int
+        137:13-137:14 VarLocal :: Int
+      137:18-137:30 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        137:18-137:19 VarLocal :: Int
+        137:22-137:30 Call :: Int
+          137:22-137:28 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: gen   instance: a1 := a   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.update|v0>>
+          137:29-137:30 VarLocal :: Vector a
+    def x :: a    [139:13-139:14]   id: author/project:Vector.x@139:13   sig: <<author/project:Vector.update|v0>>   kinds: v0:any   group: author/project:Vector.x@139:13 nonrec inferred
+      140:17-140:30 Call :: a
+        140:17-140:26 VarTopLevel :: Int -> Vector a -> a   callee: author/project:Vector.unsafeGet   use: gen   instance: a2 := a   sig#: 430fd360   subst: v0 := <<author/project:Vector.update|v0>>
+        140:27-140:28 VarLocal :: Int
+        140:29-140:30 VarLocal :: Vector a
+    142:9-142:22 Call :: Vector a
+      142:9-142:12 VarTopLevel :: Int -> a -> Vector a -> Vector a   callee: author/project:Vector.set   use: gen   instance: a3 := a   sig#: f4fb5478   subst: v0 := <<author/project:Vector.update|v0>>
+      142:13-142:14 VarLocal :: Int
+      142:16-142:19 Call :: a
+        142:16-142:17 VarLocal :: a -> a
+        142:18-142:19 VarLocal :: a   callee: author/project:Vector.x@139:13   use: gen
+      142:21-142:22 VarLocal :: Vector a
+    145:9-145:10 VarLocal :: Vector a
+def map :: (a -> b) -> Vector a -> Vector b    [201:1-201:4]   id: author/project:Vector.map   sig: (v0 -> v1) -> Vector v0 -> Vector v1   kinds: v0:any,v1:any   group: author/project:Vector.map nonrec ann
+  201:5-201:6 PVar f :: a -> b
+  201:7-201:8 PVar v :: Vector a
+  202:5-202:53 Call :: Vector b
+    202:5-202:12 VarTopLevel :: Int -> Int -> (a -> b) -> Vector a -> Vector b -> Vector b   callee: author/project:Vector.mapHelp   use: gen   instance: a1 := a, b1 := b   sig#: c3ae0231   subst: v0 := <<author/project:Vector.map|v0>>, v1 := <<author/project:Vector.map|v1>>
+    202:13-202:14 Int :: Int
+    202:16-202:24 Call :: Int
+      202:16-202:22 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: gen   instance: a2 := a   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.map|v0>>
+      202:23-202:24 VarLocal :: Vector a
+    202:26-202:27 VarLocal :: a -> b
+    202:28-202:29 VarLocal :: Vector a
+    202:31-202:53 Call :: Vector b
+      202:31-202:43 VarTopLevel :: Int -> Vector b   callee: author/project:Vector.withCapacity   use: gen   instance: a3 := b   sig#: ba4bfc0f   subst: v0 := <<author/project:Vector.map|v1>>
+      202:45-202:53 Call :: Int
+        202:45-202:51 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: gen   instance: a2 := a   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.map|v0>>
+        202:52-202:53 VarLocal :: Vector a
+def get :: Int -> Vector a -> Maybe a    [124:1-124:4]   id: author/project:Vector.get   sig: Int -> Vector v0 -> Maybe v0   kinds: v0:any   group: author/project:Vector.get nonrec ann
+  124:5-124:6 PVar i :: Int
+  124:7-124:8 PVar v :: Vector a
+  125:5-129:16 If :: Maybe a
+    125:8-125:30 Binop :: Bool   callee: elm/core:Basics.and
+      125:8-125:14 Binop :: Bool   callee: elm/core:Basics.le   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        125:8-125:9 Int :: Int
+        125:13-125:14 VarLocal :: Int
+      125:18-125:30 Binop :: Bool   callee: elm/core:Basics.lt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+        125:18-125:19 VarLocal :: Int
+        125:22-125:30 Call :: Int
+          125:22-125:28 VarTopLevel :: Vector a -> Int   callee: author/project:Vector.length   use: gen   instance: a1 := a   sig#: fa6fb87a   subst: v0 := <<author/project:Vector.get|v0>>
+          125:29-125:30 VarLocal :: Vector a
+    126:9-126:28 Call :: Maybe a
+      126:9-126:13 VarCtor :: a -> Maybe a   callee: elm/core:Maybe.Just   instance: a := a   sig#: c14b2381   subst: v0 := <<author/project:Vector.get|v0>>
+      126:15-126:28 Call :: a
+        126:15-126:24 VarTopLevel :: Int -> Vector a -> a   callee: author/project:Vector.unsafeGet   use: gen   instance: a2 := a   sig#: 430fd360   subst: v0 := <<author/project:Vector.get|v0>>
+        126:25-126:26 VarLocal :: Int
+        126:27-126:28 VarLocal :: Vector a
+    129:9-129:16 VarCtor :: Maybe a   callee: elm/core:Maybe.Nothing   instance: a := a   sig#: d83d645a   subst: v0 := <<author/project:Vector.get|v0>>
+init: 0   id: author/project:Vector.ficVectorOverlay   kind: value   reads:    needs:    init-dep: no
+init: 1   id: author/project:Vector.withCapacity   kind: function   reads:    needs:    group: author/project:Vector.withCapacity
+init: 2   id: author/project:Vector.unsafeGet   kind: function   reads:    needs:    group: author/project:Vector.unsafeGet
+init: 3   id: author/project:Vector.toIndexedHelp   kind: function   reads: author/project:Vector.unsafeGet   needs:    group: author/project:Vector.toIndexedHelp
+init: 4   id: author/project:Vector.foldrHelp   kind: function   reads: author/project:Vector.unsafeGet   needs:    group: author/project:Vector.foldrHelp
+init: 5   id: author/project:Vector.foldlHelp   kind: function   reads: author/project:Vector.unsafeGet   needs:    group: author/project:Vector.foldlHelp
+init: 6   id: author/project:Vector.fromList   kind: function   reads:    needs:    group: author/project:Vector.fromList
+init: 7   id: author/project:Vector.toList   kind: function   reads:    needs:    group: author/project:Vector.toList
+init: 8   id: author/project:Vector.length   kind: function   reads:    needs:    group: author/project:Vector.length
+init: 9   id: author/project:Vector.isEmpty   kind: function   reads: author/project:Vector.length   needs: 
+init: 10   id: author/project:Vector.toIndexedList   kind: function   reads: author/project:Vector.toIndexedHelp,author/project:Vector.length   needs: 
+init: 11   id: author/project:Vector.append   kind: function   reads:    needs:    group: author/project:Vector.append
+init: 12   id: author/project:Vector.slice   kind: function   reads:    needs:    group: author/project:Vector.slice
+init: 13   id: author/project:Vector.foldr   kind: function   reads: author/project:Vector.foldrHelp,author/project:Vector.length   needs: 
+init: 14   id: author/project:Vector.foldl   kind: function   reads: author/project:Vector.foldlHelp,author/project:Vector.length   needs: 
+init: 15   id: author/project:Vector.empty   kind: value   reads:    needs:    init-dep: no
+init: 16   id: author/project:Vector.swap   kind: function   reads:    needs:    group: author/project:Vector.swap
+init: 17   id: author/project:Vector.reverseInPlace   kind: function   reads: author/project:Vector.length,author/project:Vector.swap   needs:    group: author/project:Vector.reverseInPlace
+init: 18   id: author/project:Vector.push   kind: function   reads:    needs:    group: author/project:Vector.push
+init: 19   id: author/project:Vector.mapHelp   kind: function   reads: author/project:Vector.unsafeGet,author/project:Vector.push   needs:    group: author/project:Vector.mapHelp
+init: 20   id: author/project:Vector.singleton   kind: function   reads: author/project:Vector.withCapacity,author/project:Vector.push   needs: 
+init: 21   id: author/project:Vector.filterHelp   kind: function   reads: author/project:Vector.unsafeGet,author/project:Vector.push   needs:    group: author/project:Vector.filterHelp
+init: 22   id: author/project:Vector.filter   kind: function   reads: author/project:Vector.length,author/project:Vector.empty,author/project:Vector.reverseInPlace,author/project:Vector.filterHelp   needs: author/project:Vector.empty
+init: 23   id: author/project:Vector.repeatHelp   kind: function   reads: author/project:Vector.length,author/project:Vector.push   needs:    group: author/project:Vector.repeatHelp
+init: 24   id: author/project:Vector.repeat   kind: function   reads: author/project:Vector.withCapacity,author/project:Vector.empty,author/project:Vector.repeatHelp   needs: author/project:Vector.empty
+init: 25   id: author/project:Vector.indexedMapHelp   kind: function   reads: author/project:Vector.unsafeGet,author/project:Vector.push   needs:    group: author/project:Vector.indexedMapHelp
+init: 26   id: author/project:Vector.indexedMap   kind: function   reads: author/project:Vector.withCapacity,author/project:Vector.length,author/project:Vector.indexedMapHelp   needs: 
+init: 27   id: author/project:Vector.initializeHelp   kind: function   reads: author/project:Vector.push   needs:    group: author/project:Vector.initializeHelp
+init: 28   id: author/project:Vector.initialize   kind: function   reads: author/project:Vector.withCapacity,author/project:Vector.empty,author/project:Vector.initializeHelp   needs: author/project:Vector.empty
+init: 29   id: author/project:Vector.set   kind: function   reads:    needs:    group: author/project:Vector.set
+init: 30   id: author/project:Vector.update   kind: function   reads: author/project:Vector.unsafeGet,author/project:Vector.length,author/project:Vector.set   needs: 
+init: 31   id: author/project:Vector.map   kind: function   reads: author/project:Vector.withCapacity,author/project:Vector.length,author/project:Vector.mapHelp   needs: 
+init: 32   id: author/project:Vector.get   kind: function   reads: author/project:Vector.unsafeGet,author/project:Vector.length   needs: 
+
+-- module VecSelf: problems=0 instances=82 instance-failures=0 defaulted=5
+-- equality-uses: total=0 at-function=0
+module author/project:VecSelf
+def viaLetVar :: Vector Int -> Vector Int    [59:1-59:10]   id: author/project:VecSelf.viaLetVar   sig: Vector Int -> Vector Int   kinds:    group: author/project:VecSelf.viaLetVar nonrec ann
+  59:11-59:12 PVar v :: Vector Int
+  60:5-65:11 Call :: Vector Int
+    60:5-60:18 VarForeign :: Vector Int -> Vector Int -> Vector Int   callee: author/project:Vector.append   instance: a := Int   sig#: 6766b6a4   subst: v0 := Int
+    60:19-60:20 VarLocal :: Vector Int
+    def x :: number    [62:13-62:14]   id: author/project:VecSelf.x@62:13   sig: v0   kinds: v0:number   group: author/project:VecSelf.x@62:13 nonrec inferred
+      63:17-63:18 Int :: number
+    65:10-65:11 VarLocal :: Vector Int
+def pushToA :: Array Int -> Array Int -> Array Int    [17:1-17:8]   id: author/project:VecSelf.pushToA   sig: Array Int -> Array Int -> Array Int   kinds:    group: author/project:VecSelf.pushToA nonrec ann
+  17:9-17:10 PVar v :: Array Int
+  17:11-17:12 PVar w :: Array Int
+  18:5-18:34 Call :: Array Int
+    18:5-18:15 VarForeign :: Int -> Array Int -> Array Int   callee: elm/core:Array.push   instance: a := Int   sig#: e0aea4e2   subst: v0 := Int
+    18:17-18:31 Call :: Int
+      18:17-18:29 VarForeign :: Array Int -> Int   callee: elm/core:Array.length   instance: a := Int   sig#: 46a433c9   subst: v0 := Int
+      18:30-18:31 VarLocal :: Array Int
+    18:33-18:34 VarLocal :: Array Int
+def arrHelper :: Array Int -> Array Int    [80:1-80:10]   id: author/project:VecSelf.arrHelper   sig: Array Int -> Array Int   kinds:    group: author/project:VecSelf.arrHelper nonrec ann
+  80:11-80:12 PVar v :: Array Int
+  81:5-81:33 Call :: Array Int
+    81:5-81:12 VarTopLevel :: Array Int -> Array Int -> Array Int   callee: author/project:VecSelf.pushToA   use: gen
+    81:13-81:14 VarLocal :: Array Int
+    81:16-81:33 Call :: Array Int
+      81:16-81:27 VarForeign :: Int -> Int -> Array Int -> Array Int   callee: elm/core:Array.slice   instance: a := Int   sig#: 12a8d856   subst: v0 := Int
+      81:28-81:29 Int :: Int
+      81:30-81:31 Int :: Int
+      81:32-81:33 VarLocal :: Array Int
+def fromLen :: Vector Int -> Vector Int    [32:1-32:8]   id: author/project:VecSelf.fromLen   sig: Vector Int -> Vector Int   kinds:    group: author/project:VecSelf.fromLen nonrec ann
+  32:9-32:10 PVar v :: Vector Int
+  33:5-33:57 Call :: Vector Int
+    33:5-33:18 VarForeign :: Vector Int -> Vector Int -> Vector Int   callee: author/project:Vector.append   instance: a := Int   sig#: 6766b6a4   subst: v0 := Int
+    33:19-33:20 VarLocal :: Vector Int
+    33:22-33:57 Call :: Vector Int
+      33:22-33:37 VarForeign :: List Int -> Vector Int   callee: author/project:Vector.fromList   instance: a := Int   sig#: 87d340af   subst: v0 := Int
+      33:38-33:57 List :: List Int
+        33:40-33:55 Call :: Int
+          33:40-33:53 VarForeign :: Vector Int -> Int   callee: author/project:Vector.length   instance: a := Int   sig#: fa6fb87a   subst: v0 := Int
+          33:54-33:55 VarLocal :: Vector Int
+def viaLet :: Vector Int -> Vector Int    [48:1-48:7]   id: author/project:VecSelf.viaLet   sig: Vector Int -> Vector Int   kinds:    group: author/project:VecSelf.viaLet nonrec ann
+  48:8-48:9 PVar v :: Vector Int
+  49:5-54:25 Call :: Vector Int
+    49:5-49:18 VarForeign :: Vector Int -> Vector Int -> Vector Int   callee: author/project:Vector.append   instance: a := Int   sig#: 6766b6a4   subst: v0 := Int
+    49:19-49:20 VarLocal :: Vector Int
+    def x :: Int    [51:13-51:14]   id: author/project:VecSelf.x@51:13   sig: Int   kinds:    group: author/project:VecSelf.x@51:13 nonrec inferred
+      52:17-52:32 Call :: Int
+        52:17-52:30 VarForeign :: Vector Int -> Int   callee: author/project:Vector.length   instance: a := Int   sig#: fa6fb87a   subst: v0 := Int
+        52:31-52:32 VarLocal :: Vector Int
+    54:10-54:25 Call :: Vector Int
+      54:10-54:21 VarForeign :: Int -> Vector Int -> Vector Int   callee: author/project:Vector.push   instance: a := Int   sig#: dd6303d9   subst: v0 := Int
+      54:22-54:23 VarLocal :: Int   callee: author/project:VecSelf.x@51:13   use: gen
+      54:24-54:25 VarLocal :: Vector Int
+def pushTo :: Vector Int -> Vector Int -> Vector Int    [12:1-12:7]   id: author/project:VecSelf.pushTo   sig: Vector Int -> Vector Int -> Vector Int   kinds:    group: author/project:VecSelf.pushTo nonrec ann
+  12:8-12:9 PVar v :: Vector Int
+  12:10-12:11 PVar w :: Vector Int
+  13:5-13:36 Call :: Vector Int
+    13:5-13:16 VarForeign :: Int -> Vector Int -> Vector Int   callee: author/project:Vector.push   instance: a := Int   sig#: dd6303d9   subst: v0 := Int
+    13:18-13:33 Call :: Int
+      13:18-13:31 VarForeign :: Vector Int -> Int   callee: author/project:Vector.length   instance: a := Int   sig#: fa6fb87a   subst: v0 := Int
+      13:32-13:33 VarLocal :: Vector Int
+    13:35-13:36 VarLocal :: Vector Int
+def mapped :: Vector Int -> Vector Int    [27:1-27:7]   id: author/project:VecSelf.mapped   sig: Vector Int -> Vector Int   kinds:    group: author/project:VecSelf.mapped nonrec ann
+  27:8-27:9 PVar v :: Vector Int
+  28:5-28:49 Call :: Vector Int
+    28:5-28:18 VarForeign :: Vector Int -> Vector Int -> Vector Int   callee: author/project:Vector.append   instance: a := Int   sig#: 6766b6a4   subst: v0 := Int
+    28:19-28:20 VarLocal :: Vector Int
+    28:22-28:49 Call :: Vector Int
+      28:22-28:32 VarForeign :: (Int -> Int) -> Vector Int -> Vector Int   callee: author/project:Vector.map   instance: a := Int, b := Int   sig#: b34cdcb4   subst: v0 := Int, v1 := Int
+      28:34-28:46 Lambda :: Int -> Int
+        28:35-28:36 PVar x :: Int
+        28:40-28:46 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          28:40-28:41 VarLocal :: Int
+          28:44-28:46 Int :: Int
+      28:48-28:49 VarLocal :: Vector Int
+def viaIf :: Bool -> Vector Int -> Vector Int    [37:1-37:6]   id: author/project:VecSelf.viaIf   sig: Bool -> Vector Int -> Vector Int   kinds:    group: author/project:VecSelf.viaIf nonrec ann
+  37:7-37:8 PVar c :: Bool
+  37:9-37:10 PVar v :: Vector Int
+  38:5-43:25 Call :: Vector Int
+    38:5-38:18 VarForeign :: Vector Int -> Vector Int -> Vector Int   callee: author/project:Vector.append   instance: a := Int   sig#: 6766b6a4   subst: v0 := Int
+    38:19-38:20 VarLocal :: Vector Int
+    39:10-43:25 If :: Vector Int
+      39:13-39:14 VarLocal :: Bool
+      40:13-40:14 VarLocal :: Vector Int
+      43:13-43:25 VarForeign :: Vector Int   callee: author/project:Vector.empty   instance: a := Int   sig#: 36ada11f   subst: v0 := Int
+def twice :: Vector Int -> Vector Int    [70:1-70:6]   id: author/project:VecSelf.twice   sig: Vector Int -> Vector Int   kinds:    group: author/project:VecSelf.twice nonrec ann
+  70:7-70:8 PVar v :: Vector Int
+  71:5-71:33 Call :: Vector Int
+    71:5-71:11 VarTopLevel :: Vector Int -> Vector Int -> Vector Int   callee: author/project:VecSelf.pushTo   use: gen
+    71:12-71:13 VarLocal :: Vector Int
+    71:15-71:33 Call :: Vector Int
+      71:15-71:27 VarForeign :: Int -> Int -> Vector Int -> Vector Int   callee: author/project:Vector.slice   instance: a := Int   sig#: 76b7d331   subst: v0 := Int
+      71:28-71:29 Int :: Int
+      71:30-71:31 Int :: Int
+      71:32-71:33 VarLocal :: Vector Int
+def slice :: Int -> Vector Int -> Vector Int    [22:1-22:6]   id: author/project:VecSelf.slice   sig: Int -> Vector Int -> Vector Int   kinds:    group: author/project:VecSelf.slice nonrec ann
+  22:7-22:8 PVar n :: Int
+  22:9-22:10 PVar v :: Vector Int
+  23:5-23:40 Call :: Vector Int
+    23:5-23:18 VarForeign :: Vector Int -> Vector Int -> Vector Int   callee: author/project:Vector.append   instance: a := Int   sig#: 6766b6a4   subst: v0 := Int
+    23:19-23:20 VarLocal :: Vector Int
+    23:22-23:40 Call :: Vector Int
+      23:22-23:34 VarForeign :: Int -> Int -> Vector Int -> Vector Int   callee: author/project:Vector.slice   instance: a := Int   sig#: 76b7d331   subst: v0 := Int
+      23:35-23:36 Int :: Int
+      23:37-23:38 VarLocal :: Int
+      23:39-23:40 VarLocal :: Vector Int
+def fresh :: () -> Vector Int    [85:1-85:6]   id: author/project:VecSelf.fresh   sig: () -> Vector Int   kinds:    group: author/project:VecSelf.fresh nonrec ann
+  85:7-85:8 PAnything :: ()
+  86:5-86:32 Call :: Vector Int
+    86:5-86:20 VarForeign :: List Int -> Vector Int   callee: author/project:Vector.fromList   instance: a := Int   sig#: 87d340af   subst: v0 := Int
+    86:21-86:32 List :: List Int
+      86:23-86:24 Int :: Int
+      86:26-86:27 Int :: Int
+      86:29-86:30 Int :: Int
+def arr :: Array Int -> Array Int    [75:1-75:4]   id: author/project:VecSelf.arr   sig: Array Int -> Array Int   kinds:    group: author/project:VecSelf.arr nonrec ann
+  75:5-75:6 PVar v :: Array Int
+  76:5-76:38 Call :: Array Int
+    76:5-76:17 VarForeign :: Array Int -> Array Int -> Array Int   callee: elm/core:Array.append   instance: a := Int   sig#: 518f4932   subst: v0 := Int
+    76:18-76:19 VarLocal :: Array Int
+    76:21-76:38 Call :: Array Int
+      76:21-76:32 VarForeign :: Int -> Int -> Array Int -> Array Int   callee: elm/core:Array.slice   instance: a := Int   sig#: 12a8d856   subst: v0 := Int
+      76:33-76:34 Int :: Int
+      76:35-76:36 Int :: Int
+      76:37-76:38 VarLocal :: Array Int
+def main :: Program () () ()    [90:1-90:5]   id: author/project:VecSelf.main   sig: Program () () ()   kinds:    group: author/project:VecSelf.main nonrec ann
+  91:5-131:10 Call :: Program () () ()
+    91:5-91:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    92:9-131:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      93:13-128:33 Lambda :: () -> ( (), Cmd () )
+        93:14-93:15 PAnything :: ()
+        def v :: Vector Int    [95:21-95:22]   id: author/project:VecSelf.v@95:21   sig: Vector Int   kinds:    group: author/project:VecSelf.v@95:21 nonrec inferred
+          96:25-96:33 Call :: Vector Int
+            96:25-96:30 VarTopLevel :: () -> Vector Int   callee: author/project:VecSelf.fresh   use: gen
+            96:31-96:33 Unit :: ()
+        119:21-119:22 PAnything :: ( Vector Int, Vector Int )
+        120:25-120:72 Call :: ( Vector Int, Vector Int )
+          120:25-120:34 VarDebug :: String -> ( Vector Int, Vector Int ) -> ( Vector Int, Vector Int )   callee: elm/core:Debug.log   instance: a := ( Vector Int, Vector Int )   sig#: 6ecaa5dd   subst: v0 := ( Vector Int, Vector Int )
+          120:35-120:42 Str :: String
+          120:43-120:72 Pair :: ( Vector Int, Vector Int )
+            120:45-120:52 Call :: Vector Int
+              120:45-120:50 VarTopLevel :: Vector Int -> Vector Int   callee: author/project:VecSelf.twice   use: gen
+              120:51-120:52 VarLocal :: Vector Int   callee: author/project:VecSelf.v@95:21   use: gen
+            120:54-120:69 Call :: Vector Int
+              120:54-120:59 VarTopLevel :: Vector Int -> Vector Int   callee: author/project:VecSelf.twice   use: gen
+              120:61-120:69 Call :: Vector Int
+                120:61-120:66 VarTopLevel :: () -> Vector Int   callee: author/project:VecSelf.fresh   use: gen
+                120:67-120:69 Unit :: ()
+        116:21-116:22 PAnything :: ( Vector Int, Vector Int )
+        117:25-117:84 Call :: ( Vector Int, Vector Int )
+          117:25-117:34 VarDebug :: String -> ( Vector Int, Vector Int ) -> ( Vector Int, Vector Int )   callee: elm/core:Debug.log   instance: a := ( Vector Int, Vector Int )   sig#: 6ecaa5dd   subst: v0 := ( Vector Int, Vector Int )
+          117:35-117:46 Str :: String
+          117:47-117:84 Pair :: ( Vector Int, Vector Int )
+            117:49-117:60 Call :: Vector Int
+              117:49-117:58 VarTopLevel :: Vector Int -> Vector Int   callee: author/project:VecSelf.viaLetVar   use: gen
+              117:59-117:60 VarLocal :: Vector Int   callee: author/project:VecSelf.v@95:21   use: gen
+            117:62-117:81 Call :: Vector Int
+              117:62-117:71 VarTopLevel :: Vector Int -> Vector Int   callee: author/project:VecSelf.viaLetVar   use: gen
+              117:73-117:81 Call :: Vector Int
+                117:73-117:78 VarTopLevel :: () -> Vector Int   callee: author/project:VecSelf.fresh   use: gen
+                117:79-117:81 Unit :: ()
+        113:21-113:22 PAnything :: ( Vector Int, Vector Int )
+        114:25-114:75 Call :: ( Vector Int, Vector Int )
+          114:25-114:34 VarDebug :: String -> ( Vector Int, Vector Int ) -> ( Vector Int, Vector Int )   callee: elm/core:Debug.log   instance: a := ( Vector Int, Vector Int )   sig#: 6ecaa5dd   subst: v0 := ( Vector Int, Vector Int )
+          114:35-114:43 Str :: String
+          114:44-114:75 Pair :: ( Vector Int, Vector Int )
+            114:46-114:54 Call :: Vector Int
+              114:46-114:52 VarTopLevel :: Vector Int -> Vector Int   callee: author/project:VecSelf.viaLet   use: gen
+              114:53-114:54 VarLocal :: Vector Int   callee: author/project:VecSelf.v@95:21   use: gen
+            114:56-114:72 Call :: Vector Int
+              114:56-114:62 VarTopLevel :: Vector Int -> Vector Int   callee: author/project:VecSelf.viaLet   use: gen
+              114:64-114:72 Call :: Vector Int
+                114:64-114:69 VarTopLevel :: () -> Vector Int   callee: author/project:VecSelf.fresh   use: gen
+                114:70-114:72 Unit :: ()
+        110:21-110:22 PAnything :: ( Vector Int, Vector Int, Vector Int )
+        111:25-111:97 Call :: ( Vector Int, Vector Int, Vector Int )
+          111:25-111:34 VarDebug :: String -> ( Vector Int, Vector Int, Vector Int ) -> ( Vector Int, Vector Int, Vector Int )   callee: elm/core:Debug.log   instance: a := ( Vector Int, Vector Int, Vector Int )   sig#: 6ecaa5dd   subst: v0 := ( Vector Int, Vector Int, Vector Int )
+          111:35-111:42 Str :: String
+          111:43-111:97 Triple :: ( Vector Int, Vector Int, Vector Int )
+            111:45-111:57 Call :: Vector Int
+              111:45-111:50 VarTopLevel :: Bool -> Vector Int -> Vector Int   callee: author/project:VecSelf.viaIf   use: gen
+              111:51-111:55 VarCtor :: Bool   callee: elm/core:Basics.True
+              111:56-111:57 VarLocal :: Vector Int   callee: author/project:VecSelf.v@95:21   use: gen
+            111:59-111:72 Call :: Vector Int
+              111:59-111:64 VarTopLevel :: Bool -> Vector Int -> Vector Int   callee: author/project:VecSelf.viaIf   use: gen
+              111:65-111:70 VarCtor :: Bool   callee: elm/core:Basics.False
+              111:71-111:72 VarLocal :: Vector Int   callee: author/project:VecSelf.v@95:21   use: gen
+            111:74-111:94 Call :: Vector Int
+              111:74-111:79 VarTopLevel :: Bool -> Vector Int -> Vector Int   callee: author/project:VecSelf.viaIf   use: gen
+              111:80-111:84 VarCtor :: Bool   callee: elm/core:Basics.True
+              111:86-111:94 Call :: Vector Int
+                111:86-111:91 VarTopLevel :: () -> Vector Int   callee: author/project:VecSelf.fresh   use: gen
+                111:92-111:94 Unit :: ()
+        107:21-107:22 PAnything :: ( Vector Int, Vector Int )
+        108:25-108:78 Call :: ( Vector Int, Vector Int )
+          108:25-108:34 VarDebug :: String -> ( Vector Int, Vector Int ) -> ( Vector Int, Vector Int )   callee: elm/core:Debug.log   instance: a := ( Vector Int, Vector Int )   sig#: 6ecaa5dd   subst: v0 := ( Vector Int, Vector Int )
+          108:35-108:44 Str :: String
+          108:45-108:78 Pair :: ( Vector Int, Vector Int )
+            108:47-108:56 Call :: Vector Int
+              108:47-108:54 VarTopLevel :: Vector Int -> Vector Int   callee: author/project:VecSelf.fromLen   use: gen
+              108:55-108:56 VarLocal :: Vector Int   callee: author/project:VecSelf.v@95:21   use: gen
+            108:58-108:75 Call :: Vector Int
+              108:58-108:65 VarTopLevel :: Vector Int -> Vector Int   callee: author/project:VecSelf.fromLen   use: gen
+              108:67-108:75 Call :: Vector Int
+                108:67-108:72 VarTopLevel :: () -> Vector Int   callee: author/project:VecSelf.fresh   use: gen
+                108:73-108:75 Unit :: ()
+        104:21-104:22 PAnything :: ( Vector Int, Vector Int )
+        105:25-105:75 Call :: ( Vector Int, Vector Int )
+          105:25-105:34 VarDebug :: String -> ( Vector Int, Vector Int ) -> ( Vector Int, Vector Int )   callee: elm/core:Debug.log   instance: a := ( Vector Int, Vector Int )   sig#: 6ecaa5dd   subst: v0 := ( Vector Int, Vector Int )
+          105:35-105:43 Str :: String
+          105:44-105:75 Pair :: ( Vector Int, Vector Int )
+            105:46-105:54 Call :: Vector Int
+              105:46-105:52 VarTopLevel :: Vector Int -> Vector Int   callee: author/project:VecSelf.mapped   use: gen
+              105:53-105:54 VarLocal :: Vector Int   callee: author/project:VecSelf.v@95:21   use: gen
+            105:56-105:72 Call :: Vector Int
+              105:56-105:62 VarTopLevel :: Vector Int -> Vector Int   callee: author/project:VecSelf.mapped   use: gen
+              105:64-105:72 Call :: Vector Int
+                105:64-105:69 VarTopLevel :: () -> Vector Int   callee: author/project:VecSelf.fresh   use: gen
+                105:70-105:72 Unit :: ()
+        101:21-101:22 PAnything :: ( Vector Int, Vector Int )
+        102:25-102:76 Call :: ( Vector Int, Vector Int )
+          102:25-102:34 VarDebug :: String -> ( Vector Int, Vector Int ) -> ( Vector Int, Vector Int )   callee: elm/core:Debug.log   instance: a := ( Vector Int, Vector Int )   sig#: 6ecaa5dd   subst: v0 := ( Vector Int, Vector Int )
+          102:35-102:42 Str :: String
+          102:43-102:76 Pair :: ( Vector Int, Vector Int )
+            102:45-102:54 Call :: Vector Int
+              102:45-102:50 VarTopLevel :: Int -> Vector Int -> Vector Int   callee: author/project:VecSelf.slice   use: gen
+              102:51-102:52 Int :: Int
+              102:53-102:54 VarLocal :: Vector Int   callee: author/project:VecSelf.v@95:21   use: gen
+            102:56-102:73 Call :: Vector Int
+              102:56-102:61 VarTopLevel :: Int -> Vector Int -> Vector Int   callee: author/project:VecSelf.slice   use: gen
+              102:62-102:63 Int :: Int
+              102:65-102:73 Call :: Vector Int
+                102:65-102:70 VarTopLevel :: () -> Vector Int   callee: author/project:VecSelf.fresh   use: gen
+                102:71-102:73 Unit :: ()
+        def a :: Array number    [98:21-98:22]   id: author/project:VecSelf.a@98:21   sig: Array v0   kinds: v0:number   group: author/project:VecSelf.a@98:21 nonrec inferred
+          99:25-99:51 Call :: Array number
+            99:25-99:39 VarForeign :: List number -> Array number   callee: elm/core:Array.fromList   instance: a := number   sig#: ad16019a   subst: v0 := <<author/project:VecSelf.a@98:21|v0>>
+            99:40-99:51 List :: List number
+              99:42-99:43 Int :: number
+              99:45-99:46 Int :: number
+              99:48-99:49 Int :: number
+        125:21-125:22 PAnything :: ( Vector Int, Array Int )   <= ( Vector Int, Array number1 )
+        126:25-126:52 Call :: ( Vector Int, Array Int )   <= ( Vector Int, Array number1 )
+          126:25-126:34 VarDebug :: String -> ( Vector Int, Array Int ) -> ( Vector Int, Array Int )   <= String -> ( Vector Int, Array number1 ) -> ( Vector Int, Array number1 )   callee: elm/core:Debug.log   instance: a := ( Vector Int, Array Int ) (defaulted)   sig#: 6ecaa5dd   subst: v0 := ( Vector Int, Array Int )
+          126:35-126:43 Str :: String
+          126:44-126:52 Pair :: ( Vector Int, Array Int )   <= ( Vector Int, Array number1 )
+            126:46-126:47 VarLocal :: Vector Int   callee: author/project:VecSelf.v@95:21   use: gen
+            126:49-126:50 VarLocal :: Array Int   <= Array number1   callee: author/project:VecSelf.a@98:21   use: gen   instance: number := Int (defaulted)   sig#: d16a3311   subst: v0 := Int
+        122:21-122:22 PAnything :: ( Array Int, Array Int, Array Int )
+        123:25-123:96 Call :: ( Array Int, Array Int, Array Int )
+          123:25-123:34 VarDebug :: String -> ( Array Int, Array Int, Array Int ) -> ( Array Int, Array Int, Array Int )   callee: elm/core:Debug.log   instance: a := ( Array Int, Array Int, Array Int )   sig#: 6ecaa5dd   subst: v0 := ( Array Int, Array Int, Array Int )
+          123:35-123:42 Str :: String
+          123:43-123:96 Triple :: ( Array Int, Array Int, Array Int )
+            123:45-123:50 Call :: Array Int
+              123:45-123:48 VarTopLevel :: Array Int -> Array Int   callee: author/project:VecSelf.arr   use: gen
+              123:49-123:50 VarLocal :: Array Int   callee: author/project:VecSelf.a@98:21   use: gen   instance: number := Int   sig#: d16a3311   subst: v0 := Int
+            123:52-123:63 Call :: Array Int
+              123:52-123:61 VarTopLevel :: Array Int -> Array Int   callee: author/project:VecSelf.arrHelper   use: gen
+              123:62-123:63 VarLocal :: Array Int   callee: author/project:VecSelf.a@98:21   use: gen   instance: number := Int   sig#: d16a3311   subst: v0 := Int
+            123:65-123:93 Call :: Array Int
+              123:65-123:68 VarTopLevel :: Array Int -> Array Int   callee: author/project:VecSelf.arr   use: gen
+              123:70-123:93 Call :: Array Int
+                123:70-123:84 VarForeign :: List Int -> Array Int   callee: elm/core:Array.fromList   instance: a := Int   sig#: ad16019a   subst: v0 := Int
+                123:85-123:93 List :: List Int
+                  123:87-123:88 Int :: Int
+                  123:90-123:91 Int :: Int
+        128:17-128:33 Pair :: ( (), Cmd () )
+          128:19-128:21 Unit :: ()
+          128:23-128:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      129:20-129:43 Lambda :: () -> () -> ( (), Cmd () )
+        129:21-129:22 PAnything :: ()
+        129:23-129:24 PVar m :: ()
+        129:28-129:43 Pair :: ( (), Cmd () )
+          129:30-129:31 VarLocal :: ()
+          129:33-129:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      130:27-130:41 Lambda :: () -> Sub ()
+        130:28-130:29 PAnything :: ()
+        130:33-130:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:VecSelf.viaLetVar   kind: function   reads:    needs: 
+init: 1   id: author/project:VecSelf.pushToA   kind: function   reads:    needs: 
+init: 2   id: author/project:VecSelf.arrHelper   kind: function   reads: author/project:VecSelf.pushToA   needs: 
+init: 3   id: author/project:VecSelf.fromLen   kind: function   reads:    needs: 
+init: 4   id: author/project:VecSelf.viaLet   kind: function   reads:    needs: 
+init: 5   id: author/project:VecSelf.pushTo   kind: function   reads:    needs: 
+init: 6   id: author/project:VecSelf.mapped   kind: function   reads:    needs: 
+init: 7   id: author/project:VecSelf.viaIf   kind: function   reads:    needs: 
+init: 8   id: author/project:VecSelf.twice   kind: function   reads: author/project:VecSelf.pushTo   needs: 
+init: 9   id: author/project:VecSelf.slice   kind: function   reads:    needs: 
+init: 10   id: author/project:VecSelf.fresh   kind: function   reads:    needs: 
+init: 11   id: author/project:VecSelf.arr   kind: function   reads:    needs: 
+init: 12   id: author/project:VecSelf.main   kind: value   reads: author/project:VecSelf.viaLetVar,author/project:VecSelf.arrHelper,author/project:VecSelf.fromLen,author/project:VecSelf.viaLet,author/project:VecSelf.mapped,author/project:VecSelf.viaIf,author/project:VecSelf.twice,author/project:VecSelf.slice,author/project:VecSelf.fresh,author/project:VecSelf.arr   needs:    init-dep: no

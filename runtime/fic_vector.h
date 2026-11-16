@@ -229,6 +229,7 @@ static fic_ref fic_vector_append(fic_ref a, fic_ref b, const char *where) {
   (void)where;
   if (lb == 0) return a;
 #ifdef FIC_RC
+  if (a == b && a->rc == 1) { FIC_RC_DUP(a); r = fic_vector_append(a, b, where); FIC_RC_DROP(b); return r; }      /* the same unique vector twice (the Rc pass never does this): do not free b under the copy */
   if (a->rc == 1) {
     if (FIC_VECTOR(a)->cap >= n) { r = a; FIC_STAT(fic_n_inplace++); }
     else { int64_t g = fic_vector_grown(la); r = fic_vector_move(a, g < n ? n : g); FIC_STAT(fic_n_copied++); }

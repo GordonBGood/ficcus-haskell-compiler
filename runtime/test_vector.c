@@ -89,9 +89,13 @@ int main(void) {
   x = fic_vector_append(c, c, "test");
   CHECK("append v v: the vector is shared for the call, so it is copied; the elements are doubled", x != c && c->rc == 1 && FIC_VECTOR_LEN(x) == 200 && I64(x, 100) == 0 && I64(x, 199) == 297 && fic_n_vcopy == 4);
   fic_drop(c); c = x;
+  { fic_ref u = fic_vector_slice(0, 3, a), w;                 /* a == b with a count of 1 and no room: must not free b under the copy */
+    w = fic_vector_append(u, u, "test");
+    CHECK("append u u with one count: copied, doubled, no use after free", w != NULL && FIC_VECTOR_LEN(w) == 6 && I64(w, 3) == I64(w, 0));
+    fic_drop(w); }
   fic_dup(a);
   x = fic_vector_append(a, b, "test");
-  CHECK("append on a shared vector copies", x != a && FIC_VECTOR_LEN(x) == 200 && I64(x, 100) == 297 && a->rc == 1 && fic_n_vcopy == 5);
+  CHECK("append on a shared vector copies", x != a && FIC_VECTOR_LEN(x) == 200 && I64(x, 100) == 297 && a->rc == 1 && fic_n_vcopy == 6);
   fic_drop(x); fic_drop(a); fic_drop(b); fic_drop(c);
   CHECK("Int vectors: nothing is live", fic_live_objects == live0);
 
@@ -174,7 +178,7 @@ int main(void) {
   CHECK("a chain of 2000 nested vectors is dropped", fic_live_objects == live0);
 
   /* ---- FIC_WARN_COPY ---- */
-  CHECK("copies of shared vectors so far", fic_n_vcopy == 8);
+  CHECK("copies of shared vectors so far", fic_n_vcopy == 9);
 #else
   /* the oracle: every update copies, nothing is freed */
   b = set_i(7, -1, a);

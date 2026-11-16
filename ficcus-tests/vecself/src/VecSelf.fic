@@ -1,0 +1,131 @@
+module VecSelf exposing (main)
+
+import Array exposing (Array)
+import Vector exposing (Vector)
+
+-- B1 of docs/review/REVIEW-1.md: a call that consumes a variable in an owned argument and reads the same variable in a later borrowed
+-- argument. The count must be taken before the later argument is evaluated (it may consume the variable). Every shape of the review,
+-- for Vector and for Array, each on a fresh and on a shared vector (the shared one is printed afterwards: it must be unchanged).
+
+
+pushTo : Vector Int -> Vector Int -> Vector Int
+pushTo v w =
+    Vector.push (Vector.length w) v
+
+
+pushToA : Array Int -> Array Int -> Array Int
+pushToA v w =
+    Array.push (Array.length w) v
+
+
+slice : Int -> Vector Int -> Vector Int
+slice n v =
+    Vector.append v (Vector.slice 0 n v)
+
+
+mapped : Vector Int -> Vector Int
+mapped v =
+    Vector.append v (Vector.map (\x -> x * 10) v)
+
+
+fromLen : Vector Int -> Vector Int
+fromLen v =
+    Vector.append v (Vector.fromList [ Vector.length v ])
+
+
+viaIf : Bool -> Vector Int -> Vector Int
+viaIf c v =
+    Vector.append v
+        (if c then
+            v
+
+         else
+            Vector.empty
+        )
+
+
+viaLet : Vector Int -> Vector Int
+viaLet v =
+    Vector.append v
+        (let
+            x =
+                Vector.length v
+         in
+         Vector.push x v
+        )
+
+
+viaLetVar : Vector Int -> Vector Int
+viaLetVar v =
+    Vector.append v
+        (let
+            x =
+                1
+         in
+         v
+        )
+
+
+twice : Vector Int -> Vector Int
+twice v =
+    pushTo v (Vector.slice 0 1 v)
+
+
+arr : Array Int -> Array Int
+arr v =
+    Array.append v (Array.slice 0 2 v)
+
+
+arrHelper : Array Int -> Array Int
+arrHelper v =
+    pushToA v (Array.slice 0 1 v)
+
+
+fresh : () -> Vector Int
+fresh _ =
+    Vector.fromList [ 1, 2, 3 ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    v =
+                        fresh ()
+
+                    a =
+                        Array.fromList [ 1, 2, 3 ]
+
+                    _ =
+                        Debug.log "slice" ( slice 2 v, slice 2 (fresh ()) )
+
+                    _ =
+                        Debug.log "mapped" ( mapped v, mapped (fresh ()) )
+
+                    _ =
+                        Debug.log "fromLen" ( fromLen v, fromLen (fresh ()) )
+
+                    _ =
+                        Debug.log "viaIf" ( viaIf True v, viaIf False v, viaIf True (fresh ()) )
+
+                    _ =
+                        Debug.log "viaLet" ( viaLet v, viaLet (fresh ()) )
+
+                    _ =
+                        Debug.log "viaLetVar" ( viaLetVar v, viaLetVar (fresh ()) )
+
+                    _ =
+                        Debug.log "twice" ( twice v, twice (fresh ()) )
+
+                    _ =
+                        Debug.log "array" ( arr a, arrHelper a, arr (Array.fromList [ 7, 8 ]) )
+
+                    _ =
+                        Debug.log "shared" ( v, a )
+                in
+                ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

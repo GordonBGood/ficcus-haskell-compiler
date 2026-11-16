@@ -1,4 +1,4 @@
-FIC_STATS: allocs 4060 live 0 peak 2002 dup 37 drop 36 free_slow 24 reuse_hit 0 reuse_miss 0 inplace 1260 copied 2024 pap_steal 0 clo_steal 0 vec_copy 8
+FIC_STATS: allocs 4062 live 0 peak 2002 dup 38 drop 39 free_slow 26 reuse_hit 0 reuse_miss 0 inplace 1260 copied 2025 pap_steal 0 clo_steal 0 vec_copy 9
 ok   an empty vector: length 0, a leaf for the drop
 ok   100 pushes: length 100, capacity 128, the elements
 ok   growth is amortized: 6 moves (4, 8, .. 128), 94 pushes in place, no copy of a shared vector
@@ -15,6 +15,7 @@ ok   slice -3 1000: the last three
 ok   slice 50 40: empty
 ok   append to a unique empty vector moves into a larger one
 ok   append v v: the vector is shared for the call, so it is copied; the elements are doubled
+ok   append u u with one count: copied, doubled, no use after free
 ok   append on a shared vector copies
 ok   Int vectors: nothing is live
 ok   a vector of 1000 bytes with capacity given: no growth, 143 set

@@ -17,7 +17,7 @@ takes of `Vector.update` (elements with references)."""
 import argparse, os, random, subprocess, sys, shutil, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEFAULT = ["fib", "lists", "acc", "clo", "dict", "letnum", "str2", "inl", "clos"]      # inl: the output of Ficcus.Mono.Inline (S7); clos: the twins of Ficcus.Mono.Twin (S7 part 3)
+DEFAULT = ["fib", "lists", "acc", "clo", "dict", "letnum", "str2", "inl", "clos", "vecself"]      # inl: the output of Ficcus.Mono.Inline (S7); clos: the twins of Ficcus.Mono.Twin (S7 part 3)
 
 
 def compile_mutant(elm, home, work, mod, n, prefix=""):
