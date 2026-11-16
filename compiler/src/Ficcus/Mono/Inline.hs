@@ -216,6 +216,19 @@ rw tab (MExpr cls node) =
               case r of
                 Just e' -> do { (k, a, b) <- get; put (k, a + 1, b); return e' }
                 Nothing -> put saved >> return e
+        -- rule (L), decision D6: `Vector.fromList [x1, .., xn]` builds the vector directly (no list): push the elements into a vector of room n
+        MCall (MExpr kc (MKernel "elm/core:Vector.fromList" key)) [MExpr _ (MList xs)] | not (null xs) ->
+          do  (n0, a, b) <- get
+              put (n0, a + 1, b)
+              names <- forM xs (const (fresh "vl"))
+              base <- fresh "vl"
+              let kern nm = MExpr kc (MKernel nm key)
+                  start = MExpr cls (MCall (kern "elm/core:Vector.withCapacity") [MExpr CI64 (MLit (LInt (fromIntegral (length xs))))])
+                  prevs = base : names
+                  final = last (base : names)
+                  chain = foldr (\(x, nm, prev) acc -> MExpr cls (MLetVal nm (MExpr cls (MCall (kern "elm/core:Vector.push") [x, MExpr cls (MLocal prev)])) acc))
+                                (MExpr cls (MLocal final)) (zip3 xs names prevs)
+              return (MExpr cls (MLetVal base start chain))
         -- rule (U): `Vector.update i f v` with a lambda `f` of the same definition is written out, so that `f x` is a direct call
         MCall (MExpr _ (MGlobal c)) [ai, MExpr _ (MGlobal l), av]
           | Just def <- Map.lookup c (tDefs tab), mdName def == updateName, Just body <- mdBody def, [(pi', _), (pf, _), (pv, _)] <- mdParams def

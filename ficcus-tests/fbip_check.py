@@ -362,6 +362,15 @@ bump i n v =
     else
         bump (i + 1) n (Vector.update (modBy (Vector.length v) (i * 7)) (\\x -> x + i) v)
 ''', "Vector.foldl (+) 0 (bump 0 %d (Vector.repeat 100 0))" % N, "4999950000", "allocs <= 20 and vec_copy == 0 and copied == 0 and inplace >= %d" % N),
+    ("vec-literal", '''lit : Int -> Int -> Int -> Int
+lit i n acc =
+    if i >= n then
+        acc
+
+    else
+        lit (i + 1) n (acc + Vector.length (Vector.fromList [ i, i + 1, i * 2 ]) + Vector.foldl (+) 0 (Vector.fromList [ i, 1 ]))
+''', "lit 0 %d 0" % N, "%d" % (N * 3 + (N * (N - 1) // 2) + N),
+     "allocs <= %d + 10 and vec_copy == 0 and copied == 0" % (N * 2)),       # D6: two vectors per round and no list cells (the list would give four more objects each)
     ("dict-insert", '''fill : Int -> Int -> Dict Int Int -> Dict Int Int
 fill i n d =
     if i >= n then
