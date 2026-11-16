@@ -235,7 +235,7 @@ rcNode ctx env live e =
     MLam _ _ -> failRc "internal: a lambda reached the Rc pass" >> return e
     MIf bs final -> rcIf ctx env live cls bs final
     MLetVal n v b
-      | Just v' <- takeCall ctx env v [b] -> rcNode ctx env live (node (MLetVal n v' b))
+      | Just v' <- takeCall ctx env live v [b] -> rcNode ctx env live (node (MLetVal n v' b))
     MLetVal n v b ->
       do  let liveV = Set.union live (Set.delete n (fvNames ctx b))
           v' <- rc ctx env liveV v
@@ -506,7 +506,7 @@ rcCase ctx env live cls s bs =
       , Map.member n env, not (Set.member n live), not (Set.member n (fvNames ctx b)) ->
           rcNode ctx env live (MExpr cls (MLetVal a s (MExpr cls (MCase (MExpr (mRep s) (MLocal a)) [(q, b)]))))
     MLocal n -> do { bs' <- branches (rootOf n) (if Map.member n env then Just n else Nothing) env; return (MExpr cls (MCase s bs')) }
-    _ | Just s' <- takeCall ctx env s (map snd bs) -> rcCase ctx env live cls s' bs
+    _ | Just s' <- takeCall ctx env live s (map snd bs) -> rcCase ctx env live cls s' bs
     _ ->
       do  t <- fresh
           let liveS = Set.union live (Set.unions [ Set.difference (fvNames ctx b) (Set.fromList (map fst (patBinders p))) | (p, b) <- bs ])
@@ -626,12 +626,14 @@ rcCase ctx env live cls s bs =
 --     value does not use `a`, with at most one such update on a path and at least one in all,
 -- the read becomes `unsafeTake i a`: the element is moved out of a unique array, which then holds a placeholder at `i` that nothing can
 -- see (the update overwrites it, a path without the update only drops the array). `a` is only borrowed by the take.
-takeCall :: Ctx -> Env -> MExpr -> [MExpr] -> Maybe MExpr
-takeCall ctx env v rest =
+takeCall :: Ctx -> Env -> Live -> MExpr -> [MExpr] -> Maybe MExpr
+takeCall ctx env live v rest =
   case mNode v of
     MCall h [i, a]
       | takeOn, MKernel name key <- mNode h, Just (takeName, setName) <- takeFor name, elemOk name key
-      , MLocal t <- mNode a, Map.member t env, indexAtom i
+      -- the array must die at its update: when it is used after the whole expression (an inlined `Vector.update` of a vector that the
+      -- caller still holds) the update gets a count first, and the take would empty a vector that is shared afterwards
+      , MLocal t <- mNode a, Map.member t env, not (Set.member t live), indexAtom i
       , Just counts <- mapM (updatesOf setName t i) rest, maximum (0 : counts) == 1 ->
           Just v { mNode = MCall h { mNode = MKernel takeName key } [i, a] }
     _ -> Nothing
