@@ -49,6 +49,7 @@ mark author/project:Vector.foldr   v0=any+element v1=any
 mark author/project:Vector.foldl   v0=any+element v1=any
 mark author/project:Vector.empty   v0=any+element
 mark author/project:Vector.swap   v0=any+element
+mark author/project:Vector.reverseInPlace   v0=any+element
 mark author/project:Vector.push   v0=any+element
 mark author/project:Vector.mapHelp   v0=any+element v1=any+element
 mark author/project:Vector.singleton   v0=any+element

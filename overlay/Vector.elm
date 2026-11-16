@@ -257,16 +257,17 @@ foldrHelp i f acc v =
         foldrHelp (i - 1) f (f (unsafeGet i v) acc) v
 
 
-{-| The elements for which the function is `True`, in order.
+{-| The elements for which the function is `True`, in order. As `Array.filter` (a right fold) the function is called from the last
+element to the first (only `Debug.log` can tell); the kept elements are pushed in that order and the vector is reversed in place.
 -}
 filter : (a -> Bool) -> Vector a -> Vector a
 filter p v =
-    filterHelp 0 (length v) p v empty
+    reverseInPlace 0 (filterHelp (length v - 1) p v empty)
 
 
-filterHelp : Int -> Int -> (a -> Bool) -> Vector a -> Vector a -> Vector a
-filterHelp i n p v acc =
-    if i >= n then
+filterHelp : Int -> (a -> Bool) -> Vector a -> Vector a -> Vector a
+filterHelp i p v acc =
+    if i < 0 then
         acc
 
     else
@@ -274,7 +275,20 @@ filterHelp i n p v acc =
             x =
                 unsafeGet i v
         in
-        filterHelp (i + 1) n p v (if p x then push x acc else acc)
+        filterHelp (i - 1) p v (if p x then push x acc else acc)
+
+
+reverseInPlace : Int -> Vector a -> Vector a
+reverseInPlace i v =
+    let
+        j =
+            length v - 1 - i
+    in
+    if i >= j then
+        v
+
+    else
+        reverseInPlace (i + 1) (swap i j v)
 
 
 {-| The elements with their indices, in order.
