@@ -1,0 +1,3 @@
+{
+ "desc": "a type error inside a member names it T.foo, not the mangled name"
+}

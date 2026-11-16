@@ -1,0 +1,6 @@
+{
+ "desc": "the same calls as export-import, the type comes from a package compiled separately (members travel in the interface)",
+ "deps": [
+  "ficcus/money@1.0.0"
+ ]
+}

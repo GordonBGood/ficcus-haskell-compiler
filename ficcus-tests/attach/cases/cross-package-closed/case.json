@@ -1,0 +1,6 @@
+{
+ "desc": "Vault is exported without (..): its function peek works (it uses the member inside the package), the member secret is not reachable",
+ "deps": [
+  "ficcus/vault@1.0.0"
+ ]
+}

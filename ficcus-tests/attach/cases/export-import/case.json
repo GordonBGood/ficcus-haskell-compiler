@@ -1,0 +1,3 @@
+{
+ "desc": "Money(..) exports the members; called as Money.add (type exposed), Fm.Money.add (alias), Finance.Money.Money.add (module and type)"
+}

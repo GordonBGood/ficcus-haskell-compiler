@@ -1,0 +1,3 @@
+{
+ "desc": "Money without (..) exports the type only: its members are not reachable"
+}

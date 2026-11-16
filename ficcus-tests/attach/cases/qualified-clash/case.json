@@ -1,0 +1,3 @@
+{
+ "desc": "a module Money and a type Money in scope: the module wins for add and double, the type answers for only and toInt, Types.Money.add names the type's add"
+}

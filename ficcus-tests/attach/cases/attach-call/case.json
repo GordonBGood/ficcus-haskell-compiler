@@ -1,0 +1,3 @@
+{
+ "desc": "a type with members; Money.add, Money.zero, pipes, partial application in foldl; a top level `add` coexists with the member"
+}

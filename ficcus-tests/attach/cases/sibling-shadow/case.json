@@ -1,0 +1,3 @@
+{
+ "desc": "A1b: a parameter of a member named like a sibling is shadowing, as for a top level name"
+}

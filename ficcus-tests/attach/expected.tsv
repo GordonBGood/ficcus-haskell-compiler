@@ -1,0 +1,63 @@
+# id	outcome	titles (REJECT) or runs (RUN)	text the compiler output must contain
+attach-call	RUN	js+c	
+same-name-member	RUN	js+c	
+members-recursion	RUN	js+c	
+polymorphic-member	RUN	js+c	
+member-doc-let	RUN	js+c	
+export-import	RUN	js+c	
+import-forms	RUN	js+c	
+qualified-clash	RUN	js+c	
+local-module-shadow	RUN	js+c	
+import-open	RUN	js+c	
+cross-package	RUN	js+c	
+cross-package-closed	REJECT	NAMING ERROR	Vault.secret
+cross-package-closed-ok	RUN	js+c	
+alias-where	REJECT	MEMBERS ON A TYPE ALIAS	wrap the type in a custom type
+dup-member	REJECT	NAME CLASH	The `T` type has multiple `f` members
+unknown-member	REJECT	NAMING ERROR	T.bar
+unknown-no-members	REJECT	NAMING ERROR	I cannot find a `T` import
+missing-definition	REJECT	EXPECTING DEFINITION	foo
+name-mismatch-member	REJECT	NAME MISMATCH	foo
+member-type-error	REJECT	TYPE MISMATCH	`T.foo`
+empty-where	REJECT	UNFINISHED CUSTOM TYPE	where
+closed-export	REJECT	NAMING ERROR	Money.add
+ambiguous-type	REJECT	AMBIGUOUS NAME	two types named `T` are in scope, from `A` and
+alias-where-in-module	ACCEPT		
+no-last-segment	REJECT	NAMING ERROR	Finance.Money
+sibling-unqualified	RUN	js+c	
+sibling-shadow	REJECT	SHADOWING	`f`
+member-cycle	REJECT	CYCLIC DEFINITION	T.a
+constraint-basic	RUN	c	
+constraint-zero-arg	RUN	c	
+constraint-as	RUN	c	
+constraint-chain	RUN	c	
+constraint-poly-member	RUN	c	
+constraint-equality	RUN	c	
+constraint-member-where	RUN	c	
+constraint-modules	RUN	c	
+constraint-package	RUN	c	
+constraint-js	REJECT	CONSTRAINED FUNCTIONS	Main.sum
+constraint-no-member	REJECT	NO MEMBER	add : T -> T -> T
+constraint-no-members-at-all	REJECT	UNKNOWN MEMBER TYPE	The type is a `number` variable, which only the built-in types can be
+constraint-builtin	REJECT	NO MEMBER	built-in types (`Int`
+constraint-record	REJECT	NO MEMBER	built-in types (`Int`
+constraint-wrong-type	REJECT	MEMBER TYPE MISMATCH	T.add
+constraint-missing	REJECT	MISSING CONSTRAINT	a has add : a -> a -> a
+constraint-no-signature	REJECT	UNKNOWN MEMBER TYPE	constraint is never inferred
+constraint-given-mismatch	REJECT	MEMBER TYPE MISMATCH;MEMBER TYPE MISMATCH	the constraint `a has add`
+constraint-clash-top	REJECT	NAME CLASH	a has add as add_
+constraint-clash-two	REJECT	NAME CLASH	b has add as add_
+constraint-twice	REJECT	NAME CLASH	The constraint `a has add` is written twice
+constraint-unused-var	REJECT	UNUSED CONSTRAINT VARIABLE	`b` does not occur in the
+constraint-syntax	REJECT	PROBLEM IN CONSTRAINT	a has add as plus
+constraint-empty	REJECT	UNFINISHED CONSTRAINTS	has
+constraint-member-unsigned	REJECT	MEMBER WITHOUT TYPE ANNOTATION	T.zero
+constraint-closed-type	REJECT	NO MEMBER	to share its members
+constraint-body-error	REJECT	TYPE MISMATCH	add
+constraint-let	REJECT	CONSTRAINTS ON A LOCAL DEFINITION	top-level definition
+constraint-let-mono	RUN	c	
+constraint-let-poly	REJECT	TYPE MISMATCH	
+constraint-flow	RUN	c	
+constraint-flow-package	RUN	c	
+constraint-arg-pattern	REJECT	TYPE MISMATCH	1st argument
+constraint-arg-count	REJECT	BAD TYPE ANNOTATION	can accept 1 argument

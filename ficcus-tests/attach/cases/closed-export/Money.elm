@@ -1,0 +1,12 @@
+module Money exposing (Money, fromInt)
+
+
+type Money = Money Int
+    where
+        add : Money -> Money -> Money
+        add (Money a) (Money b) = Money (a + b)
+
+
+fromInt : Int -> Money
+fromInt =
+    Money

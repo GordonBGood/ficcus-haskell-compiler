@@ -1,0 +1,3 @@
+{
+ "desc": "module exposing (..); imports plain, with alias, and exposing the type only (no constructors); Counter.Counter.inc, C.Counter.value, C.inc"
+}

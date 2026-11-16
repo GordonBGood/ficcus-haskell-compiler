@@ -1,0 +1,7 @@
+{
+ "desc": "A2: the constrained functions come from a package compiled separately (the constrained scheme travels in the interface), the type from another package",
+ "deps": [
+  "ficcus/algebra@1.0.0",
+  "ficcus/money@1.0.0"
+ ]
+}

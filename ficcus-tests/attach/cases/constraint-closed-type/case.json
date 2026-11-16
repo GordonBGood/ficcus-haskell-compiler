@@ -1,0 +1,6 @@
+{
+ "desc": "A2: a type exported without (..) shows no members to the importer, so it cannot satisfy a constraint there",
+ "deps": [
+  "ficcus/vault@1.0.0"
+ ]
+}

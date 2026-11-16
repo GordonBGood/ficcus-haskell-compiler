@@ -1,0 +1,3 @@
+{
+ "desc": "A2: a constrained function calls constrained functions at its own variable (the constraint is passed on), recursion, a local function and a lambda that use the members"
+}
