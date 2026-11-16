@@ -1,4 +1,4 @@
-FIC_STATS: allocs 4062 live 0 peak 2002 dup 38 drop 39 free_slow 26 reuse_hit 0 reuse_miss 0 inplace 1260 copied 2025 pap_steal 0 clo_steal 0 vec_copy 9
+FIC_STATS: allocs 4081 live 0 peak 2002 dup 45 drop 50 free_slow 30 reuse_hit 0 reuse_miss 0 inplace 2259 copied 2037 pap_steal 0 clo_steal 0 vec_copy 9
 ok   an empty vector: length 0, a leaf for the drop
 ok   100 pushes: length 100, capacity 128, the elements
 ok   growth is amortized: 6 moves (4, 8, .. 128), 94 pushes in place, no copy of a shared vector
@@ -13,6 +13,11 @@ ok   push on a shared vector copies, with room to grow
 ok   slice 10 20: ten elements, a new vector
 ok   slice -3 1000: the last three
 ok   slice 50 40: empty
+ok   slice of a unique vector: in place, the same object, the capacity stays
+ok   a push after the trim does not copy
+ok   slice from the end in place, a small result shrinks the block (len * 4 < cap)
+ok   slice to empty
+ok   an in place slice drops the elements outside and keeps the others
 ok   append to a unique empty vector moves into a larger one
 ok   append v v: the vector is shared for the call, so it is copied; the elements are doubled
 ok   append u u with one count: copied, doubled, no use after free

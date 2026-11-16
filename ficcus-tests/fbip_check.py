@@ -342,6 +342,27 @@ app i n v =
     else
         app (i + 1) n (Vector.append v (Vector.singleton i))
 ''', "Vector.length (app 0 %d Vector.empty)" % 20000, "20000", "vec_copy == 0 and inplace >= 20000"),       # the singletons are the allocations
+    # V4 step 4 (docs/STAGE4-FIX1.md): `Vector.slice` consumes its vector; a unique one is cut in place (the capacity stays), a shared one is copied
+    ("vec-slice-window", '''slide : Int -> Int -> Vector Int -> Vector Int
+slide i n v =
+    if i >= n then
+        v
+
+    else
+        slide (i + 1) n (Vector.push i (Vector.slice 1 (Vector.length v) v))
+''', "Vector.foldl (+) 0 (slide 0 %d (Vector.repeat 100 0))" % N, str(sum(range(N - 100, N))), "allocs <= 20 and vec_copy == 0 and copied == 0 and inplace >= 2 * %d" % N),       # a queue: drop the front, push at the back, never a copy
+    ("vec-slice-shared", '''cut : Int -> Int -> Vector Int -> Int -> Int
+cut i n v acc =
+    if i >= n then
+        acc
+
+    else
+        let
+            w =
+                Vector.slice 1 20 v
+        in
+        cut (i + 1) n v (acc + Vector.length w)
+''', "cut 0 1000 (Vector.repeat 20 0) 0", "19000", "allocs >= 1000 and peak <= 12 and copied == 0"),       # v is used again: the slice gets a count first and copies
     ("vec-update-kept", '''keep : Int -> Int -> Vector Int -> Int -> Int
 keep i n v acc =
     if i >= n then

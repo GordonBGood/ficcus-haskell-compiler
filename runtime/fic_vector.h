@@ -18,7 +18,7 @@
 
    Ownership (the signatures are in Ficcus.Mono.Kernel): `set`, `swap`, `push` consume their vector, `set` and `push` also the element
    they store (passed by address; the references in it are moved); `append` consumes its first vector and borrows the second; `slice`
-   borrows; a read gives a borrowed element (the generated code adds the counts), a take moves the element out of a unique vector.
+   consumes its vector (in place when it is unique); a read gives a borrowed element (the generated code adds the counts), a take moves the element out of a unique vector.
 
    Diagnostic (decision D3): every update that copies because the vector is shared counts in `vec_copy` of the FIC_STATS line, and
    with the environment variable FIC_WARN_COPY=1 the first such copy prints one line on stderr with the operation and the function
@@ -210,15 +210,34 @@ static int64_t fic_vector_index(int64_t i, int64_t len) {
   return i > len ? len : i;
 }
 
-/* slice from to v (v borrowed): a new vector */
+/* slice from to v: v is CONSUMED (V4 step 4). A unique vector is cut in place: the elements outside the range lose their counts, the
+   live part moves down to index 0 and the capacity stays, so a trim followed by pushes does not copy again; when the length falls far
+   below the capacity (len * 4 < cap, cap > 64) the live part moves into a smaller block, one copy. A shared vector gives a new
+   vector (as before) and loses one count. Without counts (the oracle) v is only borrowed: a new vector. */
 static fic_ref fic_vector_slice(int64_t from, int64_t to, fic_ref v) {
   int64_t n = FIC_VECTOR(v)->len, a = fic_vector_index(from, n), b = fic_vector_index(to, n);
   fic_ref r;
   if (b < a) b = a;
+#ifdef FIC_RC
+  if (v->rc == 1) {
+    fic_vector *p = FIC_VECTOR(v);
+    int64_t len = b - a, i;
+    if (p->desc != NULL) {
+      for (i = 0; i < a; i++) fic_vector_drop_elem(p->desc, fic_vector_elem(v, i));
+      for (i = b; i < n; i++) fic_vector_drop_elem(p->desc, fic_vector_elem(v, i));
+    }
+    if (a > 0 && len > 0) memmove(p->data, fic_vector_elem(v, a), (size_t)len * p->esize);
+    p->len = len;
+    FIC_STAT(fic_n_inplace++);
+    if (p->cap > 64 && len * 4 < p->cap) { r = fic_vector_move(v, fic_vector_grown(len)); FIC_STAT(fic_n_copied++); return r; }
+    return v;
+  }
+#endif
   r = fic_vector_new(b - a, FIC_VECTOR(v)->esize, FIC_VECTOR(v)->desc);
   if (b > a) memcpy(FIC_VECTOR(r)->data, fic_vector_elem(v, a), (size_t)(b - a) * FIC_VECTOR(v)->esize);
   FIC_VECTOR(r)->len = b - a;
   fic_vector_dup_range(r, 0, b - a);
+  FIC_RC_DROP(v);
   return r;
 }
 

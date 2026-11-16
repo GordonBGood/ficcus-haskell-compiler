@@ -75,20 +75,45 @@ int main(void) {
   c = push_i(1000, a);
   CHECK("push on a shared vector copies, with room to grow", c != a && FIC_VECTOR_LEN(c) == 101 && FIC_VECTOR_LEN(a) == 100 && FIC_VECTOR(c)->cap == 200 && fic_n_vcopy == 3);
   fic_drop(c);
+  FIC_RC_DUP(a);                                            /* slice consumes its vector: keep a */
   c = fic_vector_slice(10, 20, a);
   CHECK("slice 10 20: ten elements, a new vector", FIC_VECTOR_LEN(c) == 10 && I64(c, 0) == 30 && I64(c, 9) == 57 && c != a);
   fic_drop(c);
+  FIC_RC_DUP(a);                                            /* slice consumes its vector: keep a */
   c = fic_vector_slice(-3, 1000, a);
   CHECK("slice -3 1000: the last three", FIC_VECTOR_LEN(c) == 3 && I64(c, 0) == 291);
   fic_drop(c);
+  FIC_RC_DUP(a);                                            /* slice consumes its vector: keep a */
   c = fic_vector_slice(50, 40, a);
   CHECK("slice 50 40: empty", FIC_VECTOR_LEN(c) == 0);
+#ifdef FIC_RC
+  { fic_ref u, w; int64_t cap0; size_t inpl0;
+    u = fic_vector_new(0, sizeof(int64_t), NULL);
+    for (i = 0; i < 1000; i++) u = push_i(i, u);
+    cap0 = FIC_VECTOR(u)->cap; inpl0 = fic_n_inplace;
+    w = fic_vector_slice(300, 900, u);
+    CHECK("slice of a unique vector: in place, the same object, the capacity stays", w == u && FIC_VECTOR_LEN(w) == 600 && I64(w, 0) == 300 && I64(w, 599) == 899 && FIC_VECTOR(w)->cap == cap0 && fic_n_inplace == inpl0 + 1);
+    u = push_i(-1, w);
+    CHECK("a push after the trim does not copy", u == w && FIC_VECTOR_LEN(u) == 601 && I64(u, 600) == -1);
+    w = fic_vector_slice(-3, 10000, u);
+    CHECK("slice from the end in place, a small result shrinks the block (len * 4 < cap)", FIC_VECTOR_LEN(w) == 3 && I64(w, 0) == 898 && I64(w, 2) == -1 && FIC_VECTOR(w)->cap < cap0);
+    w = fic_vector_slice(5, 2, w);
+    CHECK("slice to empty", FIC_VECTOR_LEN(w) == 0);
+    fic_drop(w); }
+  { fic_ref u = fic_vector_new(0, sizeof(fic_ref), &fic_vd_ref), e0, e2, w;
+    for (i = 0; i < 5; i++) u = push_r(box(i), u);
+    e0 = REF(u, 0); e2 = REF(u, 2); fic_dup(e0); fic_dup(e2);
+    w = fic_vector_slice(1, 4, u);
+    CHECK("an in place slice drops the elements outside and keeps the others", w == u && FIC_VECTOR_LEN(w) == 3 && e0->rc == 1 && e2->rc == 2 && REF(w, 1) == e2);
+    fic_drop(e0); fic_drop(e2); fic_drop(w); }
+#endif
   c = fic_vector_append(c, a, "test");
   CHECK("append to a unique empty vector moves into a larger one", FIC_VECTOR_LEN(c) == 100 && I64(c, 99) == 297 && fic_n_vcopy == 3);
   fic_dup(c);                                                /* the same vector twice: one count for the owner, one for the borrower */
   x = fic_vector_append(c, c, "test");
   CHECK("append v v: the vector is shared for the call, so it is copied; the elements are doubled", x != c && c->rc == 1 && FIC_VECTOR_LEN(x) == 200 && I64(x, 100) == 0 && I64(x, 199) == 297 && fic_n_vcopy == 4);
   fic_drop(c); c = x;
+  FIC_RC_DUP(a);
   { fic_ref u = fic_vector_slice(0, 3, a), w;                 /* a == b with a count of 1 and no room: must not free b under the copy */
     w = fic_vector_append(u, u, "test");
     CHECK("append u u with one count: copied, doubled, no use after free", w != NULL && FIC_VECTOR_LEN(w) == 6 && I64(w, 3) == I64(w, 0));
@@ -144,6 +169,7 @@ int main(void) {
   CHECK("take from a shared vector gives a counted copy", x->rc == 2 && REF(a, 1) == x);
   b = set_r(1, x, a);
   CHECK("the set after it copies the vector", b != a && REF(b, 1) == REF(a, 1) && REF(a, 1)->rc == 2);
+  FIC_RC_DUP(a);                                            /* slice consumes its vector: keep a */
   c = fic_vector_slice(1, 3, a);
   CHECK("a slice counts its elements", REF(c, 0)->rc == 3 && REF(c, 1)->rc == 3);
   c = fic_vector_append(c, b, "test");

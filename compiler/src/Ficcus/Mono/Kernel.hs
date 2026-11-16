@@ -114,12 +114,12 @@ regexKernels =
 -- (`forcedExact`; the `Element` mark of Ficcus.Mono.Marks carries that to every function that touches the elements), because the
 -- elements are stored flat in the layout of that type.
 --   set, swap, push consume the vector (in place when unique) and the element they store; append consumes its first vector and
---   borrows the second; unsafeGet returns a borrowed element (`kernelResultBorrowed`); unsafeTake is made by the Rc pass from an
+--   borrows the second; slice consumes its vector (in place when it is unique, V4 step 4: docs/STAGE4-FIX1.md); unsafeGet returns a borrowed element (`kernelResultBorrowed`); unsafeTake is made by the Rc pass from an
 --   unsafeGet (`takeFor`): the element is moved out of a unique vector, the result is owned, the vector is only borrowed.
 vectorKernels :: [(String, Int, String)]
 vectorKernels =
   [ ("empty", 0, ""), ("withCapacity", 1, "s"), ("length", 1, "b"), ("unsafeGet", 2, "sb"), ("unsafeTake", 2, "sb")
-  , ("set", 3, "soo"), ("swap", 3, "sso"), ("push", 2, "oo"), ("slice", 3, "ssb"), ("append", 2, "ob")
+  , ("set", 3, "soo"), ("swap", 3, "sso"), ("push", 2, "oo"), ("slice", 3, "sso"), ("append", 2, "ob")
   , ("fromList", 1, "b"), ("toList", 1, "b") ]
 
 
