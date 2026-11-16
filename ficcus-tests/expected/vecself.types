@@ -517,7 +517,7 @@ init: 30   id: author/project:Vector.update   kind: function   reads: author/pro
 init: 31   id: author/project:Vector.map   kind: function   reads: author/project:Vector.withCapacity,author/project:Vector.length,author/project:Vector.mapHelp   needs: 
 init: 32   id: author/project:Vector.get   kind: function   reads: author/project:Vector.unsafeGet,author/project:Vector.length   needs: 
 
--- module VecSelf: problems=0 instances=82 instance-failures=0 defaulted=5
+-- module VecSelf: problems=0 instances=102 instance-failures=0 defaulted=10
 -- equality-uses: total=0 at-function=0
 module author/project:VecSelf
 def viaLetVar :: Vector Int -> Vector Int    [59:1-59:10]   id: author/project:VecSelf.viaLetVar   sig: Vector Int -> Vector Int   kinds:    group: author/project:VecSelf.viaLetVar nonrec ann
@@ -643,11 +643,70 @@ def arr :: Array Int -> Array Int    [75:1-75:4]   id: author/project:VecSelf.ar
       76:35-76:36 Int :: Int
       76:37-76:38 VarLocal :: Array Int
 def main :: Program () () ()    [90:1-90:5]   id: author/project:VecSelf.main   sig: Program () () ()   kinds:    group: author/project:VecSelf.main nonrec ann
-  91:5-131:10 Call :: Program () () ()
+  91:5-144:10 Call :: Program () () ()
     91:5-91:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
-    92:9-131:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
-      93:13-128:33 Lambda :: () -> ( (), Cmd () )
+    92:9-144:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      93:13-141:33 Lambda :: () -> ( (), Cmd () )
         93:14-93:15 PAnything :: ()
+        def e3 :: Vector ( {}, number )    [135:21-135:23]   id: author/project:VecSelf.e3@135:21   sig: Vector ( {}, v0 )   kinds: v0:number   group: author/project:VecSelf.e3@135:21 nonrec inferred
+          136:25-136:74 Call :: Vector ( {}, number )
+            136:25-136:35 VarForeign :: Int -> ( {}, number ) -> Vector ( {}, number ) -> Vector ( {}, number )   callee: author/project:Vector.set   instance: a := ( {}, number )   sig#: f4fb5478   subst: v0 := ( {}, <<author/project:VecSelf.e3@135:21|v0>> )
+            136:36-136:37 Int :: Int
+            136:38-136:47 Pair :: ( {}, number )
+              136:40-136:42 Record :: {}
+              136:44-136:45 Int :: number
+            136:49-136:74 Call :: Vector ( {}, number )
+              136:49-136:62 VarForeign :: Int -> ( {}, number ) -> Vector ( {}, number )   callee: author/project:Vector.repeat   instance: a := ( {}, number )   sig#: 6d686a6c   subst: v0 := ( {}, <<author/project:VecSelf.e3@135:21|v0>> )
+              136:63-136:64 Int :: Int
+              136:65-136:74 Pair :: ( {}, number )
+                136:67-136:69 Record :: {}
+                136:71-136:72 Int :: number
+        def e2 :: Vector ()    [132:21-132:23]   id: author/project:VecSelf.e2@132:21   sig: Vector ()   kinds:    group: author/project:VecSelf.e2@132:21 nonrec inferred
+          133:25-133:101 Call :: Vector ()
+            133:25-133:38 VarForeign :: Vector () -> Vector () -> Vector ()   callee: author/project:Vector.append   instance: a := ()   sig#: 6766b6a4   subst: v0 := ()
+            133:40-133:62 Call :: Vector ()
+              133:40-133:55 VarForeign :: List () -> Vector ()   callee: author/project:Vector.fromList   instance: a := ()   sig#: 87d340af   subst: v0 := ()
+              133:56-133:62 List :: List ()
+                133:58-133:60 Unit :: ()
+            133:65-133:101 Call :: Vector ()
+              133:65-133:77 VarForeign :: Int -> Int -> Vector () -> Vector ()   callee: author/project:Vector.slice   instance: a := ()   sig#: 76b7d331   subst: v0 := ()
+              133:78-133:79 Int :: Int
+              133:80-133:81 Int :: Int
+              133:83-133:101 Call :: Vector ()
+                133:83-133:96 VarForeign :: Int -> () -> Vector ()   callee: author/project:Vector.repeat   instance: a := ()   sig#: 6d686a6c   subst: v0 := ()
+                133:97-133:98 Int :: Int
+                133:99-133:101 Unit :: ()
+        def e1 :: Vector {}    [129:21-129:23]   id: author/project:VecSelf.e1@129:21   sig: Vector {}   kinds:    group: author/project:VecSelf.e1@129:21 nonrec inferred
+          130:25-130:59 Call :: Vector {}
+            130:25-130:36 VarForeign :: {} -> Vector {} -> Vector {}   callee: author/project:Vector.push   instance: a := {}   sig#: dd6303d9   subst: v0 := {}
+            130:37-130:39 Record :: {}
+            130:41-130:59 Call :: Vector {}
+              130:41-130:54 VarForeign :: Int -> {} -> Vector {}   callee: author/project:Vector.repeat   instance: a := {}   sig#: 6d686a6c   subst: v0 := {}
+              130:55-130:56 Int :: Int
+              130:57-130:59 Record :: {}
+        138:21-138:22 PAnything :: ( ( Vector {}, Int, Vector () ), ( Int, Maybe {} ), Vector ( {}, Int ) )   <= ( ( Vector {}, Int, Vector () ), ( Int, Maybe {} ), Vector ( {}, number1 ) )
+        139:25-139:137 Call :: ( ( Vector {}, Int, Vector () ), ( Int, Maybe {} ), Vector ( {}, Int ) )   <= ( ( Vector {}, Int, Vector () ), ( Int, Maybe {} ), Vector ( {}, number1 ) )
+          139:25-139:34 VarDebug :: String -> ( ( Vector {}, Int, Vector () ), ( Int, Maybe {} ), Vector ( {}, Int ) ) -> ( ( Vector {}, Int, Vector () ), ( Int, Maybe {} ), Vector ( {}, Int ) )   <= String -> ( ( Vector {}, Int, Vector () ), ( Int, Maybe {} ), Vector ( {}, number1 ) ) -> ( ( Vector {}, Int, Vector () ), ( Int, Maybe {} ), Vector ( {}, number1 ) )   callee: elm/core:Debug.log   instance: a := ( ( Vector {}, Int, Vector () ), ( Int, Maybe {} ), Vector ( {}, Int ) ) (defaulted)   sig#: 6ecaa5dd   subst: v0 := ( ( Vector {}, Int, Vector () ), ( Int, Maybe {} ), Vector ( {}, Int ) )
+          139:35-139:42 Str :: String
+          139:43-139:137 Triple :: ( ( Vector {}, Int, Vector () ), ( Int, Maybe {} ), Vector ( {}, Int ) )   <= ( ( Vector {}, Int, Vector () ), ( Int, Maybe {} ), Vector ( {}, number1 ) )
+            139:45-139:73 Triple :: ( Vector {}, Int, Vector () )
+              139:47-139:49 VarLocal :: Vector {}   callee: author/project:VecSelf.e1@129:21   use: gen
+              139:51-139:67 Call :: Int
+                139:51-139:64 VarForeign :: Vector {} -> Int   callee: author/project:Vector.length   instance: a := {}   sig#: fa6fb87a   subst: v0 := {}
+                139:65-139:67 VarLocal :: Vector {}   callee: author/project:VecSelf.e1@129:21   use: gen
+              139:69-139:71 VarLocal :: Vector ()   callee: author/project:VecSelf.e2@132:21   use: gen
+            139:75-139:131 Pair :: ( Int, Maybe {} )
+              139:77-139:111 Call :: Int
+                139:77-139:90 VarForeign :: Vector {} -> Int   callee: author/project:Vector.length   instance: a := {}   sig#: fa6fb87a   subst: v0 := {}
+                139:92-139:111 Call :: Vector {}
+                  139:92-139:105 VarForeign :: Vector {} -> Vector {} -> Vector {}   callee: author/project:Vector.append   instance: a := {}   sig#: 6766b6a4   subst: v0 := {}
+                  139:106-139:108 VarLocal :: Vector {}   callee: author/project:VecSelf.e1@129:21   use: gen
+                  139:109-139:111 VarLocal :: Vector {}   callee: author/project:VecSelf.e1@129:21   use: gen
+              139:114-139:129 Call :: Maybe {}
+                139:114-139:124 VarForeign :: Int -> Vector {} -> Maybe {}   callee: author/project:Vector.get   instance: a := {}   sig#: 9bcc2c86   subst: v0 := {}
+                139:125-139:126 Int :: Int
+                139:127-139:129 VarLocal :: Vector {}   callee: author/project:VecSelf.e1@129:21   use: gen
+            139:133-139:135 VarLocal :: Vector ( {}, Int )   <= Vector ( {}, number1 )   callee: author/project:VecSelf.e3@135:21   use: gen   instance: number := Int (defaulted)   sig#: a4db4553   subst: v0 := Int
         def v :: Vector Int    [95:21-95:22]   id: author/project:VecSelf.v@95:21   sig: Vector Int   kinds:    group: author/project:VecSelf.v@95:21 nonrec inferred
           96:25-96:33 Call :: Vector Int
             96:25-96:30 VarTopLevel :: () -> Vector Int   callee: author/project:VecSelf.fresh   use: gen
@@ -751,20 +810,20 @@ def main :: Program () () ()    [90:1-90:5]   id: author/project:VecSelf.main   
               102:65-102:73 Call :: Vector Int
                 102:65-102:70 VarTopLevel :: () -> Vector Int   callee: author/project:VecSelf.fresh   use: gen
                 102:71-102:73 Unit :: ()
-        def a :: Array number    [98:21-98:22]   id: author/project:VecSelf.a@98:21   sig: Array v0   kinds: v0:number   group: author/project:VecSelf.a@98:21 nonrec inferred
-          99:25-99:51 Call :: Array number
-            99:25-99:39 VarForeign :: List number -> Array number   callee: elm/core:Array.fromList   instance: a := number   sig#: ad16019a   subst: v0 := <<author/project:VecSelf.a@98:21|v0>>
-            99:40-99:51 List :: List number
-              99:42-99:43 Int :: number
-              99:45-99:46 Int :: number
-              99:48-99:49 Int :: number
-        125:21-125:22 PAnything :: ( Vector Int, Array Int )   <= ( Vector Int, Array number1 )
-        126:25-126:52 Call :: ( Vector Int, Array Int )   <= ( Vector Int, Array number1 )
-          126:25-126:34 VarDebug :: String -> ( Vector Int, Array Int ) -> ( Vector Int, Array Int )   <= String -> ( Vector Int, Array number1 ) -> ( Vector Int, Array number1 )   callee: elm/core:Debug.log   instance: a := ( Vector Int, Array Int ) (defaulted)   sig#: 6ecaa5dd   subst: v0 := ( Vector Int, Array Int )
+        def a :: Array number2    [98:21-98:22]   id: author/project:VecSelf.a@98:21   sig: Array v0   kinds: v0:number   group: author/project:VecSelf.a@98:21 nonrec inferred
+          99:25-99:51 Call :: Array number2
+            99:25-99:39 VarForeign :: List number2 -> Array number2   callee: elm/core:Array.fromList   instance: a := number2   sig#: ad16019a   subst: v0 := <<author/project:VecSelf.a@98:21|v0>>
+            99:40-99:51 List :: List number2
+              99:42-99:43 Int :: number2
+              99:45-99:46 Int :: number2
+              99:48-99:49 Int :: number2
+        125:21-125:22 PAnything :: ( Vector Int, Array Int )   <= ( Vector Int, Array number3 )
+        126:25-126:52 Call :: ( Vector Int, Array Int )   <= ( Vector Int, Array number3 )
+          126:25-126:34 VarDebug :: String -> ( Vector Int, Array Int ) -> ( Vector Int, Array Int )   <= String -> ( Vector Int, Array number3 ) -> ( Vector Int, Array number3 )   callee: elm/core:Debug.log   instance: a := ( Vector Int, Array Int ) (defaulted)   sig#: 6ecaa5dd   subst: v0 := ( Vector Int, Array Int )
           126:35-126:43 Str :: String
-          126:44-126:52 Pair :: ( Vector Int, Array Int )   <= ( Vector Int, Array number1 )
+          126:44-126:52 Pair :: ( Vector Int, Array Int )   <= ( Vector Int, Array number3 )
             126:46-126:47 VarLocal :: Vector Int   callee: author/project:VecSelf.v@95:21   use: gen
-            126:49-126:50 VarLocal :: Array Int   <= Array number1   callee: author/project:VecSelf.a@98:21   use: gen   instance: number := Int (defaulted)   sig#: d16a3311   subst: v0 := Int
+            126:49-126:50 VarLocal :: Array Int   <= Array number3   callee: author/project:VecSelf.a@98:21   use: gen   instance: number2 := Int (defaulted)   sig#: d16a3311   subst: v0 := Int
         122:21-122:22 PAnything :: ( Array Int, Array Int, Array Int )
         123:25-123:96 Call :: ( Array Int, Array Int, Array Int )
           123:25-123:34 VarDebug :: String -> ( Array Int, Array Int, Array Int ) -> ( Array Int, Array Int, Array Int )   callee: elm/core:Debug.log   instance: a := ( Array Int, Array Int, Array Int )   sig#: 6ecaa5dd   subst: v0 := ( Array Int, Array Int, Array Int )
@@ -772,10 +831,10 @@ def main :: Program () () ()    [90:1-90:5]   id: author/project:VecSelf.main   
           123:43-123:96 Triple :: ( Array Int, Array Int, Array Int )
             123:45-123:50 Call :: Array Int
               123:45-123:48 VarTopLevel :: Array Int -> Array Int   callee: author/project:VecSelf.arr   use: gen
-              123:49-123:50 VarLocal :: Array Int   callee: author/project:VecSelf.a@98:21   use: gen   instance: number := Int   sig#: d16a3311   subst: v0 := Int
+              123:49-123:50 VarLocal :: Array Int   callee: author/project:VecSelf.a@98:21   use: gen   instance: number2 := Int   sig#: d16a3311   subst: v0 := Int
             123:52-123:63 Call :: Array Int
               123:52-123:61 VarTopLevel :: Array Int -> Array Int   callee: author/project:VecSelf.arrHelper   use: gen
-              123:62-123:63 VarLocal :: Array Int   callee: author/project:VecSelf.a@98:21   use: gen   instance: number := Int   sig#: d16a3311   subst: v0 := Int
+              123:62-123:63 VarLocal :: Array Int   callee: author/project:VecSelf.a@98:21   use: gen   instance: number2 := Int   sig#: d16a3311   subst: v0 := Int
             123:65-123:93 Call :: Array Int
               123:65-123:68 VarTopLevel :: Array Int -> Array Int   callee: author/project:VecSelf.arr   use: gen
               123:70-123:93 Call :: Array Int
@@ -783,18 +842,18 @@ def main :: Program () () ()    [90:1-90:5]   id: author/project:VecSelf.main   
                 123:85-123:93 List :: List Int
                   123:87-123:88 Int :: Int
                   123:90-123:91 Int :: Int
-        128:17-128:33 Pair :: ( (), Cmd () )
-          128:19-128:21 Unit :: ()
-          128:23-128:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
-      129:20-129:43 Lambda :: () -> () -> ( (), Cmd () )
-        129:21-129:22 PAnything :: ()
-        129:23-129:24 PVar m :: ()
-        129:28-129:43 Pair :: ( (), Cmd () )
-          129:30-129:31 VarLocal :: ()
-          129:33-129:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
-      130:27-130:41 Lambda :: () -> Sub ()
-        130:28-130:29 PAnything :: ()
-        130:33-130:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+        141:17-141:33 Pair :: ( (), Cmd () )
+          141:19-141:21 Unit :: ()
+          141:23-141:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      142:20-142:43 Lambda :: () -> () -> ( (), Cmd () )
+        142:21-142:22 PAnything :: ()
+        142:23-142:24 PVar m :: ()
+        142:28-142:43 Pair :: ( (), Cmd () )
+          142:30-142:31 VarLocal :: ()
+          142:33-142:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      143:27-143:41 Lambda :: () -> Sub ()
+        143:28-143:29 PAnything :: ()
+        143:33-143:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
 init: 0   id: author/project:VecSelf.viaLetVar   kind: function   reads:    needs: 
 init: 1   id: author/project:VecSelf.pushToA   kind: function   reads:    needs: 
 init: 2   id: author/project:VecSelf.arrHelper   kind: function   reads: author/project:VecSelf.pushToA   needs: 

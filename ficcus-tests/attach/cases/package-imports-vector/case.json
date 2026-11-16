@@ -1,0 +1,1 @@
+{"desc": "KNOWN LIMIT (STAGE4-FIX1): a package module that imports the core Vector is not found when the package is built; pinned, to be solved with the first Ficcus package", "deps": ["ficcus/vecpkg@1.0.0"]}

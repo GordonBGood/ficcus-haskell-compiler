@@ -61,3 +61,4 @@ constraint-flow	RUN	c
 constraint-flow-package	RUN	c	
 constraint-arg-pattern	REJECT	TYPE MISMATCH	1st argument
 constraint-arg-count	REJECT	BAD TYPE ANNOTATION	can accept 1 argument
+package-imports-vector	REJECT	PROBLEM BUILDING DEPENDENCIES	

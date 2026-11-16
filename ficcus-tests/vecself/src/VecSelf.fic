@@ -124,6 +124,19 @@ main =
 
                     _ =
                         Debug.log "shared" ( v, a )
+
+                    -- B5: elements of size zero ({} and ()), and one that holds one
+                    e1 =
+                        Vector.push {} (Vector.repeat 2 {})
+
+                    e2 =
+                        Vector.append (Vector.fromList [ () ]) (Vector.slice 0 1 (Vector.repeat 3 ()))
+
+                    e3 =
+                        Vector.set 1 ( {}, 5 ) (Vector.repeat 3 ( {}, 0 ))
+
+                    _ =
+                        Debug.log "empty" ( ( e1, Vector.length e1, e2 ), ( Vector.length (Vector.append e1 e1), Vector.get 1 e1 ), e3 )
                 in
                 ( (), Cmd.none )
         , update = \_ m -> ( m, Cmd.none )

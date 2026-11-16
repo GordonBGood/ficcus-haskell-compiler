@@ -313,7 +313,7 @@ boxedClass c = case c of { CStruct _ -> CRef; _ -> c }
 
 structDef :: [Class] -> [String]
 structDef fs =
-  [ "typedef struct { " ++ concat [ classType c ++ " f" ++ show i ++ "; " | (i, c) <- zip [0 :: Int ..] fs ] ++ "} " ++ classType (CStruct fs) ++ ";" ]
+  [ "typedef struct { " ++ (if null fs then "char pad; " else concat [ classType c ++ " f" ++ show i ++ "; " | (i, c) <- zip [0 :: Int ..] fs ]) ++ "} " ++ classType (CStruct fs) ++ ";" ]
 
 
 
@@ -520,10 +520,10 @@ genExpr info e =
           genExpr info b
     MTuple xs ->
       do  vals <- atomsTo info (zip xs (structFields (mRep e) xs))
-          return ("(" ++ classType (mRep e) ++ "){ " ++ List.intercalate ", " vals ++ " }")
+          return ("(" ++ classType (mRep e) ++ "){ " ++ (if null vals then "0" else List.intercalate ", " vals) ++ " }")
     MRecord fs ->
       do  vals <- atomsTo info (zip (map snd fs) (structFields (mRep e) (map snd fs)))
-          return ("(" ++ classType (mRep e) ++ "){ " ++ List.intercalate ", " vals ++ " }")
+          return ("(" ++ classType (mRep e) ++ "){ " ++ (if null vals then "0" else List.intercalate ", " vals) ++ " }")
     _ -> failWith "this expression form is not supported by the C generator yet"
   where
     ifChain t [] final =
@@ -1446,7 +1446,7 @@ jsonBytesCall info cls name key args =
       case c of
         CRef -> "fic_nil()"
         CF64 -> "0.0"
-        CStruct fs -> "{ " ++ List.intercalate ", " (map placeholder fs) ++ " }"
+        CStruct fs -> "{ " ++ (if null fs then "0" else List.intercalate ", " (map placeholder fs)) ++ " }"
         _ -> "0"
 
     readInt how = reader ("fic_bytes_read_int(" ++ how ++ ", ") "int64_t" "0"
@@ -2163,6 +2163,7 @@ genHelper info k name =
                     v <- structField info (clsOf info t) ty i "x"
                     showStmt info ty "b" v
               emit "fic_sb_puts(b, \")\");"
+        TyRecord [] -> emit "fic_sb_puts(b, \"{}\");"          -- Elm prints the empty record as {}
         TyRecord fs ->
           do  emit "fic_sb_puts(b, \"{ \");"
               forM_ (zip [0 :: Int ..] fs) $ \(i, (n, ty)) ->

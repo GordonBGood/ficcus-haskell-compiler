@@ -1,3 +1,4 @@
+empty: ((Vector.fromList [{},{},{}],3,Vector.fromList [(),()]),(6,Just {}),Vector.fromList [({},0),({},5),({},0)])
 twice: (Vector.fromList [1,2,3,1],Vector.fromList [1,2,3,1])
 viaLetVar: (Vector.fromList [1,2,3,1,2,3],Vector.fromList [1,2,3,1,2,3])
 viaLet: (Vector.fromList [1,2,3,1,2,3,3],Vector.fromList [1,2,3,1,2,3,3])
