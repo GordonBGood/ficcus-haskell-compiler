@@ -11,9 +11,9 @@ here = os.path.dirname(os.path.abspath(__file__))
 ws = os.path.abspath(os.path.join(here, "../../../.."))
 sys.set_int_max_str_digits(0)
 
-FULL = dict(FACT=10000, FIB=100000, POW=200000, DIG=209589, REP=10000, DEN=59200)
-ELM = dict(FACT=2000, FIB=10000, POW=20000, DIG=20958, REP=1000, DEN=5920)
-NAMES = ["fact", "fib", "pow3", "build", "tostr", "fromstr", "divmod"]
+FULL = dict(FACT=10000, FIB=100000, POW=200000, DIG=209589, REP=10000, DEN=59200, DDIG=209589, MX=150000, MY=90000)
+ELM = dict(FACT=2000, FIB=100000, POW=100000, DIG=100000, REP=10000, DEN=1183, DDIG=4193, MX=6000, MY=4000)
+NAMES = ["fact", "fib", "pow3", "build", "tostr", "fromstr", "divmod", "mulbig"]
 LABEL = {"fact": "fact10000", "fib": "fib100000", "pow3": "pow3_200000", "build": "build", "tostr": "tostr", "fromstr": "fromstr", "divmod": "divmod"}
 
 
@@ -38,8 +38,13 @@ def expected(name, z):
         return summ("tostr", 3 ** z["DIG"])
     if name == "fromstr":
         return 'fromstr: "odd False"'
+    if name == "mulbig":
+        x, y, acc = 3 ** z["MX"], 7 ** z["MY"], 0
+        for i in range(5):
+            acc += ((x + i) * y) % 1000000007
+        return "mulbig: \"%d\"" % acc
     if name == "divmod":
-        n, d, s = 3 ** z["DIG"], 7 ** z["DEN"], 0
+        n, d, s = 3 ** z["DDIG"], 7 ** z["DEN"], 0
         for i in range(10):
             q, r = divmod(n + i, d)
             s += q + r
@@ -64,20 +69,27 @@ def timed(cmd, env=None, timeout=300, rlimit=True, cwd=None):
         if rlimit:
             resource.setrlimit(resource.RLIMIT_AS, (4 << 30, 4 << 30))
     t0 = time.perf_counter()
-    p = subprocess.Popen(cmd, stdout=out, stderr=err, env=e, preexec_fn=pre, cwd=cwd)
+    tf = tempfile.NamedTemporaryFile(delete=False)
+    tf.close()
+    p = subprocess.Popen(["/usr/bin/time", "-f", "%M", "-o", tf.name] + cmd, stdout=out, stderr=err, env=e, preexec_fn=pre, cwd=cwd, start_new_session=True)
     killed = False
     while True:
         pid, status, ru = os.wait4(p.pid, os.WNOHANG)
         if pid:
             break
         if time.perf_counter() - t0 > timeout:
-            p.kill()
+            os.killpg(p.pid, 9)
             killed = True
         time.sleep(0.005)
     dt = time.perf_counter() - t0
+    try:
+        rss = int(open(tf.name).read().split()[-1])
+    except Exception:
+        rss = 0
+    os.unlink(tf.name)
     out.seek(0)
     err.seek(0)
-    return dict(sec=dt, rss=ru.ru_maxrss, out=out.read().decode(errors="replace"), err=err.read().decode(errors="replace"),
+    return dict(sec=dt, rss=rss, out=out.read().decode(errors="replace"), err=err.read().decode(errors="replace"),
                 code=os.waitstatus_to_exitcode(status), killed=killed)
 
 
@@ -113,18 +125,18 @@ def main():
     for name in names:
         res[name] = {}
         for impl in impls:
-            z = ELM if impl == "elm" else FULL
+            z = ELM if impl in ("elm", "ficcus-s") else FULL
             want = expected(name, z)
-            if impl == "ficcus":
-                f = "%s/%s.fic" % (work, name)
+            if impl in ("ficcus", "ficcus-s"):
+                f = "%s/%s%s.fic" % (work, name, impl[6:])
                 open(f, "w").write(body(name, z, "fic"))
                 bb = here + "/../bbuild.sh"
-                r = sh([bb, f, work + "/" + name + "_fic", "fast"])
+                r = sh([bb, f, work + "/" + name + impl[6:] + "_fic", "fast"])
                 if r.returncode:
                     print(name, "ficcus build failed", r.stdout[-2000:], r.stderr[-2000:]); continue
-                r = sh([bb, f, work + "/" + name + "_fics", "stats"])
-                cmd = [work + "/" + name + "_fic"]
-                st = timed([work + "/" + name + "_fics"], env={"FIC_WARN_COPY": "1"}, timeout=a.timeout)
+                r = sh([bb, f, work + "/" + name + impl[6:] + "_fics", "stats"])
+                cmd = [work + "/" + name + impl[6:] + "_fic"]
+                st = timed([work + "/" + name + impl[6:] + "_fics"], env={"FIC_WARN_COPY": "1"}, timeout=a.timeout)
                 counters = " ".join(l[11:] for l in st["err"].splitlines() if l.startswith("FIC_STATS"))
                 warns = [l for l in st["err"].splitlines() if l.startswith("FIC_WARN_COPY")]
             elif impl == "ref":
@@ -155,7 +167,7 @@ def main():
                     break
             res[name][impl] = dict(median=statistics.median(times) if times else None, min=min(times) if times else None,
                                    max=max(times) if times else None, rss_kb=max(rss) if rss else None, ok=ok, counters=counters,
-                                   copy_warnings=warns, runs=len(times), sizes=(z if impl == "elm" else "full"))
+                                   copy_warnings=warns, runs=len(times), sizes=(z if impl in ("elm", "ficcus-s") else "full"))
             r = res[name][impl]
             print("%-8s %-7s median %.3fs (min %.3f max %.3f) rss %d MB %s %s" % (name, impl, r["median"] or -1, r["min"] or -1, r["max"] or -1,
                   (r["rss_kb"] or 0) // 1024, "OK" if ok else "WRONG", counters[:110]), flush=True)

@@ -1,0 +1,54 @@
+module Main exposing (main)
+
+{- the final conversion of hamnth alone: the exponent triple of the millionth Hamming number to decimal, @N@ times -}
+
+import BigInt
+
+
+type alias Trip =
+    { i : Int, j : Int, k : Int }
+
+
+zero : Trip
+zero =
+    { i = 0, j = 0, k = 0 }
+
+
+
+render : Trip -> String
+render t =
+    BigInt.toString
+        (BigInt.mul
+            (BigInt.mul (BigInt.pow (BigInt.fromInt 2) (BigInt.fromInt t.i)) (BigInt.pow (BigInt.fromInt 3) (BigInt.fromInt t.j)))
+            (BigInt.pow (BigInt.fromInt 5) (BigInt.fromInt t.k))
+        )
+
+
+convLoop : Int -> Trip -> Int -> Int
+convLoop n t acc =
+    if n == 0 then
+        acc
+
+    else
+        convLoop (n - 1) t (acc + String.length (render t))
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    t =
+                        { i = @I@, j = @J@, k = @K@ }
+
+                    s =
+                        convLoop @N@ t 0
+
+                    _ =
+                        Debug.log "conv" s
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

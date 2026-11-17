@@ -19,4 +19,4 @@ divLoop i n d sum =
 
 result : () -> String
 result _ =
-    summary (BigInt.toString (divLoop 0 (BigInt.pow (BigInt.fromInt 3) (BigInt.fromInt @DIG@)) (BigInt.pow (BigInt.fromInt 7) (BigInt.fromInt @DEN@)) (BigInt.fromInt 0)))
+    summary (BigInt.toString (divLoop 0 (BigInt.pow (BigInt.fromInt 3) (BigInt.fromInt @DDIG@)) (BigInt.pow (BigInt.fromInt 7) (BigInt.fromInt @DEN@)) (BigInt.fromInt 0)))
