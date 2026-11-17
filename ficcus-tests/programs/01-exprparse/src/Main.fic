@@ -1,0 +1,314 @@
+module Main exposing (main)
+
+-- Expression parser and evaluator: tokenizer, recursive descent parser (Result, andThen chains), custom type AST, evaluator with
+-- environment (Dict) and error values.
+
+import Dict exposing (Dict)
+
+
+type Token
+    = TNum Int
+    | TId String
+    | TOp Char
+    | TLParen
+    | TRParen
+
+
+type Expr
+    = Num Int
+    | Var String
+    | Bin Char Expr Expr
+    | Neg Expr
+    | Let String Expr Expr
+
+
+tokenize : String -> Result String (List Token)
+tokenize src =
+    tokLoop (String.toList src) []
+
+
+tokLoop : List Char -> List Token -> Result String (List Token)
+tokLoop cs acc =
+    case cs of
+        [] ->
+            Ok (List.reverse acc)
+
+        c :: rest ->
+            if c == ' ' then
+                tokLoop rest acc
+
+            else if Char.isDigit c then
+                let
+                    ( ds, after ) =
+                        spanChars Char.isDigit cs
+                in
+                case String.toInt (String.fromList ds) of
+                    Just n ->
+                        tokLoop after (TNum n :: acc)
+
+                    Nothing ->
+                        Err "bad number"
+
+            else if Char.isAlpha c then
+                let
+                    ( ds, after ) =
+                        spanChars Char.isAlphaNum cs
+                in
+                tokLoop after (TId (String.fromList ds) :: acc)
+
+            else if c == '(' then
+                tokLoop rest (TLParen :: acc)
+
+            else if c == ')' then
+                tokLoop rest (TRParen :: acc)
+
+            else if List.member c [ '+', '-', '*', '/', '%', '=' ] then
+                tokLoop rest (TOp c :: acc)
+
+            else
+                Err ("unexpected character " ++ String.fromChar c)
+
+
+spanChars : (Char -> Bool) -> List Char -> ( List Char, List Char )
+spanChars p cs =
+    case cs of
+        c :: rest ->
+            if p c then
+                let
+                    ( a, b ) =
+                        spanChars p rest
+                in
+                ( c :: a, b )
+
+            else
+                ( [], cs )
+
+        [] ->
+            ( [], [] )
+
+
+type alias P a =
+    List Token -> Result String ( a, List Token )
+
+
+parseExpr : P Expr
+parseExpr ts =
+    case ts of
+        (TId "let") :: (TId name) :: (TOp '=') :: rest ->
+            parseExpr rest
+                |> Result.andThen
+                    (\( bound, r1 ) ->
+                        case r1 of
+                            (TId "in") :: r2 ->
+                                parseExpr r2 |> Result.map (\( body, r3 ) -> ( Let name bound body, r3 ))
+
+                            _ ->
+                                Err "expected in"
+                    )
+
+        _ ->
+            parseSum ts
+
+
+parseSum : P Expr
+parseSum ts =
+    parseTerm ts |> Result.andThen (\( l, r ) -> sumLoop l r)
+
+
+sumLoop : Expr -> List Token -> Result String ( Expr, List Token )
+sumLoop left ts =
+    case ts of
+        (TOp o) :: rest ->
+            if o == '+' || o == '-' then
+                parseTerm rest |> Result.andThen (\( r, r2 ) -> sumLoop (Bin o left r) r2)
+
+            else
+                Ok ( left, ts )
+
+        _ ->
+            Ok ( left, ts )
+
+
+parseTerm : P Expr
+parseTerm ts =
+    parseAtom ts |> Result.andThen (\( l, r ) -> termLoop l r)
+
+
+termLoop : Expr -> List Token -> Result String ( Expr, List Token )
+termLoop left ts =
+    case ts of
+        (TOp o) :: rest ->
+            if o == '*' || o == '/' || o == '%' then
+                parseAtom rest |> Result.andThen (\( r, r2 ) -> termLoop (Bin o left r) r2)
+
+            else
+                Ok ( left, ts )
+
+        _ ->
+            Ok ( left, ts )
+
+
+parseAtom : P Expr
+parseAtom ts =
+    case ts of
+        (TNum n) :: rest ->
+            Ok ( Num n, rest )
+
+        (TId v) :: rest ->
+            Ok ( Var v, rest )
+
+        (TOp '-') :: rest ->
+            parseAtom rest |> Result.map (\( e, r ) -> ( Neg e, r ))
+
+        TLParen :: rest ->
+            parseExpr rest
+                |> Result.andThen
+                    (\( e, r ) ->
+                        case r of
+                            TRParen :: r2 ->
+                                Ok ( e, r2 )
+
+                            _ ->
+                                Err "expected )"
+                    )
+
+        [] ->
+            Err "unexpected end"
+
+        _ ->
+            Err "unexpected token"
+
+
+parse : String -> Result String Expr
+parse src =
+    tokenize src
+        |> Result.andThen parseExpr
+        |> Result.andThen
+            (\( e, rest ) ->
+                if List.isEmpty rest then
+                    Ok e
+
+                else
+                    Err "trailing input"
+            )
+
+
+eval : Dict String Int -> Expr -> Result String Int
+eval env e =
+    case e of
+        Num n ->
+            Ok n
+
+        Var v ->
+            Dict.get v env |> Result.fromMaybe ("unbound " ++ v)
+
+        Neg a ->
+            Result.map negate (eval env a)
+
+        Let v b body ->
+            eval env b |> Result.andThen (\x -> eval (Dict.insert v x env) body)
+
+        Bin o l r ->
+            Result.map2 Tuple.pair (eval env l) (eval env r)
+                |> Result.andThen
+                    (\( x, y ) ->
+                        case o of
+                            '+' ->
+                                Ok (x + y)
+
+                            '-' ->
+                                Ok (x - y)
+
+                            '*' ->
+                                Ok (x * y)
+
+                            '/' ->
+                                if y == 0 then
+                                    Err "division by zero"
+
+                                else
+                                    Ok (x // y)
+
+                            '%' ->
+                                if y == 0 then
+                                    Err "modulo by zero"
+
+                                else
+                                    Ok (modBy y x)
+
+                            _ ->
+                                Err "bad operator"
+                    )
+
+
+show : Expr -> String
+show e =
+    case e of
+        Num n ->
+            String.fromInt n
+
+        Var v ->
+            v
+
+        Neg a ->
+            "-" ++ show a
+
+        Let v b body ->
+            "(let " ++ v ++ " = " ++ show b ++ " in " ++ show body ++ ")"
+
+        Bin o l r ->
+            "(" ++ show l ++ " " ++ String.fromChar o ++ " " ++ show r ++ ")"
+
+
+inputs : List String
+inputs =
+    [ "1 + 2 * 3"
+    , "(1 + 2) * 3"
+    , "10 / (5 - 5)"
+    , "let x = 5 in x * x - 1"
+    , "let x = 2 in let y = x * 10 in y % 7 + z"
+    , "2 * (3 + 4"
+    , "7 $ 3"
+    , "-3 * -(2 + 1)"
+    , "100 - 1 - 1 - 1"
+    , "-7 % 3 + 7 / -2"
+    , "1 2"
+    ]
+
+
+results : List ( String, String )
+results =
+    List.map
+        (\s ->
+            ( s
+            , case parse s of
+                Err m ->
+                    "parse error: " ++ m
+
+                Ok ex ->
+                    show ex
+                        ++ " => "
+                        ++ (case eval (Dict.fromList [ ( "w", 42 ) ]) ex of
+                                Ok n ->
+                                    String.fromInt n
+
+                                Err m ->
+                                    "error: " ++ m
+                           )
+            )
+        )
+        inputs
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

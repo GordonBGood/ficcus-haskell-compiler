@@ -1,0 +1,254 @@
+module Main exposing (main)
+
+-- Backtracking: N-queens (count and first solution), sudoku solver on a flat list with Maybe, subset sum, permutations,
+-- combinations, power set, change making with memo in a Dict, word break.
+
+import Dict exposing (Dict)
+import Set
+
+
+queens : Int -> List (List Int)
+queens n =
+    placeQ n n
+
+
+placeQ : Int -> Int -> List (List Int)
+placeQ n k =
+    if k == 0 then
+        [ [] ]
+
+    else
+        placeQ n (k - 1)
+            |> List.concatMap
+                (\qs -> List.range 1 n |> List.filter (\c -> safe c qs) |> List.map (\c -> c :: qs))
+
+
+safe : Int -> List Int -> Bool
+safe c qs =
+    List.indexedMap (\d q -> q /= c && abs (q - c) /= d + 1) qs |> List.all identity
+
+
+type alias Grid =
+    List Int
+
+
+puzzle : Grid
+puzzle =
+    [ 5, 3, 0, 0, 7, 0, 0, 0, 0
+    , 6, 0, 0, 1, 9, 5, 0, 0, 0
+    , 0, 9, 8, 0, 0, 0, 0, 6, 0
+    , 8, 0, 0, 0, 6, 0, 0, 0, 3
+    , 4, 0, 0, 8, 0, 3, 0, 0, 1
+    , 7, 0, 0, 0, 2, 0, 0, 0, 6
+    , 0, 6, 0, 0, 0, 0, 2, 8, 0
+    , 0, 0, 0, 4, 1, 9, 0, 0, 5
+    , 0, 0, 0, 0, 8, 0, 0, 7, 9
+    ]
+
+
+candidates : Grid -> Int -> List Int
+candidates g i =
+    let
+        r =
+            i // 9
+
+        c =
+            modBy 9 i
+
+        used =
+            List.indexedMap
+                (\j v ->
+                    if v /= 0 && (j // 9 == r || modBy 9 j == c || (j // 27 == r // 3 && modBy 9 j // 3 == c // 3)) then
+                        v
+
+                    else
+                        0
+                )
+                g
+                |> Set.fromList
+    in
+    List.filter (\v -> not (Set.member v used)) (List.range 1 9)
+
+
+setAt : Int -> Int -> Grid -> Grid
+setAt i v =
+    List.indexedMap (\j x -> if i == j then v else x)
+
+
+solve : Grid -> Maybe Grid
+solve g =
+    case firstEmpty g 0 of
+        Nothing ->
+            Just g
+
+        Just i ->
+            tryAll (candidates g i) i g
+
+
+tryAll : List Int -> Int -> Grid -> Maybe Grid
+tryAll cs i g =
+    case cs of
+        [] ->
+            Nothing
+
+        v :: rest ->
+            case solve (setAt i v g) of
+                Just s ->
+                    Just s
+
+                Nothing ->
+                    tryAll rest i g
+
+
+firstEmpty : Grid -> Int -> Maybe Int
+firstEmpty g i =
+    case g of
+        [] ->
+            Nothing
+
+        0 :: _ ->
+            Just i
+
+        _ :: rest ->
+            firstEmpty rest (i + 1)
+
+
+subsetSum : Int -> List Int -> Maybe (List Int)
+subsetSum target xs =
+    case xs of
+        [] ->
+            if target == 0 then Just [] else Nothing
+
+        x :: rest ->
+            case subsetSum (target - x) rest of
+                Just s ->
+                    Just (x :: s)
+
+                Nothing ->
+                    subsetSum target rest
+
+
+permutations : List a -> List (List a)
+permutations xs =
+    case xs of
+        [] ->
+            [ [] ]
+
+        _ ->
+            List.indexedMap (\i x -> List.map ((::) x) (permutations (List.take i xs ++ List.drop (i + 1) xs))) xs |> List.concat
+
+
+combinations : Int -> List a -> List (List a)
+combinations k xs =
+    if k == 0 then
+        [ [] ]
+
+    else
+        case xs of
+            [] ->
+                []
+
+            x :: rest ->
+                List.map ((::) x) (combinations (k - 1) rest) ++ combinations k rest
+
+
+powerSet : List a -> List (List a)
+powerSet xs =
+    case xs of
+        [] ->
+            [ [] ]
+
+        x :: rest ->
+            let
+                ps =
+                    powerSet rest
+            in
+            ps ++ List.map ((::) x) ps
+
+
+change : List Int -> Int -> Dict Int (Maybe Int) -> ( Maybe Int, Dict Int (Maybe Int) )
+change coins amt memo =
+    if amt == 0 then
+        ( Just 0, memo )
+
+    else if amt < 0 then
+        ( Nothing, memo )
+
+    else
+        case Dict.get amt memo of
+            Just r ->
+                ( r, memo )
+
+            Nothing ->
+                let
+                    ( best, memo2 ) =
+                        List.foldl
+                            (\c ( b, m ) ->
+                                let
+                                    ( r, m2 ) =
+                                        change coins (amt - c) m
+                                in
+                                case ( b, r ) of
+                                    ( _, Nothing ) ->
+                                        ( b, m2 )
+
+                                    ( Nothing, Just n ) ->
+                                        ( Just (n + 1), m2 )
+
+                                    ( Just bn, Just n ) ->
+                                        ( Just (min bn (n + 1)), m2 )
+                            )
+                            ( Nothing, memo )
+                            coins
+                in
+                ( best, Dict.insert amt best memo2 )
+
+
+wordBreak : Set.Set String -> String -> List String
+wordBreak dict s =
+    if s == "" then
+        [ "" ]
+
+    else
+        List.range 1 (String.length s)
+            |> List.concatMap
+                (\n ->
+                    let
+                        w =
+                            String.left n s
+                    in
+                    if Set.member w dict then
+                        wordBreak dict (String.dropLeft n s) |> List.map (\rest -> String.trim (w ++ " " ++ rest))
+
+                    else
+                        []
+                )
+
+
+results : List ( String, String )
+results =
+    [ ( "queens counts", Debug.toString (List.map (\n -> List.length (queens n)) [ 1, 2, 3, 4, 5, 6, 7, 8 ]) )
+    , ( "first 8 queens", Debug.toString (List.head (queens 8)) )
+    , ( "sudoku", Debug.toString (solve puzzle |> Maybe.map (\g -> List.take 18 g)) )
+    , ( "sudoku check", Debug.toString (solve puzzle |> Maybe.map (\g -> List.sum g)) )
+    , ( "subset", Debug.toString (subsetSum 30 [ 12, 1, 61, 5, 9, 2, 8, 20 ], subsetSum 3 [ 5, 7 ]) )
+    , ( "permutations", Debug.toString (permutations [ 1, 2, 3 ], List.length (permutations (List.range 1 7))) )
+    , ( "combinations", Debug.toString (combinations 2 [ 'a', 'b', 'c', 'd' ], List.length (combinations 4 (List.range 1 12))) )
+    , ( "power set", Debug.toString (powerSet [ 1, 2, 3 ], List.length (powerSet (List.range 1 12))) )
+    , ( "change", Debug.toString (List.map (\a -> Tuple.first (change [ 1, 5, 10, 25, 50 ] a Dict.empty)) [ 0, 7, 99, 289 ], Tuple.first (change [ 5, 10 ] 3 Dict.empty)) )
+    , ( "word break", Debug.toString (wordBreak (Set.fromList [ "cat", "cats", "and", "sand", "dog" ]) "catsanddog") )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

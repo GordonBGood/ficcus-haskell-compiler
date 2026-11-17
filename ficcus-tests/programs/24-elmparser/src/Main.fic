@@ -1,0 +1,215 @@
+module Main exposing (main)
+
+-- elm/parser: arithmetic with operator precedence (chompIf, succeed |= |.), loop, oneOf with backtracking, sequences, error reporting
+-- (DeadEnd with row/col), a tiny INI/CSV style file parser, mapChompedString, getSource, getOffset, getPosition.
+
+import Parser exposing ((|.), (|=), Parser)
+import Set
+
+
+type Expr
+    = Num Float
+    | Neg Expr
+    | Op Char Expr Expr
+
+
+number : Parser Expr
+number =
+    Parser.number { int = Just (toFloat >> Num), hex = Just (toFloat >> Num), octal = Nothing, binary = Nothing, float = Just Num }
+
+
+atom : Parser Expr
+atom =
+    Parser.oneOf
+        [ number
+        , Parser.succeed identity |. Parser.symbol "(" |. Parser.spaces |= Parser.lazy (\_ -> expr) |. Parser.spaces |. Parser.symbol ")"
+        , Parser.succeed Neg |. Parser.symbol "-" |= Parser.lazy (\_ -> atom)
+        ]
+
+
+binary : List Char -> Parser Expr -> Parser Expr
+binary ops next =
+    next
+        |> Parser.andThen
+            (\first ->
+                Parser.loop first
+                    (\acc ->
+                        Parser.oneOf
+                            [ Parser.succeed (\o r -> Parser.Loop (Op o acc r))
+                                |. Parser.spaces
+                                |= (Parser.getChompedString (Parser.chompIf (\c -> List.member c ops)) |> Parser.map (String.toList >> List.head >> Maybe.withDefault '?'))
+                                |. Parser.spaces
+                                |= next
+                            , Parser.succeed (Parser.Done acc)
+                            ]
+                    )
+            )
+
+
+expr : Parser Expr
+expr =
+    binary [ '+', '-' ] (binary [ '*', '/' ] atom)
+
+
+evalE : Expr -> Float
+evalE e =
+    case e of
+        Num n ->
+            n
+
+        Neg a ->
+            negate (evalE a)
+
+        Op '+' a b ->
+            evalE a + evalE b
+
+        Op '-' a b ->
+            evalE a - evalE b
+
+        Op '*' a b ->
+            evalE a * evalE b
+
+        Op _ a b ->
+            evalE a / evalE b
+
+
+calc : String -> String
+calc s =
+    case Parser.run (Parser.succeed identity |. Parser.spaces |= expr |. Parser.spaces |. Parser.end) s of
+        Ok e ->
+            String.fromFloat (evalE e)
+
+        Err deadEnds ->
+            "error: " ++ String.join "; " (List.map (\d -> String.fromInt d.row ++ ":" ++ String.fromInt d.col ++ " " ++ problem d.problem) deadEnds)
+
+
+problem : Parser.Problem -> String
+problem p =
+    case p of
+        Parser.Expecting s ->
+            "expecting " ++ s
+
+        Parser.ExpectingInt ->
+            "int"
+
+        Parser.ExpectingHex ->
+            "hex"
+
+        Parser.ExpectingOctal ->
+            "octal"
+
+        Parser.ExpectingBinary ->
+            "binary"
+
+        Parser.ExpectingFloat ->
+            "float"
+
+        Parser.ExpectingNumber ->
+            "number"
+
+        Parser.ExpectingVariable ->
+            "variable"
+
+        Parser.ExpectingSymbol s ->
+            "symbol " ++ s
+
+        Parser.ExpectingKeyword s ->
+            "keyword " ++ s
+
+        Parser.ExpectingEnd ->
+            "end"
+
+        Parser.UnexpectedChar ->
+            "unexpected char"
+
+        Parser.Problem s ->
+            "problem " ++ s
+
+        Parser.BadRepeat ->
+            "bad repeat"
+
+
+type alias Entry =
+    { key : String, value : String }
+
+
+ident : Parser String
+ident =
+    Parser.variable { start = Char.isAlpha, inner = \c -> Char.isAlphaNum c || c == '_', reserved = Set.fromList [ "end" ] }
+
+
+ini : Parser (List ( String, List Entry ))
+ini =
+    Parser.loop []
+        (\acc ->
+            Parser.oneOf
+                [ Parser.succeed (\name es -> Parser.Loop (( name, es ) :: acc))
+                    |. Parser.symbol "["
+                    |= ident
+                    |. Parser.symbol "]"
+                    |. Parser.spaces
+                    |= entries
+                , Parser.succeed (Parser.Done (List.reverse acc)) |. Parser.end
+                ]
+        )
+
+
+entries : Parser (List Entry)
+entries =
+    Parser.loop []
+        (\acc ->
+            Parser.oneOf
+                [ Parser.succeed (\k v -> Parser.Loop (Entry k v :: acc))
+                    |= ident
+                    |. Parser.chompWhile (\c -> c == ' ')
+                    |. Parser.symbol "="
+                    |. Parser.chompWhile (\c -> c == ' ')
+                    |= (Parser.getChompedString (Parser.chompWhile (\c -> c /= '\n')))
+                    |. Parser.spaces
+                , Parser.succeed (Parser.Done (List.reverse acc))
+                ]
+        )
+
+
+positions : Parser ( ( Int, Int ), String, Int )
+positions =
+    Parser.succeed (\p1 s o -> ( p1, s, o ))
+        |. Parser.chompWhile (\c -> c /= 'x')
+        |= Parser.getPosition
+        |= Parser.getChompedString (Parser.chompUntil "z")
+        |= Parser.getOffset
+
+
+results : List ( String, String )
+results =
+    [ ( "calc 1", calc "1 + 2 * 3" )
+    , ( "calc 2", calc " (1 + 2) * 3 - -4 / 8 " )
+    , ( "calc 3", calc "2 * (3 + " )
+    , ( "calc 4", calc "1 + * 2" )
+    , ( "calc 5", calc "0x10 + 1.5e2 + 007" )
+    , ( "calc 6", calc "10 / 4 / 5" )
+    , ( "calc 7", calc "1 2" )
+    , ( "ini", Debug.toString (Parser.run ini "[server]\nhost = localhost\nport=8080\n\n[client]\nname = a b c\n") )
+    , ( "ini bad", Debug.toString (Parser.run ini "[server\nhost = x") )
+    , ( "positions", Debug.toString (Parser.run positions "ab\ncdxyz") )
+    , ( "keyword", Debug.toString (Parser.run (Parser.keyword "let") "letter", Parser.run (Parser.keyword "let") "let x") )
+    , ( "sequence", Debug.toString (Parser.run (Parser.sequence { start = "[", separator = ",", end = "]", spaces = Parser.spaces, item = Parser.int, trailing = Parser.Forbidden }) "[ 1, 2 , 3 ]") )
+    , ( "sequence trailing", Debug.toString (Parser.run (Parser.sequence { start = "(", separator = ";", end = ")", spaces = Parser.spaces, item = ident, trailing = Parser.Optional }) "(a; b; c;)") )
+    , ( "mapChompedString", Debug.toString (Parser.run (Parser.mapChompedString Tuple.pair (Parser.chompWhile Char.isDigit)) "123abc") )
+    , ( "backtrackable", Debug.toString (Parser.run (Parser.oneOf [ Parser.backtrackable (Parser.symbol "ab" |. Parser.symbol "c"), Parser.symbol "ab" ]) "abd") )
+    , ( "float", Debug.toString (List.map (Parser.run Parser.float) [ "3.14", "2", "-1.5", "1e3", "x" ]) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

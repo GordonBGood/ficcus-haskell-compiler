@@ -1,0 +1,120 @@
+module Main exposing (main)
+
+-- elm/random with fixed seeds: generators (int, float, uniform, weighted, list, pair, map, andThen, constant), shuffling, a
+-- Monte Carlo estimate, a random walk, step threading; output must equal Elm exactly.
+
+import Random exposing (Generator, Seed)
+
+
+stepN : Int -> Generator a -> Seed -> ( List a, Seed )
+stepN n gen seed =
+    List.foldl (\_ ( acc, s ) -> let ( v, s2 ) = Random.step gen s in ( v :: acc, s2 )) ( [], seed ) (List.range 1 n)
+        |> Tuple.mapFirst List.reverse
+
+
+shuffle : List a -> Generator (List a)
+shuffle xs =
+    case xs of
+        [] ->
+            Random.constant []
+
+        _ ->
+            Random.int 0 (List.length xs - 1)
+                |> Random.andThen
+                    (\i ->
+                        let
+                            picked =
+                                List.drop i xs |> List.head
+                        in
+                        case picked of
+                            Nothing ->
+                                Random.constant xs
+
+                            Just p ->
+                                shuffle (List.take i xs ++ List.drop (i + 1) xs) |> Random.map (\rest -> p :: rest)
+                    )
+
+
+type Card
+    = Card Int Char
+
+
+deck : List Card
+deck =
+    List.concatMap (\s -> List.map (\r -> Card r s) (List.range 1 5)) [ 'H', 'S' ]
+
+
+showCard : Card -> String
+showCard (Card r s) =
+    String.fromInt r ++ String.fromChar s
+
+
+monteCarlo : Int -> Seed -> Float
+monteCarlo n seed =
+    let
+        pointGen =
+            Random.map2 Tuple.pair (Random.float 0 1) (Random.float 0 1)
+
+        ( pts, _ ) =
+            stepN n pointGen seed
+
+        inside =
+            List.length (List.filter (\( x, y ) -> x * x + y * y <= 1) pts)
+    in
+    4 * toFloat inside / toFloat n
+
+
+walk : Int -> Seed -> ( Int, Int )
+walk n seed =
+    let
+        dir =
+            Random.uniform ( 1, 0 ) [ ( -1, 0 ), ( 0, 1 ), ( 0, -1 ) ]
+
+        ( steps, _ ) =
+            stepN n dir seed
+    in
+    List.foldl (\( dx, dy ) ( x, y ) -> ( x + dx, y + dy )) ( 0, 0 ) steps
+
+
+results : List ( String, String )
+results =
+    let
+        s0 =
+            Random.initialSeed 42
+
+        ( ints, s1 ) =
+            stepN 8 (Random.int 1 100) s0
+
+        ( floats, s2 ) =
+            stepN 4 (Random.float -1 1) s1
+    in
+    [ ( "ints", Debug.toString ints )
+    , ( "floats", Debug.toString floats )
+    , ( "continue", Debug.toString (Tuple.first (stepN 3 (Random.int 0 9) s2)) )
+    , ( "other seeds", Debug.toString (List.map (\sd -> Tuple.first (Random.step (Random.int 0 1000000) (Random.initialSeed sd))) [ 0, 1, 2, 12345, 2147483647, -5 ]) )
+    , ( "uniform", Debug.toString (Tuple.first (stepN 10 (Random.uniform 'a' [ 'b', 'c' ]) s0)) )
+    , ( "weighted", Debug.toString (Tuple.first (stepN 12 (Random.weighted ( 10, "rare" ) [ ( 90, "common" ) ]) s0)) )
+    , ( "list", Debug.toString (Tuple.first (Random.step (Random.list 5 (Random.int 0 9)) s0)) )
+    , ( "pair", Debug.toString (Tuple.first (Random.step (Random.pair (Random.int 0 5) (Random.float 0 1)) s0)) )
+    , ( "shuffle", String.join " " (List.map showCard (Tuple.first (Random.step (shuffle deck) s0))) )
+    , ( "big range", Debug.toString (Tuple.first (stepN 4 (Random.int 0 4000000000) s0)) )
+    , ( "negative range", Debug.toString (Tuple.first (stepN 5 (Random.int -50 -40) s0)) )
+    , ( "frequency", Debug.toString (Tuple.first (stepN 6 (Random.map (\b -> if b then 1 else 0) (Random.uniform True [ False ])) s0)) )
+    , ( "monte carlo", String.fromFloat (monteCarlo 20000 (Random.initialSeed 7)) )
+    , ( "walk", Debug.toString (walk 5000 (Random.initialSeed 99)) )
+    , ( "generate+andThen", Debug.toString (Tuple.first (Random.step (Random.int 1 6 |> Random.andThen (\n -> Random.list n (Random.int 1 6))) s0)) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

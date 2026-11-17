@@ -1,0 +1,254 @@
+module Main exposing (main)
+
+-- Mutual recursion: even/odd, a recursive descent over a mutually recursive custom type (Stmt/Expr), local mutual recursion in let,
+-- Collatz, Ackermann, Hofstadter sequences, tokenizer with mutually recursive state functions.
+
+type Expr
+    = Lit Int
+    | Add Expr Expr
+    | Block (List Stmt) Expr
+
+
+type Stmt
+    = Assign String Expr
+    | Print Expr
+    | Loop Int (List Stmt)
+
+
+isEven : Int -> Bool
+isEven n =
+    if n == 0 then
+        True
+
+    else
+        isOdd (n - 1)
+
+
+isOdd : Int -> Bool
+isOdd n =
+    if n == 0 then
+        False
+
+    else
+        isEven (n - 1)
+
+
+evalE : List ( String, Int ) -> Expr -> ( Int, List String )
+evalE env e =
+    case e of
+        Lit n ->
+            ( n, [] )
+
+        Add a b ->
+            let
+                ( x, o1 ) =
+                    evalE env a
+
+                ( y, o2 ) =
+                    evalE env b
+            in
+            ( x + y, o1 ++ o2 )
+
+        Block stmts result ->
+            let
+                ( env2, out ) =
+                    execAll env stmts
+
+                ( v, o ) =
+                    evalE env2 result
+            in
+            ( v, out ++ o )
+
+
+execAll : List ( String, Int ) -> List Stmt -> ( List ( String, Int ), List String )
+execAll env stmts =
+    List.foldl
+        (\s ( en, out ) ->
+            let
+                ( en2, o ) =
+                    exec en s
+            in
+            ( en2, out ++ o )
+        )
+        ( env, [] )
+        stmts
+
+
+exec : List ( String, Int ) -> Stmt -> ( List ( String, Int ), List String )
+exec env s =
+    case s of
+        Assign name e ->
+            let
+                ( v, o ) =
+                    evalE env e
+            in
+            ( ( name, v ) :: env, o )
+
+        Print e ->
+            let
+                ( v, o ) =
+                    evalE env e
+            in
+            ( env, o ++ [ String.fromInt v ] )
+
+        Loop n body ->
+            if n <= 0 then
+                ( env, [] )
+
+            else
+                let
+                    ( env2, o1 ) =
+                        execAll env body
+
+                    ( env3, o2 ) =
+                        exec env2 (Loop (n - 1) body)
+                in
+                ( env3, o1 ++ o2 )
+
+
+collatz : Int -> Int
+collatz n =
+    collatzGo n 0
+
+
+collatzGo : Int -> Int -> Int
+collatzGo n steps =
+    if n == 1 then
+        steps
+
+    else if modBy 2 n == 0 then
+        collatzGo (n // 2) (steps + 1)
+
+    else
+        collatzGo (3 * n + 1) (steps + 1)
+
+
+ack : Int -> Int -> Int
+ack m n =
+    if m == 0 then
+        n + 1
+
+    else if n == 0 then
+        ack (m - 1) 1
+
+    else
+        ack (m - 1) (ack m (n - 1))
+
+
+hofF : Int -> Int
+hofF n =
+    if n == 0 then
+        1
+
+    else
+        n - hofM (hofF (n - 1))
+
+
+hofM : Int -> Int
+hofM n =
+    if n == 0 then
+        0
+
+    else
+        n - hofF (hofM (n - 1))
+
+
+type Tok
+    = Word String
+    | Number Int
+    | Sym Char
+
+
+lexA : List Char -> List Tok -> List Tok
+lexA cs acc =
+    case cs of
+        [] ->
+            List.reverse acc
+
+        c :: rest ->
+            if Char.isDigit c then
+                lexNum rest (Char.toCode c - 48) acc
+
+            else if Char.isAlpha c then
+                lexWord rest [ c ] acc
+
+            else if c == ' ' then
+                lexA rest acc
+
+            else
+                lexA rest (Sym c :: acc)
+
+
+lexNum : List Char -> Int -> List Tok -> List Tok
+lexNum cs n acc =
+    case cs of
+        c :: rest ->
+            if Char.isDigit c then
+                lexNum rest (n * 10 + Char.toCode c - 48) acc
+
+            else
+                lexA cs (Number n :: acc)
+
+        [] ->
+            lexA [] (Number n :: acc)
+
+
+lexWord : List Char -> List Char -> List Tok -> List Tok
+lexWord cs w acc =
+    case cs of
+        c :: rest ->
+            if Char.isAlphaNum c then
+                lexWord rest (c :: w) acc
+
+            else
+                lexA cs (Word (String.fromList (List.reverse w)) :: acc)
+
+        [] ->
+            lexA [] (Word (String.fromList (List.reverse w)) :: acc)
+
+
+results : List ( String, String )
+results =
+    let
+        localEven k =
+            let
+                ev n =
+                    if n == 0 then
+                        True
+
+                    else
+                        od (n - 1)
+
+                od n =
+                    if n == 0 then
+                        False
+
+                    else
+                        ev (n - 1)
+            in
+            ( ev k, od k )
+
+        prog =
+            Block [ Assign "x" (Lit 3), Print (Lit 100), Loop 3 [ Assign "x" (Add (Lit 1) (Lit 1)), Print (Block [ Print (Lit -1) ] (Lit 7)) ] ] (Add (Lit 40) (Lit 2))
+    in
+    [ ( "even/odd", Debug.toString ( ( isEven 2000, isOdd 2001 ), ( isEven 7, localEven 1001 ) ) )
+    , ( "interp", Debug.toString (evalE [] prog) )
+    , ( "collatz", Debug.toString (List.map collatz [ 1, 7, 27, 97, 871, 6171 ]) )
+    , ( "ack", Debug.toString [ ack 2 3, ack 3 3, ack 3 6 ] )
+    , ( "hofstadter", Debug.toString (List.map hofF (List.range 0 20), List.map hofM (List.range 0 20)) )
+    , ( "lex", Debug.toString (lexA (String.toList "let x1 = 42+foo(7)*y;") []) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

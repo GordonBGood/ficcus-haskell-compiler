@@ -1,0 +1,205 @@
+module Main exposing (main)
+
+-- Array programs: build, get/set, push, slice, append, foldl/foldr, map, indexedMap, filter, toList; prefix sums, game of life on a
+-- flat array, a bubble sort with set, binary search, a memo table (DP: longest common subsequence, knapsack), sparse updates.
+
+import Array exposing (Array)
+
+
+prefixSums : Array Int -> Array Int
+prefixSums a =
+    Array.foldl (\x acc -> Array.push (x + (Array.get (Array.length acc - 1) acc |> Maybe.withDefault 0)) acc) Array.empty a
+
+
+bubble : Array Int -> Array Int
+bubble a =
+    let
+        n =
+            Array.length a
+
+        pass i arr =
+            if i >= n - 1 then
+                arr
+
+            else
+                let
+                    x =
+                        Array.get i arr |> Maybe.withDefault 0
+
+                    y =
+                        Array.get (i + 1) arr |> Maybe.withDefault 0
+                in
+                if x > y then
+                    pass (i + 1) (arr |> Array.set i y |> Array.set (i + 1) x)
+
+                else
+                    pass (i + 1) arr
+
+        loop k arr =
+            if k == 0 then
+                arr
+
+            else
+                loop (k - 1) (pass 0 arr)
+    in
+    loop n a
+
+
+bsearch : Int -> Array Int -> Maybe Int
+bsearch target a =
+    let
+        go lo hi =
+            if lo > hi then
+                Nothing
+
+            else
+                let
+                    mid =
+                        (lo + hi) // 2
+
+                    v =
+                        Array.get mid a |> Maybe.withDefault 0
+                in
+                if v == target then
+                    Just mid
+
+                else if v < target then
+                    go (mid + 1) hi
+
+                else
+                    go lo (mid - 1)
+    in
+    go 0 (Array.length a - 1)
+
+
+life : Int -> Array Bool -> Array Bool
+life w cells =
+    let
+        h =
+            Array.length cells // w
+
+        at x y =
+            if x < 0 || y < 0 || x >= w || y >= h then
+                0
+
+            else if Array.get (y * w + x) cells == Just True then
+                1
+
+            else
+                0
+
+        neighbours x y =
+            at (x - 1) (y - 1) + at x (y - 1) + at (x + 1) (y - 1) + at (x - 1) y + at (x + 1) y + at (x - 1) (y + 1) + at x (y + 1) + at (x + 1) (y + 1)
+    in
+    Array.initialize (w * h)
+        (\i ->
+            let
+                x =
+                    modBy w i
+
+                y =
+                    i // w
+
+                n =
+                    neighbours x y
+            in
+            if at x y == 1 then
+                n == 2 || n == 3
+
+            else
+                n == 3
+        )
+
+
+render : Int -> Array Bool -> String
+render w cells =
+    Array.toList cells
+        |> List.indexedMap (\i c -> (if c then "#" else ".") ++ (if modBy w (i + 1) == 0 then "/" else ""))
+        |> String.concat
+
+
+lcs : String -> String -> Int
+lcs a b =
+    let
+        xs =
+            Array.fromList (String.toList a)
+
+        ys =
+            Array.fromList (String.toList b)
+
+        m =
+            Array.length ys + 1
+
+        table =
+            List.foldl
+                (\i t ->
+                    List.foldl
+                        (\j t2 ->
+                            let
+                                v =
+                                    if Array.get (i - 1) xs == Array.get (j - 1) ys then
+                                        1 + (Array.get ((i - 1) * m + j - 1) t2 |> Maybe.withDefault 0)
+
+                                    else
+                                        max (Array.get ((i - 1) * m + j) t2 |> Maybe.withDefault 0) (Array.get (i * m + j - 1) t2 |> Maybe.withDefault 0)
+                            in
+                            Array.set (i * m + j) v t2
+                        )
+                        t
+                        (List.range 1 (m - 1))
+                )
+                (Array.repeat ((Array.length xs + 1) * m) 0)
+                (List.range 1 (Array.length xs))
+    in
+    Array.get (Array.length xs * m + m - 1) table |> Maybe.withDefault -1
+
+
+results : List ( String, String )
+results =
+    let
+        a =
+            Array.fromList [ 5, 3, 9, 1, 7, 2, 8 ]
+
+        big =
+            Array.initialize 100000 (\i -> modBy 1009 (i * 7919))
+
+        glider =
+            Array.initialize 25 (\i -> List.member i [ 1, 7, 10, 11, 12 ])
+
+        sorted =
+            bubble (Array.fromList (List.map (\i -> modBy 97 (i * 31)) (List.range 1 120)))
+    in
+    [ ( "basic", Debug.toString ( ( Array.length a, Array.get 2 a ), ( Array.get 7 a, Array.get -1 a ) ) )
+    , ( "set", Debug.toString ( Array.toList (Array.set 1 100 a), Array.toList (Array.set 50 0 a), Array.toList a ) )
+    , ( "push/pop-ish", Debug.toString (Array.toList (Array.push 4 (Array.slice 0 -1 a))) )
+    , ( "slice", Debug.toString ( Array.toList (Array.slice 2 5 a), Array.toList (Array.slice -3 7 a), Array.toList (Array.slice 5 2 a) ) )
+    , ( "append", Debug.toString (Array.toList (Array.append a (Array.fromList [ 0, 0 ]))) )
+    , ( "map/indexedMap", Debug.toString ( Array.toList (Array.map ((*) 2) a), Array.toList (Array.indexedMap Tuple.pair a) |> List.take 2 ) )
+    , ( "foldr order", Debug.toString ( Array.foldr (::) [] a, Array.foldl (::) [] a ) )
+    , ( "filter", Debug.toString (Array.toList (Array.filter (\x -> modBy 2 x == 1) a)) )
+    , ( "prefix", Debug.toString (Array.toList (prefixSums a)) )
+    , ( "bubble", Debug.toString (Array.toList (Array.slice 0 15 sorted), Array.length sorted) )
+    , ( "bsearch", Debug.toString ( bsearch 40 (Array.fromList (List.range 0 100 |> List.map ((*) 2))), bsearch 41 (Array.fromList (List.range 0 100 |> List.map ((*) 2))) ) )
+    , ( "big sum", String.fromInt (Array.foldl (+) 0 big) )
+    , ( "big set", String.fromInt (Array.foldl (+) 0 (List.foldl (\i arr -> Array.set i 1 arr) big (List.range 0 99999))) )
+    , ( "big push", String.fromInt (Array.length (List.foldl Array.push Array.empty (List.range 1 100000))) )
+    , ( "persistent", Debug.toString (let b = Array.set 0 99 a in ( Array.get 0 a, Array.get 0 b )) )
+    , ( "glider 4", render 5 (life 5 (life 5 (life 5 (life 5 glider)))) )
+    , ( "lcs", Debug.toString ( lcs "AGGTAB" "GXTXAYB", lcs "the quick brown fox" "a quick brown dog jumps", lcs "" "abc" ) )
+    , ( "equality", Debug.toString ( a == Array.fromList [ 5, 3, 9, 1, 7, 2, 8 ], Array.empty == Array.fromList [] ) )
+    , ( "toString", Debug.toString (Array.fromList [ Just 1, Nothing ]) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

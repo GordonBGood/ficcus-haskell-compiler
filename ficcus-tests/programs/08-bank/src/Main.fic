@@ -1,0 +1,197 @@
+module Main exposing (main)
+
+-- Bank simulation: accounts in a Dict, transfers with Result errors, error accumulation, custom error types, Result.andThen / mapError.
+
+import Dict exposing (Dict)
+
+
+type Error
+    = NoSuchAccount String
+    | Insufficient { needed : Int, available : Int }
+    | Frozen String
+    | InvalidAmount Int
+    | SameAccount
+
+
+type alias Account =
+    { owner : String, balance : Int, frozen : Bool, history : List Txn }
+
+
+type Txn
+    = Deposit Int
+    | Withdraw Int
+    | TransferIn String Int
+    | TransferOut String Int
+
+
+type alias Bank =
+    Dict String Account
+
+
+errorText : Error -> String
+errorText e =
+    case e of
+        NoSuchAccount n ->
+            "no such account: " ++ n
+
+        Insufficient { needed, available } ->
+            "insufficient funds: need " ++ String.fromInt needed ++ ", have " ++ String.fromInt available
+
+        Frozen n ->
+            "account frozen: " ++ n
+
+        InvalidAmount a ->
+            "invalid amount " ++ String.fromInt a
+
+        SameAccount ->
+            "cannot transfer to same account"
+
+
+find : String -> Bank -> Result Error Account
+find name bank =
+    Dict.get name bank |> Result.fromMaybe (NoSuchAccount name)
+
+
+active : Account -> Result Error Account
+active a =
+    if a.frozen then
+        Err (Frozen a.owner)
+
+    else
+        Ok a
+
+
+positive : Int -> Result Error Int
+positive n =
+    if n > 0 then
+        Ok n
+
+    else
+        Err (InvalidAmount n)
+
+
+deposit : String -> Int -> Bank -> Result Error Bank
+deposit name amt bank =
+    Result.map2
+        (\a n -> Dict.insert name { a | balance = a.balance + n, history = Deposit n :: a.history } bank)
+        (find name bank |> Result.andThen active)
+        (positive amt)
+
+
+withdraw : String -> Int -> Bank -> Result Error Bank
+withdraw name amt bank =
+    positive amt
+        |> Result.andThen
+            (\n ->
+                find name bank
+                    |> Result.andThen active
+                    |> Result.andThen
+                        (\a ->
+                            if a.balance < n then
+                                Err (Insufficient { needed = n, available = a.balance })
+
+                            else
+                                Ok (Dict.insert name { a | balance = a.balance - n, history = Withdraw n :: a.history } bank)
+                        )
+            )
+
+
+transfer : String -> String -> Int -> Bank -> Result Error Bank
+transfer from to amt bank =
+    if from == to then
+        Err SameAccount
+
+    else
+        withdraw from amt bank
+            |> Result.andThen (deposit to amt)
+            |> Result.map
+                (Dict.update from (Maybe.map (\a -> { a | history = TransferOut to amt :: List.drop 1 a.history }))
+                    >> Dict.update to (Maybe.map (\a -> { a | history = TransferIn from amt :: List.drop 1 a.history }))
+                )
+
+
+type Cmd
+    = Dep String Int
+    | Wd String Int
+    | Xfer String String Int
+    | Freeze String
+
+
+apply : Cmd -> Bank -> Result Error Bank
+apply c bank =
+    case c of
+        Dep n a ->
+            deposit n a bank
+
+        Wd n a ->
+            withdraw n a bank
+
+        Xfer f t a ->
+            transfer f t a bank
+
+        Freeze n ->
+            find n bank |> Result.map (\a -> Dict.insert n { a | frozen = True } bank)
+
+
+runCmds : List Cmd -> Bank -> ( Bank, List String )
+runCmds cmds bank =
+    List.foldl
+        (\c ( b, errs ) ->
+            case apply c b of
+                Ok b2 ->
+                    ( b2, errs )
+
+                Err e ->
+                    ( b, errorText e :: errs )
+        )
+        ( bank, [] )
+        cmds
+        |> Tuple.mapSecond List.reverse
+
+
+open : List ( String, Int ) -> Bank
+open =
+    List.foldl (\( n, b ) -> Dict.insert n { owner = n, balance = b, frozen = False, history = [] }) Dict.empty
+
+
+okInt : Result String Int
+okInt =
+    Ok 1
+
+
+errInt : Result String Int
+errInt =
+    Err "e1"
+
+
+results : List ( String, String )
+results =
+    let
+        ( bank, errs ) =
+            runCmds
+                [ Dep "ann" 100, Wd "ann" 30, Wd "ann" 500, Xfer "ann" "bob" 50, Xfer "bob" "bob" 1, Xfer "ann" "zed" 5, Dep "bob" -5
+                , Freeze "bob", Dep "bob" 10, Xfer "ann" "bob" 1, Wd "ann" 20, Xfer "bob" "ann" 1, Freeze "nobody" ]
+                (open [ ( "ann", 0 ), ( "bob", 10 ), ( "cy", 1000 ) ])
+    in
+    [ ( "errors", Debug.toString errs )
+    , ( "balances", Debug.toString (List.map (\( k, a ) -> ( k, a.balance, a.frozen )) (Dict.toList bank)) )
+    ]
+        ++ List.map (\( k, a ) -> ( "history " ++ k, Debug.toString (List.reverse a.history) )) (Dict.toList bank)
+        ++ [ ( "total", String.fromInt (Dict.foldl (\_ a s -> s + a.balance) 0 bank) )
+           , ( "result eq", Debug.toString ( Ok 1 == okInt, Err "x" == okInt ) )
+           , ( "result extras", Debug.toString ( Result.toMaybe okInt, Result.withDefault 0 errInt, Result.map2 (+) (Ok 1) errInt ) )
+           ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

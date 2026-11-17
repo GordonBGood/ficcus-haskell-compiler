@@ -1,0 +1,214 @@
+module Main exposing (main)
+
+-- Sorting: sortBy, sortWith, stable order, hand written quick/merge/insertion/heap sorts, on Int, Float, String, tuples, records.
+
+type alias Emp =
+    { name : String, dept : String, salary : Int, age : Int }
+
+
+emps : List Emp
+emps =
+    [ { name = "alice", dept = "eng", salary = 120, age = 30 }
+    , { name = "bob", dept = "ops", salary = 90, age = 45 }
+    , { name = "carol", dept = "eng", salary = 120, age = 25 }
+    , { name = "dave", dept = "ops", salary = 95, age = 45 }
+    , { name = "eve", dept = "hr", salary = 70, age = 33 }
+    , { name = "frank", dept = "eng", salary = 105, age = 52 }
+    , { name = "grace", dept = "hr", salary = 70, age = 28 }
+    ]
+
+
+lcg : Int -> Int
+lcg x =
+    modBy 2147483647 (x * 48271)
+
+
+randoms : Int -> Int -> List Int
+randoms n seed =
+    List.foldl (\_ ( x, acc ) -> ( lcg x, modBy 1000 x :: acc )) ( seed, [] ) (List.range 1 n) |> Tuple.second
+
+
+quick : (a -> a -> Order) -> List a -> List a
+quick cmp xs =
+    case xs of
+        [] ->
+            []
+
+        p :: rest ->
+            let
+                ( lo, hi ) =
+                    List.partition (\x -> cmp x p == LT) rest
+            in
+            quick cmp lo ++ [ p ] ++ quick cmp hi
+
+
+merge : (a -> a -> Order) -> List a -> List a -> List a
+merge cmp a b =
+    case ( a, b ) of
+        ( [], _ ) ->
+            b
+
+        ( _, [] ) ->
+            a
+
+        ( x :: xs, y :: ys ) ->
+            if cmp y x == LT then
+                y :: merge cmp a ys
+
+            else
+                x :: merge cmp xs b
+
+
+msort : (a -> a -> Order) -> List a -> List a
+msort cmp xs =
+    case xs of
+        [] ->
+            []
+
+        [ _ ] ->
+            xs
+
+        _ ->
+            let
+                h =
+                    List.length xs // 2
+            in
+            merge cmp (msort cmp (List.take h xs)) (msort cmp (List.drop h xs))
+
+
+insertion : List comparable -> List comparable
+insertion =
+    List.foldl insertOne []
+
+
+insertOne : comparable -> List comparable -> List comparable
+insertOne x sorted =
+    case sorted of
+        [] ->
+            [ x ]
+
+        y :: ys ->
+            if x <= y then
+                x :: sorted
+
+            else
+                y :: insertOne x ys
+
+
+type Heap a
+    = E
+    | T Int a (Heap a) (Heap a)
+
+
+rank : Heap a -> Int
+rank h =
+    case h of
+        E ->
+            0
+
+        T r _ _ _ ->
+            r
+
+
+mergeH : Heap comparable -> Heap comparable -> Heap comparable
+mergeH a b =
+    case ( a, b ) of
+        ( E, _ ) ->
+            b
+
+        ( _, E ) ->
+            a
+
+        ( T _ x l1 r1, T _ y l2 r2 ) ->
+            if x <= y then
+                mk x l1 (mergeH r1 b)
+
+            else
+                mk y l2 (mergeH a r2)
+
+
+mk : a -> Heap a -> Heap a -> Heap a
+mk x a b =
+    if rank a >= rank b then
+        T (rank b + 1) x a b
+
+    else
+        T (rank a + 1) x b a
+
+
+heapSort : List comparable -> List comparable
+heapSort xs =
+    let
+        h =
+            List.foldl (\x acc -> mergeH (T 1 x E E) acc) E xs
+
+        drain hp out =
+            case hp of
+                E ->
+                    List.reverse out
+
+                T _ x l r ->
+                    drain (mergeH l r) (x :: out)
+    in
+    drain h []
+
+
+noInts : List Int
+noInts =
+    []
+
+
+byAgeDescName : Emp -> Emp -> Order
+byAgeDescName a b =
+    case compare b.age a.age of
+        EQ ->
+            compare a.name b.name
+
+        o ->
+            o
+
+
+results : List ( String, String )
+results =
+    let
+        rs =
+            randoms 200 12345
+
+        ref =
+            List.sort rs
+
+        names es =
+            String.join "," (List.map .name es)
+    in
+    [ ( "quick ok", Debug.toString (quick compare rs == ref) )
+    , ( "merge ok", Debug.toString (msort compare rs == ref) )
+    , ( "insertion ok", Debug.toString (insertion rs == ref) )
+    , ( "heap ok", Debug.toString (heapSort rs == ref) )
+    , ( "first 12", Debug.toString (List.take 12 ref) )
+    , ( "desc", Debug.toString (List.take 8 (List.sortWith (\a b -> compare b a) rs)) )
+    , ( "sortBy salary (stable)", names (List.sortBy .salary emps) )
+    , ( "sortBy neg salary (stable)", names (List.sortBy (\e -> -e.salary) emps) )
+    , ( "sortBy dept,salary", names (List.sortBy (\e -> ( e.dept, -e.salary, e.name )) emps) )
+    , ( "sortWith age then name", names (List.sortWith byAgeDescName emps) )
+    , ( "floats", Debug.toString (List.sort [ 3.5, -1, 2.25, 0, -0.5, 1 / 3, 1.0e10 ]) )
+    , ( "strings", Debug.toString (List.sort [ "banana", "Apple", "cherry", "apple", "", "Banana", "b", "ba" ]) )
+    , ( "chars", Debug.toString (List.sort (String.toList "hello world")) )
+    , ( "tuples", Debug.toString (List.sort [ ( 2, "b" ), ( 1, "z" ), ( 2, "a" ), ( 1, "a" ) ]) )
+    , ( "lists", Debug.toString (List.sort [ [ 2, 1 ], [ 1, 2, 3 ], [], [ 1, 2 ], [ 2 ] ]) )
+    , ( "maximum/minimum", Debug.toString ( List.maximum rs, List.minimum rs, List.maximum noInts ) )
+    , ( "sortBy bigger", Debug.toString (List.take 5 (List.sortBy (\x -> modBy 7 x * 1000 + x) (List.range 1 5000))) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

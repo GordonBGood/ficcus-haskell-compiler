@@ -1,0 +1,199 @@
+module Main exposing (main)
+
+-- Matrix and polynomial arithmetic with records and tuples; rational numbers; determinant; power by squaring.
+
+type alias Matrix =
+    { rows : Int, cols : Int, data : List (List Int) }
+
+
+type alias Rat =
+    { num : Int, den : Int }
+
+
+type alias Poly =
+    List Int
+
+
+mat : List (List Int) -> Matrix
+mat d =
+    { rows = List.length d, cols = d |> List.head |> Maybe.map List.length |> Maybe.withDefault 0, data = d }
+
+
+identity : Int -> Matrix
+identity n =
+    mat (List.map (\i -> List.map (\j -> if i == j then 1 else 0) (List.range 0 (n - 1))) (List.range 0 (n - 1)))
+
+
+transpose : List (List a) -> List (List a)
+transpose rows =
+    case rows of
+        [] ->
+            []
+
+        [] :: _ ->
+            []
+
+        _ ->
+            List.filterMap List.head rows :: transpose (List.filterMap List.tail rows)
+
+
+mul : Matrix -> Matrix -> Matrix
+mul a b =
+    let
+        bt =
+            transpose b.data
+    in
+    mat (List.map (\r -> List.map (\c -> List.sum (List.map2 (*) r c)) bt) a.data)
+
+
+mpow : Int -> Matrix -> Matrix
+mpow n m =
+    if n == 0 then
+        identity m.rows
+
+    else if modBy 2 n == 0 then
+        let
+            h =
+                mpow (n // 2) m
+        in
+        mul h h
+
+    else
+        mul m (mpow (n - 1) m)
+
+
+det : List (List Int) -> Int
+det rows =
+    case rows of
+        [] ->
+            1
+
+        [ [ x ] ] ->
+            x
+
+        first :: rest ->
+            first
+                |> List.indexedMap
+                    (\i x ->
+                        let
+                            minor =
+                                List.map (\r -> List.take i r ++ List.drop (i + 1) r) rest
+                        in
+                        (if modBy 2 i == 0 then 1 else -1) * x * det minor
+                    )
+                |> List.sum
+
+
+gcd : Int -> Int -> Int
+gcd a b =
+    if b == 0 then
+        abs a
+
+    else
+        gcd b (modBy b a)
+
+
+rat : Int -> Int -> Rat
+rat n d =
+    let
+        g =
+            gcd n d
+
+        s =
+            if d < 0 then -1 else 1
+    in
+    { num = s * n // g, den = s * d // g }
+
+
+addR : Rat -> Rat -> Rat
+addR a b =
+    rat (a.num * b.den + b.num * a.den) (a.den * b.den)
+
+
+mulR : Rat -> Rat -> Rat
+mulR a b =
+    rat (a.num * b.num) (a.den * b.den)
+
+
+showR : Rat -> String
+showR r =
+    if r.den == 1 then String.fromInt r.num else String.fromInt r.num ++ "/" ++ String.fromInt r.den
+
+
+addP : Poly -> Poly -> Poly
+addP a b =
+    case ( a, b ) of
+        ( [], _ ) ->
+            b
+
+        ( _, [] ) ->
+            a
+
+        ( x :: xs, y :: ys ) ->
+            (x + y) :: addP xs ys
+
+
+mulP : Poly -> Poly -> Poly
+mulP a b =
+    case a of
+        [] ->
+            []
+
+        x :: xs ->
+            addP (List.map ((*) x) b) (0 :: mulP xs b)
+
+
+evalP : Int -> Poly -> Int
+evalP x p =
+    List.foldr (\c acc -> c + x * acc) 0 p
+
+
+derivP : Poly -> Poly
+derivP p =
+    List.indexedMap (\i c -> i * c) p |> List.drop 1
+
+
+showP : Poly -> String
+showP p =
+    List.indexedMap Tuple.pair p
+        |> List.filter (\( _, c ) -> c /= 0)
+        |> List.reverse
+        |> List.map
+            (\( i, c ) ->
+                if i == 0 then String.fromInt c else String.fromInt c ++ "x^" ++ String.fromInt i
+            )
+        |> String.join " + "
+
+
+results : List ( String, String )
+results =
+    let
+        fibm =
+            mat [ [ 1, 1 ], [ 1, 0 ] ]
+    in
+    [ ( "mul", Debug.toString (mul (mat [ [ 1, 2, 3 ], [ 4, 5, 6 ] ]) (mat [ [ 7, 8 ], [ 9, 10 ], [ 11, 12 ] ])) )
+    , ( "fib 60", Debug.toString (mpow 60 fibm).data )
+    , ( "det3", String.fromInt (det [ [ 2, -3, 1 ], [ 2, 0, -1 ], [ 1, 4, 5 ] ]) )
+    , ( "det4", String.fromInt (det [ [ 1, 0, 2, -1 ], [ 3, 0, 0, 5 ], [ 2, 1, 4, -3 ], [ 1, 0, 5, 0 ] ]) )
+    , ( "rat sum", showR (List.foldl addR (rat 0 1) (List.map (\n -> rat 1 (n * (n + 1))) (List.range 1 20))) )
+    , ( "rat neg", showR (mulR (rat 3 -6) (rat -4 10)) )
+    , ( "poly mul", showP (mulP [ 1, 1 ] [ 1, 1 ] |> mulP [ 1, 1 ] |> mulP [ -1, 0, 2 ]) )
+    , ( "poly eval", String.fromInt (evalP 3 [ 5, 0, 2, 1 ]) )
+    , ( "poly deriv", Debug.toString (derivP [ 5, 4, 3, 2, 1 ]) )
+    , ( "record eq", Debug.toString (rat 2 4 == rat 1 2, rat 1 2 == rat 1 3) )
+    , ( "big", String.fromInt (evalP 100003 (List.repeat 4 7)) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

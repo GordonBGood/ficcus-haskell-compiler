@@ -1,0 +1,96 @@
+module Main exposing (main)
+
+-- Regex: find, replace, split, groups, case insensitivity, multiline, lazy quantifiers, anchors, unicode text, log line parsing.
+
+import Regex exposing (Regex)
+
+
+rx : String -> Regex
+rx s =
+    Regex.fromString s |> Maybe.withDefault Regex.never
+
+
+rxi : String -> Regex
+rxi s =
+    Regex.fromStringWith { caseInsensitive = True, multiline = False } s |> Maybe.withDefault Regex.never
+
+
+showMatch : Regex.Match -> String
+showMatch m =
+    "{" ++ m.match ++ "@" ++ String.fromInt m.index ++ "#" ++ String.fromInt m.number ++ " " ++ Debug.toString m.submatches ++ "}"
+
+
+logLines : List String
+logLines =
+    [ "2024-03-01 12:00:01 INFO  user=alice action=login ip=10.0.0.5"
+    , "2024-03-01 12:00:09 WARN  user=bob action=upload size=1048576 ip=192.168.1.20"
+    , "2024-03-02 07:15:44 ERROR user=carol action=delete id=77 reason=\"no permission\""
+    , "garbage line without structure"
+    , "2024-03-02 07:16:00 INFO  user=dave action=login ip=8.8.8.8"
+    ]
+
+
+logRx : Regex
+logRx =
+    rx "^(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}:\\d{2}:\\d{2}) (INFO|WARN|ERROR)\\s+user=(\\w+)"
+
+
+parseLog : String -> String
+parseLog line =
+    case Regex.find logRx line of
+        [ m ] ->
+            case m.submatches of
+                [ Just y, Just mo, Just d, Just t, Just lvl, Just user ] ->
+                    lvl ++ "/" ++ user ++ " on " ++ d ++ "." ++ mo ++ "." ++ y ++ " at " ++ t
+
+                _ ->
+                    "odd submatches " ++ Debug.toString m.submatches
+
+        [] ->
+            "no match"
+
+        _ ->
+            "several"
+
+
+results : List ( String, String )
+results =
+    [ ( "find digits", String.join " " (List.map showMatch (Regex.find (rx "\\d+") "a1 b22 c333 d")) )
+    , ( "find all optional group", String.join " " (List.map showMatch (Regex.find (rx "(a)?b") "ab b cb")) )
+    , ( "findAtMost", Debug.toString (List.map .match (Regex.findAtMost 2 (rx "\\w+") "one two three four")) )
+    , ( "contains", Debug.toString (List.map (\s -> Regex.contains (rx "^[a-z]+@[a-z]+\\.com$") s) [ "bob@site.com", "Bob@site.com", "bob@site.org", "bob@site.comx" ]) )
+    , ( "insensitive", Debug.toString (List.map .match (Regex.find (rxi "hello|WORLD") "Hello, world! HELLO")) )
+    , ( "replace all", Regex.replace (rx "\\s+") (\_ -> " ") "a   b \t\n c" )
+    , ( "replace fn", Regex.replace (rx "\\d+") (\m -> String.fromInt (2 * Maybe.withDefault 0 (String.toInt m.match))) "x=5 y=10 z=123" )
+    , ( "replaceAtMost", Regex.replaceAtMost 2 (rx "a") (\_ -> "A") "banana" )
+    , ( "replace groups", Regex.replace (rx "(\\w+)@(\\w+)") (\m -> String.join "<-" (List.reverse (List.filterMap identity m.submatches))) "bob@site, amy@corp" )
+    , ( "split", Debug.toString (Regex.split (rx ",\\s*") "a, b,c,   d,") )
+    , ( "split at most", Debug.toString (Regex.splitAtMost 2 (rx "-") "1-2-3-4") )
+    , ( "lazy vs greedy", Debug.toString ( List.map .match (Regex.find (rx "<.+>") "<a><b>"), List.map .match (Regex.find (rx "<.+?>") "<a><b>") ) )
+    , ( "backref", Debug.toString (List.map .match (Regex.find (rx "(\\w)\\1") "hello aab bcc")) )
+    , ( "lookahead", Debug.toString (List.map .match (Regex.find (rx "\\w+(?=!)") "hi! there wow!")) )
+    , ( "anchors multiline", Debug.toString (List.map .match (Regex.find (Maybe.withDefault Regex.never (Regex.fromStringWith { caseInsensitive = False, multiline = True } "^\\w")) "ab\ncd\n ef")) )
+    , ( "word boundary", Debug.toString (List.map .index (Regex.find (rx "\\bcat\\b") "cat concat cat. bobcat cat")) )
+    , ( "invalid", Debug.toString (Maybe.map (\_ -> "ok") (Regex.fromString "(unclosed")) )
+    , ( "never", Debug.toString (Regex.find Regex.never "anything") )
+    , ( "class and range", Debug.toString (List.map .match (Regex.find (rx "[A-Fa-f0-9]{2,4}") "xx ff00 1 abcde zz")) )
+    , ( "dot newline", Debug.toString (List.map .match (Regex.find (rx "a.b") "a\nb axb")) )
+    , ( "unicode", Debug.toString (List.map showMatch (Regex.find (rx "\\w+") "naïve café 日本語")) )
+    , ( "unicode index", Debug.toString (List.map .index (Regex.find (rx "b") "ééb€b")) )
+    ]
+        ++ List.indexedMap (\i l -> ( "log " ++ String.fromInt i, parseLog l )) logLines
+        ++ [ ( "kv", Debug.toString (List.map (\l -> List.map (\m -> ( Maybe.withDefault "" (Maybe.andThen identity (List.head m.submatches)), Maybe.withDefault "" (Maybe.andThen identity (List.head (List.drop 1 m.submatches))) )) (Regex.find (rx "(\\w+)=(\"[^\"]*\"|\\S+)") l)) (List.drop 1 (List.take 3 logLines))) ) ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

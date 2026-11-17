@@ -1,0 +1,297 @@
+module Main exposing (main)
+
+-- Recursive data: binary search tree, rose tree, list zipper, tree zipper, expression simplifier; fold, map, depth, path queries.
+
+type Tree a
+    = Empty
+    | Node (Tree a) a (Tree a)
+
+
+insert : comparable -> Tree comparable -> Tree comparable
+insert x t =
+    case t of
+        Empty ->
+            Node Empty x Empty
+
+        Node l v r ->
+            case compare x v of
+                LT ->
+                    Node (insert x l) v r
+
+                GT ->
+                    Node l v (insert x r)
+
+                EQ ->
+                    t
+
+
+toList : Tree a -> List a
+toList t =
+    case t of
+        Empty ->
+            []
+
+        Node l v r ->
+            toList l ++ v :: toList r
+
+
+height : Tree a -> Int
+height t =
+    case t of
+        Empty ->
+            0
+
+        Node l _ r ->
+            1 + max (height l) (height r)
+
+
+member : comparable -> Tree comparable -> Bool
+member x t =
+    case t of
+        Empty ->
+            False
+
+        Node l v r ->
+            if x < v then
+                member x l
+
+            else if x > v then
+                member x r
+
+            else
+                True
+
+
+remove : comparable -> Tree comparable -> Tree comparable
+remove x t =
+    case t of
+        Empty ->
+            Empty
+
+        Node l v r ->
+            if x < v then
+                Node (remove x l) v r
+
+            else if x > v then
+                Node l v (remove x r)
+
+            else
+                case ( l, r ) of
+                    ( Empty, _ ) ->
+                        r
+
+                    ( _, Empty ) ->
+                        l
+
+                    _ ->
+                        let
+                            m =
+                                minOf r
+                        in
+                        Node l m (remove m r)
+
+
+minOf : Tree comparable -> comparable
+minOf t =
+    case t of
+        Node Empty v _ ->
+            v
+
+        Node l _ _ ->
+            minOf l
+
+        Empty ->
+            Debug.todo "empty"
+
+
+mapTree : (a -> b) -> Tree a -> Tree b
+mapTree f t =
+    case t of
+        Empty ->
+            Empty
+
+        Node l v r ->
+            Node (mapTree f l) (f v) (mapTree f r)
+
+
+foldTree : (a -> b -> b) -> b -> Tree a -> b
+foldTree f acc t =
+    case t of
+        Empty ->
+            acc
+
+        Node l v r ->
+            foldTree f (f v (foldTree f acc l)) r
+
+
+type Rose a
+    = Rose a (List (Rose a))
+
+
+sizeR : Rose a -> Int
+sizeR (Rose _ kids) =
+    1 + List.sum (List.map sizeR kids)
+
+
+flattenR : Rose a -> List a
+flattenR (Rose x kids) =
+    x :: List.concatMap flattenR kids
+
+
+depthR : Rose a -> Int
+depthR (Rose _ kids) =
+    1 + List.foldl (\k m -> max m (depthR k)) 0 kids
+
+
+paths : Rose a -> List (List a)
+paths (Rose x kids) =
+    if List.isEmpty kids then
+        [ [ x ] ]
+
+    else
+        List.concatMap (\k -> List.map ((::) x) (paths k)) kids
+
+
+type alias Zipper a =
+    { before : List a, focus : a, after : List a }
+
+
+fromList : List a -> Maybe (Zipper a)
+fromList xs =
+    case xs of
+        [] ->
+            Nothing
+
+        x :: rest ->
+            Just { before = [], focus = x, after = rest }
+
+
+right : Zipper a -> Maybe (Zipper a)
+right z =
+    case z.after of
+        [] ->
+            Nothing
+
+        a :: rest ->
+            Just { before = z.focus :: z.before, focus = a, after = rest }
+
+
+left : Zipper a -> Maybe (Zipper a)
+left z =
+    case z.before of
+        [] ->
+            Nothing
+
+        b :: rest ->
+            Just { before = rest, focus = b, after = z.focus :: z.after }
+
+
+modify : (a -> a) -> Zipper a -> Zipper a
+modify f z =
+    { z | focus = f z.focus }
+
+
+toListZ : Zipper a -> List a
+toListZ z =
+    List.reverse z.before ++ z.focus :: z.after
+
+
+type Crumb
+    = LeftC Int (Tree Int)
+    | RightC Int (Tree Int)
+
+
+type alias TZ =
+    ( Tree Int, List Crumb )
+
+
+goLeft : TZ -> Maybe TZ
+goLeft ( t, cs ) =
+    case t of
+        Node l v r ->
+            Just ( l, LeftC v r :: cs )
+
+        Empty ->
+            Nothing
+
+
+goRight : TZ -> Maybe TZ
+goRight ( t, cs ) =
+    case t of
+        Node l v r ->
+            Just ( r, RightC v l :: cs )
+
+        Empty ->
+            Nothing
+
+
+goUp : TZ -> Maybe TZ
+goUp ( t, cs ) =
+    case cs of
+        LeftC v r :: rest ->
+            Just ( Node t v r, rest )
+
+        RightC v l :: rest ->
+            Just ( Node l v t, rest )
+
+        [] ->
+            Nothing
+
+
+top : TZ -> Tree Int
+top z =
+    case goUp z of
+        Nothing ->
+            Tuple.first z
+
+        Just z2 ->
+            top z2
+
+
+results : List ( String, String )
+results =
+    let
+        t =
+            List.foldl insert Empty [ 50, 30, 70, 20, 40, 60, 80, 35, 45, 65, 30 ]
+
+        rose =
+            Rose 1 [ Rose 2 [ Rose 4 [], Rose 5 [ Rose 8 [] ] ], Rose 3 [ Rose 6 [], Rose 7 [] ] ]
+
+        zip =
+            fromList [ 1, 2, 3, 4, 5 ] |> Maybe.andThen right |> Maybe.andThen right |> Maybe.map (modify (\x -> x * 100))
+
+        tz =
+            Just ( t, [] ) |> Maybe.andThen goLeft |> Maybe.andThen goRight |> Maybe.map (\( s, cs ) -> ( mapTree negate s |> (\_ -> Node Empty 999 Empty), cs ))
+    in
+    [ ( "inorder", Debug.toString (toList t) )
+    , ( "height", String.fromInt (height t) )
+    , ( "member", Debug.toString (List.map (\x -> member x t) [ 45, 46, 80, 10 ]) )
+    , ( "remove root", Debug.toString (toList (remove 50 t)) )
+    , ( "remove leaf", Debug.toString (toList (remove 20 t)) )
+    , ( "remove missing", Debug.toString (toList (remove 51 t) == toList t) )
+    , ( "fold sum", String.fromInt (foldTree (+) 0 t) )
+    , ( "map", Debug.toString (toList (mapTree (\x -> x // 10) t)) )
+    , ( "tree eq", Debug.toString (t == List.foldl insert Empty [ 70, 50, 80, 60, 30, 40, 20, 65, 45, 35 ]) )
+    , ( "rose", Debug.toString ( sizeR rose, depthR rose, flattenR rose ) )
+    , ( "paths", Debug.toString (paths rose) )
+    , ( "zipper", Debug.toString (Maybe.map toListZ zip) )
+    , ( "zipper back", Debug.toString (Maybe.map (\z -> toListZ (modify negate (Maybe.withDefault z (left z)))) zip) )
+    , ( "zipper empty", Debug.toString (fromList [] |> Maybe.map toListZ |> Maybe.withDefault [ -1 ]) )
+    , ( "tree zipper", Debug.toString (Maybe.map (\z -> toList (top z)) tz) )
+    , ( "tree show", Debug.toString (Node Empty 1 (Node Empty -2 Empty)) )
+    , ( "deep", String.fromInt (height (List.foldl insert Empty (List.range 1 3000))) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

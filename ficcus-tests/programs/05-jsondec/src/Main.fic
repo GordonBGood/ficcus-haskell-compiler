@@ -1,0 +1,159 @@
+module Main exposing (main)
+
+-- JSON: decoding records, lists, dicts, oneOf, andThen, optional fields, errors; encoding with nesting; round trip.
+
+import Dict exposing (Dict)
+import Json.Decode as D
+import Json.Encode as E
+
+
+type alias Address =
+    { street : String, zip : Maybe String }
+
+
+type alias Person =
+    { name : String
+    , age : Int
+    , email : Maybe String
+    , tags : List String
+    , address : Address
+    , scores : Dict String Float
+    }
+
+
+type Shape
+    = Circle Float
+    | Rect Float Float
+    | Named String
+
+
+addressDecoder : D.Decoder Address
+addressDecoder =
+    D.map2 Address
+        (D.field "street" D.string)
+        (D.maybe (D.field "zip" D.string))
+
+
+personDecoder : D.Decoder Person
+personDecoder =
+    D.map6 Person
+        (D.field "name" D.string)
+        (D.field "age" D.int)
+        (D.maybe (D.field "email" D.string))
+        (D.oneOf [ D.field "tags" (D.list D.string), D.succeed [] ])
+        (D.field "address" addressDecoder)
+        (D.field "scores" (D.dict D.float))
+
+
+shapeDecoder : D.Decoder Shape
+shapeDecoder =
+    D.field "kind" D.string
+        |> D.andThen
+            (\k ->
+                case k of
+                    "circle" ->
+                        D.map Circle (D.field "r" D.float)
+
+                    "rect" ->
+                        D.map2 Rect (D.field "w" D.float) (D.field "h" D.float)
+
+                    other ->
+                        D.map Named (D.succeed other)
+            )
+
+
+encodePerson : Person -> E.Value
+encodePerson p =
+    E.object
+        [ ( "name", E.string p.name )
+        , ( "age", E.int p.age )
+        , ( "email", Maybe.withDefault E.null (Maybe.map E.string p.email) )
+        , ( "tags", E.list E.string p.tags )
+        , ( "address", E.object [ ( "street", E.string p.address.street ), ( "zip", Maybe.withDefault E.null (Maybe.map E.string p.address.zip) ) ] )
+        , ( "scores", E.dict identity E.float p.scores )
+        ]
+
+
+good : String
+good =
+    """{"name":"Ada \\"Lovelace\\"","age":36,"email":"ada@example.org","tags":["math","poetry"],
+        "address":{"street":"12 St James's Sq","zip":"SW1"},"scores":{"a":1.5,"b":-2,"c":1e3}}"""
+
+
+noOptional : String
+noOptional =
+    """{"name":"Bob \\u00e9\\n","age":7,"address":{"street":"x"},"scores":{}}"""
+
+
+showResult : Result D.Error Person -> String
+showResult r =
+    case r of
+        Ok p ->
+            "ok " ++ Debug.toString p
+
+        Err e ->
+            "err " ++ D.errorToString e
+
+
+results : List ( String, String )
+results =
+    let
+        decoded =
+            D.decodeString personDecoder good
+    in
+    [ ( "good", showResult decoded )
+    , ( "no optional", showResult (D.decodeString personDecoder noOptional) )
+    , ( "bad age", showResult (D.decodeString personDecoder (String.replace "36" "\"x\"" good)) )
+    , ( "missing", showResult (D.decodeString personDecoder "{\"name\":\"n\"}") )
+    , ( "syntax", case D.decodeString personDecoder "{\"name\":" of
+            Err (D.Failure _ _) -> "failure"
+            Err _ -> "other error"
+            Ok _ -> "ok" )
+    , ( "round trip", case decoded of
+            Ok p ->
+                E.encode 0 (encodePerson p)
+
+            Err _ ->
+                "?"
+      )
+    , ( "indent", case decoded of
+            Ok p ->
+                E.encode 2 (encodePerson p)
+
+            Err _ ->
+                "?"
+      )
+    , ( "shapes"
+      , Debug.toString
+            (D.decodeString (D.list shapeDecoder) """[{"kind":"circle","r":2.5},{"kind":"rect","w":3,"h":4},{"kind":"blob"},{"kind":"circle"}]""" |> Result.mapError D.errorToString)
+      )
+    , ( "ints", Debug.toString (D.decodeString (D.list D.int) "[1, 2.0, 3]" |> Result.mapError D.errorToString) )
+    , ( "nested", Debug.toString (D.decodeString (D.at [ "a", "b", "c" ] D.int) """{"a":{"b":{"c":42}}}""" |> Result.mapError D.errorToString) )
+    , ( "index", Debug.toString (D.decodeString (D.index 1 D.string) """["x","y"]""" |> Result.mapError D.errorToString) )
+    , ( "keyValue", Debug.toString (D.decodeString (D.keyValuePairs D.int) """{"z":1,"a":2}""" |> Result.mapError D.errorToString) )
+    , ( "nullable", Debug.toString (D.decodeString (D.list (D.nullable D.int)) "[1,null,3]" |> Result.mapError D.errorToString) )
+    , ( "bool/null", Debug.toString (D.decodeString (D.map2 Tuple.pair (D.field "b" D.bool) (D.field "n" (D.null 0))) """{"b":true,"n":null}""" |> Result.mapError D.errorToString) )
+    , ( "float enc", E.encode 0 (E.list E.float [ 1, 0.5, 1.0e21, -0, 1 / 3 ]) )
+    , ( "string esc", E.encode 0 (E.string "tab\t quote\" back\\ nl\n ctrl\u{0001} \u{1F600}") )
+    , ( "decodeValue", Debug.toString (D.decodeValue (D.field "x" D.int) (E.object [ ( "x", E.int 5 ) ]) |> Result.mapError D.errorToString) )
+    , ( "lazy depth", Debug.toString (D.decodeString depth "[[[[]],[]],[[]]]") )
+    ]
+
+
+depth : D.Decoder Int
+depth =
+    D.oneOf [ D.map (\xs -> 1 + List.foldl max 0 xs) (D.list (D.lazy (\_ -> depth))), D.succeed 0 ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

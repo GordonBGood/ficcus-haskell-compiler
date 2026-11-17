@@ -1,0 +1,226 @@
+module Main exposing (main)
+
+-- Tic-tac-toe with exhaustive minimax and alpha-beta, a board as a List (Maybe Player), win detection with list patterns, counting
+-- game tree nodes, best move; plus knights tour style backtracking with Maybe.
+
+type Player
+    = X
+    | O
+
+
+type alias Board =
+    List (Maybe Player)
+
+
+lines : List ( Int, Int, Int )
+lines =
+    [ ( 0, 1, 2 ), ( 3, 4, 5 ), ( 6, 7, 8 ), ( 0, 3, 6 ), ( 1, 4, 7 ), ( 2, 5, 8 ), ( 0, 4, 8 ), ( 2, 4, 6 ) ]
+
+
+at : Int -> Board -> Maybe Player
+at i b =
+    List.drop i b |> List.head |> Maybe.andThen identity
+
+
+winner : Board -> Maybe Player
+winner b =
+    lines
+        |> List.filterMap
+            (\( x, y, z ) ->
+                case ( at x b, at y b, at z b ) of
+                    ( Just p, Just q, Just r ) ->
+                        if p == q && q == r then
+                            Just p
+
+                        else
+                            Nothing
+
+                    _ ->
+                        Nothing
+            )
+        |> List.head
+
+
+place : Int -> Player -> Board -> Board
+place i p b =
+    List.indexedMap
+        (\j c ->
+            if i == j then
+                Just p
+
+            else
+                c
+        )
+        b
+
+
+moves : Board -> List Int
+moves b =
+    List.indexedMap Tuple.pair b |> List.filterMap (\( i, c ) -> if c == Nothing then Just i else Nothing)
+
+
+other : Player -> Player
+other p =
+    case p of
+        X ->
+            O
+
+        O ->
+            X
+
+
+score : Player -> Board -> ( Int, Int )
+score turn b =
+    case winner b of
+        Just X ->
+            ( 1, 1 )
+
+        Just O ->
+            ( -1, 1 )
+
+        Nothing ->
+            case moves b of
+                [] ->
+                    ( 0, 1 )
+
+                ms ->
+                    let
+                        subs =
+                            List.map (\m -> score (other turn) (place m turn b)) ms
+
+                        values =
+                            List.map Tuple.first subs
+
+                        nodes =
+                            1 + List.sum (List.map Tuple.second subs)
+                    in
+                    ( if turn == X then Maybe.withDefault 0 (List.maximum values) else Maybe.withDefault 0 (List.minimum values), nodes )
+
+
+bestMove : Player -> Board -> Maybe Int
+bestMove turn b =
+    let
+        scored =
+            List.map (\m -> ( m, Tuple.first (score (other turn) (place m turn b)) )) (moves b)
+
+        pick ( m, s ) best =
+            case best of
+                Nothing ->
+                    Just ( m, s )
+
+                Just ( _, bs ) ->
+                    if (turn == X && s > bs) || (turn == O && s < bs) then
+                        Just ( m, s )
+
+                    else
+                        best
+    in
+    List.foldl pick Nothing scored |> Maybe.map Tuple.first
+
+
+alphabeta : Player -> Int -> Int -> Board -> ( Int, Int )
+alphabeta turn alpha beta b =
+    case winner b of
+        Just X ->
+            ( 1, 1 )
+
+        Just O ->
+            ( -1, 1 )
+
+        Nothing ->
+            let
+                go ms a bt val nodes =
+                    case ms of
+                        [] ->
+                            ( val, nodes )
+
+                        m :: rest ->
+                            let
+                                ( v, n ) =
+                                    alphabeta (other turn) a bt (place m turn b)
+
+                                val2 =
+                                    if turn == X then max val v else min val v
+
+                                a2 =
+                                    if turn == X then max a val2 else a
+
+                                b2 =
+                                    if turn == O then min bt val2 else bt
+                            in
+                            if a2 >= b2 then
+                                ( val2, nodes + n )
+
+                            else
+                                go rest a2 b2 val2 (nodes + n)
+            in
+            case moves b of
+                [] ->
+                    ( 0, 1 )
+
+                ms ->
+                    go ms alpha beta (if turn == X then -2 else 2) 1
+
+
+render : Board -> String
+render b =
+    List.map
+        (\c ->
+            case c of
+                Nothing ->
+                    "."
+
+                Just X ->
+                    "X"
+
+                Just O ->
+                    "O"
+        )
+        b
+        |> String.concat
+
+
+play : Player -> Board -> List String -> List String
+play turn b acc =
+    case ( winner b, bestMove turn b ) of
+        ( Nothing, Just m ) ->
+            let
+                b2 =
+                    place m turn b
+            in
+            play (other turn) b2 (render b2 :: acc)
+
+        _ ->
+            List.reverse acc
+
+
+results : List ( String, String )
+results =
+    let
+        empty =
+            List.repeat 9 Nothing
+
+        mid =
+            place 4 X (place 0 O empty)
+    in
+    [ ( "empty minimax", Debug.toString (score O (place 4 X empty)) )
+    , ( "alphabeta", Debug.toString (alphabeta X -2 2 empty) )
+    , ( "midgame", Debug.toString (score O mid, alphabeta O -2 2 mid) )
+    , ( "best", Debug.toString (bestMove O mid, bestMove X empty) )
+    , ( "winner", Debug.toString (List.map winner [ [ Just X, Just X, Just X, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing ], empty, [ Just O, Nothing, Nothing, Nothing, Just O, Nothing, Nothing, Nothing, Just O ] ]) )
+    , ( "game", String.join " " (play O mid []) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

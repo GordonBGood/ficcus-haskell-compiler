@@ -1,0 +1,231 @@
+module Main exposing (main)
+
+-- Hand written parser combinators (function types in a custom type and in an alias), a State monad, a Writer, a Reader style
+-- environment passing, applicative style with andMap, constructors used as functions.
+
+type Parser a
+    = Parser (List Char -> Maybe ( a, List Char ))
+
+
+runP : Parser a -> String -> Maybe ( a, String )
+runP (Parser p) s =
+    p (String.toList s) |> Maybe.map (\( a, rest ) -> ( a, String.fromList rest ))
+
+
+pure : a -> Parser a
+pure a =
+    Parser (\cs -> Just ( a, cs ))
+
+
+fail : Parser a
+fail =
+    Parser (\_ -> Nothing)
+
+
+map : (a -> b) -> Parser a -> Parser b
+map f (Parser p) =
+    Parser (\cs -> p cs |> Maybe.map (\( a, r ) -> ( f a, r )))
+
+
+andThen : (a -> Parser b) -> Parser a -> Parser b
+andThen f (Parser p) =
+    Parser
+        (\cs ->
+            case p cs of
+                Nothing ->
+                    Nothing
+
+                Just ( a, rest ) ->
+                    let
+                        (Parser q) =
+                            f a
+                    in
+                    q rest
+        )
+
+
+andMap : Parser a -> Parser (a -> b) -> Parser b
+andMap pa pf =
+    pf |> andThen (\f -> map f pa)
+
+
+orElse : Parser a -> Parser a -> Parser a
+orElse (Parser q) (Parser p) =
+    Parser
+        (\cs ->
+            case p cs of
+                Nothing ->
+                    q cs
+
+                r ->
+                    r
+        )
+
+
+satisfy : (Char -> Bool) -> Parser Char
+satisfy ok =
+    Parser
+        (\cs ->
+            case cs of
+                c :: rest ->
+                    if ok c then
+                        Just ( c, rest )
+
+                    else
+                        Nothing
+
+                [] ->
+                    Nothing
+        )
+
+
+char : Char -> Parser Char
+char c =
+    satisfy ((==) c)
+
+
+many : Parser a -> Parser (List a)
+many p =
+    orElse (pure []) (p |> andThen (\x -> many p |> map (\xs -> x :: xs)))
+
+
+many1 : Parser a -> Parser (List a)
+many1 p =
+    p |> andThen (\x -> many p |> map (\xs -> x :: xs))
+
+
+spaces : Parser ()
+spaces =
+    many (char ' ') |> map (\_ -> ())
+
+
+token : Parser a -> Parser a
+token p =
+    p |> andThen (\a -> spaces |> map (\_ -> a))
+
+
+int : Parser Int
+int =
+    many1 (satisfy Char.isDigit)
+        |> map (\ds -> List.foldl (\d n -> n * 10 + Char.toCode d - 48) 0 ds)
+        |> token
+
+
+sepBy : Parser a -> Parser sep -> Parser (List a)
+sepBy p sep =
+    orElse (pure []) (p |> andThen (\x -> many (sep |> andThen (\_ -> p)) |> map (\xs -> x :: xs)))
+
+
+type Json
+    = JNull
+    | JBool Bool
+    | JNum Int
+    | JStr String
+    | JArr (List Json)
+    | JObj (List ( String, Json ))
+
+
+lazy : (() -> Parser a) -> Parser a
+lazy f =
+    Parser (\cs -> let (Parser p) = f () in p cs)
+
+
+keyword : String -> a -> Parser a
+keyword w v =
+    String.toList w |> List.foldr (\c acc -> char c |> andThen (\_ -> acc)) (pure v) |> token
+
+
+strLit : Parser String
+strLit =
+    char '"' |> andThen (\_ -> many (satisfy (\c -> c /= '"')) |> map String.fromList) |> andThen (\s -> char '"' |> map (\_ -> s)) |> token
+
+
+json : Parser Json
+json =
+    List.foldr orElse fail
+        [ keyword "null" JNull
+        , keyword "true" (JBool True)
+        , keyword "false" (JBool False)
+        , map JNum int
+        , map JStr strLit
+        , lazy (\_ -> token (char '[') |> andThen (\_ -> sepBy json (token (char ',')) |> andThen (\xs -> token (char ']') |> map (\_ -> JArr xs))))
+        , lazy (\_ -> token (char '{') |> andThen (\_ -> sepBy pair (token (char ',')) |> andThen (\xs -> token (char '}') |> map (\_ -> JObj xs))))
+        ]
+
+
+pair : Parser ( String, Json )
+pair =
+    strLit |> andThen (\k -> token (char ':') |> andThen (\_ -> json |> map (\v -> ( k, v ))))
+
+
+type State s a
+    = State (s -> ( a, s ))
+
+
+runState : State s a -> s -> ( a, s )
+runState (State f) =
+    f
+
+
+bindS : (a -> State s b) -> State s a -> State s b
+bindS f (State g) =
+    State (\s -> let ( a, s2 ) = g s in runState (f a) s2)
+
+
+retS : a -> State s a
+retS a =
+    State (\s -> ( a, s ))
+
+
+getS : State s s
+getS =
+    State (\s -> ( s, s ))
+
+
+putS : s -> State s ()
+putS s =
+    State (\_ -> ( (), s ))
+
+
+fresh : State Int String
+fresh =
+    getS |> bindS (\n -> putS (n + 1) |> bindS (\_ -> retS ("v" ++ String.fromInt n)))
+
+
+labelAll : List a -> State Int (List ( String, a ))
+labelAll xs =
+    case xs of
+        [] ->
+            retS []
+
+        x :: rest ->
+            fresh |> bindS (\l -> labelAll rest |> bindS (\tl -> retS (( l, x ) :: tl)))
+
+
+results : List ( String, String )
+results =
+    [ ( "int", Debug.toString (runP int "123 rest") )
+    , ( "many1 fail", Debug.toString (runP int "abc") )
+    , ( "sepBy", Debug.toString (runP (sepBy int (token (char ','))) "1, 2 ,3,  44 x") )
+    , ( "andMap", Debug.toString (runP (pure (\a b -> a * b) |> andMap int |> andMap int) "6 7") )
+    , ( "json1", Debug.toString (runP json "[1, 2, [true, null], \"hi\", {\"a\": 1, \"b\": [false]}]") )
+    , ( "json2", Debug.toString (runP json "{\"k\": [1, 2,]}") )
+    , ( "json3", Debug.toString (runP json "  [ ] ") )
+    , ( "state", Debug.toString (runState (labelAll [ 'a', 'b', 'c' ]) 10) )
+    , ( "state big", Debug.toString (runState (labelAll (List.range 1 500)) 0 |> Tuple.second) )
+    , ( "constructors as functions", String.join " " [ Debug.toString ( List.map JNum [ 1, 2 ] ), Debug.toString ( List.map2 Tuple.pair [ 1, 2 ] [ 'a', 'b' ] ), Debug.toString ( List.map Just [ "x" ] ), Debug.toString ( List.map JStr [ "q" ] ) ] )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

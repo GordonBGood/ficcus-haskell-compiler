@@ -1,0 +1,157 @@
+module Main exposing (main)
+
+-- Type aliases of records, extensible records, record update, field accessors as functions, nested records, records in Dict/Set/custom types.
+
+import Dict exposing (Dict)
+
+
+type alias Point =
+    { x : Float, y : Float }
+
+
+type alias Named r =
+    { r | name : String }
+
+
+type alias Aged r =
+    { r | age : Int }
+
+
+type alias Person =
+    Named (Aged { email : String })
+
+
+type alias Config =
+    { size : { w : Int, h : Int }, title : String, flags : List Bool }
+
+
+type alias Shape =
+    { origin : Point, kind : Kind }
+
+
+type Kind
+    = Circle { radius : Float }
+    | Box { w : Float, h : Float }
+
+
+greet : Named r -> String
+greet r =
+    "hello " ++ r.name
+
+
+birthday : Aged r -> Aged r
+birthday r =
+    { r | age = r.age + 1 }
+
+
+describe : Named (Aged r) -> String
+describe p =
+    p.name ++ " (" ++ String.fromInt p.age ++ ")"
+
+
+rename : String -> Named r -> Named r
+rename n r =
+    { r | name = n }
+
+
+area : Shape -> Float
+area s =
+    case s.kind of
+        Circle { radius } ->
+            3 * radius * radius
+
+        Box b ->
+            b.w * b.h
+
+
+move : Float -> Float -> Shape -> Shape
+move dx dy s =
+    let
+        o =
+            s.origin
+    in
+    { s | origin = { o | x = o.x + dx, y = o.y + dy } }
+
+
+resize : Int -> Config -> Config
+resize k c =
+    let
+        s =
+            c.size
+    in
+    { c | size = { s | w = s.w * k, h = s.h * k }, flags = List.map not c.flags }
+
+
+sumField : (r -> Int) -> List r -> Int
+sumField f =
+    List.foldl (\r acc -> acc + f r) 0
+
+
+sortOn : (r -> comparable) -> List r -> List r
+sortOn =
+    List.sortBy
+
+
+type alias Stats =
+    { count : Int, total : Int, maxv : Int }
+
+
+stats : List Int -> Stats
+stats =
+    List.foldl (\n s -> { s | count = s.count + 1, total = s.total + n, maxv = max s.maxv n }) { count = 0, total = 0, maxv = 0 }
+
+
+results : List ( String, String )
+results =
+    let
+        alice =
+            { name = "alice", age = 30, email = "a@x.org" }
+
+        bob =
+            { name = "bob", age = 41, email = "b@y.org" }
+
+        pt =
+            { name = "origin", x = 0, y = 0 }
+
+        cfg =
+            { size = { w = 3, h = 4 }, title = "cfg", flags = [ True, False ] }
+
+        people =
+            [ alice, bob, birthday alice, rename "carol" bob ]
+
+        byAge : Dict Int Person
+        byAge =
+            Dict.fromList (List.map (\p -> ( p.age, p )) people)
+    in
+    [ ( "greet", String.join ", " [ greet alice, greet pt, greet { name = "anon" } ] )
+    , ( "describe", String.join "; " (List.map describe people) )
+    , ( "update", Debug.toString (birthday (birthday alice)) )
+    , ( "update eq", Debug.toString ( birthday alice == { alice | age = 31 }, alice == bob ) )
+    , ( "accessor", Debug.toString (List.map .name people) )
+    , ( "sumField", String.fromInt (sumField .age people) )
+    , ( "sortOn", Debug.toString (List.map .name (sortOn .age (List.reverse people))) )
+    , ( "sortOn tuple", Debug.toString (List.map .name (sortOn (\p -> ( -p.age, p.name )) people)) )
+    , ( "dict of records", Debug.toString (List.map (\( k, v ) -> ( k, v.name )) (Dict.toList byAge)) )
+    , ( "nested update", Debug.toString (resize 5 cfg) )
+    , ( "area", Debug.toString (List.map area [ { origin = { x = 0, y = 0 }, kind = Circle { radius = 2 } }, { origin = { x = 1, y = 1 }, kind = Box { w = 2.5, h = 4 } } ]) )
+    , ( "move", Debug.toString (move 1.5 -2 { origin = { x = 0, y = 0 }, kind = Circle { radius = 1 } }) )
+    , ( "stats", Debug.toString (stats [ 3, 9, 4, 1 ]) )
+    , ( "record in tuple", Debug.toString ( { a = 1, b = "x" }, [ { a = 2, b = "y" } ] ) )
+    , ( "compare fields", Debug.toString (compare alice.name bob.name) )
+    , ( "empty record", Debug.toString ( (), {} |> always 5 ) )
+    , ( "shadow", let name = "outer" in let p = { name = name } in greet p ++ " " ++ (let name2 = "inner" in greet { p | name = name2 }) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

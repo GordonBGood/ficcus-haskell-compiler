@@ -1,0 +1,186 @@
+module Main exposing (main)
+
+-- Tail calls with big loops: accumulators, tuples as state, records as state, foldl over large ranges, Maybe/Result in loops,
+-- mutually tail recursive functions, string building, a sieve, digit sums, a PRNG loop with a big state.
+
+import Dict exposing (Dict)
+import Set
+
+
+sumTo : Int -> Int -> Int
+sumTo acc n =
+    if n == 0 then
+        acc
+
+    else
+        sumTo (acc + n) (n - 1)
+
+
+collatzMax : Int -> Int -> ( Int, Int ) -> ( Int, Int )
+collatzMax i limit best =
+    if i > limit then
+        best
+
+    else
+        let
+            len =
+                steps i 0
+        in
+        collatzMax (i + 1) limit (if len > Tuple.second best then ( i, len ) else best)
+
+
+steps : Int -> Int -> Int
+steps n acc =
+    if n == 1 then
+        acc
+
+    else if modBy 2 n == 0 then
+        steps (n // 2) (acc + 1)
+
+    else
+        steps (3 * n + 1) (acc + 1)
+
+
+type alias St =
+    { a : Int, b : Int, i : Int, hits : Int }
+
+
+runSt : St -> St
+runSt s =
+    if s.i >= 1000000 then
+        s
+
+    else
+        runSt { a = modBy 1000003 (s.a * 31 + s.i), b = modBy 999983 (s.b + s.a), i = s.i + 1, hits = if modBy 7 s.a == 0 then s.hits + 1 else s.hits }
+
+
+pingPong : Int -> Int -> Int
+pingPong n acc =
+    if n == 0 then
+        acc
+
+    else
+        pongPing (n - 1) (acc + 1)
+
+
+pongPing : Int -> Int -> Int
+pongPing n acc =
+    if n == 0 then
+        acc
+
+    else
+        pingPong (n - 1) (acc + 2)
+
+
+findFirst : (Int -> Bool) -> Int -> Maybe Int
+findFirst p i =
+    if i > 5000000 then
+        Nothing
+
+    else if p i then
+        Just i
+
+    else
+        findFirst p (i + 1)
+
+
+validate : Int -> Result String Int -> Result String Int
+validate i r =
+    case r of
+        Err _ ->
+            r
+
+        Ok acc ->
+            if i == 0 then
+                r
+
+            else if acc > 100000000 then
+                Err ("overflow at " ++ String.fromInt i)
+
+            else
+                validate (i - 1) (Ok (acc + i * 7))
+
+
+lcgLoop : Int -> Int -> Int
+lcgLoop n x =
+    if n == 0 then
+        x
+
+    else
+        lcgLoop (n - 1) (modBy 4294967296 (x * 1664525 + 1013904223))
+
+
+sieve : Int -> Int
+sieve n =
+    sieveLoop 2 n Set.empty 0
+
+
+sieveLoop : Int -> Int -> Set.Set Int -> Int -> Int
+sieveLoop i n composite count =
+    if i > n then
+        count
+
+    else if Set.member i composite then
+        sieveLoop (i + 1) n composite count
+
+    else
+        sieveLoop (i + 1) n (markMultiples (i * i) i n composite) (count + 1)
+
+
+markMultiples : Int -> Int -> Int -> Set.Set Int -> Set.Set Int
+markMultiples j step n s =
+    if j > n then
+        s
+
+    else
+        markMultiples (j + step) step n (Set.insert j s)
+
+
+digitSum : Int -> Int -> Int
+digitSum n acc =
+    if n == 0 then
+        acc
+
+    else
+        digitSum (n // 10) (acc + modBy 10 n)
+
+
+build : Int -> String -> String
+build n acc =
+    if n == 0 then
+        acc
+
+    else
+        build (n - 1) (acc ++ String.fromInt (modBy 10 n))
+
+
+results : List ( String, String )
+results =
+    [ ( "sumTo", String.fromInt (sumTo 0 10000000) )
+    , ( "collatz", Debug.toString (collatzMax 1 30000 ( 1, 0 )) )
+    , ( "state record", Debug.toString (runSt { a = 1, b = 2, i = 0, hits = 0 }) )
+    , ( "ping pong", String.fromInt (pingPong 3001 0) )
+    , ( "findFirst", Debug.toString ( findFirst (\i -> modBy 1000003 i == 999999) 0, findFirst (\i -> i < 0) 0 ) )
+    , ( "validate", Debug.toString ( validate 1000 (Ok 0), validate 100000 (Ok 0) ) )
+    , ( "lcg", String.fromInt (lcgLoop 5000000 42) )
+    , ( "sieve", String.fromInt (sieve 100000) )
+    , ( "foldl range", String.fromInt (List.foldl (\i acc -> modBy 1000007 (acc * 3 + i)) 0 (List.range 1 2000000)) )
+    , ( "digit sums", String.fromInt (List.sum (List.map (\i -> digitSum i 0) (List.range 1 200000))) )
+    , ( "build", String.fromInt (String.length (build 20000 "")) )
+    , ( "dict loop", String.fromInt (Dict.size (List.foldl (\i d -> Dict.insert (modBy 10007 (i * i)) i d) Dict.empty (List.range 1 100000))) )
+    , ( "list ops", Debug.toString (List.length (List.filter (\x -> modBy 3 x == 0) (List.map (\x -> x * x) (List.range 1 1000000)))) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

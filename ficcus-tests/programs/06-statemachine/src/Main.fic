@@ -1,0 +1,194 @@
+module Main exposing (main)
+
+-- Traffic light / vending machine / turnstile state machines with custom types, Maybe, records, and an event log.
+
+type Coin
+    = Nickel
+    | Dime
+    | Quarter
+
+
+type VState
+    = Idle
+    | Collecting Int
+    | Dispensing String Int
+    | OutOfOrder { reason : String, since : Int }
+
+
+type Event
+    = Insert Coin
+    | Select String
+    | Refund
+    | Kick
+    | Tick
+
+
+type alias Machine =
+    { state : VState, bank : Int, stock : List ( String, Int, Int ), log : List String, clock : Int }
+
+
+value : Coin -> Int
+value c =
+    case c of
+        Nickel ->
+            5
+
+        Dime ->
+            10
+
+        Quarter ->
+            25
+
+
+price : String -> List ( String, Int, Int ) -> Maybe ( Int, Int )
+price name stock =
+    stock
+        |> List.filter (\( n, _, _ ) -> n == name)
+        |> List.head
+        |> Maybe.map (\( _, p, q ) -> ( p, q ))
+
+
+take : String -> List ( String, Int, Int ) -> List ( String, Int, Int )
+take name =
+    List.map (\( n, p, q ) -> if n == name then ( n, p, q - 1 ) else ( n, p, q ))
+
+
+step : Event -> Machine -> Machine
+step ev m =
+    let
+        say s =
+            { m | log = (String.fromInt m.clock ++ ": " ++ s) :: m.log }
+    in
+    case ( m.state, ev ) of
+        ( OutOfOrder _, Kick ) ->
+            let
+                m2 =
+                    say "kicked back to life"
+            in
+            { m2 | state = Idle }
+
+        ( OutOfOrder _, _ ) ->
+            say "ignored (out of order)"
+
+        ( _, Kick ) ->
+            let
+                m2 =
+                    say "kick breaks it"
+            in
+            { m2 | state = OutOfOrder { reason = "kicked", since = m.clock } }
+
+        ( Idle, Insert c ) ->
+            let
+                m2 =
+                    say ("coin " ++ String.fromInt (value c))
+            in
+            { m2 | state = Collecting (value c) }
+
+        ( Collecting n, Insert c ) ->
+            let
+                m2 =
+                    say ("coin " ++ String.fromInt (value c))
+            in
+            { m2 | state = Collecting (n + value c) }
+
+        ( Collecting n, Refund ) ->
+            let
+                m2 =
+                    say ("refund " ++ String.fromInt n)
+            in
+            { m2 | state = Idle }
+
+        ( Collecting n, Select name ) ->
+            case price name m.stock of
+                Nothing ->
+                    say ("no such item " ++ name)
+
+                Just ( p, q ) ->
+                    if q <= 0 then
+                        say (name ++ " sold out")
+
+                    else if n < p then
+                        say ("need " ++ String.fromInt (p - n) ++ " more")
+
+                    else
+                        let
+                            m2 =
+                                say ("dispense " ++ name)
+                        in
+                        { m2 | state = Dispensing name (n - p), bank = m.bank + p, stock = take name m.stock }
+
+        ( Dispensing _ change, Tick ) ->
+            let
+                m2 =
+                    say ("change " ++ String.fromInt change)
+            in
+            { m2 | state = Idle }
+
+        ( Idle, Select name ) ->
+            say ("insert coins first for " ++ name)
+
+        _ ->
+            say "nothing"
+
+
+tick : Machine -> Machine
+tick m =
+    { m | clock = m.clock + 1 }
+
+
+runAll : List Event -> Machine -> Machine
+runAll evs m =
+    List.foldl (\e acc -> step e (tick acc)) m evs
+
+
+describe : VState -> String
+describe s =
+    case s of
+        Idle ->
+            "idle"
+
+        Collecting n ->
+            "collecting " ++ String.fromInt n
+
+        Dispensing what c ->
+            "dispensing " ++ what ++ " change " ++ String.fromInt c
+
+        OutOfOrder r ->
+            "out of order (" ++ r.reason ++ " at " ++ String.fromInt r.since ++ ")"
+
+
+start : Machine
+start =
+    { state = Idle, bank = 0, stock = [ ( "cola", 45, 2 ), ( "chips", 30, 1 ), ( "gum", 10, 0 ) ], log = [], clock = 0 }
+
+
+results : List ( String, String )
+results =
+    let
+        evs =
+            [ Select "cola", Insert Quarter, Select "cola", Insert Dime, Insert Dime, Select "cola", Tick, Insert Quarter, Insert Nickel, Select "chips", Tick
+            , Insert Dime, Select "gum", Select "tea", Refund, Kick, Insert Dime, Kick, Insert Quarter, Insert Quarter, Select "chips", Tick
+            ]
+
+        end =
+            runAll evs start
+    in
+    [ ( "final", describe end.state )
+    , ( "bank", String.fromInt end.bank )
+    , ( "stock", Debug.toString end.stock )
+    ]
+        ++ List.indexedMap (\i l -> ( "log " ++ String.fromInt i, l )) (List.reverse end.log)
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

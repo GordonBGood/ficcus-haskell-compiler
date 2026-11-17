@@ -1,0 +1,200 @@
+module Main exposing (main)
+
+-- Run length encoding / decoding on strings, lists and bit lists; Huffman-like frequency coding; look-and-say; round trips.
+
+import Dict
+import Set
+
+
+rle : List a -> List ( a, Int )
+rle xs =
+    case xs of
+        [] ->
+            []
+
+        x :: rest ->
+            let
+                ( same, other ) =
+                    spanEq x rest 1
+            in
+            ( x, same ) :: rle other
+
+
+spanEq : a -> List a -> Int -> ( Int, List a )
+spanEq x xs n =
+    case xs of
+        y :: ys ->
+            if y == x then
+                spanEq x ys (n + 1)
+
+            else
+                ( n, xs )
+
+        [] ->
+            ( n, [] )
+
+
+unrle : List ( a, Int ) -> List a
+unrle =
+    List.concatMap (\( x, n ) -> List.repeat n x)
+
+
+encodeStr : String -> String
+encodeStr s =
+    rle (String.toList s)
+        |> List.map (\( c, n ) -> if n == 1 then String.fromChar c else String.fromInt n ++ String.fromChar c)
+        |> String.concat
+
+
+decodeStr : String -> String
+decodeStr s =
+    decodeLoop (String.toList s) 0 ""
+
+
+decodeLoop : List Char -> Int -> String -> String
+decodeLoop cs n acc =
+    case cs of
+        [] ->
+            acc
+
+        c :: rest ->
+            if Char.isDigit c then
+                decodeLoop rest (n * 10 + Char.toCode c - 48) acc
+
+            else
+                decodeLoop rest 0 (acc ++ String.repeat (max 1 n) (String.fromChar c))
+
+
+lookAndSay : Int -> List String
+lookAndSay n =
+    List.foldl
+        (\_ ( cur, acc ) ->
+            let
+                next =
+                    rle (String.toList cur) |> List.map (\( c, k ) -> String.fromInt k ++ String.fromChar c) |> String.concat
+            in
+            ( next, cur :: acc )
+        )
+        ( "1", [] )
+        (List.range 1 n)
+        |> Tuple.second
+        |> List.reverse
+
+
+type Tree
+    = Leaf Char Int
+    | Node Int Tree Tree
+
+
+weight : Tree -> Int
+weight t =
+    case t of
+        Leaf _ w ->
+            w
+
+        Node w _ _ ->
+            w
+
+
+insertSorted : Tree -> List Tree -> List Tree
+insertSorted t ts =
+    case ts of
+        [] ->
+            [ t ]
+
+        x :: xs ->
+            if weight t <= weight x then
+                t :: ts
+
+            else
+                x :: insertSorted t xs
+
+
+build : List Tree -> Maybe Tree
+build ts =
+    case ts of
+        [] ->
+            Nothing
+
+        [ t ] ->
+            Just t
+
+        a :: b :: rest ->
+            build (insertSorted (Node (weight a + weight b) a b) rest)
+
+
+codes : String -> Tree -> Dict.Dict Char String
+codes _ t =
+    let
+        go prefix tr acc =
+            case tr of
+                Leaf c _ ->
+                    Dict.insert c (if prefix == "" then "0" else prefix) acc
+
+                Node _ l r ->
+                    go (prefix ++ "1") r (go (prefix ++ "0") l acc)
+    in
+    go "" t Dict.empty
+
+
+huffman : String -> ( Dict.Dict Char String, String )
+huffman s =
+    let
+        freq =
+            List.foldl (\c d -> Dict.update c (\m -> Just (Maybe.withDefault 0 m + 1)) d) Dict.empty (String.toList s)
+
+        leaves =
+            Dict.toList freq |> List.map (\( c, n ) -> Leaf c n) |> List.sortBy weight
+    in
+    case build leaves of
+        Nothing ->
+            ( Dict.empty, "" )
+
+        Just t ->
+            let
+                cs =
+                    codes "" t
+            in
+            ( cs, String.toList s |> List.map (\c -> Dict.get c cs |> Maybe.withDefault "?") |> String.concat )
+
+
+noInts : List Int
+noInts =
+    []
+
+
+results : List ( String, String )
+results =
+    let
+        sample =
+            "WWWWWWWWWWWWBWWWWWWWWWWWWBBBWWWWWWWWWWWWWWWWWWWWWWWWBWWWWWWWWWWWWWW"
+
+        ( cs, bits ) =
+            huffman "this is an example of a huffman tree"
+    in
+    [ ( "encode", encodeStr sample )
+    , ( "round trip", Debug.toString (decodeStr (encodeStr sample) == sample) )
+    , ( "ints", Debug.toString (rle [ 1, 1, 2, 3, 3, 3, 1 ]) )
+    , ( "unrle", Debug.toString (unrle (rle [ 1, 1, 2, 3, 3, 3, 1 ])) )
+    , ( "bools", Debug.toString (rle [ True, True, False, True ]) )
+    , ( "empty", Debug.toString (rle noInts) )
+    , ( "look and say", String.join "," (lookAndSay 9) )
+    , ( "huffman len", String.fromInt (String.length bits) )
+    , ( "huffman codes", Debug.toString (Dict.toList cs |> List.sortBy (\( c, code ) -> ( String.length code, c )) |> List.take 6) )
+    , ( "unique", Debug.toString (Set.size (Set.fromList (String.toList sample))) )
+    , ( "unicode", encodeStr "ééé€€😀😀😀x" )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

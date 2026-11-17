@@ -1,0 +1,8 @@
+heap sorted ok: "yes"
+heap first/last: "34/999987"
+heap sizes: "60000 0"
+heap peek: "3"
+big sum: "499500000"
+bumped sum: "500500000"
+big unchanged: "993 994"
+ring: "19,20,21,22,23"

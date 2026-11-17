@@ -1,0 +1,160 @@
+module Main exposing (main)
+
+-- Text wrapping, justification, word frequency, caesar cipher, palindromes: String and Char functions.
+
+import Dict exposing (Dict)
+
+
+text : String
+text =
+    "The quick brown fox jumps over the lazy dog. The dog, being lazy, did not react; the fox -- quick as ever -- jumped again! "
+        ++ "A man, a plan, a canal: Panama. Ünïcödé wörds are fün too, naïve café résumé."
+
+
+wrap : Int -> String -> List String
+wrap width s =
+    String.words s
+        |> List.foldl
+            (\w ( cur, lines ) ->
+                if cur == "" then
+                    ( w, lines )
+
+                else if String.length cur + 1 + String.length w <= width then
+                    ( cur ++ " " ++ w, lines )
+
+                else
+                    ( w, cur :: lines )
+            )
+            ( "", [] )
+        |> (\( cur, lines ) -> List.reverse (if cur == "" then lines else cur :: lines))
+
+
+justify : Int -> String -> String
+justify width line =
+    let
+        ws =
+            String.words line
+
+        gaps =
+            List.length ws - 1
+
+        total =
+            width - List.sum (List.map String.length ws)
+    in
+    if gaps <= 0 then
+        line
+
+    else
+        List.indexedMap
+            (\i w ->
+                if i == gaps then
+                    w
+
+                else
+                    w ++ String.repeat (total // gaps + (if i < modBy gaps total then 1 else 0)) " "
+            )
+            ws
+            |> String.concat
+
+
+wordFreq : String -> List ( String, Int )
+wordFreq s =
+    s
+        |> String.toLower
+        |> String.map (\c -> if Char.isAlphaNum c then c else ' ')
+        |> String.words
+        |> List.foldl (\w d -> Dict.update w (\m -> Just (Maybe.withDefault 0 m + 1)) d) Dict.empty
+        |> Dict.toList
+        |> List.sortWith
+            (\( a, x ) ( b, y ) ->
+                case compare y x of
+                    EQ ->
+                        compare a b
+
+                    o ->
+                        o
+            )
+
+
+caesar : Int -> String -> String
+caesar n =
+    String.map
+        (\c ->
+            if Char.isLower c then
+                shift 'a' c
+
+            else if Char.isUpper c then
+                shift 'A' c
+
+            else
+                c
+        )
+
+
+shift : Char -> Char -> Char
+shift base c =
+    Char.fromCode (Char.toCode base + modBy 26 (Char.toCode c - Char.toCode base + 3))
+
+
+isPalindrome : String -> Bool
+isPalindrome s =
+    let
+        cs =
+            String.toList (String.toLower s) |> List.filter Char.isAlphaNum
+    in
+    cs == List.reverse cs
+
+
+capitalize : String -> String
+capitalize w =
+    case String.uncons w of
+        Just ( c, rest ) ->
+            String.cons (Char.toUpper c) rest
+
+        Nothing ->
+            ""
+
+
+results : List ( String, String )
+results =
+    let
+        lines =
+            wrap 30 text
+    in
+    [ ( "lines", Debug.toString lines )
+    , ( "justified", Debug.toString (List.map (justify 30) lines) )
+    , ( "freq top", Debug.toString (List.take 6 (wordFreq text)) )
+    , ( "freq distinct", String.fromInt (List.length (wordFreq text)) )
+    , ( "caesar", caesar 3 "Hello, World! xyz XYZ" )
+    , ( "palindromes", Debug.toString (List.map isPalindrome [ "A man, a plan, a canal: Panama", "hello", "", "No lemon, no melon" ]) )
+    , ( "title", String.join " " (List.map capitalize (String.words "the quick brown fox")) )
+    , ( "unicode length", String.fromInt (String.length "naïve café") )
+    , ( "unicode upper", String.toUpper "naïve café résumé ß" )
+    , ( "pad", Debug.toString ( String.padLeft 8 '.' "abc", String.padRight 8 '.' "abc" ) )
+    , ( "split/join", String.join "|" (String.split "," "a,,b,c,") )
+    , ( "indexes", Debug.toString (String.indexes "an" "banana bandana") )
+    , ( "slice", Debug.toString [ String.slice 2 5 "abcdefgh", String.slice -3 -1 "abcdefgh", String.left 2 "abc", String.right 2 "abc", String.dropLeft 1 "abc", String.dropRight 1 "abc" ] )
+    , ( "trim", Debug.toString [ String.trim "  hi \n", String.trimLeft "  hi ", String.trimRight "  hi " ] )
+    , ( "contains", Debug.toString [ String.contains "lazy" text, String.startsWith "The" text, String.endsWith "too." text ] )
+    , ( "lines", Debug.toString (String.lines "a\nb\r\nc\n") )
+    , ( "toInt", Debug.toString (List.map String.toInt [ "12", "-5", "+7", "abc", "", "1.5", "0x10" ]) )
+    , ( "toFloat", Debug.toString (List.map String.toFloat [ "1.5", "-2", ".5", "1e3", "abc", "" ]) )
+    , ( "reverse", String.reverse "stressed" )
+    , ( "foldl", String.foldl (\c n -> n * 10 + Char.toCode c - 48) 0 "12345" |> String.fromInt )
+    , ( "any/all", Debug.toString ( String.any Char.isDigit "ab1", String.all Char.isDigit "ab1" ) )
+    , ( "filter", String.filter Char.isUpper "Hello World ABC" )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

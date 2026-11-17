@@ -1,0 +1,163 @@
+module Main exposing (main)
+
+-- "Type class dictionaries" as records of functions: Monoid, Show, Ord, Functor-like records; the dictionary passed explicitly,
+-- fields used as values (not called directly), fields called directly, nested dictionaries, a record of records of functions.
+
+import Dict exposing (Dict)
+
+
+type alias Monoid a =
+    { empty : a, combine : a -> a -> a }
+
+
+type alias Show a =
+    { show : a -> String }
+
+
+type alias Ord a =
+    { compareWith : a -> a -> Order }
+
+
+type alias Shape =
+    { name : String, area : Float -> Float, scale : Float -> Float -> Float }
+
+
+sumM : Monoid Int
+sumM =
+    { empty = 0, combine = (+) }
+
+
+prodM : Monoid Int
+prodM =
+    { empty = 1, combine = (*) }
+
+
+strM : Monoid String
+strM =
+    { empty = "", combine = (++) }
+
+
+listM : Monoid (List a)
+listM =
+    { empty = [], combine = (++) }
+
+
+pairM : Monoid a -> Monoid b -> Monoid ( a, b )
+pairM ma mb =
+    { empty = ( ma.empty, mb.empty )
+    , combine = \( a1, b1 ) ( a2, b2 ) -> ( ma.combine a1 a2, mb.combine b1 b2 )
+    }
+
+
+foldMap : Monoid m -> (a -> m) -> List a -> m
+foldMap m f xs =
+    List.foldl (\x acc -> m.combine acc (f x)) m.empty xs
+
+
+mconcat : Monoid m -> List m -> m
+mconcat m =
+    List.foldr m.combine m.empty
+
+
+showInt : Show Int
+showInt =
+    { show = String.fromInt }
+
+
+showList : Show a -> Show (List a)
+showList s =
+    { show = \xs -> "[" ++ String.join "; " (List.map s.show xs) ++ "]" }
+
+
+showPair : Show a -> Show b -> Show ( a, b )
+showPair sa sb =
+    { show = \( a, b ) -> "<" ++ sa.show a ++ " | " ++ sb.show b ++ ">" }
+
+
+showMaybe : Show a -> Show (Maybe a)
+showMaybe s =
+    { show = Maybe.map s.show >> Maybe.withDefault "none" }
+
+
+descending : Ord a -> Ord a
+descending o =
+    { compareWith = \a b -> o.compareWith b a }
+
+
+byKey : (a -> comparable) -> Ord a
+byKey f =
+    { compareWith = \a b -> compare (f a) (f b) }
+
+
+thenBy : Ord a -> Ord a -> Ord a
+thenBy second first =
+    { compareWith =
+        \a b ->
+            case first.compareWith a b of
+                EQ ->
+                    second.compareWith a b
+
+                other ->
+                    other
+    }
+
+
+sortWithOrd : Ord a -> List a -> List a
+sortWithOrd o =
+    List.sortWith o.compareWith
+
+
+shapes : List Shape
+shapes =
+    [ { name = "square", area = \s -> s * s, scale = \k s -> k * s }
+    , { name = "circle", area = \r -> 3 * r * r, scale = \k r -> k * r }
+    ]
+
+
+registry : Dict String (Monoid Int)
+registry =
+    Dict.fromList [ ( "sum", sumM ), ( "prod", prodM ) ]
+
+
+combineVia : String -> Int -> Int -> Maybe Int
+combineVia key a b =
+    Dict.get key registry |> Maybe.map (\m -> m.combine a b)
+
+
+results : List ( String, String )
+results =
+    let
+        pm =
+            pairM sumM strM
+
+        words =
+            [ ( "banana", 3 ), ( "apple", 5 ), ( "cherry", 3 ), ( "date", 5 ), ( "fig", 1 ) ]
+
+        ord =
+            thenBy (byKey Tuple.first) (descending (byKey Tuple.second))
+    in
+    [ ( "foldMap sum", String.fromInt (foldMap sumM String.length [ "a", "bb", "ccc" ]) )
+    , ( "foldMap prod", String.fromInt (foldMap prodM identity [ 1, 2, 3, 4, 5 ]) )
+    , ( "foldMap pair", Debug.toString (foldMap pm (\w -> ( String.length w, String.left 1 w )) [ "hello", "world", "x" ]) )
+    , ( "mconcat", Debug.toString ( mconcat listM [ [ 1 ], [ 2, 3 ], [] ], mconcat strM [ "a", "b" ] ) )
+    , ( "direct combine", Debug.toString ( sumM.combine 2 3, prodM.combine 2 3, strM.combine "x" "y" ) )
+    , ( "registry", Debug.toString ( combineVia "sum" 4 5, combineVia "prod" 4 5, combineVia "max" 4 5 ) )
+    , ( "show nested", (showList (showPair showInt (showMaybe (showList showInt)))).show [ ( 1, Just [ 1, 2 ] ), ( 2, Nothing ) ] )
+    , ( "ord", Debug.toString (sortWithOrd ord words) )
+    , ( "ord desc", Debug.toString (List.map Tuple.first (sortWithOrd (descending (byKey Tuple.first)) words)) )
+    , ( "shapes", Debug.toString (List.map (\s -> ( s.name, s.area 3, s.scale 2 5 )) shapes) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

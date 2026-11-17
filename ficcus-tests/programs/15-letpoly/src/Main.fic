@@ -1,0 +1,141 @@
+module Main exposing (main)
+
+-- Let polymorphism, local polymorphic helpers used at several types, constrained type variables (comparable, number, appendable),
+-- local functions capturing variables, shadowing, destructuring lets, polymorphic recursion free generic containers.
+
+type Pair a b
+    = Pair a b
+
+
+type alias Box a =
+    { value : a, label : String }
+
+
+swapP : Pair a b -> Pair b a
+swapP (Pair a b) =
+    Pair b a
+
+
+showPair : (a -> String) -> (b -> String) -> Pair a b -> String
+showPair fa fb (Pair a b) =
+    "<" ++ fa a ++ "," ++ fb b ++ ">"
+
+
+maxBy : (a -> comparable) -> List a -> Maybe a
+maxBy f xs =
+    List.foldl
+        (\x best ->
+            case best of
+                Nothing ->
+                    Just x
+
+                Just b ->
+                    if f x > f b then
+                        Just x
+
+                    else
+                        best
+        )
+        Nothing
+        xs
+
+
+sumAll : List number -> number
+sumAll =
+    List.foldl (+) 0
+
+
+joinAll : List appendable -> appendable -> appendable
+joinAll xs empty =
+    List.foldl (\x acc -> acc ++ x) empty xs
+
+
+results : List ( String, String )
+results =
+    let
+        ident x =
+            x
+
+        pairUp x =
+            ( x, x )
+
+        wrap v =
+            { value = v, label = "box" }
+
+        twice f x =
+            f (f x)
+
+        count p xs =
+            List.length (List.filter p xs)
+
+        ( a, b ) =
+            ( ident 3, ident "three" )
+
+        k =
+            10
+
+        addK x =
+            x + k
+
+        apply2 f =
+            ( f 1, f 2 )
+
+        compose f g =
+            \x -> f (g x)
+
+        mapPair f ( x, y ) =
+            ( f x, f y )
+
+        n =
+            5
+
+        total =
+            let
+                n2 =
+                    m * 2
+
+                m =
+                    100
+            in
+            n2
+
+        showAll xs =
+            String.join "," (List.map Debug.toString xs)
+
+        z =
+            sumAll [ 1, 2, 3 ]
+
+        zf =
+            sumAll [ 1.5, 2.5 ]
+    in
+    [ ( "ident", String.join " " [ Debug.toString ( a, b ), Debug.toString (ident True), Debug.toString (ident [ 1, 2 ]), Debug.toString (ident (Just 'c')) ] )
+    , ( "pairUp", Debug.toString ( pairUp 1, pairUp "s", pairUp (pairUp 2.5) ) )
+    , ( "wrap", Debug.toString ( wrap 1, wrap "x", wrap (wrap [ () ]) ) )
+    , ( "twice", String.join " " [ Debug.toString ( twice ((+) 1) 0, twice (\s -> s ++ "ab") "" ), Debug.toString ( twice (List.map ((*) 2)) [ 1 ], twice (twice not) True ) ] )
+    , ( "count", Debug.toString ( count (\x -> x > 2) [ 1, 2, 3, 4 ], count Char.isUpper (String.toList "AbC"), count ((==) "a") [ "a", "b", "a" ] ) )
+    , ( "closure k", Debug.toString (List.map addK [ 1, 2, 3 ]) )
+    , ( "apply2", Debug.toString ( apply2 ((+) 1), apply2 String.fromInt, apply2 (\x -> [ x ]) ) )
+    , ( "compose", Debug.toString (compose String.length String.fromInt 12345, compose (List.map ((+) 1)) List.reverse [ 1, 2, 3 ]) )
+    , ( "mapPair", Debug.toString ( mapPair negate ( 1, 2 ), mapPair String.length ( "a", "bcd" ) ) )
+    , ( "shadow let", String.fromInt total ++ " " ++ String.fromInt n )
+    , ( "showAll", showAll [ 1, 2, 3 ] ++ " | " ++ showAll [ "a", "b" ] ++ " | " ++ showAll [ Just 1.5, Nothing ] )
+    , ( "number", Debug.toString [ toFloat z, zf, sumAll [], sumAll [ 0.1, 0.2 ] ] )
+    , ( "appendable", Debug.toString ( joinAll [ "a", "b", "c" ] ">", joinAll [ [ 1 ], [ 2, 3 ] ] [ 0 ] ) )
+    , ( "maxBy", Debug.toString ( maxBy String.length [ "a", "ccc", "bb", "ddd" ], maxBy negate [ 3, 1, 2 ] ) ++ Debug.toString ( maxBy identity [ 'x', 'a' ], maxBy identity [ ( 1, "b" ), ( 1, "c" ) ] ) )
+    , ( "pair", showPair String.fromInt (\b2 -> if b2 then "T" else "F") (swapP (Pair True 5)) )
+    , ( "pair of pairs", Debug.toString (swapP (Pair (swapP (Pair 1 "a")) [ 2.5 ])) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

@@ -1,0 +1,191 @@
+module Main exposing (main)
+
+-- Base64 and hex with elm/bytes: Encode, Decode, endianness, strings, sequences, loops; compare with a pure List implementation.
+
+import Bitwise
+import Bytes exposing (Bytes, Endianness(..))
+import Bytes.Decode as D
+import Bytes.Encode as E
+
+
+alphabet : String
+alphabet =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+
+charAt : Int -> Char
+charAt i =
+    String.slice i (i + 1) alphabet |> String.uncons |> Maybe.map Tuple.first |> Maybe.withDefault '?'
+
+
+encode64 : Bytes -> String
+encode64 bytes =
+    let
+        n =
+            Bytes.width bytes
+
+        dec =
+            D.loop ( n, [] ) encStep
+    in
+    D.decode dec bytes |> Maybe.withDefault ""
+
+
+encStep : ( Int, List Char ) -> D.Decoder (D.Step ( Int, List Char ) String)
+encStep ( remaining, acc ) =
+    if remaining >= 3 then
+        D.map3
+            (\a b c ->
+                let
+                    n =
+                        Bitwise.or (Bitwise.shiftLeftBy 16 a) (Bitwise.or (Bitwise.shiftLeftBy 8 b) c)
+                in
+                D.Loop
+                    ( remaining - 3
+                    , charAt (Bitwise.and 63 n) :: charAt (Bitwise.and 63 (Bitwise.shiftRightBy 6 n)) :: charAt (Bitwise.and 63 (Bitwise.shiftRightBy 12 n)) :: charAt (Bitwise.shiftRightBy 18 n) :: acc
+                    )
+            )
+            D.unsignedInt8
+            D.unsignedInt8
+            D.unsignedInt8
+
+    else if remaining == 2 then
+        D.map2
+            (\a b ->
+                let
+                    n =
+                        Bitwise.or (Bitwise.shiftLeftBy 8 a) b
+                in
+                D.Done (String.fromList (List.reverse ('=' :: charAt (Bitwise.and 63 (Bitwise.shiftLeftBy 2 n)) :: charAt (Bitwise.and 63 (Bitwise.shiftRightBy 4 n)) :: charAt (Bitwise.shiftRightBy 10 n) :: acc)))
+            )
+            D.unsignedInt8
+            D.unsignedInt8
+
+    else if remaining == 1 then
+        D.map
+            (\a ->
+                D.Done (String.fromList (List.reverse ('=' :: '=' :: charAt (Bitwise.and 63 (Bitwise.shiftLeftBy 4 a)) :: charAt (Bitwise.shiftRightBy 2 a) :: acc)))
+            )
+            D.unsignedInt8
+
+    else
+        D.succeed (D.Done (String.fromList (List.reverse acc)))
+
+
+decode64 : String -> Maybe Bytes
+decode64 s =
+    let
+        vals =
+            String.toList (String.filter (\c -> c /= '=') s)
+                |> List.map (\c -> String.indexes (String.fromChar c) alphabet |> List.head)
+    in
+    if List.any ((==) Nothing) vals then
+        Nothing
+
+    else
+        let
+            ns =
+                List.filterMap identity vals
+
+            go xs out =
+                case xs of
+                    a :: b :: c :: d :: rest ->
+                        go rest (out ++ [ Bitwise.or (Bitwise.shiftLeftBy 2 a) (Bitwise.shiftRightBy 4 b), Bitwise.and 255 (Bitwise.or (Bitwise.shiftLeftBy 4 b) (Bitwise.shiftRightBy 2 c)), Bitwise.and 255 (Bitwise.or (Bitwise.shiftLeftBy 6 c) d) ])
+
+                    [ a, b, c ] ->
+                        out ++ [ Bitwise.or (Bitwise.shiftLeftBy 2 a) (Bitwise.shiftRightBy 4 b), Bitwise.and 255 (Bitwise.or (Bitwise.shiftLeftBy 4 b) (Bitwise.shiftRightBy 2 c)) ]
+
+                    [ a, b ] ->
+                        out ++ [ Bitwise.or (Bitwise.shiftLeftBy 2 a) (Bitwise.shiftRightBy 4 b) ]
+
+                    _ ->
+                        out
+        in
+        Just (E.encode (E.sequence (List.map E.unsignedInt8 (go ns []))))
+
+
+toHex : Bytes -> String
+toHex b =
+    D.decode (D.loop ( Bytes.width b, [] ) (\( n, acc ) -> if n == 0 then D.succeed (D.Done (String.concat (List.reverse acc))) else D.map (\x -> D.Loop ( n - 1, hex2 x :: acc )) D.unsignedInt8)) b
+        |> Maybe.withDefault "?"
+
+
+hex2 : Int -> String
+hex2 x =
+    String.fromList [ hexDigit (x // 16), hexDigit (modBy 16 x) ]
+
+
+hexDigit : Int -> Char
+hexDigit n =
+    if n < 10 then
+        Char.fromCode (48 + n)
+
+    else
+        Char.fromCode (87 + n)
+
+
+str : String -> Bytes
+str s =
+    E.encode (E.string s)
+
+
+results : List ( String, String )
+results =
+    let
+        mixed =
+            E.encode
+                (E.sequence
+                    [ E.unsignedInt8 255
+                    , E.signedInt8 -2
+                    , E.unsignedInt16 BE 0x0102
+                    , E.unsignedInt16 LE 0x0102
+                    , E.signedInt32 BE -2
+                    , E.unsignedInt32 LE 0xDEADBEEF
+                    , E.float32 BE 1.5
+                    , E.float64 LE -0.1
+                    , E.string "é€😀"
+                    , E.bytes (str "xy")
+                    ]
+                )
+    in
+    [ ( "Man", encode64 (str "Man") )
+    , ( "Ma", encode64 (str "Ma") )
+    , ( "M", encode64 (str "M") )
+    , ( "empty", encode64 (str "") )
+    , ( "sentence", encode64 (str "Many hands make light work.") )
+    , ( "decode", Debug.toString (Maybe.map toHex (decode64 "TWFueSBoYW5kcw==")) )
+    , ( "decode bad", Debug.toString (Maybe.map toHex (decode64 "T*Fu")) )
+    , ( "round trip", Debug.toString (Maybe.map encode64 (decode64 (encode64 (str "round trip ünï")))) )
+    , ( "mixed width", String.fromInt (Bytes.width mixed) )
+    , ( "mixed hex", toHex mixed )
+    , ( "mixed decode"
+      , Debug.toString
+            (D.decode
+                (D.map5 (\a b c d e -> [ a, b, c, d, e ]) D.unsignedInt8 D.signedInt8 (D.unsignedInt16 BE) (D.unsignedInt16 LE) (D.signedInt32 BE))
+                mixed
+            )
+      )
+    , ( "mixed floats"
+      , Debug.toString
+            (D.decode
+                (D.map2 Tuple.pair (D.bytes 8 |> D.andThen (\_ -> D.float32 BE)) (D.float64 LE))
+                (E.encode (E.sequence [ E.unsignedInt32 BE 0, E.unsignedInt32 BE 0, E.float32 BE 1.5, E.float64 LE -0.1 ]))
+            )
+      )
+    , ( "string width", Debug.toString ( E.getStringWidth "é€😀", Bytes.width (str "é€😀") ) )
+    , ( "decode string", Debug.toString (D.decode (D.string 3) (str "héllo")) )
+    , ( "too short", Debug.toString (D.decode (D.unsignedInt32 BE) (str "ab")) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

@@ -1,0 +1,123 @@
+module Main exposing (main)
+
+-- Numbers: Int division and modulo with negatives, Float formatting, rounding functions, trigonometry, special values, conversions,
+-- Newton's method, primes, gcd, number theory, statistics (mean/variance), compound interest, base conversion.
+
+showF : Float -> String
+showF =
+    String.fromFloat
+
+
+sqrtNewton : Float -> Float
+sqrtNewton x =
+    let
+        go g n =
+            if n == 0 then
+                g
+
+            else
+                go ((g + x / g) / 2) (n - 1)
+    in
+    go (x / 2 + 0.5) 30
+
+
+isPrime : Int -> Bool
+isPrime n =
+    n >= 2 && List.all (\d -> modBy d n /= 0) (List.range 2 (floor (sqrt (toFloat n))))
+
+
+factorize : Int -> List Int
+factorize n =
+    let
+        go m d acc =
+            if m == 1 then
+                List.reverse acc
+
+            else if d * d > m then
+                List.reverse (m :: acc)
+
+            else if modBy d m == 0 then
+                go (m // d) d (d :: acc)
+
+            else
+                go m (d + 1) acc
+    in
+    go n 2 []
+
+
+toBase : Int -> Int -> String
+toBase b n =
+    if n == 0 then
+        "0"
+
+    else
+        let
+            go m acc =
+                if m == 0 then
+                    acc
+
+                else
+                    go (m // b) (String.fromChar (digit (modBy b m)) ++ acc)
+
+            digit d =
+                if d < 10 then
+                    Char.fromCode (48 + d)
+
+                else
+                    Char.fromCode (87 + d)
+        in
+        (if n < 0 then "-" else "") ++ go (abs n) ""
+
+
+mean : List Float -> Float
+mean xs =
+    List.sum xs / toFloat (List.length xs)
+
+
+variance : List Float -> Float
+variance xs =
+    let
+        m =
+            mean xs
+    in
+    mean (List.map (\x -> (x - m) ^ 2) xs)
+
+
+results : List ( String, String )
+results =
+    [ ( "div/mod", Debug.toString (List.map (\( a, b ) -> ( a // b, modBy b a, remainderBy b a )) [ ( 7, 3 ), ( -7, 3 ), ( 7, -3 ), ( -7, -3 ), ( 0, 5 ) ]) )
+    , ( "div by zero", Debug.toString ( 5 // 0, -5 // 0 ) )
+    , ( "float div", Debug.toString ( ( 1 / 0, -1 / 0, isNaN (0 / 0) ), ( isInfinite (1 / 0), 7 / 2 ) ) )
+    , ( "rounding", Debug.toString (List.map (\x -> [ round x, floor x, ceiling x, truncate x ]) [ 2.5, -2.5, 3.5, 0.49999, -0.5, 1.5, -1.5, 1.0e6 ]) )
+    , ( "float show", String.join " " (List.map showF [ 0, 1, -1, 0.1, 0.5, 1 / 3, 2 / 3, 100, 1.0e21, 1.0e-7, 123456789.125, 1.5e300, 5.0e-324, 0.000001, 1234567890123456789 ]) )
+    , ( "float ops", String.join " " (List.map showF [ 0.1 + 0.2, 1.1 * 1.1, 3.0e8 * 3.0e8, sqrt 2, 2 ^ 0.5, 2 ^ 10, 10 ^ -2, e, pi, logBase 2 1024, sqrt -1 ]) )
+    , ( "trig", String.join " " (List.map showF [ sin 1, cos 1, tan 1, asin 0.5, acos 0.5, atan 1, atan2 1 -1, sin pi, cos pi ]) )
+    , ( "int pow", Debug.toString [ 2 ^ 30, 3 ^ 20, 7 ^ 0, (-2) ^ 5, 10 ^ 15 ] )
+    , ( "int ops", Debug.toString [ abs -5, negate 3, min 3 4, max 3 4, clamp 0 10 15, clamp 0 10 -5 ] )
+    , ( "compare", Debug.toString ( ( compare 1 2, compare 2.5 2.5, compare 3 1 ), ( 1 == 1.0, 0.1 + 0.2 == 0.3 ) ) )
+    , ( "toFloat", Debug.toString (List.map toFloat [ 0, 1, -7, 123456789 ]) )
+    , ( "newton", showF (sqrtNewton 2) ++ " " ++ showF (sqrtNewton 1.0e10) ++ " " ++ showF (sqrtNewton 0.0001) )
+    , ( "primes", Debug.toString (List.filter isPrime (List.range 1 60)) )
+    , ( "factorize", Debug.toString (List.map factorize [ 2, 12, 97, 360, 999999, 1000003 ]) )
+    , ( "bases", Debug.toString (List.map (\b -> toBase b 255) [ 2, 8, 10, 16, 36 ]) ++ toBase 2 -10 )
+    , ( "stats", Debug.toString ( mean [ 1, 2, 3, 4 ], variance [ 2, 4, 4, 4, 5, 5, 7, 9 ], sqrt (variance [ 2, 4, 4, 4, 5, 5, 7, 9 ]) ) )
+    , ( "interest", showF (List.foldl (\_ b -> b * 1.05) 1000 (List.range 1 10)) )
+    , ( "float int", Debug.toString ( ( round 1.0e15, floor -0.0, round (2 ^ 40 + 0.5) ), ( truncate -3.99, toFloat (round 2.6) ) ) )
+    , ( "fromPolar", Debug.toString (fromPolar ( 2, pi / 3 ), toPolar ( 3, 4 )) )
+    , ( "string/float", Debug.toString ( ( String.fromFloat 3, String.toFloat "3.14" ), ( String.fromInt -0, String.fromFloat -0.0 ) ) )
+    , ( "number lit", Debug.toString ( ( 0xFF, 0x7fffffff ), ( 1.0e3, 1e3, 0.5e-3 ) ) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items
