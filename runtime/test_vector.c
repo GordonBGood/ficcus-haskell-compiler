@@ -197,6 +197,42 @@ int main(void) {
   fic_drop(b);
   CHECK("struct vectors: nothing is live", fic_live_objects == live0);
 
+  /* ---- growth of a unique large vector is realloc (block > 256 bytes: malloc'd, class 0), pooled blocks move; contents and counts stay ---- */
+  { size_t allocs0 = fic_total_allocs, copied0 = fic_n_copied, vcopy0 = fic_n_vcopy; int64_t k; int ok = 1;
+    a = fic_vector_new(0, sizeof(int64_t), NULL);
+    for (k = 0; k < 100000; k++) a = push_i(k * 7, a);
+    for (k = 0; k < 100000; k++) if (I64(a, k) != k * 7) ok = 0;
+    CHECK("RAW, 100000 pushes: every element after each growth", ok && FIC_VECTOR_LEN(a) == 100000 && FIC_VECTOR(a)->cap == 131072 && a->nptr == 0 && a->tag == FIC_TAG_VECTOR);
+    CHECK("RAW growth by realloc: one allocation per pooled size only (<= 6), 15 growths counted, none from sharing", fic_total_allocs - allocs0 <= 6 && fic_n_copied - copied0 >= 15 && fic_n_vcopy == vcopy0 && fic_live_objects == live0 + 1);
+    fic_drop(a);
+    CHECK("RAW: dropped", fic_live_objects == live0);
+    a = fic_vector_new(0, sizeof(fic_ref), &fic_vd_ref);
+    for (k = 0; k < 5000; k++) a = push_r(box(k), a);
+    ok = 1; for (k = 0; k < 5000; k++) if (unbox(REF(a, k)) != k || REF(a, k)->rc != 1) ok = 0;
+    CHECK("REF, 5000 pushes: elements and counts after each growth, the pointer map kept", ok && FIC_VECTOR(a)->desc == &fic_vd_ref && fic_live_objects == live0 + 5001);
+    fic_dup(a);
+    b = push_r(box(-1), a);                                  /* shared: copies (counted), the original stays intact and unique again */
+    CHECK("REF: a shared large vector still copies on push", b != a && FIC_VECTOR_LEN(a) == 5000 && FIC_VECTOR_LEN(b) == 5001 && a->rc == 1 && REF(a, 4999)->rc == 2 && fic_n_vcopy == vcopy0 + 1);
+    fic_drop(a); fic_drop(b);
+    CHECK("REF: nothing is live", fic_live_objects == live0);
+    a = fic_vector_new(0, sizeof(rec), &rec_desc);
+    for (k = 0; k < 3000; k++) a = push_rec(mkrec(k), a);
+    ok = 1; for (k = 0; k < 3000; k++) if (REC(a, k).id != k || unbox(REC(a, k).name) != k * 10 || unbox(REC(a, k).tag) != k * 100) ok = 0;
+    CHECK("MAP, 3000 pushes: elements and the pointer map after each growth", ok && FIC_VECTOR(a)->desc == &rec_desc && fic_live_objects == live0 + 6001);
+    fic_drop(a);
+    CHECK("MAP: nothing is live", fic_live_objects == live0);
+    a = fic_vector_new(0, sizeof(int64_t), NULL);
+    for (k = 0; k < 40; k++) a = push_i(k, a);
+    b = fic_vector_new(0, sizeof(int64_t), NULL);
+    for (k = 0; k < 5000; k++) b = push_i(k, b);
+    a = fic_vector_append(a, b, "test");                     /* unique, no room: grows with append's rule */
+    ok = 1; for (k = 0; k < 40; k++) if (I64(a, k) != k) ok = 0;
+    for (k = 0; k < 5000; k++) if (I64(a, 40 + k) != k) ok = 0;
+    CHECK("append to a unique vector grows by realloc: contents", ok && FIC_VECTOR_LEN(a) == 5040 && FIC_VECTOR(a)->cap >= 5040 && FIC_VECTOR_LEN(b) == 5000);
+    fic_drop(a); fic_drop(b);
+    CHECK("append: nothing is live", fic_live_objects == live0);
+  }
+
   /* ---- a vector of vectors, and the drop without recursion ---- */
   a = fic_vector_new(0, sizeof(fic_ref), &fic_vd_ref);
   for (i = 0; i < 2000; i++) { b = fic_vector_new(0, sizeof(fic_ref), &fic_vd_ref); b = push_r(a, b); a = b; }   /* 2000 deep */
@@ -204,7 +240,7 @@ int main(void) {
   CHECK("a chain of 2000 nested vectors is dropped", fic_live_objects == live0);
 
   /* ---- FIC_WARN_COPY ---- */
-  CHECK("copies of shared vectors so far", fic_n_vcopy == 9);
+  CHECK("copies of shared vectors so far", fic_n_vcopy == 10);
 #else
   /* the oracle: every update copies, nothing is freed */
   b = set_i(7, -1, a);

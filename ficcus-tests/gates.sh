@@ -9,7 +9,7 @@ W=$(cd "$(dirname "$0")/../.." && pwd); R=$W/ficcus-haskell-compiler
 # what the run made, not removed.
 KEEP=${KEEP:-}
 if [ -z "$S" ]; then S=$(mktemp -d "${CLAUDE_CODE_TMPDIR:-${TMPDIR:-/tmp}}/gates.XXXXXX"); OWN=1; fi
-B=$W/bin/${BIN:-elmficA14}; G=$S/gates; mkdir -p $G; cd $W
+B=$W/bin/${BIN:-elmficA15}; G=$S/gates; mkdir -p $G; cd $W
 cleanup() {
   if [ -n "$KEEP" ]; then echo "KEEP=1: $S kept ($(du -sh $S | cut -f1))"; return; fi
   rm -rf "$S"/h_* "$S"/gates "$S"/tcout "$S"/elmdiff80 "$S"/jh "$S"/jw "$S"/libw "$S"/rt_*

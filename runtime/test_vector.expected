@@ -1,4 +1,4 @@
-FIC_STATS: allocs 4081 live 0 peak 2002 dup 45 drop 50 free_slow 30 reuse_hit 0 reuse_miss 0 inplace 2259 copied 2037 pap_steal 0 clo_steal 0 vec_copy 9
+FIC_STATS: allocs 15099 live 0 peak 6001 dup 5046 drop 57 free_slow 36 reuse_hit 0 reuse_miss 0 inplace 115243 copied 2095 pap_steal 0 clo_steal 0 vec_copy 10
 ok   an empty vector: length 0, a leaf for the drop
 ok   100 pushes: length 100, capacity 128, the elements
 ok   growth is amortized: 6 moves (4, 8, .. 128), 94 pushes in place, no copy of a shared vector
@@ -46,6 +46,16 @@ ok   take from a unique vector of structs: both references moved, placeholders l
 ok   and put back in place
 ok   the elements of the copy are unique after the original is dropped
 ok   struct vectors: nothing is live
+ok   RAW, 100000 pushes: every element after each growth
+ok   RAW growth by realloc: one allocation per pooled size only (<= 6), 15 growths counted, none from sharing
+ok   RAW: dropped
+ok   REF, 5000 pushes: elements and counts after each growth, the pointer map kept
+ok   REF: a shared large vector still copies on push
+ok   REF: nothing is live
+ok   MAP, 3000 pushes: elements and the pointer map after each growth
+ok   MAP: nothing is live
+ok   append to a unique vector grows by realloc: contents
+ok   append: nothing is live
 ok   a chain of 2000 nested vectors is dropped
 ok   copies of shared vectors so far
 0 failures

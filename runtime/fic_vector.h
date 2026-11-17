@@ -129,6 +129,29 @@ static fic_ref fic_vector_move(fic_ref v, int64_t cap) {
   fic_free_obj(v);
   return r;
 }
+
+/* GROWTH of a unique vector (push, append) to room for `cap` >= len elements. A block from malloc (class 0: more than 256 bytes) is
+   extended with realloc, which lets the allocator extend it in place or remap its pages (mremap) instead of allocating, copying and
+   freeing (the copy touched fresh pages: ~75% of the page faults of hamnth). The object keeps its identity as far as the caller is
+   concerned: the result replaces v. A pooled block (small) moves as before. The pointer map (desc), the length, the element size and the
+   elements are unchanged; only cap changes. FIC_DROP_ALL: the old address leaves the registry and the new one enters. */
+static fic_ref fic_vector_regrow(fic_ref v, int64_t cap) {
+  fic_vector *p = FIC_VECTOR(v), *q;
+  size_t bytes;
+  if (p->h.cls != 0 || cap < p->len) return fic_vector_move(v, cap);
+  if (p->esize == 0 || (uint64_t)cap > (uint64_t)(SIZE_MAX / 2 - sizeof(fic_vector)) / p->esize) abort();
+  bytes = sizeof(fic_vector) + (size_t)cap * p->esize;
+#ifdef FIC_DROP_ALL
+  fic_reg_del(p);
+#endif
+  q = (fic_vector *)realloc(p, bytes);
+  if (q == NULL) abort();
+#ifdef FIC_DROP_ALL
+  fic_reg_add(q);
+#endif
+  q->cap = cap;
+  return &q->h;
+}
 #endif
 
 /* set i x v: out of range the vector comes back unchanged (and the element is released) */
@@ -188,7 +211,7 @@ static fic_ref fic_vector_push(const void *x, fic_ref v, const char *where) {
 #ifdef FIC_RC
   if (v->rc == 1) {
     if (n < FIC_VECTOR(v)->cap) { r = v; FIC_STAT(fic_n_inplace++); }
-    else { r = fic_vector_move(v, fic_vector_grown(n)); FIC_STAT(fic_n_copied++); }      /* growth: not a copy of a shared vector */
+    else { r = fic_vector_regrow(v, fic_vector_grown(n)); FIC_STAT(fic_n_copied++); }      /* growth: not a copy of a shared vector */
   } else {
     fic_vector_shared("push", v, where);
     FIC_STAT(fic_n_copied++);
@@ -251,7 +274,7 @@ static fic_ref fic_vector_append(fic_ref a, fic_ref b, const char *where) {
   if (a == b && a->rc == 1) { FIC_RC_DUP(a); r = fic_vector_append(a, b, where); FIC_RC_DROP(b); return r; }      /* the same unique vector twice (the Rc pass never does this): do not free b under the copy */
   if (a->rc == 1) {
     if (FIC_VECTOR(a)->cap >= n) { r = a; FIC_STAT(fic_n_inplace++); }
-    else { int64_t g = fic_vector_grown(la); r = fic_vector_move(a, g < n ? n : g); FIC_STAT(fic_n_copied++); }
+    else { int64_t g = fic_vector_grown(la); r = fic_vector_regrow(a, g < n ? n : g); FIC_STAT(fic_n_copied++); }
   } else {
     if (la > 0) fic_vector_shared("append", a, where);
     FIC_STAT(fic_n_copied++);

@@ -332,6 +332,8 @@ rounds k v =
         rounds (k - 1) (Vector.map (\\x -> x + 1) v)
 ''', "sumV 0 0 (rounds 100 (grow 0 1000 Vector.empty))", "599500", "allocs <= 140 and vec_copy == 0 and copied <= 12 and inplace >= 100 * 1000"),       # one new vector per map, never a copy
     ("vec-filter", VFILL, "Vector.length (Vector.filter (\\x -> modBy 3 x == 0) (grow 0 %d Vector.empty))" % N, "33334", "allocs <= 60 and vec_copy == 0 and inplace >= %d" % N),
+    # growth of a unique vector by realloc: N pushes allocate only the pooled sizes and the first malloc'd block (copying doubling: 17 allocations)
+    ("vec-push-grow", VFILL, "Vector.length (grow 0 %d Vector.empty)" % N, str(N), "allocs <= 8 and vec_copy == 0 and inplace >= %d" % (N - 30)),
     ("vec-append-loop", VFILL + '''
 
 app : Int -> Int -> Vector Int -> Vector Int

@@ -469,7 +469,11 @@ t(V + "swap", ['Vector.toList (Vector.swap 0 2 (vs 3))', 'let a = vs 3 in ( Vect
 t(V + "push", ['Vector.toList (Vector.push (mk 9) (vs 2))', 'let a = vs 2 in ( Vector.toList (Vector.push (mk 8) a), Vector.toList a )',
                'Vector.length (pushAll (List.map mk (List.range 1 80)) (vs 1))', 'let s = mk 7 in ( Vector.toList (Vector.push s (Vector.push s Vector.empty)), s )',
                'Vector.toList (pushAll (List.range 1 40) Vector.empty)', 'Vector.toList (Vector.push (P 1.5 False 3) (vp 1))',
-               'let a = vn 2 in ( Vector.toList (Vector.push (N (mk 3) 3 []) a), a )', 'Vector.length (pushAll (List.map (\\i -> N (mk i) i [ mk i ]) (List.range 1 70)) Vector.empty)'],
+               'let a = vn 2 in ( Vector.toList (Vector.push (N (mk 3) 3 []) a), a )', 'Vector.length (pushAll (List.map (\\i -> N (mk i) i [ mk i ]) (List.range 1 70)) Vector.empty)',
+               # growth of a unique large vector is realloc (RAW, REF and MAP elements, append): contents, counts and the pointer map survive it
+               'Vector.toList (pushAll (List.range 1 3000) Vector.empty)', 'Vector.length (pushAll (List.map (\\i -> N (mk i) i [ mk i ]) (List.range 1 900)) Vector.empty)',
+               'Vector.toList (pushAll (List.map mk (List.range 1 700)) Vector.empty)', 'Vector.length (Vector.append (pushAll (List.range 1 40) Vector.empty) (pushAll (List.range 1 3000) Vector.empty))',
+               'let a = pushAll (List.range 1 600) Vector.empty in ( Vector.length (Vector.push 0 a), Vector.length a )'],
   needle="fic_vector_push", **vopt)
 t(V + "slice", ['Vector.toList (Vector.slice 1 3 (vs 5))', 'let a = vs 5 in ( Vector.toList (Vector.slice -2 5 a), Vector.toList a )', 'Vector.toList (Vector.slice 3 1 (vs 5))',
                 'Vector.toList (Vector.slice 0 99 (vi 4))', 'Vector.toList (Vector.slice -99 -1 (vi 4))', 'Vector.toList (Vector.slice 1 2 (vp 3))',
