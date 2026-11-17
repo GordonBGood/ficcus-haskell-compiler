@@ -1,4 +1,4 @@
-FIC_STATS: allocs 22275 live 0 peak 212 dup 262 drop 21445 free_slow 21235 reuse_hit 0 reuse_miss 0 inplace 0 copied 0 pap_steal 0 clo_steal 0 vec_copy 0
+FIC_STATS: allocs 22275 live 0 peak 212 dup 256 drop 21439 free_slow 21235 reuse_hit 0 reuse_miss 0 inplace 0 copied 0 pap_steal 0 clo_steal 0 vec_copy 0
 ok   ustring offsets against the plain scan
 ok   cache released
 0 bad

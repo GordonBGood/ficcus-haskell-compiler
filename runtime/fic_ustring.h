@@ -70,6 +70,11 @@ static int64_t fic_us_off(fic_ref s, int64_t cp) {
   if (cp <= 0) return 0;
   if (cp >= n) return len;
   if (n == len) return cp;                          /* ASCII */
+  if (len <= 48) {                                  /* a short string: a plain scan is cheaper than the cache (no count to take) */
+    i = 0; b = 0;
+    while (i < cp) { b++; while (b < len && (d[b] & 0xC0u) == 0x80u) b++; i++; }
+    return b;
+  }
   fic_us_use(s);
   dc = cp > fic_us_ci ? cp - fic_us_ci : fic_us_ci - cp;
   if (cp <= dc && cp <= n - cp) { i = 0; b = 0; }                         /* the start is the nearest */
