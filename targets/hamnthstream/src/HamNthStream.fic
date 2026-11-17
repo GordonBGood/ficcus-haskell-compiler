@@ -1,0 +1,270 @@
+module HamNthStream exposing (main)
+
+{-| hamnthstream, variant (b), the producer state holds the three pointers and the trimmed Vector queue (updated in place when unique): the nth Hamming number (as targets/hamnth) taken from a stream
+    type CIS a = CIS a (() -> CIS a)
+whose producer yields records { i, j, k, lg } (the exponents and the Float logarithm i*ln 2 + j*ln 3 + k*ln 5, computed as in hamnth so the
+order and the answers are the same) in increasing order. The consumer skips n - 1 elements, then the nth is turned into decimal digits
+(the digit code of hamnth, for that one element only) and printed. No fusion is done by the compiler: every element is a CIS cell and a
+closure. n is the constant `target`.
+-}
+
+import Vector exposing (Vector)
+
+
+target : Int
+target =
+    1000000
+
+
+type alias Item =
+    { i : Int, j : Int, k : Int, lg : Float }
+
+
+type CIS a
+    = CIS a (() -> CIS a)
+
+
+ln2 : Float
+ln2 =
+    0.6931471805599453
+
+
+ln3 : Float
+ln3 =
+    1.0986122886681098
+
+
+ln5 : Float
+ln5 =
+    1.6094379124341003
+
+
+mk : Int -> Int -> Int -> Item
+mk i j k =
+    { i = i, j = j, k = k, lg = toFloat i * ln2 + toFloat j * ln3 + toFloat k * ln5 }
+
+
+same : Item -> Item -> Bool
+same a b =
+    a.i == b.i && a.j == b.j && a.k == b.k
+
+
+zero : Item
+zero =
+    { i = 0, j = 0, k = 0, lg = 0 }
+
+
+smallest : Item -> Item -> Item -> Item
+smallest ca cb cc =
+    if ca.lg <= cb.lg && ca.lg <= cc.lg then
+        ca
+
+    else if cb.lg <= cc.lg then
+        cb
+
+    else
+        cc
+
+
+nth : Int -> CIS Item -> Item
+nth n (CIS x rest) =
+    if n <= 1 then
+        x
+
+    else
+        nth (n - 1) (rest ())
+
+
+at : Int -> Vector Item -> Item
+at ix q =
+    case Vector.get ix q of
+        Just t ->
+            t
+
+        Nothing ->
+            zero
+
+
+{-| cut off the part of the queue in front of the smallest pointer when it is at least 65536 long and as long as the rest -}
+trim : Int -> Int -> Vector Item -> ( Int, Vector Item )
+trim base p5 q =
+    let
+        dead =
+            p5 - base
+    in
+    if dead >= 65536 && dead * 2 >= Vector.length q then
+        ( p5, Vector.slice dead (Vector.length q) q )
+
+    else
+        ( base, q )
+
+
+{-| the producer state: the queue of the items found so far (from index base), the three pointers -}
+type alias St =
+    { q : Vector Item, base : Int, p2 : Int, p3 : Int, p5 : Int }
+
+
+step : St -> ( Item, St )
+step st =
+    let
+        a =
+            at (st.p2 - st.base) st.q
+
+        b =
+            at (st.p3 - st.base) st.q
+
+        c =
+            at (st.p5 - st.base) st.q
+
+        ca =
+            mk (a.i + 1) a.j a.k
+
+        cb =
+            mk b.i (b.j + 1) b.k
+
+        cc =
+            mk c.i c.j (c.k + 1)
+
+        next =
+            smallest ca cb cc
+
+        p2n =
+            if same ca next then
+                st.p2 + 1
+
+            else
+                st.p2
+
+        p3n =
+            if same cb next then
+                st.p3 + 1
+
+            else
+                st.p3
+
+        p5n =
+            if same cc next then
+                st.p5 + 1
+
+            else
+                st.p5
+
+        ( base2, q2 ) =
+            trim st.base p5n (Vector.push next st.q)
+    in
+    ( next, { q = q2, base = base2, p2 = p2n, p3 = p3n, p5 = p5n } )
+
+
+stream : St -> CIS Item
+stream st =
+    let
+        ( x, st2 ) =
+            step st
+    in
+    CIS x (\_ -> stream st2)
+
+
+start : CIS Item
+start =
+    CIS zero (\_ -> stream { q = Vector.singleton zero, base = 0, p2 = 0, p3 = 0, p5 = 0 })
+
+
+-- the decimal digits: a Vector of limbs of base 1e9, least significant first
+
+
+limb : Int
+limb =
+    1000000000
+
+
+mulLoop : Int -> Int -> Int -> Vector Int -> Vector Int
+mulLoop m ix carry v =
+    case Vector.get ix v of
+        Just d ->
+            let
+                t =
+                    d * m + carry
+            in
+            mulLoop m (ix + 1) (t // limb) (Vector.set ix (modBy limb t) v)
+
+        Nothing ->
+            pushCarry carry v
+
+
+pushCarry : Int -> Vector Int -> Vector Int
+pushCarry carry v =
+    if carry == 0 then
+        v
+
+    else
+        pushCarry (carry // limb) (Vector.push (modBy limb carry) v)
+
+
+intPow : Int -> Int -> Int
+intPow p e =
+    if e <= 0 then
+        1
+
+    else
+        p * intPow p (e - 1)
+
+
+{-| multiply by p^e in steps of p^chunkE -}
+mulPow : Int -> Int -> Int -> Vector Int -> Vector Int
+mulPow p chunkE e v =
+    if e > chunkE then
+        mulPow p chunkE (e - chunkE) (mulLoop (intPow p chunkE) 0 0 v)
+
+    else
+        mulLoop (intPow p e) 0 0 v
+
+
+digits : Item -> Vector Int
+digits t =
+    Vector.singleton 1
+        |> mulPow 2 22 t.i
+        |> mulPow 3 13 t.j
+        |> mulPow 5 9 t.k
+
+
+{-| most significant limb first: the first without padding, the others to nine digits -}
+render : Vector Int -> String
+render v =
+    let
+        go ix acc =
+            if ix < 0 then
+                acc
+
+            else
+                go (ix - 1) (acc ++ String.padLeft 9 '0' (String.fromInt (Maybe.withDefault 0 (Vector.get ix v))))
+
+        top =
+            Vector.length v - 1
+    in
+    go (top - 1) (String.fromInt (Maybe.withDefault 0 (Vector.get top v)))
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    t =
+                        nth target start
+
+                    s =
+                        render (digits t)
+
+                    _ =
+                        Debug.log
+                            ("Hamming number " ++ String.fromInt target ++ " = 2^" ++ String.fromInt t.i ++ " * 3^" ++ String.fromInt t.j ++ " * 5^" ++ String.fromInt t.k)
+                            ()
+
+                    _ =
+                        Debug.log (s ++ " (" ++ String.fromInt (String.length s) ++ " digits)") ()
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

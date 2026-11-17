@@ -1,0 +1,284 @@
+module HamNthStreamList exposing (main)
+
+{-| hamnthstream, variant (c), a list based queue: no Vector, one banker's queue per pointer: the nth Hamming number (as targets/hamnth) taken from a stream
+    type CIS a = CIS a (() -> CIS a)
+whose producer yields records { i, j, k, lg } (the exponents and the Float logarithm i*ln 2 + j*ln 3 + k*ln 5, computed as in hamnth so the
+order and the answers are the same) in increasing order. The consumer skips n - 1 elements, then the nth is turned into decimal digits
+(the digit code of hamnth, for that one element only) and printed. No fusion is done by the compiler: every element is a CIS cell and a
+closure. n is the constant `target`.
+-}
+
+import Vector exposing (Vector)
+
+
+target : Int
+target =
+    1000000
+
+
+type alias Item =
+    { i : Int, j : Int, k : Int, lg : Float }
+
+
+type CIS a
+    = CIS a (() -> CIS a)
+
+
+ln2 : Float
+ln2 =
+    0.6931471805599453
+
+
+ln3 : Float
+ln3 =
+    1.0986122886681098
+
+
+ln5 : Float
+ln5 =
+    1.6094379124341003
+
+
+mk : Int -> Int -> Int -> Item
+mk i j k =
+    { i = i, j = j, k = k, lg = toFloat i * ln2 + toFloat j * ln3 + toFloat k * ln5 }
+
+
+same : Item -> Item -> Bool
+same a b =
+    a.i == b.i && a.j == b.j && a.k == b.k
+
+
+zero : Item
+zero =
+    { i = 0, j = 0, k = 0, lg = 0 }
+
+
+smallest : Item -> Item -> Item -> Item
+smallest ca cb cc =
+    if ca.lg <= cb.lg && ca.lg <= cc.lg then
+        ca
+
+    else if cb.lg <= cc.lg then
+        cb
+
+    else
+        cc
+
+
+nth : Int -> CIS Item -> Item
+nth n (CIS x rest) =
+    if n <= 1 then
+        x
+
+    else
+        nth (n - 1) (rest ())
+
+
+{-| a queue of the items that one pointer has not passed yet: the front list is read, the back list is the newest first -}
+type alias Q =
+    { front : List Item, back : List Item }
+
+
+emptyQ : Q
+emptyQ =
+    { front = [ zero ], back = [] }
+
+
+{-| the head of the queue, and the queue with the back list turned around when the front is empty -}
+peek : Q -> ( Item, Q )
+peek q =
+    case q.front of
+        x :: _ ->
+            ( x, q )
+
+        [] ->
+            case List.reverse q.back of
+                x :: rest ->
+                    ( x, { front = x :: rest, back = [] } )
+
+                [] ->
+                    ( zero, q )
+
+
+pop : Q -> Q
+pop q =
+    case q.front of
+        _ :: rest ->
+            { q | front = rest }
+
+        [] ->
+            q
+
+
+push : Item -> Q -> Q
+push x q =
+    { q | back = x :: q.back }
+
+
+{-| the producer state: one queue per pointer (the factors 2, 3, 5), each holds the items found since that pointer's position -}
+type alias St =
+    { q2 : Q, q3 : Q, q5 : Q }
+
+
+step : St -> ( Item, St )
+step st =
+    let
+        ( a, q2 ) =
+            peek st.q2
+
+        ( b, q3 ) =
+            peek st.q3
+
+        ( c, q5 ) =
+            peek st.q5
+
+        ca =
+            mk (a.i + 1) a.j a.k
+
+        cb =
+            mk b.i (b.j + 1) b.k
+
+        cc =
+            mk c.i c.j (c.k + 1)
+
+        next =
+            smallest ca cb cc
+
+        q2n =
+            if same ca next then
+                pop q2
+
+            else
+                q2
+
+        q3n =
+            if same cb next then
+                pop q3
+
+            else
+                q3
+
+        q5n =
+            if same cc next then
+                pop q5
+
+            else
+                q5
+    in
+    ( next, { q2 = push next q2n, q3 = push next q3n, q5 = push next q5n } )
+
+
+stream : St -> CIS Item
+stream st =
+    let
+        ( x, st2 ) =
+            step st
+    in
+    CIS x (\_ -> stream st2)
+
+
+start : CIS Item
+start =
+    CIS zero (\_ -> stream { q2 = emptyQ, q3 = emptyQ, q5 = emptyQ })
+
+
+-- the decimal digits: a Vector of limbs of base 1e9, least significant first
+
+
+limb : Int
+limb =
+    1000000000
+
+
+mulLoop : Int -> Int -> Int -> Vector Int -> Vector Int
+mulLoop m ix carry v =
+    case Vector.get ix v of
+        Just d ->
+            let
+                t =
+                    d * m + carry
+            in
+            mulLoop m (ix + 1) (t // limb) (Vector.set ix (modBy limb t) v)
+
+        Nothing ->
+            pushCarry carry v
+
+
+pushCarry : Int -> Vector Int -> Vector Int
+pushCarry carry v =
+    if carry == 0 then
+        v
+
+    else
+        pushCarry (carry // limb) (Vector.push (modBy limb carry) v)
+
+
+intPow : Int -> Int -> Int
+intPow p e =
+    if e <= 0 then
+        1
+
+    else
+        p * intPow p (e - 1)
+
+
+{-| multiply by p^e in steps of p^chunkE -}
+mulPow : Int -> Int -> Int -> Vector Int -> Vector Int
+mulPow p chunkE e v =
+    if e > chunkE then
+        mulPow p chunkE (e - chunkE) (mulLoop (intPow p chunkE) 0 0 v)
+
+    else
+        mulLoop (intPow p e) 0 0 v
+
+
+digits : Item -> Vector Int
+digits t =
+    Vector.singleton 1
+        |> mulPow 2 22 t.i
+        |> mulPow 3 13 t.j
+        |> mulPow 5 9 t.k
+
+
+{-| most significant limb first: the first without padding, the others to nine digits -}
+render : Vector Int -> String
+render v =
+    let
+        go ix acc =
+            if ix < 0 then
+                acc
+
+            else
+                go (ix - 1) (acc ++ String.padLeft 9 '0' (String.fromInt (Maybe.withDefault 0 (Vector.get ix v))))
+
+        top =
+            Vector.length v - 1
+    in
+    go (top - 1) (String.fromInt (Maybe.withDefault 0 (Vector.get top v)))
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    t =
+                        nth target start
+
+                    s =
+                        render (digits t)
+
+                    _ =
+                        Debug.log
+                            ("Hamming number " ++ String.fromInt target ++ " = 2^" ++ String.fromInt t.i ++ " * 3^" ++ String.fromInt t.j ++ " * 5^" ++ String.fromInt t.k)
+                            ()
+
+                    _ =
+                        Debug.log (s ++ " (" ++ String.fromInt (String.length s) ++ " digits)") ()
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
