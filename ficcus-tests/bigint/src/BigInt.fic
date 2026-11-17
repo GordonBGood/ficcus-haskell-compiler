@@ -1,0 +1,1379 @@
+module BigInt exposing
+    ( BigInt
+    , fromInt, fromIntString, fromHexString, toString, toHexString
+    , add, sub, mul, div, modBy, divmod, pow, gcd
+    , abs, negate
+    , compare, gt, gte, lt, lte, max, min
+    , isEven, isOdd
+    )
+
+{-| Arbitrary size integers, with the API of cmditch/elm-bigint 2.1.2 (the same exposed functions and behaviour), in Ficcus.
+
+A number is a sign and a magnitude. The magnitude is a `Vector Int` of limbs, least significant first, each limb in `0 .. base - 1`,
+no zero limb at the top, and zero has its own constructor, so one value has one representation and `==` works on `BigInt`.
+
+The limb size is `limbBits`, the only constant that fixes it. The bound is that `a * b + c + d` with all four limbs fits a signed
+64 bit `Int`: `limbBits` is at most 31. When the sized integers exist, the limbs can become `Word32` (and `limbBits` 32 with
+`Word64` products): the code uses `limbBits`, `base` and `mask` and no other limit.
+
+Algorithms: schoolbook addition and subtraction; multiplication schoolbook, Karatsuba from `karatsubaLimbs` limbs, a shift when
+one factor is a power of two; division by one limb in a pass, by more limbs Knuth's algorithm D, a shift (and a mask for the
+remainder) when the divisor is a power of two; `toString` and `fromIntString` by 10^9 per pass.
+Vectors are updated in place by loops that keep the vector unique (one owner), see docs/BIGINT.md.
+
+-}
+
+import Bitwise64 as Bit
+import Vector exposing (Vector)
+
+
+
+-- THE LIMB
+
+
+{-| Bits per limb. Never more than 31 for Int limbs (a product plus two limbs must fit 63 bits).
+-}
+limbBits : Int
+limbBits =
+    31
+
+
+base : Int
+base =
+    Bit.shiftLeftBy limbBits 1
+
+
+mask : Int
+mask =
+    base - 1
+
+
+{-| Limbs from which multiplication splits (Karatsuba); the best value is measured, see docs/BIGINT.md.
+-}
+karatsubaLimbs : Int
+karatsubaLimbs =
+    40
+
+
+{-| Decimal digits per pass of `toString` / `fromIntString`: 10^9 < 2^30, so `rem * base + limb` < 2^61.
+-}
+chunkDigits : Int
+chunkDigits =
+    9
+
+
+chunk : Int
+chunk =
+    1000000000
+
+
+
+-- THE TYPE
+
+
+type BigInt
+    = Pos (Vector Int)
+    | Neg (Vector Int)
+    | Zer
+
+
+mk : Bool -> Vector Int -> BigInt
+mk neg m =
+    if Vector.isEmpty m then
+        Zer
+
+    else if neg then
+        Neg m
+
+    else
+        Pos m
+
+
+at : Int -> Vector Int -> Int
+at i v =
+    case Vector.get i v of
+        Just x ->
+            x
+
+        Nothing ->
+            0
+
+
+topCount : Int -> Vector Int -> Int
+topCount n v =
+    if n == 0 then
+        0
+
+    else if at (n - 1) v == 0 then
+        topCount (n - 1) v
+
+    else
+        n
+
+
+{-| Cut the zero limbs at the top (in place when the vector is unique).
+-}
+trim : Vector Int -> Vector Int
+trim v =
+    let
+        len =
+            Vector.length v
+
+        n =
+            topCount len v
+    in
+    if n == len then
+        v
+
+    else
+        Vector.slice 0 n v
+
+
+bitLen : Int -> Int
+bitLen x =
+    bitLenHelp 0 x
+
+
+bitLenHelp : Int -> Int -> Int
+bitLenHelp acc x =
+    if x == 0 then
+        acc
+
+    else
+        bitLenHelp (acc + 1) (Bit.shiftRightBy 1 x)
+
+
+
+-- MAGNITUDES (Vector Int, least significant limb first, trimmed)
+
+
+magCmp : Vector Int -> Vector Int -> Order
+magCmp a b =
+    let
+        la =
+            Vector.length a
+
+        lb =
+            Vector.length b
+    in
+    if la < lb then
+        LT
+
+    else if la > lb then
+        GT
+
+    else
+        cmpFrom (la - 1) a b
+
+
+cmpFrom : Int -> Vector Int -> Vector Int -> Order
+cmpFrom i a b =
+    if i < 0 then
+        EQ
+
+    else
+        let
+            x =
+                at i a
+
+            y =
+                at i b
+        in
+        if x < y then
+            LT
+
+        else if x > y then
+            GT
+
+        else
+            cmpFrom (i - 1) a b
+
+
+magAdd : Vector Int -> Vector Int -> Vector Int
+magAdd a b =
+    if Vector.length a < Vector.length b then
+        magAdd b a
+
+    else
+        let
+            la =
+                Vector.length a
+        in
+        trim (addLoop 0 0 la a b (Vector.repeat (la + 1) 0))
+
+
+addLoop : Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int -> Vector Int
+addLoop i carry n a b r =
+    if i < n then
+        let
+            s =
+                at i a + at i b + carry
+        in
+        addLoop (i + 1) (Bit.shiftRightBy limbBits s) n a b (Vector.set i (Bit.and s mask) r)
+
+    else
+        Vector.set n carry r
+
+
+{-| a - b for a >= b.
+-}
+magSub : Vector Int -> Vector Int -> Vector Int
+magSub a b =
+    let
+        la =
+            Vector.length a
+    in
+    trim (subLoop 0 0 la a b (Vector.repeat la 0))
+
+
+subLoop : Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int -> Vector Int
+subLoop i borrow n a b r =
+    if i < n then
+        let
+            d =
+                at i a - at i b - borrow
+        in
+        subLoop (i + 1) (Bit.and 1 (Bit.shiftRightBy 63 d)) n a b (Vector.set i (Bit.and d mask) r)
+
+    else
+        r
+
+
+{-| r + x * base^off, in place on r, which is long enough.
+-}
+addInto : Int -> Vector Int -> Vector Int -> Vector Int
+addInto off x r =
+    addIntoLoop off 0 (Vector.length x) 0 x r
+
+
+addIntoLoop : Int -> Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int
+addIntoLoop off i n carry x r =
+    if i < n then
+        let
+            s =
+                at i x + at (off + i) r + carry
+        in
+        addIntoLoop off (i + 1) n (Bit.shiftRightBy limbBits s) x (Vector.set (off + i) (Bit.and s mask) r)
+
+    else
+        propagate (off + n) carry r
+
+
+propagate : Int -> Int -> Vector Int -> Vector Int
+propagate j carry r =
+    if carry == 0 then
+        r
+
+    else
+        let
+            s =
+                at j r + carry
+        in
+        propagate (j + 1) (Bit.shiftRightBy limbBits s) (Vector.set j (Bit.and s mask) r)
+
+
+-- shifts
+
+
+{-| Index of the lowest nonzero limb.
+-}
+lowestNonZero : Int -> Vector Int -> Int
+lowestNonZero i v =
+    if i >= Vector.length v || at i v /= 0 then
+        i
+
+    else
+        lowestNonZero (i + 1) v
+
+
+{-| k when the magnitude is 2^k, else -1.
+-}
+pow2Exp : Vector Int -> Int
+pow2Exp a =
+    let
+        n =
+            Vector.length a
+
+        i =
+            lowestNonZero 0 a
+    in
+    if n == 0 || i /= n - 1 then
+        -1
+
+    else
+        let
+            top =
+                at i a
+        in
+        if Bit.and top (top - 1) == 0 then
+            i * limbBits + bitLen top - 1
+
+        else
+            -1
+
+
+{-| a * 2^k, k >= 0.
+-}
+magShl : Int -> Vector Int -> Vector Int
+magShl k a =
+    if Vector.isEmpty a then
+        a
+
+    else
+        let
+            q =
+                k // limbBits
+
+            s =
+                k - q * limbBits
+
+            la =
+                Vector.length a
+        in
+        trim (shlLoop 0 q s 0 la a (Vector.repeat (la + q + 1) 0))
+
+
+shlLoop : Int -> Int -> Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int
+shlLoop i q s carry n a r =
+    if i < n then
+        let
+            t =
+                Bit.or (Bit.shiftLeftBy s (at i a)) carry
+        in
+        shlLoop (i + 1) q s (Bit.shiftRightBy limbBits t) n a (Vector.set (i + q) (Bit.and t mask) r)
+
+    else
+        Vector.set (n + q) carry r
+
+
+{-| floor (a / 2^k), k >= 0.
+-}
+magShr : Int -> Vector Int -> Vector Int
+magShr k a =
+    let
+        q =
+            k // limbBits
+
+        s =
+            k - q * limbBits
+
+        n =
+            Vector.length a - q
+    in
+    if n <= 0 then
+        Vector.empty
+
+    else if k == 0 then
+        a
+
+    else
+        trim (shrLoop 0 q s n a (Vector.repeat n 0))
+
+
+shrLoop : Int -> Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int
+shrLoop i q s n a r =
+    if i < n then
+        let
+            w =
+                Bit.or (Bit.shiftRightBy s (at (i + q) a)) (Bit.and mask (Bit.shiftLeftBy (limbBits - s) (at (i + q + 1) a)))
+        in
+        shrLoop (i + 1) q s n a (Vector.set i w r)
+
+    else
+        r
+
+
+{-| a mod 2^k.
+-}
+lowBits : Int -> Vector Int -> Vector Int
+lowBits k a =
+    let
+        q =
+            k // limbBits
+
+        s =
+            k - q * limbBits
+    in
+    if q >= Vector.length a then
+        a
+
+    else
+        let
+            cut =
+                Vector.slice 0 (q + 1) a
+        in
+        trim (Vector.set q (Bit.and (at q cut) (Bit.shiftLeftBy s 1 - 1)) cut)
+
+
+
+-- multiplication
+
+
+magMul : Vector Int -> Vector Int -> Vector Int
+magMul a b =
+    let
+        ka =
+            pow2Exp a
+    in
+    if ka >= 0 then
+        magShl ka b
+
+    else
+        let
+            kb =
+                pow2Exp b
+        in
+        if kb >= 0 then
+            magShl kb a
+
+        else
+            mulCore a b
+
+
+mulCore : Vector Int -> Vector Int -> Vector Int
+mulCore a b =
+    let
+        la =
+            Vector.length a
+
+        lb =
+            Vector.length b
+    in
+    if la < lb then
+        mulCore b a
+
+    else if lb < karatsubaLimbs then
+        trim (schoolLoop 0 la lb a b (Vector.repeat (la + lb) 0))
+
+    else if la >= 2 * lb then
+        mulChunks lb a b
+
+    else
+        karatsuba a b
+
+
+schoolLoop : Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int -> Vector Int
+schoolLoop i la lb a b r =
+    if i < la then
+        let
+            ai =
+                at i a
+        in
+        if ai == 0 then
+            schoolLoop (i + 1) la lb a b r
+
+        else
+            schoolLoop (i + 1) la lb a b (schoolRow i ai 0 0 lb b r)
+
+    else
+        r
+
+
+schoolRow : Int -> Int -> Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int
+schoolRow i ai j carry lb b r =
+    if j < lb then
+        let
+            t =
+                ai * at j b + at (i + j) r + carry
+        in
+        schoolRow i ai (j + 1) (Bit.shiftRightBy limbBits t) lb b (Vector.set (i + j) (Bit.and t mask) r)
+
+    else
+        Vector.set (i + lb) carry r
+
+
+{-| a is at least twice as long as b: pieces of a of the length of b.
+-}
+mulChunks : Int -> Vector Int -> Vector Int -> Vector Int
+mulChunks lb a b =
+    chunksLoop 0 lb a b (Vector.repeat (Vector.length a + lb + 1) 0)
+
+
+chunksLoop : Int -> Int -> Vector Int -> Vector Int -> Vector Int -> Vector Int
+chunksLoop off lb a b r =
+    if off >= Vector.length a then
+        trim r
+
+    else
+        let
+            piece =
+                trim (Vector.slice off (off + lb) a)
+        in
+        chunksLoop (off + lb) lb a b (addInto off (mulCore piece b) r)
+
+
+karatsuba : Vector Int -> Vector Int -> Vector Int
+karatsuba a b =
+    let
+        la =
+            Vector.length a
+
+        m =
+            (la + 1) // 2
+
+        a0 =
+            trim (Vector.slice 0 m a)
+
+        a1 =
+            Vector.slice m la a
+
+        b0 =
+            trim (Vector.slice 0 m b)
+
+        b1 =
+            Vector.slice m (Vector.length b) b
+
+        z0 =
+            magMul a0 b0
+
+        z2 =
+            magMul a1 b1
+
+        z1 =
+            magSub (magSub (magMul (magAdd a0 a1) (magAdd b0 b1)) z0) z2
+    in
+    trim (addInto (2 * m) z2 (addInto m z1 (addInto 0 z0 (Vector.repeat (la + Vector.length b + 1) 0))))
+
+
+
+-- division
+
+
+{-| Divide by a limb d (0 < d < 2^30 or a limb with rem * base + limb in range): quotient and remainder.
+-}
+divSmall : Int -> Vector Int -> ( Vector Int, Int )
+divSmall d a =
+    divSmallLoop d (Vector.length a - 1) 0 a
+
+
+divSmallLoop : Int -> Int -> Int -> Vector Int -> ( Vector Int, Int )
+divSmallLoop d i rem v =
+    if i < 0 then
+        ( trim v, rem )
+
+    else
+        let
+            cur =
+                rem * base + at i v
+
+            q =
+                cur // d
+        in
+        divSmallLoop d (i - 1) (cur - q * d) (Vector.set i q v)
+
+
+{-| a * m + c for small m, c, in place on a unique vector, growing it by pushes.
+-}
+mulAddSmall : Int -> Int -> Vector Int -> Vector Int
+mulAddSmall m c v =
+    mulAddLoop 0 (Vector.length v) m c v
+
+
+mulAddLoop : Int -> Int -> Int -> Int -> Vector Int -> Vector Int
+mulAddLoop i n m carry v =
+    if i < n then
+        let
+            t =
+                at i v * m + carry
+        in
+        mulAddLoop (i + 1) n m (Bit.shiftRightBy limbBits t) (Vector.set i (Bit.and t mask) v)
+
+    else if carry == 0 then
+        v
+
+    else
+        Vector.push carry v
+
+
+{-| quotient and remainder of magnitudes, b not zero
+-}
+magDivMod : Vector Int -> Vector Int -> ( Vector Int, Vector Int )
+magDivMod a b =
+    case magCmp a b of
+        LT ->
+            ( Vector.empty, a )
+
+        _ ->
+            let
+                k =
+                    pow2Exp b
+            in
+            if k >= 0 then
+                ( magShr k a, lowBits k a )
+
+            else if Vector.length b == 1 then
+                let
+                    ( q, r ) =
+                        divSmall (at 0 b) a
+                in
+                ( q, trim (Vector.singleton r) )
+
+            else
+                knuth a b
+
+
+{-| shift left by s (< limbBits) bits, one limb longer, not trimmed.
+-}
+shlFixed : Int -> Vector Int -> Vector Int
+shlFixed s a =
+    let
+        n =
+            Vector.length a
+    in
+    shlLoop 0 0 s 0 n a (Vector.repeat (n + 1) 0)
+
+
+{-| Knuth, algorithm D: a has at least as many limbs as b, b has at least two.
+-}
+knuth : Vector Int -> Vector Int -> ( Vector Int, Vector Int )
+knuth u v =
+    let
+        n =
+            Vector.length v
+
+        m =
+            Vector.length u
+
+        s =
+            limbBits - bitLen (at (n - 1) v)
+
+        vn =
+            Vector.slice 0 n (shlFixed s v)
+
+        un =
+            shlFixed s u
+
+        ( q, un2 ) =
+            divLoop (m - n) n (at (n - 1) vn) (at (n - 2) vn) vn un (Vector.repeat (m - n + 1) 0)
+    in
+    ( trim q, magShr s (trim (Vector.slice 0 n un2)) )
+
+
+divLoop : Int -> Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int -> ( Vector Int, Vector Int )
+divLoop j n vt vs v un q =
+    if j < 0 then
+        ( q, un )
+
+    else
+        let
+            num =
+                at (j + n) un * base + at (j + n - 1) un
+
+            qh0 =
+                num // vt
+
+            qh =
+                fixQ qh0 (num - qh0 * vt) vs vt (at (j + n - 2) un)
+
+            un2 =
+                mulSubLoop j 0 n qh 0 v un
+        in
+        if at (j + n) un2 < 0 then
+            divLoop (j - 1) n vt vs v (addBack j 0 n 0 v un2) (Vector.set j (qh - 1) q)
+
+        else
+            divLoop (j - 1) n vt vs v un2 (Vector.set j qh q)
+
+
+fixQ : Int -> Int -> Int -> Int -> Int -> Int
+fixQ qh rh vs vt u2 =
+    if qh >= base || qh * vs > rh * base + u2 then
+        let
+            rh2 =
+                rh + vt
+        in
+        if rh2 >= base then
+            qh - 1
+
+        else
+            fixQ (qh - 1) rh2 vs vt u2
+
+    else
+        qh
+
+
+{-| un[j .. j+n] -= qh * v; the top limb is left as a (possibly negative) Int.
+-}
+mulSubLoop : Int -> Int -> Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int
+mulSubLoop j i n qh k v un =
+    if i < n then
+        let
+            p =
+                qh * at i v
+
+            t =
+                at (i + j) un - k - Bit.and p mask
+        in
+        mulSubLoop j (i + 1) n qh (Bit.shiftRightBy limbBits p - Bit.shiftRightBy limbBits t) v (Vector.set (i + j) (Bit.and t mask) un)
+
+    else
+        Vector.set (j + n) (at (j + n) un - k) un
+
+
+addBack : Int -> Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int
+addBack j i n k v un =
+    if i < n then
+        let
+            t =
+                at (i + j) un + at i v + k
+        in
+        addBack j (i + 1) n (Bit.shiftRightBy limbBits t) v (Vector.set (i + j) (Bit.and t mask) un)
+
+    else
+        Vector.set (j + n) (Bit.and (at (j + n) un + k) mask) un
+
+
+
+-- CONVERSIONS
+
+
+fromInt : Int -> BigInt
+fromInt x =
+    if x == 0 then
+        Zer
+
+    else
+        let
+            -- the bit pattern of the magnitude as an unsigned 64 bit number (minInt: 2^63, as bits)
+            m =
+                if x < 0 then
+                    0 - x
+
+                else
+                    x
+
+            r1 =
+                Bit.shiftRightZfBy limbBits m
+
+            r2 =
+                Bit.shiftRightZfBy limbBits r1
+        in
+        mk (x < 0) (trim (Vector.fromList [ Bit.and m mask, Bit.and r1 mask, r2 ]))
+
+
+{-| Makes a BigInt from an integer string, positive or negative: "123", "-123", "+123"; "", "-", "+" and anything with another
+character are Nothing.
+-}
+fromIntString : String -> Maybe BigInt
+fromIntString x =
+    case String.toList x of
+        [] ->
+            Nothing
+
+        '-' :: [] ->
+            Nothing
+
+        '-' :: xs ->
+            Maybe.map (mk True) (digitsToMag xs)
+
+        '+' :: [] ->
+            Nothing
+
+        '+' :: xs ->
+            Maybe.map (mk False) (digitsToMag xs)
+
+        xs ->
+            Maybe.map (mk False) (digitsToMag xs)
+
+
+digitsToMag : List Char -> Maybe (Vector Int)
+digitsToMag cs =
+    if allDigits cs then
+        Just (trim (parseDigits 0 0 cs (Vector.withCapacity (List.length cs // chunkDigits + 2))))
+
+    else
+        Nothing
+
+
+allDigits : List Char -> Bool
+allDigits cs =
+    case cs of
+        [] ->
+            True
+
+        c :: rest ->
+            let
+                r =
+                    Char.toCode c
+            in
+            r >= 0x30 && r <= 0x39 && allDigits rest
+
+
+{-| left to right, nine digits at a time into the magnitude.
+-}
+parseDigits : Int -> Int -> List Char -> Vector Int -> Vector Int
+parseDigits count acc cs v =
+    case cs of
+        [] ->
+            if count == 0 then
+                v
+
+            else
+                mulAddSmall (pow10 count) acc v
+
+        c :: rest ->
+            let
+                acc2 =
+                    acc * 10 + (Char.toCode c - 0x30)
+            in
+            if count + 1 == chunkDigits then
+                parseDigits 0 0 rest (mulAddSmall chunk acc2 v)
+
+            else
+                parseDigits (count + 1) acc2 rest v
+
+
+pow10 : Int -> Int
+pow10 k =
+    if k == 0 then
+        1
+
+    else
+        10 * pow10 (k - 1)
+
+
+{-| Makes a BigInt from a base 16 string, with or without "0x", "+" or "-" in front (lower or upper case digits).
+-}
+fromHexString : String -> Maybe BigInt
+fromHexString x =
+    case String.toList x of
+        [] ->
+            Nothing
+
+        '-' :: '0' :: 'x' :: [] ->
+            Nothing
+
+        '-' :: '0' :: 'x' :: xs ->
+            Maybe.map (mk True) (hexToMag xs)
+
+        '-' :: [] ->
+            Nothing
+
+        '-' :: xs ->
+            Maybe.map (mk True) (hexToMag xs)
+
+        '+' :: [] ->
+            Nothing
+
+        '+' :: xs ->
+            Maybe.map (mk False) (hexToMag xs)
+
+        '0' :: 'x' :: [] ->
+            Nothing
+
+        '0' :: 'x' :: xs ->
+            Maybe.map (mk False) (hexToMag xs)
+
+        xs ->
+            Maybe.map (mk False) (hexToMag xs)
+
+
+hexValue : Char -> Int
+hexValue c =
+    let
+        r =
+            Char.toCode c
+    in
+    if r >= 0x30 && r <= 0x39 then
+        r - 0x30
+
+    else if r >= 0x41 && r <= 0x46 then
+        r - 0x41 + 10
+
+    else if r >= 0x61 && r <= 0x66 then
+        r - 0x61 + 10
+
+    else
+        -1
+
+
+hexToMag : List Char -> Maybe (Vector Int)
+hexToMag cs =
+    let
+        ds =
+            List.map hexValue cs
+    in
+    if List.any (\d -> d < 0) ds then
+        Nothing
+
+    else
+        let
+            n =
+                List.length ds
+        in
+        Just (trim (hexLoop 0 (List.reverse ds) (Vector.repeat ((n * 4) // limbBits + 2) 0)))
+
+
+hexLoop : Int -> List Int -> Vector Int -> Vector Int
+hexLoop k ds r =
+    case ds of
+        [] ->
+            r
+
+        d :: rest ->
+            let
+                p =
+                    4 * k
+
+                i =
+                    p // limbBits
+
+                o =
+                    p - i * limbBits
+
+                r1 =
+                    Vector.set i (Bit.or (at i r) (Bit.and mask (Bit.shiftLeftBy o d))) r
+
+                r2 =
+                    if o + 4 > limbBits then
+                        Vector.set (i + 1) (Bit.or (at (i + 1) r1) (Bit.shiftRightBy (limbBits - o) d)) r1
+
+                    else
+                        r1
+            in
+            hexLoop (k + 1) rest r2
+
+
+{-| Convert the BigInt to an integer string
+-}
+toString : BigInt -> String
+toString n =
+    case n of
+        Zer ->
+            "0"
+
+        Pos m ->
+            magToString m
+
+        Neg m ->
+            "-" ++ magToString m
+
+
+magToString : Vector Int -> String
+magToString m =
+    case chunksOf m [] of
+        [] ->
+            "0"
+
+        top :: rest ->
+            String.concat (String.fromInt top :: List.map (\c -> String.padLeft chunkDigits '0' (String.fromInt c)) rest)
+
+
+{-| the base 10^9 digits, most significant first.
+-}
+chunksOf : Vector Int -> List Int -> List Int
+chunksOf v acc =
+    if Vector.isEmpty v then
+        acc
+
+    else
+        let
+            ( q, r ) =
+                divSmall chunk v
+        in
+        chunksOf q (r :: acc)
+
+
+{-| Convert the BigInt to a hex string, lower case, without "0x" ("-" in front when negative).
+-}
+toHexString : BigInt -> String
+toHexString n =
+    case n of
+        Zer ->
+            "0"
+
+        Pos m ->
+            hexOf m
+
+        Neg m ->
+            "-" ++ hexOf m
+
+
+hexOf : Vector Int -> String
+hexOf m =
+    String.fromList (hexDigits 0 ((Vector.length m * limbBits + 3) // 4) m [])
+
+
+hexDigits : Int -> Int -> Vector Int -> List Char -> List Char
+hexDigits k count m acc =
+    if k >= count then
+        dropZeroChars acc
+
+    else
+        let
+            p =
+                4 * k
+
+            i =
+                p // limbBits
+
+            o =
+                p - i * limbBits
+
+            d =
+                Bit.and 15 (Bit.or (Bit.shiftRightBy o (at i m)) (Bit.shiftLeftBy (limbBits - o) (at (i + 1) m)))
+        in
+        hexDigits (k + 1) count m (hexChar d :: acc)
+
+
+dropZeroChars : List Char -> List Char
+dropZeroChars cs =
+    case cs of
+        '0' :: rest ->
+            dropZeroChars rest
+
+        _ ->
+            cs
+
+
+hexChar : Int -> Char
+hexChar d =
+    if d < 10 then
+        Char.fromCode (0x30 + d)
+
+    else
+        Char.fromCode (0x57 + d)
+
+
+
+-- SIGNED OPERATIONS
+
+
+{-| Adds two BigInts
+-}
+add : BigInt -> BigInt -> BigInt
+add x y =
+    case x of
+        Zer ->
+            y
+
+        Pos a ->
+            addSigned False a y
+
+        Neg a ->
+            addSigned True a y
+
+
+addSigned : Bool -> Vector Int -> BigInt -> BigInt
+addSigned neg a y =
+    case y of
+        Zer ->
+            mk neg a
+
+        Pos b ->
+            addMixed neg a False b
+
+        Neg b ->
+            addMixed neg a True b
+
+
+addMixed : Bool -> Vector Int -> Bool -> Vector Int -> BigInt
+addMixed na a nb b =
+    if na == nb then
+        mk na (magAdd a b)
+
+    else
+        case magCmp a b of
+            EQ ->
+                Zer
+
+            GT ->
+                mk na (magSub a b)
+
+            LT ->
+                mk nb (magSub b a)
+
+
+{-| Subtracts the second number from the first
+-}
+sub : BigInt -> BigInt -> BigInt
+sub x y =
+    add x (negate y)
+
+
+negate : BigInt -> BigInt
+negate n =
+    case n of
+        Zer ->
+            Zer
+
+        Pos m ->
+            Neg m
+
+        Neg m ->
+            Pos m
+
+
+abs : BigInt -> BigInt
+abs n =
+    case n of
+        Neg m ->
+            Pos m
+
+        _ ->
+            n
+
+
+mul : BigInt -> BigInt -> BigInt
+mul x y =
+    case x of
+        Zer ->
+            Zer
+
+        Pos a ->
+            mulSigned False a y
+
+        Neg a ->
+            mulSigned True a y
+
+
+mulSigned : Bool -> Vector Int -> BigInt -> BigInt
+mulSigned neg a y =
+    case y of
+        Zer ->
+            Zer
+
+        Pos b ->
+            mk neg (magMul a b)
+
+        Neg b ->
+            mk (not neg) (magMul a b)
+
+
+compare : BigInt -> BigInt -> Order
+compare x y =
+    case x of
+        Zer ->
+            case y of
+                Zer ->
+                    EQ
+
+                Pos _ ->
+                    LT
+
+                Neg _ ->
+                    GT
+
+        Pos a ->
+            case y of
+                Pos b ->
+                    magCmp a b
+
+                _ ->
+                    GT
+
+        Neg a ->
+            case y of
+                Neg b ->
+                    magCmp b a
+
+                _ ->
+                    LT
+
+
+lt : BigInt -> BigInt -> Bool
+lt x y =
+    compare x y == LT
+
+
+gt : BigInt -> BigInt -> Bool
+gt x y =
+    compare x y == GT
+
+
+lte : BigInt -> BigInt -> Bool
+lte x y =
+    compare x y /= GT
+
+
+gte : BigInt -> BigInt -> Bool
+gte x y =
+    compare x y /= LT
+
+
+max : BigInt -> BigInt -> BigInt
+max x y =
+    if lt x y then
+        y
+
+    else
+        x
+
+
+min : BigInt -> BigInt -> BigInt
+min x y =
+    if gt x y then
+        y
+
+    else
+        x
+
+
+{-| BigInt division, truncating towards zero. Produces 0 when dividing by 0 (like (//)).
+-}
+div : BigInt -> BigInt -> BigInt
+div num den =
+    case divmod num den of
+        Just ( q, _ ) ->
+            q
+
+        Nothing ->
+            Zer
+
+
+{-| Modulus (the remainder of a truncating division: the sign of the second argument, the number, decides the sign of the result).
+`modBy 0 n` is Nothing.
+-}
+modBy : BigInt -> BigInt -> Maybe BigInt
+modBy den num =
+    Maybe.map Tuple.second (divmod num den)
+
+
+{-| Division and modulus: quotient truncated towards zero, the remainder has the sign of the dividend. Nothing for a zero divisor.
+-}
+divmod : BigInt -> BigInt -> Maybe ( BigInt, BigInt )
+divmod num den =
+    case den of
+        Zer ->
+            Nothing
+
+        Pos d ->
+            Just (divmodSigned False d num)
+
+        Neg d ->
+            Just (divmodSigned True d num)
+
+
+divmodSigned : Bool -> Vector Int -> BigInt -> ( BigInt, BigInt )
+divmodSigned negDen d num =
+    case num of
+        Zer ->
+            ( Zer, Zer )
+
+        Pos n ->
+            let
+                ( q, r ) =
+                    magDivMod n d
+            in
+            ( mk negDen q, mk False r )
+
+        Neg n ->
+            let
+                ( q, r ) =
+                    magDivMod n d
+            in
+            ( mk (not negDen) q, mk True r )
+
+
+isEven : BigInt -> Bool
+isEven n =
+    case n of
+        Zer ->
+            True
+
+        Pos m ->
+            Bit.and 1 (at 0 m) == 0
+
+        Neg m ->
+            Bit.and 1 (at 0 m) == 0
+
+
+isOdd : BigInt -> Bool
+isOdd n =
+    not (isEven n)
+
+
+{-| Power. `pow x 0` is 1 (also for 0), a negative exponent gives 0.
+-}
+pow : BigInt -> BigInt -> BigInt
+pow b e =
+    case e of
+        Zer ->
+            Pos (Vector.singleton 1)
+
+        Neg _ ->
+            Zer
+
+        Pos em ->
+            case b of
+                Zer ->
+                    Zer
+
+                Pos bm ->
+                    mk False (powBits (bitCount em - 2) em bm bm)
+
+                Neg bm ->
+                    mk (Bit.and 1 (at 0 em) == 1) (powBits (bitCount em - 2) em bm bm)
+
+
+bitCount : Vector Int -> Int
+bitCount m =
+    (Vector.length m - 1) * limbBits + bitLen (at (Vector.length m - 1) m)
+
+
+bitAt : Int -> Vector Int -> Int
+bitAt p m =
+    Bit.and 1 (Bit.shiftRightBy (modBy2 p) (at (p // limbBits) m))
+
+
+modBy2 : Int -> Int
+modBy2 p =
+    p - (p // limbBits) * limbBits
+
+
+{-| left to right square and multiply over the bits p, p-1 .. 0 of the exponent (acc starts as the base: the top bit).
+-}
+powBits : Int -> Vector Int -> Vector Int -> Vector Int -> Vector Int
+powBits p e b acc =
+    if p < 0 then
+        acc
+
+    else
+        let
+            sq =
+                magMul acc acc
+        in
+        powBits (p - 1) e b
+            (if bitAt p e == 1 then
+                magMul sq b
+
+             else
+                sq
+            )
+
+
+{-| Greatest common divisor, the same cases as the package: a zero argument gives the other argument as it is.
+-}
+gcd : BigInt -> BigInt -> BigInt
+gcd x y =
+    case x of
+        Zer ->
+            y
+
+        Pos a ->
+            gcdSigned a x y
+
+        Neg a ->
+            gcdSigned a x y
+
+
+gcdSigned : Vector Int -> BigInt -> BigInt -> BigInt
+gcdSigned a x y =
+    case y of
+        Zer ->
+            x
+
+        Pos b ->
+            Pos (gcdLoop a b)
+
+        Neg b ->
+            Pos (gcdLoop a b)
+
+
+gcdLoop : Vector Int -> Vector Int -> Vector Int
+gcdLoop a b =
+    if Vector.isEmpty b then
+        a
+
+    else
+        gcdLoop b (Tuple.second (magDivMod a b))

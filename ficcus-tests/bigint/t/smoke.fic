@@ -1,0 +1,31 @@
+module Main exposing (main)
+
+import BigInt exposing (BigInt)
+
+
+show : String -> Maybe BigInt -> ()
+show label m =
+    Debug.log label (Maybe.map BigInt.toString m) |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    a = BigInt.fromIntString "123456789012345678901234567890"
+                    b = BigInt.fromIntString "987654321098765432109876543210"
+                    ab = Maybe.map2 BigInt.mul a b
+                    _ = show "a" a
+                    _ = show "a*b" ab
+                    _ = show "b/a" (Maybe.map2 BigInt.div b a)
+                    _ = Debug.log "divmod" (Maybe.andThen (\p -> Maybe.map (\(q, r) -> (BigInt.toString q, BigInt.toString r)) (BigInt.divmod p (BigInt.fromInt 1000000007))) ab)
+                    _ = Debug.log "pow" (BigInt.toString (BigInt.pow (BigInt.fromInt 3) (BigInt.fromInt 200)))
+                    _ = Debug.log "hex" (Maybe.map BigInt.toHexString ab)
+                    _ = Debug.log "min" (BigInt.toString (BigInt.fromInt (-9223372036854775807 - 1)))
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
