@@ -1,0 +1,170 @@
+-- mono: stage (iii) slice 3b, modules=22
+-- module author/project:Bitwise64 (project)
+clone c0   def: author/project:Bitwise64.ficBitwise64Overlay   key: ()   kind: value   init: 0   needs: 
+clone c1   def: author/project:Bitwise64.shiftRightZfBy   key: ()   kind: function   init: 1   needs: 
+clone c2   def: author/project:Bitwise64.shiftRightBy   key: ()   kind: function   init: 2   needs: 
+clone c3   def: author/project:Bitwise64.shiftLeftBy   key: ()   kind: function   init: 3   needs: 
+clone c4   def: author/project:Bitwise64.complement   key: ()   kind: function   init: 4   needs: 
+clone c5   def: author/project:Bitwise64.xor   key: ()   kind: function   init: 5   needs: 
+clone c6   def: author/project:Bitwise64.and   key: ()   kind: function   init: 6   needs: 
+clone c7   def: author/project:Bitwise64.or   key: ()   kind: function   init: 7   needs: 
+-- module author/project:Consts64 (project)
+clone c8   def: author/project:Consts64.limbBits   key: ()   kind: value   init: 0   needs: 
+clone c9   def: author/project:Consts64.count65   key: ()   kind: value   init: 1   needs: 
+clone c10   def: author/project:Consts64.allOnes   key: ()   kind: value   init: 2   needs: 
+clone c11   def: author/project:Consts64.base   key: ()   kind: value   init: 3   needs: c8
+clone c12   def: author/project:Consts64.mask   key: ()   kind: value   init: 4   needs: c8,c11
+clone c13   def: author/project:Consts64.mixed   key: ()   kind: value   init: 5   needs: c8,c11,c12
+clone c14   def: author/project:Consts64.wrapped   key: ()   kind: value   init: 6   needs: c8,c11
+clone c15   def: author/project:Consts64.top   key: ()   kind: value   init: 7   needs: 
+clone c16   def: author/project:Consts64.arith   key: ()   kind: value   init: 8   needs: c15
+clone c17   def: author/project:Consts64.logical   key: ()   kind: value   init: 9   needs: c15
+clone c18   def: author/project:Consts64.neg   key: ()   kind: value   init: 10   needs: c8,c11
+clone c19   def: author/project:Consts64.main   key: ()   kind: value   init: 11   needs: c8,c9,c10,c11,c12,c13,c14,c15,c16,c17,c18
+-- program: 16 clones, reachable from main, dependencies first
+clone c2   def: author/project:Consts64.limbBits   key: ()   kind: value   params:    result: i64
+  Lit 31 :: i64
+clone c3   def: author/project:Consts64.base   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Bitwise64.shiftLeftBy () :: ref
+    Global c2 :: i64
+    Lit 1 :: i64
+clone c4   def: author/project:Consts64.mask   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+    Global c3 :: i64
+    Lit 1 :: i64
+clone c5   def: author/project:Consts64.allOnes   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Bitwise64.complement () :: ref
+    Lit 0 :: i64
+clone c6   def: author/project:Consts64.top   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Bitwise64.shiftLeftBy () :: ref
+    Lit 63 :: i64
+    Lit 1 :: i64
+clone c7   def: author/project:Consts64.arith   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Bitwise64.shiftRightBy () :: ref
+    Lit 60 :: i64
+    Global c6 :: i64
+clone c8   def: author/project:Consts64.logical   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Bitwise64.shiftRightZfBy () :: ref
+    Lit 60 :: i64
+    Global c6 :: i64
+clone c9   def: author/project:Consts64.count65   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Bitwise64.shiftLeftBy () :: ref
+    Lit 65 :: i64
+    Lit 3 :: i64
+clone c10   def: author/project:Consts64.mixed   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Bitwise64.xor () :: ref
+    Call :: i64
+      Kernel elm/core:Bitwise64.or () :: ref
+      Global c4 :: i64
+      Lit 4096 :: i64
+    Call :: i64
+      Kernel elm/core:Bitwise64.and () :: ref
+      Global c3 :: i64
+      Lit 12345 :: i64
+clone c11   def: author/project:Consts64.wrapped   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Call :: i64
+      Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+      Call :: i64
+        Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+          Global c3 :: i64
+          Global c3 :: i64
+        Global c3 :: i64
+      Lit 4 :: i64
+    Lit 1 :: i64
+clone c12   def: author/project:Consts64.neg   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+    Call :: i64
+      Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+      Global c3 :: i64
+      Lit 3 :: i64
+clone c14   def: elm/core:List.foldl   key: (v0=i64; v1=i64)   name: foldl__i64__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: i64 :: xs :: ref :: ref
+      Call :: i64
+        Global c14 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: i64
+          Local acc :: i64
+        Local xs :: ref
+clone c15   def: elm/core:List.lambda@252:10   key: ()   outer: c13 (v0=i64)   kind: function   params: _a0:i64 i:i64   result: i64   lifted-from: c13
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local i :: i64
+    Lit 1 :: i64
+clone c13   def: elm/core:List.length   key: (v0=i64)   name: length__i64   kind: function   params: xs:ref   result: i64
+  Call :: i64
+    Global c14 :: ref
+    Global c15 :: ref
+    Lit 0 :: i64
+    Local xs :: ref
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Seq :: struct(unit,unit)
+    Call :: ref
+      Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
+      Lit "consts" :: ref
+      List :: ref
+        Global c2 :: i64
+        Global c3 :: i64
+        Global c4 :: i64
+        Global c5 :: i64
+        Global c6 :: i64
+        Global c7 :: i64
+        Global c8 :: i64
+        Global c9 :: i64
+        Global c10 :: i64
+        Global c11 :: i64
+        Global c12 :: i64
+    Seq :: struct(unit,unit)
+      Call :: ref
+        Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
+        Lit "runtime" :: ref
+        List :: ref
+          Call :: i64
+            Kernel elm/core:Bitwise64.shiftLeftBy () :: ref
+            Global c2 :: i64
+            Call :: i64
+              Global c13 :: ref
+              List :: ref
+                Lit 1 :: i64
+          Call :: i64
+            Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+            Global c4 :: i64
+            Call :: i64
+              Global c13 :: ref
+              List :: ref
+                Lit 1 :: i64
+          Call :: i64
+            Kernel elm/core:Bitwise64.and () :: ref
+            Global c4 :: i64
+            Call :: i64
+              Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+              Call :: i64
+                Global c13 :: ref
+                List :: ref
+                  Lit 1 :: i64
+                  Lit 2 :: i64
+      Tuple :: struct(unit,unit)
+        Lit () :: unit
+        Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Consts64.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

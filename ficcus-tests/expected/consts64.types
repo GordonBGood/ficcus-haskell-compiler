@@ -1,0 +1,179 @@
+-- module Consts64: problems=0 instances=52 instance-failures=0 defaulted=10
+-- equality-uses: total=0 at-function=0
+module author/project:Consts64
+def limbBits :: Int    [10:1-10:9]   id: author/project:Consts64.limbBits   sig: Int   kinds:    group: author/project:Consts64.limbBits nonrec ann
+  11:5-11:7 Int :: Int
+def count65 :: Int    [45:1-45:8]   id: author/project:Consts64.count65   sig: Int   kinds:    group: author/project:Consts64.count65 nonrec ann
+  46:5-46:25 Call :: Int
+    46:5-46:20 VarForeign :: Int -> Int -> Int   callee: author/project:Bitwise64.shiftLeftBy
+    46:21-46:23 Int :: Int
+    46:24-46:25 Int :: Int
+def allOnes :: Int    [25:1-25:8]   id: author/project:Consts64.allOnes   sig: Int   kinds:    group: author/project:Consts64.allOnes nonrec ann
+  26:5-26:21 Call :: Int
+    26:5-26:19 VarForeign :: Int -> Int   callee: author/project:Bitwise64.complement
+    26:20-26:21 Int :: Int
+def base :: Int    [15:1-15:5]   id: author/project:Consts64.base   sig: Int   kinds:    group: author/project:Consts64.base nonrec ann
+  16:5-16:31 Call :: Int
+    16:5-16:20 VarForeign :: Int -> Int -> Int   callee: author/project:Bitwise64.shiftLeftBy
+    16:21-16:29 VarTopLevel :: Int   callee: author/project:Consts64.limbBits   use: gen
+    16:30-16:31 Int :: Int
+def mask :: Int    [20:1-20:5]   id: author/project:Consts64.mask   sig: Int   kinds:    group: author/project:Consts64.mask nonrec ann
+  21:5-21:13 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    21:5-21:9 VarTopLevel :: Int   callee: author/project:Consts64.base   use: gen
+    21:12-21:13 Int :: Int
+def mixed :: Int    [50:1-50:6]   id: author/project:Consts64.mixed   sig: Int   kinds:    group: author/project:Consts64.mixed nonrec ann
+  51:5-51:51 Call :: Int
+    51:5-51:12 VarForeign :: Int -> Int -> Int   callee: author/project:Bitwise64.xor
+    51:14-51:30 Call :: Int
+      51:14-51:20 VarForeign :: Int -> Int -> Int   callee: author/project:Bitwise64.or
+      51:21-51:25 VarTopLevel :: Int   callee: author/project:Consts64.mask   use: gen
+      51:26-51:30 Int :: Int
+    51:33-51:51 Call :: Int
+      51:33-51:40 VarForeign :: Int -> Int -> Int   callee: author/project:Bitwise64.and
+      51:41-51:45 VarTopLevel :: Int   callee: author/project:Consts64.base   use: gen
+      51:46-51:51 Int :: Int
+def wrapped :: Int    [55:1-55:8]   id: author/project:Consts64.wrapped   sig: Int   kinds:    group: author/project:Consts64.wrapped nonrec ann
+  56:5-56:31 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    56:5-56:27 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      56:5-56:23 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        56:5-56:16 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          56:5-56:9 VarTopLevel :: Int   callee: author/project:Consts64.base   use: gen
+          56:12-56:16 VarTopLevel :: Int   callee: author/project:Consts64.base   use: gen
+        56:19-56:23 VarTopLevel :: Int   callee: author/project:Consts64.base   use: gen
+      56:26-56:27 Int :: Int
+    56:30-56:31 Int :: Int
+def top :: Int    [30:1-30:4]   id: author/project:Consts64.top   sig: Int   kinds:    group: author/project:Consts64.top nonrec ann
+  31:5-31:25 Call :: Int
+    31:5-31:20 VarForeign :: Int -> Int -> Int   callee: author/project:Bitwise64.shiftLeftBy
+    31:21-31:23 Int :: Int
+    31:24-31:25 Int :: Int
+def arith :: Int    [35:1-35:6]   id: author/project:Consts64.arith   sig: Int   kinds:    group: author/project:Consts64.arith nonrec ann
+  36:5-36:28 Call :: Int
+    36:5-36:21 VarForeign :: Int -> Int -> Int   callee: author/project:Bitwise64.shiftRightBy
+    36:22-36:24 Int :: Int
+    36:25-36:28 VarTopLevel :: Int   callee: author/project:Consts64.top   use: gen
+def logical :: Int    [40:1-40:8]   id: author/project:Consts64.logical   sig: Int   kinds:    group: author/project:Consts64.logical nonrec ann
+  41:5-41:30 Call :: Int
+    41:5-41:23 VarForeign :: Int -> Int -> Int   callee: author/project:Bitwise64.shiftRightZfBy
+    41:24-41:26 Int :: Int
+    41:27-41:30 VarTopLevel :: Int   callee: author/project:Consts64.top   use: gen
+def neg :: Int    [60:1-60:4]   id: author/project:Consts64.neg   sig: Int   kinds:    group: author/project:Consts64.neg nonrec ann
+  61:5-61:16 Negate :: Int
+    61:7-61:15 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      61:7-61:11 VarTopLevel :: Int   callee: author/project:Consts64.base   use: gen
+      61:14-61:15 Int :: Int
+def main :: Program () () ()    [65:1-65:5]   id: author/project:Consts64.main   sig: Program () () ()   kinds:    group: author/project:Consts64.main nonrec ann
+  66:5-79:10 Call :: Program () () ()
+    66:5-66:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    67:9-79:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      68:13-76:33 Lambda :: () -> ( (), Cmd () )
+        68:14-68:15 PAnything :: ()
+        70:21-70:22 PAnything :: List Int
+        71:25-71:128 Call :: List Int
+          71:25-71:34 VarDebug :: String -> List Int -> List Int   callee: elm/core:Debug.log   instance: a := List Int   sig#: 6ecaa5dd   subst: v0 := List Int
+          71:35-71:43 Str :: String
+          71:44-71:128 List :: List Int
+            71:46-71:54 VarTopLevel :: Int   callee: author/project:Consts64.limbBits   use: gen
+            71:56-71:60 VarTopLevel :: Int   callee: author/project:Consts64.base   use: gen
+            71:62-71:66 VarTopLevel :: Int   callee: author/project:Consts64.mask   use: gen
+            71:68-71:75 VarTopLevel :: Int   callee: author/project:Consts64.allOnes   use: gen
+            71:77-71:80 VarTopLevel :: Int   callee: author/project:Consts64.top   use: gen
+            71:82-71:87 VarTopLevel :: Int   callee: author/project:Consts64.arith   use: gen
+            71:89-71:96 VarTopLevel :: Int   callee: author/project:Consts64.logical   use: gen
+            71:98-71:105 VarTopLevel :: Int   callee: author/project:Consts64.count65   use: gen
+            71:107-71:112 VarTopLevel :: Int   callee: author/project:Consts64.mixed   use: gen
+            71:114-71:121 VarTopLevel :: Int   callee: author/project:Consts64.wrapped   use: gen
+            71:123-71:126 VarTopLevel :: Int   callee: author/project:Consts64.neg   use: gen
+        73:21-73:22 PAnything :: List Int
+        74:25-74:165 Call :: List Int
+          74:25-74:34 VarDebug :: String -> List Int -> List Int   callee: elm/core:Debug.log   instance: a := List Int   sig#: 6ecaa5dd   subst: v0 := List Int
+          74:35-74:44 Str :: String
+          74:45-74:165 List :: List Int
+            74:47-74:90 Call :: Int
+              74:47-74:62 VarForeign :: Int -> Int -> Int   callee: author/project:Bitwise64.shiftLeftBy
+              74:63-74:71 VarTopLevel :: Int   callee: author/project:Consts64.limbBits   use: gen
+              74:73-74:90 Call :: Int
+                74:73-74:84 VarForeign :: List Int -> Int   <= List number -> Int   callee: elm/core:List.length   instance: a := Int (defaulted)   sig#: 8f686fa0   subst: v0 := Int
+                74:85-74:90 List :: List Int   <= List number
+                  74:87-74:88 Int :: Int   <= number
+            74:93-74:117 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+              74:93-74:97 VarTopLevel :: Int   callee: author/project:Consts64.mask   use: gen
+              74:100-74:117 Call :: Int
+                74:100-74:111 VarForeign :: List Int -> Int   <= List number1 -> Int   callee: elm/core:List.length   instance: a := Int (defaulted)   sig#: 8f686fa0   subst: v0 := Int
+                74:112-74:117 List :: List Int   <= List number1
+                  74:114-74:115 Int :: Int   <= number1
+            74:119-74:161 Call :: Int
+              74:119-74:126 VarForeign :: Int -> Int -> Int   callee: author/project:Bitwise64.and
+              74:127-74:131 VarTopLevel :: Int   callee: author/project:Consts64.mask   use: gen
+              74:133-74:161 Call :: Int
+                74:133-74:139 VarForeign :: Int -> Int   callee: elm/core:Basics.negate   instance: number := Int   sig#: 1f734da5   subst: v0 := Int
+                74:141-74:161 Call :: Int
+                  74:141-74:152 VarForeign :: List Int -> Int   <= List number2 -> Int   callee: elm/core:List.length   instance: a := Int (defaulted)   sig#: 8f686fa0   subst: v0 := Int
+                  74:153-74:161 List :: List Int   <= List number2
+                    74:155-74:156 Int :: Int   <= number2
+                    74:158-74:159 Int :: Int   <= number2
+        76:17-76:33 Pair :: ( (), Cmd () )
+          76:19-76:21 Unit :: ()
+          76:23-76:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      77:20-77:44 Lambda :: () -> () -> ( (), Cmd () )
+        77:21-77:22 PAnything :: ()
+        77:23-77:24 PAnything :: ()
+        77:28-77:44 Pair :: ( (), Cmd () )
+          77:30-77:32 Unit :: ()
+          77:34-77:42 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      78:27-78:41 Lambda :: () -> Sub ()
+        78:28-78:29 PAnything :: ()
+        78:33-78:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Consts64.limbBits   kind: value   reads:    needs:    init-dep: no
+init: 1   id: author/project:Consts64.count65   kind: value   reads:    needs:    init-dep: no
+init: 2   id: author/project:Consts64.allOnes   kind: value   reads:    needs:    init-dep: no
+init: 3   id: author/project:Consts64.base   kind: value   reads: author/project:Consts64.limbBits   needs: author/project:Consts64.limbBits   init-dep: yes
+init: 4   id: author/project:Consts64.mask   kind: value   reads: author/project:Consts64.base   needs: author/project:Consts64.limbBits,author/project:Consts64.base   init-dep: yes
+init: 5   id: author/project:Consts64.mixed   kind: value   reads: author/project:Consts64.base,author/project:Consts64.mask   needs: author/project:Consts64.limbBits,author/project:Consts64.base,author/project:Consts64.mask   init-dep: yes
+init: 6   id: author/project:Consts64.wrapped   kind: value   reads: author/project:Consts64.base   needs: author/project:Consts64.limbBits,author/project:Consts64.base   init-dep: yes
+init: 7   id: author/project:Consts64.top   kind: value   reads:    needs:    init-dep: no
+init: 8   id: author/project:Consts64.arith   kind: value   reads: author/project:Consts64.top   needs: author/project:Consts64.top   init-dep: yes
+init: 9   id: author/project:Consts64.logical   kind: value   reads: author/project:Consts64.top   needs: author/project:Consts64.top   init-dep: yes
+init: 10   id: author/project:Consts64.neg   kind: value   reads: author/project:Consts64.base   needs: author/project:Consts64.limbBits,author/project:Consts64.base   init-dep: yes
+init: 11   id: author/project:Consts64.main   kind: value   reads: author/project:Consts64.limbBits,author/project:Consts64.count65,author/project:Consts64.allOnes,author/project:Consts64.base,author/project:Consts64.mask,author/project:Consts64.mixed,author/project:Consts64.wrapped,author/project:Consts64.top,author/project:Consts64.arith,author/project:Consts64.logical,author/project:Consts64.neg   needs: author/project:Consts64.limbBits,author/project:Consts64.count65,author/project:Consts64.allOnes,author/project:Consts64.base,author/project:Consts64.mask,author/project:Consts64.mixed,author/project:Consts64.wrapped,author/project:Consts64.top,author/project:Consts64.arith,author/project:Consts64.logical,author/project:Consts64.neg   init-dep: yes
+
+-- module Bitwise64: problems=0 instances=0 instance-failures=0 defaulted=0
+-- equality-uses: total=0 at-function=0
+module author/project:Bitwise64
+def ficBitwise64Overlay :: Int    [55:1-55:20]   id: author/project:Bitwise64.ficBitwise64Overlay   sig: Int   kinds:    group: author/project:Bitwise64.ficBitwise64Overlay nonrec ann
+  56:5-56:6 Int :: Int
+def shiftRightZfBy :: Int -> Int -> Int    [48:1-48:15]   id: author/project:Bitwise64.shiftRightZfBy   sig: Int -> Int -> Int   kinds:    group: author/project:Bitwise64.shiftRightZfBy nonrec ann
+  48:16-48:17 PAnything :: Int
+  48:18-48:19 PVar a :: Int
+  49:5-49:6 VarLocal :: Int
+def shiftRightBy :: Int -> Int -> Int    [43:1-43:13]   id: author/project:Bitwise64.shiftRightBy   sig: Int -> Int -> Int   kinds:    group: author/project:Bitwise64.shiftRightBy nonrec ann
+  43:14-43:15 PAnything :: Int
+  43:16-43:17 PVar a :: Int
+  44:5-44:6 VarLocal :: Int
+def shiftLeftBy :: Int -> Int -> Int    [38:1-38:12]   id: author/project:Bitwise64.shiftLeftBy   sig: Int -> Int -> Int   kinds:    group: author/project:Bitwise64.shiftLeftBy nonrec ann
+  38:13-38:14 PAnything :: Int
+  38:15-38:16 PVar a :: Int
+  39:5-39:6 VarLocal :: Int
+def complement :: Int -> Int    [33:1-33:11]   id: author/project:Bitwise64.complement   sig: Int -> Int   kinds:    group: author/project:Bitwise64.complement nonrec ann
+  33:12-33:13 PVar a :: Int
+  34:5-34:6 VarLocal :: Int
+def xor :: Int -> Int -> Int    [28:1-28:4]   id: author/project:Bitwise64.xor   sig: Int -> Int -> Int   kinds:    group: author/project:Bitwise64.xor nonrec ann
+  28:5-28:6 PVar a :: Int
+  28:7-28:8 PAnything :: Int
+  29:5-29:6 VarLocal :: Int
+def and :: Int -> Int -> Int    [18:1-18:4]   id: author/project:Bitwise64.and   sig: Int -> Int -> Int   kinds:    group: author/project:Bitwise64.and nonrec ann
+  18:5-18:6 PVar a :: Int
+  18:7-18:8 PAnything :: Int
+  19:5-19:6 VarLocal :: Int
+def or :: Int -> Int -> Int    [23:1-23:3]   id: author/project:Bitwise64.or   sig: Int -> Int -> Int   kinds:    group: author/project:Bitwise64.or nonrec ann
+  23:4-23:5 PVar a :: Int
+  23:6-23:7 PAnything :: Int
+  24:5-24:6 VarLocal :: Int
+init: 0   id: author/project:Bitwise64.ficBitwise64Overlay   kind: value   reads:    needs:    init-dep: no
+init: 1   id: author/project:Bitwise64.shiftRightZfBy   kind: function   reads:    needs: 
+init: 2   id: author/project:Bitwise64.shiftRightBy   kind: function   reads:    needs: 
+init: 3   id: author/project:Bitwise64.shiftLeftBy   kind: function   reads:    needs: 
+init: 4   id: author/project:Bitwise64.complement   kind: function   reads:    needs: 
+init: 5   id: author/project:Bitwise64.xor   kind: function   reads:    needs: 
+init: 6   id: author/project:Bitwise64.and   kind: function   reads:    needs: 
+init: 7   id: author/project:Bitwise64.or   kind: function   reads:    needs: 

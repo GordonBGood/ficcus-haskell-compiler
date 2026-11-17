@@ -24,7 +24,7 @@ module Ficcus.Mono.CGen
 
 import Control.Monad (foldM, forM, forM_, when)
 import Control.Monad.State.Strict (State, execState, gets, modify')
-import Data.Bits (shiftR, (.&.))
+import Data.Bits (complement, shiftL, shiftR, xor, (.&.), (.|.))
 import Data.Char (isAlphaNum, ord)
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
@@ -155,7 +155,7 @@ program' info root clones =
       mapM_ emit (map objectDef (allObjects clones))
       emit ""
       let funs = [ d | d <- clones, mdClone d /= root, isFunction d ]
-      let values = [ d | d <- clones, mdClone d /= root, not (isFunction d) ]
+      let values = [ d | d <- clones, mdClone d /= root, not (isFunction d), Nothing <- [constText info d] ]     -- FIX3: a constant has no global
       forM_ funs (\d -> emit (signature info d ++ ";"))
       forM_ values (\d -> emit ("static " ++ classType (mdResult d) ++ " " ++ globalName d ++ ";"))
       forM_ values (\d -> emit ("static " ++ classType (mdResult d) ++ " " ++ valueName d ++ "(void);"))
@@ -198,6 +198,69 @@ program' info root clones =
 
 isFunction :: MDef -> Bool
 isFunction d = mdKind d == Function
+
+
+-- | FIX3: a top level value that is a compile time constant (a literal Int, Float or Char, a Bool or other enum constructor, or Int
+-- arithmetic and 64 bit bit operations on constants, such as `base = shiftLeftBy limbBits 1`, `mask = base - 1`) has no global
+-- variable and no initialiser: every use is the constant itself, which the C compiler folds into shifts, masks and immediates.
+-- The result is the C text of the constant.
+constText :: Info -> MDef -> Maybe String
+constText info d0 | isFunction d0 = Nothing
+                  | otherwise = fmap (render (mdResult d0)) (constOf info (40 :: Int) =<< mdBody d0)
+  where
+    render cls v =
+      case v of
+        CInt n | cls == CEnum -> show n
+               | n == -9223372036854775808 -> "(-INT64_C(9223372036854775807) - 1)"       -- the literal itself would be unsigned
+               | otherwise -> "(INT64_C(" ++ show n ++ "))"
+        CFlt x -> "(" ++ show x ++ ")"
+        CChr c -> "(UINT32_C(" ++ show c ++ "))"
+
+
+data ConstVal = CInt Integer | CFlt Double | CChr Int
+
+
+constOf :: Info -> Int -> MExpr -> Maybe ConstVal
+constOf info fuel e
+  | fuel <= 0 = Nothing
+  | otherwise =
+      case (mNode e, mRep e) of
+        (MLit (LInt n), CI64) -> Just (CInt (wrap n))
+        (MLit (LInt n), CEnum) -> Just (CInt n)           -- Bool (0 or 1)
+        (MLit (LInt n), CF64) -> Just (CFlt (fromIntegral n))
+        (MLit (LFloat x), CF64) | not (isNaN x || isInfinite x) -> Just (CFlt x)
+        (MLit (LChar c), CU32) -> Just (CChr c)
+        (MCtor _ tag (Key []), CEnum) -> Just (CInt (fromIntegral tag))
+        (MGlobal c, cls) | cls `elem` [CI64, CF64, CU32, CEnum], Just d <- Map.lookup c (iClones info), not (isFunction d), mdResult d == cls ->
+          constOf info (fuel - 1) =<< mdBody d
+        (MCall (MExpr _ (MKernel name key)) args, CI64) | isIntOp name, isBitwise name || isInt key ->
+          do  vs <- mapM (intOf . constOf info (fuel - 1)) args
+              fmap (CInt . wrap) (apply name vs)
+        _ -> Nothing
+  where
+    isBitwise n = List.isPrefixOf "elm/core:Bitwise64." n
+    isInt key = case numberOf key of { NInt -> True; _ -> False }
+    intOf (Just (CInt n)) = Just n
+    intOf _ = Nothing
+    wrap n = let m = n `mod` 18446744073709551616 in if m >= 9223372036854775808 then m - 18446744073709551616 else m
+    unsigned n = n `mod` 18446744073709551616
+    isIntOp n = n `elem` ["elm/core:Basics.add", "elm/core:Basics.sub", "elm/core:Basics.mul", "elm/core:Basics.negate"
+                         , "elm/core:Bitwise64.and", "elm/core:Bitwise64.or", "elm/core:Bitwise64.xor", "elm/core:Bitwise64.complement"
+                         , "elm/core:Bitwise64.shiftLeftBy", "elm/core:Bitwise64.shiftRightBy", "elm/core:Bitwise64.shiftRightZfBy"]
+    apply name vs =
+      case (name, vs) of
+        ("elm/core:Basics.add", [a, b]) -> Just (a + b)
+        ("elm/core:Basics.sub", [a, b]) -> Just (a - b)
+        ("elm/core:Basics.mul", [a, b]) -> Just (a * b)
+        ("elm/core:Basics.negate", [a]) -> Just (negate a)
+        ("elm/core:Bitwise64.and", [a, b]) -> Just (unsigned a .&. unsigned b)
+        ("elm/core:Bitwise64.or", [a, b]) -> Just (unsigned a .|. unsigned b)
+        ("elm/core:Bitwise64.xor", [a, b]) -> Just (unsigned a `xor` unsigned b)
+        ("elm/core:Bitwise64.complement", [a]) -> Just (complement (unsigned a))
+        ("elm/core:Bitwise64.shiftLeftBy", [n, a]) -> Just (unsigned a `shiftL` fromIntegral (n .&. 63))
+        ("elm/core:Bitwise64.shiftRightBy", [n, a]) -> Just (wrap a `shiftR` fromIntegral (n .&. 63))
+        ("elm/core:Bitwise64.shiftRightZfBy", [n, a]) -> Just (unsigned a `shiftR` fromIntegral (n .&. 63))
+        _ -> Nothing
 
 
 -- main = Platform.worker { init = ... }
@@ -486,7 +549,7 @@ genExpr info e =
           return t
     MGlobal c ->
       case Map.lookup c (iClones info) of
-        Just d | not (isFunction d) -> adapt (mdResult d) (mRep e) (globalName d)
+        Just d | not (isFunction d) -> adapt (mdResult d) (mRep e) (maybe (globalName d) id (constText info d))
         Just d -> closureValue info d
         Nothing -> failWith "internal: a reference to an unknown clone"
     MKernel name key -> kernelValue info name key

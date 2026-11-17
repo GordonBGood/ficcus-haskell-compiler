@@ -1,0 +1,6 @@
+ints: [1000,-77,1000007,1000006,2000089,2000089]
+floats: (0.125,3,0.375)
+char: ('q',113)
+bools: (True,False,True)
+case: "limitother"
+loop: 1500506000

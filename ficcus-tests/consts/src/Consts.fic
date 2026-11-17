@@ -1,0 +1,108 @@
+module Consts exposing (main)
+
+-- FIX3: top level constants (literal Int, Float, Char, Bool; Int arithmetic on constants) are compile time constants in the
+-- generated C (no global variable). Every output is compared with Elm.
+
+
+limit : Int
+limit =
+    1000
+
+
+negLimit : Int
+negLimit =
+    -77
+
+
+scale : Float
+scale =
+    0.125
+
+
+ratio : Float
+ratio =
+    3
+
+
+letter : Char
+letter =
+    'q'
+
+
+flag : Bool
+flag =
+    True
+
+
+off : Bool
+off =
+    False
+
+
+big : Int
+big =
+    limit * 1000 + 7
+
+
+mask : Int
+mask =
+    big - 1
+
+
+twice : Int
+twice =
+    mask + mask - negLimit
+
+
+fromOther : Int
+fromOther =
+    twice
+
+
+kind : Int -> String
+kind n =
+    case n of
+        1000 ->
+            "limit"
+
+        _ ->
+            "other"
+
+
+sumTo : Int -> Int -> Int
+sumTo n acc =
+    if n <= 0 then
+        acc
+
+    else
+        sumTo (n - 1) (acc + n * limit + mask)
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ =
+                        Debug.log "ints" [ limit, negLimit, big, mask, twice, fromOther ]
+
+                    _ =
+                        Debug.log "floats" ( scale, ratio, scale * ratio )
+
+                    _ =
+                        Debug.log "char" ( letter, Char.toCode letter )
+
+                    _ =
+                        Debug.log "bools" ( flag, off, flag && not off )
+
+                    _ =
+                        Debug.log "case" (kind limit ++ kind 5)
+
+                    _ =
+                        Debug.log "loop" (sumTo 1000 0)
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

@@ -1,0 +1,158 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:Consts (project)
+clone c0   def: author/project:Consts.negLimit   key: ()   kind: value   init: 0   needs: 
+clone c1   def: author/project:Consts.letter   key: ()   kind: value   init: 1   needs: 
+clone c2   def: author/project:Consts.scale   key: ()   kind: value   init: 2   needs: 
+clone c3   def: author/project:Consts.ratio   key: ()   kind: value   init: 3   needs: 
+clone c4   def: author/project:Consts.limit   key: ()   kind: value   init: 4   needs: 
+clone c5   def: author/project:Consts.kind   key: ()   kind: function   init: 5   needs: 
+clone c6   def: author/project:Consts.flag   key: ()   kind: value   init: 6   needs: 
+clone c7   def: author/project:Consts.off   key: ()   kind: value   init: 7   needs: 
+clone c8   def: author/project:Consts.big   key: ()   kind: value   init: 8   needs: c4
+clone c9   def: author/project:Consts.mask   key: ()   kind: value   init: 9   needs: c4,c8
+clone c10   def: author/project:Consts.sumTo   key: ()   kind: function   init: 10   needs: c4,c8,c9
+clone c11   def: author/project:Consts.twice   key: ()   kind: value   init: 11   needs: c0,c4,c8,c9
+clone c12   def: author/project:Consts.fromOther   key: ()   kind: value   init: 12   needs: c0,c4,c8,c9,c11
+clone c13   def: author/project:Consts.main   key: ()   kind: value   init: 13   needs: c0,c1,c2,c3,c4,c6,c7,c8,c9,c11,c12
+-- program: 15 clones, reachable from main, dependencies first
+clone c2   def: author/project:Consts.limit   key: ()   kind: value   params:    result: i64
+  Lit 1000 :: i64
+clone c3   def: author/project:Consts.negLimit   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+    Lit 77 :: i64
+clone c4   def: author/project:Consts.big   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Call :: i64
+      Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+      Global c2 :: i64
+      Lit 1000 :: i64
+    Lit 7 :: i64
+clone c5   def: author/project:Consts.mask   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+    Global c4 :: i64
+    Lit 1 :: i64
+clone c6   def: author/project:Consts.twice   key: ()   kind: value   params:    result: i64
+  Call :: i64
+    Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+    Call :: i64
+      Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+      Global c5 :: i64
+      Global c5 :: i64
+    Global c3 :: i64
+clone c7   def: author/project:Consts.fromOther   key: ()   kind: value   params:    result: i64
+  Global c6 :: i64
+clone c8   def: author/project:Consts.scale   key: ()   kind: value   params:    result: f64
+  Lit 0.125 :: f64
+clone c9   def: author/project:Consts.ratio   key: ()   kind: value   params:    result: f64
+  Lit 3.0 :: f64
+clone c10   def: author/project:Consts.letter   key: ()   kind: value   params:    result: u32
+  Lit '113' :: u32
+clone c11   def: author/project:Consts.flag   key: ()   kind: value   params:    result: enum
+  Lit 1 :: enum
+clone c12   def: author/project:Consts.off   key: ()   kind: value   params:    result: enum
+  Lit 0 :: enum
+clone c13   def: author/project:Consts.kind   key: ()   kind: function   params: n:i64   result: ref
+  Case :: ref
+    Local n :: i64
+    branch 1000 :: i64
+      Lit "limit" :: ref
+    branch _ :: i64
+      Lit "other" :: ref
+clone c14   def: author/project:Consts.sumTo   key: ()   kind: function   params: n:i64 acc:i64   result: i64
+  If :: i64
+    Call :: enum
+      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+      Local n :: i64
+      Lit 0 :: i64
+    Local acc :: i64
+    Call :: i64
+      Global c14 :: ref
+      Call :: i64
+        Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+        Local n :: i64
+        Lit 1 :: i64
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+          Local acc :: i64
+          Call :: i64
+            Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+            Local n :: i64
+            Global c2 :: i64
+        Global c5 :: i64
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Seq :: struct(unit,unit)
+    Call :: ref
+      Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
+      Lit "ints" :: ref
+      List :: ref
+        Global c2 :: i64
+        Global c3 :: i64
+        Global c4 :: i64
+        Global c5 :: i64
+        Global c6 :: i64
+        Global c7 :: i64
+    Seq :: struct(unit,unit)
+      Call :: struct(f64,f64,f64)
+        Kernel elm/core:Debug.log (v0=type (elm/core:Basics.Float, elm/core:Basics.Float, elm/core:Basics.Float)) :: ref
+        Lit "floats" :: ref
+        Tuple :: struct(f64,f64,f64)
+          Global c8 :: f64
+          Global c9 :: f64
+          Call :: f64
+            Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Float) :: ref
+            Global c8 :: f64
+            Global c9 :: f64
+      Seq :: struct(unit,unit)
+        Call :: struct(u32,i64)
+          Kernel elm/core:Debug.log (v0=type (elm/core:Char.Char, elm/core:Basics.Int)) :: ref
+          Lit "char" :: ref
+          Tuple :: struct(u32,i64)
+            Global c10 :: u32
+            Call :: i64
+              Kernel elm/core:Char.toCode () :: ref
+              Global c10 :: u32
+        Seq :: struct(unit,unit)
+          Call :: struct(enum,enum,enum)
+            Kernel elm/core:Debug.log (v0=type (elm/core:Basics.Bool, elm/core:Basics.Bool, elm/core:Basics.Bool)) :: ref
+            Lit "bools" :: ref
+            Tuple :: struct(enum,enum,enum)
+              Global c11 :: enum
+              Global c12 :: enum
+              Call :: enum
+                Kernel elm/core:Basics.and () :: ref
+                Global c11 :: enum
+                Call :: enum
+                  Kernel elm/core:Basics.not () :: ref
+                  Global c12 :: enum
+          Seq :: struct(unit,unit)
+            Call :: ref
+              Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+              Lit "case" :: ref
+              Call :: ref
+                Kernel elm/core:Basics.append (v0=app string) :: ref
+                Call :: ref
+                  Global c13 :: ref
+                  Global c2 :: i64
+                Call :: ref
+                  Global c13 :: ref
+                  Lit 5 :: i64
+            Seq :: struct(unit,unit)
+              Call :: i64
+                Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
+                Lit "loop" :: ref
+                Call :: i64
+                  Global c14 :: ref
+                  Lit 1000 :: i64
+                  Lit 0 :: i64
+              Tuple :: struct(unit,unit)
+                Lit () :: unit
+                Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Consts.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref
