@@ -12,7 +12,7 @@ export ELM_HOME=${ELM_HOME:-$ws/elm-home-difftest/0.19.3}
 w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
 mkdir -p "$w/src"; cp "$src" "$w/src/Main.fic"
 cat > "$w/elm.json" <<JSON
-{"type":"application","source-directories":["src","$here/src"],"elm-version":"0.19.3",
+{"type":"application","source-directories":["src","${BB_SRC:-$here/src}"],"elm-version":"0.19.3",
  "dependencies":{"direct":{"elm/core":"1.0.5"},"indirect":{"elm/json":"1.1.3"}},"test-dependencies":{"direct":{},"indirect":{}}}
 JSON
 (cd "$w" && "$elm" make src/Main.fic --output="$out.c" ${BB_FLAGS---rc} > "$w/log" 2>&1) || { cat "$w/log"; exit 1; }

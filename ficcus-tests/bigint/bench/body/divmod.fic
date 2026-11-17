@@ -1,0 +1,22 @@
+name : String
+name =
+    "divmod"
+
+
+divLoop : Int -> BigInt -> BigInt -> BigInt -> BigInt
+divLoop i n d sum =
+    if i == 10 then
+        sum
+
+    else
+        case BigInt.divmod (BigInt.add n (BigInt.fromInt i)) d of
+            Just ( q, r ) ->
+                divLoop (i + 1) n d (BigInt.add (BigInt.add sum q) r)
+
+            Nothing ->
+                sum
+
+
+result : () -> String
+result _ =
+    summary (BigInt.toString (divLoop 0 (BigInt.pow (BigInt.fromInt 3) (BigInt.fromInt @DIG@)) (BigInt.pow (BigInt.fromInt 7) (BigInt.fromInt @DEN@)) (BigInt.fromInt 0)))

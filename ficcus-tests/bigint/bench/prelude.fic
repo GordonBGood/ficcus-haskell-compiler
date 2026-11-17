@@ -1,0 +1,26 @@
+module Main exposing (main)
+
+import BigInt exposing (BigInt)
+
+
+summary : String -> String
+summary s =
+    "len=" ++ String.fromInt (String.length s) ++ " head=" ++ String.left 20 s ++ " tail=" ++ String.right 20 s
+
+
+@BODY@
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ =
+                        Debug.log name (result ())
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

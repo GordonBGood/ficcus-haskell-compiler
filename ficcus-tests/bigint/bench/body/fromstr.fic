@@ -1,0 +1,13 @@
+name : String
+name =
+    "fromstr"
+
+
+result : () -> String
+result _ =
+    case BigInt.fromIntString (String.repeat @REP@ "1234567890") of
+        Just x ->
+            "odd " ++ (if BigInt.isOdd x then "True" else "False")
+
+        Nothing ->
+            "Nothing"

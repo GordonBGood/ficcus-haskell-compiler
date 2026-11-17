@@ -1,0 +1,17 @@
+name : String
+name =
+    "fib100000"
+
+
+fibLoop : Int -> BigInt -> BigInt -> BigInt
+fibLoop i a b =
+    if i == 0 then
+        a
+
+    else
+        fibLoop (i - 1) b (BigInt.add a b)
+
+
+result : () -> String
+result _ =
+    summary (BigInt.toString (fibLoop @FIB@ (BigInt.fromInt 0) (BigInt.fromInt 1)))

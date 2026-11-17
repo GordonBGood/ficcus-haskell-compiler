@@ -1,0 +1,12 @@
+name : String
+name =
+    "build"
+
+
+result : () -> String
+result _ =
+    if BigInt.gt (BigInt.pow (BigInt.fromInt 3) (BigInt.fromInt @DIG@)) (BigInt.fromInt 0) then
+        "positive"
+
+    else
+        "zero"
