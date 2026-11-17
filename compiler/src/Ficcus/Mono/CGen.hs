@@ -1339,6 +1339,64 @@ vectorCall info cls op key args =
                       emit ("else " ++ t ++ " = fic_vector_set(" ++ i' ++ ", &" ++ val ++ ", " ++ t ++ ", " ++ wh ++ ");")
                 else emit (t ++ " = fic_vector_set(" ++ i' ++ ", &" ++ val ++ ", " ++ t ++ ", " ++ wh ++ ");")     -- no counts: every update copies
               return t
+        -- FIX3: the same as `set` and `swap` for an index that the overlay has tested: no range test on the fast path (the slow
+        -- path, a shared vector, is the checked runtime function)
+        ("unsafeSet", [i, x, v]) ->
+          do  vs <- atomsTo info [(i, CI64), (x, c), (v, CRef)]
+              let i' = vs !! 0
+              val <- stored (vs !! 1)
+              t <- target (vs !! 2)
+              emit "/* Vector.unsafeSet */"
+              if rcMode
+                then
+                  do  let check = updateCheck v
+                          uniq = case check of { CheckCount -> t ++ "->rc == 1"; KnownUnique -> "FIC_CHECK_UNIQUE(" ++ t ++ ") != NULL" }
+                          write =
+                            if vecHasRefs c
+                              then ty ++ " old_" ++ t ++ " = " ++ at t i' ++ "; " ++ at t i' ++ " = " ++ val ++ "; "
+                                   ++ concat [ "fic_drop(" ++ p ++ "); " | p <- refPaths c ("old_" ++ t) ]
+                              else at t i' ++ " = " ++ val ++ "; "
+                      emit ("if (" ++ uniq ++ ") { " ++ write ++ "FIC_STAT(fic_n_inplace++); }")
+                      emit ("else " ++ t ++ " = fic_vector_set(" ++ i' ++ ", &" ++ val ++ ", " ++ t ++ ", " ++ wh ++ ");")
+                else emit (t ++ " = fic_vector_set(" ++ i' ++ ", &" ++ val ++ ", " ++ t ++ ", " ++ wh ++ ");")
+              return t
+        ("unsafeSwap", [i, j, v]) ->
+          do  vs <- atomsTo info [(i, CI64), (j, CI64), (v, CRef)]
+              let i' = vs !! 0
+                  j' = vs !! 1
+              t <- target (vs !! 2)
+              emit "/* Vector.unsafeSwap */"
+              if rcMode
+                then
+                  do  let check = updateCheck v
+                          uniq = case check of { CheckCount -> t ++ "->rc == 1"; KnownUnique -> "FIC_CHECK_UNIQUE(" ++ t ++ ") != NULL" }
+                      emit ("if (" ++ uniq ++ ") { "
+                            ++ ty ++ " sw_" ++ t ++ " = " ++ at t i' ++ "; " ++ at t i' ++ " = " ++ at t j' ++ "; " ++ at t j' ++ " = sw_" ++ t ++ "; FIC_STAT(fic_n_inplace++); }")
+                      emit ("else " ++ t ++ " = fic_vector_swap(" ++ i' ++ ", " ++ j' ++ ", " ++ t ++ ", " ++ wh ++ ");")
+                else emit (t ++ " = fic_vector_swap(" ++ i' ++ ", " ++ j' ++ ", " ++ t ++ ", " ++ wh ++ ");")
+              return t
+        -- FIX3: a fill loop (gcc makes a memset or vector stores of it for RAW elements); the element is moved into the vector, the
+        -- other n - 1 places hold their own counts; n <= 0 gives the empty vector and releases the element
+        ("repeat", [n, x]) ->
+          do  vs <- atomsTo info [(n, CI64), (x, c)]
+              cnt <- fresh "rn"
+              emit "/* Vector.repeat */"
+              val <- stored (vs !! 1)
+              t <- fresh "rp"
+              emit ("int64_t " ++ cnt ++ " = " ++ (vs !! 0) ++ ";")
+              emit ("fic_ref " ++ t ++ " = fic_vector_new(" ++ cnt ++ " > 0 ? " ++ cnt ++ " : 0, " ++ esize ++ ", " ++ desc ++ ");")
+              let refs = vecHasRefs c
+              emit ("if (" ++ cnt ++ " > 0) {")
+              indented $
+                do  emit ("int64_t k_" ++ t ++ ";")
+                    emit ("for (k_" ++ t ++ " = 0; k_" ++ t ++ " < " ++ cnt ++ "; k_" ++ t ++ "++) " ++ at t ("k_" ++ t) ++ " = " ++ val ++ ";")
+                    emit ("FIC_VECTOR_LEN(" ++ t ++ ") = " ++ cnt ++ ";")
+                    when (rcMode && refs) $
+                      emit ("for (k_" ++ t ++ " = 1; k_" ++ t ++ " < " ++ cnt ++ "; k_" ++ t ++ "++) { " ++ concat [ "fic_dup(" ++ p ++ "); " | p <- refPaths c val ] ++ "}")
+              if rcMode && refs
+                then emit ("} else { " ++ concat [ "fic_drop(" ++ p ++ "); " | p <- refPaths c val ] ++ "}")
+                else emit "}"
+              return t
         ("swap", [i, j, v]) ->
           do  vs <- atomsTo info [(i, CI64), (j, CI64), (v, CRef)]
               let i' = vs !! 0

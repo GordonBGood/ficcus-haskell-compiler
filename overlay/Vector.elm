@@ -70,6 +70,20 @@ unsafeGet i v =
     unsafeGet i v
 
 
+{-| not exposed: `set` for an index that is in range (`update` tests it): no range test on the fast path
+-}
+unsafeSet : Int -> a -> Vector a -> Vector a
+unsafeSet i x v =
+    unsafeSet i x v
+
+
+{-| not exposed: `swap` for two indices that are in range (the loop of `filter` that reverses)
+-}
+unsafeSwap : Int -> Int -> Vector a -> Vector a
+unsafeSwap i j v =
+    unsafeSwap i j v
+
+
 {-| Replace the element at the index; out of range the vector is returned unchanged. In place when the vector has one owner.
 -}
 set : Int -> a -> Vector a -> Vector a
@@ -139,7 +153,7 @@ update i f v =
             x =
                 unsafeGet i v
         in
-        set i (f x) v
+        unsafeSet i (f x) v
 
     else
         v
@@ -177,24 +191,11 @@ initializeHelp i n f acc =
         initializeHelp (i + 1) n f (push (f i) acc)
 
 
-{-| `repeat n x` has `n` copies of `x`; the empty vector when `n` is not positive.
+{-| `repeat n x` has `n` copies of `x`; the empty vector when `n` is not positive. (A kernel function: a fill loop.)
 -}
 repeat : Int -> a -> Vector a
 repeat n x =
-    if n <= 0 then
-        empty
-
-    else
-        repeatHelp n x (withCapacity n)
-
-
-repeatHelp : Int -> a -> Vector a -> Vector a
-repeatHelp n x acc =
-    if length acc >= n then
-        acc
-
-    else
-        repeatHelp n x (push x acc)
+    repeat n x
 
 
 map : (a -> b) -> Vector a -> Vector b
@@ -288,7 +289,7 @@ reverseInPlace i v =
         v
 
     else
-        reverseInPlace (i + 1) (swap i j v)
+        reverseInPlace (i + 1) (unsafeSwap i j v)
 
 
 {-| The elements with their indices, in order.

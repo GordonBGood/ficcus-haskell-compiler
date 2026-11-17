@@ -113,6 +113,8 @@ regexKernels =
 -- signature of each intrinsic. Every one has a single type variable, the element type, and is keyed by the EXACT element type
 -- (`forcedExact`; the `Element` mark of Ficcus.Mono.Marks carries that to every function that touches the elements), because the
 -- elements are stored flat in the layout of that type.
+--   FIX3: `unsafeSet` and `unsafeSwap` are `set` and `swap` for an index that is in range by construction (the overlay's `update` and
+--   `filter` test it): no range test on the fast path. `repeat n x` is a fill loop (the empty vector for n <= 0; x is consumed).
 --   set, swap, push consume the vector (in place when unique) and the element they store; append consumes its first vector and
 --   borrows the second; slice consumes its vector (in place when it is unique, V4 step 4: docs/STAGE4-FIX1.md); unsafeGet returns a borrowed element (`kernelResultBorrowed`); unsafeTake is made by the Rc pass from an
 --   unsafeGet (`takeFor`): the element is moved out of a unique vector, the result is owned, the vector is only borrowed.
@@ -120,6 +122,7 @@ vectorKernels :: [(String, Int, String)]
 vectorKernels =
   [ ("empty", 0, ""), ("withCapacity", 1, "s"), ("length", 1, "b"), ("unsafeGet", 2, "sb"), ("unsafeTake", 2, "sb")
   , ("set", 3, "soo"), ("swap", 3, "sso"), ("push", 2, "oo"), ("slice", 3, "sso"), ("append", 2, "ob")
+  , ("unsafeSet", 3, "soo"), ("unsafeSwap", 3, "sso"), ("repeat", 2, "so")
   , ("fromList", 1, "b"), ("toList", 1, "b") ]
 
 
@@ -259,7 +262,7 @@ unsafeSetKernel = "elm/core:Elm.JsArray.unsafeSet"
 takeFamilies :: [(String, String, String)]
 takeFamilies =
   [ (unsafeGetKernel, takeKernel, unsafeSetKernel)
-  , (vectorKernelId "unsafeGet", vectorKernelId "unsafeTake", vectorKernelId "set") ]
+  , (vectorKernelId "unsafeGet", vectorKernelId "unsafeTake", vectorKernelId "unsafeSet") ]
 
 
 -- | for a read: its take and the update that must follow
@@ -281,7 +284,7 @@ setOfTake name = case [ u | (_, t, u) <- takeFamilies, t == name ] of { u : _ ->
 updateKernels :: [(String, Int)]
 updateKernels =
   [ ("elm/core:Elm.JsArray.unsafeSet", 2), ("elm/core:Elm.JsArray.push", 1)
-  , (vectorKernelId "set", 2), (vectorKernelId "swap", 2), (vectorKernelId "push", 1), (vectorKernelId "append", 0) ]
+  , (vectorKernelId "set", 2), (vectorKernelId "swap", 2), (vectorKernelId "unsafeSet", 2), (vectorKernelId "unsafeSwap", 2), (vectorKernelId "push", 1), (vectorKernelId "append", 0) ]
 
 
 -- | S6, unique PAP stealing: `MCall (MKernel applyOwnKernel _) (f : args)` is a call of the function value `f` that CONSUMES `f`

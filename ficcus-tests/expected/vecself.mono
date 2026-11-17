@@ -18,71 +18,41 @@ clone c11   def: author/project:VecSelf.arr   key: ()   kind: function   init: 1
 clone c12   def: author/project:VecSelf.main   key: ()   kind: value   init: 12   needs: 
 -- module author/project:Vector (project)
 mark author/project:Vector.withCapacity   v0=any+element
+mark author/project:Vector.unsafeSwap   v0=any+element
+mark author/project:Vector.unsafeSet   v0=any+element
 mark author/project:Vector.unsafeGet   v0=any+element
 mark author/project:Vector.toIndexedHelp   v0=any+element
 mark author/project:Vector.foldrHelp   v0=any+element v1=any
 mark author/project:Vector.foldlHelp   v0=any+element v1=any
 mark author/project:Vector.fromList   v0=any+element
 mark author/project:Vector.toList   v0=any+element
+mark author/project:Vector.repeat   v0=any+element
 mark author/project:Vector.length   v0=any+element
+mark author/project:Vector.update   v0=any+element
 mark author/project:Vector.isEmpty   v0=any+element
 mark author/project:Vector.toIndexedList   v0=any+element
+mark author/project:Vector.reverseInPlace   v0=any+element
 mark author/project:Vector.append   v0=any+element
 mark author/project:Vector.slice   v0=any+element
 mark author/project:Vector.foldr   v0=any+element v1=any
 mark author/project:Vector.foldl   v0=any+element v1=any
 mark author/project:Vector.empty   v0=any+element
 mark author/project:Vector.swap   v0=any+element
-mark author/project:Vector.reverseInPlace   v0=any+element
 mark author/project:Vector.push   v0=any+element
 mark author/project:Vector.mapHelp   v0=any+element v1=any+element
 mark author/project:Vector.singleton   v0=any+element
 mark author/project:Vector.filterHelp   v0=any+element
 mark author/project:Vector.filter   v0=any+element
-mark author/project:Vector.repeatHelp   v0=any+element
-mark author/project:Vector.repeat   v0=any+element
 mark author/project:Vector.indexedMapHelp   v0=any+element v1=any+element
 mark author/project:Vector.indexedMap   v0=any+element v1=any+element
 mark author/project:Vector.initializeHelp   v0=any+element
 mark author/project:Vector.initialize   v0=any+element
 mark author/project:Vector.set   v0=any+element
-mark author/project:Vector.update   v0=any+element
 mark author/project:Vector.map   v0=any+element v1=any+element
 mark author/project:Vector.get   v0=any+element
 clone c13   def: author/project:Vector.ficVectorOverlay   key: ()   kind: value   init: 0   needs: 
--- program: 63 clones, reachable from main, dependencies first
-clone c30   def: author/project:Vector.repeatHelp   key: (v0=type ({}, elm/core:Basics.Int))   name: repeatHelp__t   kind: function   params: n:i64 x:struct(ref,i64) acc:ref   result: ref
-  If :: ref
-    Call :: enum
-      Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
-      Call :: i64
-        Kernel elm/core:Vector.length (v0=type ({}, elm/core:Basics.Int)) :: ref
-        Local acc :: ref
-      Local n :: i64
-    Local acc :: ref
-    Call :: ref
-      Global c30 :: ref
-      Local n :: i64
-      Local x :: struct(ref,i64)
-      Call :: ref
-        Kernel elm/core:Vector.push (v0=type ({}, elm/core:Basics.Int)) :: ref
-        Local x :: struct(ref,i64)
-        Local acc :: ref
-clone c20   def: author/project:Vector.repeat   key: (v0=type ({}, elm/core:Basics.Int))   name: repeat__t   kind: function   params: n:i64 x:struct(ref,i64)   result: ref
-  If :: ref
-    Call :: enum
-      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
-      Local n :: i64
-      Lit 0 :: i64
-    Kernel elm/core:Vector.empty (v0=type ({}, elm/core:Basics.Int)) :: ref
-    Call :: ref
-      Global c30 :: ref
-      Local n :: i64
-      Local x :: struct(ref,i64)
-      Call :: ref
-        Kernel elm/core:Vector.withCapacity (v0=type ({}, elm/core:Basics.Int)) :: ref
-        Local n :: i64
-clone c5   def: author/project:VecSelf.e3@135:21   key: (v0=type elm/core:Basics.Int)   name: e3@135:21__i64   kind: function   params:    result: ref   lifted-from: c1
+-- program: 57 clones, reachable from main, dependencies first
+clone c3   def: author/project:VecSelf.e3@135:21   key: (v0=type elm/core:Basics.Int)   name: e3@135:21__i64   kind: function   params:    result: ref   lifted-from: c1
   Call :: ref
     Kernel elm/core:Vector.set (v0=type ({}, elm/core:Basics.Int)) :: ref
     Lit 1 :: i64
@@ -90,74 +60,12 @@ clone c5   def: author/project:VecSelf.e3@135:21   key: (v0=type elm/core:Basics
       Record  :: struct()
       Lit 5 :: i64
     Call :: ref
-      Global c20 :: ref
+      Kernel elm/core:Vector.repeat (v0=type ({}, elm/core:Basics.Int)) :: ref
       Lit 3 :: i64
       Tuple :: struct(ref,i64)
         Record  :: struct()
         Lit 0 :: i64
-clone c18   def: author/project:Vector.repeatHelp   key: (v0=type ())   name: repeatHelp__t   kind: function   params: n:i64 x:unit acc:ref   result: ref
-  If :: ref
-    Call :: enum
-      Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
-      Call :: i64
-        Kernel elm/core:Vector.length (v0=type ()) :: ref
-        Local acc :: ref
-      Local n :: i64
-    Local acc :: ref
-    Call :: ref
-      Global c18 :: ref
-      Local n :: i64
-      Local x :: unit
-      Call :: ref
-        Kernel elm/core:Vector.push (v0=type ()) :: ref
-        Local x :: unit
-        Local acc :: ref
-clone c2   def: author/project:Vector.repeat   key: (v0=type ())   name: repeat__t   kind: function   params: n:i64 x:unit   result: ref
-  If :: ref
-    Call :: enum
-      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
-      Local n :: i64
-      Lit 0 :: i64
-    Kernel elm/core:Vector.empty (v0=type ()) :: ref
-    Call :: ref
-      Global c18 :: ref
-      Local n :: i64
-      Local x :: unit
-      Call :: ref
-        Kernel elm/core:Vector.withCapacity (v0=type ()) :: ref
-        Local n :: i64
-clone c19   def: author/project:Vector.repeatHelp   key: (v0=type {})   name: repeatHelp__t   kind: function   params: n:i64 x:struct() acc:ref   result: ref
-  If :: ref
-    Call :: enum
-      Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
-      Call :: i64
-        Kernel elm/core:Vector.length (v0=type {}) :: ref
-        Local acc :: ref
-      Local n :: i64
-    Local acc :: ref
-    Call :: ref
-      Global c19 :: ref
-      Local n :: i64
-      Local x :: struct()
-      Call :: ref
-        Kernel elm/core:Vector.push (v0=type {}) :: ref
-        Local x :: struct()
-        Local acc :: ref
-clone c3   def: author/project:Vector.repeat   key: (v0=type {})   name: repeat__t   kind: function   params: n:i64 x:struct()   result: ref
-  If :: ref
-    Call :: enum
-      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
-      Local n :: i64
-      Lit 0 :: i64
-    Kernel elm/core:Vector.empty (v0=type {}) :: ref
-    Call :: ref
-      Global c19 :: ref
-      Local n :: i64
-      Local x :: struct()
-      Call :: ref
-        Kernel elm/core:Vector.withCapacity (v0=type {}) :: ref
-        Local n :: i64
-clone c4   def: author/project:Vector.get   key: (v0=type {})   name: get__t   kind: function   params: i:i64 v:ref   result: ref
+clone c2   def: author/project:Vector.get   key: (v0=type {})   name: get__t   kind: function   params: i:i64 v:ref   result: ref
   If :: ref
     Call :: enum
       Kernel elm/core:Basics.and () :: ref
@@ -178,40 +86,40 @@ clone c4   def: author/project:Vector.get   key: (v0=type {})   name: get__t   k
         Local i :: i64
         Local v :: ref
     Ctor Nothing tag 1 () :: ref
-clone c6   def: author/project:VecSelf.fresh   key: ()   kind: function   params: _a0:unit   result: ref
+clone c4   def: author/project:VecSelf.fresh   key: ()   kind: function   params: _a0:unit   result: ref
   Call :: ref
     Kernel elm/core:Vector.fromList (v0=type elm/core:Basics.Int) :: ref
     List :: ref
       Lit 1 :: i64
       Lit 2 :: i64
       Lit 3 :: i64
-clone c21   def: author/project:VecSelf.pushTo   key: ()   kind: function   params: v:ref w:ref   result: ref
+clone c16   def: author/project:VecSelf.pushTo   key: ()   kind: function   params: v:ref w:ref   result: ref
   Call :: ref
     Kernel elm/core:Vector.push (v0=type elm/core:Basics.Int) :: ref
     Call :: i64
       Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
       Local w :: ref
     Local v :: ref
-clone c7   def: author/project:VecSelf.twice   key: ()   kind: function   params: v:ref   result: ref
+clone c5   def: author/project:VecSelf.twice   key: ()   kind: function   params: v:ref   result: ref
   Call :: ref
-    Global c21 :: ref
+    Global c16 :: ref
     Local v :: ref
     Call :: ref
       Kernel elm/core:Vector.slice (v0=type elm/core:Basics.Int) :: ref
       Lit 0 :: i64
       Lit 1 :: i64
       Local v :: ref
-clone c22   def: author/project:VecSelf.x@62:13   key: (v0=type elm/core:Basics.Int)   name: x@62:13__i64   kind: function   params:    result: i64   lifted-from: c8
+clone c17   def: author/project:VecSelf.x@62:13   key: (v0=type elm/core:Basics.Int)   name: x@62:13__i64   kind: function   params:    result: i64   lifted-from: c6
   Lit 1 :: i64
-clone c8   def: author/project:VecSelf.viaLetVar   key: ()   kind: function   params: v:ref   result: ref
+clone c6   def: author/project:VecSelf.viaLetVar   key: ()   kind: function   params: v:ref   result: ref
   Call :: ref
     Kernel elm/core:Vector.append (v0=type elm/core:Basics.Int) :: ref
     Local v :: ref
-    Let _pv22 :: ref
+    Let _pv17 :: ref
       Call :: i64
-        Global c22 :: ref
+        Global c17 :: ref
       Local v :: ref
-clone c9   def: author/project:VecSelf.viaLet   key: ()   kind: function   params: v:ref   result: ref
+clone c7   def: author/project:VecSelf.viaLet   key: ()   kind: function   params: v:ref   result: ref
   Call :: ref
     Kernel elm/core:Vector.append (v0=type elm/core:Basics.Int) :: ref
     Local v :: ref
@@ -223,7 +131,7 @@ clone c9   def: author/project:VecSelf.viaLet   key: ()   kind: function   param
         Kernel elm/core:Vector.push (v0=type elm/core:Basics.Int) :: ref
         Local x@51:13 :: i64
         Local v :: ref
-clone c10   def: author/project:VecSelf.viaIf   key: ()   kind: function   params: c:enum v:ref   result: ref
+clone c8   def: author/project:VecSelf.viaIf   key: ()   kind: function   params: c:enum v:ref   result: ref
   Call :: ref
     Kernel elm/core:Vector.append (v0=type elm/core:Basics.Int) :: ref
     Local v :: ref
@@ -231,7 +139,7 @@ clone c10   def: author/project:VecSelf.viaIf   key: ()   kind: function   param
       Local c :: enum
       Local v :: ref
       Kernel elm/core:Vector.empty (v0=type elm/core:Basics.Int) :: ref
-clone c11   def: author/project:VecSelf.fromLen   key: ()   kind: function   params: v:ref   result: ref
+clone c9   def: author/project:VecSelf.fromLen   key: ()   kind: function   params: v:ref   result: ref
   Call :: ref
     Kernel elm/core:Vector.append (v0=type elm/core:Basics.Int) :: ref
     Local v :: ref
@@ -241,7 +149,7 @@ clone c11   def: author/project:VecSelf.fromLen   key: ()   kind: function   par
         Call :: i64
           Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
           Local v :: ref
-clone c31   def: author/project:Vector.mapHelp   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int)   name: mapHelp__i64__i64   kind: function   params: i:i64 n:i64 f:ref v:ref acc:ref   result: ref
+clone c25   def: author/project:Vector.mapHelp   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int)   name: mapHelp__i64__i64   kind: function   params: i:i64 n:i64 f:ref v:ref acc:ref   result: ref
   If :: ref
     Call :: enum
       Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
@@ -249,7 +157,7 @@ clone c31   def: author/project:Vector.mapHelp   key: (v0=type elm/core:Basics.I
       Local n :: i64
     Local acc :: ref
     Call :: ref
-      Global c31 :: ref
+      Global c25 :: ref
       Call :: i64
         Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
         Local i :: i64
@@ -266,9 +174,9 @@ clone c31   def: author/project:Vector.mapHelp   key: (v0=type elm/core:Basics.I
             Local i :: i64
             Local v :: ref
         Local acc :: ref
-clone c23   def: author/project:Vector.map   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int)   name: map__i64__i64   kind: function   params: f:ref v:ref   result: ref
+clone c18   def: author/project:Vector.map   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int)   name: map__i64__i64   kind: function   params: f:ref v:ref   result: ref
   Call :: ref
-    Global c31 :: ref
+    Global c25 :: ref
     Lit 0 :: i64
     Call :: i64
       Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
@@ -280,20 +188,20 @@ clone c23   def: author/project:Vector.map   key: (v0=type elm/core:Basics.Int; 
       Call :: i64
         Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
         Local v :: ref
-clone c24   def: author/project:VecSelf.lambda@28:34   key: ()   kind: function   params: x:i64   result: i64   lifted-from: c12
+clone c19   def: author/project:VecSelf.lambda@28:34   key: ()   kind: function   params: x:i64   result: i64   lifted-from: c10
   Call :: i64
     Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
     Local x :: i64
     Lit 10 :: i64
-clone c12   def: author/project:VecSelf.mapped   key: ()   kind: function   params: v:ref   result: ref
+clone c10   def: author/project:VecSelf.mapped   key: ()   kind: function   params: v:ref   result: ref
   Call :: ref
     Kernel elm/core:Vector.append (v0=type elm/core:Basics.Int) :: ref
     Local v :: ref
     Call :: ref
-      Global c23 :: ref
-      Global c24 :: ref
+      Global c18 :: ref
+      Global c19 :: ref
       Local v :: ref
-clone c13   def: author/project:VecSelf.slice   key: ()   kind: function   params: n:i64 v:ref   result: ref
+clone c11   def: author/project:VecSelf.slice   key: ()   kind: function   params: n:i64 v:ref   result: ref
   Call :: ref
     Kernel elm/core:Vector.append (v0=type elm/core:Basics.Int) :: ref
     Local v :: ref
@@ -302,9 +210,9 @@ clone c13   def: author/project:VecSelf.slice   key: ()   kind: function   param
       Lit 0 :: i64
       Local n :: i64
       Local v :: ref
-clone c32   def: elm/core:Array.branchFactor   key: ()   kind: value   params:    result: i64
+clone c26   def: elm/core:Array.branchFactor   key: ()   kind: value   params:    result: i64
   Lit 32 :: i64
-clone c44   def: elm/core:Array.shiftStep   key: ()   kind: value   params:    result: i64
+clone c38   def: elm/core:Array.shiftStep   key: ()   kind: value   params:    result: i64
   Call :: i64
     Kernel elm/core:Basics.ceiling () :: ref
     Call :: f64
@@ -312,49 +220,49 @@ clone c44   def: elm/core:Array.shiftStep   key: ()   kind: value   params:    r
       Lit 2.0 :: f64
       Call :: f64
         Kernel elm/core:Basics.toFloat () :: ref
-        Global c32 :: i64
-clone c28   def: elm/core:Array.empty   key: (v0=i64)   name: empty__i64   kind: value   params:    result: ref
+        Global c26 :: i64
+clone c23   def: elm/core:Array.empty   key: (v0=i64)   name: empty__i64   kind: value   params:    result: ref
   Call :: ref
     Ctor Array_elm_builtin tag 0 (v0=i64; v1=i64; v2=ref; v3=ref) :: ref
     Lit 0 :: i64
-    Global c44 :: i64
+    Global c38 :: i64
     Kernel elm/core:Elm.JsArray.empty (v0=ref) :: ref
     Kernel elm/core:Elm.JsArray.empty (v0=i64) :: ref
-clone c53   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+clone c47   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
   Case :: ref
     Local list :: ref
     branch [] :: ref
       Local acc :: ref
     branch x :: ref :: xs :: ref :: ref
       Call :: ref
-        Global c53 :: ref
+        Global c47 :: ref
         Local func :: ref
         Call :: ref
           Local func :: ref
           Local x :: ref
           Local acc :: ref
         Local xs :: ref
-clone c60   def: elm/core:List.lambda@261:9   key: ()   outer: c46 (v0=ref)   kind: function   params: _pb60_0:ref _pb60_1:ref   result: ref   lifted-from: c46
+clone c54   def: elm/core:List.lambda@261:9   key: ()   outer: c40 (v0=ref)   kind: function   params: _pb54_0:ref _pb54_1:ref   result: ref   lifted-from: c40
   Call :: ref
     Kernel elm/core:List.cons (v0=ref) :: ref
-    Local _pb60_0 :: ref
-    Local _pb60_1 :: ref
-clone c46   def: elm/core:List.reverse   key: (v0=ref)   name: reverse__ref   kind: function   params: list:ref   result: ref
+    Local _pb54_0 :: ref
+    Local _pb54_1 :: ref
+clone c40   def: elm/core:List.reverse   key: (v0=ref)   name: reverse__ref   kind: function   params: list:ref   result: ref
   Call :: ref
-    Global c53 :: ref
-    Global c60 :: ref
+    Global c47 :: ref
+    Global c54 :: ref
     List :: ref
     Local list :: ref
-clone c61   def: elm/core:Tuple.first   key: (v0=ref; v1=ref)   name: first__ref__ref   kind: function   params: _p0:struct(ref,ref)   result: ref
+clone c55   def: elm/core:Tuple.first   key: (v0=ref; v1=ref)   name: first__ref__ref   kind: function   params: _p0:struct(ref,ref)   result: ref
   Case :: ref
     Local _p0 :: struct(ref,ref)
     branch (x :: ref, _ :: ref) :: struct(ref,ref)
       Local x :: ref
-clone c62   def: elm/core:Array.compressNodes   key: (v0=i64)   name: compressNodes__i64   kind: function   params: nodes:ref acc:ref   result: ref
+clone c56   def: elm/core:Array.compressNodes   key: (v0=i64)   name: compressNodes__i64   kind: function   params: nodes:ref acc:ref   result: ref
   Case :: ref
     Call :: struct(ref,ref)
       Kernel elm/core:Elm.JsArray.initializeFromList (v0=ref) :: ref
-      Global c32 :: i64
+      Global c26 :: i64
       Local nodes :: ref
     branch (node :: ref, remainingNodes :: ref) :: struct(ref,ref)
       Let newAcc@996:9 :: ref
@@ -368,14 +276,14 @@ clone c62   def: elm/core:Array.compressNodes   key: (v0=i64)   name: compressNo
           Local remainingNodes :: ref
           branch [] :: ref
             Call :: ref
-              Global c46 :: ref
+              Global c40 :: ref
               Local newAcc@996:9 :: ref
           branch _ :: ref
             Call :: ref
-              Global c62 :: ref
+              Global c56 :: ref
               Local remainingNodes :: ref
               Local newAcc@996:9 :: ref
-clone c47   def: elm/core:Array.treeFromBuilder   key: (v0=i64)   name: treeFromBuilder__i64   kind: function   params: nodeList:ref nodeListSize:i64   result: ref
+clone c41   def: elm/core:Array.treeFromBuilder   key: (v0=i64)   name: treeFromBuilder__i64   kind: function   params: nodeList:ref nodeListSize:i64   result: ref
   Let newNodeSize@974:9 :: ref
     Call :: i64
       Kernel elm/core:Basics.ceiling () :: ref
@@ -386,26 +294,26 @@ clone c47   def: elm/core:Array.treeFromBuilder   key: (v0=i64)   name: treeFrom
           Local nodeListSize :: i64
         Call :: f64
           Kernel elm/core:Basics.toFloat () :: ref
-          Global c32 :: i64
+          Global c26 :: i64
     If :: ref
       Call :: enum
         Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
         Local newNodeSize@974:9 :: i64
         Lit 1 :: i64
       Call :: ref
-        Global c61 :: ref
+        Global c55 :: ref
         Call :: struct(ref,ref)
           Kernel elm/core:Elm.JsArray.initializeFromList (v0=ref) :: ref
-          Global c32 :: i64
+          Global c26 :: i64
           Local nodeList :: ref
       Call :: ref
-        Global c47 :: ref
+        Global c41 :: ref
         Call :: ref
-          Global c62 :: ref
+          Global c56 :: ref
           Local nodeList :: ref
           List :: ref
         Local newNodeSize@974:9 :: i64
-clone c48   def: elm/core:Basics.max   key: (v0=type elm/core:Basics.Int)   name: max__i64   kind: function   params: x:i64 y:i64   result: i64
+clone c42   def: elm/core:Basics.max   key: (v0=type elm/core:Basics.Int)   name: max__i64   kind: function   params: x:i64 y:i64   result: i64
   If :: i64
     Call :: enum
       Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
@@ -413,7 +321,7 @@ clone c48   def: elm/core:Basics.max   key: (v0=type elm/core:Basics.Int)   name
       Local y :: i64
     Local x :: i64
     Local y :: i64
-clone c35   def: elm/core:Array.builderToArray   key: (v0=i64)   name: builderToArray__i64   kind: function   params: reverseNodeList:enum builder:struct(ref,ref,i64)   result: ref
+clone c29   def: elm/core:Array.builderToArray   key: (v0=i64)   name: builderToArray__i64   kind: function   params: reverseNodeList:enum builder:struct(ref,ref,i64)   result: ref
   If :: ref
     Call :: enum
       Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
@@ -426,7 +334,7 @@ clone c35   def: elm/core:Array.builderToArray   key: (v0=i64)   name: builderTo
         Kernel elm/core:Elm.JsArray.length (v0=i64) :: ref
         Access .tail #0 :: ref
           Local builder :: struct(ref,ref,i64)
-      Global c44 :: i64
+      Global c38 :: i64
       Kernel elm/core:Elm.JsArray.empty (v0=ref) :: ref
       Access .tail #0 :: ref
         Local builder :: struct(ref,ref,i64)
@@ -434,7 +342,7 @@ clone c35   def: elm/core:Array.builderToArray   key: (v0=i64)   name: builderTo
       If :: ref
         Local reverseNodeList :: enum
         Call :: ref
-          Global c46 :: ref
+          Global c40 :: ref
           Access .nodeList #1 :: ref
             Local builder :: struct(ref,ref,i64)
         Access .nodeList #1 :: ref
@@ -444,7 +352,7 @@ clone c35   def: elm/core:Array.builderToArray   key: (v0=i64)   name: builderTo
           Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
           Access .nodeListSize #2 :: i64
             Local builder :: struct(ref,ref,i64)
-          Global c32 :: i64
+          Global c26 :: i64
         Let depth@946:13 :: ref
           Call :: i64
             Kernel elm/core:Basics.floor () :: ref
@@ -452,7 +360,7 @@ clone c35   def: elm/core:Array.builderToArray   key: (v0=i64)   name: builderTo
               Kernel elm/core:Basics.logBase () :: ref
               Call :: f64
                 Kernel elm/core:Basics.toFloat () :: ref
-                Global c32 :: i64
+                Global c26 :: i64
               Call :: f64
                 Kernel elm/core:Basics.toFloat () :: ref
                 Call :: i64
@@ -461,7 +369,7 @@ clone c35   def: elm/core:Array.builderToArray   key: (v0=i64)   name: builderTo
                   Lit 1 :: i64
           Let tree@958:13 :: ref
             Call :: ref
-              Global c47 :: ref
+              Global c41 :: ref
               Local correctNodeList@952:13 :: ref
               Access .nodeListSize #2 :: i64
                 Local builder :: struct(ref,ref,i64)
@@ -475,20 +383,20 @@ clone c35   def: elm/core:Array.builderToArray   key: (v0=i64)   name: builderTo
                     Local builder :: struct(ref,ref,i64)
                 Local treeLen@943:13 :: i64
               Call :: i64
-                Global c48 :: ref
+                Global c42 :: ref
                 Lit 5 :: i64
                 Call :: i64
                   Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
                   Local depth@946:13 :: i64
-                  Global c44 :: i64
+                  Global c38 :: i64
               Local tree@958:13 :: ref
               Access .tail #0 :: ref
                 Local builder :: struct(ref,ref,i64)
-clone c29   def: elm/core:Array.fromListHelp   key: (v0=i64)   name: fromListHelp__i64   kind: function   params: list:ref nodeList:ref nodeListSize:i64   result: ref
+clone c24   def: elm/core:Array.fromListHelp   key: (v0=i64)   name: fromListHelp__i64   kind: function   params: list:ref nodeList:ref nodeListSize:i64   result: ref
   Case :: ref
     Call :: struct(ref,ref)
       Kernel elm/core:Elm.JsArray.initializeFromList (v0=i64) :: ref
-      Global c32 :: i64
+      Global c26 :: i64
       Local list :: ref
     branch (jsArray :: ref, remainingItems :: ref) :: struct(ref,ref)
       If :: ref
@@ -497,16 +405,16 @@ clone c29   def: elm/core:Array.fromListHelp   key: (v0=i64)   name: fromListHel
           Call :: i64
             Kernel elm/core:Elm.JsArray.length (v0=i64) :: ref
             Local jsArray :: ref
-          Global c32 :: i64
+          Global c26 :: i64
         Call :: ref
-          Global c35 :: ref
+          Global c29 :: ref
           Lit 1 :: enum
           Record tail nodeList nodeListSize :: struct(ref,ref,i64)
             Local jsArray :: ref
             Local nodeList :: ref
             Local nodeListSize :: i64
         Call :: ref
-          Global c29 :: ref
+          Global c24 :: ref
           Local remainingItems :: ref
           Call :: ref
             Kernel elm/core:List.cons (v0=ref) :: ref
@@ -518,37 +426,37 @@ clone c29   def: elm/core:Array.fromListHelp   key: (v0=i64)   name: fromListHel
             Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
             Local nodeListSize :: i64
             Lit 1 :: i64
-clone c17   def: elm/core:Array.fromList   key: (v0=i64)   name: fromList__i64   kind: function   params: list:ref   result: ref
+clone c15   def: elm/core:Array.fromList   key: (v0=i64)   name: fromList__i64   kind: function   params: list:ref   result: ref
   Case :: ref
     Local list :: ref
     branch [] :: ref
-      Global c28 :: ref
+      Global c23 :: ref
     branch _ :: ref
       Call :: ref
-        Global c29 :: ref
+        Global c24 :: ref
         Local list :: ref
         List :: ref
         Lit 0 :: i64
-clone c14   def: author/project:VecSelf.a@98:21   key: (v0=type elm/core:Basics.Int)   name: a@98:21__i64   kind: function   params:    result: ref   lifted-from: c1
+clone c12   def: author/project:VecSelf.a@98:21   key: (v0=type elm/core:Basics.Int)   name: a@98:21__i64   kind: function   params:    result: ref   lifted-from: c1
   Call :: ref
-    Global c17 :: ref
+    Global c15 :: ref
     List :: ref
       Lit 1 :: i64
       Lit 2 :: i64
       Lit 3 :: i64
-clone c55   def: elm/core:Array.bitMask   key: ()   kind: value   params:    result: i64
+clone c49   def: elm/core:Array.bitMask   key: ()   kind: value   params:    result: i64
   Call :: i64
     Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
     Call :: i64
       Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
       Lit 32 :: i64
-      Global c44 :: i64
+      Global c38 :: i64
     Lit 4294967295 :: i64
-clone c59   def: elm/core:Array.insertTailInTree   key: (v0=i64)   name: insertTailInTree__i64   kind: function   params: shift:i64 index:i64 tail:ref tree:ref   result: ref
+clone c53   def: elm/core:Array.insertTailInTree   key: (v0=i64)   name: insertTailInTree__i64   kind: function   params: shift:i64 index:i64 tail:ref tree:ref   result: ref
   Let pos@404:9 :: ref
     Call :: i64
       Kernel elm/core:Bitwise.and () :: ref
-      Global c55 :: i64
+      Global c49 :: i64
       Call :: i64
         Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
         Local shift :: i64
@@ -575,11 +483,11 @@ clone c59   def: elm/core:Array.insertTailInTree   key: (v0=i64)   name: insertT
           Call :: ref
             Ctor SubTree tag 0 (v0=ref) :: ref
             Call :: ref
-              Global c59 :: ref
+              Global c53 :: ref
               Call :: i64
                 Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
                 Local shift :: i64
-                Global c44 :: i64
+                Global c38 :: i64
               Local index :: i64
               Local tail :: ref
               Kernel elm/core:Elm.JsArray.empty (v0=ref) :: ref
@@ -599,11 +507,11 @@ clone c59   def: elm/core:Array.insertTailInTree   key: (v0=i64)   name: insertT
               Call :: ref
                 Ctor SubTree tag 0 (v0=ref) :: ref
                 Call :: ref
-                  Global c59 :: ref
+                  Global c53 :: ref
                   Call :: i64
                     Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
                     Local shift :: i64
-                    Global c44 :: i64
+                    Global c38 :: i64
                   Local index :: i64
                   Local tail :: ref
                   Local subTree :: ref
@@ -617,11 +525,11 @@ clone c59   def: elm/core:Array.insertTailInTree   key: (v0=i64)   name: insertT
               Call :: ref
                 Ctor SubTree tag 0 (v0=ref) :: ref
                 Call :: ref
-                  Global c59 :: ref
+                  Global c53 :: ref
                   Call :: i64
                     Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
                     Local shift :: i64
-                    Global c44 :: i64
+                    Global c38 :: i64
                   Local index :: i64
                   Local tail :: ref
                   Call :: ref
@@ -632,7 +540,7 @@ clone c59   def: elm/core:Array.insertTailInTree   key: (v0=i64)   name: insertT
                 Local pos@404:9 :: i64
                 Local newSub@435:29 :: ref
                 Local tree :: ref
-clone c45   def: elm/core:Array.unsafeReplaceTail   key: (v0=i64)   name: unsafeReplaceTail__i64   kind: function   params: newTail:ref _p1:ref   result: ref
+clone c39   def: elm/core:Array.unsafeReplaceTail   key: (v0=i64)   name: unsafeReplaceTail__i64   kind: function   params: newTail:ref _p1:ref   result: ref
   Case :: ref
     Local _p1 :: ref
     branch Array_elm_builtin #0 len :: i64 startShift :: i64 tree :: ref tail :: ref :: ref
@@ -656,13 +564,13 @@ clone c45   def: elm/core:Array.unsafeReplaceTail   key: (v0=i64)   name: unsafe
               Call :: enum
                 Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
                 Local newTailLen@362:9 :: i64
-                Global c32 :: i64
+                Global c26 :: i64
               Let overflow@370:17 :: ref
                 Call :: enum
                   Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
                   Call :: i64
                     Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
-                    Global c44 :: i64
+                    Global c38 :: i64
                     Local newArrayLen@365:9 :: i64
                   Call :: i64
                     Kernel elm/core:Bitwise.shiftLeftBy () :: ref
@@ -674,10 +582,10 @@ clone c45   def: elm/core:Array.unsafeReplaceTail   key: (v0=i64)   name: unsafe
                     Call :: i64
                       Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
                       Local startShift :: i64
-                      Global c44 :: i64
+                      Global c38 :: i64
                     Let newTree@378:25 :: ref
                       Call :: ref
-                        Global c59 :: ref
+                        Global c53 :: ref
                         Local newShift@375:25 :: i64
                         Local len :: i64
                         Local newTail :: ref
@@ -697,7 +605,7 @@ clone c45   def: elm/core:Array.unsafeReplaceTail   key: (v0=i64)   name: unsafe
                     Local newArrayLen@365:9 :: i64
                     Local startShift :: i64
                     Call :: ref
-                      Global c59 :: ref
+                      Global c53 :: ref
                       Local startShift :: i64
                       Local len :: i64
                       Local newTail :: ref
@@ -709,7 +617,7 @@ clone c45   def: elm/core:Array.unsafeReplaceTail   key: (v0=i64)   name: unsafe
                 Local startShift :: i64
                 Local tree :: ref
                 Local newTail :: ref
-clone c33   def: elm/core:Array.appendHelpTree   key: (v0=i64)   name: appendHelpTree__i64   kind: function   params: toAppend:ref _p1:ref   result: ref
+clone c27   def: elm/core:Array.appendHelpTree   key: (v0=i64)   name: appendHelpTree__i64   kind: function   params: toAppend:ref _p1:ref   result: ref
   Case :: ref
     Local _p1 :: ref
     branch Array_elm_builtin #0 len :: i64 _ :: i64 tree :: ref tail :: ref :: ref as array :: ref
@@ -722,7 +630,7 @@ clone c33   def: elm/core:Array.appendHelpTree   key: (v0=i64)   name: appendHel
             Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
             Call :: i64
               Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
-              Global c32 :: i64
+              Global c26 :: i64
               Call :: i64
                 Kernel elm/core:Elm.JsArray.length (v0=i64) :: ref
                 Local tail :: ref
@@ -730,12 +638,12 @@ clone c33   def: elm/core:Array.appendHelpTree   key: (v0=i64)   name: appendHel
           Let appended@604:9 :: ref
             Call :: ref
               Kernel elm/core:Elm.JsArray.appendN (v0=i64) :: ref
-              Global c32 :: i64
+              Global c26 :: i64
               Local tail :: ref
               Local toAppend :: ref
             Let newArray@613:9 :: ref
               Call :: ref
-                Global c45 :: ref
+                Global c39 :: ref
                 Local appended@604:9 :: ref
                 Local array :: ref
               If :: ref
@@ -750,29 +658,29 @@ clone c33   def: elm/core:Array.appendHelpTree   key: (v0=i64)   name: appendHel
                     Local itemsToAppend@607:9 :: i64
                     Local toAppend :: ref
                   Call :: ref
-                    Global c45 :: ref
+                    Global c39 :: ref
                     Local nextTail@618:17 :: ref
                     Local newArray@613:9 :: ref
                 Local newArray@613:9 :: ref
-clone c34   def: elm/core:Array.foldHelper@576:13   key: (v0=i64)   outer: c25 (v0=i64)   name: foldHelper@576:13__i64   kind: function   params: node:ref array:ref   result: ref   lifted-from: c25
+clone c28   def: elm/core:Array.foldHelper@576:13   key: (v0=i64)   outer: c20 (v0=i64)   name: foldHelper@576:13__i64   kind: function   params: node:ref array:ref   result: ref   lifted-from: c20
   Case :: ref
     Local node :: ref
     branch SubTree #0 tree :: ref :: ref
       Call :: ref
         Kernel elm/core:Elm.JsArray.foldl (v0=ref; v1=ref) :: ref
-        Global c34 :: ref
+        Global c28 :: ref
         Local array :: ref
         Local tree :: ref
     branch Leaf #1 leaf :: ref :: ref
       Call :: ref
-        Global c33 :: ref
+        Global c27 :: ref
         Local leaf :: ref
         Local array :: ref
-clone c36   def: elm/core:Array.appendHelpBuilder   key: (v0=i64)   name: appendHelpBuilder__i64   kind: function   params: tail:ref builder:struct(ref,ref,i64)   result: struct(ref,ref,i64)
+clone c30   def: elm/core:Array.appendHelpBuilder   key: (v0=i64)   name: appendHelpBuilder__i64   kind: function   params: tail:ref builder:struct(ref,ref,i64)   result: struct(ref,ref,i64)
   Let appended@629:9 :: struct(ref,ref,i64)
     Call :: ref
       Kernel elm/core:Elm.JsArray.appendN (v0=i64) :: ref
-      Global c32 :: i64
+      Global c26 :: i64
       Access .tail #0 :: ref
         Local builder :: struct(ref,ref,i64)
       Local tail :: ref
@@ -785,7 +693,7 @@ clone c36   def: elm/core:Array.appendHelpBuilder   key: (v0=i64)   name: append
           Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
           Call :: i64
             Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
-            Global c32 :: i64
+            Global c26 :: i64
             Call :: i64
               Kernel elm/core:Elm.JsArray.length (v0=i64) :: ref
               Access .tail #0 :: ref
@@ -838,27 +746,27 @@ clone c36   def: elm/core:Array.appendHelpBuilder   key: (v0=i64)   name: append
               Local builder :: struct(ref,ref,i64)
             Access .nodeListSize #2 :: i64
               Local builder :: struct(ref,ref,i64)
-clone c37   def: elm/core:Array.foldHelper@588:13   key: (v0=i64)   outer: c25 (v0=i64)   name: foldHelper@588:13__i64   kind: function   params: node:ref builder:struct(ref,ref,i64)   result: struct(ref,ref,i64)   lifted-from: c25
+clone c31   def: elm/core:Array.foldHelper@588:13   key: (v0=i64)   outer: c20 (v0=i64)   name: foldHelper@588:13__i64   kind: function   params: node:ref builder:struct(ref,ref,i64)   result: struct(ref,ref,i64)   lifted-from: c20
   Case :: struct(ref,ref,i64)
     Local node :: ref
     branch SubTree #0 tree :: ref :: ref
       Call :: struct(ref,ref,i64)
         Kernel elm/core:Elm.JsArray.foldl (v0=ref; v1=ref) :: ref
-        Global c37 :: ref
+        Global c31 :: ref
         Local builder :: struct(ref,ref,i64)
         Local tree :: ref
     branch Leaf #1 leaf :: ref :: ref
       Call :: struct(ref,ref,i64)
-        Global c36 :: ref
+        Global c30 :: ref
         Local leaf :: ref
         Local builder :: struct(ref,ref,i64)
-clone c49   def: elm/core:Array.helper@912:9   key: (v0=i64)   outer: c38 (v0=i64)   name: helper@912:9__i64   kind: function   params: node:ref acc:ref   result: ref   lifted-from: c38
+clone c43   def: elm/core:Array.helper@912:9   key: (v0=i64)   outer: c32 (v0=i64)   name: helper@912:9__i64   kind: function   params: node:ref acc:ref   result: ref   lifted-from: c32
   Case :: ref
     Local node :: ref
     branch SubTree #0 subTree :: ref :: ref
       Call :: ref
         Kernel elm/core:Elm.JsArray.foldl (v0=ref; v1=ref) :: ref
-        Global c49 :: ref
+        Global c43 :: ref
         Local acc :: ref
         Local subTree :: ref
     branch Leaf #1 _ :: ref :: ref
@@ -866,7 +774,7 @@ clone c49   def: elm/core:Array.helper@912:9   key: (v0=i64)   outer: c38 (v0=i6
         Kernel elm/core:List.cons (v0=ref) :: ref
         Local node :: ref
         Local acc :: ref
-clone c38   def: elm/core:Array.builderFromArray   key: (v0=i64)   name: builderFromArray__i64   kind: function   params: _p0:ref   result: struct(ref,ref,i64)
+clone c32   def: elm/core:Array.builderFromArray   key: (v0=i64)   name: builderFromArray__i64   kind: function   params: _p0:ref   result: struct(ref,ref,i64)
   Case :: struct(ref,ref,i64)
     Local _p0 :: ref
     branch Array_elm_builtin #0 len :: i64 _ :: i64 tree :: ref tail :: ref :: ref
@@ -874,14 +782,14 @@ clone c38   def: elm/core:Array.builderFromArray   key: (v0=i64)   name: builder
         Local tail :: ref
         Call :: ref
           Kernel elm/core:Elm.JsArray.foldl (v0=ref; v1=ref) :: ref
-          Global c49 :: ref
+          Global c43 :: ref
           List :: ref
           Local tree :: ref
         Call :: i64
           Kernel elm/core:Basics.idiv () :: ref
           Local len :: i64
-          Global c32 :: i64
-clone c25   def: elm/core:Array.append   key: (v0=i64)   name: append__i64   kind: function   params: _p0:ref _p1:ref   result: ref
+          Global c26 :: i64
+clone c20   def: elm/core:Array.append   key: (v0=i64)   name: append__i64   kind: function   params: _p0:ref _p1:ref   result: ref
   Case :: ref
     Local _p0 :: ref
     branch Array_elm_builtin #0 _ :: i64 _ :: i64 _ :: ref aTail :: ref :: ref as a :: ref
@@ -894,30 +802,30 @@ clone c25   def: elm/core:Array.append   key: (v0=i64)   name: append__i64   kin
               Local bLen :: i64
               Call :: i64
                 Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
-                Global c32 :: i64
+                Global c26 :: i64
                 Lit 4 :: i64
             Call :: ref
-              Global c33 :: ref
+              Global c27 :: ref
               Local bTail :: ref
               Call :: ref
                 Kernel elm/core:Elm.JsArray.foldl (v0=ref; v1=ref) :: ref
-                Global c34 :: ref
+                Global c28 :: ref
                 Local a :: ref
                 Local bTree :: ref
             Call :: ref
-              Global c35 :: ref
+              Global c29 :: ref
               Lit 1 :: enum
               Call :: struct(ref,ref,i64)
-                Global c36 :: ref
+                Global c30 :: ref
                 Local bTail :: ref
                 Call :: struct(ref,ref,i64)
                   Kernel elm/core:Elm.JsArray.foldl (v0=ref; v1=ref) :: ref
-                  Global c37 :: ref
+                  Global c31 :: ref
                   Call :: struct(ref,ref,i64)
-                    Global c38 :: ref
+                    Global c32 :: ref
                     Local a :: ref
                   Local bTree :: ref
-clone c39   def: elm/core:Array.translateIndex   key: (v0=i64)   name: translateIndex__i64   kind: function   params: index:i64 _p1:ref   result: i64
+clone c33   def: elm/core:Array.translateIndex   key: (v0=i64)   name: translateIndex__i64   kind: function   params: index:i64 _p1:ref   result: i64
   Case :: i64
     Local _p1 :: ref
     branch Array_elm_builtin #0 len :: i64 _ :: i64 _ :: ref _ :: ref :: ref
@@ -944,7 +852,7 @@ clone c39   def: elm/core:Array.translateIndex   key: (v0=i64)   name: translate
             Local len :: i64
           Local len :: i64
           Local posIndex@698:9 :: i64
-clone c50   def: elm/core:Array.tailIndex   key: ()   kind: function   params: len:i64   result: i64
+clone c44   def: elm/core:Array.tailIndex   key: ()   kind: function   params: len:i64   result: i64
   Call :: i64
     Kernel elm/core:Bitwise.shiftLeftBy () :: ref
     Lit 5 :: i64
@@ -952,13 +860,13 @@ clone c50   def: elm/core:Array.tailIndex   key: ()   kind: function   params: l
       Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
       Lit 5 :: i64
       Local len :: i64
-clone c51   def: elm/core:Array.helper@846:13   key: (v0=i64)   outer: c40 (v0=i64)   name: helper@846:13__i64   kind: function   params: node:ref acc:ref   result: ref   lifted-from: c40
+clone c45   def: elm/core:Array.helper@846:13   key: (v0=i64)   outer: c34 (v0=i64)   name: helper@846:13__i64   kind: function   params: node:ref acc:ref   result: ref   lifted-from: c34
   Case :: ref
     Local node :: ref
     branch SubTree #0 subTree :: ref :: ref
       Call :: ref
         Kernel elm/core:Elm.JsArray.foldr (v0=ref; v1=ref) :: ref
-        Global c51 :: ref
+        Global c45 :: ref
         Local acc :: ref
         Local subTree :: ref
     branch Leaf #1 leaf :: ref :: ref
@@ -966,7 +874,7 @@ clone c51   def: elm/core:Array.helper@846:13   key: (v0=i64)   outer: c40 (v0=i
         Kernel elm/core:List.cons (v0=ref) :: ref
         Local leaf :: ref
         Local acc :: ref
-clone c52   def: elm/core:List.drop   key: (v0=ref)   name: drop__ref   kind: function   params: n:i64 list:ref   result: ref
+clone c46   def: elm/core:List.drop   key: (v0=ref)   name: drop__ref   kind: function   params: n:i64 list:ref   result: ref
   If :: ref
     Call :: enum
       Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
@@ -979,13 +887,13 @@ clone c52   def: elm/core:List.drop   key: (v0=ref)   name: drop__ref   kind: fu
         Local list :: ref
       branch x :: ref :: xs :: ref :: ref
         Call :: ref
-          Global c52 :: ref
+          Global c46 :: ref
           Call :: i64
             Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
             Local n :: i64
             Lit 1 :: i64
           Local xs :: ref
-clone c54   def: elm/core:Array.initialBuilder@872:25   key: (v1=ref; v2=type elm/core:Basics.Int)   outer: c40 (v0=i64)   name: initialBuilder@872:25__ref__i64   kind: function   params:    result: struct(ref,ref,i64)   lifted-from: c40
+clone c48   def: elm/core:Array.initialBuilder@872:25   key: (v1=ref; v2=type elm/core:Basics.Int)   outer: c34 (v0=i64)   name: initialBuilder@872:25__ref__i64   kind: function   params:    result: struct(ref,ref,i64)   lifted-from: c34
   Record tail nodeList nodeListSize :: struct(ref,ref,i64)
     Call :: ref
       Kernel elm/core:Elm.JsArray.slice (v0=i64) :: ref
@@ -996,7 +904,7 @@ clone c54   def: elm/core:Array.initialBuilder@872:25   key: (v1=ref; v2=type el
       Local head :: ref
     List :: ref
     Lit 0 :: i64
-clone c40   def: elm/core:Array.sliceLeft   key: (v0=i64)   name: sliceLeft__i64   kind: function   params: from:i64 _p1:ref   result: ref
+clone c34   def: elm/core:Array.sliceLeft   key: (v0=i64)   name: sliceLeft__i64   kind: function   params: from:i64 _p1:ref   result: ref
   Case :: ref
     Local _p1 :: ref
     branch Array_elm_builtin #0 len :: i64 _ :: i64 tree :: ref tail :: ref :: ref as array :: ref
@@ -1010,7 +918,7 @@ clone c40   def: elm/core:Array.sliceLeft   key: (v0=i64)   name: sliceLeft__i64
           Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
           Local from :: i64
           Call :: i64
-            Global c50 :: ref
+            Global c44 :: ref
             Local len :: i64
         Call :: ref
           Ctor Array_elm_builtin tag 0 (v0=i64; v1=i64; v2=ref; v3=ref) :: ref
@@ -1018,7 +926,7 @@ clone c40   def: elm/core:Array.sliceLeft   key: (v0=i64)   name: sliceLeft__i64
             Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
             Local len :: i64
             Local from :: i64
-          Global c44 :: i64
+          Global c38 :: i64
           Kernel elm/core:Elm.JsArray.empty (v0=ref) :: ref
           Call :: ref
             Kernel elm/core:Elm.JsArray.slice (v0=i64) :: ref
@@ -1026,7 +934,7 @@ clone c40   def: elm/core:Array.sliceLeft   key: (v0=i64)   name: sliceLeft__i64
               Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
               Local from :: i64
               Call :: i64
-                Global c50 :: ref
+                Global c44 :: ref
                 Local len :: i64
             Call :: i64
               Kernel elm/core:Elm.JsArray.length (v0=i64) :: ref
@@ -1036,23 +944,23 @@ clone c40   def: elm/core:Array.sliceLeft   key: (v0=i64)   name: sliceLeft__i64
           Call :: i64
             Kernel elm/core:Basics.idiv () :: ref
             Local from :: i64
-            Global c32 :: i64
+            Global c26 :: i64
           Let leafNodes@854:13 :: ref
             Call :: ref
               Kernel elm/core:Elm.JsArray.foldr (v0=ref; v1=ref) :: ref
-              Global c51 :: ref
+              Global c45 :: ref
               List :: ref
                 Local tail :: ref
               Local tree :: ref
             Let nodesToInsert@860:13 :: ref
               Call :: ref
-                Global c52 :: ref
+                Global c46 :: ref
                 Local skipNodes@857:13 :: i64
                 Local leafNodes@854:13 :: ref
               Case :: ref
                 Local nodesToInsert@860:13 :: ref
                 branch [] :: ref
-                  Global c28 :: ref
+                  Global c23 :: ref
                 branch head :: ref :: rest :: ref :: ref
                   Let firstSlice@869:25 :: ref
                     Call :: i64
@@ -1061,19 +969,19 @@ clone c40   def: elm/core:Array.sliceLeft   key: (v0=i64)   name: sliceLeft__i64
                       Call :: i64
                         Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
                         Local skipNodes@857:13 :: i64
-                        Global c32 :: i64
-                    Let _pv54 :: ref
+                        Global c26 :: i64
+                    Let _pv48 :: ref
                       Call :: struct(ref,ref,i64)
-                        Global c54 :: ref
+                        Global c48 :: ref
                       Call :: ref
-                        Global c35 :: ref
+                        Global c29 :: ref
                         Lit 1 :: enum
                         Call :: struct(ref,ref,i64)
-                          Global c53 :: ref
-                          Global c36 :: ref
-                          Local _pv54 :: struct(ref,ref,i64)
+                          Global c47 :: ref
+                          Global c30 :: ref
+                          Local _pv48 :: struct(ref,ref,i64)
                           Local rest :: ref
-clone c56   def: elm/core:Array.hoistTree   key: (v0=i64)   name: hoistTree__i64   kind: function   params: oldShift:i64 newShift:i64 tree:ref   result: ref
+clone c50   def: elm/core:Array.hoistTree   key: (v0=i64)   name: hoistTree__i64   kind: function   params: oldShift:i64 newShift:i64 tree:ref   result: ref
   If :: ref
     Call :: enum
       Kernel elm/core:Basics.or () :: ref
@@ -1095,20 +1003,20 @@ clone c56   def: elm/core:Array.hoistTree   key: (v0=i64)   name: hoistTree__i64
         Local tree :: ref
       branch SubTree #0 sub :: ref :: ref
         Call :: ref
-          Global c56 :: ref
+          Global c50 :: ref
           Call :: i64
             Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
             Local oldShift :: i64
-            Global c44 :: i64
+            Global c38 :: i64
           Local newShift :: i64
           Local sub :: ref
       branch Leaf #1 _ :: ref :: ref
         Local tree :: ref
-clone c57   def: elm/core:Array.sliceTree   key: (v0=i64)   name: sliceTree__i64   kind: function   params: shift:i64 endIdx:i64 tree:ref   result: ref
+clone c51   def: elm/core:Array.sliceTree   key: (v0=i64)   name: sliceTree__i64   kind: function   params: shift:i64 endIdx:i64 tree:ref   result: ref
   Let lastPos@780:9 :: ref
     Call :: i64
       Kernel elm/core:Bitwise.and () :: ref
-      Global c55 :: i64
+      Global c49 :: i64
       Call :: i64
         Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
         Local shift :: i64
@@ -1121,11 +1029,11 @@ clone c57   def: elm/core:Array.sliceTree   key: (v0=i64)   name: sliceTree__i64
       branch SubTree #0 sub :: ref :: ref
         Let newSub@786:21 :: ref
           Call :: ref
-            Global c57 :: ref
+            Global c51 :: ref
             Call :: i64
               Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
               Local shift :: i64
-              Global c44 :: i64
+              Global c38 :: i64
             Local endIdx :: i64
             Local sub :: ref
           If :: ref
@@ -1160,11 +1068,11 @@ clone c57   def: elm/core:Array.sliceTree   key: (v0=i64)   name: sliceTree__i64
           Lit 0 :: i64
           Local lastPos@780:9 :: i64
           Local tree :: ref
-clone c58   def: elm/core:Array.fetchNewTail   key: (v0=i64)   name: fetchNewTail__i64   kind: function   params: shift:i64 end:i64 treeEnd:i64 tree:ref   result: ref
+clone c52   def: elm/core:Array.fetchNewTail   key: (v0=i64)   name: fetchNewTail__i64   kind: function   params: shift:i64 end:i64 treeEnd:i64 tree:ref   result: ref
   Let pos@762:9 :: ref
     Call :: i64
       Kernel elm/core:Bitwise.and () :: ref
-      Global c55 :: i64
+      Global c49 :: i64
       Call :: i64
         Kernel elm/core:Bitwise.shiftRightZfBy () :: ref
         Local shift :: i64
@@ -1176,11 +1084,11 @@ clone c58   def: elm/core:Array.fetchNewTail   key: (v0=i64)   name: fetchNewTai
         Local tree :: ref
       branch SubTree #0 sub :: ref :: ref
         Call :: ref
-          Global c58 :: ref
+          Global c52 :: ref
           Call :: i64
             Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
             Local shift :: i64
-            Global c44 :: i64
+            Global c38 :: i64
           Local end :: i64
           Local treeEnd :: i64
           Local sub :: ref
@@ -1190,10 +1098,10 @@ clone c58   def: elm/core:Array.fetchNewTail   key: (v0=i64)   name: fetchNewTai
           Lit 0 :: i64
           Call :: i64
             Kernel elm/core:Bitwise.and () :: ref
-            Global c55 :: i64
+            Global c49 :: i64
             Local end :: i64
           Local values :: ref
-clone c41   def: elm/core:Array.sliceRight   key: (v0=i64)   name: sliceRight__i64   kind: function   params: end:i64 _p1:ref   result: ref
+clone c35   def: elm/core:Array.sliceRight   key: (v0=i64)   name: sliceRight__i64   kind: function   params: end:i64 _p1:ref   result: ref
   Case :: ref
     Local _p1 :: ref
     branch Array_elm_builtin #0 len :: i64 startShift :: i64 tree :: ref tail :: ref :: ref as array :: ref
@@ -1207,7 +1115,7 @@ clone c41   def: elm/core:Array.sliceRight   key: (v0=i64)   name: sliceRight__i
           Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
           Local end :: i64
           Call :: i64
-            Global c50 :: ref
+            Global c44 :: ref
             Local len :: i64
         Call :: ref
           Ctor Array_elm_builtin tag 0 (v0=i64; v1=i64; v2=ref; v3=ref) :: ref
@@ -1219,12 +1127,12 @@ clone c41   def: elm/core:Array.sliceRight   key: (v0=i64)   name: sliceRight__i
             Lit 0 :: i64
             Call :: i64
               Kernel elm/core:Bitwise.and () :: ref
-              Global c55 :: i64
+              Global c49 :: i64
               Local end :: i64
             Local tail :: ref
         Let endIdx@733:13 :: ref
           Call :: i64
-            Global c50 :: ref
+            Global c44 :: ref
             Local end :: i64
           Let depth@736:13 :: ref
             Call :: i64
@@ -1233,11 +1141,11 @@ clone c41   def: elm/core:Array.sliceRight   key: (v0=i64)   name: sliceRight__i
                 Kernel elm/core:Basics.logBase () :: ref
                 Call :: f64
                   Kernel elm/core:Basics.toFloat () :: ref
-                  Global c32 :: i64
+                  Global c26 :: i64
                 Call :: f64
                   Kernel elm/core:Basics.toFloat () :: ref
                   Call :: i64
-                    Global c48 :: ref
+                    Global c42 :: ref
                     Lit 1 :: i64
                     Call :: i64
                       Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
@@ -1245,40 +1153,40 @@ clone c41   def: elm/core:Array.sliceRight   key: (v0=i64)   name: sliceRight__i
                       Lit 1 :: i64
             Let newShift@743:13 :: ref
               Call :: i64
-                Global c48 :: ref
+                Global c42 :: ref
                 Lit 5 :: i64
                 Call :: i64
                   Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
                   Local depth@736:13 :: i64
-                  Global c44 :: i64
+                  Global c38 :: i64
               Call :: ref
                 Ctor Array_elm_builtin tag 0 (v0=i64; v1=i64; v2=ref; v3=ref) :: ref
                 Local end :: i64
                 Local newShift@743:13 :: i64
                 Call :: ref
-                  Global c56 :: ref
+                  Global c50 :: ref
                   Local startShift :: i64
                   Local newShift@743:13 :: i64
                   Call :: ref
-                    Global c57 :: ref
+                    Global c51 :: ref
                     Local startShift :: i64
                     Local endIdx@733:13 :: i64
                     Local tree :: ref
                 Call :: ref
-                  Global c58 :: ref
+                  Global c52 :: ref
                   Local startShift :: i64
                   Local end :: i64
                   Local endIdx@733:13 :: i64
                   Local tree :: ref
-clone c26   def: elm/core:Array.slice   key: (v0=i64)   name: slice__i64   kind: function   params: from:i64 to:i64 array:ref   result: ref
+clone c21   def: elm/core:Array.slice   key: (v0=i64)   name: slice__i64   kind: function   params: from:i64 to:i64 array:ref   result: ref
   Let correctFrom@675:9 :: ref
     Call :: i64
-      Global c39 :: ref
+      Global c33 :: ref
       Local from :: i64
       Local array :: ref
     Let correctTo@678:9 :: ref
       Call :: i64
-        Global c39 :: ref
+        Global c33 :: ref
         Local to :: i64
         Local array :: ref
       If :: ref
@@ -1286,59 +1194,59 @@ clone c26   def: elm/core:Array.slice   key: (v0=i64)   name: slice__i64   kind:
           Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
           Local correctFrom@675:9 :: i64
           Local correctTo@678:9 :: i64
-        Global c28 :: ref
+        Global c23 :: ref
         Call :: ref
-          Global c40 :: ref
+          Global c34 :: ref
           Local correctFrom@675:9 :: i64
           Call :: ref
-            Global c41 :: ref
+            Global c35 :: ref
             Local correctTo@678:9 :: i64
             Local array :: ref
-clone c15   def: author/project:VecSelf.arr   key: ()   kind: function   params: v:ref   result: ref
+clone c13   def: author/project:VecSelf.arr   key: ()   kind: function   params: v:ref   result: ref
   Call :: ref
-    Global c25 :: ref
+    Global c20 :: ref
     Local v :: ref
     Call :: ref
-      Global c26 :: ref
+      Global c21 :: ref
       Lit 0 :: i64
       Lit 2 :: i64
       Local v :: ref
-clone c42   def: elm/core:Array.push   key: (v0=i64)   name: push__i64   kind: function   params: a:i64 _p1:ref   result: ref
+clone c36   def: elm/core:Array.push   key: (v0=i64)   name: push__i64   kind: function   params: a:i64 _p1:ref   result: ref
   Case :: ref
     Local _p1 :: ref
     branch Array_elm_builtin #0 _ :: i64 _ :: i64 _ :: ref tail :: ref :: ref as array :: ref
       Call :: ref
-        Global c45 :: ref
+        Global c39 :: ref
         Call :: ref
           Kernel elm/core:Elm.JsArray.push (v0=i64) :: ref
           Local a :: i64
           Local tail :: ref
         Local array :: ref
-clone c43   def: elm/core:Array.length   key: (v0=i64)   name: length__i64   kind: function   params: _p0:ref   result: i64
+clone c37   def: elm/core:Array.length   key: (v0=i64)   name: length__i64   kind: function   params: _p0:ref   result: i64
   Case :: i64
     Local _p0 :: ref
     branch Array_elm_builtin #0 len :: i64 _ :: i64 _ :: ref _ :: ref :: ref
       Local len :: i64
-clone c27   def: author/project:VecSelf.pushToA   key: ()   kind: function   params: v:ref w:ref   result: ref
+clone c22   def: author/project:VecSelf.pushToA   key: ()   kind: function   params: v:ref w:ref   result: ref
   Call :: ref
-    Global c42 :: ref
+    Global c36 :: ref
     Call :: i64
-      Global c43 :: ref
+      Global c37 :: ref
       Local w :: ref
     Local v :: ref
-clone c16   def: author/project:VecSelf.arrHelper   key: ()   kind: function   params: v:ref   result: ref
+clone c14   def: author/project:VecSelf.arrHelper   key: ()   kind: function   params: v:ref   result: ref
   Call :: ref
-    Global c27 :: ref
+    Global c22 :: ref
     Local v :: ref
     Call :: ref
-      Global c26 :: ref
+      Global c21 :: ref
       Lit 0 :: i64
       Lit 1 :: i64
       Local v :: ref
 clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let _pv5 :: struct(unit,unit)
+  Let _pv3 :: struct(unit,unit)
     Call :: ref
-      Global c5 :: ref
+      Global c3 :: ref
     Let e2@132:21 :: struct(unit,unit)
       Call :: ref
         Kernel elm/core:Vector.append (v0=type ()) :: ref
@@ -1351,7 +1259,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
           Lit 0 :: i64
           Lit 1 :: i64
           Call :: ref
-            Global c2 :: ref
+            Kernel elm/core:Vector.repeat (v0=type ()) :: ref
             Lit 3 :: i64
             Lit () :: unit
       Let e1@129:21 :: struct(unit,unit)
@@ -1359,7 +1267,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
           Kernel elm/core:Vector.push (v0=type {}) :: ref
           Record  :: struct()
           Call :: ref
-            Global c3 :: ref
+            Kernel elm/core:Vector.repeat (v0=type {}) :: ref
             Lit 2 :: i64
             Record  :: struct()
         Seq :: struct(unit,unit)
@@ -1381,13 +1289,13 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                     Local e1@129:21 :: ref
                     Local e1@129:21 :: ref
                 Call :: ref
-                  Global c4 :: ref
+                  Global c2 :: ref
                   Lit 1 :: i64
                   Local e1@129:21 :: ref
-              Local _pv5 :: ref
+              Local _pv3 :: ref
           Let v@95:21 :: struct(unit,unit)
             Call :: ref
-              Global c6 :: ref
+              Global c4 :: ref
               Lit () :: unit
             Seq :: struct(unit,unit)
               Call :: struct(ref,ref)
@@ -1395,12 +1303,12 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Lit "twice" :: ref
                 Tuple :: struct(ref,ref)
                   Call :: ref
-                    Global c7 :: ref
+                    Global c5 :: ref
                     Local v@95:21 :: ref
                   Call :: ref
-                    Global c7 :: ref
+                    Global c5 :: ref
                     Call :: ref
-                      Global c6 :: ref
+                      Global c4 :: ref
                       Lit () :: unit
               Seq :: struct(unit,unit)
                 Call :: struct(ref,ref)
@@ -1408,12 +1316,12 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Lit "viaLetVar" :: ref
                   Tuple :: struct(ref,ref)
                     Call :: ref
-                      Global c8 :: ref
+                      Global c6 :: ref
                       Local v@95:21 :: ref
                     Call :: ref
-                      Global c8 :: ref
+                      Global c6 :: ref
                       Call :: ref
-                        Global c6 :: ref
+                        Global c4 :: ref
                         Lit () :: unit
                 Seq :: struct(unit,unit)
                   Call :: struct(ref,ref)
@@ -1421,12 +1329,12 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                     Lit "viaLet" :: ref
                     Tuple :: struct(ref,ref)
                       Call :: ref
-                        Global c9 :: ref
+                        Global c7 :: ref
                         Local v@95:21 :: ref
                       Call :: ref
-                        Global c9 :: ref
+                        Global c7 :: ref
                         Call :: ref
-                          Global c6 :: ref
+                          Global c4 :: ref
                           Lit () :: unit
                   Seq :: struct(unit,unit)
                     Call :: struct(ref,ref,ref)
@@ -1434,18 +1342,18 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                       Lit "viaIf" :: ref
                       Tuple :: struct(ref,ref,ref)
                         Call :: ref
-                          Global c10 :: ref
+                          Global c8 :: ref
                           Lit 1 :: enum
                           Local v@95:21 :: ref
                         Call :: ref
-                          Global c10 :: ref
+                          Global c8 :: ref
                           Lit 0 :: enum
                           Local v@95:21 :: ref
                         Call :: ref
-                          Global c10 :: ref
+                          Global c8 :: ref
                           Lit 1 :: enum
                           Call :: ref
-                            Global c6 :: ref
+                            Global c4 :: ref
                             Lit () :: unit
                     Seq :: struct(unit,unit)
                       Call :: struct(ref,ref)
@@ -1453,12 +1361,12 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                         Lit "fromLen" :: ref
                         Tuple :: struct(ref,ref)
                           Call :: ref
-                            Global c11 :: ref
+                            Global c9 :: ref
                             Local v@95:21 :: ref
                           Call :: ref
-                            Global c11 :: ref
+                            Global c9 :: ref
                             Call :: ref
-                              Global c6 :: ref
+                              Global c4 :: ref
                               Lit () :: unit
                       Seq :: struct(unit,unit)
                         Call :: struct(ref,ref)
@@ -1466,12 +1374,12 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                           Lit "mapped" :: ref
                           Tuple :: struct(ref,ref)
                             Call :: ref
-                              Global c12 :: ref
+                              Global c10 :: ref
                               Local v@95:21 :: ref
                             Call :: ref
-                              Global c12 :: ref
+                              Global c10 :: ref
                               Call :: ref
-                                Global c6 :: ref
+                                Global c4 :: ref
                                 Lit () :: unit
                         Seq :: struct(unit,unit)
                           Call :: struct(ref,ref)
@@ -1479,40 +1387,40 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                             Lit "slice" :: ref
                             Tuple :: struct(ref,ref)
                               Call :: ref
-                                Global c13 :: ref
+                                Global c11 :: ref
                                 Lit 2 :: i64
                                 Local v@95:21 :: ref
                               Call :: ref
-                                Global c13 :: ref
+                                Global c11 :: ref
                                 Lit 2 :: i64
                                 Call :: ref
-                                  Global c6 :: ref
+                                  Global c4 :: ref
                                   Lit () :: unit
-                          Let _pv14 :: struct(unit,unit)
+                          Let _pv12 :: struct(unit,unit)
                             Call :: ref
-                              Global c14 :: ref
+                              Global c12 :: ref
                             Seq :: struct(unit,unit)
                               Call :: struct(ref,ref)
                                 Kernel elm/core:Debug.log (v0=type ((author/project:Vector.Vector elm/core:Basics.Int), (elm/core:Array.Array elm/core:Basics.Int))) :: ref
                                 Lit "shared" :: ref
                                 Tuple :: struct(ref,ref)
                                   Local v@95:21 :: ref
-                                  Local _pv14 :: ref
+                                  Local _pv12 :: ref
                               Seq :: struct(unit,unit)
                                 Call :: struct(ref,ref,ref)
                                   Kernel elm/core:Debug.log (v0=type ((elm/core:Array.Array elm/core:Basics.Int), (elm/core:Array.Array elm/core:Basics.Int), (elm/core:Array.Array elm/core:Basics.Int))) :: ref
                                   Lit "array" :: ref
                                   Tuple :: struct(ref,ref,ref)
                                     Call :: ref
-                                      Global c15 :: ref
-                                      Local _pv14 :: ref
+                                      Global c13 :: ref
+                                      Local _pv12 :: ref
                                     Call :: ref
-                                      Global c16 :: ref
-                                      Local _pv14 :: ref
+                                      Global c14 :: ref
+                                      Local _pv12 :: ref
                                     Call :: ref
-                                      Global c15 :: ref
+                                      Global c13 :: ref
                                       Call :: ref
-                                        Global c17 :: ref
+                                        Global c15 :: ref
                                         List :: ref
                                           Lit 7 :: i64
                                           Lit 8 :: i64

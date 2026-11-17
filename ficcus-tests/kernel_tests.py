@@ -466,6 +466,20 @@ t(V + "set", ['Vector.toList (Vector.set 1 (mk 9) (vs 3))', 'let a = vs 3 in ( V
 t(V + "swap", ['Vector.toList (Vector.swap 0 2 (vs 3))', 'let a = vs 3 in ( Vector.toList (Vector.swap 0 1 a), Vector.toList a )', 'Vector.toList (Vector.swap 0 3 (vs 3))',
                'Vector.toList (Vector.swap -1 0 (vi 3))', 'Vector.toList (Vector.swap 1 1 (vi 3))', 'Vector.toList (Vector.swap 0 4 (vp 5))',
                'let a = vn 3 in ( Vector.toList (Vector.swap 2 0 a), Vector.toList a )', 'Vector.toList (Vector.swap 1 0 (vn 2))'], needle="fic_vector_swap", **vopt)
+# FIX3: `repeat` is a fill loop (RAW, REF and MAP elements; n <= 0), `unsafeSet` and `unsafeSwap` are the overlay's `update` and `filter` (no range test)
+t(V + "repeat", ['Vector.toList (Vector.repeat 3 (mk 4))', 'let s = mk 5 in ( Vector.toList (Vector.repeat 4 s), s )', 'Vector.toList (Vector.repeat 0 (mk 6))',
+                 'Vector.toList (Vector.repeat -2 (mk 6))', 'Vector.toList (Vector.repeat 70 (N (mk 1) 1 [ mk 2 ]))', 'let r = N (mk 3) 3 [] in ( Vector.length (Vector.repeat 5 r), r )',
+                 'Vector.toList (Vector.repeat 5 7)', 'Vector.toList (Vector.repeat 3 (P 1.5 True 2))', 'Vector.toList (Vector.repeat 0 (N (mk 1) 1 []))',
+                 'let a = Vector.repeat 3 (mk 9) in ( Vector.toList (Vector.push (mk 1) a), Vector.toList a )', 'Vector.toList (Vector.repeat 200 0)'],
+  needle="/* Vector.repeat */", **vopt)
+t(V + "unsafeSet", ['Vector.toList (Vector.update 1 (\\s -> s ++ "!") (vs 3))', 'let a = vs 3 in ( Vector.toList (Vector.update 0 (\\s -> s ++ "?") a), Vector.toList a )',
+                    'Vector.toList (Vector.update 1 (\\n -> n * 10) (vi 3))', 'Vector.toList (Vector.update 9 (\\n -> n * 10) (vi 3))',
+                    'let a = vn 3 in ( Vector.toList (Vector.update 2 (\\r -> { r | n = 0 }) a), a )', 'Vector.toList (Vector.update -1 (\\s -> s) (vs 2))'],
+  needle="/* Vector.unsafeSet */", **vopt)
+t(V + "unsafeSwap", ['Vector.toList (Vector.filter (\\s -> String.length s > 0) (vs 4))', 'let a = vs 5 in ( Vector.toList (Vector.filter (\\s -> s /= mk 2) a), Vector.toList a )',
+                     'Vector.toList (Vector.filter (\\n -> modBy 2 n == 0) (vi 7))', 'Vector.toList (Vector.filter (\\_ -> False) (vs 3))',
+                     'let a = vn 4 in ( Vector.toList (Vector.filter (\\r -> r.n > 1) a), a )', 'Vector.toList (Vector.filter (\\p -> p.on) (vp 5))'],
+  needle="/* Vector.unsafeSwap */", **vopt)
 t(V + "push", ['Vector.toList (Vector.push (mk 9) (vs 2))', 'let a = vs 2 in ( Vector.toList (Vector.push (mk 8) a), Vector.toList a )',
                'Vector.length (pushAll (List.map mk (List.range 1 80)) (vs 1))', 'let s = mk 7 in ( Vector.toList (Vector.push s (Vector.push s Vector.empty)), s )',
                'Vector.toList (pushAll (List.range 1 40) Vector.empty)', 'Vector.toList (Vector.push (P 1.5 False 3) (vp 1))',
