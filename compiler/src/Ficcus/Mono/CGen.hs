@@ -569,16 +569,20 @@ maxArity = 9
 closureClones :: Info -> [MDef] -> [MDef]
 closureClones info clones =
   List.nubBy (\a b -> mdClone a == mdClone b)
-    [ d | c <- concatMap (maybe [] closureRefs . mdBody) clones, Just d <- [Map.lookup c (iClones info)], isFunction d ]
+    [ d | c <- concatMap (maybe [] (closureRefs info) . mdBody) clones, Just d <- [Map.lookup c (iClones info)], isFunction d ]
 
 
-closureRefs :: MExpr -> [CloneId]
-closureRefs e =
+closureRefs :: Info -> MExpr -> [CloneId]
+closureRefs info e =
   case mNode e of
-    MCall (MExpr _ (MGlobal _)) args -> concatMap closureRefs args
+    -- a direct call needs no closure; a call with another number of arguments than the parameters (`.run h v`: the accessor
+    -- function of one parameter applied to two arguments) goes through the closure of the function
+    MCall (MExpr _ (MGlobal c)) args
+      | Just d <- Map.lookup c (iClones info), isFunction d, length args == length (mdParams d) -> concatMap (closureRefs info) args
+      | otherwise -> c : concatMap (closureRefs info) args
     MCall (MExpr _ (MKernel "elm/core:Platform.worker" _)) _ -> []
     MGlobal c -> [c]
-    _ -> concatMap closureRefs (children e)
+    _ -> concatMap (closureRefs info) (children e)
 
 
 -- the class a value has in a closure's words (the ABI class): a struct is boxed

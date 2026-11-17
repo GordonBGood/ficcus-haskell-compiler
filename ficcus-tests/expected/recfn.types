@@ -1,0 +1,238 @@
+-- module Recfn: problems=0 instances=48 instance-failures=0 defaulted=36
+-- equality-uses: total=0 at-function=0
+module author/project:Recfn
+def viaAccessor2 :: H -> Int -> Int    [31:1-31:13]   id: author/project:Recfn.viaAccessor2   sig: H -> Int -> Int   kinds:    group: author/project:Recfn.viaAccessor2 nonrec ann
+  31:14-31:15 PVar h :: H
+  31:16-31:17 PVar v :: Int
+  32:5-32:24 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    32:5-32:13 Call :: Int
+      32:5-32:9 Accessor :: { run : Int -> Int, name : String } -> Int -> Int
+      32:10-32:11 VarLocal :: { run : Int -> Int, name : String }
+      32:12-32:13 VarLocal :: Int
+    32:16-32:24 Call :: Int
+      32:16-32:20 Accessor :: { run : Int -> Int, name : String } -> Int -> Int
+      32:21-32:22 VarLocal :: { run : Int -> Int, name : String }
+      32:23-32:24 Int :: Int
+def viaAccessor :: H -> Int -> Int    [26:1-26:12]   id: author/project:Recfn.viaAccessor   sig: H -> Int -> Int   kinds:    group: author/project:Recfn.viaAccessor nonrec ann
+  26:13-26:14 PVar h :: H
+  26:15-26:16 PVar v :: Int
+  27:5-27:13 Call :: Int
+    27:5-27:9 Accessor :: { run : Int -> Int, name : String } -> Int -> Int
+    27:10-27:11 VarLocal :: { run : Int -> Int, name : String }
+    27:12-27:13 VarLocal :: Int
+def describe :: Dict a -> a -> a -> String    [41:1-41:9]   id: author/project:Recfn.describe   sig: Dict v0 -> v0 -> v0 -> String   kinds: v0:any   group: author/project:Recfn.describe nonrec ann
+  41:10-41:11 PVar d :: Dict a
+  41:12-41:13 PVar a :: a
+  41:14-41:15 PVar b :: a
+  42:5-42:26 Call :: String
+    42:5-42:11 Access :: a -> String
+      42:5-42:6 VarLocal :: { show : a -> String, zero : a, combine : a -> a -> a }
+    42:13-42:26 Call :: a
+      42:13-42:22 Access :: a -> a -> a
+        42:13-42:14 VarLocal :: { show : a -> String, zero : a, combine : a -> a -> a }
+      42:23-42:24 VarLocal :: a
+      42:25-42:26 VarLocal :: a
+def strDict :: Dict String    [51:1-51:8]   id: author/project:Recfn.strDict   sig: Dict String   kinds:    group: author/project:Recfn.strDict nonrec ann
+  52:5-52:74 Record :: Dict String
+    52:40-52:61 Lambda :: String -> String
+      52:41-52:42 PVar s :: String
+      52:46-52:61 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        52:46-52:49 Str :: String
+        52:53-52:61 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+          52:53-52:54 VarLocal :: String
+          52:58-52:61 Str :: String
+    52:70-52:72 Str :: String
+    52:17-52:31 Lambda :: String -> String -> String
+      52:18-52:19 PVar a :: String
+      52:20-52:21 PVar b :: String
+      52:25-52:31 Binop :: String   callee: elm/core:Basics.append   instance: appendable := String   sig#: 08810ccc   subst: v0 := String
+        52:25-52:26 VarLocal :: String
+        52:30-52:31 VarLocal :: String
+def intDict :: Dict Int    [46:1-46:8]   id: author/project:Recfn.intDict   sig: Dict Int   kinds:    group: author/project:Recfn.intDict nonrec ann
+  47:5-47:55 Record :: Dict Int
+    47:29-47:43 VarForeign :: Int -> String   callee: elm/core:String.fromInt
+    47:52-47:53 Int :: Int
+    47:17-47:20 VarOperator :: Int -> Int -> Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+def twice :: H -> Int -> Int    [21:1-21:6]   id: author/project:Recfn.twice   sig: H -> Int -> Int   kinds:    group: author/project:Recfn.twice nonrec ann
+  21:7-21:8 PVar h :: H
+  21:9-21:10 PVar v :: Int
+  22:5-22:30 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+    22:5-22:12 Call :: Int
+      22:5-22:10 Access :: Int -> Int
+        22:5-22:6 VarLocal :: { run : Int -> Int, name : String }
+      22:11-22:12 VarLocal :: Int
+    22:15-22:29 Call :: Int
+      22:15-22:20 Access :: Int -> Int
+        22:15-22:16 VarLocal :: { run : Int -> Int, name : String }
+      22:22-22:29 Call :: Int
+        22:22-22:27 Access :: Int -> Int
+          22:22-22:23 VarLocal :: { run : Int -> Int, name : String }
+        22:28-22:29 VarLocal :: Int
+def fold :: Dict a -> List a -> a    [36:1-36:5]   id: author/project:Recfn.fold   sig: Dict v0 -> List v0 -> v0   kinds: v0:any   group: author/project:Recfn.fold nonrec ann
+  36:6-36:7 PVar d :: Dict a
+  36:8-36:10 PVar xs :: List a
+  37:5-37:35 Call :: a
+    37:5-37:15 VarForeign :: (a -> a -> a) -> a -> List a -> a   callee: elm/core:List.foldl   instance: a := a, b := a   sig#: 8a8782c6   subst: v0 := <<author/project:Recfn.fold|v0>>, v1 := <<author/project:Recfn.fold|v0>>
+    37:16-37:25 Access :: a -> a -> a
+      37:16-37:17 VarLocal :: { show : a -> String, zero : a, combine : a -> a -> a }
+    37:26-37:32 Access :: a
+      37:26-37:27 VarLocal :: { show : a -> String, zero : a, combine : a -> a -> a }
+    37:33-37:35 VarLocal :: List a
+def go :: H -> Int -> Int    [16:1-16:3]   id: author/project:Recfn.go   sig: H -> Int -> Int   kinds:    group: author/project:Recfn.go nonrec ann
+  16:4-16:5 PVar h :: H
+  16:6-16:7 PVar v :: Int
+  17:5-17:12 Call :: Int
+    17:5-17:10 Access :: Int -> Int
+      17:5-17:6 VarLocal :: { run : Int -> Int, name : String }
+    17:11-17:12 VarLocal :: Int
+def main :: Program () () ()    [56:1-56:5]   id: author/project:Recfn.main   sig: Program () () ()   kinds:    group: author/project:Recfn.main nonrec ann
+  57:5-103:10 Call :: Program () () ()
+    57:5-57:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    58:9-103:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      59:13-100:33 Lambda :: () -> ( (), Cmd () )
+        59:14-59:15 PAnything :: ()
+        88:21-88:22 PAnything :: Int
+        89:25-89:74 Call :: Int
+          89:25-89:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          89:35-89:45 Str :: String
+          89:47-89:74 Call :: Int
+            89:47-89:51 VarTopLevel :: Dict Int -> List Int -> Int   callee: author/project:Recfn.fold   use: gen   instance: a := Int   sig#: 15f94c3a   subst: v0 := Int
+            89:52-89:59 VarTopLevel :: Dict Int   callee: author/project:Recfn.intDict   use: gen
+            89:60-89:74 List :: List Int
+              89:62-89:63 Int :: Int
+              89:65-89:66 Int :: Int
+              89:68-89:69 Int :: Int
+              89:71-89:72 Int :: Int
+        91:21-91:22 PAnything :: String
+        92:25-92:77 Call :: String
+          92:25-92:34 VarDebug :: String -> String -> String   callee: elm/core:Debug.log   instance: a := String   sig#: 6ecaa5dd   subst: v0 := String
+          92:35-92:45 Str :: String
+          92:47-92:77 Call :: String
+            92:47-92:51 VarTopLevel :: Dict String -> List String -> String   callee: author/project:Recfn.fold   use: gen   instance: a := String   sig#: 15f94c3a   subst: v0 := String
+            92:52-92:59 VarTopLevel :: Dict String   callee: author/project:Recfn.strDict   use: gen
+            92:60-92:77 List :: List String
+              92:62-92:65 Str :: String
+              92:67-92:70 Str :: String
+              92:72-92:75 Str :: String
+        94:21-94:22 PAnything :: ( String, String )
+        95:25-95:98 Call :: ( String, String )
+          95:25-95:34 VarDebug :: String -> ( String, String ) -> ( String, String )   callee: elm/core:Debug.log   instance: a := ( String, String )   sig#: 6ecaa5dd   subst: v0 := ( String, String )
+          95:35-95:45 Str :: String
+          95:46-95:98 Pair :: ( String, String )
+            95:48-95:70 Call :: String
+              95:48-95:56 VarTopLevel :: Dict Int -> Int -> Int -> String   callee: author/project:Recfn.describe   use: gen   instance: a1 := Int   sig#: af4076f7   subst: v0 := Int
+              95:57-95:64 VarTopLevel :: Dict Int   callee: author/project:Recfn.intDict   use: gen
+              95:65-95:67 Int :: Int
+              95:68-95:70 Int :: Int
+            95:72-95:96 Call :: String
+              95:72-95:80 VarTopLevel :: Dict String -> String -> String -> String   callee: author/project:Recfn.describe   use: gen   instance: a1 := String   sig#: af4076f7   subst: v0 := String
+              95:81-95:88 VarTopLevel :: Dict String   callee: author/project:Recfn.strDict   use: gen
+              95:89-95:92 Str :: String
+              95:93-95:96 Str :: String
+        def k :: { run : number -> number, name : String }    [64:21-64:22]   id: author/project:Recfn.k@64:21   sig: { run : v0 -> v0, name : String }   kinds: v0:number   group: author/project:Recfn.k@64:21 nonrec inferred
+          65:25-65:55 Record :: { run : number -> number, name : String }
+            65:47-65:53 Call :: number -> number
+              65:47-65:50 VarOperator :: number -> number -> number   callee: elm/core:Basics.add   instance: number := number   sig#: 08810ccc   subst: v0 := <<author/project:Recfn.k@64:21|v0>>
+              65:51-65:53 Int :: number
+            65:34-65:39 Str :: String
+        79:21-79:22 PAnything :: Int
+        80:25-80:62 Call :: Int
+          80:25-80:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          80:35-80:45 Str :: String
+          80:47-80:62 Call :: Int
+            80:47-80:58 VarTopLevel :: H -> Int -> Int   callee: author/project:Recfn.viaAccessor   use: gen
+            80:59-80:60 VarLocal :: H   callee: author/project:Recfn.k@64:21   use: gen   instance: number := Int   sig#: 802e886b   subst: v0 := Int
+            80:61-80:62 Int :: Int
+        76:21-76:22 PAnything :: Int   <= number1
+        77:25-77:53 Call :: Int   <= number1
+          77:25-77:34 VarDebug :: String -> Int -> Int   <= String -> number1 -> number1   callee: elm/core:Debug.log   instance: a := Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := Int
+          77:35-77:44 Str :: String
+          77:46-77:53 Call :: Int   <= number1
+            77:46-77:51 Access :: Int -> Int   <= number1 -> number1
+              77:46-77:47 VarLocal :: { run : Int -> Int, name : String }   <= { run : number1 -> number1, name : String }   callee: author/project:Recfn.k@64:21   use: gen   instance: number := Int (defaulted)   sig#: 802e886b   subst: v0 := Int
+            77:52-77:53 Int :: Int   <= number1
+        def h :: { run : number2 -> number2, name : String }    [61:21-61:22]   id: author/project:Recfn.h@61:21   sig: { run : v0 -> v0, name : String }   kinds: v0:number   group: author/project:Recfn.h@61:21 nonrec inferred
+          62:25-62:60 Record :: { run : number2 -> number2, name : String }
+            62:47-62:58 Lambda :: number2 -> number2
+              62:48-62:49 PVar x :: number2
+              62:53-62:58 Binop :: number2   callee: elm/core:Basics.mul   instance: number := number2   sig#: 08810ccc   subst: v0 := <<author/project:Recfn.h@61:21|v0>>
+                62:53-62:54 VarLocal :: number2
+                62:57-62:58 Int :: number2
+            62:34-62:39 Str :: String
+        97:21-97:22 PAnything :: List Int   <= List number3
+        98:25-98:90 Call :: List Int   <= List number3
+          98:25-98:34 VarDebug :: String -> List Int -> List Int   <= String -> List number3 -> List number3   callee: elm/core:Debug.log   instance: a := List Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := List Int
+          98:35-98:52 Str :: String
+          98:54-98:90 Call :: List Int   <= List number3
+            98:54-98:62 VarForeign :: ({ run : Int -> Int, name : String } -> Int) -> List { run : Int -> Int, name : String } -> List Int   <= ({ run : number3 -> number3, name : String } -> number3) -> List { run : number3 -> number3, name : String } -> List number3   callee: elm/core:List.map   instance: a := { run : Int -> Int, name : String } (defaulted), b := Int (defaulted)   sig#: 6a702f63   subst: v0 := { run : Int -> Int, name : String }, v1 := Int
+            98:64-98:77 Lambda :: { run : Int -> Int, name : String } -> Int   <= { run : number3 -> number3, name : String } -> number3
+              98:65-98:66 PVar r :: { run : Int -> Int, name : String }   <= { run : number3 -> number3, name : String }
+              98:70-98:77 Call :: Int   <= number3
+                98:70-98:75 Access :: Int -> Int   <= number3 -> number3
+                  98:70-98:71 VarLocal :: { run : Int -> Int, name : String }   <= { run : number3 -> number3, name : String }
+                98:76-98:77 Int :: Int   <= number3
+            98:79-98:90 List :: List { run : Int -> Int, name : String }   <= List { run : number3 -> number3, name : String }
+              98:81-98:82 VarLocal :: { run : Int -> Int, name : String }   <= { run : number3 -> number3, name : String }   callee: author/project:Recfn.h@61:21   use: gen   instance: number2 := Int (defaulted)   sig#: 802e886b   subst: v0 := Int
+              98:84-98:85 VarLocal :: { run : Int -> Int, name : String }   <= { run : number3 -> number3, name : String }   callee: author/project:Recfn.k@64:21   use: gen   instance: number := Int (defaulted)   sig#: 802e886b   subst: v0 := Int
+              98:87-98:88 VarLocal :: { run : Int -> Int, name : String }   <= { run : number3 -> number3, name : String }   callee: author/project:Recfn.h@61:21   use: gen   instance: number2 := Int (defaulted)   sig#: 802e886b   subst: v0 := Int
+        85:21-85:22 PAnything :: Int   <= number4
+        86:25-86:62 Call :: Int   <= number4
+          86:25-86:34 VarDebug :: String -> Int -> Int   <= String -> number4 -> number4   callee: elm/core:Debug.log   instance: a := Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := Int
+          86:35-86:51 Str :: String
+          86:53-86:62 Call :: Int   <= number4
+            86:53-86:57 Accessor :: { run : Int -> Int, name : String } -> Int -> Int   <= { run : number4 -> number4, name : String } -> number4 -> number4
+            86:58-86:59 VarLocal :: { run : Int -> Int, name : String }   <= { run : number4 -> number4, name : String }   callee: author/project:Recfn.h@61:21   use: gen   instance: number2 := Int (defaulted)   sig#: 802e886b   subst: v0 := Int
+            86:60-86:62 Int :: Int   <= number4
+        82:21-82:22 PAnything :: Int
+        83:25-83:64 Call :: Int
+          83:25-83:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          83:35-83:46 Str :: String
+          83:48-83:64 Call :: Int
+            83:48-83:60 VarTopLevel :: H -> Int -> Int   callee: author/project:Recfn.viaAccessor2   use: gen
+            83:61-83:62 VarLocal :: H   callee: author/project:Recfn.h@61:21   use: gen   instance: number2 := Int   sig#: 802e886b   subst: v0 := Int
+            83:63-83:64 Int :: Int
+        73:21-73:22 PAnything :: Int   <= number5
+        74:25-74:51 Call :: Int   <= number5
+          74:25-74:34 VarDebug :: String -> Int -> Int   <= String -> number5 -> number5   callee: elm/core:Debug.log   instance: a := Int (defaulted)   sig#: 6ecaa5dd   subst: v0 := Int
+          74:35-74:42 Str :: String
+          74:44-74:51 Call :: Int   <= number5
+            74:44-74:49 Access :: Int -> Int   <= number5 -> number5
+              74:44-74:45 VarLocal :: { run : Int -> Int, name : String }   <= { run : number5 -> number5, name : String }   callee: author/project:Recfn.h@61:21   use: gen   instance: number2 := Int (defaulted)   sig#: 802e886b   subst: v0 := Int
+            74:50-74:51 Int :: Int   <= number5
+        70:21-70:22 PAnything :: Int
+        71:25-71:53 Call :: Int
+          71:25-71:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          71:35-71:42 Str :: String
+          71:44-71:53 Call :: Int
+            71:44-71:49 VarTopLevel :: H -> Int -> Int   callee: author/project:Recfn.twice   use: gen
+            71:50-71:51 VarLocal :: H   callee: author/project:Recfn.h@61:21   use: gen   instance: number2 := Int   sig#: 802e886b   subst: v0 := Int
+            71:52-71:53 Int :: Int
+        67:21-67:22 PAnything :: Int
+        68:25-68:47 Call :: Int
+          68:25-68:34 VarDebug :: String -> Int -> Int   callee: elm/core:Debug.log   instance: a := Int   sig#: 6ecaa5dd   subst: v0 := Int
+          68:35-68:39 Str :: String
+          68:41-68:47 Call :: Int
+            68:41-68:43 VarTopLevel :: H -> Int -> Int   callee: author/project:Recfn.go   use: gen
+            68:44-68:45 VarLocal :: H   callee: author/project:Recfn.h@61:21   use: gen   instance: number2 := Int   sig#: 802e886b   subst: v0 := Int
+            68:46-68:47 Int :: Int
+        100:17-100:33 Pair :: ( (), Cmd () )
+          100:19-100:21 Unit :: ()
+          100:23-100:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      101:20-101:44 Lambda :: () -> () -> ( (), Cmd () )
+        101:21-101:22 PAnything :: ()
+        101:23-101:24 PAnything :: ()
+        101:28-101:44 Pair :: ( (), Cmd () )
+          101:30-101:32 Unit :: ()
+          101:34-101:42 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      102:27-102:41 Lambda :: () -> Sub ()
+        102:28-102:29 PAnything :: ()
+        102:33-102:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Recfn.viaAccessor2   kind: function   reads:    needs: 
+init: 1   id: author/project:Recfn.viaAccessor   kind: function   reads:    needs: 
+init: 2   id: author/project:Recfn.describe   kind: function   reads:    needs: 
+init: 3   id: author/project:Recfn.strDict   kind: value   reads:    needs:    init-dep: no
+init: 4   id: author/project:Recfn.intDict   kind: value   reads:    needs:    init-dep: no
+init: 5   id: author/project:Recfn.twice   kind: function   reads:    needs: 
+init: 6   id: author/project:Recfn.fold   kind: function   reads:    needs: 
+init: 7   id: author/project:Recfn.go   kind: function   reads:    needs: 
+init: 8   id: author/project:Recfn.main   kind: value   reads: author/project:Recfn.viaAccessor2,author/project:Recfn.viaAccessor,author/project:Recfn.describe,author/project:Recfn.strDict,author/project:Recfn.intDict,author/project:Recfn.twice,author/project:Recfn.fold,author/project:Recfn.go   needs: author/project:Recfn.strDict,author/project:Recfn.intDict   init-dep: yes

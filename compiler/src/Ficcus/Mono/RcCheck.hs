@@ -282,6 +282,7 @@ call e h args =
       do  case mNode h of
             MLocal _ -> view h
             MGlobal _ -> view h
+            MAccess _ _ _ -> view h          -- a function stored in a field of a borrowed record: read where it is, never counted (`view` checks the root)
             _ -> bad "the function of a call of a function value is not a variable or a global"
           mapM_ owned args
 

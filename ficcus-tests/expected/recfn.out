@@ -1,0 +1,11 @@
+fold int: 10
+fold str: "cba"
+describe: ("42","<xy>")
+accessor: 15
+partial: 11
+list of records: [8,14,8]
+accessor local: 42
+accessor2: 12
+local: 14
+twice: 18
+go: 10

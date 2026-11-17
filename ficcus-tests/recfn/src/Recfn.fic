@@ -1,0 +1,103 @@
+module Recfn exposing (main)
+
+-- Programs issues 01 and 02: a function stored in a record field called directly (`h.run v`, borrowed and owned records,
+-- twice in one expression, in a let) and through the accessor function (`.run h v`). Every output is compared with Elm.
+
+
+type alias H =
+    { name : String, run : Int -> Int }
+
+
+type alias Dict a =
+    { combine : a -> a -> a, show : a -> String, zero : a }
+
+
+go : H -> Int -> Int
+go h v =
+    h.run v
+
+
+twice : H -> Int -> Int
+twice h v =
+    h.run v + h.run (h.run v)
+
+
+viaAccessor : H -> Int -> Int
+viaAccessor h v =
+    .run h v
+
+
+viaAccessor2 : H -> Int -> Int
+viaAccessor2 h v =
+    .run h v + .run h 1
+
+
+fold : Dict a -> List a -> a
+fold d xs =
+    List.foldl d.combine d.zero xs
+
+
+describe : Dict a -> a -> a -> String
+describe d a b =
+    d.show (d.combine a b)
+
+
+intDict : Dict Int
+intDict =
+    { combine = (+), show = String.fromInt, zero = 0 }
+
+
+strDict : Dict String
+strDict =
+    { combine = \a b -> a ++ b, show = \s -> "<" ++ s ++ ">", zero = "" }
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    h =
+                        { name = "dbl", run = \x -> x * 2 }
+
+                    k =
+                        { name = "inc", run = (+) 10 }
+
+                    _ =
+                        Debug.log "go" (go h 5)
+
+                    _ =
+                        Debug.log "twice" (twice h 3)
+
+                    _ =
+                        Debug.log "local" (h.run 7)
+
+                    _ =
+                        Debug.log "partial" (k.run 1)
+
+                    _ =
+                        Debug.log "accessor" (viaAccessor k 5)
+
+                    _ =
+                        Debug.log "accessor2" (viaAccessor2 h 5)
+
+                    _ =
+                        Debug.log "accessor local" (.run h 21)
+
+                    _ =
+                        Debug.log "fold int" (fold intDict [ 1, 2, 3, 4 ])
+
+                    _ =
+                        Debug.log "fold str" (fold strDict [ "a", "b", "c" ])
+
+                    _ =
+                        Debug.log "describe" ( describe intDict 20 22, describe strDict "x" "y" )
+
+                    _ =
+                        Debug.log "list of records" (List.map (\r -> r.run 4) [ h, k, h ])
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
