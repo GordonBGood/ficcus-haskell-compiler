@@ -192,11 +192,11 @@ def gen(seed, n, maxbits, big, elm=False):
             L.append(("pow", b, e, b ** e))
         L.append(("pow", b, -1, 0))
         L.append(("pow", b, -5, 0))
-    # fromInt: the 64 bit range (the package under node: 2^53)
-    lim = 2**53 if elm else 2**63
-    ints = [0, 1, -1, 2**31 - 1, 2**31, 2**31 + 1, 2**62, -(2**62), lim - 1, -(lim - 1), 10**9, -(10**9)]
+    # fromInt: the 64 bit range (the package under node: 2^52; its fromInt is wrong at 2^53 - 1)
+    lim = 2**52 if elm else 2**63
+    ints = [0, 1, -1, 2**31 - 1, 2**31, 2**31 + 1, lim - 1, -(lim - 1), 10**9, -(10**9)]
     if not elm:
-        ints += [-(2**63), 2**63 - 1, 2**62 + 1, 2**61]
+        ints += [-(2**63), 2**63 - 1, 2**62, -(2**62), 2**62 + 1, 2**61]
     for _ in range(n):
         ints.append(rng.randrange(-lim + 1, lim))
     for x in ints:

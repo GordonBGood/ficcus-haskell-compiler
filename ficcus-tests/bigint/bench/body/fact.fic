@@ -1,0 +1,17 @@
+name : String
+name =
+    "fact10000"
+
+
+factLoop : Int -> BigInt -> BigInt
+factLoop i acc =
+    if i > @FACT@ then
+        acc
+
+    else
+        factLoop (i + 1) (BigInt.mul acc (BigInt.fromInt i))
+
+
+result : () -> String
+result _ =
+    summary (BigInt.toString (factLoop 2 (BigInt.fromInt 1)))

@@ -1,0 +1,8 @@
+name : String
+name =
+    "pow3_200000"
+
+
+result : () -> String
+result _ =
+    summary (BigInt.toString (BigInt.pow (BigInt.fromInt 3) (BigInt.fromInt @POW@)))

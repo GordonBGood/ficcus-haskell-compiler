@@ -12,9 +12,11 @@ module BigInt exposing
 A number is a sign and a magnitude. The magnitude is a `Vector Int` of limbs, least significant first, each limb in `0 .. base - 1`,
 no zero limb at the top, and zero has its own constructor, so one value has one representation and `==` works on `BigInt`.
 
-The limb size is `limbBits`, the only constant that fixes it. The bound is that `a * b + c + d` with all four limbs fits a signed
+The limb size is `limbBits ()`, the only constant that fixes it. The bound is that `a * b + c + d` with all four limbs fits a signed
 64 bit `Int`: `limbBits` is at most 31. When the sized integers exist, the limbs can become `Word32` (and `limbBits` 32 with
 `Word64` products): the code uses `limbBits`, `base` and `mask` and no other limit.
+The constants are functions of `()` on purpose: the compiler keeps a top level value in a global variable that the C compiler cannot
+fold, and shifts and masks by a variable made the divisions twice as slow (measured); a static function returning a literal is folded.
 
 Algorithms: schoolbook addition and subtraction; multiplication schoolbook, Karatsuba from `karatsubaLimbs` limbs, a shift when
 one factor is a power of two; division by one limb in a pass, by more limbs Knuth's algorithm D, a shift (and a mask for the
@@ -33,37 +35,37 @@ import Vector exposing (Vector)
 
 {-| Bits per limb. Never more than 31 for Int limbs (a product plus two limbs must fit 63 bits).
 -}
-limbBits : Int
-limbBits =
+limbBits : () -> Int
+limbBits _ =
     31
 
 
-base : Int
-base =
-    Bit.shiftLeftBy limbBits 1
+base : () -> Int
+base _ =
+    Bit.shiftLeftBy (limbBits ()) 1
 
 
-mask : Int
-mask =
-    base - 1
+mask : () -> Int
+mask _ =
+    base () - 1
 
 
 {-| Limbs from which multiplication splits (Karatsuba); the best value is measured, see docs/BIGINT.md.
 -}
-karatsubaLimbs : Int
-karatsubaLimbs =
+karatsubaLimbs : () -> Int
+karatsubaLimbs _ =
     40
 
 
 {-| Decimal digits per pass of `toString` / `fromIntString`: 10^9 < 2^30, so `rem * base + limb` < 2^61.
 -}
-chunkDigits : Int
-chunkDigits =
+chunkDigits : () -> Int
+chunkDigits _ =
     9
 
 
-chunk : Int
-chunk =
+chunk : () -> Int
+chunk _ =
     1000000000
 
 
@@ -209,7 +211,7 @@ addLoop i carry n a b r =
             s =
                 at i a + at i b + carry
         in
-        addLoop (i + 1) (Bit.shiftRightBy limbBits s) n a b (Vector.set i (Bit.and s mask) r)
+        addLoop (i + 1) (Bit.shiftRightBy (limbBits ()) s) n a b (Vector.set i (Bit.and s (mask ())) r)
 
     else
         Vector.set n carry r
@@ -233,13 +235,13 @@ subLoop i borrow n a b r =
             d =
                 at i a - at i b - borrow
         in
-        subLoop (i + 1) (Bit.and 1 (Bit.shiftRightBy 63 d)) n a b (Vector.set i (Bit.and d mask) r)
+        subLoop (i + 1) (Bit.and 1 (Bit.shiftRightBy 63 d)) n a b (Vector.set i (Bit.and d (mask ())) r)
 
     else
         r
 
 
-{-| r + x * base^off, in place on r, which is long enough.
+{-| r + x * (base ())^off, in place on r, which is long enough.
 -}
 addInto : Int -> Vector Int -> Vector Int -> Vector Int
 addInto off x r =
@@ -253,7 +255,7 @@ addIntoLoop off i n carry x r =
             s =
                 at i x + at (off + i) r + carry
         in
-        addIntoLoop off (i + 1) n (Bit.shiftRightBy limbBits s) x (Vector.set (off + i) (Bit.and s mask) r)
+        addIntoLoop off (i + 1) n (Bit.shiftRightBy (limbBits ()) s) x (Vector.set (off + i) (Bit.and s (mask ())) r)
 
     else
         propagate (off + n) carry r
@@ -269,7 +271,7 @@ propagate j carry r =
             s =
                 at j r + carry
         in
-        propagate (j + 1) (Bit.shiftRightBy limbBits s) (Vector.set j (Bit.and s mask) r)
+        propagate (j + 1) (Bit.shiftRightBy (limbBits ()) s) (Vector.set j (Bit.and s (mask ())) r)
 
 
 -- shifts
@@ -306,7 +308,7 @@ pow2Exp a =
                 at i a
         in
         if Bit.and top (top - 1) == 0 then
-            i * limbBits + bitLen top - 1
+            i * (limbBits ()) + bitLen top - 1
 
         else
             -1
@@ -322,10 +324,10 @@ magShl k a =
     else
         let
             q =
-                k // limbBits
+                k // (limbBits ())
 
             s =
-                k - q * limbBits
+                k - q * (limbBits ())
 
             la =
                 Vector.length a
@@ -340,7 +342,7 @@ shlLoop i q s carry n a r =
             t =
                 Bit.or (Bit.shiftLeftBy s (at i a)) carry
         in
-        shlLoop (i + 1) q s (Bit.shiftRightBy limbBits t) n a (Vector.set (i + q) (Bit.and t mask) r)
+        shlLoop (i + 1) q s (Bit.shiftRightBy (limbBits ()) t) n a (Vector.set (i + q) (Bit.and t (mask ())) r)
 
     else
         Vector.set (n + q) carry r
@@ -352,10 +354,10 @@ magShr : Int -> Vector Int -> Vector Int
 magShr k a =
     let
         q =
-            k // limbBits
+            k // (limbBits ())
 
         s =
-            k - q * limbBits
+            k - q * (limbBits ())
 
         n =
             Vector.length a - q
@@ -375,7 +377,7 @@ shrLoop i q s n a r =
     if i < n then
         let
             w =
-                Bit.or (Bit.shiftRightBy s (at (i + q) a)) (Bit.and mask (Bit.shiftLeftBy (limbBits - s) (at (i + q + 1) a)))
+                Bit.or (Bit.shiftRightBy s (at (i + q) a)) (Bit.and (mask ()) (Bit.shiftLeftBy ((limbBits ()) - s) (at (i + q + 1) a)))
         in
         shrLoop (i + 1) q s n a (Vector.set i w r)
 
@@ -389,10 +391,10 @@ lowBits : Int -> Vector Int -> Vector Int
 lowBits k a =
     let
         q =
-            k // limbBits
+            k // (limbBits ())
 
         s =
-            k - q * limbBits
+            k - q * (limbBits ())
     in
     if q >= Vector.length a then
         a
@@ -442,8 +444,8 @@ mulCore a b =
     if la < lb then
         mulCore b a
 
-    else if lb < karatsubaLimbs then
-        trim (schoolLoop 0 la lb a b (Vector.repeat (la + lb) 0))
+    else if lb < (karatsubaLimbs ()) then
+        trim (schoolLoop 0 lb la b a (Vector.repeat (la + lb) 0))
 
     else if la >= 2 * lb then
         mulChunks lb a b
@@ -452,6 +454,8 @@ mulCore a b =
         karatsuba a b
 
 
+{-| rows over the limbs of the shorter factor a (la of them), columns over the longer b (lb): the carry store of a row is amortised.
+-}
 schoolLoop : Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int -> Vector Int
 schoolLoop i la lb a b r =
     if i < la then
@@ -476,7 +480,7 @@ schoolRow i ai j carry lb b r =
             t =
                 ai * at j b + at (i + j) r + carry
         in
-        schoolRow i ai (j + 1) (Bit.shiftRightBy limbBits t) lb b (Vector.set (i + j) (Bit.and t mask) r)
+        schoolRow i ai (j + 1) (Bit.shiftRightBy (limbBits ()) t) lb b (Vector.set (i + j) (Bit.and t (mask ())) r)
 
     else
         Vector.set (i + lb) carry r
@@ -539,7 +543,7 @@ karatsuba a b =
 -- division
 
 
-{-| Divide by a limb d (0 < d < 2^30 or a limb with rem * base + limb in range): quotient and remainder.
+{-| Divide by a limb d (0 < d < 2^30 or a limb with rem * (base ()) + limb in range): quotient and remainder.
 -}
 divSmall : Int -> Vector Int -> ( Vector Int, Int )
 divSmall d a =
@@ -554,7 +558,7 @@ divSmallLoop d i rem v =
     else
         let
             cur =
-                rem * base + at i v
+                rem * (base ()) + at i v
 
             q =
                 cur // d
@@ -576,7 +580,7 @@ mulAddLoop i n m carry v =
             t =
                 at i v * m + carry
         in
-        mulAddLoop (i + 1) n m (Bit.shiftRightBy limbBits t) (Vector.set i (Bit.and t mask) v)
+        mulAddLoop (i + 1) n m (Bit.shiftRightBy (limbBits ()) t) (Vector.set i (Bit.and t (mask ())) v)
 
     else if carry == 0 then
         v
@@ -612,7 +616,7 @@ magDivMod a b =
                 knuth a b
 
 
-{-| shift left by s (< limbBits) bits, one limb longer, not trimmed.
+{-| shift left by s (< (limbBits ())) bits, one limb longer, not trimmed.
 -}
 shlFixed : Int -> Vector Int -> Vector Int
 shlFixed s a =
@@ -635,7 +639,7 @@ knuth u v =
             Vector.length u
 
         s =
-            limbBits - bitLen (at (n - 1) v)
+            (limbBits ()) - bitLen (at (n - 1) v)
 
         vn =
             Vector.slice 0 n (shlFixed s v)
@@ -657,7 +661,7 @@ divLoop j n vt vs v un q =
     else
         let
             num =
-                at (j + n) un * base + at (j + n - 1) un
+                at (j + n) un * (base ()) + at (j + n - 1) un
 
             qh0 =
                 num // vt
@@ -677,12 +681,12 @@ divLoop j n vt vs v un q =
 
 fixQ : Int -> Int -> Int -> Int -> Int -> Int
 fixQ qh rh vs vt u2 =
-    if qh >= base || qh * vs > rh * base + u2 then
+    if qh >= (base ()) || qh * vs > rh * (base ()) + u2 then
         let
             rh2 =
                 rh + vt
         in
-        if rh2 >= base then
+        if rh2 >= (base ()) then
             qh - 1
 
         else
@@ -702,9 +706,9 @@ mulSubLoop j i n qh k v un =
                 qh * at i v
 
             t =
-                at (i + j) un - k - Bit.and p mask
+                at (i + j) un - k - Bit.and p (mask ())
         in
-        mulSubLoop j (i + 1) n qh (Bit.shiftRightBy limbBits p - Bit.shiftRightBy limbBits t) v (Vector.set (i + j) (Bit.and t mask) un)
+        mulSubLoop j (i + 1) n qh (Bit.shiftRightBy (limbBits ()) p - Bit.shiftRightBy (limbBits ()) t) v (Vector.set (i + j) (Bit.and t (mask ())) un)
 
     else
         Vector.set (j + n) (at (j + n) un - k) un
@@ -717,10 +721,10 @@ addBack j i n k v un =
             t =
                 at (i + j) un + at i v + k
         in
-        addBack j (i + 1) n (Bit.shiftRightBy limbBits t) v (Vector.set (i + j) (Bit.and t mask) un)
+        addBack j (i + 1) n (Bit.shiftRightBy (limbBits ()) t) v (Vector.set (i + j) (Bit.and t (mask ())) un)
 
     else
-        Vector.set (j + n) (Bit.and (at (j + n) un + k) mask) un
+        Vector.set (j + n) (Bit.and (at (j + n) un + k) (mask ())) un
 
 
 
@@ -743,12 +747,12 @@ fromInt x =
                     x
 
             r1 =
-                Bit.shiftRightZfBy limbBits m
+                Bit.shiftRightZfBy (limbBits ()) m
 
             r2 =
-                Bit.shiftRightZfBy limbBits r1
+                Bit.shiftRightZfBy (limbBits ()) r1
         in
-        mk (x < 0) (trim (Vector.fromList [ Bit.and m mask, Bit.and r1 mask, r2 ]))
+        mk (x < 0) (trim (Vector.fromList [ Bit.and m (mask ()), Bit.and r1 (mask ()), r2 ]))
 
 
 {-| Makes a BigInt from an integer string, positive or negative: "123", "-123", "+123"; "", "-", "+" and anything with another
@@ -779,7 +783,7 @@ fromIntString x =
 digitsToMag : List Char -> Maybe (Vector Int)
 digitsToMag cs =
     if allDigits cs then
-        Just (trim (parseDigits 0 0 cs (Vector.withCapacity (List.length cs // chunkDigits + 2))))
+        Just (trim (parseDigits 0 0 cs (Vector.withCapacity (List.length cs // (chunkDigits ()) + 2))))
 
     else
         Nothing
@@ -816,8 +820,8 @@ parseDigits count acc cs v =
                 acc2 =
                     acc * 10 + (Char.toCode c - 0x30)
             in
-            if count + 1 == chunkDigits then
-                parseDigits 0 0 rest (mulAddSmall chunk acc2 v)
+            if count + 1 == (chunkDigits ()) then
+                parseDigits 0 0 rest (mulAddSmall (chunk ()) acc2 v)
 
             else
                 parseDigits (count + 1) acc2 rest v
@@ -832,7 +836,7 @@ pow10 k =
         10 * pow10 (k - 1)
 
 
-{-| Makes a BigInt from a base 16 string, with or without "0x", "+" or "-" in front (lower or upper case digits).
+{-| Makes a BigInt from a (base ()) 16 string, with or without "0x", "+" or "-" in front (lower or upper case digits).
 -}
 fromHexString : String -> Maybe BigInt
 fromHexString x =
@@ -901,7 +905,7 @@ hexToMag cs =
             n =
                 List.length ds
         in
-        Just (trim (hexLoop 0 (List.reverse ds) (Vector.repeat ((n * 4) // limbBits + 2) 0)))
+        Just (trim (hexLoop 0 (List.reverse ds) (Vector.repeat ((n * 4) // (limbBits ()) + 2) 0)))
 
 
 hexLoop : Int -> List Int -> Vector Int -> Vector Int
@@ -916,17 +920,17 @@ hexLoop k ds r =
                     4 * k
 
                 i =
-                    p // limbBits
+                    p // (limbBits ())
 
                 o =
-                    p - i * limbBits
+                    p - i * (limbBits ())
 
                 r1 =
-                    Vector.set i (Bit.or (at i r) (Bit.and mask (Bit.shiftLeftBy o d))) r
+                    Vector.set i (Bit.or (at i r) (Bit.and (mask ()) (Bit.shiftLeftBy o d))) r
 
                 r2 =
-                    if o + 4 > limbBits then
-                        Vector.set (i + 1) (Bit.or (at (i + 1) r1) (Bit.shiftRightBy (limbBits - o) d)) r1
+                    if o + 4 > (limbBits ()) then
+                        Vector.set (i + 1) (Bit.or (at (i + 1) r1) (Bit.shiftRightBy ((limbBits ()) - o) d)) r1
 
                     else
                         r1
@@ -956,10 +960,10 @@ magToString m =
             "0"
 
         top :: rest ->
-            String.concat (String.fromInt top :: List.map (\c -> String.padLeft chunkDigits '0' (String.fromInt c)) rest)
+            String.concat (String.fromInt top :: List.map (\c -> String.padLeft (chunkDigits ()) '0' (String.fromInt c)) rest)
 
 
-{-| the base 10^9 digits, most significant first.
+{-| the (base ()) 10^9 digits, most significant first.
 -}
 chunksOf : Vector Int -> List Int -> List Int
 chunksOf v acc =
@@ -969,7 +973,7 @@ chunksOf v acc =
     else
         let
             ( q, r ) =
-                divSmall chunk v
+                divSmall (chunk ()) v
         in
         chunksOf q (r :: acc)
 
@@ -991,7 +995,7 @@ toHexString n =
 
 hexOf : Vector Int -> String
 hexOf m =
-    String.fromList (hexDigits 0 ((Vector.length m * limbBits + 3) // 4) m [])
+    String.fromList (hexDigits 0 ((Vector.length m * (limbBits ()) + 3) // 4) m [])
 
 
 hexDigits : Int -> Int -> Vector Int -> List Char -> List Char
@@ -1005,13 +1009,13 @@ hexDigits k count m acc =
                 4 * k
 
             i =
-                p // limbBits
+                p // (limbBits ())
 
             o =
-                p - i * limbBits
+                p - i * (limbBits ())
 
             d =
-                Bit.and 15 (Bit.or (Bit.shiftRightBy o (at i m)) (Bit.shiftLeftBy (limbBits - o) (at (i + 1) m)))
+                Bit.and 15 (Bit.or (Bit.shiftRightBy o (at i m)) (Bit.shiftLeftBy ((limbBits ()) - o) (at (i + 1) m)))
         in
         hexDigits (k + 1) count m (hexChar d :: acc)
 
@@ -1308,20 +1312,20 @@ pow b e =
 
 bitCount : Vector Int -> Int
 bitCount m =
-    (Vector.length m - 1) * limbBits + bitLen (at (Vector.length m - 1) m)
+    (Vector.length m - 1) * (limbBits ()) + bitLen (at (Vector.length m - 1) m)
 
 
 bitAt : Int -> Vector Int -> Int
 bitAt p m =
-    Bit.and 1 (Bit.shiftRightBy (modBy2 p) (at (p // limbBits) m))
+    Bit.and 1 (Bit.shiftRightBy (modBy2 p) (at (p // (limbBits ())) m))
 
 
 modBy2 : Int -> Int
 modBy2 p =
-    p - (p // limbBits) * limbBits
+    p - (p // (limbBits ())) * (limbBits ())
 
 
-{-| left to right square and multiply over the bits p, p-1 .. 0 of the exponent (acc starts as the base: the top bit).
+{-| left to right square and multiply over the bits p, p-1 .. 0 of the exponent (acc starts as the (base ()): the top bit).
 -}
 powBits : Int -> Vector Int -> Vector Int -> Vector Int -> Vector Int
 powBits p e b acc =
