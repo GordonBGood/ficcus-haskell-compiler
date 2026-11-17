@@ -11,7 +11,7 @@ typedef int64_t i64;
 #define BITS 31
 #define BASE ((u64)1 << BITS)
 #define MASK (BASE - 1)
-#define KARA 40
+#define KARA 48
 typedef struct { limb *d; int n, cap; } num;   /* trimmed: d[n-1] != 0, zero is n == 0 */
 
 static num mk(int cap) { num r; r.cap = cap < 1 ? 1 : cap; r.d = calloc(r.cap, sizeof(limb)); r.n = 0; return r; }
@@ -182,6 +182,13 @@ int main(int argc, char **argv) {
     } else if (!strcmp(w, "fromstr")) {
         char *s = malloc(100001); for (int i = 0; i < 100000; i++) s[i] = "1234567890"[i % 10]; s[100000] = 0;
         num p = fromstr(s); printf("fromstr: \"odd %s\"\n", (p.d[0] & 1) ? "True" : "False");
+    } else if (!strcmp(w, "mulbig")) {
+        num x = powi(3, 150000), y = powi(7, 90000), acc = small(0);
+        for (int i = 0; i < 5; i++) {
+            num xi = small(i), x2 = add(&x, &xi), p = mul(&x2, &y); u64 m = divsmall(&p, 1000000007);
+            num mm = small(m), a2 = add(&acc, &mm); fr(&acc); acc = a2; fr(&xi); fr(&x2); fr(&p); fr(&mm);
+        }
+        char *s = tostr(&acc); printf("mulbig: \"%s\"\n", s);
     } else if (!strcmp(w, "divmod")) {
         num n = powi(3, 209589), d = powi(7, 59200), sum = small(0);
         for (int i = 0; i < 10; i++) {

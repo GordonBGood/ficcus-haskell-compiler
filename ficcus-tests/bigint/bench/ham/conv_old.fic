@@ -1,0 +1,120 @@
+module Main exposing (main)
+
+{- the final conversion of hamnth alone: the exponent triple of the millionth Hamming number to decimal, @N@ times -}
+
+import Vector exposing (Vector)
+
+
+type alias Trip =
+    { i : Int, j : Int, k : Int }
+
+
+zero : Trip
+zero =
+    { i = 0, j = 0, k = 0 }
+
+
+-- the decimal digits: a Vector of limbs of base 1e9, least significant first
+
+
+limb : Int
+limb =
+    1000000000
+
+
+mulLoop : Int -> Int -> Int -> Vector Int -> Vector Int
+mulLoop m ix carry v =
+    case Vector.get ix v of
+        Just d ->
+            let
+                t =
+                    d * m + carry
+            in
+            mulLoop m (ix + 1) (t // limb) (Vector.set ix (modBy limb t) v)
+
+        Nothing ->
+            pushCarry carry v
+
+
+pushCarry : Int -> Vector Int -> Vector Int
+pushCarry carry v =
+    if carry == 0 then
+        v
+
+    else
+        pushCarry (carry // limb) (Vector.push (modBy limb carry) v)
+
+
+intPow : Int -> Int -> Int
+intPow p e =
+    if e <= 0 then
+        1
+
+    else
+        p * intPow p (e - 1)
+
+
+{-| multiply by p^e in steps of p^chunkE -}
+mulPow : Int -> Int -> Int -> Vector Int -> Vector Int
+mulPow p chunkE e v =
+    if e > chunkE then
+        mulPow p chunkE (e - chunkE) (mulLoop (intPow p chunkE) 0 0 v)
+
+    else
+        mulLoop (intPow p e) 0 0 v
+
+
+digits : Trip -> Vector Int
+digits t =
+    Vector.singleton 1
+        |> mulPow 2 22 t.i
+        |> mulPow 3 13 t.j
+        |> mulPow 5 9 t.k
+
+
+{-| most significant limb first: the first without padding, the others to nine digits -}
+render : Vector Int -> String
+render v =
+    let
+        go ix acc =
+            if ix < 0 then
+                acc
+
+            else
+                go (ix - 1) (acc ++ String.padLeft 9 '0' (String.fromInt (Maybe.withDefault 0 (Vector.get ix v))))
+
+        top =
+            Vector.length v - 1
+    in
+    go (top - 1) (String.fromInt (Maybe.withDefault 0 (Vector.get top v)))
+
+
+
+convLoop : Int -> Trip -> Int -> Int
+convLoop n t acc =
+    if n == 0 then
+        acc
+
+    else
+        convLoop (n - 1) t (acc + String.length (render (digits t)))
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    t =
+                        { i = @I@, j = @J@, k = @K@ }
+
+                    s =
+                        convLoop @N@ t 0
+
+                    _ =
+                        Debug.log "conv" s
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

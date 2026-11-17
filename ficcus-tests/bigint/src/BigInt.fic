@@ -54,7 +54,7 @@ mask _ =
 -}
 karatsubaLimbs : () -> Int
 karatsubaLimbs _ =
-    40
+    48
 
 
 {-| Decimal digits per pass of `toString` / `fromIntString`: 10^9 < 2^30, so `rem * base + limb` < 2^61.
@@ -201,9 +201,11 @@ magAdd a b =
             la =
                 Vector.length a
         in
-        trim (addLoop 0 0 la a b (Vector.repeat (la + 1) 0))
+        addLoop 0 0 la a b (Vector.withCapacity (la + 1))
 
 
+{-| the sum is written by pushes (no zero fill); the top limb of the longer operand is not zero, so the result is trimmed.
+-}
 addLoop : Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int -> Vector Int
 addLoop i carry n a b r =
     if i < n then
@@ -211,10 +213,13 @@ addLoop i carry n a b r =
             s =
                 at i a + at i b + carry
         in
-        addLoop (i + 1) (Bit.shiftRightBy (limbBits ()) s) n a b (Vector.set i (Bit.and s (mask ())) r)
+        addLoop (i + 1) (Bit.shiftRightBy (limbBits ()) s) n a b (Vector.push (Bit.and s (mask ())) r)
+
+    else if carry == 0 then
+        r
 
     else
-        Vector.set n carry r
+        Vector.push carry r
 
 
 {-| a - b for a >= b.
@@ -225,7 +230,7 @@ magSub a b =
         la =
             Vector.length a
     in
-    trim (subLoop 0 0 la a b (Vector.repeat la 0))
+    trim (subLoop 0 0 la a b (Vector.withCapacity la))
 
 
 subLoop : Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int -> Vector Int
@@ -235,7 +240,7 @@ subLoop i borrow n a b r =
             d =
                 at i a - at i b - borrow
         in
-        subLoop (i + 1) (Bit.and 1 (Bit.shiftRightBy 63 d)) n a b (Vector.set i (Bit.and d (mask ())) r)
+        subLoop (i + 1) (Bit.and 1 (Bit.shiftRightBy 63 d)) n a b (Vector.push (Bit.and d (mask ())) r)
 
     else
         r
@@ -332,20 +337,38 @@ magShl k a =
             la =
                 Vector.length a
         in
-        trim (shlLoop 0 q s 0 la a (Vector.repeat (la + q + 1) 0))
+        trim (shlLoop 0 s 0 la a (zeroLimbs q (la + q + 1)))
 
 
-shlLoop : Int -> Int -> Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int
-shlLoop i q s carry n a r =
+{-| q zero limbs in a vector with room for cap.
+-}
+zeroLimbs : Int -> Int -> Vector Int
+zeroLimbs q cap =
+    zerosHelp q (Vector.withCapacity cap)
+
+
+zerosHelp : Int -> Vector Int -> Vector Int
+zerosHelp q v =
+    if q <= 0 then
+        v
+
+    else
+        zerosHelp (q - 1) (Vector.push 0 v)
+
+
+{-| the shifted limbs are pushed; the last push is the carry (possibly zero): the result is one limb longer than a plus the zeros.
+-}
+shlLoop : Int -> Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int
+shlLoop i s carry n a r =
     if i < n then
         let
             t =
                 Bit.or (Bit.shiftLeftBy s (at i a)) carry
         in
-        shlLoop (i + 1) q s (Bit.shiftRightBy (limbBits ()) t) n a (Vector.set (i + q) (Bit.and t (mask ())) r)
+        shlLoop (i + 1) s (Bit.shiftRightBy (limbBits ()) t) n a (Vector.push (Bit.and t (mask ())) r)
 
     else
-        Vector.set (n + q) carry r
+        Vector.push carry r
 
 
 {-| floor (a / 2^k), k >= 0.
@@ -369,7 +392,7 @@ magShr k a =
         a
 
     else
-        trim (shrLoop 0 q s n a (Vector.repeat n 0))
+        trim (shrLoop 0 q s n a (Vector.withCapacity n))
 
 
 shrLoop : Int -> Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int
@@ -379,7 +402,7 @@ shrLoop i q s n a r =
             w =
                 Bit.or (Bit.shiftRightBy s (at (i + q) a)) (Bit.and (mask ()) (Bit.shiftLeftBy ((limbBits ()) - s) (at (i + q + 1) a)))
         in
-        shrLoop (i + 1) q s n a (Vector.set i w r)
+        shrLoop (i + 1) q s n a (Vector.push w r)
 
     else
         r
@@ -444,6 +467,9 @@ mulCore a b =
     if la < lb then
         mulCore b a
 
+    else if lb == 1 then
+        mulLimb (at 0 b) a
+
     else if lb < (karatsubaLimbs ()) then
         trim (schoolLoop 0 lb la b a (Vector.repeat (la + lb) 0))
 
@@ -452,6 +478,29 @@ mulCore a b =
 
     else
         karatsuba a b
+
+
+{-| a magnitude times one limb m: written by pushes.
+-}
+mulLimb : Int -> Vector Int -> Vector Int
+mulLimb m a =
+    mulLimbLoop 0 (Vector.length a) m 0 a (Vector.withCapacity (Vector.length a + 1))
+
+
+mulLimbLoop : Int -> Int -> Int -> Int -> Vector Int -> Vector Int -> Vector Int
+mulLimbLoop i n m carry a r =
+    if i < n then
+        let
+            t =
+                m * at i a + carry
+        in
+        mulLimbLoop (i + 1) n m (Bit.shiftRightBy (limbBits ()) t) a (Vector.push (Bit.and t (mask ())) r)
+
+    else if carry == 0 then
+        r
+
+    else
+        Vector.push carry r
 
 
 {-| rows over the limbs of the shorter factor a (la of them), columns over the longer b (lb): the carry store of a row is amortised.
@@ -624,7 +673,7 @@ shlFixed s a =
         n =
             Vector.length a
     in
-    shlLoop 0 0 s 0 n a (Vector.repeat (n + 1) 0)
+    shlLoop 0 s 0 n a (Vector.withCapacity (n + 1))
 
 
 {-| Knuth, algorithm D: a has at least as many limbs as b, b has at least two.

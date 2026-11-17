@@ -1,0 +1,22 @@
+name : String
+name =
+    "mulbig"
+
+
+mulLoop : Int -> BigInt -> BigInt -> BigInt -> BigInt
+mulLoop i x y acc =
+    if i == 5 then
+        acc
+
+    else
+        case BigInt.modBy (BigInt.fromInt 1000000007) (BigInt.mul (BigInt.add x (BigInt.fromInt i)) y) of
+            Just m ->
+                mulLoop (i + 1) x y (BigInt.add acc m)
+
+            Nothing ->
+                acc
+
+
+result : () -> String
+result _ =
+    BigInt.toString (mulLoop 0 (BigInt.pow (BigInt.fromInt 3) (BigInt.fromInt @MX@)) (BigInt.pow (BigInt.fromInt 7) (BigInt.fromInt @MY@)) (BigInt.fromInt 0))
