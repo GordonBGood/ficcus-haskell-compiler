@@ -37,22 +37,59 @@ static int fic_us_put(char *o, uint32_t c) {
 
 static int64_t fic_us_length(fic_ref s) { return FIC_STR(s)->cps; }   /* L11: cached in the header */
 
+/* ---- code point index to byte offset (FIX2 step 3) ----
+   An ASCII string (byte length == code point length, known from its header: both are computed once, when the string is made) has
+   offset == index. For another string a one entry cache (the last string with a code point index and its byte offset) lets a left to
+   right scan stay linear, and a seek starts at the nearest of the start, the cached position and the end (a scan backwards over
+   the continuation bytes), so a restart from zero costs no more than the plain scan and usually much less. Semantics are those of
+   decision L11 (code point indices); strings are valid UTF-8, so an index never falls inside a character.
+   In a counted program the cache holds a count on its string (a string freed and another allocated at the same address must not be
+   mistaken for the cached one); fic_us_release gives it back at the end of the program (test builds). */
+static fic_ref fic_us_cs;                 /* the string of the cache */
+static int64_t fic_us_ci, fic_us_cb;      /* a code point index of it and its byte offset */
+
+static void fic_us_use(fic_ref s) {
+  if (s != fic_us_cs) {
+#ifdef FIC_RC
+    fic_dup(s);
+    if (fic_us_cs != NULL) fic_drop(fic_us_cs);
+#endif
+    fic_us_cs = s; fic_us_ci = 0; fic_us_cb = 0;
+  }
+}
+static void fic_us_release(void) {
+#ifdef FIC_RC
+  if (fic_us_cs != NULL) { fic_drop(fic_us_cs); fic_us_cs = NULL; }
+#endif
+}
+
+/* the byte offset of the code point index cp of s, 0 <= cp <= its length (the byte length for cp == length); clamped outside */
+static int64_t fic_us_off(fic_ref s, int64_t cp) {
+  const unsigned char *d = (const unsigned char *)FIC_STR(s)->data;
+  int64_t n = FIC_STR(s)->cps, len = FIC_STR(s)->len, i, b, dc;
+  if (cp <= 0) return 0;
+  if (cp >= n) return len;
+  if (n == len) return cp;                          /* ASCII */
+  fic_us_use(s);
+  dc = cp > fic_us_ci ? cp - fic_us_ci : fic_us_ci - cp;
+  if (cp <= dc && cp <= n - cp) { i = 0; b = 0; }                         /* the start is the nearest */
+  else if (n - cp < dc) { i = n; b = len; }                              /* the end is the nearest */
+  else { i = fic_us_ci; b = fic_us_cb; }
+  while (i < cp) { b++; while (b < len && (d[b] & 0xC0u) == 0x80u) b++; i++; }
+  while (i > cp) { b--; while (b > 0 && (d[b] & 0xC0u) == 0x80u) b--; i--; }
+  fic_us_ci = cp; fic_us_cb = b;
+  return b;
+}
+
 /* JavaScript's slice rule on code point indices: negative indices count from the end, both are clamped */
 static fic_ref fic_us_slice(int64_t from, int64_t to, fic_ref s) {
-  int64_t n = fic_us_length(s), i = 0, bf = 0, bt = 0, len = FIC_STR(s)->len;
-  const unsigned char *d = (const unsigned char *)FIC_STR(s)->data;
+  int64_t n = fic_us_length(s), bf, bt;
   if (from < 0) { from += n; if (from < 0) from = 0; } else if (from > n) from = n;
   if (to < 0) { to += n; if (to < 0) to = 0; } else if (to > n) to = n;
   if (from >= to) return fic_str_new("", 0);
-  { int64_t b = 0;
-    while (b < len && i < to) {
-      if (i == from) bf = b;
-      b++; while (b < len && (d[b] & 0xC0u) == 0x80u) b++;
-      i++;
-    }
-    bt = b;
-    if (from == 0) bf = 0;
-  }
+  bf = fic_us_off(s, from);
+  bt = fic_us_off(s, to);
+  if (n == FIC_STR(s)->len) return fic_str_new_cps(FIC_STR(s)->data + bf, bt - bf, bt - bf);     /* ASCII: the result is too */
   return fic_str_new(FIC_STR(s)->data + bf, bt - bf);
 }
 
@@ -292,19 +329,26 @@ static int64_t fic_us_cp_index(const char *d, int64_t b) {
   return n;
 }
 
-/* Elm's indexes: the non overlapping matches from the left; no index for an empty pattern */
+/* Elm's indexes: the non overlapping matches from the left; no index for an empty pattern. One pass: the code point index of a match
+   continues from the previous one, and an ASCII string needs no conversion (O(length + matches), not O(matches * offset)) */
 static fic_ref fic_us_indexes(fic_ref sub, fic_ref s) {
-  int64_t sl = FIC_STR(sub)->len, hl = FIC_STR(s)->len, n = 0, i = 0, k;
+  int64_t sl = FIC_STR(sub)->len, hl = FIC_STR(s)->len, n = 0, i = 0, k, prev_b = 0, prev_i = 0;
+  int ascii = FIC_STR(s)->cps == hl;
   int64_t *at;
   fic_ref list = fic_nil();
   const char *p;
   if (sl < 1) return list;
-  at = (int64_t *)malloc((size_t)(hl + 1) * sizeof(int64_t));
+  at = (int64_t *)malloc((size_t)(hl / sl + 1) * 2 * sizeof(int64_t));      /* at most hl / sl matches: byte offset and code point index */
   if (at == NULL) abort();
-  while ((p = fic_us_memmem(FIC_STR(s)->data, hl, FIC_STR(sub)->data, sl, i)) != NULL) { at[n++] = (int64_t)(p - FIC_STR(s)->data); i = at[n - 1] + sl; }
+  while ((p = fic_us_memmem(FIC_STR(s)->data, hl, FIC_STR(sub)->data, sl, i)) != NULL) {
+    int64_t b = (int64_t)(p - FIC_STR(s)->data);
+    prev_i = ascii ? b : prev_i + fic_us_cp_index(FIC_STR(s)->data + prev_b, b - prev_b); prev_b = b;
+    at[2 * n] = b; at[2 * n + 1] = prev_i; n++;
+    i = b + sl;
+  }
   for (k = n - 1; k >= 0; k--) {
     fic_us_icell *c = (fic_us_icell *)fic_alloc(sizeof(fic_us_icell), 1u, 1);
-    c->f0 = fic_us_cp_index(FIC_STR(s)->data, at[k]); c->f1 = list; list = &c->h;
+    c->f0 = at[2 * k + 1]; c->f1 = list; list = &c->h;
   }
   free(at);
   return list;

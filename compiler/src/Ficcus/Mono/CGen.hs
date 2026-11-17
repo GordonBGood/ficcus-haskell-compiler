@@ -130,8 +130,8 @@ generate rcMode program =
                       ++ map objectDef (Set.toList (gExtraObjs final)) ++ concatMap vecDescDef (Set.toList (gVecDescs final)) ++ reverse (gProtos final)
                       ++ [ "static fic_hdr fic_nul" ++ show t ++ " = { FIC_IMMORTAL, " ++ show t ++ "u, 0, 0 };" | t <- Set.toList (gNullary final), t > 1 ]
                       ++ [ staticString str i | (str, i) <- Map.toList (gStrings final) ]
-              body = unlines (concatMap (\l -> if l == helperMark then extra else if l == "  /* PK_RELEASE */" then [ "  fic_pk_release();" | pkUsed ] else [l]) (reverse (gOut final)))
-              pkUsed = any ("fic_pk_" `List.isInfixOf`) (gOut final)
+              body = unlines (concatMap (\l -> if l == helperMark then extra else if l == "  /* PK_RELEASE */" then [ "  fic_us_release();" | pkUsed ] else [l]) (reverse (gOut final)))
+              pkUsed = any (\l -> any (`List.isInfixOf` l) ["fic_pk_", "fic_us_slice("]) (gOut final)     -- the position cache of the string kernels (fic_us_off)
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
           in Right ((if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n"
                     ++ (if any (`List.isInfixOf` body) ["fic_vector_", "FIC_VECTOR_"] then vectorRuntime ++ "\n" else "")
