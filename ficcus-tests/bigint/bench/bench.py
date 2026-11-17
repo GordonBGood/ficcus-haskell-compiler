@@ -12,7 +12,7 @@ ws = os.path.abspath(os.path.join(here, "../../../.."))
 sys.set_int_max_str_digits(0)
 
 FULL = dict(FACT=10000, FIB=100000, POW=200000, DIG=209589, REP=10000, DEN=59200, DDIG=209589, MX=150000, MY=90000)
-ELM = dict(FACT=2000, FIB=100000, POW=100000, DIG=100000, REP=10000, DEN=1183, DDIG=4193, MX=6000, MY=4000)
+ELM = dict(FACT=2000, FIB=100000, POW=100000, DIG=100000, REP=10000, DEN=590, DDIG=2100, MX=1500, MY=1000)
 NAMES = ["fact", "fib", "pow3", "build", "tostr", "fromstr", "divmod", "mulbig"]
 LABEL = {"fact": "fact10000", "fib": "fib100000", "pow3": "pow3_200000", "build": "build", "tostr": "tostr", "fromstr": "fromstr", "divmod": "divmod"}
 
@@ -177,4 +177,5 @@ def main():
         json.dump(res, open(a.json, "w"), indent=1)
 
 
-main()
+if __name__ == "__main__":
+    main()

@@ -809,71 +809,73 @@ character are Nothing.
 -}
 fromIntString : String -> Maybe BigInt
 fromIntString x =
-    case String.toList x of
-        [] ->
+    case String.uncons x of
+        Nothing ->
             Nothing
 
-        '-' :: [] ->
-            Nothing
+        Just ( '-', rest ) ->
+            Maybe.map (mk True) (digitsToMag rest)
 
-        '-' :: xs ->
-            Maybe.map (mk True) (digitsToMag xs)
+        Just ( '+', rest ) ->
+            Maybe.map (mk False) (digitsToMag rest)
 
-        '+' :: [] ->
-            Nothing
-
-        '+' :: xs ->
-            Maybe.map (mk False) (digitsToMag xs)
-
-        xs ->
-            Maybe.map (mk False) (digitsToMag xs)
+        Just _ ->
+            Maybe.map (mk False) (digitsToMag x)
 
 
-digitsToMag : List Char -> Maybe (Vector Int)
-digitsToMag cs =
-    if allDigits cs then
-        Just (trim (parseDigits 0 0 cs (Vector.withCapacity (List.length cs // (chunkDigits ()) + 2))))
-
-    else
+{-| Nothing for the empty string or a character that is not 0 to 9. The digits are taken nine at a time (a slice and `String.toInt`
+of a nine digit string), the first group has the remainder, so no list of characters is built.
+-}
+digitsToMag : String -> Maybe (Vector Int)
+digitsToMag s =
+    let
+        len =
+            String.length s
+    in
+    if len == 0 || not (String.all isAsciiDigit s) then
         Nothing
 
+    else
+        let
+            first =
+                case modBy9 len of
+                    0 ->
+                        chunkDigits ()
 
-allDigits : List Char -> Bool
-allDigits cs =
-    case cs of
-        [] ->
-            True
-
-        c :: rest ->
-            let
-                r =
-                    Char.toCode c
-            in
-            r >= 0x30 && r <= 0x39 && allDigits rest
+                    r ->
+                        r
+        in
+        Just (trim (parseGroups first s len (groupOf 0 first s) (Vector.withCapacity (len // chunkDigits () + 2))))
 
 
-{-| left to right, nine digits at a time into the magnitude.
+modBy9 : Int -> Int
+modBy9 n =
+    n - (n // chunkDigits ()) * chunkDigits ()
+
+
+isAsciiDigit : Char -> Bool
+isAsciiDigit c =
+    c >= '0' && c <= '9'
+
+
+groupOf : Int -> Int -> String -> ( Int, Int )
+groupOf from to s =
+    ( pow10 (to - from), Maybe.withDefault 0 (String.toInt (String.slice from to s)) )
+
+
+{-| v * 10^k + group, one group after the other from the left.
 -}
-parseDigits : Int -> Int -> List Char -> Vector Int -> Vector Int
-parseDigits count acc cs v =
-    case cs of
-        [] ->
-            if count == 0 then
-                v
+parseGroups : Int -> String -> Int -> ( Int, Int ) -> Vector Int -> Vector Int
+parseGroups pos s len ( scale, value ) v =
+    let
+        v2 =
+            mulAddSmall scale value v
+    in
+    if pos >= len then
+        v2
 
-            else
-                mulAddSmall (pow10 count) acc v
-
-        c :: rest ->
-            let
-                acc2 =
-                    acc * 10 + (Char.toCode c - 0x30)
-            in
-            if count + 1 == (chunkDigits ()) then
-                parseDigits 0 0 rest (mulAddSmall (chunk ()) acc2 v)
-
-            else
-                parseDigits (count + 1) acc2 rest v
+    else
+        parseGroups (pos + chunkDigits ()) s len (groupOf pos (pos + chunkDigits ()) s) v2
 
 
 pow10 : Int -> Int

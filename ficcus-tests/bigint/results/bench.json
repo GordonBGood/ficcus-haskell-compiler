@@ -1,0 +1,618 @@
+{
+ "fact": {
+  "ficcus": {
+   "median": 0.05325042900221888,
+   "min": 0.047982122996472754,
+   "max": 0.05345703300554305,
+   "rss_kb": 2772,
+   "ok": true,
+   "counters": "allocs 63887 live 0 peak 11889 dup 23966 drop 54005 free_slow 30043 reuse_hit 1 reuse_miss 0 inplace 25568545 copied 6 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ref": {
+   "median": 0.0376355550106382,
+   "min": 0.037428609997732565,
+   "max": 0.039319709001574665,
+   "rss_kb": 1744,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "gmp": {
+   "median": 0.012406862006173469,
+   "min": 0.012200468991068192,
+   "max": 0.012512428002082743,
+   "rss_kb": 2468,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ficcus-s": {
+   "median": 0.0073911350045818835,
+   "min": 0.006855150000774302,
+   "max": 0.008317494008224458,
+   "rss_kb": 2396,
+   "ok": true,
+   "counters": "allocs 11601 live 0 peak 1914 dup 4639 drop 10323 free_slow 5687 reuse_hit 1 reuse_miss 0 inplace 774645 copied 4 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  },
+  "elm": {
+   "median": 6.402122072991915,
+   "min": 6.352938511001412,
+   "max": 6.480902583993156,
+   "rss_kb": 93468,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  }
+ },
+ "fib": {
+  "ficcus": {
+   "median": 0.1610354099975666,
+   "min": 0.15543150099983905,
+   "max": 0.16933138300373685,
+   "rss_kb": 2636,
+   "ok": true,
+   "counters": "allocs 212414 live 0 peak 6969 dup 202328 drop 307453 free_slow 105129 reuse_hit 1 reuse_miss 0 inplace 114628702 copied 6 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ref": {
+   "median": 0.07386576200951822,
+   "min": 0.07318686200596858,
+   "max": 0.07610195998859126,
+   "rss_kb": 1876,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "gmp": {
+   "median": 0.018646108990651555,
+   "min": 0.01693924199207686,
+   "max": 0.019620135994045995,
+   "rss_kb": 2416,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ficcus-s": {
+   "median": 0.15980576700530946,
+   "min": 0.15481012800591998,
+   "max": 0.1663726120023057,
+   "rss_kb": 2636,
+   "ok": true,
+   "counters": "allocs 212414 live 0 peak 6969 dup 202328 drop 307453 free_slow 105129 reuse_hit 1 reuse_miss 0 inplace 114628702 copied 6 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  },
+  "elm": {
+   "median": 5.029367735987762,
+   "min": 4.97917521999625,
+   "max": 5.046270529011963,
+   "rss_kb": 84544,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  }
+ },
+ "pow3": {
+  "ficcus": {
+   "median": 0.154760517005343,
+   "min": 0.150225801000488,
+   "max": 0.16027299399138428,
+   "rss_kb": 3596,
+   "ok": true,
+   "counters": "allocs 81305 live 0 peak 36387 dup 22096 drop 62986 free_slow 40895 reuse_hit 1 reuse_miss 0 inplace 61894371 copied 8 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ref": {
+   "median": 0.155188750999514,
+   "min": 0.15487530900281854,
+   "max": 0.1602201970090391,
+   "rss_kb": 2004,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "gmp": {
+   "median": 0.007058988994685933,
+   "min": 0.006625573994824663,
+   "max": 0.00727733300300315,
+   "rss_kb": 2920,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ficcus-s": {
+   "median": 0.047910108987707645,
+   "min": 0.04290912099531852,
+   "max": 0.04811678300029598,
+   "rss_kb": 2980,
+   "ok": true,
+   "counters": "allocs 36792 live 0 peak 15906 dup 9142 drop 26724 free_slow 17587 reuse_hit 1 reuse_miss 0 inplace 16090136 copied 7 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  },
+  "elm": {
+   "median": 1.5096207099995809,
+   "min": 1.502318179991562,
+   "max": 1.5673387689894298,
+   "rss_kb": 84968,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  }
+ },
+ "build": {
+  "ficcus": {
+   "median": 0.022572505011339672,
+   "min": 0.0224414410040481,
+   "max": 0.02320258399413433,
+   "rss_kb": 2444,
+   "ok": true,
+   "counters": "allocs 17487 live 0 peak 40 dup 11491 drop 28973 free_slow 17483 reuse_hit 0 reuse_miss 0 inplace 8307518 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ref": {
+   "median": 0.012660542997764423,
+   "min": 0.011764698996557854,
+   "max": 0.013065223989542574,
+   "rss_kb": 1952,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "gmp": {
+   "median": 0.007231377996504307,
+   "min": 0.006773549001081847,
+   "max": 0.007374743989203125,
+   "rss_kb": 2468,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ficcus-s": {
+   "median": 0.012294824002310634,
+   "min": 0.01221979400725104,
+   "max": 0.012492911002482288,
+   "rss_kb": 2356,
+   "ok": true,
+   "counters": "allocs 5823 live 0 peak 35 dup 3838 drop 9656 free_slow 5819 reuse_hit 0 reuse_miss 0 inplace 2527498 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  },
+  "elm": {
+   "median": 1.5382527080073487,
+   "min": 1.5193780150002567,
+   "max": 1.5837740160059184,
+   "rss_kb": 84372,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  }
+ },
+ "tostr": {
+  "ficcus": {
+   "median": 0.1696273419947829,
+   "min": 0.1661312549986178,
+   "max": 0.17068912199465558,
+   "rss_kb": 3636,
+   "ok": true,
+   "counters": "allocs 84487 live 0 peak 38423 dup 22605 drop 64641 free_slow 42041 reuse_hit 1 reuse_miss 0 inplace 67861156 copied 8 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ref": {
+   "median": 0.166754050005693,
+   "min": 0.16572494199499488,
+   "max": 0.17084479100594763,
+   "rss_kb": 2084,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "gmp": {
+   "median": 0.007353555003646761,
+   "min": 0.0068895949953002855,
+   "max": 0.008164670012774877,
+   "rss_kb": 2856,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ficcus-s": {
+   "median": 0.048071810000692494,
+   "min": 0.04324907099362463,
+   "max": 0.04818315600277856,
+   "rss_kb": 2772,
+   "ok": true,
+   "counters": "allocs 36792 live 0 peak 15906 dup 9142 drop 26724 free_slow 17587 reuse_hit 1 reuse_miss 0 inplace 16090136 copied 7 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  },
+  "elm": {
+   "median": 1.5208976150024682,
+   "min": 1.4943331940012285,
+   "max": 1.5852247480070218,
+   "rss_kb": 84724,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  }
+ },
+ "fromstr": {
+  "ficcus": {
+   "median": 0.08376913800020702,
+   "min": 0.08326063500135206,
+   "max": 0.0890597749967128,
+   "rss_kb": 4900,
+   "ok": true,
+   "counters": "allocs 100025 live 0 peak 100003 dup 7 drop 30 free_slow 24 reuse_hit 0 reuse_miss 0 inplace 59552116 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ref": {
+   "median": 0.03263040700403508,
+   "min": 0.03239188498992007,
+   "max": 0.033152356001664884,
+   "rss_kb": 1792,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "gmp": {
+   "median": 0.007237117999466136,
+   "min": 0.006688640991342254,
+   "max": 0.00746254799014423,
+   "rss_kb": 2856,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ficcus-s": {
+   "median": 0.08423402099288069,
+   "min": 0.08369798598869238,
+   "max": 0.0897206920053577,
+   "rss_kb": 4868,
+   "ok": true,
+   "counters": "allocs 100025 live 0 peak 100003 dup 7 drop 30 free_slow 24 reuse_hit 0 reuse_miss 0 inplace 59552116 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  },
+  "elm": {
+   "median": 0.10416026500752196,
+   "min": 0.09843505200115032,
+   "max": 0.10426976800954435,
+   "rss_kb": 107896,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  }
+ },
+ "divmod": {
+  "ficcus": {
+   "median": 0.5073484809981892,
+   "min": 0.4978991579991998,
+   "max": 0.5127844490052667,
+   "rss_kb": 2700,
+   "ok": true,
+   "counters": "allocs 55960 live 0 peak 16677 dup 20936 drop 56564 free_slow 35654 reuse_hit 1 reuse_miss 0 inplace 313670952 copied 7 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ref": {
+   "median": 0.30428354399919044,
+   "min": 0.30320029400172643,
+   "max": 0.3094315769994864,
+   "rss_kb": 2080,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "gmp": {
+   "median": 0.01742794799793046,
+   "min": 0.012118736005504616,
+   "max": 0.017631066002650186,
+   "rss_kb": 2892,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ficcus-s": {
+   "median": 0.007181405002484098,
+   "min": 0.006907527000294067,
+   "max": 0.007271062000654638,
+   "rss_kb": 2360,
+   "ok": true,
+   "counters": "allocs 506 live 0 peak 171 dup 162 drop 399 free_slow 262 reuse_hit 1 reuse_miss 0 inplace 42522 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  },
+  "elm": {
+   "median": 4.9559607050032355,
+   "min": 4.916023981000762,
+   "max": 5.137543741991976,
+   "rss_kb": 103248,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  }
+ },
+ "mulbig": {
+  "ficcus": {
+   "median": 0.12138388500898145,
+   "min": 0.11352463100047316,
+   "max": 0.12504595899372362,
+   "rss_kb": 2712,
+   "ok": true,
+   "counters": "allocs 207848 live 0 peak 50 dup 136410 drop 344194 free_slow 207795 reuse_hit 1 reuse_miss 0 inplace 62864239 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ref": {
+   "median": 0.03786502999719232,
+   "min": 0.03729657600342762,
+   "max": 0.03841655299765989,
+   "rss_kb": 2192,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "gmp": {
+   "median": 0.007180874003097415,
+   "min": 0.007106166012817994,
+   "max": 0.007941024989122525,
+   "rss_kb": 2720,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": "full"
+  },
+  "ficcus-s": {
+   "median": 0.007317697993130423,
+   "min": 0.006735807997756638,
+   "max": 0.007427713004290126,
+   "rss_kb": 2360,
+   "ok": true,
+   "counters": "allocs 179 live 0 peak 17 dup 113 drop 228 free_slow 126 reuse_hit 1 reuse_miss 0 inplace 40274 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  },
+  "elm": {
+   "median": 1.7049868220055941,
+   "min": 1.65523337200284,
+   "max": 1.7213640410045628,
+   "rss_kb": 86384,
+   "ok": true,
+   "counters": "",
+   "copy_warnings": [],
+   "runs": 5,
+   "sizes": {
+    "FACT": 2000,
+    "FIB": 100000,
+    "POW": 100000,
+    "DIG": 100000,
+    "REP": 10000,
+    "DEN": 590,
+    "DDIG": 2100,
+    "MX": 1500,
+    "MY": 1000
+   }
+  }
+ }
+}
