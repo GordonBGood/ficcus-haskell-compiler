@@ -45,13 +45,17 @@ def clone_counts(mono_text):
 
 
 # FIC_DROP_ALL=1: build every example with -DFIC_DROP_ALL (STAGE4-PLAN S0: the layout check and the free of every object at exit);
-# FIC_CFLAGS adds other C flags (e.g. -DFIC_STATS)
+# FICTEST_CFLAGS adds other C flags (e.g. -DFIC_STATS)
 DROP_ALL = bool(os.environ.get("FIC_DROP_ALL"))
-# FIC_RC=1: compile with --rc (reference counting, stage iv) and build with -DFIC_STATS: the program must end with 0 live objects
-# FIC_SAN=1: build with -fsanitize=address,undefined (leak detection on: a leak, a use after free or a double free fails the run)
-RC = bool(os.environ.get("FIC_RC"))
-SAN = bool(os.environ.get("FIC_SAN"))
-EXTRA = (["-DFIC_DROP_ALL"] if DROP_ALL else []) + (["-DFIC_STATS"] if RC else []) + os.environ.get("FIC_CFLAGS", "").split()
+# FICTEST_RC=1: compile with --rc (reference counting, stage iv) and build with -DFIC_STATS: the program must end with 0 live objects
+# FICTEST_SAN=1: build with -fsanitize=address,undefined (leak detection on: a leak, a use after free or a double free fails the run)
+# (FIX3: renamed from FIC_RC, FIC_SAN, FIC_CFLAGS, which clash with the macros of the runtime; the old names are refused, not ignored)
+for old in ("FIC_RC", "FIC_SAN", "FIC_CFLAGS"):
+    if old in os.environ:
+        sys.exit("examples.py: the environment variable %s was renamed to FICTEST_%s" % (old, old[4:]))
+RC = bool(os.environ.get("FICTEST_RC"))
+SAN = bool(os.environ.get("FICTEST_SAN"))
+EXTRA = (["-DFIC_DROP_ALL"] if DROP_ALL else []) + (["-DFIC_STATS"] if RC else []) + os.environ.get("FICTEST_CFLAGS", "").split()
 SAN_FLAGS = {"gcc": ["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL", "-Wno-maybe-uninitialized"],
              "clang": ["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL", "-fuse-ld=bfd"]}
 

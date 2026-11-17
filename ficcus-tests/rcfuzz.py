@@ -26,6 +26,12 @@ import argparse, os, random, shutil, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 SETTINGS = {"default": {}, "proj": {"FICCUS_BORROW_PROJ": "1"}, "reuse": {"FICCUS_BORROW_REUSE": "1"}, "s3rule": {"FICCUS_BORROW_S3": "1"}}
+# FIX3 (docs/FLAGS.md section 4): one setting for each experiment switch that had none; `--settings nospec,noreuse,...` (not in the default run)
+for _name, _var in [("nospec", "NO_SPEC"), ("noreuse", "NO_REUSE"), ("noupdate", "NO_UPDATE_RULE"), ("notake", "NO_TAKE"), ("nolatespec", "NO_LATE_SPEC"),
+                    ("nosteal", "NO_STEAL"), ("nostealrule", "NO_STEAL_RULE"), ("noinline", "NO_INLINE"), ("noclosteal", "NO_CLO_STEAL"),
+                    ("noaliaslet", "NO_ALIAS_LET"), ("nohybridclo", "NO_HYBRID_CLO")]:
+    SETTINGS[_name] = {"FICCUS_" + _var: "1"}
+EXPERIMENTS = [n for n in SETTINGS if n not in ("default", "proj", "reuse", "s3rule")]
 
 PRELUDE = '''module Main exposing (main)
 
@@ -831,7 +837,8 @@ def check(a, text, work, settings):
     open(os.path.join(work, "elm.json"), "w").write(ELM_JSON)
     open(os.path.join(work, "src", "Main.fic"), "w").write(text)
     env = dict(os.environ, ELM_HOME=a.elm_home)
-    for k in ("FICCUS_BORROW_PROJ", "FICCUS_BORROW_REUSE", "FICCUS_BORROW_S3", "FICCUS_NO_SPEC", "FICCUS_NO_REUSE"): env.pop(k, None)
+    for st in SETTINGS.values():
+        for k in st: env.pop(k, None)
     elm = os.path.abspath(a.elm)
     if a.elm_check:      # Elm has no module Vector: the stand-in written on Array (ficcus-tests/vecshim) is put beside the program for this check only
         shutil.copy(os.path.join(work, "src", "Main.fic"), os.path.join(work, "src", "Main.elm"))
@@ -864,7 +871,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--elm"); ap.add_argument("--elm-home"); ap.add_argument("--safe")
     ap.add_argument("--count", type=int, default=500); ap.add_argument("--first", type=int, default=1)
-    ap.add_argument("--settings", default="default,proj,reuse"); ap.add_argument("--out", default=None)
+    ap.add_argument("--settings", default="default,proj,reuse", help="comma list of: " + ",".join(SETTINGS)); ap.add_argument("--out", default=None)
     ap.add_argument("--keep", default=os.path.join(HERE, "rcfuzz")); ap.add_argument("--elm-check", default=None)
     ap.add_argument("--print", type=int, default=None, dest="show"); ap.add_argument("--replay", action="store_true")
     a = ap.parse_args()

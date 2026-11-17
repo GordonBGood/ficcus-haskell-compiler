@@ -9,7 +9,7 @@ W=$(cd "$(dirname "$0")/../.." && pwd); R=$W/ficcus-haskell-compiler
 # what the run made, not removed.
 KEEP=${KEEP:-}
 if [ -z "$S" ]; then S=$(mktemp -d "${CLAUDE_CODE_TMPDIR:-${TMPDIR:-/tmp}}/gates.XXXXXX"); OWN=1; fi
-B=$W/bin/${BIN:-elmficA15}; G=$S/gates; mkdir -p $G; cd $W
+B=$W/bin/${BIN:-elmficA16}; G=$S/gates; mkdir -p $G; cd $W
 cleanup() {
   if [ -n "$KEEP" ]; then echo "KEEP=1: $S kept ($(du -sh $S | cut -f1))"; return; fi
   rm -rf "$S"/h_* "$S"/gates "$S"/tcout "$S"/elmdiff80 "$S"/jh "$S"/jw "$S"/libw "$S"/rt_*
@@ -28,7 +28,7 @@ step jsid;     $R/ficcus-tests/jsid.sh $W/bin/elm0193 $B $S/jh $S/jw > $G/jsid.t
 H=$(fresh ex); 
 step examples; (cd $R && python3 ficcus-tests/examples.py --elm $B --safe $W/tools/safe --elm-home $H > $G/ex1.txt 2>&1); grep -c "^ok" $G/ex1.txt; grep -E "FAIL" $G/ex1.txt | head
 step ex-dropall; (cd $R && FIC_DROP_ALL=1 python3 ficcus-tests/examples.py --elm $B --safe $W/tools/safe --elm-home $H > $G/ex2.txt 2>&1); grep -c "^ok" $G/ex2.txt; grep -E "FAIL" $G/ex2.txt | head
-step ex-rcsan; (cd $R && FIC_RC=1 FIC_SAN=1 python3 ficcus-tests/examples.py --elm $B --safe $W/tools/safe --elm-home $H > $G/ex3.txt 2>&1); grep -c "^ok" $G/ex3.txt; grep -E "FAIL" $G/ex3.txt | head
+step ex-rcsan; (cd $R && FICTEST_RC=1 FICTEST_SAN=1 python3 ficcus-tests/examples.py --elm $B --safe $W/tools/safe --elm-home $H > $G/ex3.txt 2>&1); grep -c "^ok" $G/ex3.txt; grep -E "FAIL" $G/ex3.txt | head
 step fbip;     python3 $R/ficcus-tests/fbip_check.py --elm $B --elm-home $H --safe $W/tools/safe > $G/fbip.txt 2>&1; tail -2 $G/fbip.txt
 step rcfaults; python3 $R/ficcus-tests/rccheck_faults.py --elm $B --elm-home $H > $G/faults.txt 2>&1; tail -2 $G/faults.txt
 step rcfaults-big; python3 $R/ficcus-tests/rccheck_faults.py --elm $B --elm-home $H --only vec,fbip,reuse,evo,parse --sample 0.02 --seed 1 > $G/faults2.txt 2>&1; tail -2 $G/faults2.txt
