@@ -64,3 +64,6 @@ Translate **`targets/p1/src/JsonComb.elm` (632 lines; everything but `toVector` 
 
 ## Reproduce
 `python3 ficcus-tools/p1_bench.py --elm bin/elmfic80 --elm-home H --out results/p1 --sizes 7500,375000 --runs 5 --str-runs 1 --elm-check` (the String variant at 1 MB takes 8 minutes; `--only a,b` selects versions; H a private copy of an ELM_HOME with elm/core, json, parser).
+
+## Update 17 Nov (FIX2, `docs/STAGE4-FIX2.md`)
+Finding 1 is fixed (`Spec.ordered`; the cyclic form of `JsonComb` gives the right checksum, the programs here keep the `()` workaround so that results stay comparable). Finding 2 is fixed (`fic_us_off`): B on the 1 MB document 12,965 ms to 275 ms, A on a String 479,852 ms to 241 ms (whole process, `elmfic80`-era runtime against `elmficA14`).
