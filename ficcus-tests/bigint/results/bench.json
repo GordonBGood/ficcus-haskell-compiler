@@ -1,10 +1,10 @@
 {
  "fact": {
   "ficcus": {
-   "median": 0.05325042900221888,
-   "min": 0.047982122996472754,
-   "max": 0.05345703300554305,
-   "rss_kb": 2772,
+   "median": 0.048308368990547024,
+   "min": 0.04786359300487675,
+   "max": 0.052749990005395375,
+   "rss_kb": 2868,
    "ok": true,
    "counters": "allocs 63887 live 0 peak 11889 dup 23966 drop 54005 free_slow 30043 reuse_hit 1 reuse_miss 0 inplace 25568545 copied 6 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
@@ -12,10 +12,10 @@
    "sizes": "full"
   },
   "ref": {
-   "median": 0.0376355550106382,
-   "min": 0.037428609997732565,
-   "max": 0.039319709001574665,
-   "rss_kb": 1744,
+   "median": 0.03732685100112576,
+   "min": 0.032424315009848215,
+   "max": 0.03792361899104435,
+   "rss_kb": 1876,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -23,10 +23,10 @@
    "sizes": "full"
   },
   "gmp": {
-   "median": 0.012406862006173469,
-   "min": 0.012200468991068192,
-   "max": 0.012512428002082743,
-   "rss_kb": 2468,
+   "median": 0.01232091200654395,
+   "min": 0.01182237699686084,
+   "max": 0.012364802998490632,
+   "rss_kb": 2472,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -34,10 +34,10 @@
    "sizes": "full"
   },
   "ficcus-s": {
-   "median": 0.0073911350045818835,
-   "min": 0.006855150000774302,
-   "max": 0.008317494008224458,
-   "rss_kb": 2396,
+   "median": 0.0069391369906952605,
+   "min": 0.006711244001053274,
+   "max": 0.00712885799293872,
+   "rss_kb": 2484,
    "ok": true,
    "counters": "allocs 11601 live 0 peak 1914 dup 4639 drop 10323 free_slow 5687 reuse_hit 1 reuse_miss 0 inplace 774645 copied 4 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
@@ -55,10 +55,10 @@
    }
   },
   "elm": {
-   "median": 6.402122072991915,
-   "min": 6.352938511001412,
-   "max": 6.480902583993156,
-   "rss_kb": 93468,
+   "median": 6.337553793011466,
+   "min": 6.298771991991089,
+   "max": 6.5120779819990275,
+   "rss_kb": 94144,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -78,10 +78,10 @@
  },
  "fib": {
   "ficcus": {
-   "median": 0.1610354099975666,
-   "min": 0.15543150099983905,
-   "max": 0.16933138300373685,
-   "rss_kb": 2636,
+   "median": 0.1602575959987007,
+   "min": 0.15484091600228567,
+   "max": 0.16412207699613646,
+   "rss_kb": 2860,
    "ok": true,
    "counters": "allocs 212414 live 0 peak 6969 dup 202328 drop 307453 free_slow 105129 reuse_hit 1 reuse_miss 0 inplace 114628702 copied 6 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
@@ -89,10 +89,10 @@
    "sizes": "full"
   },
   "ref": {
-   "median": 0.07386576200951822,
-   "min": 0.07318686200596858,
-   "max": 0.07610195998859126,
-   "rss_kb": 1876,
+   "median": 0.07366785401245579,
+   "min": 0.07294316000479739,
+   "max": 0.07866239199938718,
+   "rss_kb": 2004,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -100,10 +100,10 @@
    "sizes": "full"
   },
   "gmp": {
-   "median": 0.018646108990651555,
-   "min": 0.01693924199207686,
-   "max": 0.019620135994045995,
-   "rss_kb": 2416,
+   "median": 0.017435012006899342,
+   "min": 0.017174619002616964,
+   "max": 0.02327367599355057,
+   "rss_kb": 2408,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -111,10 +111,10 @@
    "sizes": "full"
   },
   "ficcus-s": {
-   "median": 0.15980576700530946,
-   "min": 0.15481012800591998,
-   "max": 0.1663726120023057,
-   "rss_kb": 2636,
+   "median": 0.15988233999814838,
+   "min": 0.15608018499915488,
+   "max": 0.17004196198831778,
+   "rss_kb": 2656,
    "ok": true,
    "counters": "allocs 212414 live 0 peak 6969 dup 202328 drop 307453 free_slow 105129 reuse_hit 1 reuse_miss 0 inplace 114628702 copied 6 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
@@ -132,10 +132,10 @@
    }
   },
   "elm": {
-   "median": 5.029367735987762,
-   "min": 4.97917521999625,
-   "max": 5.046270529011963,
-   "rss_kb": 84544,
+   "median": 5.025230018000002,
+   "min": 4.996256696002092,
+   "max": 5.053953215989168,
+   "rss_kb": 84276,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -155,10 +155,10 @@
  },
  "pow3": {
   "ficcus": {
-   "median": 0.154760517005343,
-   "min": 0.150225801000488,
-   "max": 0.16027299399138428,
-   "rss_kb": 3596,
+   "median": 0.154571485996712,
+   "min": 0.15416912900400348,
+   "max": 0.16037575500376988,
+   "rss_kb": 3348,
    "ok": true,
    "counters": "allocs 81305 live 0 peak 36387 dup 22096 drop 62986 free_slow 40895 reuse_hit 1 reuse_miss 0 inplace 61894371 copied 8 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
@@ -166,10 +166,10 @@
    "sizes": "full"
   },
   "ref": {
-   "median": 0.155188750999514,
-   "min": 0.15487530900281854,
-   "max": 0.1602201970090391,
-   "rss_kb": 2004,
+   "median": 0.15525580599205568,
+   "min": 0.14998967299470678,
+   "max": 0.15626755300036166,
+   "rss_kb": 2012,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -177,9 +177,9 @@
    "sizes": "full"
   },
   "gmp": {
-   "median": 0.007058988994685933,
-   "min": 0.006625573994824663,
-   "max": 0.00727733300300315,
+   "median": 0.007367040001554415,
+   "min": 0.006959424004890025,
+   "max": 0.008091775001958013,
    "rss_kb": 2920,
    "ok": true,
    "counters": "",
@@ -188,10 +188,10 @@
    "sizes": "full"
   },
   "ficcus-s": {
-   "median": 0.047910108987707645,
-   "min": 0.04290912099531852,
-   "max": 0.04811678300029598,
-   "rss_kb": 2980,
+   "median": 0.04760499300027732,
+   "min": 0.04340279700409155,
+   "max": 0.047838245998718776,
+   "rss_kb": 3052,
    "ok": true,
    "counters": "allocs 36792 live 0 peak 15906 dup 9142 drop 26724 free_slow 17587 reuse_hit 1 reuse_miss 0 inplace 16090136 copied 7 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
@@ -209,10 +209,10 @@
    }
   },
   "elm": {
-   "median": 1.5096207099995809,
-   "min": 1.502318179991562,
-   "max": 1.5673387689894298,
-   "rss_kb": 84968,
+   "median": 1.524458913001581,
+   "min": 1.5021853529906366,
+   "max": 1.5495775529998355,
+   "rss_kb": 84484,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -232,10 +232,10 @@
  },
  "build": {
   "ficcus": {
-   "median": 0.022572505011339672,
-   "min": 0.0224414410040481,
-   "max": 0.02320258399413433,
-   "rss_kb": 2444,
+   "median": 0.022574007001821883,
+   "min": 0.022343169010127895,
+   "max": 0.02300158100842964,
+   "rss_kb": 2484,
    "ok": true,
    "counters": "allocs 17487 live 0 peak 40 dup 11491 drop 28973 free_slow 17483 reuse_hit 0 reuse_miss 0 inplace 8307518 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
@@ -243,10 +243,10 @@
    "sizes": "full"
   },
   "ref": {
-   "median": 0.012660542997764423,
-   "min": 0.011764698996557854,
-   "max": 0.013065223989542574,
-   "rss_kb": 1952,
+   "median": 0.012735622003674507,
+   "min": 0.01242089799779933,
+   "max": 0.013390045991400257,
+   "rss_kb": 2132,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -254,10 +254,10 @@
    "sizes": "full"
   },
   "gmp": {
-   "median": 0.007231377996504307,
-   "min": 0.006773549001081847,
-   "max": 0.007374743989203125,
-   "rss_kb": 2468,
+   "median": 0.0073537849966669455,
+   "min": 0.007147722993977368,
+   "max": 0.007421179994707927,
+   "rss_kb": 2512,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -265,10 +265,10 @@
    "sizes": "full"
   },
   "ficcus-s": {
-   "median": 0.012294824002310634,
-   "min": 0.01221979400725104,
-   "max": 0.012492911002482288,
-   "rss_kb": 2356,
+   "median": 0.012176945005194284,
+   "min": 0.01190199499251321,
+   "max": 0.013186868993216194,
+   "rss_kb": 2516,
    "ok": true,
    "counters": "allocs 5823 live 0 peak 35 dup 3838 drop 9656 free_slow 5819 reuse_hit 0 reuse_miss 0 inplace 2527498 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
@@ -286,10 +286,10 @@
    }
   },
   "elm": {
-   "median": 1.5382527080073487,
-   "min": 1.5193780150002567,
-   "max": 1.5837740160059184,
-   "rss_kb": 84372,
+   "median": 1.5169320169952698,
+   "min": 1.5050973870093003,
+   "max": 1.5731707209924934,
+   "rss_kb": 84248,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -309,10 +309,10 @@
  },
  "tostr": {
   "ficcus": {
-   "median": 0.1696273419947829,
-   "min": 0.1661312549986178,
-   "max": 0.17068912199465558,
-   "rss_kb": 3636,
+   "median": 0.1700378640089184,
+   "min": 0.16542792999825906,
+   "max": 0.1752348570007598,
+   "rss_kb": 3560,
    "ok": true,
    "counters": "allocs 84487 live 0 peak 38423 dup 22605 drop 64641 free_slow 42041 reuse_hit 1 reuse_miss 0 inplace 67861156 copied 8 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
@@ -320,9 +320,9 @@
    "sizes": "full"
   },
   "ref": {
-   "median": 0.166754050005693,
-   "min": 0.16572494199499488,
-   "max": 0.17084479100594763,
+   "median": 0.16594790598901454,
+   "min": 0.165869880001992,
+   "max": 0.1752892289950978,
    "rss_kb": 2084,
    "ok": true,
    "counters": "",
@@ -331,10 +331,10 @@
    "sizes": "full"
   },
   "gmp": {
-   "median": 0.007353555003646761,
-   "min": 0.0068895949953002855,
-   "max": 0.008164670012774877,
-   "rss_kb": 2856,
+   "median": 0.007526335000875406,
+   "min": 0.007258629004354589,
+   "max": 0.007685440999921411,
+   "rss_kb": 2920,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -342,10 +342,10 @@
    "sizes": "full"
   },
   "ficcus-s": {
-   "median": 0.048071810000692494,
-   "min": 0.04324907099362463,
-   "max": 0.04818315600277856,
-   "rss_kb": 2772,
+   "median": 0.048182516009546816,
+   "min": 0.042465136997634545,
+   "max": 0.04871681700751651,
+   "rss_kb": 2904,
    "ok": true,
    "counters": "allocs 36792 live 0 peak 15906 dup 9142 drop 26724 free_slow 17587 reuse_hit 1 reuse_miss 0 inplace 16090136 copied 7 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
@@ -363,10 +363,10 @@
    }
   },
   "elm": {
-   "median": 1.5208976150024682,
-   "min": 1.4943331940012285,
-   "max": 1.5852247480070218,
-   "rss_kb": 84724,
+   "median": 1.5210067370062461,
+   "min": 1.5009269489964936,
+   "max": 1.564341327000875,
+   "rss_kb": 84396,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -386,21 +386,21 @@
  },
  "fromstr": {
   "ficcus": {
-   "median": 0.08376913800020702,
-   "min": 0.08326063500135206,
-   "max": 0.0890597749967128,
-   "rss_kb": 4900,
+   "median": 0.0734179610008141,
+   "min": 0.07313650898868218,
+   "max": 0.07476544100791216,
+   "rss_kb": 2768,
    "ok": true,
-   "counters": "allocs 100025 live 0 peak 100003 dup 7 drop 30 free_slow 24 reuse_hit 0 reuse_miss 0 inplace 59552116 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
+   "counters": "allocs 22251 live 0 peak 6 dup 5 drop 22253 free_slow 22248 reuse_hit 1 reuse_miss 0 inplace 59542592 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
    "runs": 5,
    "sizes": "full"
   },
   "ref": {
-   "median": 0.03263040700403508,
-   "min": 0.03239188498992007,
-   "max": 0.033152356001664884,
-   "rss_kb": 1792,
+   "median": 0.03253099300491158,
+   "min": 0.03214074799325317,
+   "max": 0.033165700995596126,
+   "rss_kb": 1752,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -408,10 +408,10 @@
    "sizes": "full"
   },
   "gmp": {
-   "median": 0.007237117999466136,
-   "min": 0.006688640991342254,
-   "max": 0.00746254799014423,
-   "rss_kb": 2856,
+   "median": 0.007065159996272996,
+   "min": 0.0067510059889173135,
+   "max": 0.007483065011911094,
+   "rss_kb": 2792,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -419,12 +419,12 @@
    "sizes": "full"
   },
   "ficcus-s": {
-   "median": 0.08423402099288069,
-   "min": 0.08369798598869238,
-   "max": 0.0897206920053577,
-   "rss_kb": 4868,
+   "median": 0.07354217198735569,
+   "min": 0.07100417200126685,
+   "max": 0.07883616499020718,
+   "rss_kb": 2728,
    "ok": true,
-   "counters": "allocs 100025 live 0 peak 100003 dup 7 drop 30 free_slow 24 reuse_hit 0 reuse_miss 0 inplace 59552116 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
+   "counters": "allocs 22251 live 0 peak 6 dup 5 drop 22253 free_slow 22248 reuse_hit 1 reuse_miss 0 inplace 59542592 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
    "runs": 5,
    "sizes": {
@@ -440,10 +440,10 @@
    }
   },
   "elm": {
-   "median": 0.10416026500752196,
-   "min": 0.09843505200115032,
-   "max": 0.10426976800954435,
-   "rss_kb": 107896,
+   "median": 0.10423730799811892,
+   "min": 0.10391522099962458,
+   "max": 0.11400137501186691,
+   "rss_kb": 107664,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -463,10 +463,10 @@
  },
  "divmod": {
   "ficcus": {
-   "median": 0.5073484809981892,
-   "min": 0.4978991579991998,
-   "max": 0.5127844490052667,
-   "rss_kb": 2700,
+   "median": 0.5085844150016783,
+   "min": 0.4982289600011427,
+   "max": 0.5142395379953086,
+   "rss_kb": 2960,
    "ok": true,
    "counters": "allocs 55960 live 0 peak 16677 dup 20936 drop 56564 free_slow 35654 reuse_hit 1 reuse_miss 0 inplace 313670952 copied 7 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
@@ -474,10 +474,10 @@
    "sizes": "full"
   },
   "ref": {
-   "median": 0.30428354399919044,
-   "min": 0.30320029400172643,
-   "max": 0.3094315769994864,
-   "rss_kb": 2080,
+   "median": 0.3051380090037128,
+   "min": 0.3018026099889539,
+   "max": 0.30886300100246444,
+   "rss_kb": 2084,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -485,10 +485,10 @@
    "sizes": "full"
   },
   "gmp": {
-   "median": 0.01742794799793046,
-   "min": 0.012118736005504616,
-   "max": 0.017631066002650186,
-   "rss_kb": 2892,
+   "median": 0.012572388994158246,
+   "min": 0.012286728990147822,
+   "max": 0.01837114900990855,
+   "rss_kb": 2920,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -496,9 +496,9 @@
    "sizes": "full"
   },
   "ficcus-s": {
-   "median": 0.007181405002484098,
-   "min": 0.006907527000294067,
-   "max": 0.007271062000654638,
+   "median": 0.007309734006412327,
+   "min": 0.006953862990485504,
+   "max": 0.007452328005456366,
    "rss_kb": 2360,
    "ok": true,
    "counters": "allocs 506 live 0 peak 171 dup 162 drop 399 free_slow 262 reuse_hit 1 reuse_miss 0 inplace 42522 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
@@ -517,10 +517,10 @@
    }
   },
   "elm": {
-   "median": 4.9559607050032355,
-   "min": 4.916023981000762,
-   "max": 5.137543741991976,
-   "rss_kb": 103248,
+   "median": 4.95659342900035,
+   "min": 4.889147169000353,
+   "max": 5.1715622449992225,
+   "rss_kb": 103144,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -540,10 +540,10 @@
  },
  "mulbig": {
   "ficcus": {
-   "median": 0.12138388500898145,
-   "min": 0.11352463100047316,
-   "max": 0.12504595899372362,
-   "rss_kb": 2712,
+   "median": 0.11561273499683011,
+   "min": 0.11464570100361016,
+   "max": 0.13005331000022124,
+   "rss_kb": 2904,
    "ok": true,
    "counters": "allocs 207848 live 0 peak 50 dup 136410 drop 344194 free_slow 207795 reuse_hit 1 reuse_miss 0 inplace 62864239 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
@@ -551,10 +551,10 @@
    "sizes": "full"
   },
   "ref": {
-   "median": 0.03786502999719232,
-   "min": 0.03729657600342762,
-   "max": 0.03841655299765989,
-   "rss_kb": 2192,
+   "median": 0.03774671099381521,
+   "min": 0.037704050992033444,
+   "max": 0.04281776100106072,
+   "rss_kb": 2304,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -562,10 +562,10 @@
    "sizes": "full"
   },
   "gmp": {
-   "median": 0.007180874003097415,
-   "min": 0.007106166012817994,
-   "max": 0.007941024989122525,
-   "rss_kb": 2720,
+   "median": 0.007214908007881604,
+   "min": 0.006792863990995102,
+   "max": 0.011813439996330999,
+   "rss_kb": 2928,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
@@ -573,10 +573,10 @@
    "sizes": "full"
   },
   "ficcus-s": {
-   "median": 0.007317697993130423,
-   "min": 0.006735807997756638,
-   "max": 0.007427713004290126,
-   "rss_kb": 2360,
+   "median": 0.00724298000568524,
+   "min": 0.007006821004324593,
+   "max": 0.0073491470102453604,
+   "rss_kb": 2456,
    "ok": true,
    "counters": "allocs 179 live 0 peak 17 dup 113 drop 228 free_slow 126 reuse_hit 1 reuse_miss 0 inplace 40274 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
    "copy_warnings": [],
@@ -594,10 +594,10 @@
    }
   },
   "elm": {
-   "median": 1.7049868220055941,
-   "min": 1.65523337200284,
-   "max": 1.7213640410045628,
-   "rss_kb": 86384,
+   "median": 1.6713427240028977,
+   "min": 1.6410838869924191,
+   "max": 1.7504574360063998,
+   "rss_kb": 85784,
    "ok": true,
    "counters": "",
    "copy_warnings": [],
