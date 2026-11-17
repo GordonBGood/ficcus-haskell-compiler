@@ -590,6 +590,7 @@ type StatusDict =
 
 data Status
   = SLocal DocsStatus (Map.Map Module.Name ()) Src.Module
+  | SOverlay DocsStatus (Map.Map Module.Name ()) Src.Module      -- a module of the Ficcus overlay, compiled as `author/project` (FIX2)
   | SForeign I.Interface
   | SKernelLocal [Kernel.Chunk]
   | SKernelForeign
@@ -616,7 +617,36 @@ crawlModule foreignDeps mvar pkg src docsStatus name () =
             crawlKernel foreignDeps mvar pkg src name
 
           else
-            return Nothing
+            crawlOverlay foreignDeps mvar pkg src docsStatus name
+
+
+-- Ficcus (FIX2): a package of a build to C may import a module that Ficcus adds to the core library (the overlay directory: Vector).
+-- It is searched for only when the package has no module of that name and no dependency exposes one (the yield rule of Build.crawlModule
+-- holds here too). The module is compiled as part of the package but under the name of the application's dummy package, so that its
+-- types and definitions are those of the module `Vector` that the program itself imports (the ids of Ficcus.Mono.Overlay are
+-- `author/project:Vector.*`): the types of the package and of the program agree. A build to JavaScript has no overlay directory.
+crawlOverlay :: Map.Map Module.Name ForeignInterface -> MVar StatusDict -> Pkg.Name -> FilePath -> DocsStatus -> Module.Name -> IO (Maybe Status)
+crawlOverlay foreignDeps mvar pkg src docsStatus name =
+  do  extra <- Flags.getExtraSrcDir
+      case extra of
+        Nothing ->
+          return Nothing
+
+        Just dir ->
+          do  let path = dir </> Module.toFilePath name <.> "elm"
+              exists <- if Module.toChars name == "Vector" then File.exists path else return False
+              if not exists
+                then return Nothing
+                else
+                  do  bytes <- File.readUtf8 path
+                      result <- Parse.fromByteString Parse.Application bytes
+                      case result of
+                        Right modul@(Src.Module (Just (A.At _ actualName)) _ _ imports _ _ _ _ _) | name == actualName ->
+                          do  deps <- crawlImports foreignDeps mvar pkg src imports
+                              return (Just (SOverlay docsStatus deps modul))
+
+                        _ ->
+                          return Nothing
 
 
 crawlFile :: Map.Map Module.Name ForeignInterface -> MVar StatusDict -> Pkg.Name -> FilePath -> DocsStatus -> Module.Name -> FilePath -> IO (Maybe Status)
@@ -683,6 +713,9 @@ data Result
 compile :: Maybe (File.Writer R.PACKAGES, R.Stuff) -> Pkg.Name -> MVar (Map.Map Module.Name (Fork.SafeMVar (Maybe Result))) -> Module.Name -> Status -> IO (Maybe Result)
 compile typed pkg mvar name status =
   case status of
+    SOverlay docsStatus deps modul ->
+      compile typed Pkg.dummyName mvar name (SLocal docsStatus deps modul)
+
     SLocal docsStatus deps modul ->
       do  resultsDict <- readMVar mvar
           maybeResults <- traverse Fork.await (Map.intersection resultsDict deps)

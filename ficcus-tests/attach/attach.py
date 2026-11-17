@@ -66,7 +66,10 @@ def one(case, elm, home, want):
         json.dump(elm_json(meta.get("deps", [])), open(os.path.join(dst, "elm.json"), "w"))
         env = dict(os.environ, ELM_HOME=home)
         js = not (want[0] == "RUN" and "js" not in want[1].split("+"))     # a C-only RUN case is only checked, not generated as JavaScript
-        rc, out = run([elm, "make", main, "--output=" + ("out.js" if js else "/dev/null")], dst, env)
+        if meta.get("c_only"):       # a program that needs the Ficcus overlay (a package importing Vector): there is no build without --output=x.c
+            rc, out = 0, ""
+        else:
+            rc, out = run([elm, "make", main, "--output=" + ("out.js" if js else "/dev/null")], dst, env)
         got_titles = titles(out)
         if "$$" in out or "$where" in out:
             return ("MANGLED", "a mangled name in the compiler output"), False, out

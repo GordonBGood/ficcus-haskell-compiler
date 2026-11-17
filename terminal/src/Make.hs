@@ -126,6 +126,13 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag no
         Just (Mono _)  -> Task.io (Flags.setTypedOutput True >> Flags.setKeepModules True)
         Just (FicC _)  -> Task.io (Flags.setTypedOutput True >> Flags.setKeepModules True)
         _              -> return ()
+      -- Ficcus (FIX2): the overlay is written, and its directory made known (Flags.setExtraSrcDir), before the dependencies are built, so
+      -- that a package that imports the core `Vector` finds it (Details.crawlModule)
+      overlayPaths <-
+        case (paths, maybeOutput) of
+          (_ : _, Just (Mono _)) -> Task.io (writeOverlay root)
+          (_ : _, Just (FicC _)) -> Task.io (writeOverlay root)
+          _ -> return []
       details <- Task.eio Exit.MakeBadDetails (Details.load writer style root stuff)
       case paths of
         [] ->
@@ -133,12 +140,7 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag no
               buildExposed writer style root stuff details maybeDocs exposed
 
         p:ps ->
-          do  -- Ficcus: the elm/core overlay is an extra root module of the `.c` and `.mono` builds
-              overlayPaths <-
-                case maybeOutput of
-                  Just (Mono _) -> Task.io (writeOverlay root)
-                  Just (FicC _) -> Task.io (writeOverlay root)
-                  _ -> return []
+          do  -- Ficcus: the elm/core overlay is an extra root module of the `.c` and `.mono` builds (written above)
               artifacts <- buildPaths writer style root stuff details (NE.List p (ps ++ overlayPaths))
               case maybeOutput of
                 Nothing ->

@@ -1,1 +1,1 @@
-{"desc": "KNOWN LIMIT (STAGE4-FIX1): a package module that imports the core Vector is not found when the package is built; pinned, to be solved with the first Ficcus package", "deps": ["ficcus/vecpkg@1.0.0"]}
+{"desc": "STAGE4-FIX2 step 4: a package that imports the core Vector builds in a build to C (the package gets the core overlay; Elm has no module Vector, so there is no JS or /dev/null build: c_only)", "deps": ["ficcus/vecpkg@1.0.0"], "c_only": true}
