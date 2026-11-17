@@ -33,6 +33,7 @@ import Control.Monad.State.Strict (State, execState, gets, modify')
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy.Char8 as BLC
 import Data.Char (ord)
+import qualified Data.Graph as Graph
 import qualified Data.Index as Index
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
@@ -217,19 +218,55 @@ requestRoot mainId =
         Just src -> requestClone (CKey mainId Nothing (Key [])) src
 
 
--- | dependencies first: the clones in the order a depth first walk from the root finishes them
+-- | dependencies first: the clones in the order a depth first walk from the root finishes them. A cycle of clones (top level values
+-- through a lambda: the `lazy` of parser combinators; only a cycle of two or more values matters) is the exception (FIX2): its members come out together, after everything the
+-- cycle depends on, and inside the cycle in the order of the references that run when a value is initialised. A reference to a
+-- lifted function (a lambda or local function) that is not called at that place, only made into a closure, runs later, as in Elm's
+-- JS output (`cyclic$x()`), so it is not a dependency; a reference from the body of the lifted function is one when it is called.
 ordered :: Map.Map CloneId MDef -> CloneId -> [MDef]
 ordered done root =
   reverse (snd (visit (Set.empty, []) root))
   where
+    refsOf c = maybe [] (maybe [] exprRefs . mdBody) (Map.lookup c done)
+    strongOf c = maybe [] (maybe [] (eagerRefs done) . mdBody) (Map.lookup c done)
+    reachable = Set.toList (go Set.empty [root])
+      where go seen [] = seen
+            go seen (c : cs) | Set.member c seen = go seen cs
+                             | otherwise = go (Set.insert c seen) (refsOf c ++ cs)
+    cycles = Map.fromList [ (c, ms) | Graph.CyclicSCC ms <- Graph.stronglyConnComp [ (c, c, refsOf c) | c <- reachable ]
+                                    , length [ () | m <- ms, Just d <- [Map.lookup m done], mdKind d == Value ] > 1, c <- ms ]
     visit (seen, acc) c
       | Set.member c seen = (seen, acc)
       | otherwise =
-          case Map.lookup c done of
-            Nothing -> (Set.insert c seen, acc)
-            Just d ->
+          case (Map.lookup c cycles, Map.lookup c done) of
+            (Just ms, _) ->
+              let seen0 = foldr Set.insert seen ms
+                  members = c : filter (/= c) ms
+                  (seen', acc') = foldl visit (seen0, acc) (concatMap refsOf members)
+                  inits = initOrder (Set.fromList ms) members
+              in (seen', reverse [ d | m <- inits, Just d <- [Map.lookup m done] ] ++ acc')
+            (Nothing, Nothing) -> (Set.insert c seen, acc)
+            (Nothing, Just d) ->
               let (seen', acc') = foldl visit (Set.insert c seen, acc) (maybe [] exprRefs (mdBody d))
               in (seen', d : acc')
+    -- the members of a cycle, each after the members it needs when it is initialised (depth first over the eager references;
+    -- a cycle of those is a bug that Elm's compiler reports earlier: the order is then as the walk finds it)
+    initOrder inside members = reverse (snd (foldl step (Set.empty, []) members))
+      where
+        step (seen, acc) m
+          | Set.member m seen = (seen, acc)
+          | otherwise = let (seen', acc') = foldl step (Set.insert m seen, acc) [ r | r <- strongOf m, Set.member r inside ] in (seen', m : acc')
+
+
+-- | the references that are evaluated or called where they stand: not a lifted clone that is only made into a closure
+-- (a bare `MGlobal` of a lifted clone, not the function of a call)
+eagerRefs :: Map.Map CloneId MDef -> MExpr -> [CloneId]
+eagerRefs done e =
+  case mNode e of
+    MGlobal c -> [ c | not (lifted c) ]
+    MCall f args -> (case mNode f of { MGlobal c -> [c]; _ -> eagerRefs done f }) ++ concatMap (eagerRefs done) args
+    _ -> concatMap (eagerRefs done) (children e)
+  where lifted c = maybe False (\d -> mdLifted d /= Nothing) (Map.lookup c done)
 
 
 drain :: SM ()

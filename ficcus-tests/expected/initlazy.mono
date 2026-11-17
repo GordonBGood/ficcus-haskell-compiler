@@ -1,0 +1,292 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:Initlazy (project)
+clone c0   def: author/project:Initlazy.wrap   key: ()   kind: function   init: 0   needs: 
+clone c1   def: author/project:Initlazy.leaf   key: ()   kind: function   init: 1   needs: 
+clone c2   def: author/project:Initlazy.lazy   key: ()   kind: function   init: 2   needs: 
+clone c3   def: author/project:Initlazy.alt   key: ()   kind: function   init: 3   needs: 
+clone c4   def: author/project:Initlazy.value   key: ()   kind: value   init: 4   needs: c5
+clone c5   def: author/project:Initlazy.arr   key: ()   kind: value   init: 5   needs: c4
+clone c6   def: author/project:Initlazy.zb   key: ()   kind: value   init: 6   needs: c7,c8
+clone c7   def: author/project:Initlazy.za   key: ()   kind: value   init: 7   needs: c6,c8
+clone c8   def: author/project:Initlazy.zc   key: ()   kind: value   init: 8   needs: c6,c7
+clone c9   def: author/project:Initlazy.main   key: ()   kind: value   init: 9   needs: c4,c5,c6,c7,c8
+-- program: 27 clones, reachable from main, dependencies first
+clone c23   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: ref :: xs :: ref :: ref
+      Call :: ref
+        Global c23 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: ref
+          Local acc :: ref
+        Local xs :: ref
+clone c26   def: elm/core:List.lambda@261:9   key: ()   outer: c24 (v0=ref)   kind: function   params: _pb26_0:ref _pb26_1:ref   result: ref   lifted-from: c24
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Local _pb26_0 :: ref
+    Local _pb26_1 :: ref
+clone c24   def: elm/core:List.reverse   key: (v0=ref)   name: reverse__ref   kind: function   params: list:ref   result: ref
+  Call :: ref
+    Global c23 :: ref
+    Global c26 :: ref
+    List :: ref
+    Local list :: ref
+clone c17   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldrHelper__ref__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
+  Case :: ref
+    Local ls :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch a :: ref :: r1 :: ref :: ref
+      Case :: ref
+        Local r1 :: ref
+        branch [] :: ref
+          Call :: ref
+            Local fn :: ref
+            Local a :: ref
+            Local acc :: ref
+        branch b :: ref :: r2 :: ref :: ref
+          Case :: ref
+            Local r2 :: ref
+            branch [] :: ref
+              Call :: ref
+                Local fn :: ref
+                Local a :: ref
+                Call :: ref
+                  Local fn :: ref
+                  Local b :: ref
+                  Local acc :: ref
+            branch c :: ref :: r3 :: ref :: ref
+              Case :: ref
+                Local r3 :: ref
+                branch [] :: ref
+                  Call :: ref
+                    Local fn :: ref
+                    Local a :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local b :: ref
+                      Call :: ref
+                        Local fn :: ref
+                        Local c :: ref
+                        Local acc :: ref
+                branch d :: ref :: r4 :: ref :: ref
+                  Let res@200:41 :: ref
+                    If :: ref
+                      Call :: enum
+                        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                        Local ctr :: i64
+                        Lit 500 :: i64
+                      Call :: ref
+                        Global c23 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: ref
+                          Global c24 :: ref
+                          Local r4 :: ref
+                      Call :: ref
+                        Global c17 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: i64
+                          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                          Local ctr :: i64
+                          Lit 1 :: i64
+                        Local r4 :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local a :: ref
+                      Call :: ref
+                        Local fn :: ref
+                        Local b :: ref
+                        Call :: ref
+                          Local fn :: ref
+                          Local c :: ref
+                          Call :: ref
+                            Local fn :: ref
+                            Local d :: ref
+                            Local res@200:41 :: ref
+clone c6   def: elm/core:List.foldr   key: (v0=ref; v1=ref)   name: foldr__ref__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
+  Call :: ref
+    Global c17 :: ref
+    Local fn :: ref
+    Local acc :: ref
+    Lit 0 :: i64
+    Local ls :: ref
+clone c7   def: elm/core:List.lambda@125:10   key: ()   outer: c2 (v0=ref; v1=i64)   kind: function   params: x:ref acc:ref   result: ref   lifted-from: c2
+  Call :: ref
+    Kernel elm/core:List.cons (v0=i64) :: ref
+    Call :: i64
+      Local f :: ref
+      Local x :: ref
+    Local acc :: ref
+clone c2   def: elm/core:List.map   key: (v0=ref; v1=i64)   name: map__ref__i64   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Global c6 :: ref
+    Global c7 :: ref
+    List :: ref
+    Local xs :: ref
+clone c18   def: author/project:Initlazy.lambda@15:5   key: ()   kind: function   params: xs:ref   result: i64   lifted-from: c8
+  Call :: i64
+    Local thunk :: ref
+    Lit () :: unit
+    Local xs :: ref
+clone c8   def: author/project:Initlazy.lazy   key: ()   kind: function   params: thunk:ref   result: ref
+  Global c18 :: ref
+clone c19   def: author/project:Initlazy.lambda@25:5   key: ()   kind: function   params: xs:ref   result: i64   lifted-from: c10
+  Case :: i64
+    Local xs :: ref
+    branch [] :: ref
+      Lit 0 :: i64
+    branch x :: i64 :: rest :: ref :: ref
+      If :: i64
+        Call :: enum
+          Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+          Local x :: i64
+          Lit 0 :: i64
+        Call :: i64
+          Local a :: ref
+          Local rest :: ref
+        Call :: i64
+          Local b :: ref
+          Local rest :: ref
+clone c10   def: author/project:Initlazy.alt   key: ()   kind: function   params: a:ref b:ref   result: ref
+  Global c19 :: ref
+clone c12   def: author/project:Initlazy.leaf   key: ()   kind: function   params: _a0:ref   result: i64
+  Lit 100 :: i64
+clone c25   def: author/project:Initlazy.lambda@20:5   key: ()   kind: function   params: xs:ref   result: i64   lifted-from: c20
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Lit 1 :: i64
+    Call :: i64
+      Local p :: ref
+      Local xs :: ref
+clone c20   def: author/project:Initlazy.wrap   key: ()   kind: function   params: p:ref   result: ref
+  Global c25 :: ref
+clone c3   def: author/project:Initlazy.za   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c8 :: ref
+    Global c9 :: ref
+clone c11   def: author/project:Initlazy.zb   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c20 :: ref
+    Call :: ref
+      Global c8 :: ref
+      Global c21 :: ref
+clone c9   def: author/project:Initlazy.lambda@68:11   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c3
+  Call :: ref
+    Global c10 :: ref
+    Global c11 :: ref
+    Global c12 :: ref
+clone c22   def: author/project:Initlazy.zc   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c20 :: ref
+    Global c3 :: ref
+clone c21   def: author/project:Initlazy.lambda@73:17   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c11
+  Call :: ref
+    Global c10 :: ref
+    Global c22 :: ref
+    Global c3 :: ref
+clone c4   def: author/project:Initlazy.value   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c8 :: ref
+    Global c13 :: ref
+clone c14   def: author/project:Initlazy.arr   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c20 :: ref
+    Global c4 :: ref
+clone c13   def: author/project:Initlazy.lambda@49:11   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c4
+  Call :: ref
+    Global c10 :: ref
+    Global c14 :: ref
+    Global c12 :: ref
+clone c15   def: elm/core:List.foldl   key: (v0=ref; v1=i64)   name: foldl__ref__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+  Case :: i64
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: i64
+    branch x :: ref :: xs :: ref :: ref
+      Call :: i64
+        Global c15 :: ref
+        Local func :: ref
+        Call :: i64
+          Local func :: ref
+          Local x :: ref
+          Local acc :: i64
+        Local xs :: ref
+clone c16   def: elm/core:List.lambda@252:10   key: ()   outer: c5 (v0=ref)   kind: function   params: _a0:ref i:i64   result: i64   lifted-from: c5
+  Call :: i64
+    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+    Local i :: i64
+    Lit 1 :: i64
+clone c5   def: elm/core:List.length   key: (v0=ref)   name: length__ref   kind: function   params: xs:ref   result: i64
+  Call :: i64
+    Global c15 :: ref
+    Global c16 :: ref
+    Lit 0 :: i64
+    Local xs :: ref
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Let l2@86:21 :: struct(unit,unit)
+    Call :: ref
+      Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
+      Lit "za" :: ref
+      Call :: ref
+        Global c2 :: ref
+        Global c3 :: ref
+        List :: ref
+          List :: ref
+          List :: ref
+            Lit 1 :: i64
+          List :: ref
+            Lit 0 :: i64
+            Lit 1 :: i64
+            Lit 1 :: i64
+          List :: ref
+            Lit 0 :: i64
+            Lit 0 :: i64
+            Lit 1 :: i64
+            Lit 1 :: i64
+    Let l1@83:21 :: struct(unit,unit)
+      Call :: ref
+        Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
+        Lit "value" :: ref
+        Call :: ref
+          Global c2 :: ref
+          Global c4 :: ref
+          List :: ref
+            List :: ref
+            List :: ref
+              Lit 1 :: i64
+            List :: ref
+              Lit 1 :: i64
+              Lit 1 :: i64
+            List :: ref
+              Lit 1 :: i64
+              Lit 1 :: i64
+              Lit 0 :: i64
+            List :: ref
+              Lit 1 :: i64
+              Lit 0 :: i64
+      If :: struct(unit,unit)
+        Call :: enum
+          Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+          Call :: i64
+            Global c5 :: ref
+            List :: ref
+              Local l1@83:21 :: ref
+              Local l2@86:21 :: ref
+          Lit 0 :: i64
+        Tuple :: struct(unit,unit)
+          Lit () :: unit
+          Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+        Tuple :: struct(unit,unit)
+          Lit () :: unit
+          Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Initlazy.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref

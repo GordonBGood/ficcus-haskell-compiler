@@ -1,0 +1,162 @@
+-- module Initlazy: problems=0 instances=34 instance-failures=0 defaulted=0
+-- equality-uses: total=0 at-function=0
+module author/project:Initlazy
+def wrap :: P -> P    [19:1-19:5]   id: author/project:Initlazy.wrap   sig: P -> P   kinds:    group: author/project:Initlazy.wrap nonrec ann
+  19:6-19:7 PVar p :: P
+  20:5-20:20 Lambda :: P
+    20:6-20:8 PVar xs :: List Int
+    20:12-20:20 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      20:12-20:13 Int :: Int
+      20:16-20:20 Call :: Int
+        20:16-20:17 VarLocal :: P
+        20:18-20:20 VarLocal :: List Int
+def leaf :: List Int -> Int    [53:1-53:5]   id: author/project:Initlazy.leaf   sig: List Int -> Int   kinds:    group: author/project:Initlazy.leaf nonrec ann
+  53:6-53:7 PAnything :: List Int
+  54:5-54:8 Int :: Int
+def lazy :: (() -> P) -> P    [14:1-14:5]   id: author/project:Initlazy.lazy   sig: (() -> P) -> P   kinds:    group: author/project:Initlazy.lazy nonrec ann
+  14:6-14:11 PVar thunk :: () -> P
+  15:5-15:23 Lambda :: P
+    15:6-15:8 PVar xs :: List Int
+    15:12-15:23 Call :: Int
+      15:12-15:17 VarLocal :: () -> List Int -> Int
+      15:18-15:20 Unit :: ()
+      15:21-15:23 VarLocal :: List Int
+def alt :: P -> P -> P    [24:1-24:4]   id: author/project:Initlazy.alt   sig: P -> P -> P   kinds:    group: author/project:Initlazy.alt nonrec ann
+  24:5-24:6 PVar a :: P
+  24:7-24:8 PVar b :: P
+  25:5-35:27 Lambda :: P
+    25:6-25:8 PVar xs :: List Int
+    26:9-35:27 Case :: Int
+      26:14-26:16 VarLocal :: List Int
+      27:13-27:15 PList :: List Int
+      28:17-28:18 Int :: Int
+      30:13-30:22 PCons :: List Int
+        30:13-30:14 PVar x :: Int
+        30:18-30:22 PVar rest :: List Int
+      31:17-35:27 If :: Int
+        31:20-31:25 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+          31:20-31:21 VarLocal :: Int
+          31:24-31:25 Int :: Int
+        32:21-32:27 Call :: Int
+          32:21-32:22 VarLocal :: P
+          32:23-32:27 VarLocal :: List Int
+        35:21-35:27 Call :: Int
+          35:21-35:22 VarLocal :: P
+          35:23-35:27 VarLocal :: List Int
+def value :: P    [48:1-48:6]   id: author/project:Initlazy.value   sig: P   kinds:    group: author/project:Initlazy.arr rec ann
+  49:5-49:29 Call :: P
+    49:5-49:9 VarTopLevel :: (() -> P) -> P   callee: author/project:Initlazy.lazy   use: gen
+    49:11-49:29 Lambda :: () -> P
+      49:12-49:13 PAnything :: ()
+      49:17-49:29 Call :: P
+        49:17-49:20 VarTopLevel :: P -> P -> P   callee: author/project:Initlazy.alt   use: gen
+        49:21-49:24 VarTopLevel :: P   callee: author/project:Initlazy.arr   use: rec
+        49:25-49:29 VarTopLevel :: P   callee: author/project:Initlazy.leaf   use: gen
+def arr :: P    [43:1-43:4]   id: author/project:Initlazy.arr   sig: P   kinds:    group: author/project:Initlazy.arr rec ann
+  44:5-44:15 Call :: P
+    44:5-44:9 VarTopLevel :: P -> P   callee: author/project:Initlazy.wrap   use: gen
+    44:10-44:15 VarTopLevel :: P   callee: author/project:Initlazy.value   use: rec
+def zb :: P    [72:1-72:3]   id: author/project:Initlazy.zb   sig: P   kinds:    group: author/project:Initlazy.zc rec ann
+  73:5-73:32 Call :: P
+    73:5-73:9 VarTopLevel :: P -> P   callee: author/project:Initlazy.wrap   use: gen
+    73:11-73:32 Call :: P
+      73:11-73:15 VarTopLevel :: (() -> P) -> P   callee: author/project:Initlazy.lazy   use: gen
+      73:17-73:32 Lambda :: () -> P
+        73:18-73:19 PAnything :: ()
+        73:23-73:32 Call :: P
+          73:23-73:26 VarTopLevel :: P -> P -> P   callee: author/project:Initlazy.alt   use: gen
+          73:27-73:29 VarTopLevel :: P   callee: author/project:Initlazy.zc   use: rec
+          73:30-73:32 VarTopLevel :: P   callee: author/project:Initlazy.za   use: rec
+def za :: P    [67:1-67:3]   id: author/project:Initlazy.za   sig: P   kinds:    group: author/project:Initlazy.zc rec ann
+  68:5-68:28 Call :: P
+    68:5-68:9 VarTopLevel :: (() -> P) -> P   callee: author/project:Initlazy.lazy   use: gen
+    68:11-68:28 Lambda :: () -> P
+      68:12-68:13 PAnything :: ()
+      68:17-68:28 Call :: P
+        68:17-68:20 VarTopLevel :: P -> P -> P   callee: author/project:Initlazy.alt   use: gen
+        68:21-68:23 VarTopLevel :: P   callee: author/project:Initlazy.zb   use: rec
+        68:24-68:28 VarTopLevel :: P   callee: author/project:Initlazy.leaf   use: gen
+def zc :: P    [62:1-62:3]   id: author/project:Initlazy.zc   sig: P   kinds:    group: author/project:Initlazy.zc rec ann
+  63:5-63:12 Call :: P
+    63:5-63:9 VarTopLevel :: P -> P   callee: author/project:Initlazy.wrap   use: gen
+    63:10-63:12 VarTopLevel :: P   callee: author/project:Initlazy.za   use: rec
+def main :: Program () () ()    [78:1-78:5]   id: author/project:Initlazy.main   sig: Program () () ()   kinds:    group: author/project:Initlazy.main nonrec ann
+  79:5-96:10 Call :: Program () () ()
+    79:5-79:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    80:9-96:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      81:13-93:37 Lambda :: () -> ( (), Cmd () )
+        81:14-81:15 PAnything :: ()
+        def l2 :: List Int    [86:21-86:23]   id: author/project:Initlazy.l2@86:21   sig: List Int   kinds:    group: author/project:Initlazy.l2@86:21 nonrec inferred
+          87:25-87:95 Call :: List Int
+            87:25-87:34 VarDebug :: String -> List Int -> List Int   callee: elm/core:Debug.log   instance: a := List Int   sig#: 6ecaa5dd   subst: v0 := List Int
+            87:35-87:39 Str :: String
+            87:41-87:95 Call :: List Int
+              87:41-87:49 VarForeign :: (List Int -> Int) -> List (List Int) -> List Int   callee: elm/core:List.map   instance: a := List Int, b := Int   sig#: 6a702f63   subst: v0 := List Int, v1 := Int
+              87:50-87:52 VarTopLevel :: List Int -> Int   callee: author/project:Initlazy.za   use: gen
+              87:53-87:95 List :: List (List Int)
+                87:55-87:57 List :: List Int
+                87:59-87:64 List :: List Int
+                  87:61-87:62 Int :: Int
+                87:66-87:77 List :: List Int
+                  87:68-87:69 Int :: Int
+                  87:71-87:72 Int :: Int
+                  87:74-87:75 Int :: Int
+                87:79-87:93 List :: List Int
+                  87:81-87:82 Int :: Int
+                  87:84-87:85 Int :: Int
+                  87:87-87:88 Int :: Int
+                  87:90-87:91 Int :: Int
+        def l1 :: List Int    [83:21-83:23]   id: author/project:Initlazy.l1@83:21   sig: List Int   kinds:    group: author/project:Initlazy.l1@83:21 nonrec inferred
+          84:25-84:105 Call :: List Int
+            84:25-84:34 VarDebug :: String -> List Int -> List Int   callee: elm/core:Debug.log   instance: a := List Int   sig#: 6ecaa5dd   subst: v0 := List Int
+            84:35-84:42 Str :: String
+            84:44-84:105 Call :: List Int
+              84:44-84:52 VarForeign :: (List Int -> Int) -> List (List Int) -> List Int   callee: elm/core:List.map   instance: a := List Int, b := Int   sig#: 6a702f63   subst: v0 := List Int, v1 := Int
+              84:53-84:58 VarTopLevel :: List Int -> Int   callee: author/project:Initlazy.value   use: gen
+              84:59-84:105 List :: List (List Int)
+                84:61-84:63 List :: List Int
+                84:65-84:70 List :: List Int
+                  84:67-84:68 Int :: Int
+                84:72-84:80 List :: List Int
+                  84:74-84:75 Int :: Int
+                  84:77-84:78 Int :: Int
+                84:82-84:93 List :: List Int
+                  84:84-84:85 Int :: Int
+                  84:87-84:88 Int :: Int
+                  84:90-84:91 Int :: Int
+                84:95-84:103 List :: List Int
+                  84:97-84:98 Int :: Int
+                  84:100-84:101 Int :: Int
+        89:17-93:37 If :: ( (), Cmd () )
+          89:20-89:46 Binop :: Bool   callee: elm/core:Basics.gt   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+            89:20-89:42 Call :: Int
+              89:20-89:31 VarForeign :: List (List Int) -> Int   callee: elm/core:List.length   instance: a := List Int   sig#: 8f686fa0   subst: v0 := List Int
+              89:32-89:42 List :: List (List Int)
+                89:34-89:36 VarLocal :: List Int   callee: author/project:Initlazy.l1@83:21   use: gen
+                89:38-89:40 VarLocal :: List Int   callee: author/project:Initlazy.l2@86:21   use: gen
+            89:45-89:46 Int :: Int
+          90:21-90:37 Pair :: ( (), Cmd () )
+            90:23-90:25 Unit :: ()
+            90:27-90:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+          93:21-93:37 Pair :: ( (), Cmd () )
+            93:23-93:25 Unit :: ()
+            93:27-93:35 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      94:20-94:43 Lambda :: () -> () -> ( (), Cmd () )
+        94:21-94:22 PAnything :: ()
+        94:23-94:24 PVar m :: ()
+        94:28-94:43 Pair :: ( (), Cmd () )
+          94:30-94:31 VarLocal :: ()
+          94:33-94:41 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      95:27-95:41 Lambda :: () -> Sub ()
+        95:28-95:29 PAnything :: ()
+        95:33-95:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Initlazy.wrap   kind: function   reads:    needs: 
+init: 1   id: author/project:Initlazy.leaf   kind: function   reads:    needs: 
+init: 2   id: author/project:Initlazy.lazy   kind: function   reads:    needs: 
+init: 3   id: author/project:Initlazy.alt   kind: function   reads:    needs: 
+init: 4   id: author/project:Initlazy.value   kind: value   reads: author/project:Initlazy.leaf,author/project:Initlazy.lazy,author/project:Initlazy.alt,author/project:Initlazy.arr   needs: author/project:Initlazy.arr   init-dep: yes   group: author/project:Initlazy.arr
+init: 5   id: author/project:Initlazy.arr   kind: value   reads: author/project:Initlazy.wrap,author/project:Initlazy.value   needs: author/project:Initlazy.value   init-dep: yes   group: author/project:Initlazy.arr
+init: 6   id: author/project:Initlazy.zb   kind: value   reads: author/project:Initlazy.wrap,author/project:Initlazy.lazy,author/project:Initlazy.alt,author/project:Initlazy.za,author/project:Initlazy.zc   needs: author/project:Initlazy.za,author/project:Initlazy.zc   init-dep: yes   group: author/project:Initlazy.zc
+init: 7   id: author/project:Initlazy.za   kind: value   reads: author/project:Initlazy.leaf,author/project:Initlazy.lazy,author/project:Initlazy.alt,author/project:Initlazy.zb   needs: author/project:Initlazy.zb,author/project:Initlazy.zc   init-dep: yes   group: author/project:Initlazy.zc
+init: 8   id: author/project:Initlazy.zc   kind: value   reads: author/project:Initlazy.wrap,author/project:Initlazy.za   needs: author/project:Initlazy.zb,author/project:Initlazy.za   init-dep: yes   group: author/project:Initlazy.zc
+init: 9   id: author/project:Initlazy.main   kind: value   reads: author/project:Initlazy.value,author/project:Initlazy.za   needs: author/project:Initlazy.value,author/project:Initlazy.arr,author/project:Initlazy.zb,author/project:Initlazy.za,author/project:Initlazy.zc   init-dep: yes
