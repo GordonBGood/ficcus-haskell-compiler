@@ -423,7 +423,14 @@ def main():
     ap.add_argument("--only", default=""); ap.add_argument("--out", default=None)
     a = ap.parse_args()
     only = [x for x in a.only.split(",") if x]
-    work = a.out or tempfile.mkdtemp(prefix="fbip")
+    work = a.out or tempfile.mkdtemp(prefix="fbip.")      # under $TMPDIR; removed at the end unless --out is given
+    try:
+        return check(a, only, work)
+    finally:
+        if not a.out: shutil.rmtree(work, ignore_errors=True)
+
+
+def check(a, only, work):
     elm, safe = os.path.abspath(a.elm), os.path.abspath(a.safe)
     bad = 0
     print("%-20s %-5s %10s %10s %10s %10s %10s %9s %8s" % ("check", "", "allocs", "inplace", "copied", "pap_steal", "clo_steal", "vec_copy", "peak"))

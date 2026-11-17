@@ -120,7 +120,10 @@ t(J + "appendN", ['Array.toList (Array.append (big 2) (big 3))', 'let a = big 40
                   'Array.toList (Array.append (big 2) Array.empty)', 'Array.length (Array.append (big 33) (big 70))'], needle="fic_ja_appendn")
 
 t(S + "length", ['String.length (mk 12)', 'let s = mk 3 in ( String.length s, s )', 'String.length ""'])
-t(S + "slice", ['String.slice 1 3 (mk 12345)', 'let s = mk 12345 in ( String.slice 0 2 s, String.slice -2 99 s, s )', 'String.slice 5 2 (mk 1)', 'String.slice 0 0 ""'])
+t(S + "slice", ['String.slice 1 3 (mk 12345)', 'let s = mk 12345 in ( String.slice 0 2 s, String.slice -2 99 s, s )', 'String.slice 5 2 (mk 1)', 'String.slice 0 0 ""',
+                 # FIX2 step 3: a long non ASCII string (the position cache), seeks forwards, backwards, to the end; an ASCII one (offset = index)
+                 'let s = String.join "" (List.repeat 30 "é日😀") ++ mk 7 in ( String.slice 10 14 s, String.slice 3 5 s, ( String.slice -4 99 s, String.slice 0 2 s ) ) |> \\r -> ( r, String.slice 80 91 s, ( String.slice 85 86 s, s ) )',
+                 'let s = String.join "" (List.repeat 60 "abc") ++ mk 7 in ( String.slice 100 104 s, String.slice 3 5 s, ( String.slice -4 99 s, String.left 3 s, ( String.dropRight 170 s, s ) ) )'])
 t(S + "cons", ["String.cons 'a' (mk 1)", "let s = mk 2 in ( String.cons 'b' s, s )", "String.cons 'c' \"\""])
 t(S + "join", ['String.join (mk 0) [ mk 1, mk 2, mk 3 ]', 'let l = [ mk 1, mk 2 ] in let sep = mk 9 in ( String.join sep l, l, sep )', 'String.join (mk 1) []'])
 t(S + "words", ['String.words (mk 1 ++ " " ++ mk 2)', 'let s = "a  b " ++ mk 3 in ( String.words s, s )', 'String.words ""'])
@@ -135,7 +138,8 @@ t(S + "append", ['String.append (mk 1) (mk 2)', 'let a = mk 3 in ( String.append
 t(S + "contains", ['String.contains "x" (mk 1)', 'let a = mk 12 in let b = mk 2 in ( String.contains b a, a, b )', 'String.contains "" ""'])
 t(S + "startsWith", ['String.startsWith "1" (mk 1)', 'let a = mk 12 in let b = mk 12 in ( String.startsWith b a, a, b )', 'String.startsWith "q" ""'])
 t(S + "endsWith", ['String.endsWith "x" (mk 1)', 'let a = mk 12 in let b = mk 2 in ( String.endsWith b a, a, b )', 'String.endsWith "q" ""'])
-t(S + "indexes", ['String.indexes "x" (mk 1 ++ mk 2)', 'let a = mk 1 ++ mk 1 in let b = mk 1 in ( String.indexes b a, a, b )', 'String.indexes "" (mk 1)'])
+t(S + "indexes", ['String.indexes "x" (mk 1 ++ mk 2)', 'let a = mk 1 ++ mk 1 in let b = mk 1 in ( String.indexes b a, a, b )', 'String.indexes "" (mk 1)',
+                  'let s = String.join "" (List.repeat 30 "é日😀") ++ mk 7 in ( String.indexes "日" s, String.indexes "😀é" s, s )', 'String.indexes "ab" (String.join "" (List.repeat 40 "abab"))'])
 t(S + "indices", ['String.indices "x" (mk 1 ++ mk 2)', 'let a = mk 1 ++ mk 1 in let b = mk 1 in ( String.indices b a, a, b )', 'String.indices "q" ""'])
 t(S + "split", ['String.split "x" (mk 1 ++ mk 2)', 'let a = mk 1 ++ mk 1 in let b = "1" ++ "" in ( String.split b a, a, b )', 'String.split "" (mk 12)', 'String.split "q" ""'])
 t(S + "lines", ['String.lines (mk 1 ++ "\\n" ++ mk 2)', 'let s = mk 1 ++ "\\r\\n" in ( String.lines s, s )', 'String.lines ""'])
