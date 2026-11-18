@@ -171,7 +171,8 @@ static void fic_ps_sort_pd(fic_ps_pd *p, int64_t n) { fic_ps_sort_inl(p, n, size
 
 /* a comparator on element addresses (FIC_SORT_CMP) and the closure comparator on indices, as a GT test */
 typedef struct { fic_vcmp_fn cmp; const unsigned char *keys; size_t es; } fic_ps_keyctx;
-static int fic_psg_cmp(void *c, const void *a, const void *b) { return ((fic_vcmp_fn)c)(a, b) > 0; }
+/* ctx is the ADDRESS of a fic_vcmp_fn (a function pointer is not converted to void *) */
+static int fic_psg_cmp(void *c, const void *a, const void *b) { return (*(const fic_vcmp_fn *)c)(a, b) > 0; }
 static int fic_psg_key(void *c, const void *a, const void *b) {
   const fic_ps_keyctx *k = (const fic_ps_keyctx *)c;
   return k->cmp(k->keys + (size_t)*(const int64_t *)a * k->es, k->keys + (size_t)*(const int64_t *)b * k->es) > 0;
@@ -186,11 +187,12 @@ static int fic_psg_clo(void *c, const void *a, const void *b) {
 static void fic_vsort_data(fic_ref v, int mode, fic_vcmp_fn cmp) {
   int64_t n = FIC_VECTOR(v)->len;
   void *d = FIC_VECTOR(v)->data;
+  fic_vcmp_fn cf = cmp;
   switch (mode) {
   case FIC_SORT_I64: fic_ps_sort_i64((int64_t *)d, n); break;
   case FIC_SORT_F64: fic_ps_sort_f64((double *)d, n); break;
   case FIC_SORT_U32: fic_ps_sort_u32((uint32_t *)d, n); break;
-  default: fic_ps_sort_inl(d, n, FIC_VECTOR(v)->esize, fic_psg_cmp, (void *)cmp); break;
+  default: fic_ps_sort_inl(d, n, FIC_VECTOR(v)->esize, fic_psg_cmp, (void *)&cf); break;
   }
 }
 

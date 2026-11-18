@@ -1,0 +1,10 @@
+ok   scalar modes equal the reference on 9 patterns x 14 sizes
+ok   stable: pairs equal the reference with indices
+ok   pair sort is ordered
+ok   sort of a shared vector gives a sorted copy
+ok   the other owner still sees the original order
+ok   without counts every sort copies
+ok   sortPerm is the stable permutation of the keys
+ok   sortIdx with a closure keeps the order of an ordered vector
+ok   sortIdx with a closure comparator is stable
+ok   inconsistent comparator: canaries intact and the result is a permutation (400 runs)
