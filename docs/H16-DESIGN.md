@@ -122,3 +122,120 @@ used as a function (no gain); a Value in an init cycle of `Spec.ordered` (FIX2 g
 capture-free `MGlobal` (it then needs no initialisation order); `Vector.update` (rule U keeps it; same `mdName` is kept on copies, so rule U still
 recognises it); bodies containing `Debug.*` kernels are expanded only with all non-atomic arguments `let`-bound first in order (Inline's `atom`
 convention), so the order of effects cannot change.
+
+## 2. The algorithm
+
+### 2.1 Worked example (Mini.elm of the survey, section 4, plus `sepBy`)
+
+```elm
+map2 f pa pb = \s -> case pa s of                      -- c9, its lambda c13 captures f pa pb
+                       Good c1 a s1 -> case pb s1 of
+                                         Good c2 b s2 -> Good (c1 || c2) (f a b) s2
+                                         Bad c2 m -> Bad (c1 || c2) m
+                       Bad c m -> Bad c m
+succeed a = \s -> Good False a s                       -- c6, lambda captures a
+oneOf ps  = \s -> oneOfHelp s ps                       -- c4, lambda captures ps
+item      = \s -> Good True s.off { off = s.off + 1 }  -- Value c11, body MGlobal itemLam
+pair      = map2 (\a b -> a + b) item item             -- Value c5
+top       = oneOf [ pair, succeed 7 ]                  -- Value c2
+sepBy p sep = \s -> sepByHelp p sep False [] s         -- builder; sepByHelp recursive, calls `p s` and `sep s`
+list      = sepBy item (succeed ())
+```
+
+Steps, in the order the pass does them:
+
+1. **Prepare.** Build `byId`, the reference graph and its SCCs (on the original clones), `fnUse` per parameter (c9: f, pa, pb all used as call
+   heads in c13; c4: ps not used as a function; sepByHelp: p, sep used as heads), `builder c` (body after lets is `MGlobal l` with `mdLifted l ==
+   Just c`: c9, c6, c4, sepBy), `caps = Free.captures clones`, `origin = id`.
+2. **Bottom-up order**: SCCs callees first, inside an SCC by `mpClones` order. Here: itemLam, c10 (`\a b -> a+b`), c13, c9, c11 `item`, c5 `pair`,
+   c6, c4, c2 `top`, sepByHelp, sepBy, `list`.
+3. **`item`**: body `MGlobal itemLam`, `caps itemLam = []` -> rule V: `alias[c11] = Known itemLam []`.
+4. **`pair`**: `MCall (MGlobal c9) [MGlobal c10, MGlobal c11, MGlobal c11]`. Environment: `c10` is a lifted Function used as a value -> `Known c10 []`;
+   `c11` -> alias `Known itemLam []`. c9 is a builder, args are known functions, family size of c9 ~45 <= 200: **expand**.
+   `copyFamily {f -> Known c10 [], pa -> Known itemLam [], pb -> Known itemLam []} c9` gives body `MGlobal c13'` and clone `c13'` (owner c5) in
+   which `MCall (MLocal pa) [s]` became `MCall (MGlobal itemLam) [s]` (direct), `f a b` became `MCall (MGlobal c10) [a, b]` (direct). Memo
+   `(c9, [Fun c10, Fun itemLam, Fun itemLam]) -> c13'` (fully static expansion). `pair`'s body is `MGlobal c13'`, `caps c13' = []` -> rule V:
+   `alias[c5] = Known c13' []`. In C: `pair` needs no initialisation code beyond a static closure, `c13'` takes `fic_s_i` by value (no box (B)),
+   `pa s` is `f_itemLam(s)` (no `fic_ap1` (C)).
+5. **`top`**: `oneOf [pair, succeed 7]`. First the argument: `succeed 7` is a builder call with all arguments static -> expand: `c6'` with `a -> 7`,
+   capture-free, memo `(c6, [Lit 7])`; the list `[Known c13' [], Known c6' []]` is closed data -> rule F: new Value `k1 = [<static clo c13'>, <static clo c6'>]`
+   at the front of `mpClones`. Then `oneOf (MGlobal k1)`: builder with all arguments static -> expand: `c4'` = `\s -> oneOfHelp s k1`, capture-free;
+   `alias[c2] = Known c4' []`. `oneOfHelp` keeps its `fic_ap1` on the list elements (no unrolling).
+6. **`list`**: `sepBy item (succeed ())`: `succeed ()` -> `c6''` (memo `(c6, [Lit ()])`); expand sepBy with `p -> Known itemLam []`, `sep -> Known c6'' []`:
+   its lambda copy contains `sepByHelp p sep False [] s` = a call of a non-builder with known function arguments -> **specialize**: key
+   `(sepByHelp, [Fun itemLam, Fun c6'', Dyn, Dyn, Dyn])`; allocate `sbh'`, enter it in the memo, copy sepByHelp's family with
+   `p -> Known itemLam [], sep -> Known c6'' []`, params `[p', acc, s]`; inside, the recursive call `sepByHelp p sep (..) (..) s1` has the same key ->
+   `MCall (MGlobal sbh') [..]`: a direct self (tail) call. If `p` had captures, `sbh'` would get one extra parameter per captured value and every
+   call would pass them (1.4).
+7. **Round 2** for clones that refer to one that gained a fact in round 1 (here none; in JsonCombV the thunk of `value`, whose `jarray ()` becomes
+   a constant closure (rule C) after `jarray` is rewritten in the same SCC).
+8. **Sweep**: remove Functions and alias Values not reachable from `mpMain` (c13, c9's original lambda, c11, c5, ...), then **check**: with
+   `FICCUS_KNOWN_CHECK=1` verify invariant S and that every Value refers eagerly only to Values before it in `mpClones`.
+
+Partial and over application. A known function `k` whose code has arity `n` called with `m` arguments: `m == n` direct; `m > n`
+(`loopHelp`'s `f st s` with `f = \st -> ...`) is split to `MCall (MCall (MGlobal k) first-n) rest`, and the inner call is treated again (it may be
+a constant closure, or an expandable builder); `m < n` is left alone (Spec already made partial applications lifted lambdas, which are knowns
+with captures once bound by `let`).
+
+Value position of a known with captures: materialising it re-creates the closure where it is used. That is one allocation per use instead
+of one per creation; it is allowed only when the use is the argument of a known call that is itself expanded or specialized (so the closure
+disappears) or in tail position; otherwise the original variable is kept for value uses (the known is still used for calls). This keeps the
+pass from ever adding allocations.
+
+### 2.2 Data structures (all in `M.Known`)
+
+```haskell
+data Known = Known { kCode :: CloneId, kCaps :: [MExpr] }        -- kCaps: atoms, positional to captures of kCode
+data Arg   = AFun Known | AAtom MExpr | ADyn MExpr                -- classification of a call argument
+data Shape = SFun CloneId | SLit MLit | SGlob CloneId | SDyn      -- memo key part; SFun holds the ORIGIN code
+type Key   = (CloneId, [Shape])
+
+data St = St
+  { sFresh    :: Int                                  -- names "x@kN"; clone ids from 1 + maximum
+  , sNext     :: Int
+  , sDefs     :: Map.Map CloneId MDef                 -- current clones (originals + copies)
+  , sNew      :: [MDef]                               -- copies made, in creation order
+  , sFloated  :: [MDef]                               -- rule F Values (front of mpClones)
+  , sOrigin   :: Map.Map CloneId CloneId              -- copy -> original
+  , sMemo     :: Map.Map Key CloneId                  -- specializations and fully static expansions
+  , sAlias    :: Map.Map CloneId Known                -- rule V (Value clone -> capture-free known)
+  , sConstFn  :: Map.Map CloneId CloneId              -- rule C (Function clone -> capture-free code)
+  , sCaps     :: Map.Map CloneId [(String, Class)]    -- Free.captures of the round
+  , sPerOrig  :: Map.Map CloneId Int                  -- budget used per origin
+  , sAdded    :: Int                                  -- nodes added (program budget)
+  , sStack    :: [CloneId]                            -- builders being expanded (rule 3 of 1.4)
+  , sStats    :: Stats                                -- counters for FICCUS_KNOWN_STATS, refusals by reason
+  }
+type K = State St
+
+data Info = Info                                      -- read only, built in step 1
+  { iScc :: Map.Map CloneId Int, iBuilder :: Map.Map CloneId CloneId   -- builder -> its returned lambda
+  , iFnUse :: Map.Map CloneId [Bool], iSize :: Map.Map CloneId Int     -- family size per original
+  , iRecursive :: Set.Set CloneId, iCycleValues :: Set.Set CloneId }
+type Env = Map.Map String Known                       -- locals known in the current body
+```
+
+Functions: `knownProgram :: MProgram -> MProgram` (switch, rounds, sweep, check, stats), `rewriteDef :: Info -> MDef -> K MDef`,
+`rw :: Info -> CloneId -> Env -> MExpr -> K MExpr` (bottom-up over the body, the cases of 2.1), `classify :: Env -> MExpr -> K Arg`,
+`expand :: Info -> CloneId -> MDef -> [Arg] -> K (Maybe MExpr)`, `specialize :: Info -> MDef -> [Arg] -> K (Maybe MExpr)`,
+`copyFamily :: Subst -> CloneId -> CloneId -> K (MExpr, [MDef])` (origin, new owner), `materialise :: Known -> K MExpr`,
+`floatData :: MExpr -> K (Maybe MExpr)`, `sweep`, `checkScope`. Estimated 700 to 900 lines.
+
+### 2.3 Changes per module
+
+| module | change |
+|---|---|
+| `M.Known` (new) | the pass above |
+| `terminal/src/Make.hs:208` | `Inline.inlineProgram program` -> `Inline.inlineProgram (Known.knownProgram program)`, inside the `rcMode` branch only; import. `FICCUS_KNOWN_STATS` printing next to the existing debug aids (Make.hs:~212) |
+| the compiler's `.cabal` file | add `Ficcus.Mono.Known` to the module list |
+| `M.Inline` | export `size` (:136) and `atom` (:183) for reuse; eligibility in `table` (:95-99): a reference to a **capture-free** lifted clone no longer disqualifies a body (it needs no scope), so the small specialized copies (`symbol 44`'s lambda, `succeed`'s) can be inlined and reached by rules A/B in stage 2. Behind the same `FICCUS_NO_KNOWN` switch, so with the pass off Inline is byte-identical. `canCallDirect` (:260) unchanged |
+| `M.Free`, `M.Twin`, `M.Borrow`, `M.Rc`, `M.RcCheck`, `M.CGen`, `M.Spec`, `M.Ir` | unchanged. CGen makes the direct calls because the heads are now `MGlobal` with matching arity (CGen.hs:557); copies are ordinary lifted clones for Free/Twin/Borrow |
+| `ficcus-tests/rcfuzz.py:27-33` | a setting `noknown` (`FICCUS_NO_KNOWN=1`) |
+| `ficcus-tests/gates.sh` | one variant row: examples and suite with `FICCUS_NO_KNOWN=1` |
+| workspace `docs/FLAGS.md` section 4 | the four environment variables (proposed text for the user, not edited by the implementing session if it is a shared file) |
+
+### 2.4 What stays out of the no-RC path
+
+Everything. `Known.knownProgram` is only called in the `rcMode` branch of Make.hs:208; Spec is unchanged, so the `--no-rc` C text is unchanged
+(`norc_identity.py` must pass without `--update`). The Inline eligibility change is only active when the pass is on; Inline itself never runs
+with `--no-rc`. `v2fuzz.py` (no-RC against RC under ASan) therefore compares the old semantics with the new pass for free.
