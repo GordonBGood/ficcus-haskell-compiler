@@ -132,7 +132,8 @@ vectorKernels =
   [ ("empty", 0, ""), ("withCapacity", 1, "s"), ("length", 1, "b"), ("unsafeGet", 2, "sb"), ("unsafeTake", 2, "sb")
   , ("set", 3, "soo"), ("swap", 3, "sso"), ("push", 2, "oo"), ("slice", 3, "sso"), ("append", 2, "ob")
   , ("unsafeSet", 3, "soo"), ("unsafeSwap", 3, "sso"), ("repeat", 2, "so")
-  , ("fromList", 1, "b"), ("toList", 1, "b") ]
+  , ("fromList", 1, "b"), ("toList", 1, "b")
+  , ("sort", 1, "o"), ("sortPerm", 1, "b"), ("sortIdx", 2, "bo") ]       -- H21: Powersort (runtime/fic_sort.h); sort and sortIdx consume (in place when unique)
 
 
 vectorKernelId :: String -> String
@@ -294,7 +295,8 @@ setOfTake name = case [ u | (_, t, u) <- takeFamilies, t == name ] of { u : _ ->
 updateKernels :: [(String, Int)]
 updateKernels =
   [ ("elm/core:Elm.JsArray.unsafeSet", 2), ("elm/core:Elm.JsArray.push", 1)
-  , (vectorKernelId "set", 2), (vectorKernelId "swap", 2), (vectorKernelId "unsafeSet", 2), (vectorKernelId "unsafeSwap", 2), (vectorKernelId "push", 1), (vectorKernelId "append", 0) ]
+  , (vectorKernelId "set", 2), (vectorKernelId "swap", 2), (vectorKernelId "unsafeSet", 2), (vectorKernelId "unsafeSwap", 2), (vectorKernelId "push", 1), (vectorKernelId "append", 0)
+  , (vectorKernelId "sort", 0), (vectorKernelId "sortIdx", 1) ]
 
 
 -- | S6, unique PAP stealing: `MCall (MKernel applyOwnKernel _) (f : args)` is a call of the function value `f` that CONSUMES `f`

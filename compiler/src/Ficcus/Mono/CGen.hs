@@ -30,7 +30,7 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
-import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, prelude, regexRuntime, sizedRuntime, stringRuntime, vectorRuntime)
+import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, prelude, regexRuntime, sizedRuntime, sortRuntime, stringRuntime, vectorRuntime)
 import Ficcus.Mono.Overlay (vectorMarker, vectorTypeName)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free (captures, refClass)
@@ -136,7 +136,8 @@ generate rcMode program =
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
           in Right ((if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n"
                     ++ (if any (`List.isInfixOf` body) ["fic_vector_", "FIC_VECTOR_"] then vectorRuntime ++ "\n" else "")
-                    ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_"] then closureRuntime ++ "\n" else "")
+                    ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_", "fic_vsort"] then closureRuntime ++ "\n" else "")
+                    ++ (if "fic_vsort" `List.isInfixOf` body then sortRuntime ++ "\n" else "")
                     ++ (if "fic_fd_" `List.isInfixOf` body then fdlibmRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_sz_", "FIC_SZ_"] then sizedRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_ja_", "fic_json_", "fic_jd_"] then jsArrayRuntime ++ "\n" else "")
@@ -1430,6 +1431,19 @@ vectorCall info cls op key args =
         ("append", [a, b]) ->
           do  vs <- atomsTo info [(a, CRef), (b, CRef)]
               return ("fic_vector_append(" ++ List.intercalate ", " vs ++ ", " ++ wh ++ ")")
+        -- H21: Powersort (runtime/fic_sort.h). sort consumes its vector (in place when unique); sortPerm borrows the keys and gives the
+        -- sorting permutation; sortIdx sorts a vector of Int with a closure comparator (borrowed)
+        ("sort", [v]) ->
+          do  vs <- atomsTo info [(v, CRef)]
+              (mode, cmp) <- sortMode info key
+              return ("fic_vsort(" ++ vs !! 0 ++ ", " ++ mode ++ ", " ++ cmp ++ ", " ++ wh ++ ")")
+        ("sortPerm", [v]) ->
+          do  vs <- atomsTo info [(v, CRef)]
+              (mode, cmp) <- sortMode info key
+              return ("fic_vsort_perm(" ++ vs !! 0 ++ ", " ++ mode ++ ", " ++ cmp ++ ")")
+        ("sortIdx", [f, v]) ->
+          do  vs <- atomsTo info [(f, CRef), (v, CRef)]
+              return ("fic_vsort_idx(" ++ vs !! 0 ++ ", " ++ vs !! 1 ++ ", " ++ wh ++ ")")
         ("fromList", [xs]) ->
           do  vs <- atomsTo info [(xs, CRef)]
               h <- helper (HVecFromList c)
@@ -1439,6 +1453,19 @@ vectorCall info cls op key args =
               h <- helper (HVecToList c)
               return (h ++ "(" ++ (vs !! 0) ++ ")")
         _ -> failWith ("the Vector intrinsic " ++ op ++ " (with " ++ show (length args) ++ " arguments) is not supported by the C generator")
+
+
+-- | H21: the comparison mode of a sort of vectors of the exact element type of the key: (mode, comparator expression)
+sortMode :: Info -> Key -> CG (String, String)
+sortMode info key =
+  case key of
+    Key [ByType t] ->
+      case t of
+        TyCon "elm/core:Basics.Int" [] -> return ("FIC_SORT_I64", "NULL")
+        TyCon "elm/core:Basics.Float" [] -> return ("FIC_SORT_F64", "NULL")
+        TyCon "elm/core:Char.Char" [] -> return ("FIC_SORT_U32", "NULL")
+        _ -> do { h <- helper (HVecCmp t); return ("FIC_SORT_CMP", h) }
+    _ -> failWith "a Vector sort whose element type is not exact" >> return ("FIC_SORT_CMP", "NULL")
 
 
 kernelValue :: Info -> String -> Key -> CG String
@@ -1945,6 +1972,7 @@ data HKey
   | HShowTree MType
   | HVecFromList Class         -- V1: a Vector of this element class from a list, and back
   | HVecToList Class
+  | HVecCmp MType              -- H21: the comparator on element addresses of a Vector sort (FIC_SORT_CMP)
   deriving (Eq, Ord)
 
 
@@ -1975,6 +2003,7 @@ helper k =
         HFromList _ -> "fic_jafl_"
         HVecFromList _ -> "fic_vfl_"
         HVecToList _ -> "fic_vtl_"
+        HVecCmp _ -> "fic_vcmp_"
         HShow _ -> "fic_show_"
         HShowTree _ -> "fic_showtree_"
 
@@ -2079,6 +2108,7 @@ genHelper info k name =
     HFromList c -> withProto ("static fic_ref " ++ name ++ "(int64_t max, fic_ref xs, fic_ref *rest)") (fromListBody c)
     HVecFromList c -> withProto ("static fic_ref " ++ name ++ "(fic_ref xs)") (vecFromListBody c)
     HVecToList c -> withProto ("static fic_ref " ++ name ++ "(fic_ref v)") (vecToListBody c)
+    HVecCmp t -> withProto ("static int " ++ name ++ "(const void *pa, const void *pb)") (vecCmpBody t)
   where
     withProto sig body =
       do  modify' (\g -> g { gProtos = (sig ++ ";") : gProtos g })
@@ -2136,6 +2166,14 @@ genHelper info k name =
           emit "return 1;"
 
     -- V1: the elements of a list, in order, as a new Vector (the list is borrowed: the elements get counts of their own)
+    -- H21: the sign of the comparison of two elements (addresses), the compare of `compare` at the exact element type
+    vecCmpBody t =
+      do  let ty = classType (clsOf info t)
+          needClass info (clsOf info t)
+          emit (ty ++ " a = *(const " ++ ty ++ " *)pa, b = *(const " ++ ty ++ " *)pb;")
+          c <- cmpExpr t "a" "b"
+          emit ("return " ++ c ++ ";")
+
     vecFromListBody c =
       do  let fcs = [boxedClass c, CRef]
               ty = classType c

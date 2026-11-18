@@ -5,6 +5,7 @@ module Vector exposing
     , set, update, swap, push
     , append, slice
     , map, indexedMap, foldl, foldr, filter, toIndexedList
+    , sort, sortBy, sortWith
     )
 
 {-| Ficcus: the flat `Vector` (decisions D1 to D8 of 12 Nov; docs/STAGE4-V1.md). The primitives of step V1 are the first section; the rest of the API of `Array`
@@ -126,6 +127,28 @@ fromList xs =
 toList : Vector a -> List a
 toList v =
     toList v
+
+
+{-| Sort in ascending order (`compare`); stable. Powersort (runtime/fic_sort.h), in place when the vector has one owner and on a copy when
+it is shared.
+-}
+sort : Vector comparable -> Vector comparable
+sort v =
+    sort v
+
+
+{-| not exposed: the indices that sort the keys (stable): the permutation that `sortBy` applies
+-}
+sortPerm : Vector comparable -> Vector Int
+sortPerm v =
+    sortPerm v
+
+
+{-| not exposed: the vector of Int sorted with a comparison function on the values (stable)
+-}
+sortIdx : (Int -> Int -> Order) -> Vector Int -> Vector Int
+sortIdx f v =
+    sortIdx f v
 
 
 
@@ -306,3 +329,42 @@ toIndexedHelp i v acc =
 
     else
         toIndexedHelp (i - 1) v (( i, unsafeGet i v ) :: acc)
+
+
+{-| Sort by the key of each element; stable. Unlike `List.sortBy` of elm/core in JavaScript, which calls the function at each comparison, the
+key of every element is computed exactly once (n calls), also for an element that is never compared.
+-}
+sortBy : (a -> comparable) -> Vector a -> Vector a
+sortBy f v =
+    if length v < 2 then
+        v
+
+    else
+        permute v (sortPerm (map f v))
+
+
+{-| Sort with a comparison function; stable. The function is called on the elements (borrowed from the vector) through an index sort.
+-}
+sortWith : (a -> a -> Order) -> Vector a -> Vector a
+sortWith cmp v =
+    if length v < 2 then
+        v
+
+    else
+        permute v (sortIdx (\i j -> cmp (unsafeGet i v) (unsafeGet j v)) (initialize (length v) (\i -> i)))
+
+
+{-| not exposed: the elements in the order of the indices
+-}
+permute : Vector a -> Vector Int -> Vector a
+permute v idx =
+    permuteHelp 0 (length idx) v idx (withCapacity (length idx))
+
+
+permuteHelp : Int -> Int -> Vector a -> Vector Int -> Vector a -> Vector a
+permuteHelp k n v idx acc =
+    if k >= n then
+        acc
+
+    else
+        permuteHelp (k + 1) n v idx (push (unsafeGet (unsafeGet k idx) v) acc)

@@ -11,6 +11,7 @@ module Ficcus.Mono.CRuntime
   , regexRuntime
   , vectorRuntime
   , sizedRuntime
+  , sortRuntime
   )
   where
 
@@ -91,3 +92,9 @@ vectorRuntime =
 sizedRuntime :: String
 sizedRuntime =
   $(embedFiles [ "runtime/fic_sized.h" ])
+
+
+-- Powersort for the flat Vector (H21; needs the Vector and the closure runtime): emitted only by programs that sort a Vector or a List
+sortRuntime :: String
+sortRuntime =
+  $(embedFiles [ "runtime/fic_sort.h" ])

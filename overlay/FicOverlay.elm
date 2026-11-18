@@ -11,6 +11,8 @@ the shorter list ends the result); no function here recurses deeper than a few c
 (lists are built reversed and turned around).
 -}
 
+import Vector
+
 
 listMap2 : (a -> b -> result) -> List a -> List b -> List result
 listMap2 f xs ys =
@@ -127,73 +129,22 @@ indexedMapHelp f i xs acc =
             indexedMapHelp f (i + 1) xr (f i x :: acc)
 
 
-{-| The key function is called once per element (elm/core calls it once per comparison: an accepted
-difference, only visible with a key function that has an effect such as Debug.log). Stable. -}
+{-| H21: the C path sorts a list by turning it into a Vector, sorting that (Powersort, runtime/fic_sort.h) and turning it back. Stable.
+The key function of `sortBy` is called once per element (n calls), where elm/core in JavaScript calls it at each comparison: a difference that
+is only visible with a key function that has an effect, such as Debug.log. -}
+listSort : List comparable -> List comparable
+listSort xs =
+    Vector.toList (Vector.sort (Vector.fromList xs))
+
+
 listSortBy : (a -> comparable) -> List a -> List a
 listSortBy f xs =
-    List.map Tuple.second (listSortWith keyOrder (List.map (\x -> ( f x, x )) xs))
+    Vector.toList (Vector.sortBy f (Vector.fromList xs))
 
 
-keyOrder : ( comparable, a ) -> ( comparable, a ) -> Order
-keyOrder ( a, _ ) ( b, _ ) =
-    compare a b
-
-
-{-| A stable merge sort: halves of the list are sorted and merged, an element of the left half goes first
-when the two are equal. -}
 listSortWith : (a -> a -> Order) -> List a -> List a
 listSortWith cmp xs =
-    sortN cmp (List.length xs) xs
-
-
-sortN : (a -> a -> Order) -> Int -> List a -> List a
-sortN cmp n xs =
-    if n < 2 then
-        xs
-
-    else
-        let
-            h =
-                n // 2
-
-            ( left, right ) =
-                splitAt h xs []
-        in
-        mergeLists cmp (sortN cmp h left) (sortN cmp (n - h) right) []
-
-
-splitAt : Int -> List a -> List a -> ( List a, List a )
-splitAt n xs acc =
-    if n <= 0 then
-        ( List.reverse acc, xs )
-
-    else
-        case xs of
-            [] ->
-                ( List.reverse acc, [] )
-
-            x :: rest ->
-                splitAt (n - 1) rest (x :: acc)
-
-
-mergeLists : (a -> a -> Order) -> List a -> List a -> List a -> List a
-mergeLists cmp ls rs acc =
-    case ls of
-        [] ->
-            List.foldl (::) rs acc
-
-        l :: lr ->
-            case rs of
-                [] ->
-                    List.foldl (::) ls acc
-
-                r :: rr ->
-                    case cmp l r of
-                        GT ->
-                            mergeLists cmp ls rr (r :: acc)
-
-                        _ ->
-                            mergeLists cmp lr rs (l :: acc)
+    Vector.toList (Vector.sortWith cmp (Vector.fromList xs))
 
 
 {-| Ficcus (ATTACH A3): `<`, `>`, `<=`, `>=` and `/=` at a custom type that has the member `compare` (or `eq`) are these

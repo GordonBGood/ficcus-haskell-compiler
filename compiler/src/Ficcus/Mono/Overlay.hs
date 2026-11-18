@@ -81,7 +81,7 @@ overlayId cid =
       [ ("elm/core:List.map2", "listMap2"), ("elm/core:List.map3", "listMap3")
       , ("elm/core:List.map4", "listMap4"), ("elm/core:List.map5", "listMap5")
       , ("elm/core:List.indexedMap", "listIndexedMap")
-      , ("elm/core:List.sortBy", "listSortBy"), ("elm/core:List.sortWith", "listSortWith")
+      , ("elm/core:List.sort", "listSort"), ("elm/core:List.sortBy", "listSortBy"), ("elm/core:List.sortWith", "listSortWith")
       ]
     -- the module of the parser overlay is not the same: see below
     capital n = case n of { c : rest -> toUpper c : rest; [] -> [] }
