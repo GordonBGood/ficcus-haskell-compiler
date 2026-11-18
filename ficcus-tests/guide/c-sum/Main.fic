@@ -1,0 +1,62 @@
+module Main exposing (main)
+
+
+type Money
+    = Money Int
+    where
+        zero : Money
+        zero =
+            Money 0
+
+        add : Money -> Money -> Money
+        add (Money a) (Money b) =
+            Money (a + b)
+
+
+type V2
+    = V2 Float Float
+    where
+        zero : V2
+        zero =
+            V2 0 0
+
+        add : V2 -> V2 -> V2
+        add (V2 a b) (V2 c d) =
+            V2 (a + c) (b + d)
+
+
+sum : List a -> a
+    where
+        a has zero : a
+        a has add : a -> a -> a
+sum xs =
+    List.foldl add zero xs
+
+
+noMoney : List Money
+noMoney =
+    []
+
+
+report : () -> ()
+report _ =
+    let
+        _ =
+            Debug.log "money" (sum [ Money 1, Money 2, Money 3 ])
+
+        _ =
+            Debug.log "vectors" (sum [ V2 1 2, V2 3 4 ])
+
+        _ =
+            Debug.log "empty" (sum noMoney)
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

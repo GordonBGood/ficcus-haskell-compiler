@@ -1,0 +1,27 @@
+module Main exposing (main)
+
+
+add : Int -> Int -> Int
+add a b =
+    a + b
+
+
+twice : a -> a
+    where
+        a has add : a -> a -> a
+twice x =
+    add x x
+
+
+report : () -> ()
+report _ =
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

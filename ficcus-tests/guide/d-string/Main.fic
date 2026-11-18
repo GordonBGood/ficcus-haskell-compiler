@@ -1,0 +1,46 @@
+module Main exposing (main)
+
+
+report : () -> ()
+report _ =
+    let
+        _ =
+            Debug.log "length \"a😀b\"" (String.length "a😀b")
+
+        _ =
+            Debug.log "slice 1 2" (String.slice 1 2 "a😀b")
+
+        _ =
+            Debug.log "left 2" (String.left 2 "a😀b")
+
+        _ =
+            Debug.log "indexes \"b\"" (String.indexes "b" "a😀b")
+
+        _ =
+            Debug.log "toList" (String.toList "a😀b")
+
+        _ =
+            Debug.log "reverse" (String.reverse "a😀b")
+
+        _ =
+            Debug.log "compare" (compare "\u{FF5E}" "😀")
+
+        _ =
+            Debug.log "toUpper" (String.toUpper "straße")
+
+        _ =
+            Debug.log "Char.toUpper" (Char.toUpper 'ß')
+
+        _ =
+            Debug.log "toInt" (String.toInt "9007199254740993")
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

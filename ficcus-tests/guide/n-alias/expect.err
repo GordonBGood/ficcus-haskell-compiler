@@ -1,0 +1,28 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Compiling (1)
+Compiling (2)
+Detected problems in 1 module.
+-- MEMBERS ON A TYPE ALIAS ---------------------------------------- src/Main.fic
+
+I am parsing a type alias, but I got stuck at this `where`:
+
+4| type alias Meters =
+5|     Float
+6|     where
+       ^
+A type alias is only another name for an existing type, so it cannot carry
+members of its own. Two names for one type would have to share one set of
+members.
+
+If you want a type with its own functions, wrap the type in a custom type:
+
+    type Meters = Meters Float
+        where
+            add : Meters -> Meters -> Meters
+            add (Meters a) (Meters b) = Meters (a + b)

@@ -1,0 +1,24 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Detected problems in 1 module.
+-- MODULE NOT FOUND ----------------------------------------------- src/Main.fic
+
+You are trying to import a `Vector` module:
+
+3| import Vector exposing (Vector)
+          ^^^^^^
+I checked the "dependencies" and "source-directories" listed in your elm.json,
+but I cannot find it! Maybe it is a typo for one of these names?
+
+    Set
+    Dict
+    Main
+    Task
+
+Hint: If it is not a typo, check the "dependencies" and "source-directories" of
+your elm.json to make sure all the packages you need are listed there!

@@ -1,0 +1,15 @@
+module Main exposing (main)
+
+
+report : () -> ()
+report _ =
+    Debug.log "modBy 0 5" (modBy 0 5) |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

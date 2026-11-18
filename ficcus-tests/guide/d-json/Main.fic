@@ -1,0 +1,31 @@
+module Main exposing (main)
+
+import Json.Decode as D
+import Json.Encode as E
+
+
+report : () -> ()
+report _ =
+    let
+        _ =
+            Debug.log "int beyond 2^53" (D.decodeString D.int "9007199254740993")
+
+        _ =
+            Debug.log "int beyond 2^63" (Result.toMaybe (D.decodeString D.int "9223372036854775808"))
+
+        _ =
+            Debug.log "keys" (D.decodeString (D.keyValuePairs D.int) "{\"b\":1,\"10\":2,\"a\":3,\"2\":4}")
+
+        _ =
+            Debug.log "encode NaN" (E.encode 0 (E.float (0 / 0)))
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

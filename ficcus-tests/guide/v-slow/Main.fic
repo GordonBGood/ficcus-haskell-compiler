@@ -1,0 +1,48 @@
+module Main exposing (main)
+
+import Vector exposing (Vector)
+
+
+fill : Int -> Int -> Vector Int -> Vector Int
+fill i n acc =
+    if i >= n then
+        acc
+
+    else
+        fill (i + 1) n (Vector.push (i * i) acc)
+
+
+-- `v` is read after the update, so the old vector is still alive and every update copies it
+bump : Int -> Int -> Vector Int -> Vector Int
+bump i n v =
+    if i >= n then
+        v
+
+    else
+        let
+            w =
+                Vector.update i (\x -> x + 1) v
+        in
+        if Vector.length v < 0 then
+            w
+
+        else
+            bump (i + 1) n w
+
+
+report : () -> ()
+report _ =
+    let
+        v =
+            bump 0 1000 (fill 0 1000 Vector.empty)
+    in
+    Debug.log "sum" (Vector.foldl (+) 0 v) |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

@@ -1,0 +1,4 @@
+int beyond 2^53: Ok 9007199254740993
+int beyond 2^63: Nothing
+keys: Ok [("2",4),("10",2),("b",1),("a",3)]
+encode NaN: "null"

@@ -1,0 +1,44 @@
+module Main exposing (main)
+
+
+type Money
+    = Money Int
+    where
+        zero : Money
+        zero =
+            Money 0
+
+        add : Money -> Money -> Money
+        add (Money a) (Money b) =
+            Money (a + b)
+
+
+sum : List a -> a
+    where
+        a has zero : a
+        a has add : a -> a -> a
+sum xs =
+    List.foldl add zero xs
+
+
+-- a constrained function that calls another one repeats the constraints it needs
+sumPlusZero : List a -> a
+    where
+        a has zero : a
+        a has add : a -> a -> a
+sumPlusZero xs =
+    sum [ sum xs, zero ]
+
+
+report : () -> ()
+report _ =
+    Debug.log "sumPlusZero" (sumPlusZero [ Money 4, Money 5 ]) |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

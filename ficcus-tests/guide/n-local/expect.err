@@ -1,0 +1,20 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Compiling (1)
+Compiling (2)
+Detected problems in 1 module.
+-- CONSTRAINTS ON A LOCAL DEFINITION ------------------------------ src/Main.fic
+
+The type annotation of `twice` is in a `let`, but I got stuck at this `where`:
+
+15|         twice : a -> a
+16|             where
+                ^
+Only a top-level definition (or a member in the `where` block of a type) can
+have constraints on its type variables. Move `twice` to the top level to give it
+a `where` block.

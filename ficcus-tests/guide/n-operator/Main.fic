@@ -1,0 +1,23 @@
+module Main exposing (main)
+
+
+type Money
+    = Money Int
+    where
+        add : Money -> Money -> Money
+        add (Money a) (Money b) =
+            Money (a + b)
+
+
+report : () -> ()
+report _ =
+    Debug.log "r" (Money 1 + Money 2) |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

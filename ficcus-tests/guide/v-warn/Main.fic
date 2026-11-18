@@ -1,0 +1,23 @@
+module Main exposing (main)
+
+import Vector exposing (Vector)
+
+
+-- `v` is still used after the update, so the update has to copy it
+bump : Vector Int -> ( List Int, List Int )
+bump v =
+    ( Vector.toList (Vector.set 0 99 v), Vector.toList v )
+
+
+report : () -> ()
+report _ =
+    Debug.log "bump" (bump (Vector.fromList [ 1, 2, 3 ])) |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

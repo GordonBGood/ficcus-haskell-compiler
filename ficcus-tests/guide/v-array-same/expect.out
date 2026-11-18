@@ -1,0 +1,5 @@
+array: [15,0,9,6,3]
+vector: [15,0,9,6,3]
+same get: (True,True)
+Array prints as: Array.fromList [15,12,9,6,3]
+Vector prints as: Vector.fromList [15,12,9,6,3]

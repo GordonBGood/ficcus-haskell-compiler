@@ -1,0 +1,26 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Compiling (1)
+Compiling (2)
+Compiling (3)
+Detected problems in 1 module.
+-- NAMING ERROR --------------------------------------------------- src/Main.fic
+
+I cannot find a `Money.add` variable:
+
+13|             Debug.log "add" (Money.add (fromInt 1) (fromInt 2))
+                                 ^^^^^^^^^
+I cannot find a `Money` import. These names seem close though:
+
+    modBy
+    negate
+    List.all
+    List.any
+
+Hint: Read <https://elm-lang.org/0.19.3/imports> to see how `import`
+declarations work in Elm.

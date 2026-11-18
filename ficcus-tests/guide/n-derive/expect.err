@@ -1,0 +1,28 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Compiling (1)
+Compiling (2)
+Detected problems in 1 module.
+-- UNFINISHED DEFINITION ------------------------------------------ src/Main.fic
+
+I got stuck while parsing the `derive` definition:
+
+8|         derive compare
+                         ^
+I was expecting to see an argument or an equals sign next.
+
+Here is a valid definition (with a type annotation) for reference:
+
+    greet : String -> String
+    greet name =
+      "Hello " ++ name ++ "!"
+
+The top line (called a "type annotation") is optional. You can leave it off if
+you want. As you get more comfortable with Elm and as your project grows, it
+becomes more and more valuable to add them though! They work great as
+compiler-verified documentation, and they often improve error messages!

@@ -1,0 +1,32 @@
+module Main exposing (main)
+
+import Regex
+
+
+rx : String -> Regex.Regex
+rx s =
+    Maybe.withDefault Regex.never (Regex.fromString s)
+
+
+report : () -> ()
+report _ =
+    let
+        _ =
+            Debug.log "find \\d+" (List.map .match (Regex.find (rx "\\d+") "a12b345"))
+
+        _ =
+            Debug.log "split \",\" on empty text" (Regex.split (rx ",") "")
+
+        _ =
+            Debug.log "index in code points" (List.map .index (Regex.find (rx "b") "😀b"))
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

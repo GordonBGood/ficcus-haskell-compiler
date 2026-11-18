@@ -1,0 +1,17 @@
+module Main exposing (main)
+
+import Regex
+
+
+report : () -> ()
+report _ =
+    Debug.log "split x* on empty text" (Regex.split (Maybe.withDefault Regex.never (Regex.fromString "x*")) "") |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

@@ -1,0 +1,6 @@
+shiftLeftBy 40 1: 256
+shiftLeftBy 31 1: -2147483648
+and 0xFFFFFFFF 0x1FFFFFFFF: -1
+complement 0: -1
+shiftRightZfBy 0 -1: 4294967295
+shiftRightBy 1 -8: -4

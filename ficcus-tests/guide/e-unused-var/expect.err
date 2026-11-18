@@ -1,0 +1,23 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Compiling (1)
+Compiling (2)
+Detected problems in 1 module.
+-- AMBIGUOUS CONSTRAINT ------------------------------------------- src/Main.fic
+
+The constraint `b has zero` mentions the type variable `b`, but `b` does not
+occur in the type of `size`:
+
+14|         b has zero : b
+            ^^^^^^^^^^
+A constraint is solved from the types at each use of `size`, so every type
+variable in it has to be part of the type of the function. Here no use of `size`
+could say what `b` is.
+
+Use `b` in the type of `size` (an argument or the result), or remove the
+constraint.

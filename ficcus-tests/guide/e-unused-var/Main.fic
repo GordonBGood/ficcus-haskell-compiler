@@ -1,0 +1,30 @@
+module Main exposing (main)
+
+
+type T
+    = T Int
+    where
+        zero : T
+        zero =
+            T 0
+
+
+size : List a -> Int
+    where
+        b has zero : b
+size xs =
+    List.length xs
+
+
+report : () -> ()
+report _ =
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

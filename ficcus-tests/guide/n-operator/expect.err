@@ -1,0 +1,23 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Compiling (1)
+Compiling (2)
+Detected problems in 1 module.
+-- TYPE MISMATCH -------------------------------------------------- src/Main.fic
+
+Addition does not work with this value:
+
+14|     Debug.log "r" (Money 1 + Money 2) |> always ()
+                       ^^^^^^^
+This `Money` call produces:
+
+    Money
+
+But (+) only works with Int and Float values.
+
+Hint: Only Int and Float values work as numbers.

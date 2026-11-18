@@ -1,0 +1,25 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Compiling (1)
+Compiling (2)
+Detected problems in 1 module.
+-- NAMING ERROR ------------------------------------------ src/Finance/Money.fic
+
+I cannot find a `add` variable:
+
+19|     List.foldl add (Money 0)
+                   ^^^
+These names seem close though:
+
+    abs
+    e
+    pi
+    cos
+
+Hint: Read <https://elm-lang.org/0.19.3/imports> to see how `import`
+declarations work in Elm.

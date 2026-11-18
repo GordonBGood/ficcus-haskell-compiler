@@ -1,0 +1,63 @@
+module Main exposing (main)
+
+import Array exposing (Array)
+import Vector exposing (Vector)
+
+
+-- the same steps on an Array and on a Vector: only the module name changes
+fillArray : Int -> Array Int -> Array Int
+fillArray n acc =
+    if n == 0 then
+        acc
+
+    else
+        fillArray (n - 1) (Array.push (n * 3) acc)
+
+
+fillVector : Int -> Vector Int -> Vector Int
+fillVector n acc =
+    if n == 0 then
+        acc
+
+    else
+        fillVector (n - 1) (Vector.push (n * 3) acc)
+
+
+a : Array Int
+a =
+    fillArray 5 Array.empty
+
+
+v : Vector Int
+v =
+    fillVector 5 Vector.empty
+
+
+report : () -> ()
+report _ =
+    let
+        _ =
+            Debug.log "array" (Array.toList (Array.set 1 0 a))
+
+        _ =
+            Debug.log "vector" (Vector.toList (Vector.set 1 0 v))
+
+        _ =
+            Debug.log "same get" ( Array.get 9 a == Vector.get 9 v, Array.get 2 a == Vector.get 2 v )
+
+        _ =
+            Debug.log "Array prints as" a
+
+        _ =
+            Debug.log "Vector prints as" v
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

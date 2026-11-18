@@ -1,0 +1,33 @@
+module Main exposing (main)
+
+import Random
+
+
+report : () -> ()
+report _ =
+    let
+        seed =
+            Random.initialSeed 42
+
+        ( a, s1 ) =
+            Random.step (Random.int 0 1000) seed
+
+        ( b, s2 ) =
+            Random.step (Random.int 0 1000) s1
+
+        ( c, _ ) =
+            Random.step (Random.float 10 0) s2
+
+        ( d, _ ) =
+            Random.step (Random.float 0 10) s2
+    in
+    Debug.log "draws" ( a, b, c == d ) |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

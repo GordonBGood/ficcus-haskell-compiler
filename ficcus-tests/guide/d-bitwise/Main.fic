@@ -1,0 +1,37 @@
+module Main exposing (main)
+
+import Bitwise
+
+
+-- `Bitwise` works on 32 bits, exactly as in Elm
+report : () -> ()
+report _ =
+    let
+        _ =
+            Debug.log "shiftLeftBy 40 1" (Bitwise.shiftLeftBy 40 1)
+
+        _ =
+            Debug.log "shiftLeftBy 31 1" (Bitwise.shiftLeftBy 31 1)
+
+        _ =
+            Debug.log "and 0xFFFFFFFF 0x1FFFFFFFF" (Bitwise.and 0xFFFFFFFF 0x0001FFFFFFFF)
+
+        _ =
+            Debug.log "complement 0" (Bitwise.complement 0)
+
+        _ =
+            Debug.log "shiftRightZfBy 0 -1" (Bitwise.shiftRightZfBy 0 -1)
+
+        _ =
+            Debug.log "shiftRightBy 1 -8" (Bitwise.shiftRightBy 1 -8)
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

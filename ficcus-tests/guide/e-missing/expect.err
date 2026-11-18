@@ -1,0 +1,23 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Compiling (1)
+Compiling (2)
+Detected problems in 1 module.
+-- MISSING CONSTRAINT --------------------------------------------- src/Main.fic
+
+This use of `sum` needs the type `a` to have the members `zero` and `add`, but
+the type annotation of this definition does not say so.
+
+14|     sum xs
+        ^^^
+`a` can be any type here. If every such type must have these members, say it in
+a `where` block after the type annotation:
+
+    where
+        a has zero : a
+        a has add : a -> a -> a
