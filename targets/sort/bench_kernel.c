@@ -1,5 +1,5 @@
 /* H21 benchmark of the sort kernel alone (no List conversion): fic_ps_sort_i64 vs a plain top down merge sort vs qsort, 1e6 int64.
-   gcc -std=c99 -O2 -I runtime -I targets/c targets/sort/bench_kernel.c -o bk -lm */
+   gcc -std=gnu99 -O2 -I runtime -I targets/c targets/sort/bench_kernel.c -o bk -lm */
 #include <stdio.h>
 #include <time.h>
 #include "fic_rt.h"
