@@ -38,4 +38,7 @@ step suite;    python3 targets/run_all.py --san > $G/suite.txt 2>&1; tail -4 $G/
 step typed;    python3 $R/ficcus-tests/typed_check.py --elm $B --safe $W/tools/safe --elm-home $(fresh tc) --out $S/tcout --jobs 2 corpus/pkgs-sample corpus/apps > $G/typed.txt 2>&1; tail -3 $G/typed.txt
 step lib-rcsan; $R/ficcus-tests/libsuite.sh rcsan $B $(fresh lib) $S/libw --compare results/baseline.json > $G/lib.txt 2>&1; tail -4 $G/lib.txt
 step elmdiff;  python3 elmdiff/elmdiff.py --a ./bin/elm0193 --b $B --pkgs corpus/pkgs-sample --apps corpus/apps --out $S/elmdiff80 --elm-home $(fresh ed) --timeout 120 > $G/elmdiff.txt 2>&1; tail -4 $G/elmdiff.txt
+echo "=== SUMMARY (from $G)"
+echo "elmdiff: $(grep -E 'SAME|DIFF' $G/elmdiff.txt | tr '\n' ' ')"
+echo "suite:   $(grep -iE 'pass|fail' $G/suite.txt | tail -3 | tr '\n' ' ')"
 echo "=== DONE $(date +%T)"
