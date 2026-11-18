@@ -239,3 +239,103 @@ Functions: `knownProgram :: MProgram -> MProgram` (switch, rounds, sweep, check,
 Everything. `Known.knownProgram` is only called in the `rcMode` branch of Make.hs:208; Spec is unchanged, so the `--no-rc` C text is unchanged
 (`norc_identity.py` must pass without `--update`). The Inline eligibility change is only active when the pass is on; Inline itself never runs
 with `--no-rc`. `v2fuzz.py` (no-RC against RC under ASan) therefore compares the old semantics with the new pass for free.
+
+## 3. Test plan
+
+### 3.1 New test programs (`ficcus-tests/known/`, each with an Elm 0.19.3 golden output; vectors through `ficcus-tests/vecshim` where needed)
+
+| name | covers |
+|---|---|
+| K1 `Mini.elm` | the example of 2.1: aliases, static expansion, `succeed 7`, floated list, `oneOf` kept |
+| K2 `Rec.elm` | specialization by key: `sepByHelp`, `chompWhileHelp isDigit`, `loopHelp` with over application; tail self call after specialization |
+| K3 `Caps.elm` | knowns with captures: `succeed n` with a local `n`, `map2 f` partial application, a capturing known passed into a recursive function (extra parameters), the same known used in value position (no extra allocation: check `FIC_STATS`) |
+| K4 `Cycle.elm` | `value = lazy (\_ -> oneOf [ .. value .. ])` in the cyclic form without the `()` workaround, mutual recursion through closures, init order of floated constants and aliases |
+| K5 `Grow.elm` | termination stressors: `f p = \s -> f (map g p) s`, a builder that returns a builder, polymorphic combinators used at three types, `Debug.log` in combinator arguments (order of output equals Elm) |
+| K6 `Big.elm` | 500 combinator uses (generated): the program budget is hit, output still correct, `FICCUS_KNOWN_STATS` shows refusals, C size within 2 x of pass off |
+| K7 `Arity.elm` | under and over application of knowns, a known function stored in a record and in a list (not specialized, still correct) |
+
+Each runs with the pass on, off (`FICCUS_NO_KNOWN=1`), with `FICCUS_KNOWN_CHECK=1`, and under `FICTEST_RC=1 FICTEST_SAN=1`.
+
+### 3.2 Gates and differential checks
+
+* After each work item: `norc_identity.py` (16/16 identical, never `--update`); **pass-off identity**: the `--rc` C text of the 16 suite
+  programs and of K1-K7 with `FICCUS_NO_KNOWN=1` equals the text of the binary before the change (sha256 of both, a small script next to
+  `norc_identity.py`); `targets/run_all.py --san`; `rcfuzz.py --settings default,noknown,noinline` (500 programs); `v2fuzz.py`;
+  `rccheck_faults.py` (RcCheck must still catch the mutations in programs that now have copies).
+* Before merge: full `ficcus-tests/gates.sh` with the pass on (all expected numbers unchanged) plus the new `FICCUS_NO_KNOWN=1` row; elmdiff
+  (1160 SAME + 15 apps) is the main code-size and compile-time exposure: record total C bytes and compile time against pass off.
+* `ficcus-tests/expected/*.mono`: if they are dumped after Inline they will change with the pass on; refresh only with a stated reason
+  (question 2).
+
+### 3.3 Measurement protocol (P1 A2)
+
+`ficcus-tools/h16a_bench.py` (branch `bench/h16a`) on `JsonCombV.elm` (A2), sizes 7500 (1 MB) and 375000 (50 MB), 5 runs, median of
+parse = stage 2 - stage 1, the same session measures A2 with `FICCUS_NO_KNOWN=1` and with the pass on (absolute times drift 3-10 % between
+sessions, H16A.md). Counters from a `-DFIC_STATS` build: allocations, dups, drops, closures. Checksums must equal `gen_json.py`'s.
+
+| measure | A2 today | success (pass on) | S1 by hand |
+|---|---|---|---|
+| parse 50 MB | 7,895 ms | **<= 2,600 ms** and >= 3.0 x faster than pass off in the same session | 1,951 ms |
+| parse 1 MB | 162 ms | >= 2.9 x | 41.8 ms |
+| allocations 50 MB | 832 M | <= 260 M | 158 M |
+| closures 50 MB | 170 M | <= 10 M | 1.9 M |
+| C text / binary `.text` | 1 x | <= 2 x | |
+| compile time of A2 | 1 x | <= 1.5 x | |
+
+Secondary: `JsonComb.elm` (A) and `JsonStrComb.elm` with the same protocol; the 16 suite programs must not be slower (run_all timings).
+
+## 4. Risks (ranked)
+
+1. **Scope errors in copies** (a lifted copy referenced where its captured names are not bound, or a renaming that misses a binder): C that does not
+   compile or reads the wrong variable. Mitigation: invariant S checker (`FICCUS_KNOWN_CHECK`, on in all tests), RcCheck, ASan, v2fuzz.
+2. **Missing the 2.6 s target** because the gain of S1 partly came from `oneOf` written as a chain of `case` (excluded) and from `lazy` removal.
+   Rules C and F remove the per-use rebuilding, but every `value` still goes through `oneOfHelp` and up to seven `fic_ap1`. Estimate: closures
+   170 M -> few M, allocations about 5 x down as in S1, time 2.2-2.8 s. Measure after work item 2 before writing item 3.
+3. **Code size and compile time** on large programs (elmdiff, corpus): budgets of 1.4 are guesses; the `Free.captures` fixpoint is run per round
+   over all clones (cost grows with copies).
+4. **Init order** broken by aliases or floated constants (a Value now reads another before its initialisation). Mitigation: the pass never
+   reorders existing clones and only removes eager references; floated Values have only static leaves; the order check of step 8.
+5. **Counting heuristics** (Borrow, Twin, Reuse) behave differently on copies: extra capture parameters may be inferred owned, adding dups.
+   Visible in the counters; not a correctness risk (RcCheck).
+6. **Allocation increase** from materialising capturing knowns in value position (prevented by the rule at the end of 2.1; checked by K3).
+7. **Order of `Debug.log` output** (arguments are `let`-bound in order; K5 checks).
+
+## 5. Work split (four Sonnet prompts)
+
+1. **W1 skeleton and aliases** (~350 lines + K1, K7): `M.Known` with switches, stats, `Info`, `copyFamily`, `materialise`, the scope checker,
+   rule V and direct calls through `let`-bound and aliased knowns, sweep; wiring in Make.hs and the `.cabal` file; norc identity and pass-off
+   identity scripts; suite, rcfuzz `noknown`. No expansion yet.
+2. **W2 expansion** (~350 lines + K3, K4): builder expansion with memo and knot tying, static arguments, rules C and F, SCC bottom-up order and
+   rounds, the size budgets; first P1 A2 measurement at 1 MB and 50 MB (go / no-go for W3 on the numbers of 3.3 and risk 2).
+3. **W3 specialization** (~300 lines + K2, K5, K6): keys with origin codes, extra capture parameters, over application split, the value
+   position rule; the Inline eligibility change; second measurement.
+4. **W4 validation** (tests only, ~a day of machine time): full gates with the variant row, elmdiff size and compile time, `FLAGS.md` text,
+   final measurement table, a dated result entry proposed for the decisions file (the user applies it).
+
+## 6. Stage 2 outline (case of known constructor, unboxed results, scalar replacement; hand S2 0.80 s)
+
+After stage 1 every combinator step is a direct call of a small capture-free function that returns `Good c a s'` or `Bad c m`, and its caller
+immediately does `case`. Stage 2 adds, in this order:
+1. **Inlining of the small copies** into their callers (Inline with the eligibility change of 2.3), so that Inline's rule A (known constructor,
+   case of case on constructor leaves) removes the `Step` cells for all non-recursive steps.
+2. **Unboxed results (worker/wrapper)** for the remaining direct calls of functions whose result is a custom type all of whose leaves are
+   constructor applications (recursive `sepByHelp'`, `loopHelp'`, `oneOfHelp`): a worker returning a C struct `{tag, fields}` (a new
+   `CStruct`-like class for a sum, fields of all constructors laid side by side), used at direct call sites whose result is immediately
+   matched; the boxed wrapper stays for value uses. This is S2's (a), the bulk of the 2.4 x.
+3. **Scalar replacement** of a constructor or record bound by `let` and matched or read later (`State` split into source and offset: S2's (b)
+   needs that a record parameter whose fields are only read and rebuilt is passed as its fields; this is a parameter-level transformation in
+   the specialized clones).
+S2's (c) (dropping the unread message) needs a dead-field analysis and is not planned. Design after the stage 1 numbers.
+
+## 7. Questions that need an experiment
+
+1. Do CGen, Rc, Borrow and Twin accept a lifted clone referenced from a clone that is not its owner, and a lifted clone whose owner is a Value
+   (reading says yes: captures are by name, `mdLifted` is only tested for `Nothing`)? A five line test in W1.
+2. Are `ficcus-tests/expected/*.mono` dumped before or after Inline?
+3. Is the position of Function clones in `mpClones` significant for CGen (prototypes, order of definitions)? Where must copies go?
+4. Does anything rely on `mdName` being unique per clone (C names seem to use the clone id: `f9_map2`)?
+5. How much of S1's gain does stage 1 without `oneOf` unrolling keep (risk 2)? Count with `FIC_STATS` after W2.
+6. Does Borrow infer the extra capture parameters of specialized clones as borrowed?
+7. Compile time of the per-round `Free.captures` fixpoint on the largest elmdiff programs.
+8. The budget numbers of 1.4 (200 / 300 / 32 / max(20,000, 1.0 x)): fix them from A2 and elmdiff measurements.
+9. Does CGen's self tail call (`continue`, CGen.hs:478-496) fire for the knot-tied specialized self call, as it does for an original self call?
