@@ -1,0 +1,192 @@
+module Main exposing (main)
+
+-- H21: Powersort (List.sort, sortBy, sortWith and Vector.sort, sortBy, sortWith). The same source runs under Elm 0.19.3 (JavaScript, with
+-- the stand-in ficcus-tests/vecshim/Vector.elm) and as C (--rc and --no-rc, plain and ASan); ficcus-tests/sort/sortdiff.py compares the
+-- output, which is one line per (pattern, size) with hashes of the six results, so the sorts must agree exactly (all are stable).
+
+import Vector
+
+
+next : Int -> Int
+next s =
+    modBy 2147483647 (s * 48271)
+
+
+randoms : Int -> Int -> List Int
+randoms n seed =
+    randomsHelp n seed []
+
+
+randomsHelp : Int -> Int -> List Int -> List Int
+randomsHelp n s acc =
+    if n <= 0 then
+        acc
+
+    else
+        let
+            s2 =
+                next s
+        in
+        randomsHelp (n - 1) s2 (modBy 100003 (s2 // 7) :: acc)
+
+
+pattern : String -> Int -> Int -> List Int
+pattern name n seed =
+    let
+        rs =
+            randoms n seed
+
+        idx =
+            List.range 0 (n - 1)
+    in
+    case name of
+        "random" ->
+            rs
+
+        "sorted" ->
+            idx
+
+        "reversed" ->
+            List.reverse idx
+
+        "equal" ->
+            List.map (\_ -> 7) idx
+
+        "organ" ->
+            List.map (\i -> min i (n - 1 - i)) idx
+
+        "saw" ->
+            List.map (\i -> modBy 50 i) idx
+
+        "runs" ->
+            List.map2 (\i r -> if modBy 100 i < 60 then i * 3 else r) idx rs |> List.indexedMap (\i x -> x + (i // 100) * 400000)
+
+        "swaps10" ->
+            List.map2 (\i r -> if modBy 10 r == 0 then r else i) idx rs
+
+        _ ->
+            List.map (\r -> modBy 9 r) rs
+
+
+hash : List Int -> Int
+hash xs =
+    List.foldl (\x acc -> modBy 1000000007 (acc * 31 + x + 1)) 7 xs
+
+
+sumInt : List Int -> Int
+sumInt xs =
+    List.foldl (+) 0 xs
+
+
+-- the original position of equal keys must stay in order
+stableBad : List ( Int, Int ) -> Int
+stableBad ps =
+    stableBadHelp ps 0
+
+
+stableBadHelp : List ( Int, Int ) -> Int -> Int
+stableBadHelp ps acc =
+    case ps of
+        ( k1, i1 ) :: (( k2, i2 ) :: _ as rest) ->
+            stableBadHelp rest (if k1 == k2 && i1 > i2 then acc + 1 else acc)
+
+        _ ->
+            acc
+
+
+-- a comparison function that is not a total order (it depends on a hash of the pair)
+wild : Int -> Int -> Int -> Order
+wild seed a b =
+    case modBy 3 (a * 7 + b * 13 + seed) of
+        0 ->
+            LT
+
+        1 ->
+            EQ
+
+        _ ->
+            GT
+
+
+one : String -> Int -> String
+one name n =
+    let
+        xs =
+            pattern name n (n + 17)
+
+        ps =
+            List.indexedMap (\i x -> ( modBy 7 x, i )) xs
+
+        v =
+            Vector.fromList xs
+
+        sorted =
+            Vector.sort v
+
+        r1 =
+            List.sort xs
+
+        r2 =
+            List.sortBy (\x -> negate x) xs
+
+        r3 =
+            List.sortBy Tuple.first ps
+
+        r4 =
+            List.sortWith (\( a, _ ) ( b, _ ) -> compare b a) ps
+
+        r5 =
+            List.sortWith (\a b -> compare b a) xs
+
+        v1 =
+            Vector.toList sorted
+
+        v2 =
+            Vector.toList (Vector.sortBy (\x -> negate x) v)
+
+        v3 =
+            Vector.toList (Vector.sortWith (\a b -> compare a b) v)
+
+        w =
+            List.sortWith (wild n) xs
+
+        ws =
+            List.sortWith (\a b -> wild 5 (String.length a) (String.length b + modBy 3 (String.length a))) (List.map String.fromInt xs)
+    in
+    String.join " "
+        [ name
+        , String.fromInt n
+        , String.fromInt (hash r1)
+        , String.fromInt (hash r2)
+        , String.fromInt (hash (List.map Tuple.second r3))
+        , String.fromInt (hash (List.map Tuple.second r4))
+        , String.fromInt (hash r5)
+        , String.fromInt (hash v1)
+        , String.fromInt (hash v2)
+        , String.fromInt (hash v3)
+        , String.fromInt (hash (Vector.toList v)) -- the original vector is unchanged by Vector.sort
+        , "bad=" ++ String.fromInt (stableBad r3 + stableBad (List.sortBy Tuple.first (List.reverse ps) |> List.map (\( k, i ) -> ( k, negate i ))))
+        , "fuzz=" ++ String.fromInt (List.length w) ++ "," ++ String.fromInt (sumInt w) ++ "," ++ String.fromInt (List.length ws)
+        ]
+
+
+cases : List ( String, Int )
+cases =
+    List.concatMap (\p -> List.map (\n -> ( p, n )) [ 0, 1, 2, 3, 31, 32, 33, 100, 1000, 5000 ])
+        [ "random", "sorted", "reversed", "equal", "organ", "saw", "runs", "swaps10", "dups" ]
+        ++ [ ( "random", 1000000 ), ( "sorted", 1000000 ), ( "reversed", 1000000 ), ( "swaps10", 1000000 ), ( "dups", 1000000 ) ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ =
+                        Debug.log "sortdiff" (String.join "\n" (List.map (\( p, n ) -> one p n) cases))
+                in
+                ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

@@ -5,6 +5,7 @@ module Vector exposing
     , set, update, swap, push
     , append, slice
     , map, indexedMap, foldl, foldr, filter, toIndexedList
+    , sort, sortBy, sortWith
     )
 
 {-| A stand-in for the Ficcus module `Vector` (overlay/Vector.elm, V1) written on `Array`, so that a program that uses the Vector
@@ -139,3 +140,18 @@ filter p (Vector a) =
 toIndexedList : Vector a -> List ( Int, a )
 toIndexedList (Vector a) =
     Array.toIndexedList a
+
+
+sort : Vector comparable -> Vector comparable
+sort v =
+    fromList (List.sort (toList v))
+
+
+sortBy : (a -> comparable) -> Vector a -> Vector a
+sortBy f v =
+    fromList (List.sortBy f (toList v))
+
+
+sortWith : (a -> a -> Order) -> Vector a -> Vector a
+sortWith f v =
+    fromList (List.sortWith f (toList v))
