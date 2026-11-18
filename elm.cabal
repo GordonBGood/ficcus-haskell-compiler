@@ -184,6 +184,7 @@ executable elm
         Ficcus.Mono.Borrow
         Ficcus.Mono.Rc
         Ficcus.Mono.Inline
+        Ficcus.Mono.Known
         Ficcus.Mono.Twin
         Ficcus.Mono.RcCheck
         Ficcus.Mono.Ir

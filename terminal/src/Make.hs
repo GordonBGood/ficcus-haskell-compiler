@@ -37,6 +37,7 @@ import qualified Ficcus.Mono.Overlay as Overlay
 import qualified Ficcus.Mono.Print as Print
 import qualified Ficcus.Mono.Rc as Rc
 import qualified Ficcus.Mono.Inline as Inline
+import qualified Ficcus.Mono.Known as Known
 import qualified Ficcus.Mono.Twin as Twin
 import qualified Ficcus.Mono.RcCheck as RcCheck
 import qualified Ficcus.Mono.Spec as Spec
@@ -217,7 +218,12 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                           -- FICCUS_RC_DUMP=text (debugging): print the counted clones whose definition name contains the text, before the check
                           dumpText <- Task.io (System.Environment.lookupEnv "FICCUS_RC_DUMP")
                           -- S7: constructor values made by a small known function and matched at once are not built (counted builds only)
-                          let rced = if rcMode then Rc.rcProgram (Twin.twinProgram (Inline.inlineProgram program)) >>= mutated else Right program
+                          let (knownResult, knownCounters) = Known.knownRun program
+                          knownStatsOn <- Task.io (System.Environment.lookupEnv "FICCUS_KNOWN_STATS")
+                          case knownStatsOn of
+                            Just "1" | rcMode -> Task.io (hPutStrLn stderr ("FICCUS_KNOWN_STATS: " ++ show knownCounters))
+                            _ -> return ()
+                          let rced = if rcMode then knownResult >>= \known -> Rc.rcProgram (Twin.twinProgram (Inline.inlineProgram known)) >>= mutated else Right program
                           twinStatsOn <- Task.io (System.Environment.lookupEnv "FICCUS_TWIN_STATS")
                           case (twinStatsOn, rced) of
                             (Just "1", Right _) | rcMode -> Task.io (hPutStrLn stderr ("FICCUS_TWIN_STATS: (twins, twins that build a cell of their closure's size class) = " ++ show (Twin.twinStats (Twin.twinProgram (Inline.inlineProgram program)))))
