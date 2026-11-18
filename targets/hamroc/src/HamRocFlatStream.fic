@@ -1,0 +1,182 @@
+module HamRocFlatStream exposing (main)
+
+{-| hamroc flat: the same algorithm with the queue fields (front, back, size, list) as separate arguments and results, no queue object (the manually inlined form of the Roc source); the nth Hamming number by the algorithm of the user's Roc program (targets/roc/NthHamming.roc), translated function for function
+(the recursive `worker` form, which the Roc source says runs at the same speed as its manually inlined loop):
+two growable circular buffer queues (multiples of 2: `bigq`, multiples of 3: `smlq`, each a Vector of LogRep with front, back, size, initial size 16,
+doubling by appending a copy of itself) and one running value for the multiples of 5 (`fvs`). A LogRep is { log2 : Float, twos, threes, fives }
+(Roc has U16 counts, 16 bytes; here Int, 32 bytes). log2 is built by repeated addition of lg2, lg3, lg5, as in Roc. The answer is printed as
+the exponents only (no decimal digits). n is the constant `target`.
+-}
+
+import Vector exposing (Vector)
+
+
+target : Int
+target =
+    1000000
+
+
+type alias LogRep =
+    { log2 : Float, twos : Int, threes : Int, fives : Int }
+
+
+type alias Q =
+    ( ( Int, Int ), ( Int, Vector LogRep ) )
+
+
+lg2 : Float
+lg2 =
+    1.0
+
+
+lg3 : Float
+lg3 =
+    1.584962500721156
+
+
+lg5 : Float
+lg5 =
+    2.321928094887362
+
+
+one : LogRep
+one =
+    { log2 = 0.0, twos = 0, threes = 0, fives = 0 }
+
+
+mult2 : LogRep -> LogRep
+mult2 lr =
+    { lr | log2 = lr.log2 + lg2, twos = lr.twos + 1 }
+
+
+mult3 : LogRep -> LogRep
+mult3 lr =
+    { lr | log2 = lr.log2 + lg3, threes = lr.threes + 1 }
+
+
+mult5 : LogRep -> LogRep
+mult5 lr =
+    { lr | log2 = lr.log2 + lg5, fives = lr.fives + 1 }
+
+
+at : Int -> Vector LogRep -> LogRep
+at i list =
+    case Vector.get i list of
+        Just v ->
+            v
+
+        Nothing ->
+            one
+
+
+{-| push x at the back (doubling when full); returns front, back, size, list -}
+push : Int -> Int -> Int -> Vector LogRep -> LogRep -> Q
+push front back size list x =
+    if back == front then
+        let
+            size2 =
+                size * 2
+
+            list2 =
+                Vector.append list (Vector.slice 0 size list)
+        in
+        ( ( front + size, nextIx back size2 ), ( size2, Vector.set back x list2 ) )
+
+    else
+        ( ( front, nextIx back size ), ( size, Vector.set back x list ) )
+
+
+nextIx : Int -> Int -> Int
+nextIx i size =
+    if i >= size - 1 then
+        0
+
+    else
+        i + 1
+
+
+type CIS a
+    = CIS a (() -> CIS a)
+
+
+nth : Int -> CIS LogRep -> LogRep
+nth n (CIS x rest) =
+    if n <= 1 then
+        x
+
+    else
+        nth (n - 1) (rest ())
+
+
+next : Int -> Int -> Int -> Vector LogRep -> Int -> Int -> Int -> Vector LogRep -> LogRep -> CIS LogRep
+next bf bb bs bl sf sb ss sl fvs =
+    let
+        b =
+            at bf bl
+
+        s =
+            at sf sl
+    in
+    if min b.log2 s.log2 > fvs.log2 then
+        case push bf bb bs bl (mult2 fvs) of
+            ( ( bf2, bb2 ), ( bs2, bl2 ) ) ->
+                case push sf sb ss sl (mult3 fvs) of
+                    ( ( sf2, sb2 ), ( ss2, sl2 ) ) ->
+                        let
+                            f =
+                                mult5 fvs
+                        in
+                        CIS fvs (\_ -> next bf2 bb2 bs2 bl2 sf2 sb2 ss2 sl2 f)
+
+    else if b.log2 < s.log2 then
+        let
+            bf2 =
+                nextIx bf bs
+
+            bb2 =
+                nextIx bb bs
+
+            bl2 =
+                Vector.set bb (mult2 b) bl
+        in
+        CIS b (\_ -> next bf2 bb2 bs bl2 sf sb ss sl fvs)
+
+    else
+        case push bf bb bs bl (mult2 s) of
+            ( ( bf2, bb2 ), ( bs2, bl2 ) ) ->
+                let
+                    sf2 =
+                        nextIx sf ss
+
+                    sb2 =
+                        nextIx sb ss
+
+                    sl2 =
+                        Vector.set sb (mult3 s) sl
+                in
+                CIS s (\_ -> next bf2 bb2 bs2 bl2 sf2 sb2 ss sl2 fvs)
+
+
+hamming : CIS LogRep
+hamming =
+    CIS one (\_ -> next 0 1 16 (Vector.repeat 16 (mult2 one)) 0 1 16 (Vector.repeat 16 (mult3 one)) (mult5 one))
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    t =
+                        nth target hamming
+
+                    _ =
+                        Debug.log
+                            ("Hamming number " ++ String.fromInt target ++ " = 2^" ++ String.fromInt t.twos ++ " * 3^" ++ String.fromInt t.threes ++ " * 5^" ++ String.fromInt t.fives)
+                            ()
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

@@ -1,0 +1,185 @@
+module HamRoc exposing (main)
+
+{-| hamroc: the nth Hamming number by the algorithm of the user's Roc program (targets/roc/NthHamming.roc), translated function for function
+(the recursive `worker` form, which the Roc source says runs at the same speed as its manually inlined loop):
+two growable circular buffer queues (multiples of 2: `bigq`, multiples of 3: `smlq`, each a Vector of LogRep with front, back, size, initial size 16,
+doubling by appending a copy of itself) and one running value for the multiples of 5 (`fvs`). A LogRep is { log2 : Float, twos, threes, fives }
+(Roc has U16 counts, 16 bytes; here Int, 32 bytes). log2 is built by repeated addition of lg2, lg3, lg5, as in Roc. The answer is printed as
+the exponents only (no decimal digits). n is the constant `target`.
+-}
+
+import Vector exposing (Vector)
+
+
+target : Int
+target =
+    1000000
+
+
+type alias LogRep =
+    { log2 : Float, twos : Int, threes : Int, fives : Int }
+
+
+type Queue
+    = Queue Int Int Int (Vector LogRep)
+
+
+lg2 : Float
+lg2 =
+    1.0
+
+
+lg3 : Float
+lg3 =
+    1.584962500721156
+
+
+lg5 : Float
+lg5 =
+    2.321928094887362
+
+
+one : LogRep
+one =
+    { log2 = 0.0, twos = 0, threes = 0, fives = 0 }
+
+
+mult2 : LogRep -> LogRep
+mult2 lr =
+    { lr | log2 = lr.log2 + lg2, twos = lr.twos + 1 }
+
+
+mult3 : LogRep -> LogRep
+mult3 lr =
+    { lr | log2 = lr.log2 + lg3, threes = lr.threes + 1 }
+
+
+mult5 : LogRep -> LogRep
+mult5 lr =
+    { lr | log2 = lr.log2 + lg5, fives = lr.fives + 1 }
+
+
+initQueue : LogRep -> Queue
+initQueue x =
+    Queue 0 1 16 (Vector.repeat 16 x)
+
+
+peekQueue : Queue -> LogRep
+peekQueue (Queue front _ _ list) =
+    case Vector.get front list of
+        Just v ->
+            v
+
+        Nothing ->
+            one
+
+
+pushQueue : Queue -> LogRep -> Queue
+pushQueue (Queue front back size list) x =
+    let
+        full =
+            back == front
+
+        size2 =
+            if full then
+                size * 2
+
+            else
+                size
+
+        front2 =
+            if full then
+                front + size
+
+            else
+                front
+
+        list2 =
+            if full then
+                Vector.append list (Vector.slice 0 size list)
+
+            else
+                list
+
+        newBack =
+            if back >= size2 - 1 then
+                0
+
+            else
+                back + 1
+    in
+    Queue front2 newBack size2 (Vector.set back x list2)
+
+
+replaceQueueWith : Queue -> (LogRep -> LogRep) -> Queue
+replaceQueueWith (Queue front back size list) f =
+    let
+        nfront =
+            if front >= size - 1 then
+                0
+
+            else
+                front + 1
+
+        nback =
+            if back >= size - 1 then
+                0
+
+            else
+                back + 1
+
+        fval =
+            case Vector.get front list of
+                Just v ->
+                    v
+
+                Nothing ->
+                    one
+    in
+    Queue nfront nback size (Vector.set back (f fval) list)
+
+
+worker : Int -> Queue -> Queue -> LogRep -> LogRep -> LogRep
+worker cnt bigq smlq fvs hd =
+    if cnt >= target then
+        hd
+
+    else
+        let
+            b =
+                peekQueue bigq
+
+            s =
+                peekQueue smlq
+
+            min23 =
+                min b.log2 s.log2
+        in
+        if min23 > fvs.log2 then
+            worker (cnt + 1) (pushQueue bigq (mult2 fvs)) (pushQueue smlq (mult3 fvs)) (mult5 fvs) fvs
+
+        else if b.log2 < s.log2 then
+            worker (cnt + 1) (replaceQueueWith bigq mult2) smlq fvs b
+
+        else
+            worker (cnt + 1) (pushQueue bigq (mult2 s)) (replaceQueueWith smlq mult3) fvs s
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    t =
+                        worker 1 (initQueue (mult2 one)) (initQueue (mult3 one)) (mult5 one) one
+
+                    _ =
+                        Debug.log
+                            ("Hamming number " ++ String.fromInt target ++ " = 2^" ++ String.fromInt t.twos ++ " * 3^" ++ String.fromInt t.threes ++ " * 5^" ++ String.fromInt t.fives)
+                            ()
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
