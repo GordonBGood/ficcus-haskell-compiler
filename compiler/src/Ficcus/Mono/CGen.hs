@@ -1435,11 +1435,11 @@ vectorCall info cls op key args =
         -- sorting permutation; sortIdx sorts a vector of Int with a closure comparator (borrowed)
         ("sort", [v]) ->
           do  vs <- atomsTo info [(v, CRef)]
-              (mode, cmp) <- sortMode info key
+              (mode, cmp) <- sortMode key
               return ("fic_vsort(" ++ vs !! 0 ++ ", " ++ mode ++ ", " ++ cmp ++ ", " ++ wh ++ ")")
         ("sortPerm", [v]) ->
           do  vs <- atomsTo info [(v, CRef)]
-              (mode, cmp) <- sortMode info key
+              (mode, cmp) <- sortMode key
               return ("fic_vsort_perm(" ++ vs !! 0 ++ ", " ++ mode ++ ", " ++ cmp ++ ")")
         ("sortIdx", [f, v]) ->
           do  vs <- atomsTo info [(f, CRef), (v, CRef)]
@@ -1456,8 +1456,8 @@ vectorCall info cls op key args =
 
 
 -- | H21: the comparison mode of a sort of vectors of the exact element type of the key: (mode, comparator expression)
-sortMode :: Info -> Key -> CG (String, String)
-sortMode info key =
+sortMode :: Key -> CG (String, String)
+sortMode key =
   case key of
     Key [ByType t] ->
       case t of
