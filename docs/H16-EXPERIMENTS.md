@@ -18,3 +18,14 @@ Written for: the user and the sessions implementing W2 to W4. Line numbers are t
 
 Consequence for the design: none of the answers invalidates it. One refinement: Inline's `canCallDirect` assumes a lifted callee is called only
 inside its owner; that only matters for Inline's rule U, not for Known.
+
+## W1 measurement: P1 A2 (JsonCombV) at 1 MB, binary elmficK1, one session, median of 5
+
+| | parse (stage 2 - stage 1) | allocations | closures | dup / drop |
+|---|---|---|---|---|
+| pass off (FICCUS_NO_KNOWN=1) | 163.2 ms | 19,046,020 | 3,516,330 | 20,140,285 / 15,255,442 |
+| pass on (rule V only) | 173.5 ms (noise) | 19,046,020 | 3,516,330 | 20,140,282 / 15,255,439 |
+
+Counters (FICCUS_KNOWN_STATS): aliases 3, aliases removed 3, value uses replaced 6, direct calls 0, new functions 0 (the copy kit is not used yet;
+with FICCUS_KNOWN_COPYTEST=1 it copied 32 families and refused 20 on shape, the scope check passed on all copies). Rule V alone does not move A2, as expected:
+the combinators receive `item` & co. as arguments, so no call head is an alias. Output equals the expected checksum in both modes.
