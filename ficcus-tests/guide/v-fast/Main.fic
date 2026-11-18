@@ -1,0 +1,40 @@
+module Main exposing (main)
+
+import Vector exposing (Vector)
+
+
+-- the accumulator is passed on and never used again: every push and update is done in place
+fill : Int -> Int -> Vector Int -> Vector Int
+fill i n acc =
+    if i >= n then
+        acc
+
+    else
+        fill (i + 1) n (Vector.push (i * i) acc)
+
+
+bump : Int -> Int -> Vector Int -> Vector Int
+bump i n v =
+    if i >= n then
+        v
+
+    else
+        bump (i + 1) n (Vector.update i (\x -> x + 1) v)
+
+
+report : () -> ()
+report _ =
+    let
+        v =
+            bump 0 1000 (fill 0 1000 Vector.empty)
+    in
+    Debug.log "sum" (Vector.foldl (+) 0 v) |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

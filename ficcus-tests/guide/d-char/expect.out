@@ -1,0 +1,4 @@
+fromCode 0xD800: 65533
+fromCode -1: 65533
+fromCode 0x110000: 65533
+fromCode 0x1F600: '😀'

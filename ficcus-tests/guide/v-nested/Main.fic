@@ -1,0 +1,38 @@
+module Main exposing (main)
+
+import Vector exposing (Vector)
+
+
+-- a grid as a vector of vectors: `Vector.update y (Vector.set x v)` changes one cell in place, in both levels
+grid : Int -> Vector (Vector Int)
+grid n =
+    Vector.initialize n (\_ -> Vector.repeat n 0)
+
+
+paint : Int -> Int -> Vector (Vector Int) -> Vector (Vector Int)
+paint i n g =
+    if i >= n then
+        g
+
+    else
+        paint (i + 1) n (Vector.update i (Vector.set i 1) g)
+
+
+report : () -> ()
+report _ =
+    let
+        g =
+            paint 0 100 (grid 100)
+    in
+    Debug.log "diagonal"
+        (Vector.foldl (\row acc -> acc + Vector.foldl (+) 0 row) 0 g)
+        |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

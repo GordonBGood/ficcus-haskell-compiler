@@ -1,0 +1,19 @@
+module Finance.Money exposing (Money, fromInt, total)
+
+
+type Money
+    = Money Int
+    where
+        add : Money -> Money -> Money
+        add (Money a) (Money b) =
+            Money (a + b)
+
+
+fromInt : Int -> Money
+fromInt =
+    Money
+
+
+total : List Money -> Money
+total =
+    List.foldl Money.add (Money 0)

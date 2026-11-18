@@ -29,7 +29,7 @@ type Money = Money Int
 
 - `where` follows the last variant, on a later line, indented. The members are indented under it, aligned with each other; each is an
   ordinary definition (function or value, optional signature). A doc comment or a line comment before a member is accepted (a doc
-  comment is ignored: members are not in `docs.json` in A1).
+  comment is ignored: members are not in `docs.json` in A1; see section 7 item 1).
 - A body continues on lines indented more than the member. The block ends at the first line that is not aligned with the members.
 - `where` after a type alias: **MEMBERS ON A TYPE ALIAS** (a parse error), with a wrapper type as the suggestion.
 - `where` with no member: UNFINISHED CUSTOM TYPE. A signature without its definition: Elm's EXPECTING DEFINITION (last member) or NAME MISMATCH.
@@ -105,7 +105,7 @@ names without members), `Canonicalize.Environment.Foreign` (import tables), `Rep
 
 ## 7. Known limits and open questions
 
-1. Members are not in `docs.json`; a doc comment on a member is ignored (left for later, decided with A1b).
+1. `docs.json` is not handled yet: members (and, from A2, constrained functions) show there only as the compiler's wrapped names (`Money$$add`, the `$where` scheme), and a doc comment on a member is ignored (left for later, decided with A1b).
 2. (closed by A1b: siblings are visible unqualified inside the block.)
 3. (closed by A1b: no last-segment shortcut.)
 4. The `.types`/`.mono` dumps and the JS/C identifiers show the mangled name `Money$$add` (errors and warnings never do).

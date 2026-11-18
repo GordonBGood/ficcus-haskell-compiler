@@ -1,0 +1,24 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Compiling (1)
+Compiling (2)
+Detected problems in 1 module.
+-- MISSING CONSTRAINT --------------------------------------------- src/Main.fic
+
+The type of `total` would need constraints, because it uses `sum`, but it has no
+type annotation:
+
+24| total xs =
+    ^^^^^
+I never infer constraints. A definition that needs a type to have members needs
+a type annotation with a `where` block that says so. This one:
+
+    total : List a -> a
+        where
+            a has add : a -> a -> a
+            a has zero : a

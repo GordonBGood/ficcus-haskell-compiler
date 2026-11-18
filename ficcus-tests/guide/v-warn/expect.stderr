@@ -1,0 +1,2 @@
+FIC_WARN_COPY: Vector.set copies a shared vector of 3 elements (2 references to it) in Main.bump; later copies are not reported
+vec_copy 1

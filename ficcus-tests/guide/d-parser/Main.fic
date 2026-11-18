@@ -1,0 +1,52 @@
+module Main exposing (main)
+
+import Parser exposing ((|.), (|=), Parser)
+
+
+-- (column, offset) after the astral character 😀; Parser.run counts code points, Elm counts UTF-16 units
+p1 : Parser ( Int, Int )
+p1 =
+    Parser.succeed Tuple.pair
+        |. Parser.chompIf (\c -> c == '😀')
+        |= Parser.getCol
+        |= Parser.getOffset
+
+
+p2 : Parser ( Int, Int )
+p2 =
+    Parser.succeed Tuple.pair
+        |. Parser.chompWhile (\c -> c /= '!')
+        |= Parser.getCol
+        |= Parser.getOffset
+
+
+p3 : Parser ( Int, Int )
+p3 =
+    Parser.succeed Tuple.pair
+        |. Parser.symbol "😀"
+        |= Parser.getCol
+        |= Parser.getOffset
+
+
+report : () -> ()
+report _ =
+    let
+        _ =
+            Debug.log "chompIf" (Parser.run p1 "😀!")
+
+        _ =
+            Debug.log "chompWhile" (Parser.run p2 "😀!")
+
+        _ =
+            Debug.log "symbol" (Parser.run p3 "😀!")
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

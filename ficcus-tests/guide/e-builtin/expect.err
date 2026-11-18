@@ -1,0 +1,34 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Compiling (1)
+Compiling (2)
+Detected problems in 1 module.
+-- UNKNOWN MEMBER TYPE -------------------------------------------- src/Main.fic
+
+This use of `sum` needs a type that has the members `add` and `zero`, but I
+cannot tell which type that is:
+
+14|     Debug.log "r" (sum [ 1, 2, 3 ]) |> always ()
+                       ^^^
+    add : number -> number -> number
+    zero : number
+
+The type is not determined here. If this definition is meant to work for every
+type that has these members, it needs a type annotation with a `where` block (a
+constraint is never inferred):
+
+    where
+        a has add : ...
+        a has zero : ...
+
+Otherwise a type annotation on the value that is used here will settle it.
+
+The type is a `number` variable, which only the built-in types can be. The
+built-in types (`Int`, `Float`, `String`, `List`, records, tuples, ...) do not
+have members yet; they get them in a later version. For now a constraint can
+only be met by a custom type that defines the member in its `where` block.

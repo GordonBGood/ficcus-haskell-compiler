@@ -1,0 +1,28 @@
+module Main exposing (main)
+
+
+sum : List a -> a
+    where
+        a has zero : a
+        a has add : a -> a -> a
+sum xs =
+    List.foldl add zero xs
+
+
+total : List a -> a
+total xs =
+    sum xs
+
+
+report : () -> ()
+report _ =
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

@@ -1,0 +1,39 @@
+module Main exposing (main)
+
+
+type T
+    = T Int
+    where
+        zero : T
+        zero =
+            T 0
+
+        add : T -> T -> T
+        add (T a) (T b) =
+            T (a + b)
+
+
+sum : List a -> a
+    where
+        a has zero : a
+        a has add : a -> a -> a
+sum xs =
+    List.foldl add zero xs
+
+
+total xs =
+    sum xs
+
+
+report : () -> ()
+report _ =
+    Debug.log "r" (total [ T 1 ]) |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

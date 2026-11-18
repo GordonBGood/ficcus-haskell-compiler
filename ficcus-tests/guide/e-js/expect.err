@@ -1,0 +1,15 @@
+-- CONSTRAINED FUNCTIONS -------------------------------------------------------
+
+This program has functions whose type annotation has a `where` block of
+constraints:
+
+    Main.sum
+
+They are not supported in the JavaScript output yet: the member functions that
+such a function needs would have to be passed to it when the program runs, and
+how the JavaScript output does that is not decided.
+
+The C output supports them (every use is compiled for its own types, so the
+members are called directly). Compile with an output file that ends in `.c`:
+
+    elm make src/Main.elm --output=main.c

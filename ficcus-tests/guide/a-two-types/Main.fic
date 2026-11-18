@@ -1,0 +1,51 @@
+module Main exposing (main)
+
+
+type Money
+    = Money Int
+    where
+        zero : Money
+        zero =
+            Money 0
+
+
+type Count
+    = Count Int
+    where
+        zero : Count
+        zero =
+            Count 100
+
+        bump : Count -> Count
+        bump (Count n) =
+            Count (n + 1)
+
+
+-- a top level function may have the name of a member
+zero : Int
+zero =
+    7
+
+
+report : () -> ()
+report _ =
+    let
+        _ =
+            Debug.log "Money.zero" Money.zero
+
+        _ =
+            Debug.log "Count.zero" (Count.bump Count.zero)
+
+        _ =
+            Debug.log "zero" zero
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

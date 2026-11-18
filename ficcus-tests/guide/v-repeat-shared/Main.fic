@@ -1,0 +1,38 @@
+module Main exposing (main)
+
+import Vector exposing (Vector)
+
+
+-- `Vector.repeat` puts the SAME inner vector into every slot, so the first update of each row has to copy it
+grid : Int -> Vector (Vector Int)
+grid n =
+    Vector.repeat n (Vector.repeat n 0)
+
+
+paint : Int -> Int -> Vector (Vector Int) -> Vector (Vector Int)
+paint i n g =
+    if i >= n then
+        g
+
+    else
+        paint (i + 1) n (Vector.update i (Vector.set i 1) g)
+
+
+report : () -> ()
+report _ =
+    let
+        g =
+            paint 0 100 (grid 100)
+    in
+    Debug.log "diagonal"
+        (Vector.foldl (\row acc -> acc + Vector.foldl (+) 0 row) 0 g)
+        |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

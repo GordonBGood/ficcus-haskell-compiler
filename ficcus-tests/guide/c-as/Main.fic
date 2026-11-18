@@ -1,0 +1,43 @@
+module Main exposing (main)
+
+
+type Money
+    = Money Int
+    where
+        add : Money -> Money -> Money
+        add (Money a) (Money b) =
+            Money (a + b)
+
+
+-- the module has a top level `add`, so the member needs another name inside `twice`
+add : Int -> Int -> Int
+add a b =
+    a * b
+
+
+twice : a -> a
+    where
+        a has add as plus : a -> a -> a
+twice x =
+    plus x x
+
+
+report : () -> ()
+report _ =
+    let
+        _ =
+            Debug.log "twice" (twice (Money 21))
+
+        _ =
+            Debug.log "add" (add 6 7)
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

@@ -1,0 +1,23 @@
+module Main exposing (main)
+
+
+type alias Meters =
+    Float
+    where
+        double : Meters -> Meters
+        double m =
+            m * 2
+
+
+report : () -> ()
+report _ =
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

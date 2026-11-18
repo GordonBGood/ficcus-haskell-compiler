@@ -1,0 +1,10 @@
+length "a😀b": 4
+slice 1 2: "�"
+left 2: "a�"
+indexes "b": [3]
+toList: ['a','😀','b']
+reverse: "b😀a"
+compare: GT
+toUpper: "STRASSE"
+Char.toUpper: 'SS'
+toInt: Just 9007199254740992

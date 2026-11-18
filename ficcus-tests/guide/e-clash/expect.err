@@ -1,0 +1,25 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Compiling (1)
+Compiling (2)
+Detected problems in 1 module.
+-- NAME CLASH ----------------------------------------------------- src/Main.fic
+
+The constraint gives the name `add`, but that is already the name of a
+definition. The name is first defined here:
+
+5| add a b =
+   ^^^
+And the constraint is here:
+
+11|         a has add : a -> a -> a
+                  ^^^
+Inside the definition the name could mean either one, so give the member another
+name here with `as`:
+
+    a has add as add_ : ...

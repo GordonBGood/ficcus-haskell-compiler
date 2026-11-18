@@ -120,7 +120,7 @@ byte-identical JavaScript.
 NO MEMBER (type has no such member; lists the members it has and the type needed), MEMBER TYPE MISMATCH (member exists with another
 type), MISSING CONSTRAINT (generic code uses a constrained function at its own type variable without stating the constraint),
 UNKNOWN MEMBER TYPE (constrained function used where the type is not determined, or by a function without a signature), NAME CLASH
-suggesting `as`, UNUSED CONSTRAINT VARIABLE, PROBLEM IN CONSTRAINT (syntax).
+suggesting `as`, AMBIGUOUS CONSTRAINT (a variable of a constraint that is not in the type of the signature; this is what the compiler prints, an earlier draft of this note called it UNUSED CONSTRAINT VARIABLE), PROBLEM IN CONSTRAINT (syntax).
 
 ## 8. Files
 
@@ -179,6 +179,6 @@ New: `AST.Constraints` (names, the hidden parameters, the wrapped scheme), `Pars
    type cannot be kept back; I have no program that reaches this.
 6. (closed 16 Nov: the hidden parameters are not counted in "the 2nd argument" of a definition's patterns nor in the counts of BAD TYPE
    ANNOTATION; the arguments of a call of a constrained function were never affected.)
-7. `docs.json` (`elm make --docs`, `elm diff`, `elm publish`) would show the wrapped scheme of a constrained function; not handled.
+7. `docs.json` (`elm make --docs`, `elm diff`, `elm publish`): **not handled yet.** Members and constrained functions appear there only as the compiler's internal wrapped names (`Money$$add`, the `$where` scheme), and a doc comment on a member is ignored. Same limit as item 1 of A1-NOTES section 7.
 8. The `.types` dump shows a constrained definition with its hidden parameters.
 9. The JS refusal names every constrained function of the program and its packages, used or not.

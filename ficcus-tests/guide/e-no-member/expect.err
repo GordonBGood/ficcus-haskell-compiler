@@ -1,0 +1,26 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Compiling (1)
+Compiling (2)
+Detected problems in 1 module.
+-- NO MEMBER ------------------------------------------------------ src/Main.fic
+
+This use of `sum` needs a type that has the member `add`, but it is used with:
+
+26|     Debug.log "r" (sum [ T 1 ]) |> always ()
+                       ^^^
+    T
+
+That type has these members:
+
+    mul
+    zero
+
+`sum` needs:
+
+    add : T -> T -> T

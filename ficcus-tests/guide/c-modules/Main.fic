@@ -1,0 +1,18 @@
+module Main exposing (main)
+
+import Algebra
+import Types exposing (Money(..))
+
+
+report : () -> ()
+report _ =
+    Debug.log "sum" (Algebra.sum [ Money 20, Money 22 ]) |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

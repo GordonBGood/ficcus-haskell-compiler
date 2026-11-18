@@ -1,0 +1,22 @@
+module Main exposing (main)
+
+
+type Suit
+    = Hearts
+    | Spades
+    where
+        derive compare
+
+
+report : () -> ()
+report _ =
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

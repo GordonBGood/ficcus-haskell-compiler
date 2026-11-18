@@ -1,0 +1,24 @@
+module Main exposing (main)
+
+import Finance.Money exposing (Money, fromInt, total)
+
+
+report : () -> ()
+report _ =
+    let
+        _ =
+            Debug.log "total" (total [ fromInt 1, fromInt 2 ])
+
+        _ =
+            Debug.log "add" (Money.add (fromInt 1) (fromInt 2))
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

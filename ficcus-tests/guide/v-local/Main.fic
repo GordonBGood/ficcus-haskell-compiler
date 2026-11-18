@@ -1,0 +1,23 @@
+module Main exposing (main)
+
+import Vector exposing (Vector)
+
+
+-- this is the project's own `Vector` (a 2D vector), not the flat array type of the core library
+v : Vector
+v =
+    Vector.make 3 4
+
+
+report : () -> ()
+report _ =
+    Debug.log "length" (Vector.length v) |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

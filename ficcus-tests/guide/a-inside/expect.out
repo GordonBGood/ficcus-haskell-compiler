@@ -1,0 +1,3 @@
+sum: Money 3
+double: Money 42
+top level add: 12

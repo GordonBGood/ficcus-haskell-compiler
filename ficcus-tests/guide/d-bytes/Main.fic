@@ -1,0 +1,24 @@
+module Main exposing (main)
+
+import Bytes
+import Bytes.Decode as D
+import Bytes.Encode as E
+
+
+-- the two bytes C3 28 are not valid UTF-8
+report : () -> ()
+report _ =
+    let
+        bad =
+            E.encode (E.sequence [ E.unsignedInt8 0xC3, E.unsignedInt8 0x28 ])
+    in
+    Debug.log "decode string" (D.decode (D.string 2) bad) |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

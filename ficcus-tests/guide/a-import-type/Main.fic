@@ -1,0 +1,22 @@
+module Main exposing (main)
+
+import Finance.Money exposing (Money, fromInt)
+
+
+-- `Money` is imported without its constructors. The members come with the type anyway.
+report : () -> ()
+report _ =
+    let
+        _ =
+            Debug.log "sum" (List.foldl Money.add (fromInt 1) [ fromInt 2, fromInt 3 ])
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

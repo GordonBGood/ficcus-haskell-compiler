@@ -1,0 +1,1 @@
+FIC_STATS: allocs 1006 live 0 peak 2 dup 1001 drop 2003 free_slow 1002 reuse_hit 0 reuse_miss 0 inplace 991 copied 1009 pap_steal 0 clo_steal 0 vec_copy 1000

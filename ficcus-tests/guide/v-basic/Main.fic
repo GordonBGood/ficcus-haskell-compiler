@@ -1,0 +1,56 @@
+module Main exposing (main)
+
+import Vector exposing (Vector)
+
+
+squares : Vector Int
+squares =
+    Vector.initialize 6 (\i -> i * i)
+
+
+report : () -> ()
+report _ =
+    let
+        _ =
+            Debug.log "squares" squares
+
+        _ =
+            Debug.log "length" (Vector.length squares)
+
+        _ =
+            Debug.log "get 3 / get 9" ( Vector.get 3 squares, Vector.get 9 squares )
+
+        _ =
+            Debug.log "set 0 / set 9" ( Vector.toList (Vector.set 0 -1 squares), Vector.toList (Vector.set 9 -1 squares) )
+
+        _ =
+            Debug.log "push" (Vector.toList (Vector.push 36 squares))
+
+        _ =
+            Debug.log "slice 1 3 / slice -2 6" ( Vector.toList (Vector.slice 1 3 squares), Vector.toList (Vector.slice -2 6 squares) )
+
+        _ =
+            Debug.log "append" (Vector.toList (Vector.append squares (Vector.fromList [ 100, 101 ])))
+
+        _ =
+            Debug.log "map / foldl" ( Vector.toList (Vector.map (\x -> x + 1) squares), Vector.foldl (+) 0 squares )
+
+        _ =
+            Debug.log "filter" (Vector.toList (Vector.filter (\x -> modBy 2 x == 0) squares))
+
+        _ =
+            Debug.log "equal" ( squares == Vector.fromList [ 0, 1, 4, 9, 16, 25 ], squares == Vector.empty )
+
+        _ =
+            Debug.log "initialize 0 / repeat -3" ( Vector.length (Vector.initialize 0 identity), Vector.length (Vector.repeat -3 'x') )
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

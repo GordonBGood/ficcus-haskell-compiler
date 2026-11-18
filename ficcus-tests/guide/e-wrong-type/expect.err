@@ -1,0 +1,21 @@
+
+Verifying dependencies (0/2)
+Verifying dependencies (1/2)
+Verifying dependencies (2/2)
+                            
+Dependencies ready!
+Compiling ...
+Compiling (1)
+Compiling (2)
+Detected problems in 1 module.
+-- MEMBER TYPE MISMATCH ------------------------------------------- src/Main.fic
+
+This use of `sum` needs the member `add` with this type:
+
+26|     Debug.log "r" (sum [ T 1 ]) |> always ()
+                       ^^^
+    T -> T -> T
+
+But `T.add` is:
+
+    T -> Int -> T

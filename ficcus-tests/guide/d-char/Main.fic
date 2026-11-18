@@ -1,0 +1,28 @@
+module Main exposing (main)
+
+
+report : () -> ()
+report _ =
+    let
+        _ =
+            Debug.log "fromCode 0xD800" (Char.toCode (Char.fromCode 0xD800))
+
+        _ =
+            Debug.log "fromCode -1" (Char.toCode (Char.fromCode -1))
+
+        _ =
+            Debug.log "fromCode 0x110000" (Char.toCode (Char.fromCode 0x00110000))
+
+        _ =
+            Debug.log "fromCode 0x1F600" (Char.fromCode 0x0001F600)
+    in
+    ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

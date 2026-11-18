@@ -1,0 +1,22 @@
+module Main exposing (main)
+
+import Regex
+
+
+-- (a*)*b on a text of a's without a b: the number of ways to split the a's grows exponentially
+report : () -> ()
+report _ =
+    let
+        rx =
+            Maybe.withDefault Regex.never (Regex.fromString "(a*)*b")
+    in
+    Debug.log "contains" (Regex.contains rx (String.repeat 40 "a" ++ "c")) |> always ()
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( report (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
