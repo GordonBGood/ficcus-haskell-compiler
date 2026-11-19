@@ -343,15 +343,12 @@ sortBy f v =
         permute v (sortPerm (map f v))
 
 
-{-| Sort with a comparison function; stable. The function is called on the elements (borrowed from the vector) through an index sort.
+{-| Sort with a comparison function; stable. A kernel (H21d): the elements are sorted in place (unique vector) or in a copy, the function is
+called on copies of the two elements (the closure consumes its arguments).
 -}
 sortWith : (a -> a -> Order) -> Vector a -> Vector a
 sortWith cmp v =
-    if length v < 2 then
-        v
-
-    else
-        permute v (sortIdx (\i j -> cmp (unsafeGet i v) (unsafeGet j v)) (initialize (length v) (\i -> i)))
+    sortWith cmp v
 
 
 {-| not exposed: the elements in the order of the indices

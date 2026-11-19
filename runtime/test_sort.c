@@ -90,6 +90,9 @@ static fic_ref ivec(int64_t n, int p) {
   FIC_VECTOR(v)->len = n;
   return v;
 }
+static fic_word wildf(fic_ref self, fic_word a, fic_word b) { (void)self; (void)a; (void)b; return fic_w_b((uint8_t)(rnd() % 3)); }
+static const fic_code wildcode = { (void (*)(void))wildf, 2u FIC_CODE_OWN0 };
+static int gtw(void *f, const void *a, const void *b) { return fic_ap2((fic_ref)f, 0u, fic_w_i(*(const int64_t *)a), fic_w_i(*(const int64_t *)b)).b == 2u; }
 static int is_sorted(fic_ref v) {
   int64_t i, *d = (int64_t *)(void *)FIC_VECTOR(v)->data;
   for (i = 1; i < FIC_VECTOR(v)->len; i++) if (d[i - 1] > d[i]) return 0;
@@ -136,6 +139,21 @@ static void vector_cases(void) {
   for (i = 1; i < 100; i++) if ((pd[i - 1] % 5) > (pd[i] % 5) || ((pd[i - 1] % 5) == (pd[i] % 5) && pd[i - 1] > pd[i])) ok = 0;
   CHECK("sortIdx with a closure comparator is stable", ok);
   fic_drop(idx);
+  /* sortWith on the elements themselves (H21d): stable by key mod 5 (elements 0..4999 tagged by their value), unique vector in place */
+  { fic_ref e = ivec(5000, 1), e2; int64_t *ed; clo.code = &keycode;
+    e2 = e; e = fic_vsort_gt(e, gtw, (fic_ref)&clo, "test");
+    ed = (int64_t *)(void *)FIC_VECTOR(e)->data; ok = 1;
+    for (i = 1; i < 5000; i++) if ((ed[i - 1] % 5) > (ed[i] % 5) || ((ed[i - 1] % 5) == (ed[i] % 5) && ed[i - 1] > ed[i])) ok = 0;
+    CHECK("sortWith on the elements is stable", ok);
+#ifdef FIC_RC
+    CHECK("sortWith on a unique vector is in place", e == e2);
+#endif
+    fic_drop(e);
+    e = ivec(3000, 0); { int64_t sum = 0, sum2 = 0; for (i = 0; i < 3000; i++) sum += ((int64_t *)(void *)FIC_VECTOR(e)->data)[i];
+      clo.code = &wildcode; e = fic_vsort_gt(e, gtw, (fic_ref)&clo, "test");
+      for (i = 0; i < 3000; i++) sum2 += ((int64_t *)(void *)FIC_VECTOR(e)->data)[i];
+      CHECK("sortWith with an inconsistent comparison function keeps a permutation", sum == sum2 && FIC_VECTOR(e)->len == 3000); }
+    fic_drop(e); }
 }
 
 static int wild(const void *a, const void *b) { (void)a; (void)b; return (int)(rnd() % 3) - 1; }

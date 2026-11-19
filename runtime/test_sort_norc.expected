@@ -8,4 +8,6 @@ ok   without counts every sort copies
 ok   sortPerm is the stable permutation of the keys
 ok   sortIdx with a closure keeps the order of an ordered vector
 ok   sortIdx with a closure comparator is stable
+ok   sortWith on the elements is stable
+ok   sortWith with an inconsistent comparison function keeps a permutation
 ok   inconsistent comparator: canaries intact and the result is a permutation (400 runs)

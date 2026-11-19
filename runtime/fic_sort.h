@@ -350,4 +350,18 @@ static fic_ref fic_vsort_idx(fic_ref f, fic_ref idx, const char *where) {
   return idx;
 }
 
+/* Vector.sortWith f v (H21d): the elements themselves are sorted (v consumed, in place when unique) with the comparison function f (a closure,
+   borrowed) through `gt`, the generated test for the element class (CGen `vecSortCmpBody`): no index vector, no gather. */
+static fic_ref fic_vsort_gt(fic_ref v, fic_ps_gt_fn gt, fic_ref f, const char *where) {
+  if (FIC_VECTOR(v)->len < 2) return v;
+  v = fic_vsort_own(v, where);
+  /* the element size as a constant for the usual sizes (a scalar, a reference or a pair of words): the moves become plain loads and stores */
+  switch (FIC_VECTOR(v)->esize) {
+  case 8: fic_ps_sort_inl(FIC_VECTOR(v)->data, FIC_VECTOR(v)->len, 8, gt, (void *)f); break;
+  case 16: fic_ps_sort_inl(FIC_VECTOR(v)->data, FIC_VECTOR(v)->len, 16, gt, (void *)f); break;
+  default: fic_ps_sort_inl(FIC_VECTOR(v)->data, FIC_VECTOR(v)->len, FIC_VECTOR(v)->esize, gt, (void *)f); break;
+  }
+  return v;
+}
+
 #endif

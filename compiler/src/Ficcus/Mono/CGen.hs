@@ -1441,6 +1441,10 @@ vectorCall info cls op key args =
           do  vs <- atomsTo info [(v, CRef)]
               (mode, cmp) <- sortMode key
               return ("fic_vsort_perm(" ++ vs !! 0 ++ ", " ++ mode ++ ", " ++ cmp ++ ")")
+        ("sortWith", [f, v]) ->
+          do  vs <- atomsTo info [(f, CRef), (v, CRef)]
+              h <- helper (HVecSortCmp c)
+              return ("fic_vsort_gt(" ++ vs !! 1 ++ ", " ++ h ++ ", " ++ vs !! 0 ++ ", " ++ wh ++ ")")
         ("sortIdx", [f, v]) ->
           do  vs <- atomsTo info [(f, CRef), (v, CRef)]
               return ("fic_vsort_idx(" ++ vs !! 0 ++ ", " ++ vs !! 1 ++ ", " ++ wh ++ ")")
@@ -1972,6 +1976,7 @@ data HKey
   | HShowTree MType
   | HVecFromList Class         -- V1: a Vector of this element class from a list, and back
   | HVecToList Class
+  | HVecSortCmp Class          -- H21d: `a > b` through a user comparison function (closure) on element addresses
   | HVecCmp MType              -- H21: the comparator on element addresses of a Vector sort (FIC_SORT_CMP)
   deriving (Eq, Ord)
 
@@ -2004,6 +2009,7 @@ helper k =
         HVecFromList _ -> "fic_vfl_"
         HVecToList _ -> "fic_vtl_"
         HVecCmp _ -> "fic_vcmp_"
+        HVecSortCmp _ -> "fic_vsw_"
         HShow _ -> "fic_show_"
         HShowTree _ -> "fic_showtree_"
 
@@ -2108,6 +2114,7 @@ genHelper info k name =
     HFromList c -> withProto ("static fic_ref " ++ name ++ "(int64_t max, fic_ref xs, fic_ref *rest)") (fromListBody c)
     HVecFromList c -> withProto ("static fic_ref " ++ name ++ "(fic_ref xs)") (vecFromListBody c)
     HVecToList c -> withProto ("static fic_ref " ++ name ++ "(fic_ref v)") (vecToListBody c)
+    HVecSortCmp c -> withProto ("static int " ++ name ++ "(void *f, const void *pa, const void *pb)") (vecSortCmpBody c)
     HVecCmp t -> withProto ("static int " ++ name ++ "(const void *pa, const void *pb)") (vecCmpBody t)
   where
     withProto sig body =
@@ -2166,6 +2173,18 @@ genHelper info k name =
           emit "return 1;"
 
     -- V1: the elements of a list, in order, as a new Vector (the list is borrowed: the elements get counts of their own)
+    -- H21d: the comparison function f (a closure, borrowed) on two elements that stay in the vector: each is copied out, given its own counts
+    -- (the closure consumes its arguments), put in the closure ABI (a struct is boxed) and f is applied; GT (2) means "a goes after b"
+    vecSortCmpBody c =
+      do  let ty = classType c
+          needClass info c
+          rcMode <- gets gRc
+          emit (ty ++ " x = *(const " ++ ty ++ " *)pa, y = *(const " ++ ty ++ " *)pb;")
+          when rcMode (dupVars' c "x" >> dupVars' c "y")
+          bx <- adaptOwn c (abiClass c) "x"
+          by <- adaptOwn c (abiClass c) "y"
+          emit ("return fic_ap2((fic_ref)f, " ++ (if abiClass c == CRef then "3u" else "0u") ++ ", " ++ wordMk c bx ++ ", " ++ wordMk c by ++ ")" ++ ".b == 2u;")
+
     -- H21: the sign of the comparison of two elements (addresses), the compare of `compare` at the exact element type
     vecCmpBody t =
       do  let ty = classType (clsOf info t)
