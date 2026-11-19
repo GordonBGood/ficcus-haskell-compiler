@@ -141,7 +141,7 @@ static void vector_cases(void) {
   fic_drop(idx);
   /* sortWith on the elements themselves (H21d): stable by key mod 5 (elements 0..4999 tagged by their value), unique vector in place */
   { fic_ref e = ivec(5000, 1), e2; int64_t *ed; clo.code = &keycode;
-    e2 = e; e = fic_vsort_gt(e, gtw, (fic_ref)&clo, "test");
+    e2 = e; (void)e2; e = fic_vsort_gt(e, gtw, (fic_ref)&clo, "test");
     ed = (int64_t *)(void *)FIC_VECTOR(e)->data; ok = 1;
     for (i = 1; i < 5000; i++) if ((ed[i - 1] % 5) > (ed[i] % 5) || ((ed[i - 1] % 5) == (ed[i] % 5) && ed[i - 1] > ed[i])) ok = 0;
     CHECK("sortWith on the elements is stable", ok);

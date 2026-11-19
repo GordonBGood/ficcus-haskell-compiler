@@ -21,6 +21,7 @@ OPS = {
  "vsort": "let v = Vector.sort (Vector.fromList xs) in Vector.length v + (Maybe.withDefault 0 (Vector.get 0 v))",
  "lsort": "sum (List.sort xs)",
  "lsortWith": "sum (List.sortWith compare xs)",
+ "lsortWithDesc": "sum (List.sortWith (\\a b -> compare b a) xs)",
  "lsortBy": "sum (List.sortBy (\\x -> x) xs)",
 }
 TEMPLATE = '''module Main exposing (main)
@@ -94,7 +95,7 @@ for pat, pe in PAT.items():
             t = time.perf_counter(); p = subprocess.run(["./x"], cwd=d, capture_output=True, text=True); ts.append((time.perf_counter() - t) * 1e3)
             if p.returncode: print("run failed", pat, op, p.stderr[-300:]); sys.exit(1)
         res[(pat, op)] = statistics.median(ts[-a.last:] if a.last else ts)
-if len(OPS) < 7:
+if len(OPS) < 8:
     for k, v in res.items(): print("%-9s %-10s %8.1f ms" % (k[0], k[1], v - res[(k[0], "gen")] if k[1] != "gen" else v))
     sys.exit(0)
 print("%-9s %7s %9s %9s %9s %9s %9s %9s %9s" % ("pattern", "gen", "fromList", "toList", "vsort", "lsort", "lsortWith", "lsortBy", "in/sort/out"))
