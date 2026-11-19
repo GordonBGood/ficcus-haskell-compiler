@@ -11,7 +11,8 @@ ap.add_argument("--runs", type=int, default=5); ap.add_argument("--work", defaul
 a = ap.parse_args()
 HERE = os.path.dirname(os.path.abspath(__file__)); W = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 env = dict(os.environ, ELM_HOME=os.path.abspath(a.elm_home)); elm = os.path.abspath(a.elm)
-PAT = {"random": "lcg s", "sorted": "k", "reversed": "n - k", "swap10": "(if modBy 10 (lcg s) == 0 then lcg s else k)", "dups": "modBy 100 (lcg s)"}
+PAT = {"random": "lcg s", "sorted": "k", "reversed": "n - k", "swap10": "(if modBy 10 (lcg s) == 0 then lcg s else k)", "dups": "modBy 100 (lcg s)", "small": "modBy 1000 (lcg s)", "rand100k": "lcg s"}
+SIZE = {"rand100k": "100000"}
 OPS = {
  "gen": "sum xs",
  "fromList": "let v = Vector.fromList xs in Vector.length v + (Maybe.withDefault 0 (Vector.get 0 v))",
@@ -56,7 +57,7 @@ main =
             \\_ ->
                 let
                     n =
-                        1000000
+                        @N@
 
                     xs =
                         gen n 0 12345 []
@@ -76,7 +77,7 @@ for pat, pe in PAT.items():
     for op, oe in OPS.items():
         d = f"{a.work}/{pat}_{op}"; os.makedirs(d + "/src")
         open(d + "/elm.json", "w").write(ELMJSON)
-        src = TEMPLATE.replace("@PAT@", pe).replace("@OP@", oe)
+        src = TEMPLATE.replace("@PAT@", pe).replace("@OP@", oe).replace("@N@", SIZE.get(pat, "1000000"))
         # the lcg values are used as the elements; "k" and "n" are the index and the size
         src = src.replace("(@", "(").replace("1000000\n", "1000000\n")
         src = src.replace("gen n (k + 1) s2 (", "gen n (k + 1) s2 (")
