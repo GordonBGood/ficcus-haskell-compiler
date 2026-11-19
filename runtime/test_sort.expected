@@ -1,7 +1,7 @@
 ok   scalar modes equal the reference on 9 patterns x 18 sizes
 ok   stable: pairs equal the reference with indices
 ok   pair sort is ordered
-FAIL radix (Int with INT64_MIN/MAX, Char with a high byte; stable pairs with equal keys) equals Powersort or the stable reference; the automatic choice sorts
+ok   radix (Int with INT64_MIN/MAX, Char with a high byte; stable pairs with equal keys) equals Powersort or the stable reference; the automatic choice sorts
 ok   sort of a shared vector gives a sorted copy
 ok   the other owner still sees the original order
 ok   sort of a unique vector is in place

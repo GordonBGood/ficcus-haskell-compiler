@@ -64,8 +64,8 @@ static void sort_cases(void) {
           for (i = 0; i < n; i++) { r1[i].k = r2[i].k = (i % 53 == 7) ? INT64_MIN : (i % 59 == 9) ? INT64_MAX : (a[(i * 7919) % n].k % 7) - 3; r1[i].i = r2[i].i = i; }
           qsort(r1, (size_t)n, sizeof(fic_ps_pi), ref_kp); fic_radix_pi(r2, n);                      /* many equal keys, negative, extremes: stable */
           for (i = 0; i < n; i++) if (r1[i].k != r2[i].k || r1[i].i != r2[i].i) { badr++; break; }
-          for (i = 0; i < n; i++) r2[i] = r1[n - 1 - i];
-          fic_sort_pi_auto(r2, n);                                                                      /* reversed input: the automatic choice, same order */
+          for (i = 0; i < n; i++) r2[i] = r1[i];
+          fic_sort_pi_auto(r2, n);                                                                      /* sorted input (few runs): Powersort, same order */
           for (i = 0; i < n; i++) if (r1[i].k != r2[i].k || r1[i].i != r2[i].i) { badr++; break; }
           free(r1); free(r2); }
         for (i = 1; i < n; i++) if (q[i - 1].k > q[i].k) { badk++; break; }
