@@ -156,6 +156,9 @@ one name n =
         chars =
             List.map Char.fromCode (List.map (\x -> 32 + modBy 50000 x) xs)
 
+        cb =
+            List.sortBy Tuple.first (List.indexedMap (\i c -> ( Char.fromCode (65 + modBy 5 (Char.toCode c)), i )) chars)
+
         w =
             List.sortWith (wild n) xs
 
@@ -175,6 +178,7 @@ one name n =
         , String.fromInt (hash v3)
         , String.fromInt (hash (Vector.toList v)) -- the original vector is unchanged by Vector.sort
         , String.fromInt (hash (List.map Char.toCode (List.sort chars)))
+        , String.fromInt (hash (List.map Tuple.second cb))
         , "bad=" ++ String.fromInt (stableBad r3 + stableBad (List.sortBy Tuple.first (List.reverse ps) |> List.map (\( k, i ) -> ( k, negate i ))))
         , "fuzz=" ++ String.fromInt (List.length w) ++ "," ++ String.fromInt (sumInt w) ++ "," ++ String.fromInt (List.length ws)
         ]

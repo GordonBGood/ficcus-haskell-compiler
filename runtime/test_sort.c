@@ -60,6 +60,14 @@ static void sort_cases(void) {
       { fic_ps_pi *q = (fic_ps_pi *)malloc((size_t)(n + 1) * sizeof(fic_ps_pi));
         for (i = 0; i < n; i++) { q[i].k = b[i].k; q[i].i = b[i].i; }
         fic_ps_sort_pi(q, n);
+        { fic_ps_pi *r1 = (fic_ps_pi *)malloc((size_t)(n + 1) * sizeof(fic_ps_pi)), *r2 = (fic_ps_pi *)malloc((size_t)(n + 1) * sizeof(fic_ps_pi));
+          for (i = 0; i < n; i++) { r1[i].k = r2[i].k = (i % 53 == 7) ? INT64_MIN : (i % 59 == 9) ? INT64_MAX : (a[(i * 7919) % n].k % 7) - 3; r1[i].i = r2[i].i = i; }
+          qsort(r1, (size_t)n, sizeof(fic_ps_pi), ref_kp); fic_radix_pi(r2, n);                      /* many equal keys, negative, extremes: stable */
+          for (i = 0; i < n; i++) if (r1[i].k != r2[i].k || r1[i].i != r2[i].i) { badr++; break; }
+          for (i = 0; i < n; i++) r2[i] = r1[n - 1 - i];
+          fic_sort_pi_auto(r2, n);                                                                      /* reversed input: the automatic choice, same order */
+          for (i = 0; i < n; i++) if (r1[i].k != r2[i].k || r1[i].i != r2[i].i) { badr++; break; }
+          free(r1); free(r2); }
         for (i = 1; i < n; i++) if (q[i - 1].k > q[i].k) { badk++; break; }
         free(q); }
       free(a); free(b); free(v); free(d); free(u); free(v2); free(v3); free(u2); free(u3);
@@ -67,7 +75,7 @@ static void sort_cases(void) {
   CHECK("scalar modes equal the reference on 9 patterns x 18 sizes", bad == 0);
   CHECK("stable: pairs equal the reference with indices", bads == 0);
   CHECK("pair sort is ordered", badk == 0);
-  CHECK("radix (Int with INT64_MIN/MAX, Char with a high byte) equals Powersort; the automatic choice sorts", badr == 0);
+  CHECK("radix (Int with INT64_MIN/MAX, Char with a high byte; stable pairs with equal keys) equals Powersort or the stable reference; the automatic choice sorts", badr == 0);
 }
 
 static fic_word gtclo(fic_ref self, fic_word a, fic_word b) { (void)self; return fic_w_b(a.i < b.i ? 0 : a.i == b.i ? 1 : 2); }

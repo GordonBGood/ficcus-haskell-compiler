@@ -225,6 +225,45 @@ static void fic_sort_u32_auto(uint32_t *p, int64_t n) {
   if (n >= FIC_RADIX_MIN && !fic_fewruns_u32(p, n)) fic_radix_u32(p, n); else fic_ps_sort_u32(p, n);
 }
 
+/* H21c: the same radix sort on (key, index) pairs, for sortBy with an Int or Char key: LSD passes are stable, so equal keys keep their order of
+   indices; the key is flipped like the Int radix above. The run test looks at the keys. */
+static void fic_radix_pi(fic_ps_pi *a, int64_t n) {
+  size_t h[8][256];
+  fic_ps_pi *src = a, *dst, *t;
+  int64_t i;
+  int b;
+  if (n < 2) return;
+  dst = (fic_ps_pi *)malloc((size_t)n * sizeof(fic_ps_pi));
+  if (dst == NULL) abort();
+  t = dst;
+  memset(h, 0, sizeof h);
+  for (i = 0; i < n; i++) { uint64_t k = (uint64_t)src[i].k ^ 0x8000000000000000ull; src[i].k = (int64_t)k; for (b = 0; b < 8; b++) h[b][(k >> (8 * b)) & 255]++; }
+  for (b = 0; b < 8; b++) {
+    size_t sum = 0;
+    int d;
+    if (h[b][((uint64_t)src[0].k >> (8 * b)) & 255] == (size_t)n) continue;
+    for (d = 0; d < 256; d++) { size_t c = h[b][d]; h[b][d] = sum; sum += c; }
+    for (i = 0; i < n; i++) dst[h[b][((uint64_t)src[i].k >> (8 * b)) & 255]++] = src[i];
+    { fic_ps_pi *x = src; src = dst; dst = x; }
+  }
+  if (src == t) memcpy(a, src, (size_t)n * sizeof(fic_ps_pi));
+  for (i = 0; i < n; i++) a[i].k = (int64_t)((uint64_t)a[i].k ^ 0x8000000000000000ull);
+  free(t);
+}
+static int fic_fewruns_pi(const fic_ps_pi *a, int64_t n) {
+  int64_t i = 0, runs = 0, limit = n / 32;
+  while (i < n) {
+    int64_t j = i + 1;
+    if (++runs > limit) return 0;
+    if (j < n) { if (a[i].k > a[j].k) { j++; while (j < n && a[j - 1].k > a[j].k) j++; } else { j++; while (j < n && a[j - 1].k <= a[j].k) j++; } }
+    i = j;
+  }
+  return 1;
+}
+static void fic_sort_pi_auto(fic_ps_pi *p, int64_t n) {
+  if (n >= FIC_RADIX_MIN && !fic_fewruns_pi(p, n)) fic_radix_pi(p, n); else fic_ps_sort_pi(p, n);
+}
+
 /* a comparator on element addresses (FIC_SORT_CMP) and the closure comparator on indices, as a GT test */
 typedef struct { fic_vcmp_fn cmp; const unsigned char *keys; size_t es; } fic_ps_keyctx;
 /* ctx is the ADDRESS of a fic_vcmp_fn (a function pointer is not converted to void *) */
@@ -284,7 +323,7 @@ static fic_ref fic_vsort_perm(fic_ref keys, int mode, fic_vcmp_fn cmp) {
     fic_ps_pi *p = (fic_ps_pi *)malloc((size_t)n * sizeof(fic_ps_pi));
     if (p == NULL) abort();
     for (i = 0; i < n; i++) { p[i].k = mode == FIC_SORT_I64 ? ((const int64_t *)kd)[i] : (int64_t)((const uint32_t *)kd)[i]; p[i].i = i; }
-    fic_ps_sort_pi(p, n);
+    fic_sort_pi_auto(p, n);
     for (i = 0; i < n; i++) out[i] = p[i].i;
     free(p);
   } else if (mode == FIC_SORT_F64) {

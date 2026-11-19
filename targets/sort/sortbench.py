@@ -7,7 +7,8 @@ Split of List.sort: in = fromList, sort = vsort - fromList, out = lsort - vsort.
   python3 targets/sort/sortbench.py --elm bin/elmficS2 --elm-home H [--runs 5]"""
 import argparse, os, shutil, statistics, subprocess, sys, time
 ap = argparse.ArgumentParser(); ap.add_argument("--elm", required=True); ap.add_argument("--elm-home", required=True)
-ap.add_argument("--runs", type=int, default=5); ap.add_argument("--work", default="/home/gordon/claude-tmp/sortbench")
+ap.add_argument("--runs", type=int, default=5); ap.add_argument("--last", type=int, default=0, help="median of the last N runs (steady state: --runs 60 --last 40)")
+ap.add_argument("--patterns", default=""); ap.add_argument("--ops", default=""); ap.add_argument("--work", default="/home/gordon/claude-tmp/sortbench")
 a = ap.parse_args()
 HERE = os.path.dirname(os.path.abspath(__file__)); W = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 env = dict(os.environ, ELM_HOME=os.path.abspath(a.elm_home)); elm = os.path.abspath(a.elm)
@@ -72,6 +73,8 @@ main =
 '''
 ELMJSON = open(os.path.join(HERE, "..", "..", "ficcus-tests", "ficc-exe-rc.sh")).read().split("<<'JSON'\n")[1].split("\nJSON")[0]
 res = {}
+if a.patterns: PAT = {k: v for k, v in PAT.items() if k in a.patterns.split(",")}
+if a.ops: OPS = {k: v for k, v in OPS.items() if k in a.ops.split(",")}
 shutil.rmtree(a.work, ignore_errors=True)
 for pat, pe in PAT.items():
     for op, oe in OPS.items():
@@ -90,7 +93,10 @@ for pat, pe in PAT.items():
         for _ in range(a.runs):
             t = time.perf_counter(); p = subprocess.run(["./x"], cwd=d, capture_output=True, text=True); ts.append((time.perf_counter() - t) * 1e3)
             if p.returncode: print("run failed", pat, op, p.stderr[-300:]); sys.exit(1)
-        res[(pat, op)] = statistics.median(ts)
+        res[(pat, op)] = statistics.median(ts[-a.last:] if a.last else ts)
+if len(OPS) < 7:
+    for k, v in res.items(): print("%-9s %-10s %8.1f ms" % (k[0], k[1], v - res[(k[0], "gen")] if k[1] != "gen" else v))
+    sys.exit(0)
 print("%-9s %7s %9s %9s %9s %9s %9s %9s %9s" % ("pattern", "gen", "fromList", "toList", "vsort", "lsort", "lsortWith", "lsortBy", "in/sort/out"))
 for pat in PAT:
     g = res[(pat, "gen")]; f = res[(pat, "fromList")] - g; tl = res[(pat, "toList")] - res[(pat, "fromList")]
