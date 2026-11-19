@@ -64,6 +64,12 @@ pattern name n seed =
         "swaps10" ->
             List.map2 (\i r -> if modBy 10 r == 0 then r else i) idx rs
 
+        "small" ->
+            List.map (\r -> modBy 1000 r) rs
+
+        "neg" ->
+            List.map (\r -> r * 1000 - 50000000) rs
+
         _ ->
             List.map (\r -> modBy 9 r) rs
 
@@ -147,6 +153,9 @@ one name n =
         v3 =
             Vector.toList (Vector.sortWith (\a b -> compare a b) v)
 
+        chars =
+            List.map Char.fromCode (List.map (\x -> 32 + modBy 50000 x) xs)
+
         w =
             List.sortWith (wild n) xs
 
@@ -165,6 +174,7 @@ one name n =
         , String.fromInt (hash v2)
         , String.fromInt (hash v3)
         , String.fromInt (hash (Vector.toList v)) -- the original vector is unchanged by Vector.sort
+        , String.fromInt (hash (List.map Char.toCode (List.sort chars)))
         , "bad=" ++ String.fromInt (stableBad r3 + stableBad (List.sortBy Tuple.first (List.reverse ps) |> List.map (\( k, i ) -> ( k, negate i ))))
         , "fuzz=" ++ String.fromInt (List.length w) ++ "," ++ String.fromInt (sumInt w) ++ "," ++ String.fromInt (List.length ws)
         ]
@@ -172,9 +182,9 @@ one name n =
 
 cases : List ( String, Int )
 cases =
-    List.concatMap (\p -> List.map (\n -> ( p, n )) [ 0, 1, 2, 3, 31, 32, 33, 100, 1000, 5000 ])
-        [ "random", "sorted", "reversed", "equal", "organ", "saw", "runs", "swaps10", "dups" ]
-        ++ [ ( "random", 1000000 ), ( "sorted", 1000000 ), ( "reversed", 1000000 ), ( "swaps10", 1000000 ), ( "dups", 1000000 ) ]
+    List.concatMap (\p -> List.map (\n -> ( p, n )) [ 0, 1, 2, 3, 31, 32, 33, 100, 255, 256, 257, 300, 1000, 5000, 100000 ])
+        [ "random", "sorted", "reversed", "equal", "organ", "saw", "runs", "swaps10", "dups", "small", "neg" ]
+        ++ [ ( "random", 1000000 ), ( "sorted", 1000000 ), ( "reversed", 1000000 ), ( "swaps10", 1000000 ), ( "dups", 1000000 ), ( "small", 1000000 ), ( "neg", 1000000 ) ]
 
 
 main : Program () () ()

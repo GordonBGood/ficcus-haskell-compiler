@@ -35,8 +35,8 @@ static int64_t gen(int p, int64_t i, int64_t n) {
 }
 
 static void sort_cases(void) {
-  static const int64_t sizes[] = { 0, 1, 2, 3, 31, 32, 33, 63, 64, 65, 100, 1000, 4097, 100000 };
-  int p, bad = 0, badk = 0, bads = 0;
+  static const int64_t sizes[] = { 0, 1, 2, 3, 31, 32, 33, 63, 64, 65, 100, 255, 256, 257, 300, 1000, 4097, 100000 };
+  int p, bad = 0, badk = 0, bads = 0, badr = 0;
   size_t s;
   for (p = 0; p < 9; p++)
     for (s = 0; s < sizeof sizes / sizeof sizes[0]; s++) {
@@ -46,22 +46,28 @@ static void sort_cases(void) {
       int64_t *v = (int64_t *)malloc((size_t)(n + 1) * 8);
       double *d = (double *)malloc((size_t)(n + 1) * 8);
       uint32_t *u = (uint32_t *)malloc((size_t)(n + 1) * 4);
-      for (i = 0; i < n; i++) { a[i].k = gen(p, i, n); a[i].i = i; b[i] = a[i]; v[i] = a[i].k; d[i] = (double)a[i].k; u[i] = (uint32_t)(a[i].k + 500000); }
+      int64_t *v2 = (int64_t *)malloc((size_t)(n + 1) * 8), *v3 = (int64_t *)malloc((size_t)(n + 1) * 8);
+      uint32_t *u2 = (uint32_t *)malloc((size_t)(n + 1) * 4), *u3 = (uint32_t *)malloc((size_t)(n + 1) * 4);
+      for (i = 0; i < n; i++) { a[i].k = gen(p, i, n); a[i].i = i; b[i] = a[i]; v[i] = a[i].k; d[i] = (double)a[i].k; u[i] = (uint32_t)(a[i].k + 500000); v2[i] = v3[i] = (i % 97 == 5) ? (a[i].k % 2 ? INT64_MIN : INT64_MAX) : a[i].k; u2[i] = u3[i] = (uint32_t)(a[i].k + 500000) ^ ((i % 89 == 3) ? 0xFF000000u : 0u); }
       qsort(a, (size_t)n, sizeof(kp), ref_kp);
       fic_ps_sort_inl(b, n, sizeof(kp), fic_psg_cmp, (void *)&cmpf);     /* stable: must equal the reference, indices included */
       for (i = 0; i < n; i++) if (a[i].k != b[i].k || a[i].i != b[i].i) { bads++; break; }
       fic_ps_sort_i64(v, n); fic_ps_sort_f64(d, n); fic_ps_sort_u32(u, n);
+      fic_ps_sort_i64(v2, n); fic_radix_i64(v3, n); fic_ps_sort_u32(u2, n); fic_radix_u32(u3, n);        /* radix with the extremes and the top byte */
+      for (i = 0; i < n; i++) if (v2[i] != v3[i] || u2[i] != u3[i]) { badr++; break; }
+      { int64_t *v4 = (int64_t *)malloc((size_t)(n + 1) * 8); for (i = 0; i < n; i++) v4[i] = a[(i * 7919) % (n ? n : 1)].k; fic_sort_i64_auto(v4, n); for (i = 1; i < n; i++) if (v4[i - 1] > v4[i]) { badr++; break; } free(v4); }
       for (i = 0; i < n; i++) if (v[i] != a[i].k || d[i] != (double)a[i].k || u[i] != (uint32_t)(a[i].k + 500000)) { bad++; break; }
       { fic_ps_pi *q = (fic_ps_pi *)malloc((size_t)(n + 1) * sizeof(fic_ps_pi));
         for (i = 0; i < n; i++) { q[i].k = b[i].k; q[i].i = b[i].i; }
         fic_ps_sort_pi(q, n);
         for (i = 1; i < n; i++) if (q[i - 1].k > q[i].k) { badk++; break; }
         free(q); }
-      free(a); free(b); free(v); free(d); free(u);
+      free(a); free(b); free(v); free(d); free(u); free(v2); free(v3); free(u2); free(u3);
     }
-  CHECK("scalar modes equal the reference on 9 patterns x 14 sizes", bad == 0);
+  CHECK("scalar modes equal the reference on 9 patterns x 18 sizes", bad == 0);
   CHECK("stable: pairs equal the reference with indices", bads == 0);
   CHECK("pair sort is ordered", badk == 0);
+  CHECK("radix (Int with INT64_MIN/MAX, Char with a high byte) equals Powersort; the automatic choice sorts", badr == 0);
 }
 
 static fic_word gtclo(fic_ref self, fic_word a, fic_word b) { (void)self; return fic_w_b(a.i < b.i ? 0 : a.i == b.i ? 1 : 2); }

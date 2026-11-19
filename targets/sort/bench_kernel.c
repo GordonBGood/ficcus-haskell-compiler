@@ -24,18 +24,19 @@ static void msort(int64_t *a, int64_t *t, int n) {
 static int cmpd(const void *a, const void *b) { return cmpi(a, b); }
 int main(void) {
   static int64_t src[N], w[N], t[N];
-  const char *names[] = { "random", "sorted", "reversed", "swap10", "dups" };
+  const char *names[] = { "random", "sorted", "reversed", "swap10", "dups", "small", "rand1000", "rand100k", "rand300" };
   int p, r, k;
-  for (p = 0; p < 5; p++) {
-    double best[3] = { 1e9, 1e9, 1e9 };
-    for (k = 0; k < N; k++) src[k] = p == 0 ? lcg() : p == 1 ? k : p == 2 ? N - k : p == 3 ? (lcg() % 10 == 0 ? lcg() : k) : lcg() % 100;
+  for (p = 0; p < 9; p++) {
+    double best[5] = { 1e9, 1e9, 1e9, 1e9, 1e9 };
+    int n = p == 6 ? 1000 : p == 7 ? 100000 : p == 8 ? 300 : N, reps = n < 5000 ? 2000 : 1;
+    for (k = 0; k < N; k++) src[k] = p == 0 || p >= 6 ? lcg() : p == 1 ? k : p == 2 ? N - k : p == 3 ? (lcg() % 10 == 0 ? lcg() : k) : p == 4 ? lcg() % 100 : lcg() % 1000;
     for (r = 0; r < 5; r++) {
       double a;
-      memcpy(w, src, sizeof src); a = now(); fic_ps_sort_i64(w, N); a = now() - a; if (a < best[0]) best[0] = a;
-      memcpy(w, src, sizeof src); a = now(); msort(w, t, N); a = now() - a; if (a < best[1]) best[1] = a;
-      memcpy(w, src, sizeof src); a = now(); qsort(w, N, 8, cmpd); a = now() - a; if (a < best[2]) best[2] = a;
+      int q;
+#define TIME(slot, call) a = 0; for (q = 0; q < reps; q++) { memcpy(w, src, (size_t)n * 8); double s0 = now(); call; a += now() - s0; } a /= reps; if (a < best[slot]) best[slot] = a;
+      TIME(0, fic_ps_sort_i64(w, n)) TIME(1, msort(w, t, n)) TIME(2, qsort(w, n, 8, cmpd)) TIME(3, fic_radix_i64(w, n)) TIME(4, fic_sort_i64_auto(w, n))
     }
-    printf("%-9s powersort %7.2f ms   merge %7.2f ms   qsort %7.2f ms\n", names[p], best[0], best[1], best[2]);
+    printf("%-9s n=%7d powersort %8.3f  merge %8.3f  qsort %8.3f  radix %8.3f  auto %8.3f ms\n", names[p], n, best[0], best[1], best[2], best[3], best[4]);
   }
   return 0;
 }

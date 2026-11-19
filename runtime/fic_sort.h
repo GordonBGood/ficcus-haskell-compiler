@@ -169,6 +169,62 @@ static void fic_ps_sort_u32(uint32_t *p, int64_t n) { fic_ps_sort_inl(p, n, size
 static void fic_ps_sort_pi(fic_ps_pi *p, int64_t n) { fic_ps_sort_inl(p, n, sizeof(fic_ps_pi), fic_psg_pi, NULL); }
 static void fic_ps_sort_pd(fic_ps_pd *p, int64_t n) { fic_ps_sort_inl(p, n, sizeof(fic_ps_pd), fic_psg_pd, NULL); }
 
+/* H21b: LSD radix sort for the INT and CHAR modes (not Float: NaN and -0.0; not String; not closures). 8 bit digits; ALL digit histograms
+   are computed in one pass; a digit that is the same in every key is skipped (the values of a typical Int vector use few of the 8 bytes);
+   the sign of an Int is flipped in place so that the unsigned order is the signed one. Two buffers (the vector and a scratch of n) are
+   used alternately; when the last pass lands in the scratch it is copied back, so the result is always in the vector. Equal keys are equal
+   elements, so stability does not matter for these types. */
+#define FIC_RADIX_DEF(NAME, T, U, NB, FLIP) \
+static void NAME(T *a, int64_t n) { \
+  size_t h[NB][256]; \
+  U *src = (U *)(void *)a, *dst, *t; \
+  int64_t i; int b; \
+  if (n < 2) return; \
+  dst = (U *)malloc((size_t)n * sizeof(U)); \
+  if (dst == NULL) abort(); \
+  t = dst; \
+  memset(h, 0, sizeof h); \
+  for (i = 0; i < n; i++) { U k = src[i] ^ (U)(FLIP); src[i] = k; for (b = 0; b < NB; b++) h[b][(k >> (8 * b)) & 255]++; } \
+  for (b = 0; b < NB; b++) { \
+    size_t sum = 0; int d; \
+    if (h[b][(src[0] >> (8 * b)) & 255] == (size_t)n) continue; \
+    for (d = 0; d < 256; d++) { size_t c = h[b][d]; h[b][d] = sum; sum += c; } \
+    for (i = 0; i < n; i++) { U k = src[i]; dst[h[b][(k >> (8 * b)) & 255]++] = k; } \
+    { U *x = src; src = dst; dst = x; } \
+  } \
+  if (src == t) { for (i = 0; i < n; i++) ((U *)(void *)a)[i] = src[i] ^ (U)(FLIP); } \
+  else { for (i = 0; i < n; i++) src[i] ^= (U)(FLIP); } \
+  free(t); \
+}
+FIC_RADIX_DEF(fic_radix_i64, int64_t, uint64_t, 8, 0x8000000000000000ull)
+FIC_RADIX_DEF(fic_radix_u32, uint32_t, uint32_t, 4, 0u)
+
+/* the choice: n below FIC_RADIX_MIN is Powersort; otherwise one pass counts the natural runs (an ascending run, or a strictly descending
+   one that Powersort reverses) and stops as soon as there are more than n / 32: then the average run is shorter than 32 and the radix sort
+   is used; fewer runs (sorted, reversed, a few swaps, concatenated runs) go to Powersort, which is linear for them */
+#ifndef FIC_RADIX_MIN
+#define FIC_RADIX_MIN 256
+#endif
+#define FIC_RUNS_DEF(NAME, T) \
+static int NAME(const T *a, int64_t n) { \
+  int64_t i = 0, runs = 0, limit = n / 32; \
+  while (i < n) { \
+    int64_t j = i + 1; \
+    if (++runs > limit) return 0; \
+    if (j < n) { if (a[i] > a[j]) { j++; while (j < n && a[j - 1] > a[j]) j++; } else { j++; while (j < n && a[j - 1] <= a[j]) j++; } } \
+    i = j; \
+  } \
+  return 1; \
+}
+FIC_RUNS_DEF(fic_fewruns_i64, int64_t)
+FIC_RUNS_DEF(fic_fewruns_u32, uint32_t)
+static void fic_sort_i64_auto(int64_t *p, int64_t n) {
+  if (n >= FIC_RADIX_MIN && !fic_fewruns_i64(p, n)) fic_radix_i64(p, n); else fic_ps_sort_i64(p, n);
+}
+static void fic_sort_u32_auto(uint32_t *p, int64_t n) {
+  if (n >= FIC_RADIX_MIN && !fic_fewruns_u32(p, n)) fic_radix_u32(p, n); else fic_ps_sort_u32(p, n);
+}
+
 /* a comparator on element addresses (FIC_SORT_CMP) and the closure comparator on indices, as a GT test */
 typedef struct { fic_vcmp_fn cmp; const unsigned char *keys; size_t es; } fic_ps_keyctx;
 /* ctx is the ADDRESS of a fic_vcmp_fn (a function pointer is not converted to void *) */
@@ -189,9 +245,9 @@ static void fic_vsort_data(fic_ref v, int mode, fic_vcmp_fn cmp) {
   void *d = FIC_VECTOR(v)->data;
   fic_vcmp_fn cf = cmp;
   switch (mode) {
-  case FIC_SORT_I64: fic_ps_sort_i64((int64_t *)d, n); break;
+  case FIC_SORT_I64: fic_sort_i64_auto((int64_t *)d, n); break;
   case FIC_SORT_F64: fic_ps_sort_f64((double *)d, n); break;
-  case FIC_SORT_U32: fic_ps_sort_u32((uint32_t *)d, n); break;
+  case FIC_SORT_U32: fic_sort_u32_auto((uint32_t *)d, n); break;
   default: fic_ps_sort_inl(d, n, FIC_VECTOR(v)->esize, fic_psg_cmp, (void *)&cf); break;
   }
 }
