@@ -10,6 +10,7 @@ module Ficcus.Mono.Overlay
   , bitwise64Source
   , bitwise64FileName
   , sizedSources
+  , sortSource, sortListSource, sortFileName
   , vectorSource, vectorFileName, vectorModuleId, vectorTypeName, vectorMarker
   , parserSource
   , parserFileName
@@ -47,7 +48,7 @@ overlayModuleName = "FicOverlay"
 -- | the modules that are not part of the project in the listings (`x.mono`, `x.types`): the overlay of elm/core and the Elm parts of
 -- the Json and Bytes kernels, which are compiled into every project that lists the package
 supportModuleNames :: [String]
-supportModuleNames = [overlayModuleName, "FicOverlayJson", "FicOverlayBytes", "FicOverlayRegex"]
+supportModuleNames = [overlayModuleName, "FicOverlaySort", "FicOverlayJson", "FicOverlayBytes", "FicOverlayRegex"]
 
 
 overlayFileName :: FilePath
@@ -62,6 +63,9 @@ overlayId cid =
     Just name -> Just ("author/project:" ++ overlayModuleName ++ "." ++ name)
     Nothing ->
       case cid of
+        "elm/core:List.sort" -> Just ("author/project:FicOverlaySort.listSort")
+        "elm/core:List.sortBy" -> Just ("author/project:FicOverlaySort.listSortBy")
+        "elm/core:List.sortWith" -> Just ("author/project:FicOverlaySort.listSortWith")
         "elm/parser:Parser.Advanced.multiComment" -> Just "author/project:FicOverlayParser.multiComment"
         "elm/random:Random.float" -> Just "author/project:FicOverlayRandom.float"
         _ | Just n <- List.stripPrefix "elm/json:Json.Encode." cid, n `elem` ["list", "array", "set", "object", "dict"] ->
@@ -81,7 +85,6 @@ overlayId cid =
       [ ("elm/core:List.map2", "listMap2"), ("elm/core:List.map3", "listMap3")
       , ("elm/core:List.map4", "listMap4"), ("elm/core:List.map5", "listMap5")
       , ("elm/core:List.indexedMap", "listIndexedMap")
-      , ("elm/core:List.sort", "listSort"), ("elm/core:List.sortBy", "listSortBy"), ("elm/core:List.sortWith", "listSortWith")
       ]
     -- the module of the parser overlay is not the same: see below
     capital n = case n of { c : rest -> toUpper c : rest; [] -> [] }
@@ -186,3 +189,13 @@ sizedSources =
   , ("Float32.elm", $(embedFiles [ "overlay/Float32.elm" ]))
   , ("Float64.elm", $(embedFiles [ "overlay/Float64.elm" ]))
   ]
+
+
+-- the sorts (overlay/FicOverlaySort.elm on the Vector; overlay/FicOverlaySortList.elm on lists, for a project with a module `Vector` of its own)
+sortSource, sortListSource :: String
+sortSource = $(embedFiles [ "overlay/FicOverlaySort.elm" ])
+sortListSource = $(embedFiles [ "overlay/FicOverlaySortList.elm" ])
+
+
+sortFileName :: FilePath
+sortFileName = "FicOverlaySort.elm"

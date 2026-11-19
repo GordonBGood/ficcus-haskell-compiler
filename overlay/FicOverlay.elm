@@ -11,8 +11,6 @@ the shorter list ends the result); no function here recurses deeper than a few c
 (lists are built reversed and turned around).
 -}
 
-import Vector
-
 
 listMap2 : (a -> b -> result) -> List a -> List b -> List result
 listMap2 f xs ys =
@@ -127,24 +125,6 @@ indexedMapHelp f i xs acc =
 
         x :: xr ->
             indexedMapHelp f (i + 1) xr (f i x :: acc)
-
-
-{-| H21: the C path sorts a list by turning it into a Vector, sorting that (Powersort, runtime/fic_sort.h) and turning it back. Stable.
-The key function of `sortBy` is called once per element (n calls), where elm/core in JavaScript calls it at each comparison: a difference that
-is only visible with a key function that has an effect, such as Debug.log. -}
-listSort : List comparable -> List comparable
-listSort xs =
-    Vector.toList (Vector.sort (Vector.fromList xs))
-
-
-listSortBy : (a -> comparable) -> List a -> List a
-listSortBy f xs =
-    Vector.toList (Vector.sortBy f (Vector.fromList xs))
-
-
-listSortWith : (a -> a -> Order) -> List a -> List a
-listSortWith cmp xs =
-    Vector.toList (Vector.sortWith cmp (Vector.fromList xs))
 
 
 {-| Ficcus (ATTACH A3): `<`, `>`, `<=`, `>=` and `/=` at a custom type that has the member `compare` (or `eq`) are these

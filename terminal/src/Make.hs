@@ -288,7 +288,24 @@ writeOverlay root =
       jsonFiles <- optional usesJson Overlay.jsonFileName Overlay.jsonSource
       bytesFiles <- optional usesBytes Overlay.bytesFileName Overlay.bytesSource
       regexFiles <- optional usesRegex Overlay.regexFileName Overlay.regexSource
-      return (file : parserFiles ++ randomFiles ++ jsonFiles ++ bytesFiles ++ regexFiles)
+      -- H21b: the sorts of the List module are written on the Vector, unless the project has a module `Vector` of its own (which wins
+      -- over the overlay's: the overlay must not import it); then the list variant is written
+      own <- hasOwnVector root jsonText
+      let sortFile = dir FP.</> Overlay.sortFileName
+      writeFile sortFile (if own then Overlay.sortListSource else Overlay.sortSource)
+      return (file : sortFile : parserFiles ++ randomFiles ++ jsonFiles ++ bytesFiles ++ regexFiles)
+
+
+-- | does a source directory of elm.json hold a module named `Vector` (`Vector.elm` or `Vector.fic`)?
+hasOwnVector :: R.Root -> String -> IO Bool
+hasOwnVector root jsonText =
+  do  let dirs = quoted (takeWhile (/= ']') (drop 1 (dropWhile (/= '[') (afterKey jsonText))))
+      found <- mapM (\d -> mapM (\e -> Dir.doesFileExist (R.toAbsolutePath root (R.Relative (d FP.</> "Vector" FP.<.> e)))) ["elm", "fic"]) dirs
+      return (or (concat found))
+  where
+    key = "\"source-directories\""
+    afterKey t = case [ drop (length key) r | r <- List.tails t, key `List.isPrefixOf` r ] of { r : _ -> r; [] -> "" }
+    quoted t = case dropWhile (/= '"') t of { '"' : r -> let (a, b) = break (== '"') r in a : quoted (drop 1 b); _ -> [] }
 
 
 readFileStrict :: FilePath -> IO String
