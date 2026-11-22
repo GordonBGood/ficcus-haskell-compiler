@@ -58,6 +58,9 @@ data Error
   | MissingConstraint A.Region N.Name String [(N.Name, T.Type)]   -- the type variable, the members needed
   | MissingSignature A.Region N.Name N.Name T.Type [(String, [(N.Name, T.Type)])]   -- the function used, the definition without annotation, its type, the constraints by variable
   | UnknownMemberType A.Region N.Name (Maybe String) [(N.Name, T.Type)]   -- the kind of the variable (number, comparable, ...), the members needed
+  -- Ficcus (ATTACH A3): a well known member (`add`, `compare`, ...) that has not the type the language needs
+  | WellKnownShape A.Region String N.Name String        -- the type, the member, the type the member must have
+  | WellKnownNoSignature A.Region String N.Name String  -- the same, for a member without a type annotation
 
 
 data MemberOwner
@@ -254,6 +257,36 @@ toReport source localizer err =
               ]
           )
 
+    WellKnownShape region tipe member expected ->
+      Report.Report "WELL KNOWN MEMBER WITH THE WRONG TYPE" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "`" <> tipe <> "." <> N.toChars member <> "` is a well known member: the language uses it (for example\
+              \ `+` uses `add`, `<` uses `compare`), so it must have exactly this type:"
+          ,
+            D.stack
+              [ D.indent 4 $ D.green $ D.fromChars (N.toChars member <> " : " <> expected)
+              , D.reflow $
+                  "If this function is not meant for the language, give it another name."
+              ]
+          )
+
+    WellKnownNoSignature region tipe member expected ->
+      Report.Report "WELL KNOWN MEMBER WITHOUT TYPE ANNOTATION" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "`" <> tipe <> "." <> N.toChars member <> "` is a well known member: the language uses it (for example\
+              \ `+` uses `add`, `<` uses `compare`), so it needs a type annotation. It must have this type:"
+          ,
+            D.stack
+              [ D.indent 4 $ D.green $ D.fromChars (N.toChars member <> " : " <> expected)
+              , D.reflow $
+                  "If this function is not meant for the language, give it another name."
+              ]
+          )
+
     MemberNeedsSignature region function member tipe ->
       Report.Report "MEMBER WITHOUT TYPE ANNOTATION" region [] $
         Code.toSnippet source region Nothing
@@ -329,7 +362,7 @@ toReport source localizer err =
                   ]
               , D.reflow "Otherwise a type annotation on the value that is used here will settle it."
               ] ++
-              [ D.reflow ("The type is a `" <> k <> "` variable, which only the built-in types can be. " <> builtinNote) | Just k <- [kind] ]
+              [ D.reflow ("The type is a `" <> k <> "` variable, so it is not known which type is meant. " <> builtinNote) | Just k <- [kind] ]
           )
 
     HiddenCycle region name ->
@@ -353,8 +386,9 @@ toReport source localizer err =
 -- Ficcus (ATTACH A2)
 builtinNote :: String
 builtinNote =
-  "The built-in types (`Int`, `Float`, `String`, `List`, records, tuples, ...) do not have members yet; they get them\
-  \ in a later version. For now a constraint can only be met by a custom type that defines the member in its `where` block."
+  "The built-in types (`Int`, `Float`, `String`, `Char`, `List`, tuples, ...) have only the well known members, as far as\
+  \ their type allows (`add`, `sub`, `mul`, `pow`, `neg`, `abs`, `fromInt`, `div`, `idiv`, `mod`, `rem`, `compare`, `eq`, `append`). Any other\
+  \ member can only be met by a custom type that defines it in its `where` block."
 
 
 -- Ficcus (ATTACH A2): "the member `zero`", "the members `zero` and `add`"

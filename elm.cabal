@@ -142,6 +142,7 @@ executable elm
         AST.Canonical
         AST.Optimized
         AST.Members
+        AST.WellKnown
         AST.Constraints
         Parse.Constraints
         Canonicalize.Constraints

@@ -2,6 +2,9 @@
 module Type.Unify
   ( Answer(..)
   , unify
+  , Policy(..)
+  , noPolicy
+  , unifyWith
   )
   where
 
@@ -45,12 +48,29 @@ data RunawayException = RunawayException Bool
 instance Exception RunawayException
 
 
+-- Ficcus (ATTACH A3): a custom type may take the place of one of Elm's `number`, `comparable` and `appendable`
+-- variables when it has the members that the variable stands for (Type.Members builds the policy from the member
+-- table).  `noPolicy` is Elm's rule: no custom type does.
+newtype Policy =
+  Policy { _customOk :: SuperType -> ModuleName.Canonical -> T.Name -> Bool }
+
+
+noPolicy :: Policy
+noPolicy =
+  Policy (\_ _ _ -> False)
+
+
 unify :: Variable -> Variable -> IO Answer
-unify v1 v2 =
+unify =
+  unifyWith noPolicy
+
+
+unifyWith :: Policy -> Variable -> Variable -> IO Answer
+unifyWith policy v1 v2 =
   do  result <- try $
         case guardedUnify v1 v2 of
           Unify k ->
-            k (Vars 0 []) onSuccess $ \(Vars _ vars) () ->
+            k (Vars 0 [] policy) onSuccess $ \(Vars _ vars _) () ->
               do  t1 <- Type.toErrorType v1
                   t2 <- Type.toErrorType v2
                   UF.union v1 v2 errorDescriptor
@@ -68,11 +88,11 @@ unify v1 v2 =
 -- the variables created so far (they have to be introduced into the pools afterwards)
 -- and the number of steps taken
 data Vars =
-  Vars !Int [Variable]
+  Vars !Int [Variable] Policy
 
 
 onSuccess :: Vars -> () -> IO Answer
-onSuccess (Vars _ vars) () =
+onSuccess (Vars _ vars _) () =
   return (Ok vars)
 
 
@@ -145,7 +165,13 @@ register :: IO Variable -> Unify Variable
 register mkVar =
   Unify $ \vars ok _ ->
     do  var <- mkVar
-        ok (case vars of Vars n vs -> Vars n (var:vs)) var
+        ok (case vars of Vars n vs p -> Vars n (var:vs) p) var
+
+
+customOk :: SuperType -> ModuleName.Canonical -> T.Name -> Unify Bool
+customOk super home name =
+  Unify $ \vars@(Vars _ _ (Policy ok')) ok _ ->
+    ok vars (ok' super home name)
 
 
 mismatch :: Unify a
@@ -195,13 +221,13 @@ fresh (Context _ (Descriptor _ rank1 _ _) _ (Descriptor _ rank2 _ _)) content =
 
 guardedUnify :: Variable -> Variable -> Unify ()
 guardedUnify left right =
-  Unify $ \(Vars steps vs) ok err ->
+  Unify $ \(Vars steps vs policy) ok err ->
     do  equivalent <- UF.equivalent left right
         if equivalent
-          then ok (Vars steps vs) ()
+          then ok (Vars steps vs policy) ()
           else
             do  if steps >= stepBudget then throwIO (RunawayException False) else return ()
-                let vars = Vars (steps + 1) vs
+                let vars = Vars (steps + 1) vs policy
                 leftDesc <- UF.get left
                 rightDesc <- UF.get right
                 case actuallyUnify (Context left leftDesc right rightDesc) of
@@ -411,7 +437,7 @@ unifyFlexSuperStructure context super flatType =
       if atomMatchesSuper super home name then
         merge context (Structure flatType)
       else
-        mismatch
+        custom home name
 
     App1 home name [variable] | home == ModuleName.list && name == T.list ->
       case super of
@@ -430,6 +456,9 @@ unifyFlexSuperStructure context super flatType =
             do  comparableOccursCheck context
                 unifyComparableRecursive variable
                 merge context (Structure flatType)
+
+    App1 home name _ ->
+      custom home name
 
     Pair1 a b ->
       case super of
@@ -456,6 +485,11 @@ unifyFlexSuperStructure context super flatType =
 
     _ ->
       mismatch
+  where
+    -- (ATTACH A3) a custom type that has the members of the variable's kind
+    custom home name =
+      do  allowed <- customOk super home name
+          if allowed then merge context (Structure flatType) else mismatch
 
 
 -- TODO: is there some way to avoid doing this?

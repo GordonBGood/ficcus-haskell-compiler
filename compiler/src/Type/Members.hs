@@ -21,6 +21,8 @@ module Type.Members
   , wrapAnnotations
   , Obligation
   , Tools(..)
+  , policyOf
+  , shapeErrors
   , use
   , discharge
   , hold
@@ -41,6 +43,7 @@ import qualified AST.Prim.Module as Module
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
 import qualified AST.Prim.TypeVar as TV
+import qualified AST.WellKnown as WK
 import qualified Elm.Interface as I
 import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Package as Pkg
@@ -50,6 +53,7 @@ import qualified Type.Error as ET
 import Type.Type as Type
 import qualified Type.Unify as Unify
 import qualified Type.UnionFind as UF
+import qualified String as S
 
 
 
@@ -138,6 +142,68 @@ wrapAnnotations (Can.Module _ _ _ decls _ _ _ _) annotations =
 
 
 
+-- WELL KNOWN MEMBERS (A3)
+
+
+memberName :: String -> N.Name
+memberName =
+  N.fromString . S.fromChars
+
+
+-- | when may a custom type take the place of one of Elm's `number`, `comparable`, `appendable` variables: when
+-- it has every member of the bundle, each with the type the language needs
+policyOf :: Table -> Unify.Policy
+policyOf table =
+  Unify.Policy $ \super home name ->
+    case Map.lookup (Members.typeId home name) table of
+      Nothing ->
+        False
+
+      Just members ->
+        all (has members home name) (bundle super)
+  where
+    bundle super =
+      case super of
+        Number -> WK.numberBundle
+        Comparable -> WK.comparableBundle
+        Appendable -> WK.appendableBundle
+        CompAppend -> WK.comparableBundle ++ WK.appendableBundle
+
+    has members home name member =
+      case (Map.lookup (memberName member) members, WK.shapeOf member) of
+        (Just (Just (Can.Forall _ written)), Just shape) -> WK.fits home name shape written
+        _ -> False
+
+
+-- | the well known members of this module's own types that do not have the type the language needs, or no
+-- type annotation (the members of imported types were checked in their own module)
+shapeErrors :: Can.Module -> [Error.Error]
+shapeErrors (Can.Module home _ _ decls _ _ _ _) =
+  concatMap check (defsOf decls)
+  where
+    check def =
+      case (Members.split (nameOf def), def) of
+        (Just (tipe, member), _) | Just shape <- WK.shapeOf (N.toChars member) ->
+          let
+            tname = T.nameFromString (S.fromChars tipe)
+            expected = WK.expectedText shape tipe
+          in
+          case def of
+            Can.Def (A.At region _) _ _ ->
+              [Error.WellKnownNoSignature region tipe member expected]
+
+            Can.TypedDef (A.At region _) _ args _ result ->
+              let written = foldr (\(_, t) acc -> Can.TLambda t acc) result (drop (Constraints.hiddenCount def) args)
+              in
+              if Constraints.hiddenCount def == 0 && WK.fits home tname shape written
+                then []
+                else [Error.WellKnownShape region tipe member expected]
+
+        _ ->
+          []
+
+
+
 -- OBLIGATIONS
 
 
@@ -210,10 +276,12 @@ resolve :: Tools -> Table -> Map.Map N.Name Variable -> Obligation -> IO Step
 resolve tools table env obligation@(Obligation region function member subject tipe) =
   go subject
   where
+    policy = policyOf table
+
     go var =
       do  (Descriptor content _ _ _) <- UF.get var
           case content of
-            Structure (App1 home name _) ->
+            Structure (App1 home name args) ->
               case Map.lookup (Members.typeId home name) table of
                 Just members | Just entry <- Map.lookup member members ->
                   case entry of
@@ -225,10 +293,33 @@ resolve tools table env obligation@(Obligation region function member subject ti
                     Nothing ->
                       return (Done [] [Error.MemberNeedsSignature region function member (T.nameToChars name)])
 
-                maybeMembers ->
-                  noMember (isBuiltin home) (maybe [] Map.keys maybeMembers)
+                maybeMembers
+                  | Just kind <- WK.builtinOfApp home name (length args) ->
+                      builtin kind (T.nameToChars name) args
+                  | isBuiltin home ->
+                      builtin WK.BOther (T.nameToChars name) []
+                  | N.toChars member == "eq" ->
+                      -- `==` is automatic for a type without an `eq` member: the structural equality
+                      shaped WK.Equal (T.nameToChars name) []
+                  | otherwise ->
+                      noMember False (maybe [] Map.keys maybeMembers)
 
-            Structure _ ->
+            Structure (Pair1 a b) ->
+              builtin WK.BTuple "tuple" [a, b]
+
+            Structure (Triple1 a b c) ->
+              builtin WK.BTuple "tuple" [a, b, c]
+
+            Structure Unit1 ->
+              builtin WK.BOther "()" []
+
+            Structure (Record1 _ _) ->
+              builtin WK.BOther "record" []
+
+            Structure EmptyRecord1 ->
+              builtin WK.BOther "record" []
+
+            Structure (Fun1 _ _) ->
               noMember True []
 
             Alias _ _ _ real ->
@@ -254,8 +345,48 @@ resolve tools table env obligation@(Obligation region function member subject ti
         Just hidden -> unify (Error.MemberOfVariable var) hidden []
         Nothing -> return Keep
 
+    -- (A3) a built-in type has the well known members its type allows; the parts of a list or a tuple must have
+    -- `compare` too
+    builtin kind tname parts =
+      case WK.shapeOf (N.toChars member) of
+        Just shape | WK.builtinHas kind (N.toChars member) ->
+          shaped shape tname (if WK.builtinChildren kind (N.toChars member) then parts else [])
+
+        _ ->
+          noMember True []
+
+    -- the member must have the shape the language needs, at the subject type
+    shaped shape tname parts =
+      do  inst <- _instantiate tools (WK.shapeAnnotation shape)
+          (x, body) <- splitPair inst
+          answer <- Unify.unifyWith policy subject x
+          case answer of
+            Unify.Ok vars ->
+              do  _introduce tools vars
+                  children <- traverse (child shape) parts
+                  unify' (Error.MemberOfType tname) body (concat children)
+            Unify.Err vars _ _ ->
+              do  _introduce tools vars
+                  noMember True []
+            Unify.Runaway isCycle ->
+              return (Done [] [Error.Runaway region isCycle])
+
+    child shape part =
+      do  inst <- _instantiate tools (WK.shapeAnnotation shape)
+          (_, body) <- splitPair inst
+          return [Obligation region function member part body]
+
+    splitPair var =
+      do  (Descriptor content _ _ _) <- UF.get var
+          case content of
+            Structure (Pair1 a b) -> return (a, b)
+            _ -> return (var, var)
+
     unify owner actual more =
-      do  answer <- Unify.unify actual tipe
+      unify' owner actual more
+
+    unify' owner actual more =
+      do  answer <- Unify.unifyWith policy actual tipe
           case answer of
             Unify.Ok vars ->
               do  _introduce tools vars
@@ -268,10 +399,10 @@ resolve tools table env obligation@(Obligation region function member subject ti
             Unify.Runaway isCycle ->
               return (Done [] [Error.Runaway region isCycle])
 
-    noMember builtin members =
+    noMember builtin' members =
       do  subjectType <- Type.toErrorType subject
           neededType <- Type.toErrorType tipe
-          return (Done [] [Error.NoMember region function subjectType members builtin [(member, neededType)]])
+          return (Done [] [Error.NoMember region function subjectType members builtin' [(member, neededType)]])
 
     -- the types of the packages by `elm` (core, json, ...) are the built-in ones
     isBuiltin (ModuleName.Canonical pkg _) =

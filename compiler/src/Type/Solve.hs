@@ -100,7 +100,7 @@ solve env rank pools state constraint =
     CEqual region category tipe expectation ->
       do  actual <- typeToVariable rank pools tipe
           expected <- expectedToVariable rank pools expectation
-          answer <- Unify.unify actual expected
+          answer <- Unify.unifyWith (Members.policyOf (_table state)) actual expected
           case answer of
             Unify.Ok vars ->
               do  introduce rank pools vars
@@ -118,7 +118,7 @@ solve env rank pools state constraint =
     CLocal region name expectation ->
       do  actual <- makeCopy rank pools $ $(Map.require 'solve) name env N.toChars
           expected <- expectedToVariable rank pools expectation
-          answer <- Unify.unify actual expected
+          answer <- Unify.unifyWith (Members.policyOf (_table state)) actual expected
           case answer of
             Unify.Ok vars ->
               do  introduce rank pools vars
@@ -144,7 +144,7 @@ solve env rank pools state constraint =
               else
                 return (actual0, state)
           expected <- expectedToVariable rank pools expectation
-          answer <- Unify.unify actual expected
+          answer <- Unify.unifyWith (Members.policyOf (_table state)) actual expected
           case answer of
             Unify.Ok vars ->
               do  introduce rank pools vars
@@ -162,7 +162,7 @@ solve env rank pools state constraint =
     COperator region op (Can.Forall freeVars srcType) expectation ->
       do  actual <- srcTypeToVariable rank pools freeVars srcType
           expected <- expectedToVariable rank pools expectation
-          answer <- Unify.unify actual expected
+          answer <- Unify.unifyWith (Members.policyOf (_table state)) actual expected
           case answer of
             Unify.Ok vars ->
               do  introduce rank pools vars
@@ -180,7 +180,7 @@ solve env rank pools state constraint =
     CPattern region category tipe expectation ->
       do  actual <- typeToVariable rank pools tipe
           expected <- patternExpectationToVariable rank pools expectation
-          answer <- Unify.unify actual expected
+          answer <- Unify.unifyWith (Members.policyOf (_table state)) actual expected
           case answer of
             Unify.Ok vars ->
               do  introduce rank pools vars

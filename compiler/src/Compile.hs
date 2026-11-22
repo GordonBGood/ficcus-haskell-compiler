@@ -84,7 +84,7 @@ canonicalize pkg ifaces modul =
 -- constrained definition becomes its constrained scheme (Type.Members, AST.Constraints)
 typeCheck :: Map.Map Module.Name I.Interface -> Src.Module -> Can.Module -> Either E.Error (Map.Map N.Name Can.Annotation)
 typeCheck ifaces modul canonical =
-  case unsafePerformIO (Type.runWith (Members.toTable ifaces canonical) =<< Type.constrain Nothing canonical) of
+  case unsafePerformIO (checkShapes canonical (Type.runWith (Members.toTable ifaces canonical) =<< Type.constrain Nothing canonical)) of
     Right annotations ->
       Right (Map.union (Members.wrapAnnotations canonical annotations) (Members.embedded ifaces))
 
@@ -106,7 +106,7 @@ typeCheckTypedIO :: Map.Map Module.Name I.Interface -> Can.Module -> IO (Either 
 typeCheckTypedIO ifaces canonical =
   do  recorder <- Recorder.new
       constraint <- Type.constrain (Just recorder) canonical
-      result <- Type.runWith (Members.toTable ifaces canonical) constraint
+      result <- checkShapes canonical (Type.runWith (Members.toTable ifaces canonical) constraint)
       case result of
         Left errors ->
           return (Left errors)
@@ -114,6 +114,14 @@ typeCheckTypedIO ifaces canonical =
         Right annotations ->
           do  typed <- Readout.readout recorder
               return (Right (Map.union (Members.wrapAnnotations canonical annotations) (Members.embedded ifaces), typed))
+
+
+-- Ficcus (ATTACH A3): a well known member with the wrong type is reported before anything else is checked
+checkShapes :: Can.Module -> IO (Either (NE.List Error.Error) a) -> IO (Either (NE.List Error.Error) a)
+checkShapes canonical check =
+  case Members.shapeErrors canonical of
+    e:es -> return (Left (NE.List e es))
+    [] -> check
 
 
 nitpick :: Can.Module -> Either E.Error ()
