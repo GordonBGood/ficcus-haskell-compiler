@@ -74,11 +74,30 @@ def main():
     work = a.work or tempfile.mkdtemp(prefix="pkgsub-")
     L = bigint_cases.gen(a.seed, a.n, 300, 6, elm=True)
     big = open(os.path.join(here, "../bigint/t/main_template.fic")).read().replace("@DATA@", bigint_cases.render(L))
-    small = ('module Main exposing (main)\nimport BigInt\n\nmain : Program () () ()\nmain =\n    Platform.worker\n'
-             '        { init = \\_ -> let\n'
-             '                    _ = Debug.log "cases" 1\n'
-             '                    _ = Debug.log "failed" (if BigInt.toString (BigInt.mul (BigInt.fromInt 123456789) (BigInt.fromInt 987654321)) == "121932631112635269" then 0 else 1)\n'
-             '                in ( (), Cmd.none )\n        , update = \\_ _ -> ( (), Cmd.none )\n        , subscriptions = \\_ -> Sub.none\n        }\n')
+    small = """module Main exposing (main)
+
+import BigInt
+
+
+check : Int
+check =
+    if BigInt.toString (BigInt.mul (BigInt.fromInt 123456789) (BigInt.fromInt 987654321)) == "121932631112635269" then
+        0
+
+    else
+        1
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \\_ ->
+                ( Debug.log "cases" 1 |> always (Debug.log "failed" check) |> always (), Cmd.none )
+        , update = \\_ _ -> ( (), Cmd.none )
+        , subscriptions = \\_ -> Sub.none
+        }
+"""
     bad = 0
 
     def report(name, ok, detail=""):
