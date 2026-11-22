@@ -215,7 +215,7 @@ Rule (Elm's): an unconstrained `number` defaults to Int, also inside a member's 
 **Check.** `Spec.mtypeOf` returns an error for a `number` variable that is neither in the clone's environment nor defaulted, and `Spec.classOfTy`
 reports one (`internal: the number variable ... is not resolved`, naming the definition): the build stops with the FICCUS report instead of a crash.
 It stops no existing program: 0 hits in the suite (16), examples (281 x3), attach (126), library (167), rc tools, and the typed corpus run through the
-specializer (`TYPED_OUT=x.mono typed_check.py`, 581 projects, see below).
+specializer (`TYPED_OUT=x.mono typed_check.py`, 581 projects: 524 SAME, 11 BOTH_REJECT_SAME, 1 BOTH_REJECT_TEXT_DIFF, 45 VERDICT_DIFF, every project with the same status on `elmficA18` and `elmficA19`, no internal error; the 45 are old limits of the `x.mono` path: packages it cannot resolve (`Random`, `Regex` imports), the Int literal range, dependency resolution).
 
 **F8, root cause.** Not the output target as such, but the rank structure: `Members.defaulting` and `Members.hold` (A3, A2c) tell a top level definition
 from a let definition by its rank (`outer > outermostRank`). Elm's solver opens no rank for a `CLet` without variables, which is what a definition whose
