@@ -1,6 +1,7 @@
 # ATTACH A3: well known members, operators, `number`, `comparable`, `appendable` (stage A3 of docs/ABILITIES-PROPOSAL.md, section 3.3)
 
 Branch `feat/a3` (worktree `ficcus-haskell-compiler-a3`, from `ficcus` 2e5f3b16), binary `bin/elmficA18` (A17 before the review fixes of section 9).
+A3c (section 10): branch `feat/a3c` from `ficcus` fd65b5a6, binary `bin/elmficA19`, F7 and F8 fixed.
 Tests: `ficcus-tests/attach/` of the branch (`python3 ficcus-tests/attach/attach.py --elm bin/elmficA17 --rc`; 122 cases, 43 new: `a3-*`).
 Note: `tests/attach` in the workspace is a symlink into the *main checkout* (`ficcus-haskell-compiler/`, branch feat/known-pass), so cases written
 there would land on the wrong branch; the new cases are in the worktree and `gates.sh` now runs from the worktree it lives in (section 8).
@@ -194,10 +195,51 @@ New findings and fixes of this round:
 * **F9 (fixed)**: a relaxed `/`, `//`, `modBy`, `remainderBy` inside a generic function with `a has div` (or `number has div`) called at `Float` or `Int` ended in `internal: instance of Basics.fdiv does not match its scheme`
   (the instance type is the variable, the scheme says Float). `Spec.wellKnownRef` now maps that use to the built-in member (`builtinMember`).
 * **F10 (fixed)**: WELL KNOWN MEMBER WITH THE WRONG TYPE showed the expected type without the parameters of a parameterized type (`append : V -> V -> V`); it shows `V a -> V a -> V a`.
-* **F7 (open, found by the parameterized-type case)**: a member of a parameterized type applied to an unresolved number literal, `compare (V [ 1 ]) (V [ 2 ])` or `V [ 1 ] ++ V [ 2 ]` with `type V a = V (List a)`, compiles but the program crashes (SIGSEGV in `List.length`): the instance type has the `number` variable
+* **F7 (fixed in A3c, section 10; found by the parameterized-type case)**: a member of a parameterized type applied to an unresolved number literal, `compare (V [ 1 ]) (V [ 2 ])` or `V [ 1 ] ++ V [ 2 ]` with `type V a = V (List a)`, compiles but the program crashes (SIGSEGV in `List.length`): the instance type has the `number` variable
   unresolved and `mtypeOf` turns an unmapped variable into `ref`, so the clone of the member is keyed with `V ref` and the list holds unboxed Ints. With typed elements (`V [ one ]`, `one : Int`) it works (`a3-param` uses them). Present in A17, not caused by this round. Fix idea: default a `number` variable of an instance type to `Int` in `wellKnownRef`.
-* **F8 (open)**: the F4 program is accepted by `--output=x.c` and rejected by `--output=/dev/null` (`h needs Float`, as in Elm): the same source type checks differently in the two output modes. Not investigated.
+* **F8 (fixed in A3c, section 10)**: the F4 program is accepted by `--output=x.c` and rejected by `--output=/dev/null` (`h needs Float`, as in Elm): the same source type checks differently in the two output modes. Not investigated.
 
 Gates of the review round (`KEEP=1`, `elmficA18`, code commit 673cec97), all green: runtime 0, stringdiff agree, attach 122 cases 0 differ (`--rc` ASan/UBSan), types 267 PASS 1 XFAIL, JS identity 28/0,
 examples 281 x3, fbip 0 failures, rcfaults 0 missed of 1362, rcfaults-big 0 missed of 295, rcgate-san ok, suite 16 PASS, typed corpus 581: 568 SAME, 12 BOTH_REJECT_SAME, 1 VERDICT_DIFF (salix-aws-spec, as before),
 lib-rcsan 108 PASS 59 FIXED, elmdiff 1160 + 15 SAME, 0 DIFF. C text of the 16 suite programs: identical to `elmficA16` in `--rc` and `--no-rc` (32 of 32).
+
+
+## 10. A3c: F7 and F8 (branch `feat/a3c`, binary `elmficA19`)
+
+**F7, root cause.** Not the type checker: `compare (V [ 1 ]) (V [ 2 ])` type checks with the obligation `V number has compare`, which `V`'s member discharges;
+the `number` variable itself has no obligation. The specializer defaults such a dead variable to Int (`Type.Readout.applyDefault`, used by `nodeType` and
+`keyFor`), but `Spec.foreignOrTop` passed the *raw* instance type to `wellKnownRef` and `wellKnownDerived`, so the member clone was keyed `V ref`
+(boxed elements) while the literal list was built as `List Int` (unboxed): SIGSEGV. Fix: the instance type is defaulted there too (`instD`).
+Rule (Elm's): an unconstrained `number` defaults to Int, also inside a member's subject type (`V number`). A literal whose *own* variable has an obligation
+(`smallest 3 2` with `a has compare`) is not defaulted: UNKNOWN MEMBER TYPE, as before (`a3-err-ambiguous-literal`), in every output mode.
+**Check.** `Spec.mtypeOf` returns an error for a `number` variable that is neither in the clone's environment nor defaulted, and `Spec.classOfTy`
+reports one (`internal: the number variable ... is not resolved`, naming the definition): the build stops with the FICCUS report instead of a crash.
+It stops no existing program: 0 hits in the suite (16), examples (281 x3), attach (126), library (167), rc tools, and the typed corpus run through the
+specializer (`TYPED_OUT=x.mono typed_check.py`, 581 projects, see below).
+
+**F8, root cause.** Not the output target as such, but the rank structure: `Members.defaulting` and `Members.hold` (A3, A2c) tell a top level definition
+from a let definition by its rank (`outer > outermostRank`). Elm's solver opens no rank for a `CLet` without variables, which is what a definition whose
+annotation has no type variable makes (`poly : ( Money, Money )`). So in plain mode (`/dev/null`, JS) such a definition (a) never defaulted its own relaxed
+uses (`q : String`, `q = Debug.toString (3 / 4)` with a `div` type in sight was UNKNOWN MEMBER TYPE: an Elm-valid use rejected) and (b) its let definitions
+counted as top level ones, so `h y = y / 4` was defaulted to Float at once (the F4 verdict). The typed mode (`--output=x.c`, `.types`) gives every definition
+a scheme variable (`Constrain.Expression.defHeader`), so the definition always had a rank and the program was checked as decision 3 intends. Same source,
+two verdicts, decided by the annotation and the mode.
+Fix (`Type.Solve`, `topLevel`): a `CLet` with a header at the outermost rank always takes the general case (a rank of its own) in both modes. For a program
+without a type with `div`/`idiv`/`mod`/`rem` in sight (every Elm 0.19.3 program) no relaxed obligation exists, so defaulting and hold do nothing; the
+only other effect is that the body of such a definition is generalized in its own pool (its type has no variable, so nothing escapes) and the hidden
+cycle check of `generalize` (D10, 1491) now also runs for it, as it already did in typed mode. Gates: types matrix, JS identity, elmdiff unchanged.
+**Recommendation on F4 (decision for the review).** Keep the typed mode's reading in both modes: a let function using a relaxed `/` is not generalized
+over `has div`; it is held and settled by its uses (F4 gives `(Money 75, Money 200)`); used at two types it is a TYPE MISMATCH (`a3-f8-err-let-div-two-types`).
+Elm rejects F4, but the acceptance cannot change the meaning of any program Elm accepts: the relaxation exists only when a type with a `where` member
+`div` (or `idiv`, `mod`, `rem`) is in sight, which no Elm program has, and Float/Int uses keep Elm's type (top level default, checked against
+`bin/elm0193` on `a3-f8-closed-annotation` with the type removed: same output). F4 proper (generalizing a let `/` over `has div`) is not done.
+
+Cases (`ficcus-tests/attach`, 126): `a3-f7-literal` (typed and untyped definitions, Float literals, `<`, `max`, `++`, `List.sort`, `sortBy` on a record
+field, a literal inside a record field, `Dict` keys and `Dict.get`, a generic `a has compare` function at `V`), `a3-f7-err-literal-obligation`,
+`a3-f8-closed-annotation` (js+c: direct, in a let, with arguments, recursive, unannotated), `a3-f8-err-let-div-two-types`; `a3-known-let-div` is no longer
+`c_only` (checked in both modes). On `elmficA18`: `a3-f7-literal` SIGSEGV, `a3-f8-closed-annotation` UNKNOWN MEMBER TYPE, `a3-known-let-div` TYPE MISMATCH.
+
+Gates (`KEEP=1`, `elmficA19`, commit b1a9cb3e), all green: runtime 0, attach 126 cases 0 differ (`--rc` ASan/UBSan), stringdiff agree, types 267 PASS 1 XFAIL,
+JS identity 28/0, examples 281 x3, fbip 0 failures, rcfaults 0 missed of 1362, rcfaults-big 0 missed of 295, rcgate-san ok, suite 16 PASS, typed corpus 581:
+568 SAME, 12 BOTH_REJECT_SAME, 1 VERDICT_DIFF (salix-aws-spec, as before), lib-rcsan 108 PASS 59 FIXED, elmdiff 1160 + 15 SAME, 0 DIFF.
+C text of the 16 suite programs: identical to `elmficA18` in `--rc` and `--no-rc` (32 of 32).
