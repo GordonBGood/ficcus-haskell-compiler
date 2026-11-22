@@ -1,0 +1,1 @@
+{"desc": "A3c F7: a literal whose own type variable has a member obligation (`smallest 3 2` with `a has compare`) is not defaulted: UNKNOWN MEMBER TYPE, in both output modes"}

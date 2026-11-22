@@ -1,0 +1,1 @@
+{"desc": "A3c F7: number literals inside a parameterized type with members (`V [ 1 ]`) default to Int: compare, <, max, ++, List.sort, sortBy, Dict keys, a literal in a record field, typed and untyped definitions, a generic function with `a has compare`"}

@@ -33,7 +33,7 @@ two : Int
 two =
     2
 
--- NOTE (review finding F7, tracked): the elements are typed Int values on purpose; `V [ 1 ]` (an unresolved number literal inside a parameterized member type) crashes today
+-- the elements are typed Int values; literals (`V [ 1 ]`, review finding F7, fixed in A3c) are case a3-f7-literal
 compApp : compappend -> compappend -> Bool
 compApp a b =
     a ++ b > b

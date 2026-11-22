@@ -121,3 +121,7 @@ a3-values	RUN	c
 a3-param	RUN	c	
 a3-err-param-shape	REJECT	WELL KNOWN MEMBER WITH THE WRONG TYPE	append : V a -> V a -> V a
 a3-known-let-div	RUN	c	
+a3-f7-literal	RUN	c	
+a3-f7-err-literal-obligation	REJECT	UNKNOWN MEMBER TYPE	compare : number -> number -> Order
+a3-f8-closed-annotation	RUN	js+c	
+a3-f8-err-let-div-two-types	REJECT	TYPE MISMATCH	

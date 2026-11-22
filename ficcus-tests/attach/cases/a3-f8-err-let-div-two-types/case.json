@@ -1,0 +1,1 @@
+{"desc": "A3c F8: a let bound function using `/` is not generalized over `has div`; used at Float and at Int it is a TYPE MISMATCH, in both output modes"}

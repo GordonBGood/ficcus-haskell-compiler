@@ -1,0 +1,1 @@
+{"desc": "A3c F8: a type with `div` in sight; `/` in top level definitions whose annotation has no variable (direct, in a let, in a function with arguments, recursive) and in unannotated ones means what it means in Elm, in both output modes"}

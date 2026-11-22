@@ -58,7 +58,7 @@ type Money
             Money (remainderBy m x)
 
 
--- KNOWN LIMIT (review F4, tracked): Elm rejects this program; here `h` is not generalized over `has div`, so the literal 3 becomes `fromInt 3`
+-- review F4 (tracked): Elm rejects this program; here `h` is not generalized over `has div` but held, and its uses make it Money, so the literal 3 becomes `fromInt 3` (the same in every output mode since A3c, F8)
 poly : ( Money, Money )
 poly =
     let
