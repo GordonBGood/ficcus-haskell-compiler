@@ -99,7 +99,7 @@ knownRun prog
               dead d = Map.member (mdClone d) aliases && not (Set.member (mdClone d) referenced)
               kept' = filter (not . dead) rewritten
           bumpN (length rewritten - length kept') "aliases-removed"
-          terrs <- if copyTestOn then copyTest byId kept' else return []
+          terrs <- if copyTestOn then copyTest byId caps kept' else return []
           return (kept', terrs)
     errs = testErrs ++ (if checkOn then checkScope kept else [])
 
@@ -248,90 +248,100 @@ binders e =
      _ -> []) ++ concatMap binders (children e)
 
 
-hasRecordPat :: MExpr -> Bool
-hasRecordPat e =
-  (case mNode e of { MCase _ bs -> any (recPat . fst) bs; _ -> False }) || any hasRecordPat (children e)
-  where
-    recPat p = case mpNode p of
-      PRecord _ -> True
-      PCtor _ _ ps -> any recPat ps
-      PTuple ps -> any recPat ps
-      PCons a b -> recPat a || recPat b
-      PAlias q _ -> recPat q
-      _ -> False
-
-
 nodeCount :: MExpr -> Int
 nodeCount e = 1 + sum (map nodeCount (children e))
 
 
 -- | Copy the body of `root` together with its family under one renaming: every binder (parameter, let, pattern, lambda parameter) of the
--- family gets the suffix "@k<n>" (a binder name of the family must be unique, or the copy is refused: Nothing), every parameter of `root`
+-- family gets the suffix "@k<n>" (by name: one renaming for the family; a name that clashes with a captured variable of the root makes the copy refused: Nothing), every parameter of `root`
 -- named in the substitution is replaced by its atom (the class of the atom must be the class of the parameter), every lifted clone of the
 -- family is copied to a fresh clone id and every reference to it is remapped. Result: the parameters of `root` that are not substituted
 -- (renamed), the copied body, the copied family (owner `newOwner` for the clones that were lifted out of `root`; `mdOwn`, `mdTwin`,
 -- `mdCapsOwned`, `mdInit`, `mdNeeds` reset). Free names that are neither binders of the family nor substituted are left alone.
-copyFamily :: Map.Map CloneId MDef -> Map.Map String MExpr -> CloneId -> CloneId -> K (Maybe ([(String, Class)], MExpr, [MDef]))
-copyFamily byId sub root newOwner =
+copyFamily :: Map.Map CloneId MDef -> Map.Map CloneId [(String, Class)] -> Map.Map String MExpr -> CloneId -> CloneId
+           -> K (Maybe ([(String, Class)], MExpr, [MDef]))
+copyFamily byId caps sub root newOwner =
   case Map.lookup root byId of
     Just d | Just body <- mdBody d ->
       let fam = family byId root
           defs = d : fam
           bodies = [ b | x <- defs, Just b <- [mdBody x] ]
           names = concat [ map fst (mdParams x) ++ maybe [] binders (mdBody x) | x <- defs ]
-          unique = Set.size (Set.fromList names) == length names
+          -- a captured variable of the root that is also a binder name of the family cannot be told apart from it in a lifted child
+          -- (captured names are matched by name), so such a family is refused
+          clash = not (null fam) && any (\(n, _) -> n `elem` names) (Map.findWithDefault [] root caps)
+          -- a substituted parameter that is bound again somewhere in the family: scope aware renaming handles it in the root body, but a
+          -- lifted child that uses the name free would be ambiguous
+          subClash = not (null fam) && any (\n -> Map.member n sub && n `elem` concatMap (maybe [] binders . mdBody) defs) (map fst (mdParams d))
           classOk = and [ maybe True (\a -> mRep a == c) (Map.lookup n sub) | (n, c) <- mdParams d ]
           size = sum (map nodeCount bodies)
-      in if not unique || any hasRecordPat bodies || not classOk then do { bump "copy-refused-shape"; return Nothing }
+      in if clash || subClash then do { bump "copy-refused-capture-clash"; return Nothing }
+         else if not classOk then do { bump "copy-refused-shape"; return Nothing }
          else if size > budget then do { bump "copy-refused-budget"; return Nothing }
          else
            do  k <- freshSuffix
                ids <- mapM (const freshId) fam
                let idm = Map.fromList (zip (map mdClone fam) ids)
-                   bset = Set.fromList names
                    rn n = n ++ "@k" ++ show k
-                   cp = copyExpr (\n -> Map.lookup n sub) bset rn idm
+                   -- the names a body starts with: its own parameters (renamed), the parameters of the root (substituted or renamed) and
+                   -- every binder name of the family (a lifted child uses the names of its owner free: one renaming by name)
+                   base x = Map.unions [ Map.fromList [ (n, BRen) | (n, _) <- mdParams x ]
+                                       , Map.fromList [ (n, maybe BRen BSub (Map.lookup n sub)) | (n, _) <- mdParams d ]
+                                       , Map.fromList [ (n, BRen) | n <- names ] ]
+                   cp x = copyExpr (base x) rn idm
                    params x = [ (rn n, c) | (n, c) <- mdParams x ]
                    owner o = if o == root then newOwner else Map.findWithDefault newOwner o idm
                    copyDef x c =
-                     x { mdClone = c, mdParams = params x, mdBody = fmap cp (mdBody x), mdLifted = fmap owner (mdLifted x)
+                     x { mdClone = c, mdParams = params x, mdBody = fmap (cp x) (mdBody x), mdLifted = fmap owner (mdLifted x)
                        , mdOwn = [], mdTwin = Nothing, mdCapsOwned = False, mdInit = Nothing, mdNeeds = [] }
                bump "copies"
-               return (Just ([ (rn n, c) | (n, c) <- mdParams d, not (Map.member n sub) ], cp body, zipWith copyDef fam ids))
+               return (Just ([ (rn n, c) | (n, c) <- mdParams d, not (Map.member n sub) ], cp d body, zipWith copyDef fam ids))
     _ -> return Nothing
 
 
-copyExpr :: (String -> Maybe MExpr) -> Set.Set String -> (String -> String) -> Map.Map CloneId CloneId -> MExpr -> MExpr
-copyExpr sub bset rn idm = go
+data Bind = BRen | BSub MExpr
+
+
+-- | the scope aware copy: `env` says what a name means at this point (renamed, or replaced by an atom); a name that is not in it is free
+-- and stays. A binder shadows the entry of its name (a renamed binder is `BRen`, so a substituted parameter that is bound again is not
+-- replaced inside the scope of the new binder).
+copyExpr :: Map.Map String Bind -> (String -> String) -> Map.Map CloneId CloneId -> MExpr -> MExpr
+copyExpr env0 rn idm = go env0
   where
-    go e =
+    bind ns env = foldr (\n -> Map.insert n BRen) env ns
+    go env e =
       case mNode e of
-        MLocal n | Just a <- sub n -> a
-                 | Set.member n bset -> e { mNode = MLocal (rn n) }
+        MLocal n -> case Map.lookup n env of
+                      Just (BSub a) -> a
+                      Just BRen -> e { mNode = MLocal (rn n) }
+                      Nothing -> e
         MGlobal c | Just c' <- Map.lookup c idm -> e { mNode = MGlobal c' }
-        MLam ps b -> e { mNode = MLam [ (rn n, c) | (n, c) <- ps ] (go b) }
-        MLetVal n v b -> e { mNode = MLetVal (rn n) (go v) (go b) }
-        MCase s bs -> e { mNode = MCase (go s) [ (pat p, go b) | (p, b) <- bs ] }
-        _ -> runIdentity (mapChildrenM (Identity . go) e)
+        MLam ps b -> e { mNode = MLam [ (rn n, c) | (n, c) <- ps ] (go (bind (map fst ps) env) b) }
+        MLetVal n v b -> e { mNode = MLetVal (rn n) (go env v) (go (bind [n] env) b) }
+        MCase s bs -> e { mNode = MCase (go env s) [ (pat p, go (bind (patVars p) env) b) | (p, b) <- bs ] }
+        _ -> runIdentity (mapChildrenM (Identity . go env) e)
     pat p = p { mpNode = case mpNode p of
                   PVar v -> PVar (rn v)
                   PCtor n t ps -> PCtor n t (map pat ps)
                   PTuple ps -> PTuple (map pat ps)
                   PCons a b -> PCons (pat a) (pat b)
                   PAlias q v -> PAlias (pat q) (rn v)
+                  PRecord fs -> PRecord [ (i, rn v, c) | (i, v, c) <- fs ]
                   other -> other }
 
 
 -- the self test: copy the family of every function clone that has one (unused), put the copies next to the originals and check scope
-copyTest :: Map.Map CloneId MDef -> [MDef] -> K [String]
-copyTest byId clones =
-  do  copies <- mapM one [ d | d <- clones, mdKind d == Function, isJust (mdBody d), not (null (family byId (mdClone d))) ]
+copyTest :: Map.Map CloneId MDef -> Map.Map CloneId [(String, Class)] -> [MDef] -> K [String]
+copyTest byId caps clones =
+  do  let targets = [ d | d <- clones, mdKind d == Function, isJust (mdBody d), not (null (family byId (mdClone d))) ]
+      copies <- mapM one targets
       let made = concat [ r | Just r <- copies ]
       bumpN (length [ () | Just _ <- copies ]) "copytest-ok"
       bumpN (length [ () | Nothing <- copies ]) "copytest-refused"
+      mapM_ (\(d, r) -> bump ((if isJust r then "family-ok:" else "family-refused:") ++ mdName d)) (zip targets copies)
       return (checkScope (clones ++ made))
   where
     one d =
       do  newId <- freshId
-          r <- copyFamily byId Map.empty (mdClone d) newId
+          r <- copyFamily byId caps Map.empty (mdClone d) newId
           return (fmap (\(ps, b, fam) -> d { mdClone = newId, mdParams = ps, mdBody = Just b } : fam) r)
