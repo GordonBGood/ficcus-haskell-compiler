@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
+{-# LANGUAGE PatternGuards #-}
 module Ficcus.Mono.Kernel
   ( kernelArity
   , forcedExact
