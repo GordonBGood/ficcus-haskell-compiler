@@ -114,16 +114,22 @@ run paths flags@(Flags _ _ _ report _ _ _) =
 
 
 runHelp :: R.Root -> [FilePath] -> Reporting.Style -> Flags -> IO (Either Exit.Make ())
-runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag noRcFlag) =
-  let rcMode = not noRcFlag && (rcFlag || rcDefault) in
+runHelp root paths style flags@(Flags _ _ maybeOutput _ _ _ _) =
   -- Ficcus (G43): the setting and the stuff directory of a build that may use a core package are decided before the root is locked
-  (do  setting <- CorePackages.readSetting (R.toAbsolutePath root (R.Relative "elm.json"))
-       Flags.setCorePackages setting
-       mentioned <- CorePackages.mentionsCorePackage (R.toAbsolutePath root (R.Relative "elm.json"))
-       case maybeOutput of
-         Just (Mono _) | setting && mentioned -> Flags.setStuffSuffix "-ficcus-core"
-         Just (FicC _) | setting && mentioned -> Flags.setStuffSuffix "-ficcus-core"
-         _ -> return ()) >>
+  do  let elmJsonPath = R.toAbsolutePath root (R.Relative "elm.json")
+      setting <- CorePackages.readSetting elmJsonPath
+      Flags.setCorePackages setting
+      mentioned <- CorePackages.mentionsCorePackage elmJsonPath
+      case maybeOutput of
+        Just (Mono _) | setting && mentioned -> Flags.setStuffSuffix "-ficcus-core"
+        Just (FicC _) | setting && mentioned -> Flags.setStuffSuffix "-ficcus-core"
+        _ -> return ()
+      runLocked root paths style flags
+
+
+runLocked :: R.Root -> [FilePath] -> Reporting.Style -> Flags -> IO (Either Exit.Make ())
+runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag noRcFlag) =
+  let rcMode = not noRcFlag && (rcFlag || rcDefault) in
   R.withRootLock root $ \writer stuff ->
   Task.run $
   do  desiredMode <- getMode debug optimize
