@@ -615,7 +615,29 @@ nodeType se key =
 classOfTy :: SEnv -> TType -> SM Class
 classOfTy se t =
   do  enums <- gets sEnums
+      case unresolvedNumber (seEnv se) t of
+        Just n -> report ("internal: the `number` variable " ++ n ++ " of a node in " ++ seDid se ++ " is not resolved (not defaulted to Int)")
+        Nothing -> return ()
       return (classOfT enums (seEnv se) t)
+
+
+-- (A3c) a `number` variable that is neither a variable of the clone (in the environment) nor defaulted (`applyDefault` makes a
+-- dead one Int): its values could be Int or Float, so no representation can be chosen.  Every node type is defaulted, so this
+-- is a path of the specializer that skipped the defaulting (F7 was one); the build stops with an internal error, never a crash
+unresolvedNumber :: Env -> TType -> Maybe String
+unresolvedNumber env t =
+  case t of
+    TVar n KNumber _ | not (Map.member n env) -> Just n
+    TVar _ _ _ -> Nothing
+    TCon _ _ args -> firstJust args
+    TFun a b -> firstJust [a, b]
+    TPair a b -> firstJust [a, b]
+    TTriple a b c -> firstJust [a, b, c]
+    TRecord fields _ -> firstJust (Map.elems fields)
+    TAlias _ _ _ real -> unresolvedNumber env real
+    _ -> Nothing
+  where
+    firstJust ts = case [ n | Just n <- map (unresolvedNumber env) ts ] of { n : _ -> Just n; [] -> Nothing }
 
 
 classOfT :: Map.Map String Bool -> Env -> TType -> Class
@@ -714,10 +736,11 @@ mtypeOf env t =
     TTriple a b c -> (\x y z -> TyTuple [x, y, z]) <$> go a <*> go b <*> go c
     TRecord fields Nothing -> TyRecord <$> mapM (\(k, v) -> (,) (N.toChars k) <$> go v) (Map.toList fields)
     TRecord _ (Just _) -> Left "an extensible record in an exact type (row variables: slice 5)"
-    TVar n _ _ ->
+    TVar n k _ ->
       case Map.lookup n env of
         Just (ByType m) -> Right m
         Just _ -> Left ("the variable " ++ n ++ " is used at an exact type but is keyed by class")
+        Nothing | KNumber <- k -> Left ("internal: the `number` variable " ++ n ++ " is not resolved (not defaulted to Int)")
         Nothing -> Right (TyCon "ref" [])
     TAlias _ _ _ real -> go real
     TRef _ -> Right (TyCon "ref" [])
@@ -1312,10 +1335,12 @@ resolve se region e =
 
     schemeInst = raw >>= schemeOf ctx e
 
-    -- (ATTACH A3) an operator at a custom type with the member behind it
+    -- (ATTACH A3) an operator at a custom type with the member behind it.  The instance type is defaulted as every node type is
+    -- (`nodeType`): `compare (V [ 1 ]) (V [ 2 ])` has the instance `V number`, and the literals are Int (A3c, F7)
     foreignOrTop cid00 =
-      do  hooked <- wellKnownRef se cid00 (fmap snd schemeInst)
-          dtv <- wellKnownDerived se cid00 (fmap snd schemeInst)
+      do  let instD = fmap (applyDefault (\n -> not (Map.member n (seEnv se))) . snd) schemeInst
+          hooked <- wellKnownRef se cid00 instD
+          dtv <- wellKnownDerived se cid00 instD
           tops1 <- gets sTops
           case (hooked, dtv >>= \o -> fmap (\src -> (o, src)) (Map.lookup o tops1)) of
             (Just ref, _) -> return ref

@@ -208,11 +208,16 @@ solve env rank pools state constraint =
     CAnd constraints ->
       foldM (solve env rank pools) state constraints
 
-    CLet [] flexs _ headerCon CTrue ->
+    -- (A3c, F8) a definition at the outermost rank (a top level one) always takes the general case below, so that it has a
+    -- rank of its own: Members.defaulting and Members.hold tell a top level definition from a let by its rank, and a
+    -- definition without variables (`poly : ( Money, Money )`) took these two cases, so its own relaxed uses were never
+    -- defaulted and its let definitions counted as top level ones.  The typed mode (Type.Constrain.Expression.defHeader)
+    -- always gave it a variable, so the two output modes checked such a program differently
+    CLet [] flexs header headerCon CTrue | not (topLevel rank header) ->
       do  introduce rank pools flexs
           solve env rank pools state headerCon
 
-    CLet [] [] header headerCon subCon ->
+    CLet [] [] header headerCon subCon | not (topLevel rank header) ->
       do  state1 <- solve env rank pools state headerCon
           locals <- traverse (A.traverse (typeToVariable rank pools)) header
           let newEnv = Map.union env (Map.map A.toValue locals)
@@ -286,6 +291,12 @@ solve env rank pools state constraint =
           newState <- discharge newEnv rank nextPools =<< solve newEnv rank nextPools tempState subCon
 
           foldM occurs newState (Map.toList locals)
+
+
+-- (A3c) a definition at the outermost rank
+topLevel :: Int -> Map.Map N.Name a -> Bool
+topLevel rank header =
+  rank == outermostRank && not (Map.null header)
 
 
 -- Check that a rigid variable still has rank == noRank, meaning that it can be
