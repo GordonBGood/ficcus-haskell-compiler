@@ -147,3 +147,6 @@ sized-err-pattern	REJECTC	TYPE MISMATCH	can never match
 sized-err-word64-tuple	REJECTC		has its own
 sized-err-float-literal	REJECTC	TYPE MISMATCH	
 sized-err-float32-idiv	REJECTC	NO MEMBER	idiv
+sized-js-refused	REJECT	MODULE NOT FOUND	does not support the sized integers
+sized-local-type	RUN	c	
+sized-local-module	RUN	js+c	
