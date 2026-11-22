@@ -25,6 +25,7 @@ import qualified AST.Prim.TypeVar as T
 import qualified Reporting.Annotation as A
 import qualified Reporting.Error.Type as Error
 import qualified Type.Error as ET
+import qualified Elm.ModuleName as ModuleName
 import qualified Type.Members as Members
 import qualified Type.Occurs as Occurs
 import Type.Type as Type
@@ -142,8 +143,8 @@ solve env rank pools state constraint =
                     Error.BadExpr region (Error.Local name) actualType $
                       Error.typeReplace expectation expectedType
 
-    CForeign region name (Can.Forall freeVars srcType) expectation ->
-      do  (actual0, state0) <- instantiateUse rank pools state region name freeVars srcType
+    CForeign region name home (Can.Forall freeVars srcType) expectation ->
+      do  (actual0, state0) <- instantiateUse rank pools state region home name freeVars srcType
           -- Ficcus (ATTACH A2): a constrained scheme leaves an obligation for each required member
           (actual, state1) <-
             if Constraints.isWrapped srcType
@@ -168,8 +169,8 @@ solve env rank pools state constraint =
                     Error.BadExpr region (Error.Foreign name) actualType $
                       Error.typeReplace expectation expectedType
 
-    COperator region op (Can.Forall freeVars srcType) expectation ->
-      do  (actual, state0) <- instantiateUse rank pools state region (N.fromString (S.fromChars (Op.toChars op))) freeVars srcType
+    COperator region op home (Can.Forall freeVars srcType) expectation ->
+      do  (actual, state0) <- instantiateUse rank pools state region home (N.fromString (S.fromChars (Op.toChars op))) freeVars srcType
           expected <- expectedToVariable rank pools expectation
           answer <- Unify.unifyWith (Members.policyOf (_flag state0) (_table state0)) actual expected
           case answer of
@@ -360,9 +361,9 @@ addError state err =
 
 -- Ficcus (ATTACH A3): the type of a use of a name or operator; `/`, `//`, `modBy` and `remainderBy` are typed `a -> a -> a` with an
 -- obligation when a type in sight has the member behind them (Type.Members.relax)
-instantiateUse :: Int -> Pools -> State -> A.Region -> N.Name -> Map.Map T.Var () -> Can.Type -> IO (Variable, State)
-instantiateUse rank pools state region name freeVars srcType =
-  case Members.relax (_table state) (N.toChars name) srcType of
+instantiateUse :: Int -> Pools -> State -> A.Region -> ModuleName.Canonical -> N.Name -> Map.Map T.Var () -> Can.Type -> IO (Variable, State)
+instantiateUse rank pools state region home name freeVars srcType =
+  case Members.relax (_table state) home (N.toChars name) srcType of
     Nothing ->
       do  actual <- srcTypeToVariable rank pools freeVars srcType
           return (actual, state)

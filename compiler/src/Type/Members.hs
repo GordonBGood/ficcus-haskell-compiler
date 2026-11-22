@@ -221,11 +221,12 @@ shapeErrors (Can.Module home _ _ decls _ _ _ _) =
 -- (`div`, `idiv`, `mod`, `rem`) could not be used.  When a type that this module can see has the member, the use is
 -- typed `a -> a -> a` with the obligation `a has <member>`, and Elm's type is the default of `a` (`defaulting`), so
 -- every program that uses them on Float and Int means what it meant.  Without such a type nothing changes.
-relax :: Table -> String -> Can.Type -> Maybe (N.Name, Can.Type)
-relax table name written =
+relax :: Table -> ModuleName.Canonical -> String -> Can.Type -> Maybe (N.Name, Can.Type)
+relax table home name written =
   case lookup name uses of
     Just (member, tipe)
-      | written == Can.TLambda tipe (Can.TLambda tipe tipe)
+      | home == ModuleName.basics        -- a user function of the same name is an ordinary one (Elm's own type)
+      , written == Can.TLambda tipe (Can.TLambda tipe tipe)
       , any (Map.member (memberName member)) (Map.elems table) ->
           Just (memberName member, tipe)
     _ -> Nothing

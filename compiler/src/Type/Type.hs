@@ -58,8 +58,8 @@ data Constraint
   | CSaveTheEnvironment
   | CEqual A.Region E.Category Type (E.Expected Type)
   | CLocal A.Region N.Name (E.Expected Type)
-  | CForeign A.Region N.Name Can.Annotation (E.Expected Type)
-  | COperator A.Region Op.Name Can.Annotation (E.Expected Type)
+  | CForeign A.Region N.Name ModuleName.Canonical Can.Annotation (E.Expected Type)    -- (ATTACH A3) the home module: Type.Members.relax only relaxes Basics
+  | COperator A.Region Op.Name ModuleName.Canonical Can.Annotation (E.Expected Type)
   | CPattern A.Region E.PCategory Type (E.PExpected Type)
   | CAnd [Constraint]
   | CLet

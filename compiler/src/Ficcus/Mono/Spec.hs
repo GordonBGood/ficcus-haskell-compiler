@@ -145,6 +145,7 @@ data S =
     , sHoisted :: Map.Map (String, Int) (Set.Set Int)    -- their clones that the body uses (evaluated once at the binding)
     , sPvClass :: Map.Map String Class            -- the class of the variable that holds such a clone's value
     , sVector :: Bool                             -- the program has the overlay's built-in `Vector` (V1): its functions are intrinsics
+    , sUnions :: Map.Map String UnionShape        -- (ATTACH A3) every custom type, for `holdsMember`
     }
 
 
@@ -193,7 +194,7 @@ specialize modules marks =
         builtin = if vecOn then Map.insert vectorTypeName False else id
         unions = (if vecOn then Map.adjust (\u -> u { usEnum = False }) vectorTypeName else id) (Map.fromList (concatMap mmUnions modules))
         enums = builtin (Map.fromList (concatMap mmEnums modules))
-        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn
+        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions
         mainId = defIdOf (mmCtx m) (defKeyOf d)
         final = execState (requestRoot mainId >>= \r0 -> drain >> return r0) start
         root = Map.lookup (CKey mainId Nothing (Key [])) (sClones final)
@@ -437,6 +438,7 @@ wellKnownRef se cid inst =
   case (WK.operatorMember cid, inst >>= peelFun 1) of
     (Just member, Just ([first], _)) | Right t <- mtypeOf (seEnv se) first ->
       do  tops <- gets sTops
+          unions <- gets sUnions
           case t of
             TyCon tid _ | Map.member (tid ++ "$$" ++ member) tops ->
               if cid `elem` derived
@@ -448,16 +450,18 @@ wellKnownRef se cid inst =
                         Left why -> report ("cannot specialize `" ++ cid ++ "` at " ++ mtypeText t ++ ": " ++ why) >> return (Just RNone)
                         Right ref -> return (Just ref)
             _ ->
-              do  nested tops member t
+              do  nested tops unions member t
                   return Nothing
     _ -> return Nothing
   where
     -- `==` and the comparisons of a type that holds a custom type with the member (a list, a tuple, a record) would use
     -- the structural code of the C generator and so ignore the member: not supported yet (A3-NOTES section 6)
-    nested tops member t =
+    nested tops unions member t =
       when (member `elem` ["eq", "compare"]) $
-        case holdsMember tops member t of
-          Just inner -> report ("`" ++ cid ++ "` at " ++ mtypeText t ++ ": the type " ++ inner ++ " inside it has its own `" ++ member ++ "` member, which the structural code for a list, tuple, record or other type does not call yet; compare the parts yourself")
+        case holdsMember tops unions member t of
+          Just path -> report ("`" ++ cid ++ "` at " ++ mtypeText t ++ ": the type " ++ last path ++ " has its own `" ++ member ++ "` member"
+                               ++ (if length path > 1 then " and is found inside it (" ++ List.intercalate " > " path ++ ")" else "")
+                               ++ ", which the structural code for a list, tuple, record or other custom type does not call yet; compare the parts yourself")
           Nothing -> return ()
 
 
@@ -493,18 +497,42 @@ shapeType shape t =
     WK.FromInt -> TyFun (TyCon "elm/core:Basics.Int" []) t
 
 
--- a custom type with the member inside an exact type (its type arguments, tuple and record parts)
-holdsMember :: Map.Map String a -> String -> MType -> Maybe String
-holdsMember tops member t =
-  case t of
-    TyCon tid args
-      | Map.member (tid ++ "$$" ++ member) tops -> Just tid
-      | otherwise -> firstJust (map (holdsMember tops member) args)
-    TyTuple xs -> firstJust (map (holdsMember tops member) xs)
-    TyRecord fs -> firstJust (map (holdsMember tops member . snd) fs)
-    _ -> Nothing
+-- a custom type with the member inside an exact type (its type arguments, tuple and record parts, and the constructor fields of
+-- custom types, followed through aliases (already expanded in the unions) and across modules): the path of type names from the
+-- type to the one with the member.  A type is entered once (`seen`), so recursive and mutually recursive types end.
+holdsMember :: Map.Map String a -> Map.Map String UnionShape -> String -> MType -> Maybe [String]
+holdsMember tops unions member t0 = fst (go Set.empty [] t0)
   where
-    firstJust xs = case [ x | Just x <- xs ] of { x : _ -> Just x; [] -> Nothing }
+    go seen path t =
+      case t of
+        TyCon tid args
+          | Map.member (tid ++ "$$" ++ member) tops -> (Just (reverse (tid : path)), seen)
+          | otherwise ->
+              case goAll seen path args of
+                (Just r, seen') -> (Just r, seen')
+                (Nothing, seen')
+                  | Set.member tid seen' -> (Nothing, seen')
+                  | otherwise ->
+                      case Map.lookup tid unions of
+                        Just u -> goAll (Set.insert tid seen') (tid : path) [ f | (_, _, fs) <- usCtors u, f <- map (subst args) fs ]
+                        Nothing -> (Nothing, seen')
+        TyTuple xs -> goAll seen path xs
+        TyRecord fs -> goAll seen path (map snd fs)
+        _ -> (Nothing, seen)
+    goAll seen _ [] = (Nothing, seen)
+    goAll seen path (x : xs) =
+      case go seen path x of
+        (Just r, seen') -> (Just r, seen')
+        (Nothing, seen') -> goAll seen' path xs
+    -- the parameters of a union are `TyCon "#i" []`
+    subst args ty =
+      case ty of
+        TyCon ('#' : ds) [] | [(i, "")] <- reads ds, i < length args -> args !! i
+        TyCon c xs -> TyCon c (map (subst args) xs)
+        TyFun a b -> TyFun (subst args a) (subst args b)
+        TyRecord fs -> TyRecord [ (f, subst args x) | (f, x) <- fs ]
+        TyTuple xs -> TyTuple (map (subst args) xs)
+        TyUnit -> TyUnit
 
 
 -- the key of a definition for the exact types of its variables (`keyFor` for types without variables)

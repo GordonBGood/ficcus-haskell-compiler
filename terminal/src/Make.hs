@@ -12,7 +12,6 @@ module Make
 
 
 import qualified Data.ByteString.Builder as B
-import System.Exit (ExitCode(..), exitWith)
 import System.IO (hPutStrLn, stderr)
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
@@ -58,9 +57,7 @@ readMaybeInt s = case reads s of { [(k, "")] -> Just k; _ -> Nothing }
 -- Ficcus: report problems of the specializer or the C generator and stop
 failWith :: [String] -> Task a
 failWith msgs =
-  Task.io $
-    do  hPutStrLn stderr ("-- FICCUS: the program cannot be compiled to C yet --------------------------------\n\n" ++ unlines msgs)
-        exitWith (ExitFailure 1)
+  Task.throw (Exit.MakeFiccus msgs)
 
 
 

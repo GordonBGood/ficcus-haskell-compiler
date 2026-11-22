@@ -1602,11 +1602,17 @@ data Make
   | MakeNonMainFilesIntoJavaScript Module.Name [Module.Name]
   | MakeCannotBuild BuildProblem
   | MakeBadGenerate Generate
+  | MakeFiccus [String]     -- Ficcus: the specializer or the C generator refuses the program
 
 
 makeToReport :: Make -> Help.Report
 makeToReport make =
   case make of
+    MakeFiccus msgs ->
+      Help.docReport "FICCUS: the program cannot be compiled to C yet" Nothing
+        (D.vcat (map D.fromChars msgs))
+        []
+
     MakeNoOutline ->
       Help.report "NO elm.json FILE" Nothing
         "It looks like you are starting a new Elm project. Very exciting! Try running:"

@@ -94,17 +94,17 @@ constrainHelp env region expression expected =
     Can.VarKernel _ _ ->
       return CTrue
 
-    Can.VarForeign _ name annotation ->
-      return $ CForeign region name annotation expected
+    Can.VarForeign home name annotation ->
+      return $ CForeign region name home annotation expected
 
-    Can.VarCtor _ _ name _ annotation ->
-      return $ CForeign region name annotation expected
+    Can.VarCtor _ home name _ annotation ->
+      return $ CForeign region name home annotation expected
 
-    Can.VarDebug _ name annotation ->
-      return $ CForeign region name annotation expected
+    Can.VarDebug home name annotation ->
+      return $ CForeign region name home annotation expected
 
-    Can.VarOperator op _ _ annotation ->
-      return $ COperator region op annotation expected
+    Can.VarOperator op home _ annotation ->
+      return $ COperator region op home annotation expected
 
     Can.Str _ ->
       return $ CEqual region String Type.string expected
@@ -129,8 +129,8 @@ constrainHelp env region expression expected =
           let negateCon = CEqual region E.Number numberType expected
           return $ exists [numberVar] $ CAnd [ numberCon, negateCon ]
 
-    Can.Binop op _ _ annotation leftExpr rightExpr ->
-      constrainBinop env region op annotation leftExpr rightExpr expected
+    Can.Binop op home _ annotation leftExpr rightExpr ->
+      constrainBinop env region op home annotation leftExpr rightExpr expected
 
     Can.Lambda args body ->
       constrainLambda env region args body expected
@@ -288,8 +288,8 @@ getAccessName (A.At _ expr) =
 -- CONSTRAIN BINOP
 
 
-constrainBinop :: Env -> A.Region -> Op.Name -> Can.Annotation -> Can.Expr -> Can.Expr -> Expected Type -> IO Constraint
-constrainBinop env region op annotation leftExpr rightExpr expected =
+constrainBinop :: Env -> A.Region -> Op.Name -> ModuleName.Canonical -> Can.Annotation -> Can.Expr -> Can.Expr -> Expected Type -> IO Constraint
+constrainBinop env region op home annotation leftExpr rightExpr expected =
   do  leftVar <- mkFlexVar
       rightVar <- mkFlexVar
       answerVar <- mkFlexVar
@@ -298,7 +298,7 @@ constrainBinop env region op annotation leftExpr rightExpr expected =
       let answerType = VarN answerVar
       let binopType = leftType ==> rightType ==> answerType
 
-      let opCon = COperator region op annotation (NoExpectation binopType)
+      let opCon = COperator region op home annotation (NoExpectation binopType)
 
       leftCon <- constrain env leftExpr (FromContext region (OpLeft op) leftType)
       rightCon <- constrain env rightExpr (FromContext region (OpRight op) rightType)
