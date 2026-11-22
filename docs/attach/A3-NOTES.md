@@ -1,0 +1,172 @@
+# ATTACH A3: well known members, operators, `number`, `comparable`, `appendable` (stage A3 of docs/ABILITIES-PROPOSAL.md, section 3.3)
+
+Branch `feat/a3` (worktree `ficcus-haskell-compiler-a3`, from `ficcus` 2e5f3b16), binary `bin/elmficA17`. Not merged: it waits for the review.
+Tests: `ficcus-tests/attach/` of the branch (`python3 ficcus-tests/attach/attach.py --elm bin/elmficA17 --rc`; 95 cases, 16 new: `a3-*`).
+Note: `tests/attach` in the workspace is a symlink into the *main checkout* (`ficcus-haskell-compiler/`, branch feat/known-pass), so cases written
+there would land on the wrong branch; the new cases are in the worktree and `gates.sh` now runs from the worktree it lives in (section 8).
+
+## 1. What a program can do now
+
+```elm
+type Money = Money Int
+    where
+        add : Money -> Money -> Money
+        ...
+a + b      -- Money.add a b, a direct call in the C output
+```
+
+| member | shape (the type the member must have) | used by |
+|---|---|---|
+| `eq` | `T -> T -> Bool` | `==`, `/=` (`/=` is "not eq"); a type without `eq` keeps the automatic structural `==` |
+| `compare` | `T -> T -> Order` | `<` `<=` `>` `>=`, `compare`, `min` `max` `clamp` (Elm code, so derived), `Dict`/`Set` keys, `List.sort`, `sortBy`, `maximum`, `minimum` |
+| `append` | `T -> T -> T` | `++` |
+| `add` `sub` `mul` `pow` | `T -> T -> T` | `+ - * ^` |
+| `neg` `abs` | `T -> T` | unary `-` and `negate`, `abs` |
+| `fromInt` | `Int -> T` | an integer literal at `T` |
+| `div` | `T -> T -> T` | `/` |
+| `idiv` `mod` `rem` | `T -> T -> T` (`mod` and `rem` take the modulus first, as `modBy` and `remainderBy` do) | `//`, `modBy`, `remainderBy` |
+
+Bundles (Elm's own variables, exact Elm meaning, no new names): `number` = `add sub mul pow neg abs fromInt compare` (no division),
+`comparable` = `compare`, `appendable` = `append`. A custom type takes the place of such a variable when it has every member of the bundle with the
+shape above. Custom types stay non comparable unless they define `compare` (derivation is A4). `Int` and a user type do not mix without `fromInt`.
+
+Built-in types get their members from one table (`AST.WellKnown.builtinHas`): `Int` all of `number` plus `eq idiv mod rem`; `Float` all of `number` plus
+`eq div`; `String` `append compare eq`; `Char` `compare eq`; `List` `append eq` and `compare` when its element has it; tuples `compare` (parts) and `eq`;
+every other built-in type (Bool, Maybe, records, unit, ...) `eq`; functions nothing. In the C output they are the existing primitives
+(`MKernel "elm/core:Basics.add"` at `Key [ByType Int]` ...): the C text of the 16 suite programs is byte identical (section 8).
+
+## 2. Decisions taken (to be confirmed in the review)
+
+1. **`+` needs the whole `number` bundle.** An operator is typed by Elm's own scheme (`number -> number -> number`), and a `number` variable becomes a
+   custom type only when the type has all eight members. A per member rule (`+` needs only `add`) would need to know which operator made the variable;
+   that origin is lost when two variables are merged. It is the reading the task gives ("a BigInt-like type with `number` but no `div`").
+   A type with `add` only can be used through `a has add` constraints (A2), not through `+`. The error says what is missing (section 6, notes).
+2. **A well known name carries its shape in every program.** `add : Money -> Int -> Money` is now an error, WELL KNOWN MEMBER WITH THE WRONG TYPE
+   (also without a type annotation: WELL KNOWN MEMBER WITHOUT TYPE ANNOTATION). The shape check is what lets the specializer call the member without
+   looking at its type. One A2 case (`constraint-wrong-type`) used `add : T -> Int -> T` and was changed to the member `plus`.
+3. **`/`, `//`, `modBy`, `remainderBy` are typed by Float and Int in Elm**, so they cannot take a user type. When a type in sight (this module or an
+   import) has `div` (`idiv`, `mod`, `rem`), the use is typed `a -> a -> a` with the obligation `a has div`; Elm's type is the default of `a`
+   (`Float` for `/`, `Int` for the others), applied before the generalization of a top level definition. So every use at `Float` and `Int` means what
+   it meant (case `a3-defaults`). When nothing in sight has the member nothing changes at all, and `/` on a type without `div` is Elm's own error
+   ("The (/) operator is specifically for floating-point division"). When some other type has `div`, it is NO MEMBER.
+4. **`eq` is always met.** `a has eq : a -> a -> Bool` is met by any type but a function: a custom type without `eq` gets the structural `==`.
+5. **`min`, `max`, `clamp` are not members**: they are Elm code over `lt`/`gt`, so they follow `compare`. `abs` is a member (it is in `number`).
+6. **JavaScript.** A module that uses a custom type as a `number`/`comparable`/`appendable`, or uses `/ // modBy remainderBy` at a custom type, or defines an
+   `eq` member, gets a marker node `$customOperators` in its object graph; `Generate` refuses the program with the existing CONSTRAINED FUNCTIONS report
+   (text extended, the marker is named "Main: operators on custom types"). `elm make --output=x.js` of a program without members is unchanged.
+   `eq` is refused by definition, not by use (used or not, like a constrained function): `==` has no type in the solver to look at.
+7. **`appendable` keys.** A clone keyed by an `appendable` variable is keyed by class (`ByApp`); at a custom type with `append` it is keyed by the exact type.
+
+## 3. Solver changes (for the review)
+
+Nothing in `Type.Type`, `Type.Occurs`, `Type.Constrain.*`, `Type.Instantiate` changed. The line numbers are those of the branch head.
+
+| file | lines | change |
+|---|---|---|
+| `Type/Unify.hs` | 5-7, 51-89 | `Policy` (a custom type may take the place of a `SuperType` variable; an IO function so that the solver can note that it did), `noPolicy`, `unify = unifyWith noPolicy`, `unifyWith` |
+| | 90-95, 164-176, 222-232 | the policy travels in `Vars` (the state of the CPS unifier): `Vars`, `onSuccess`, `register`, `customOk`, `guardedUnify` |
+| | 440, 460-462, 488-492 | `unifyFlexSuperStructure`: a type constructor that is not an atom of the variable's kind, and not a List, goes to `custom` (merge when the policy allows, else the old mismatch). The only place where Elm's rule is relaxed |
+| `Type/Members.hs` | 24-32, 44, 54, 64 | exports and imports |
+| | 163-192 `policyOf` | the policy from the member table: the type has every member of the bundle, each with its shape (`WK.fits`); sets the flag (the JS marker) when it says yes |
+| | 193-223 `shapeErrors` | the well known members of the module's own types with the wrong type or no annotation |
+| | 224-278 `relax`, `relaxedObligation`, `relaxedUse`, `defaulting` | the `/ // modBy remainderBy` typing of decision 3 and its default |
+| | 279-342 `notesFor` | extra sentences on a mismatch that involves a custom type with well known members (what is missing; `Int` does not mix) |
+| | 343-365 `Obligation`, `Tools` | `Obligation` has a `_default` field; `Tools` has `_policy` and `_note`; 381, 412-420, 427-461, 541-544, 567-628, 687, 706 are the constructor patterns that follow |
+| | 411-562 `resolve` | built-in subjects through the table (`builtin`, `shaped`: the member must have the shape at the subject type; `compare` of a list or tuple makes obligations for the parts); a custom type without the member but `eq` is met; `_note` when a relaxed use meets a custom type; the policy is used for the unifications |
+| `Type/Solve.hs` | 22-27 | imports |
+| | 49-64 | `runWith`: the flag; the marker annotation `$customOperators` in the result when it was set |
+| | 74, 89-99 | `State` has `_flag` (`emptyState`) |
+| | 112-192 | the five `Unify.unify` calls (CEqual, CLocal, CForeign, COperator, CPattern) are `unifyWith (policyOf ...)`; CForeign and COperator instantiate through `instantiateUse`; mismatches go through `noted` |
+| | 240-255, 282-284 | before `Members.hold`: `Members.defaulting`; its errors join the hold errors; the `State` patterns carry `flag` |
+| | 349-355 `noted`, 363-382 `instantiateUse` | the notes; the relaxed instantiation (`(a, a -> a -> a)` instantiated once, the second part is the type of the use) |
+| | 394-395 `discharge` | the tools carry the policy and `_note` |
+| `Compile.hs` | 11, 16-17, 27, 55-71, 93, 115 | imports; `compile`/`compileTyped`/`typeCheck*` call `checkShapes` and `markCustomOperators` |
+| | 127-150 | `markCustomOperators` (the marker node; also for a module that defines an `eq` member), `checkShapes` (before type checking) |
+| `AST/Constraints.hs` | 37, 198-205 | the name of the marker |
+| `AST/WellKnown.hs` (new) | 1-220 | names, shapes, `fits`, the shape as an annotation, bundles, the built-in table, the operator to member map |
+| `Reporting/Error/Type.hs` | 61-64, 196-200, 266-295, 371-397 | errors `WellKnownShape`, `WellKnownNoSignature`, `WithNotes` and their reports; the built-in note and the number sentence reworded (the built-in types have members now) |
+| `Nitpick/Constraints.hs`, `builder/src/Generate.hs`, `builder/src/Reporting/Exit.hs` | 30-52; 42, 192-194; 1971-1976 | the marker is a constrained node; the refusal text |
+| `Type/Dump.hs` | 723-725 | the dump does not call a relaxed use a failed instance match |
+| `elm.cabal` | 145 | `AST.WellKnown` |
+
+### Specializer (`Ficcus/Mono/Spec.hs`, the C path)
+
+| lines | change |
+|---|---|
+| 342-360 `hiddenMembers` | the constraint members go through `memberRef` (before: custom types only) |
+| 361-434 `memberRef`, `memberClone`, `builtinMember` | the clone of a member of a custom type (the A2 code, factored out); for a built-in subject the primitive (`Basics.add` kernel at `[ByType t]`, `Basics.abs`/`identity` clones, `toFloat`, the `append` keys) |
+| 435-510 `wellKnownRef`, `derived`, `wellKnownDerived`, `shapeType`, `holdsMember` | an operator or `Basics` function at a type with the member is the member's clone (decided from the instance type of the callee: its first parameter); `< > <= >= /=` are `FicOverlay.ficLt ...` (compare/eq at the member); the guard for a type that *holds* a custom type with `eq`/`compare` (limit 1) |
+| 1279-1289 `resolve` | `foreignOrTop` asks `wellKnownRef` and `wellKnownDerived` first |
+| 750-759, 772-786, 787-800 | `customTypeOf`; an integer literal at a custom type is `fromInt`; unary `-` is `neg` |
+| 952-957 | a number pattern at a custom type is an error |
+| 529-537 (`keyForM`), 732-745 (`keyFor`) | appendable keys (decision 7) |
+| `overlay/FicOverlay.elm` 197-224 | `ficLt ficGt ficLe ficGe ficNeq` |
+
+No change in `CGen`, the IR, the runtime or the Rc passes: a member call is an ordinary call of a clone.
+
+## 4. Worked examples (all are cases of `ficcus-tests/attach`, run as C with gcc and clang, and `--rc` under ASan+UBSan with 0 live objects)
+
+| case | what it shows |
+|---|---|
+| `a3-money` | every operator on a `Money`: `+ - * ^ -x negate abs / // modBy remainderBy ++ < <= > >= compare max min clamp == /=`, `number`/`comparable`/`appendable` functions, `List.sort`, `Dict`, `Set` |
+| `a3-bigint` | `number` and nothing else (no `div`, no `eq`): 25!, 2^100, literals, `Dict` and `List.sort` keys, structural `==` |
+| `a3-keys` | `Version` with `compare` only as `Dict` key, in `Set`, `List.sort`, `sortBy`, `maximum`; a wrapper `Desc` with a reversed order |
+| `a3-neq` | `/=` and `==` through `eq` (case-insensitive name, an unordered pair), `List.member`, `filter`; types without `eq` keep `==` |
+| `a3-literals` | literals through `fromInt`, `-3`, `List.sum`, `List.product`, a `number` constant used at `Tenths`, `Int` and `Float` |
+| `a3-constraint-builtin` | A2 constraints met by `Int`, `Float`, `String`, `List`, `Char`, tuples, `Maybe` and a custom type |
+| `a3-defaults` | the `/ // modBy remainderBy` typing in a module that has a type with `div ...`: Float and Int uses unchanged |
+| `a3-err-missing-member` | TYPE MISMATCH plus "It is missing: `sub`, `mul`, ..." |
+| `a3-err-div` | `/` on a `number` type without `div`: Elm's own error |
+| `a3-err-div-others` | the same with `div` on another type: NO MEMBER |
+| `a3-err-mix-int` | `Money 1 + seven`: TYPE MISMATCH plus "do not mix: there is no automatic conversion" |
+| `a3-err-ambiguous-literal` | `total [ 1, 2, 3 ]` with `a has add`: UNKNOWN MEMBER TYPE (a literal is `number`, never decided) |
+| `a3-err-wrong-shape`, `a3-err-no-signature` | the two well known member errors |
+| `a3-err-not-comparable` | a custom type without `compare` as a `Dict` key: Elm's message |
+| `a3-js` | `--output=out.js` of a program that adds two `Money`: CONSTRAINED FUNCTIONS |
+
+## 5. Not done, known limits
+
+1. **A type that holds a custom type with `eq` or `compare`** (a list, tuple, record, `Maybe`, `Dict` of `Money`, ...) used with `==`, `compare`, `<`, `Dict` keys: the C generator
+   builds structural code per type and does not call the member, so the specializer refuses with "the type ... inside it has its own `eq` member ... compare the parts yourself"
+   instead of generating code that ignores the member. Fix: have `CGen.eqExpr`/`cmpExpr` call the member clones (needs the clone ids and the ownership of their parameters in the `--rc` build). Fields of a user
+   union are not scanned (`type W = W Money` with `==` is structural).
+2. The JS output refuses operators on custom types (decision 6). `eq` by definition.
+3. `derive` is A4; sized integers are not part of this change (no sized `Int` types exist in the table: they would add rows to `builtinHas`).
+4. A well known member cannot have constraints of its own (`where` on its signature): WELL KNOWN MEMBER WITH THE WRONG TYPE.
+5. `hash`, `toString` are not well known members yet (proposal 3.3).
+6. A user function named `modBy` or `remainderBy` in an imported module is mistaken for Elm's one by `Type.Members.relax` when a type in sight has `mod`/`rem` (the solver knows the name, not the module of a `CForeign`).
+7. The `.types` dump of a relaxed use shows the type at which it is used (`Money -> Money -> Money`), not the scheme of `Basics.idiv`.
+
+## 6. Errors (Elm's voice)
+
+NO MEMBER (existing, now also for `/ // modBy remainderBy`), UNKNOWN MEMBER TYPE (existing), TYPE MISMATCH with notes ("`Money` can be used as a `number` when it defines all
+the members of `number` (...) with the types the language needs. It is missing: ..."; "`Money` and `Int` do not mix: there is no automatic conversion. `Money.fromInt` makes a `Money` from an `Int`."),
+WELL KNOWN MEMBER WITH THE WRONG TYPE, WELL KNOWN MEMBER WITHOUT TYPE ANNOTATION. A note is added only when the custom type has at least one well known member, so an ordinary Elm mistake keeps Elm's text.
+
+## 7. What changed in other files
+
+`ficcus-tests/gates.sh`: `R` is the worktree the script is in (it was `$W/ficcus-haskell-compiler`, the main checkout), the attach step runs `$R/ficcus-tests/attach/attach.py`
+(not the `tests/attach` symlink), default binary `elmficA17`, expected attach count 95. A2 cases: `constraint-wrong-type` (member `plus`), the text of `constraint-no-members-at-all`
+(`expected.tsv`). `bin/BUILDS.txt`: the line for `elmficA17`.
+
+## 8. Gates
+
+Full `ficcus-tests/gates.sh` (`KEEP=1`, binary `elmficA17`, code commit 9eafcedc), all green:
+
+| gate | result |
+|---|---|
+| runtime, stringdiff | 0 non-ok, all agree |
+| attach (`--rc`, ASan/UBSan) | 95 cases, 0 differ from expected.tsv |
+| types matrix | 267 PASS, 1 XFAIL (unchanged) |
+| JS identity | 28 identical, 0 different |
+| examples (plain, drop-all, rc+san) | 281 each |
+| fbip / rcfaults / rcfaults-big | 0 failures / 0 missed of 1362 / 0 missed of 295 |
+| rcgate-san | ok |
+| suite (`run_all.py`) | 16 programs: 16 PASS |
+| typed corpus | 581 projects: 568 SAME, 12 BOTH_REJECT_SAME, 1 VERDICT_DIFF (same single one as before: salix-aws-spec) |
+| lib-rcsan | 108 PASS, 59 FIXED, 0 fail |
+| elmdiff | 1175 comparisons: 1175 SAME, 0 DIFF (1160 + 15 apps) |
+
+Byte identity: the C text of the 16 suite programs, `--rc` and `--no-rc`, is identical between `elmficA16` and
+`elmficA17` (32 of 32), so no explanation of differences is needed.
+
