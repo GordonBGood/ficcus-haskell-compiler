@@ -8,10 +8,13 @@ module Compile
 
 
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 import qualified Data.NonEmptyList as NE
 
 import qualified AST.Source as Src
 import qualified AST.Canonical as Can
+import qualified AST.Constraints as Constraints
+import qualified AST.Members as AMembers
 import qualified AST.Optimized as Opt
 import qualified AST.Prim.Module as Module
 import qualified AST.Prim.Name as N
@@ -21,6 +24,7 @@ import qualified Elm.Package as Pkg
 import qualified Nitpick.PatternMatches as PatternMatches
 import qualified Optimize.Module as Optimize
 import qualified Reporting.Error as E
+import qualified String as S
 import qualified Reporting.Error.Type as Error
 import qualified Reporting.Result as R
 import qualified Reporting.Render.Type.Localizer as Localizer
@@ -48,9 +52,10 @@ data Artifacts =
 compile :: Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Either E.Error Artifacts
 compile pkg ifaces modul =
   do  canonical   <- canonicalize pkg ifaces modul
-      annotations <- typeCheck ifaces modul canonical
+      annotations0 <- typeCheck ifaces modul canonical
       ()          <- nitpick canonical
-      objects     <- optimize modul annotations canonical
+      objects0    <- optimize modul annotations0 canonical
+      let (annotations, objects) = markCustomOperators canonical annotations0 objects0
       return (Artifacts canonical annotations objects)
 
 
@@ -60,9 +65,10 @@ compile pkg ifaces modul =
 compileTyped :: Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Either E.Error (Artifacts, Readout.Typed)
 compileTyped pkg ifaces modul =
   do  canonical   <- canonicalize pkg ifaces modul
-      (annotations, typed) <- typeCheckTyped ifaces modul canonical
+      (annotations0, typed) <- typeCheckTyped ifaces modul canonical
       ()          <- nitpick canonical
-      objects     <- optimize modul annotations canonical
+      objects0    <- optimize modul annotations0 canonical
+      let (annotations, objects) = markCustomOperators canonical annotations0 objects0
       return (Artifacts canonical annotations objects, typed)
 
 
@@ -115,6 +121,24 @@ typeCheckTypedIO ifaces canonical =
           do  typed <- Readout.readout recorder
               return (Right (Map.union (Members.wrapAnnotations canonical annotations) (Members.embedded ifaces), typed))
 
+
+-- Ficcus (ATTACH A3): a module that uses operators at a custom type gets a marker node in its object graph (the
+-- JavaScript output refuses it, Nitpick.Constraints); the annotation the solver made for the marker is dropped
+markCustomOperators :: Can.Module -> Map.Map N.Name Can.Annotation -> Opt.LocalGraph -> (Map.Map N.Name Can.Annotation, Opt.LocalGraph)
+markCustomOperators (Can.Module home _ _ decls _ _ _ _) annotations objects@(Opt.LocalGraph main nodes fields) =
+  if Map.member Constraints.customOperators annotations || definesEq
+    then
+      ( Map.delete Constraints.customOperators annotations
+      , Opt.LocalGraph main (Map.insert (Opt.Global home Constraints.customOperators) (Opt.Define Opt.Unit Set.empty) nodes) fields
+      )
+    else
+      (annotations, objects)
+  where
+    -- `==` and `/=` stay structural in the JavaScript output, so a module that defines an `eq` member is refused
+    -- there (used or not, like a constrained function)
+    definesEq =
+      any (\def -> fmap snd (AMembers.split (Members.nameOf def)) == Just eqName) (Members.defsOf decls)
+    eqName = N.fromString (S.fromChars "eq")
 
 -- Ficcus (ATTACH A3): a well known member with the wrong type is reported before anything else is checked
 checkShapes :: Can.Module -> IO (Either (NE.List Error.Error) a) -> IO (Either (NE.List Error.Error) a)

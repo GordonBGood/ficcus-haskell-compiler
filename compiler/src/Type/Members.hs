@@ -23,6 +23,12 @@ module Type.Members
   , Tools(..)
   , policyOf
   , shapeErrors
+  , relax
+  , relaxedUse
+  , relaxedObligation
+  , defaulting
+  , defsOf
+  , nameOf
   , use
   , discharge
   , hold
@@ -34,6 +40,7 @@ module Type.Members
 
 
 import Control.Monad (foldM, forM_)
+import Data.IORef (IORef, writeIORef)
 import qualified Data.Map.Strict as Map
 
 import qualified AST.Canonical as Can
@@ -152,15 +159,20 @@ memberName =
 
 -- | when may a custom type take the place of one of Elm's `number`, `comparable`, `appendable` variables: when
 -- it has every member of the bundle, each with the type the language needs
-policyOf :: Table -> Unify.Policy
-policyOf table =
+policyOf :: Maybe (IORef Bool) -> Table -> Unify.Policy
+policyOf flag table =
   Unify.Policy $ \super home name ->
-    case Map.lookup (Members.typeId home name) table of
-      Nothing ->
-        False
+    let
+      allowed =
+        case Map.lookup (Members.typeId home name) table of
+          Nothing ->
+            False
 
-      Just members ->
-        all (has members home name) (bundle super)
+          Just members ->
+            all (has members home name) (bundle super)
+    in
+    do  if allowed then maybe (return ()) (\ref -> writeIORef ref True) flag else return ()
+        return allowed
   where
     bundle super =
       case super of
@@ -204,6 +216,62 @@ shapeErrors (Can.Module home _ _ decls _ _ _ _) =
 
 
 
+-- (A3) `/`, `//`, `modBy` and `remainderBy` are typed by Float and Int in Elm, so a type with the member behind them
+-- (`div`, `idiv`, `mod`, `rem`) could not be used.  When a type that this module can see has the member, the use is
+-- typed `a -> a -> a` with the obligation `a has <member>`, and Elm's type is the default of `a` (`defaulting`), so
+-- every program that uses them on Float and Int means what it meant.  Without such a type nothing changes.
+relax :: Table -> String -> Can.Type -> Maybe (N.Name, Can.Type)
+relax table name written =
+  case lookup name uses of
+    Just (member, tipe)
+      | written == Can.TLambda tipe (Can.TLambda tipe tipe)
+      , any (Map.member (memberName member)) (Map.elems table) ->
+          Just (memberName member, tipe)
+    _ -> Nothing
+  where
+    floatT = Can.TType ModuleName.basics T.float []
+    intT = Can.TType ModuleName.basics T.int []
+    uses = [ ("/", ("div", floatT)), ("//", ("idiv", intT)), ("modBy", ("mod", intT)), ("remainderBy", ("rem", intT)) ]
+
+
+relaxedObligation :: A.Region -> N.Name -> N.Name -> Variable -> Variable -> Can.Type -> Obligation
+relaxedObligation region function member subject tipe defaultType =
+  Obligation region function member subject tipe (Just defaultType)
+
+
+-- | the scheme `(a, a -> a -> a)` of a relaxed use: one instantiation gives the subject and the type of the use
+relaxedUse :: Can.Annotation
+relaxedUse =
+  WK.shapeAnnotation WK.Binary
+
+
+-- | before the generalization of a top level definition: a subject of a relaxed use that is still a variable gets
+-- Elm's type (Float for `/`, Int for the others), and what that settles is discharged
+defaulting :: Tools -> Table -> Map.Map N.Name Variable -> Int -> Int -> [Obligation] -> IO ([Obligation], [Error.Error])
+defaulting tools table env outer young pending
+  | outer > outermostRank || all (\o -> _default o == Nothing) pending = return (pending, [])
+  | otherwise =
+      do  forM_ pending $ \(Obligation _ _ _ subject _ relaxed) ->
+            case relaxed of
+              Nothing -> return ()
+              Just tipe ->
+                do  (Descriptor content rank _ _) <- UF.get subject
+                    case content of
+                      FlexVar _ | rank >= young -> settle subject tipe
+                      FlexSuper _ _ | rank >= young -> settle subject tipe
+                      _ -> return ()
+          discharge tools table env pending
+  where
+    settle subject tipe =
+      do  var <- _instantiate tools (Can.Forall Map.empty tipe)
+          answer <- Unify.unifyWith (_policy tools) subject var
+          case answer of
+            Unify.Ok vars -> _introduce tools vars
+            Unify.Err vars _ _ -> _introduce tools vars
+            Unify.Runaway _ -> return ()
+
+
+
 -- OBLIGATIONS
 
 
@@ -214,6 +282,7 @@ data Obligation =
     , _member :: N.Name
     , _subject :: Variable
     , _type :: Variable
+    , _default :: Maybe Can.Type   -- (A3) the type of Elm that a flexible subject gets (`Float` for `/`): see `relax`
     }
 
 
@@ -223,6 +292,8 @@ data Tools =
   Tools
     { _instantiate :: Can.Annotation -> IO Variable
     , _introduce :: [Variable] -> IO ()
+    , _policy :: Unify.Policy
+    , _note :: IO ()             -- (A3) a custom type met an operator that is not typed by `number` (the JavaScript output refuses the program)
     }
 
 
@@ -242,7 +313,7 @@ use region function instance_ =
       do  (Descriptor content _ _ _) <- UF.get var
           case content of
             Structure (App1 _ name [subject, tipe]) | Just member <- Constraints.hasMember name ->
-              return [Obligation region function member subject tipe]
+              return [Obligation region function member subject tipe Nothing]
 
             _ ->
               return []
@@ -273,10 +344,10 @@ discharge tools table env pending =
 
 
 resolve :: Tools -> Table -> Map.Map N.Name Variable -> Obligation -> IO Step
-resolve tools table env obligation@(Obligation region function member subject tipe) =
+resolve tools table env obligation@(Obligation region function member subject tipe relaxed) =
   go subject
   where
-    policy = policyOf table
+    policy = _policy tools
 
     go var =
       do  (Descriptor content _ _ _) <- UF.get var
@@ -288,6 +359,9 @@ resolve tools table env obligation@(Obligation region function member subject ti
                     Just annotation ->
                       do  instance_ <- _instantiate tools annotation
                           (real, more) <- use region function instance_
+                          case relaxed of
+                            Just _ -> _note tools
+                            Nothing -> return ()
                           unify (Error.MemberOfType (T.nameToChars name)) real more
 
                     Nothing ->
@@ -374,7 +448,7 @@ resolve tools table env obligation@(Obligation region function member subject ti
     child shape part =
       do  inst <- _instantiate tools (WK.shapeAnnotation shape)
           (_, body) <- splitPair inst
-          return [Obligation region function member part body]
+          return [Obligation region function member part body Nothing]
 
     splitPair var =
       do  (Descriptor content _ _ _) <- UF.get var
@@ -425,7 +499,7 @@ hold :: Int -> Int -> Map.Map N.Name (A.Located Variable) -> [Obligation] -> IO 
 hold outer young header pending
   | null pending = return ([], [])
   | outer > outermostRank =
-      do  forM_ pending $ \(Obligation _ _ _ subject tipe) ->
+      do  forM_ pending $ \(Obligation _ _ _ subject tipe _) ->
             do  vars <- flexVariables subject
                 vars2 <- flexVariables tipe
                 forM_ (vars ++ vars2) $ \var ->
@@ -440,7 +514,7 @@ hold outer young header pending
             do  errors <- report (reverse bad)
                 return (ok, errors)
   where
-    isYoung (Obligation _ _ _ subject _) =
+    isYoung (Obligation _ _ _ subject _ _) =
       do  (Descriptor content rank _ _) <- UF.get subject
           return $
             case content of
@@ -449,7 +523,7 @@ hold outer young header pending
               _ -> False
 
     report bad =
-      nameTogether (concat [ [subject, tipe] | Obligation _ _ _ subject tipe <- bad ] ++ map A.toValue (Map.elems header)) >>
+      nameTogether (concat [ [subject, tipe] | Obligation _ _ _ subject tipe _ <- bad ] ++ map A.toValue (Map.elems header)) >>
       report' bad
 
     report' bad =
@@ -465,14 +539,14 @@ hold outer young header pending
               missing <-
                 case shown of
                   [] -> return []
-                  Obligation _ function _ _ _ : _ ->
+                  Obligation _ function _ _ _ _ : _ ->
                     do  defType <- Type.toErrorType defVar      -- first: it names the variables that the constraints then use
                         groups <- traverse describe shown
                         return [Error.MissingSignature region function name defType (group groups)]
               others <- traverse unknown hidden
               return (missing ++ others)
 
-    describe (Obligation _ _ member subject tipe) =
+    describe (Obligation _ _ member subject tipe _) =
       do  subjectType <- Type.toErrorType subject
           neededType <- Type.toErrorType tipe
           let var = case subjectType of
@@ -486,7 +560,7 @@ hold outer young header pending
                 Just _ -> [ if v == var then (v, es ++ [entry]) else (v, es) | (v, es) <- acc ]
                 Nothing -> acc ++ [(var, [entry])]) [] items
 
-    unknown (Obligation region function member subject tipe) =
+    unknown (Obligation region function member subject tipe _) =
       do  (Descriptor content _ _ _) <- UF.get subject
           t <- Type.toErrorType tipe
           return (Error.UnknownMemberType region function (kindOf content) [(member, t)])
@@ -545,7 +619,7 @@ sweep :: [Obligation] -> IO ([Obligation], [Error.Error])
 sweep pending =
   foldM check ([], []) (reverse pending)
   where
-    check (kept, errors) obligation@(Obligation region function member subject tipe) =
+    check (kept, errors) obligation@(Obligation region function member subject tipe _) =
       do  (Descriptor content rank _ _) <- UF.get subject
           if rank /= noRank
             then return (obligation : kept, errors)
@@ -564,7 +638,7 @@ leftovers :: [Obligation] -> IO [Error.Error]
 leftovers pending =
   traverse leftover pending
   where
-    leftover (Obligation region function member subject tipe) =
+    leftover (Obligation region function member subject tipe _) =
       do  (Descriptor content _ _ _) <- UF.get subject
           t <- Type.toErrorType tipe
           return (Error.UnknownMemberType region function (kindOf content) [(member, t)])

@@ -1968,11 +1968,12 @@ toGenerateReport problem =
 
     GenerateConstrainedFunctions names ->
       Help.report "CONSTRAINED FUNCTIONS" Nothing
-        "This program has functions whose type annotation has a `where` block of constraints:"
+        "This program has functions whose type annotation has a `where` block of constraints, or uses operators on its own types:"
         [ D.indent 4 $ D.red $ D.vcat $ map D.fromChars names
         , D.reflow
             "They are not supported in the JavaScript output yet: the member functions that such a\
-            \ function needs would have to be passed to it when the program runs, and how the\
+            \ function (or an operator such as `+`, `<` or `==` on a custom type that defines `add`,\
+            \ `compare` or `eq`) needs would have to be passed to it when the program runs, and how the\
             \ JavaScript output does that is not decided."
         , D.reflow
             "The C output supports them (every use is compiled for its own types, so the members are\

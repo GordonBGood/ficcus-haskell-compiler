@@ -46,12 +46,13 @@ import qualified AST.Prim.Module as Module
 import qualified String
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
+import qualified AST.WellKnown as WK
 import qualified Elm.Float as EF
 import qualified Elm.String as ES
 import Ficcus.Mono.Class
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel
-import Ficcus.Mono.Overlay (overlayId, randomOverlayPrefix, vectorMarker, vectorModuleId, vectorTypeName)
+import Ficcus.Mono.Overlay (overlayId, overlayModuleName, randomOverlayPrefix, vectorMarker, vectorModuleId, vectorTypeName)
 import Ficcus.Mono.Marks (Marks)
 import qualified Ficcus.Mono.Marks as Marks
 import qualified Ficcus.Mono.Members as Members
@@ -344,27 +345,166 @@ hiddenMembers did def scheme env hidden =
       refs <- forM (zip3 hidden (Members.subjectNames def scheme) types) $ \(Constraints.Hidden var member local, subject, tipe) ->
         do  let what = "the constraint `" ++ var ++ " has " ++ N.toChars member ++ "` of " ++ did
             case (subject >>= \n -> Map.lookup n env, mtypeOf env tipe) of
-              (Just (ByType (TyCon tid _)), Right mtype) ->
-                do  let mid = tid ++ "$$" ++ N.toChars member
-                    tops <- gets sTops
-                    case Map.lookup mid tops of
-                      Nothing -> report ("cannot specialize " ++ what ++ ": the type " ++ tid ++ " has no such member") >> return (N.toChars local, RNone)
-                      Just msrc ->
-                        do  let mdef = srcDef msrc
-                            let mhidden = Constraints.hiddenCount mdef
-                            case Map.lookup (defKeyOf mdef) (_defs (_typed (srcCtx msrc))) of
-                              Nothing -> report ("no scheme recorded for " ++ mid) >> return (N.toChars local, RNone)
-                              Just mscheme ->
-                                case Members.matchM (snd (Members.peel mhidden mscheme)) mtype of
-                                  Left why -> report ("cannot specialize " ++ what ++ ": " ++ why) >> return (N.toChars local, RNone)
-                                  Right subst ->
-                                    do  key <- keyForM mid mscheme subst
-                                        c <- requestClone (CKey mid Nothing key) msrc
-                                        let arity = length (defArgs mdef) - mhidden
-                                        return (N.toChars local, RClone c arity (arity == 0 && mhidden == 0))
+              (Just (ByType st), Right mtype) ->
+                do  r <- memberRef st (N.toChars member) mtype
+                    case r of
+                      Left why -> report ("cannot specialize " ++ what ++ ": " ++ why) >> return (N.toChars local, RNone)
+                      Right ref -> return (N.toChars local, ref)
               (_, Left why) -> report ("cannot specialize " ++ what ++ ": " ++ why) >> return (N.toChars local, RNone)
-              _ -> report ("cannot specialize " ++ what ++ ": the type of `" ++ var ++ "` is not known exactly here") >> return (N.toChars local, RNone)
+              _ -> report ("cannot specialize " ++ what ++ ": the type of `" ++ var ++ "` is not known here") >> return (N.toChars local, RNone)
       return (Map.fromList refs)
+
+
+-- (ATTACH A3) the function that stands for the member `member` of the exact type `st`, called at the exact member type
+-- `mtype`: the clone of the member of a custom type, or for a built-in type (and for `eq` of a custom type that has no such
+-- member) the kernel function or definition of elm/core that the member is (AST.WellKnown, the table of the built-in types)
+memberRef :: MType -> String -> MType -> SM (Either String Ref)
+memberRef st member mtype =
+  do  tops <- gets sTops
+      case st of
+        TyCon tid _ | Map.member (tid ++ "$$" ++ member) tops -> memberClone tid member mtype
+        _ -> builtinMember st member
+
+
+-- the clone of the member `member` of the custom type `tid`
+memberClone :: String -> String -> MType -> SM (Either String Ref)
+memberClone tid member mtype =
+  do  let mid = tid ++ "$$" ++ member
+      tops <- gets sTops
+      case Map.lookup mid tops of
+        Nothing -> return (Left ("the type " ++ tid ++ " has no such member"))
+        Just msrc ->
+          do  let mdef = srcDef msrc
+              let mhidden = Constraints.hiddenCount mdef
+              case Map.lookup (defKeyOf mdef) (_defs (_typed (srcCtx msrc))) of
+                Nothing -> return (Left ("no scheme recorded for " ++ mid))
+                Just mscheme ->
+                  case Members.matchM (snd (Members.peel mhidden mscheme)) mtype of
+                    Left why -> return (Left why)
+                    Right subst ->
+                      do  key <- keyForM mid mscheme subst
+                          c <- requestClone (CKey mid Nothing key) msrc
+                          let arity = length (defArgs mdef) - mhidden
+                          return (Right (RClone c arity (arity == 0 && mhidden == 0)))
+
+
+-- the members of the built-in types are the primitives of elm/core at the exact type: no call, and the generated C is the
+-- one of the operator (`add` of Int is the kernel `Basics.add` at the key [Int])
+builtinMember :: MType -> String -> SM (Either String Ref)
+builtinMember st member =
+  do  enums <- gets sEnums
+      tops <- gets sTops
+      let numKey = Key [ByType st]
+      let kernel cid key =
+            case kernelArity cid of
+              Just arity -> return (Right (RKernel cid key arity))
+              Nothing -> return (Left ("`" ++ cid ++ "` is not in the kernel table"))
+      let basics n = "elm/core:Basics." ++ n
+      case member of
+        "add" -> kernel (basics "add") numKey
+        "sub" -> kernel (basics "sub") numKey
+        "mul" -> kernel (basics "mul") numKey
+        "pow" -> kernel (basics "pow") numKey
+        "neg" -> kernel (basics "negate") numKey
+        "abs" ->
+          case Map.lookup (basics "abs") tops of
+            Just src -> (\c -> Right (RClone c 1 False)) <$> requestClone (CKey (basics "abs") Nothing numKey) src
+            Nothing -> return (Left "`Basics.abs` has no definition")
+        "compare" -> kernel (basics "compare") numKey
+        "eq" -> kernel (basics "eq") numKey
+        "div" -> kernel (basics "fdiv") (Key [])
+        "idiv" -> kernel (basics "idiv") (Key [])
+        "mod" -> kernel (basics "modBy") (Key [])
+        "rem" -> kernel (basics "remainderBy") (Key [])
+        "fromInt"
+          | st == TyCon "elm/core:Basics.Float" [] -> kernel (basics "toFloat") (Key [])
+          | otherwise ->
+              case Map.lookup (basics "identity") tops of
+                Just src -> (\c -> Right (RClone c 1 False)) <$> requestClone (CKey (basics "identity") Nothing (Key [ByClass CI64])) src
+                Nothing -> return (Left "`Basics.identity` has no definition")
+        "append" ->
+          case st of
+            TyCon "elm/core:List.List" [e] -> kernel (basics "append") (Key [ByApp (AList (boxed (classOfM enums e)))])
+            _ -> kernel (basics "append") (Key [ByApp AStr])
+        _ -> return (Left ("the type " ++ mtypeText st ++ " has no member `" ++ member ++ "`"))
+
+
+-- (ATTACH A3) an operator or a function of Basics at a custom type that has the member behind it: the clone of the member
+-- (`a + b` at `Money` is `Money.add a b`, a direct call; `compare`, `==`, `negate`, `abs`, `++`, `/`, `//`, `modBy`, `remainderBy` the same).
+-- The first parameter of the instance of the callee is the type.  `Nothing`: not such a use.
+wellKnownRef :: SEnv -> String -> Maybe TType -> SM (Maybe Ref)
+wellKnownRef se cid inst =
+  case (WK.operatorMember cid, inst >>= peelFun 1) of
+    (Just member, Just ([first], _)) | Right t <- mtypeOf (seEnv se) first ->
+      do  tops <- gets sTops
+          case t of
+            TyCon tid _ | Map.member (tid ++ "$$" ++ member) tops ->
+              if cid `elem` derived
+                then return Nothing
+                else
+                  do  let shape = maybe WK.Binary id (WK.shapeOf member)
+                      r <- memberClone tid member (shapeType shape t)
+                      case r of
+                        Left why -> report ("cannot specialize `" ++ cid ++ "` at " ++ mtypeText t ++ ": " ++ why) >> return (Just RNone)
+                        Right ref -> return (Just ref)
+            _ ->
+              do  nested tops member t
+                  return Nothing
+    _ -> return Nothing
+  where
+    -- `==` and the comparisons of a type that holds a custom type with the member (a list, a tuple, a record) would use
+    -- the structural code of the C generator and so ignore the member: not supported yet (A3-NOTES section 6)
+    nested tops member t =
+      when (member `elem` ["eq", "compare"]) $
+        case holdsMember tops member t of
+          Just inner -> report ("`" ++ cid ++ "` at " ++ mtypeText t ++ ": the type " ++ inner ++ " inside it has its own `" ++ member ++ "` member, which the structural code for a list, tuple, record or other type does not call yet; compare the parts yourself")
+          Nothing -> return ()
+
+
+-- the functions that are not the member itself but are made from it (the overlay: FicOverlay.ficLt ...)
+derived :: [String]
+derived =
+  [ "elm/core:Basics.lt", "elm/core:Basics.gt", "elm/core:Basics.le", "elm/core:Basics.ge", "elm/core:Basics.neq" ]
+
+
+-- | `<`, `>`, `<=`, `>=` at a type with `compare`, `/=` at a type with `eq`: the definition in the overlay
+wellKnownDerived :: SEnv -> String -> Maybe TType -> SM (Maybe String)
+wellKnownDerived se cid inst =
+  case (lookup cid table, inst >>= peelFun 1) of
+    (Just (member, name), Just ([first], _)) | Right (TyCon tid _) <- mtypeOf (seEnv se) first ->
+      do  tops <- gets sTops
+          return (if Map.member (tid ++ "$$" ++ member) tops then Just ("author/project:" ++ overlayModuleName ++ "." ++ name) else Nothing)
+    _ -> return Nothing
+  where
+    table =
+      [ ("elm/core:Basics.lt", ("compare", "ficLt")), ("elm/core:Basics.gt", ("compare", "ficGt"))
+      , ("elm/core:Basics.le", ("compare", "ficLe")), ("elm/core:Basics.ge", ("compare", "ficGe"))
+      , ("elm/core:Basics.neq", ("eq", "ficNeq")) ]
+
+
+-- the member of the exact type `t` that the language needs, as a type
+shapeType :: WK.Shape -> MType -> MType
+shapeType shape t =
+  case shape of
+    WK.Binary -> TyFun t (TyFun t t)
+    WK.Compare -> TyFun t (TyFun t (TyCon "elm/core:Basics.Order" []))
+    WK.Equal -> TyFun t (TyFun t (TyCon "elm/core:Basics.Bool" []))
+    WK.Unary -> TyFun t t
+    WK.FromInt -> TyFun (TyCon "elm/core:Basics.Int" []) t
+
+
+-- a custom type with the member inside an exact type (its type arguments, tuple and record parts)
+holdsMember :: Map.Map String a -> String -> MType -> Maybe String
+holdsMember tops member t =
+  case t of
+    TyCon tid args
+      | Map.member (tid ++ "$$" ++ member) tops -> Just tid
+      | otherwise -> firstJust (map (holdsMember tops member) args)
+    TyTuple xs -> firstJust (map (holdsMember tops member) xs)
+    TyRecord fs -> firstJust (map (holdsMember tops member . snd) fs)
+    _ -> Nothing
+  where
+    firstJust xs = case [ x | Just x <- xs ] of { x : _ -> Just x; [] -> Nothing }
 
 
 -- the key of a definition for the exact types of its variables (`keyFor` for types without variables)
@@ -386,7 +526,11 @@ keyForM cid scheme subst =
                 | kind == "row" -> report ("cannot key the row variable v" ++ show i ++ " of the member " ++ cid) >> return (ByLayout [])
                 | exact -> return (ByType m)
                 | kind == "appendable" ->
-                    return (ByApp (case m of { TyCon "elm/core:List.List" [e] -> AList (boxed (classOfM enums e)); _ -> AStr }))
+                    do  tops <- gets sTops
+                        return $ case m of
+                          TyCon tid _ | Map.member (tid ++ "$$append") tops -> ByType m
+                          TyCon "elm/core:List.List" [e] -> ByApp (AList (boxed (classOfM enums e)))
+                          _ -> ByApp AStr
                 | otherwise -> return (ByClass (boxed (classOfM enums m)))
       return (Key parts)
 
@@ -585,7 +729,12 @@ keyFor se cid scheme subst isOuter =
                       Right m | typeSizeUpTo typeSizeLimit m >= typeSizeLimit -> report (growthMessage cid) >> return (ByType (TyCon "ref" []))
                       Right m -> return (ByType m)
                       Left why -> report ("cannot key " ++ cid ++ " v" ++ show i ++ ": " ++ why) >> return (ByClass CRef)
-                | kind == "appendable" -> return (ByApp (appClassOf enums env t))
+                | kind == "appendable" ->
+                    do  tops <- gets sTops
+                        -- (ATTACH A3) a custom type with an `append` member is keyed by its exact type
+                        case mtypeOf env t of
+                          Right m@(TyCon tid _) | Map.member (tid ++ "$$append") tops -> return (ByType m)
+                          _ -> return (ByApp (appClassOf enums env t))
                 | otherwise -> return (ByClass (boxed (classOfT enums env t)))
       return (Key parts)
 
@@ -595,6 +744,16 @@ keyFor se cid scheme subst isOuter =
 
 unitLit :: MExpr
 unitLit = MExpr CUnit (MLit LUnit)
+
+
+-- (ATTACH A3) the exact type of a node when it is a custom type that has well known members (`Money`), else Nothing
+customTypeOf :: SEnv -> Recorder.Key -> SM (Maybe MType)
+customTypeOf se key =
+  case nodeType se key of
+    Just t | Right m@(TyCon tid _) <- mtypeOf (seEnv se) t ->
+      do  tops <- gets sTops
+          return (if Map.member (tid ++ "$$fromInt") tops || Map.member (tid ++ "$$neg") tops then Just m else Nothing)
+    _ -> return Nothing
 
 
 -- the class of a node of the Canonical tree, from its recorded type
@@ -612,7 +771,16 @@ specExpr se (A.At region e) =
     Can.Str s -> return (MExpr CRef (MLit (LString (unescape (ES.toChars s)))))
     Can.Int n ->
       do  cls <- exprClass se region e
-          return (MExpr cls (MLit (if cls == CF64 then LFloat (fromIntegral n) else LInt (fromIntegral n))))
+          custom <- customTypeOf se (Recorder.exprKey region e)
+          case custom of
+            -- (ATTACH A3) an integer literal at a custom type is `fromInt` of it
+            Just t@(TyCon tid _) ->
+              do  r <- memberClone tid "fromInt" (shapeType WK.FromInt t)
+                  case r of
+                    Right (RClone c _ _) -> return (MExpr cls (MCall (MExpr CRef (MGlobal c)) [MExpr CI64 (MLit (LInt (fromIntegral n)))]))
+                    Right _ -> report ("internal: fromInt of " ++ tid ++ " is not a function") >> return (MExpr cls (MLit (LInt 0)))
+                    Left why -> report ("cannot specialize the literal " ++ show n ++ " at " ++ tid ++ ": " ++ why ++ " (a literal at a custom type is its `fromInt`)") >> return (MExpr cls (MLit (LInt 0)))
+            _ -> return (MExpr cls (MLit (if cls == CF64 then LFloat (fromIntegral n) else LInt (fromIntegral n))))
     Can.Float f ->
       return (MExpr CF64 (MLit (LFloat (readDouble (BLC.unpack (BB.toLazyByteString (EF.toBuilder f)))))))
     Can.Unit -> return unitLit
@@ -620,7 +788,16 @@ specExpr se (A.At region e) =
       do  cls <- exprClass se region e
           x' <- specExpr se x
           key <- keyOfType se (nodeType se (Recorder.exprKey region e))
-          return (MExpr cls (MCall (MExpr CRef (MKernel "elm/core:Basics.negate" key)) [x']))
+          custom <- customTypeOf se (Recorder.exprKey region e)
+          case custom of
+            -- (ATTACH A3) `-x` at a custom type is `neg x`
+            Just t@(TyCon tid _) ->
+              do  r <- memberClone tid "neg" (shapeType WK.Unary t)
+                  case r of
+                    Right (RClone c _ _) -> return (MExpr cls (MCall (MExpr CRef (MGlobal c)) [x']))
+                    Right _ -> report ("internal: neg of " ++ tid ++ " is not a function") >> return x'
+                    Left why -> report ("cannot specialize `-` at " ++ tid ++ ": " ++ why) >> return x'
+            _ -> return (MExpr cls (MCall (MExpr CRef (MKernel "elm/core:Basics.negate" key)) [x']))
     Can.Pair a b ->
       do  cls <- exprClass se region e
           a' <- specExpr se a
@@ -1094,7 +1271,17 @@ resolve se region e =
 
     schemeInst = raw >>= schemeOf ctx e
 
+    -- (ATTACH A3) an operator at a custom type with the member behind it
     foreignOrTop cid00 =
+      do  hooked <- wellKnownRef se cid00 (fmap snd schemeInst)
+          dtv <- wellKnownDerived se cid00 (fmap snd schemeInst)
+          tops1 <- gets sTops
+          case (hooked, dtv >>= \o -> fmap (\src -> (o, src)) (Map.lookup o tops1)) of
+            (Just ref, _) -> return ref
+            (_, Just (o, src)) -> viaClone src o
+            _ -> foreignOrTopPlain cid00
+
+    foreignOrTopPlain cid00 =
       do  tops0 <- gets sTops
           vecOn <- gets sVector
           -- Random.peel (decision L31): the Int product is rounded to a double like Elm's (JavaScript's) `*`, the fork's roundTo53

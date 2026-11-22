@@ -19,6 +19,8 @@ import qualified Crash
 import qualified AST.Canonical as Can
 import qualified AST.Constraints as Constraints
 import qualified AST.Prim.Name as N
+import qualified AST.Prim.Operator as Op
+import qualified String as S
 import qualified AST.Prim.TypeVar as T
 import qualified Reporting.Annotation as A
 import qualified Reporting.Error.Type as Error
@@ -43,8 +45,9 @@ runWith :: Members.Table -> Constraint -> IO (Either (NE.List Error.Error) (Map.
 runWith table constraint =
   do  pools <- MVector.replicate 8 []
 
-      (State env _ errors0 _ pending) <-
-        solve Map.empty outermostRank pools (emptyState { _table = table }) constraint
+      flag <- newIORef False
+      (State env _ errors0 _ pending _) <-
+        solve Map.empty outermostRank pools (emptyState { _table = table, _flag = Just flag }) constraint
 
       errors <-
         case pending of
@@ -53,7 +56,11 @@ runWith table constraint =
 
       case Members.merge errors of
         [] ->
-          Right <$> traverse Type.toAnnotation env
+          do  annotations <- traverse Type.toAnnotation env
+              -- Ficcus (ATTACH A3): did an operator or a bundle meet a custom type? (the JavaScript output refuses such a program)
+              used <- readIORef flag
+              return $ Right $
+                if used then Map.insert Constraints.customOperators (Can.Forall Map.empty Can.TUnit) annotations else annotations
 
         e:es ->
           return $ Left (NE.List e es)
@@ -63,7 +70,7 @@ runWith table constraint =
 {-# NOINLINE emptyState #-}
 emptyState :: State
 emptyState =
-  State Map.empty (nextMark noMark) [] Members.emptyTable []
+  State Map.empty (nextMark noMark) [] Members.emptyTable [] Nothing
 
 
 
@@ -85,6 +92,7 @@ data State =
     , _errors :: [Error.Error]
     , _table :: Members.Table             -- Ficcus (ATTACH A2): the members the module can see
     , _pending :: [Members.Obligation]    -- the member obligations not yet discharged
+    , _flag :: Maybe (IORef Bool)         -- Ficcus (ATTACH A3): set when a custom type took the place of a `number`, `comparable`, ... variable
     }
 
 
@@ -100,7 +108,7 @@ solve env rank pools state constraint =
     CEqual region category tipe expectation ->
       do  actual <- typeToVariable rank pools tipe
           expected <- expectedToVariable rank pools expectation
-          answer <- Unify.unifyWith (Members.policyOf (_table state)) actual expected
+          answer <- Unify.unifyWith (Members.policyOf (_flag state) (_table state)) actual expected
           case answer of
             Unify.Ok vars ->
               do  introduce rank pools vars
@@ -118,7 +126,7 @@ solve env rank pools state constraint =
     CLocal region name expectation ->
       do  actual <- makeCopy rank pools $ $(Map.require 'solve) name env N.toChars
           expected <- expectedToVariable rank pools expectation
-          answer <- Unify.unifyWith (Members.policyOf (_table state)) actual expected
+          answer <- Unify.unifyWith (Members.policyOf (_flag state) (_table state)) actual expected
           case answer of
             Unify.Ok vars ->
               do  introduce rank pools vars
@@ -134,17 +142,17 @@ solve env rank pools state constraint =
                       Error.typeReplace expectation expectedType
 
     CForeign region name (Can.Forall freeVars srcType) expectation ->
-      do  actual0 <- srcTypeToVariable rank pools freeVars srcType
+      do  (actual0, state0) <- instantiateUse rank pools state region name freeVars srcType
           -- Ficcus (ATTACH A2): a constrained scheme leaves an obligation for each required member
           (actual, state1) <-
             if Constraints.isWrapped srcType
               then
                 do  (real, obligations) <- Members.use region name actual0
-                    return (real, state { _pending = obligations ++ _pending state })
+                    return (real, state0 { _pending = obligations ++ _pending state0 })
               else
-                return (actual0, state)
+                return (actual0, state0)
           expected <- expectedToVariable rank pools expectation
-          answer <- Unify.unifyWith (Members.policyOf (_table state)) actual expected
+          answer <- Unify.unifyWith (Members.policyOf (_flag state) (_table state)) actual expected
           case answer of
             Unify.Ok vars ->
               do  introduce rank pools vars
@@ -160,27 +168,27 @@ solve env rank pools state constraint =
                       Error.typeReplace expectation expectedType
 
     COperator region op (Can.Forall freeVars srcType) expectation ->
-      do  actual <- srcTypeToVariable rank pools freeVars srcType
+      do  (actual, state0) <- instantiateUse rank pools state region (N.fromString (S.fromChars (Op.toChars op))) freeVars srcType
           expected <- expectedToVariable rank pools expectation
-          answer <- Unify.unifyWith (Members.policyOf (_table state)) actual expected
+          answer <- Unify.unifyWith (Members.policyOf (_flag state0) (_table state0)) actual expected
           case answer of
             Unify.Ok vars ->
               do  introduce rank pools vars
-                  return state
+                  return state0
 
             Unify.Runaway isCycle ->
-              return $ addError state (Error.Runaway region isCycle)
+              return $ addError state0 (Error.Runaway region isCycle)
 
             Unify.Err vars actualType expectedType ->
               do  introduce rank pools vars
-                  return $ addError state $
+                  return $ addError state0 $
                     Error.BadExpr region (Error.Operator op) actualType $
                       Error.typeReplace expectation expectedType
 
     CPattern region category tipe expectation ->
       do  actual <- typeToVariable rank pools tipe
           expected <- patternExpectationToVariable rank pools expectation
-          answer <- Unify.unifyWith (Members.policyOf (_table state)) actual expected
+          answer <- Unify.unifyWith (Members.policyOf (_flag state) (_table state)) actual expected
           case answer of
             Unify.Ok vars ->
               do  introduce rank pools vars
@@ -228,8 +236,21 @@ solve env rank pools state constraint =
 
           -- run solver in next pool
           locals <- traverse (A.traverse (typeToVariable nextRank nextPools)) header
-          (State savedEnv mark errors table pending0) <-
+          (State savedEnv mark errors table pending00 flag) <-
             discharge env nextRank nextPools =<< solve env nextRank nextPools state headerCon
+
+          -- (ATTACH A3) a relaxed use of `/` ... whose type is still open gets Elm's type
+          (pending0, defaultErrors) <-
+            case pending00 of
+              [] -> return ([], [])
+              _  ->
+                Members.defaulting
+                  (Members.Tools
+                    (\(Can.Forall freeVars srcType) -> srcTypeToVariable nextRank nextPools freeVars srcType)
+                    (introduce nextRank nextPools)
+                    (Members.policyOf flag table)
+                    (maybe (return ()) (\ref -> writeIORef ref True) flag))
+                  table env rank nextRank pending00
 
           -- (ATTACH A2c) before the generalization: what the pending member obligations are about is not generalized
           (pendingHeld, holdErrors) <- Members.hold rank nextRank locals pending0
@@ -257,9 +278,9 @@ solve env rank pools state constraint =
           -- (ATTACH A2) an obligation whose subject was generalized can never be discharged
           (pending, memberErrors) <-
             case pendingHeld of
-              [] -> return ([], holdErrors)
-              _  -> (\(kept, errs) -> (kept, errs ++ holdErrors)) <$> Members.sweep pendingHeld
-          let tempState = State savedEnv grayMark (memberErrors ++ cycles ++ escapes ++ errors) table pending
+              [] -> return ([], holdErrors ++ defaultErrors)
+              _  -> (\(kept, errs) -> (kept, errs ++ holdErrors ++ defaultErrors)) <$> Members.sweep pendingHeld
+          let tempState = State savedEnv grayMark (memberErrors ++ cycles ++ escapes ++ errors) table pending flag
           newState <- discharge newEnv rank nextPools =<< solve newEnv rank nextPools tempState subCon
 
           foldM occurs newState (Map.toList locals)
@@ -328,6 +349,27 @@ addError state err =
   state { _errors = err : _errors state }
 
 
+-- Ficcus (ATTACH A3): the type of a use of a name or operator; `/`, `//`, `modBy` and `remainderBy` are typed `a -> a -> a` with an
+-- obligation when a type in sight has the member behind them (Type.Members.relax)
+instantiateUse :: Int -> Pools -> State -> A.Region -> N.Name -> Map.Map T.Var () -> Can.Type -> IO (Variable, State)
+instantiateUse rank pools state region name freeVars srcType =
+  case Members.relax (_table state) (N.toChars name) srcType of
+    Nothing ->
+      do  actual <- srcTypeToVariable rank pools freeVars srcType
+          return (actual, state)
+
+    Just (member, defaultType) ->
+      do  let Can.Forall vars shape = Members.relaxedUse
+          pair <- srcTypeToVariable rank pools vars shape
+          (Descriptor content _ _ _) <- UF.get pair
+          case content of
+            Structure (Pair1 subject fn) ->
+              return (fn, state { _pending = Members.relaxedObligation region name member subject fn defaultType : _pending state })
+
+            _ ->
+              return (pair, state)
+
+
 -- Ficcus (ATTACH A2): discharge the member obligations whose subject is known by now (Type.Members)
 discharge :: Env -> Int -> Pools -> State -> IO State
 discharge env rank pools state =
@@ -340,6 +382,8 @@ discharge env rank pools state =
                 Members.Tools
                   (\(Can.Forall freeVars srcType) -> srcTypeToVariable rank pools freeVars srcType)
                   (introduce rank pools)
+                  (Members.policyOf (_flag state) (_table state))
+                  (maybe (return ()) (\ref -> writeIORef ref True) (_flag state))
           (pending', errors) <- Members.discharge tools (_table state) env pending
           return (state { _pending = pending', _errors = errors ++ _errors state })
 

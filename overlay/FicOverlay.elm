@@ -194,3 +194,31 @@ mergeLists cmp ls rs acc =
 
                         _ ->
                             mergeLists cmp lr rs (l :: acc)
+
+
+{-| Ficcus (ATTACH A3): `<`, `>`, `<=`, `>=` and `/=` at a custom type that has the member `compare` (or `eq`) are these
+definitions: the specializer redirects the kernel function to them for such a type only (the primitives are used for
+every other type). `compare` and `==` inside are the member calls. -}
+ficLt : comparable -> comparable -> Bool
+ficLt a b =
+    compare a b == LT
+
+
+ficGt : comparable -> comparable -> Bool
+ficGt a b =
+    compare a b == GT
+
+
+ficLe : comparable -> comparable -> Bool
+ficLe a b =
+    compare a b /= GT
+
+
+ficGe : comparable -> comparable -> Bool
+ficGe a b =
+    compare a b /= LT
+
+
+ficNeq : a -> a -> Bool
+ficNeq a b =
+    not (a == b)

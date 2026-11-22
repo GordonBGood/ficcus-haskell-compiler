@@ -34,6 +34,7 @@ module AST.Constraints
   , fullType
   , whereName
   , hasMember
+  , customOperators
   )
   where
 
@@ -194,3 +195,11 @@ fullType tipe =
 fromChars :: String -> N.Name
 fromChars =
   N.fromString . S.fromChars
+
+
+-- | Ficcus (ATTACH A3): the name of the marker that says "this module uses operators (or `number`, `comparable`,
+-- `appendable`) at a custom type".  The solver adds it to the annotations; `Compile` turns it into a node of the
+-- object graph, which the JavaScript output refuses like a constrained function.
+customOperators :: N.Name
+customOperators =
+  fromChars "$customOperators"

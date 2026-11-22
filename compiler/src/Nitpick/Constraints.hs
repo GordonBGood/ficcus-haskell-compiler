@@ -27,6 +27,7 @@ constrainedNodes nodes =
   where
     found (global@(Opt.Global home _), node) =
       case node of
+        Opt.Define _ _ | isMarker global -> [global]
         Opt.Define (Opt.Function _ body) _ | hiddenFirst body -> [global]
         Opt.DefineTailFunc _ body _ | hiddenFirst body -> [global]
         Opt.Cycle _ _ defs _ -> concatMap (inCycle home) defs
@@ -38,6 +39,9 @@ constrainedNodes nodes =
         Opt.TailDef name _ body | hiddenFirst body -> [Opt.Global home name]
         _ -> []
 
+    isMarker (Opt.Global _ name) =
+      name == Constraints.customOperators
+
     hiddenFirst body =
       case body of
         Opt.Destruct (Opt.Destructor name _) rest ->
@@ -45,3 +49,4 @@ constrainedNodes nodes =
             Just _ -> True
             Nothing -> hiddenFirst rest
         _ -> False
+

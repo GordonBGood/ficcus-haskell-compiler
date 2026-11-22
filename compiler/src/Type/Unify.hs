@@ -52,12 +52,12 @@ instance Exception RunawayException
 -- variables when it has the members that the variable stands for (Type.Members builds the policy from the member
 -- table).  `noPolicy` is Elm's rule: no custom type does.
 newtype Policy =
-  Policy { _customOk :: SuperType -> ModuleName.Canonical -> T.Name -> Bool }
+  Policy { _customOk :: SuperType -> ModuleName.Canonical -> T.Name -> IO Bool }
 
 
 noPolicy :: Policy
 noPolicy =
-  Policy (\_ _ _ -> False)
+  Policy (\_ _ _ -> return False)
 
 
 unify :: Variable -> Variable -> IO Answer
@@ -171,7 +171,7 @@ register mkVar =
 customOk :: SuperType -> ModuleName.Canonical -> T.Name -> Unify Bool
 customOk super home name =
   Unify $ \vars@(Vars _ _ (Policy ok')) ok _ ->
-    ok vars (ok' super home name)
+    ok vars =<< ok' super home name
 
 
 mismatch :: Unify a

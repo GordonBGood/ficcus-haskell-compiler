@@ -720,6 +720,9 @@ instanceText ctx e raw =
 
     Just (scheme, inst) ->
       case matchT scheme inst of
+        -- (ATTACH A3) `/`, `//`, `modBy`, `remainderBy` at a type with the member behind them are typed by that type, not by Float or Int
+        Left _ | fmap (`elem` ["elm/core:Basics.fdiv", "elm/core:Basics.idiv", "elm/core:Basics.modBy", "elm/core:Basics.remainderBy"]) (calleeId ctx e) == Just True ->
+          return "   (the member of its type)"
         Left err ->
           do  modify' (\w -> w { _failed = _failed w + 1, _bad = _bad w + 1 })
               return ("   !! instance match failed: " ++ err)

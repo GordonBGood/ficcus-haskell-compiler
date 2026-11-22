@@ -39,6 +39,7 @@ import qualified File
 import qualified Generate.C as GC
 import qualified Generate.JavaScript as JS
 import qualified Generate.Mode as Mode
+import qualified AST.Constraints as Constraints
 import qualified Nitpick.Constraints as NitpickConstraints
 import qualified Nitpick.Debug as Nitpick
 import qualified Reporting.Exit as Exit
@@ -188,8 +189,9 @@ checkForConstraints (Objects (Opt.GlobalGraph foreignNodes _) locals) =
     [] -> return ()
     globals -> Task.throw (Exit.GenerateConstrainedFunctions (List.sort (map toChars globals)))
   where
-    toChars (Opt.Global (ModuleName.Canonical _ home) name) =
-      Module.toChars home ++ "." ++ Members.displayName name
+    toChars (Opt.Global (ModuleName.Canonical _ home) name)
+      | name == Constraints.customOperators = Module.toChars home ++ ": operators on custom types (`+`, `<`, `==`, ...)"
+      | otherwise = Module.toChars home ++ "." ++ Members.displayName name
 
 
 
