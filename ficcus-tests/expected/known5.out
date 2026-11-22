@@ -1,0 +1,14 @@
+sepBy: ["ok [] at 0","ok [1] at 1","ok [1,2,3] at 5","ok [1,2] at 3","bad eof True"]
+chomp: [0,2,3]
+below: [0,2,6]
+in: [1,2,0,0]
+loop2: (8,13)
+list: [8,20]
+under: [15,25]
+record: [5,6,7]
+acc: 4
+acc: 8
+acc: 12
+logLoop: 12
+loop: 140
+apply: [4,4,8,8]

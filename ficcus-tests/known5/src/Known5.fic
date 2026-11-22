@@ -1,0 +1,243 @@
+module Known5 exposing (main)
+
+-- H16 W3 (K2 Rec, K7 Arity): specialization of recursive functions by their known function arguments: a recursive scanner with a
+-- capture-free predicate, one with a predicate that captures a local (extra parameters), a loop whose step function is applied to more
+-- arguments than its arity, a known function used as a value inside the recursion, `Debug.log` inside the callee (order), a known
+-- function stored in a record and in a list (not specialized), and under application.
+
+
+type alias State =
+    { rest : List Int, pos : Int }
+
+
+type Step a
+    = Good Bool a State
+    | Bad Bool String
+
+
+type alias Parser a =
+    State -> Step a
+
+
+item : Parser Int
+item =
+    \s ->
+        case s.rest of
+            x :: more ->
+                Good True x { rest = more, pos = s.pos + 1 }
+
+            [] ->
+                Bad False "eof"
+
+
+succeed : a -> Parser a
+succeed a =
+    \s -> Good False a s
+
+
+map : (a -> b) -> Parser a -> Parser b
+map f p =
+    \s ->
+        case p s of
+            Good c a s1 ->
+                Good c (f a) s1
+
+            Bad c m ->
+                Bad c m
+
+
+keep : Parser (a -> b) -> Parser a -> Parser b
+keep pf pa =
+    \s ->
+        case pf s of
+            Bad c m ->
+                Bad c m
+
+            Good c1 f s1 ->
+                case pa s1 of
+                    Bad c2 m ->
+                        Bad (c1 || c2) m
+
+                    Good c2 a s2 ->
+                        Good (c1 || c2) (f a) s2
+
+
+-- recursive, calls its parser arguments, builds the step parser at each iteration
+sepBy : Parser a -> Parser () -> Parser (List a)
+sepBy p sep =
+    \s ->
+        case p s of
+            Bad c m ->
+                if c then
+                    Bad c m
+
+                else
+                    Good False [] s
+
+            Good c1 x s1 ->
+                sepByHelp p sep c1 [ x ] s1
+
+
+sepByHelp : Parser a -> Parser () -> Bool -> List a -> State -> Step (List a)
+sepByHelp p sep c acc s =
+    let
+        step =
+            keep (map (\_ y -> y) sep) p
+    in
+    case step s of
+        Good c2 y s1 ->
+            sepByHelp p sep (c || c2) (y :: acc) s1
+
+        Bad c2 m ->
+            if c2 then
+                Bad c2 m
+
+            else
+                Good c (List.reverse acc) s
+
+
+comma : Parser ()
+comma =
+    \s ->
+        case s.rest of
+            0 :: more ->
+                Good True () { rest = more, pos = s.pos + 1 }
+
+            _ ->
+                Bad False "comma"
+
+
+-- a plain recursive scanner with a predicate argument
+chompWhile : (Int -> Bool) -> Int -> List Int -> Int
+chompWhile ok n xs =
+    case xs of
+        x :: rest ->
+            if ok x then
+                chompWhile ok (n + 1) rest
+
+            else
+                n
+
+        [] ->
+            n
+
+
+isBig : Int -> Bool
+isBig x =
+    x > 5
+
+
+-- the predicate captures `lim` (an extra parameter of the specialization)
+countBelow : Int -> List Int -> Int
+countBelow lim xs =
+    chompWhile (\x -> x < lim) 0 xs
+
+
+-- the predicate captures a list (an extra parameter of a reference class: borrowed or owned)
+countIn : List Int -> List Int -> Int
+countIn lims xs =
+    chompWhile (\x -> List.member x lims) 0 xs
+
+
+-- the capturing function is also used as a value in the recursion (kept as a variable, no specialization on it)
+applyAll : (Int -> Int) -> List Int -> List Int
+applyAll f xs =
+    case xs of
+        [] ->
+            []
+
+        x :: rest ->
+            f x :: List.map f [ x ] ++ applyAll f rest
+
+
+-- a loop whose step function takes the state and returns a function (over application: `f st s`)
+loop : (st -> Int -> ( Bool, st )) -> st -> Int -> st
+loop f st i =
+    case f st i of
+        ( True, st1 ) ->
+            loop f st1 (i + 1)
+
+        ( False, st1 ) ->
+            st1
+
+
+-- Debug.log inside the specialized callee: the order of the output must equal Elm's
+logLoop : (Int -> Int) -> Int -> Int -> Int
+logLoop f n acc =
+    if n <= 0 then
+        acc
+
+    else
+        logLoop f (n - 1) (Debug.log "acc" (f acc))
+
+
+type alias Ops =
+    { op : Int -> Int }
+
+
+useRecord : Ops -> List Int -> List Int
+useRecord r xs =
+    List.map r.op xs
+
+
+add3 : Int -> Int -> Int -> Int
+add3 a b c =
+    a + b + c
+
+
+run : Parser a -> List Int -> String
+run p xs =
+    case p { rest = xs, pos = 0 } of
+        Good _ a s ->
+            "ok " ++ Debug.toString a ++ " at " ++ String.fromInt s.pos
+
+        Bad c m ->
+            "bad " ++ m ++ " " ++ Debug.toString c
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    k =
+                        4
+
+                    _ =
+                        Debug.log "sepBy" (List.map (run (sepBy item comma)) [ [], [ 1 ], [ 1, 0, 2, 0, 3 ], [ 1, 0, 2, 7, 3 ], [ 1, 0 ] ])
+
+                    _ =
+                        Debug.log "chomp" (List.map (\xs -> chompWhile isBig 0 xs) [ [], [ 9, 9, 1 ], [ 6, 7, 8 ] ])
+
+                    _ =
+                        Debug.log "below" (List.map (\l -> countBelow l [ 1, 2, 3, 4, 5, 1 ]) [ 0, 3, 9 ])
+
+                    _ =
+                        Debug.log "in" (List.map (\l -> countIn [ l, l + 1 ] [ 3, 4, 5, 6, 7 ]) [ 2, 3, 6, 9 ])
+
+                    _ =
+                        Debug.log "apply" (applyAll (\x -> x * k) [ 1, 2 ])
+
+                    _ =
+                        Debug.log "loop" (loop (\st i -> ( i < 4, st + i * k )) 100 0)
+
+                    _ =
+                        Debug.log "loop2" (loop (\( a, b ) i -> ( i < 5, ( b, a + b ) )) ( 0, 1 ) 0)
+
+                    _ =
+                        Debug.log "logLoop" (logLoop (\a -> a + k) 3 0)
+
+                    _ =
+                        Debug.log "record" (useRecord { op = \x -> x + k } [ 1, 2, 3 ])
+
+                    _ =
+                        Debug.log "under" (List.map (add3 1 k) [ 10, 20 ])
+
+                    _ =
+                        Debug.log "list" (List.map (\f -> f 5) [ add3 1 2, \x -> x * k ])
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

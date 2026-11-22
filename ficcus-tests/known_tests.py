@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """H16 tests of M.Known (K3, K4 of docs/H16-DESIGN.md section 3.1): every program in ficcus-tests/known*/ (expected output = Elm 0.19.3
 `expected/<name>.out`) is compiled with --rc in four settings - pass on with FICCUS_KNOWN_CHECK=1 (scope checker), pass off
-(FICCUS_NO_KNOWN=1), pass on without expansion (FICCUS_KNOWN_NO_EXPAND=1), pass on with a tiny budget (FICCUS_KNOWN_BUDGET=20) - and each result is
+(FICCUS_NO_KNOWN=1), pass on without expansion (FICCUS_KNOWN_NO_EXPAND=1), pass on with a tiny budget (FICCUS_KNOWN_BUDGET=20, FICCUS_KNOWN_SPEC_BUDGET=20), pass on without specialization (FICCUS_KNOWN_NO_SPEC=1) - and each result is
 built with gcc under AddressSanitizer + UBSan (no pool) and with -O2, run, and compared with the expected output; a counted run must end with 0
 live objects.
 
@@ -12,7 +12,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RT = os.path.join(HERE, "..", "..", "targets", "c")
 SAFE = os.path.join(HERE, "..", "ficcus-tools", "safe")
 SETTINGS = [("on+check", {"FICCUS_KNOWN_CHECK": "1"}), ("off", {"FICCUS_NO_KNOWN": "1"}),
-            ("no-expand", {"FICCUS_KNOWN_NO_EXPAND": "1"}), ("budget20", {"FICCUS_KNOWN_BUDGET": "20", "FICCUS_KNOWN_CHECK": "1"})]
+            ("no-expand", {"FICCUS_KNOWN_NO_EXPAND": "1"}), ("budget20", {"FICCUS_KNOWN_BUDGET": "20", "FICCUS_KNOWN_SPEC_BUDGET": "20", "FICCUS_KNOWN_CHECK": "1"}),
+            ("no-spec", {"FICCUS_KNOWN_NO_SPEC": "1", "FICCUS_KNOWN_CHECK": "1"})]
 SAN = ["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL", "-Wno-maybe-uninitialized"]
 
 

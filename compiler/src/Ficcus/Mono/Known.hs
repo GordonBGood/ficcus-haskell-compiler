@@ -4,6 +4,7 @@ module Ficcus.Mono.Known
   ( knownProgram
   , knownRun
   , checkScope
+  , knownOn
   )
   where
 
@@ -58,6 +59,14 @@ copyTestOn = unsafePerformIO (fmap (== Just "1") (lookupEnv "FICCUS_KNOWN_COPYTE
 expandOn :: Bool
 expandOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_KNOWN_NO_EXPAND"))
 
+{-# NOINLINE specOn #-}
+specOn :: Bool
+specOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_KNOWN_NO_SPEC"))
+
+{-# NOINLINE specBudget #-}
+specBudget :: Int
+specBudget = unsafePerformIO (fmap (fromMaybe 300 . (>>= readMaybe)) (lookupEnv "FICCUS_KNOWN_SPEC_BUDGET"))
+
 {-# NOINLINE budget #-}
 budget :: Int
 budget = unsafePerformIO (fmap (fromMaybe 200 . (>>= readMaybe)) (lookupEnv "FICCUS_KNOWN_BUDGET"))
@@ -86,6 +95,8 @@ data St = St
   , sStack :: [CloneId]                  -- builders being expanded
   , sMemo :: Map.Map (CloneId, [String]) MExpr   -- expansions with static arguments only
   , sCur :: CloneId                      -- the clone whose body is being rewritten (the owner of new lifted copies)
+  , sSpec :: Map.Map (CloneId, [String]) (CloneId, [(String, Class)])
+      -- W3: specializations by key (the function, the known function of each argument); the clone and its extra parameters (captured variables)
   }
 
 type K = State St
@@ -157,7 +168,7 @@ knownRun prog
     byId0 = Map.fromList [ (mdClone d, d) | d <- clones ]
     info = mkInfo prog
     start = St 0 (1 + maximum (0 : [ n | d <- clones, let CloneId n = mdClone d ])) Map.empty byId0 [] [] Map.empty Map.empty Map.empty
-              (captures clones) Map.empty 0 [] Map.empty (CloneId 0)
+              (captures clones) Map.empty 0 [] Map.empty (CloneId 0) Map.empty
     ((out, testErrs), st) = runState go start
     go =
       do  terrs <- if copyTestOn then copyTest byId0 (sCaps start) clones else return []
@@ -319,11 +330,11 @@ rwCall info env e h args =
           let n = length (mdParams d)
               m = length args
           in if m == n then exact c d
-             else if m > n && n > 0 && (Map.member c (sConstFn st) || Set.member c (iBuilder info))
+             else if m > n && n > 0
                then do { let { (first, rest) = splitAt n args }
                        ; inner <- exact' c d (e { mRep = mdResult d }) first
                        ; case mNode inner of
-                           MCall _ _ -> return plain
+                           MCall ih _ | MGlobal c' <- mNode ih, c' == c -> return plain
                            _ -> do { bump "over-application-split"; return e { mNode = MCall inner rest } } }
                else return plain
         _ -> return plain
@@ -336,8 +347,11 @@ rwCall info env e h args =
             Just code | all atomE as -> do { bump "const-calls"; return ex { mNode = MGlobal code } }
             _ | Set.member c (iBuilder info) ->
                   do  r <- tryExpand info env ex c d as
-                      return (fromMaybe ex { mNode = MCall h as } r)
-              | otherwise -> return ex { mNode = MCall h as }
+                      case r of
+                        Just x -> return x
+                        Nothing -> spec ex c d as
+              | otherwise -> spec ex c d as
+    spec ex c d as = fmap (fromMaybe ex { mNode = MCall h as }) (if specOn then trySpecialize info env ex h c d as else return Nothing)
 
 
 -- EXPANSION
@@ -436,7 +450,7 @@ tryExpand info env e c d args =
                       else (lets, acc ++ [a])
                   (lets', atoms) = foldl step ([], []) (zip fl (mdParams d))
                   sub = Map.fromList (zip ps atoms)
-              r <- copyFamily defs (sCaps st0) sub c (sCur st0)
+              r <- copyFamily budget defs (sCaps st0) sub c (sCur st0)
               case r of
                 Nothing -> return Nothing
                 Just (_, body, copies) ->
@@ -465,6 +479,86 @@ registerCopies origin _ size copies =
     in s { sDefs = defs', sNew = reverse (map mdClone copies) ++ sNew s, sOrigin = origins
          , sPerOrig = Map.insertWith (+) origin 1 (sPerOrig s), sAdded = sAdded s + size
          , sCaps = newCaps (sCaps s) copies }
+
+
+-- SPECIALIZATION (W3): a call of a function with known function arguments becomes a call of a copy in which they are substituted
+
+-- the parameter is an argument or the head of a call in the bodies (so that knowing it can make a call direct or an expansion possible)
+usefulParam :: String -> [MExpr] -> Bool
+usefulParam p = any go
+  where
+    isP x = case mNode x of { MLocal q -> q == p; _ -> False }
+    callable h = case mNode h of { MGlobal _ -> True; MLocal _ -> True; _ -> False }
+    go e = (case mNode e of
+              MCall h as | callable h -> any isP (h : as)
+              _ -> False) || any go (children e)
+
+
+-- every use of the parameter is the head of a call, or the argument at its own position of a recursive call of `c`
+-- (a known function with captures is then not built again at a use)
+headOrSelf :: CloneId -> [String] -> String -> [MExpr] -> Bool
+headOrSelf c ps p = all go
+  where
+    idx = List.elemIndex p ps
+    isP x = case mNode x of { MLocal q -> q == p; _ -> False }
+    go e = case mNode e of
+      MCall h as | MGlobal g <- mNode h, g == c -> and [ (Just i == idx && isP a) || go a | (i, a) <- zip [0 :: Int ..] as ]
+      MCall h as -> (isP h || go h) && all go as
+      MLocal x -> x /= p
+      _ -> all go (children e)
+
+
+trySpecialize :: Info -> Env -> MExpr -> MExpr -> CloneId -> MDef -> [MExpr] -> K (Maybe MExpr)
+trySpecialize info env e h c d args
+  | mdKind d /= Function || Just c == iMain info || null args = return Nothing
+  | otherwise =
+  do  st0 <- get
+      cl <- mapM (classify info env) args
+      let defs = sDefs st0
+          fam = family defs c
+          bodies = [ b | x <- d : fam, Just b <- [mdBody x] ]
+          ps = map fst (mdParams d)
+          pick (a, k) p
+            | k == KFun && usefulParam p bodies = Just a
+            | k == KFunCap && usefulParam p bodies && headOrSelf c ps p bodies = Just a
+            | otherwise = Nothing
+          picks = zipWith pick cl ps
+          origin = Map.findWithDefault c c (sOrigin st0)
+          used = Map.findWithDefault 0 origin (sPerOrig st0)
+          size = sum (map nodeCount bodies)
+          shape = maybe "_" (\a -> case mNode a of { MGlobal (CloneId n) -> "F" ++ show n; _ -> "?" })
+          key = (c, map shape picks)
+          extras = List.nubBy (\x y -> fst x == fst y)
+                     [ nc | Just a <- picks, MGlobal l <- [mNode a], nc <- Map.findWithDefault [] l (sCaps st0) ]
+          dyn = [ a | (a, Nothing) <- zip args picks ]
+          callOf sid ex = e { mNode = MCall (h { mNode = MGlobal sid }) (dyn ++ [ MExpr cls (MLocal n) | (n, cls) <- ex ]) }
+      if all (== Nothing) (map (fmap (const ())) picks) then return Nothing
+      else case Map.lookup key (sSpec st0) of
+        Just (sid, ex) -> do { bump "spec-memo-hits"; return (Just (callOf sid ex)) }
+        Nothing
+          | used >= perOriginMax -> refuse "spec-per-origin-budget"
+          | size > specBudget -> refuse "spec-family-size"
+          | sAdded st0 + size > max programFloor (iSize info) -> refuse "spec-program-budget"
+          | otherwise ->
+              do  sid <- freshId
+                  let sub = Map.fromList [ (p, a) | (p, Just a) <- zip ps picks ]
+                  r <- copyFamily specBudget defs (sCaps st0) sub c sid
+                  case r of
+                    Nothing -> return Nothing
+                    Just (remaining, body, copies) ->
+                      do  let nd = d { mdClone = sid, mdParams = remaining ++ extras, mdBody = Just body
+                                     , mdLifted = fmap (const (sCur st0)) (mdLifted d)
+                                     , mdOwn = [], mdTwin = Nothing, mdCapsOwned = False, mdInit = Nothing, mdNeeds = [] }
+                          bumpN size "nodes-added"
+                          bump "specializations"
+                          bump ("specialize:" ++ mdName d)
+                          registerCopies origin c size (nd : copies)
+                          modify' (\s -> s { sSpec = Map.insert key (sid, extras) (sSpec s) })
+                          mapM_ (rewriteClone info . mdClone) copies
+                          rewriteClone info sid
+                          return (Just (callOf sid extras))
+  where
+    refuse why = do { bump ("refused-" ++ why); return Nothing }
 
 
 -- the captured variables of new clones (the rule of Free.captures: names used and not bound, plus those of the lifted clones called),
@@ -601,9 +695,9 @@ nodeCount e = 1 + sum (map nodeCount (children e))
 -- family is copied to a fresh clone id and every reference to it is remapped. Result: the parameters of `root` that are not substituted
 -- (renamed), the copied body, the copied family (owner `newOwner` for the clones that were lifted out of `root`; `mdOwn`, `mdTwin`,
 -- `mdCapsOwned`, `mdInit`, `mdNeeds` reset). Free names that are neither binders of the family nor substituted are left alone.
-copyFamily :: Map.Map CloneId MDef -> Map.Map CloneId [(String, Class)] -> Map.Map String MExpr -> CloneId -> CloneId
+copyFamily :: Int -> Map.Map CloneId MDef -> Map.Map CloneId [(String, Class)] -> Map.Map String MExpr -> CloneId -> CloneId
            -> K (Maybe ([(String, Class)], MExpr, [MDef]))
-copyFamily byId caps sub root newOwner =
+copyFamily limit byId caps sub root newOwner =
   case Map.lookup root byId of
     Just d | Just body <- mdBody d ->
       let fam = family byId root
@@ -620,7 +714,7 @@ copyFamily byId caps sub root newOwner =
           size = sum (map nodeCount bodies)
       in if clash || subClash then do { bump "copy-refused-capture-clash"; return Nothing }
          else if not classOk then do { bump "copy-refused-shape"; return Nothing }
-         else if size > budget then do { bump "copy-refused-budget"; return Nothing }
+         else if size > limit then do { bump "copy-refused-budget"; return Nothing }
          else
            do  k <- freshSuffix
                ids <- mapM (const freshId) fam
@@ -686,5 +780,5 @@ copyTest byId caps clones =
   where
     one d =
       do  newId <- freshId
-          r <- copyFamily byId caps Map.empty (mdClone d) newId
+          r <- copyFamily budget byId caps Map.empty (mdClone d) newId
           return (fmap (\(ps, b, fam) -> d { mdClone = newId, mdParams = ps, mdBody = Just b } : fam) r)

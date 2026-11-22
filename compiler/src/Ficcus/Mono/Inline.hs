@@ -43,7 +43,8 @@ import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 
 import Ficcus.Mono.Class
-import Ficcus.Mono.Free (patVars)
+import Ficcus.Mono.Free (captures, patVars)
+import Ficcus.Mono.Known (knownOn)
 import Ficcus.Mono.Ir
 
 
@@ -94,9 +95,12 @@ table :: [MDef] -> Tab
 table clones =
   let owners = Set.fromList [ o | d <- clones, Just o <- [mdLifted d] ]
       lifted = Set.fromList [ mdClone d | d <- clones, mdLifted d /= Nothing ]
+      -- H16 W3: with the Known pass on, a reference to a lifted clone that captures nothing does not disqualify a body (it needs no scope)
+      caps = if knownOn then captures clones else Map.empty
+      liftedCap = Set.fromList [ mdClone d | d <- clones, mdLifted d /= Nothing, not (knownOn && null (Map.findWithDefault [("", CRef)] (mdClone d) caps)) ]
       ok d = mdKind d == Function && mdLifted d == Nothing && not (Set.member (mdClone d) owners)
              && case mdBody d of
-                  Just b -> size b <= sizeLimit && mdClone d `notElem` exprRefs b && not (hasLam b) && not (hasRecordPat b) && not (any (`Set.member` lifted) (exprRefs b))
+                  Just b -> size b <= sizeLimit && mdClone d `notElem` exprRefs b && not (hasLam b) && not (hasRecordPat b) && not (any (`Set.member` liftedCap) (exprRefs b))
                   Nothing -> False
       defs = Map.fromList [ (mdClone d, d) | d <- clones, ok d ]
       leafOk ps l = isCtorApp l || (case mNode l of { MCall (MExpr _ (MGlobal p)) _ -> Set.member p ps; _ -> False })

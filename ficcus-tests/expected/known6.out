@@ -1,0 +1,5 @@
+grow: [Just (1,[2]),Just (4,[2]),Just (16,[2]),Just (121,[2])]
+quad: Just (48,[])
+three: (Just ((1,2),[3]),Just (("4",True),[]),Just (('c',[5]),[6]))
+mutual: [23,12,1]
+chain: Just (672,[2])

@@ -1,0 +1,140 @@
+module Known6 exposing (main)
+
+-- H16 W3 (K5 Grow): termination stressors for specialization and expansion: a recursive function that grows its own known argument,
+-- a builder that returns a builder, one polymorphic combinator used at three types, a mutual recursion through known functions, and a
+-- chain of 40 nested maps (the budgets stop the growth; the output stays right).
+
+
+type alias Parser a =
+    List Int -> Maybe ( a, List Int )
+
+
+succeed : a -> Parser a
+succeed a =
+    \s -> Just ( a, s )
+
+
+item : Parser Int
+item =
+    \s ->
+        case s of
+            x :: r ->
+                Just ( x, r )
+
+            [] ->
+                Nothing
+
+
+map : (a -> b) -> Parser a -> Parser b
+map f p =
+    \s ->
+        case p s of
+            Just ( a, r ) ->
+                Just ( f a, r )
+
+            Nothing ->
+                Nothing
+
+
+-- the known argument grows at each recursive call: f p = \s -> f (map g p) s would not terminate; here the depth counter ends it
+grow : Int -> (Int -> Int) -> Parser Int -> Parser Int
+grow n g p =
+    if n <= 0 then
+        p
+
+    else
+        grow (n - 1) g (map g p)
+
+
+-- a builder that returns a builder
+twice : (a -> a) -> Parser a -> Parser a
+twice f p =
+    map f (map f p)
+
+
+quad : (a -> a) -> Parser a -> Parser a
+quad f p =
+    twice f (twice f p)
+
+
+-- the same combinator at three types
+pairUp : Parser a -> Parser b -> Parser ( a, b )
+pairUp pa pb =
+    \s ->
+        case pa s of
+            Nothing ->
+                Nothing
+
+            Just ( a, r ) ->
+                case pb r of
+                    Nothing ->
+                        Nothing
+
+                    Just ( b, r2 ) ->
+                        Just ( ( a, b ), r2 )
+
+
+-- mutual recursion through known functions
+evens : (Int -> Bool) -> List Int -> Int
+evens p xs =
+    case xs of
+        [] ->
+            0
+
+        x :: r ->
+            if p x then
+                1 + odds p r
+
+            else
+                evens p r
+
+
+odds : (Int -> Bool) -> List Int -> Int
+odds p xs =
+    case xs of
+        [] ->
+            0
+
+        x :: r ->
+            if p x then
+                10 + evens p r
+
+            else
+                odds p r
+
+
+chain : Parser Int
+chain =
+    item
+        |> map (\x -> x + 1) |> map (\x -> x + 1) |> map (\x -> x + 1) |> map (\x -> x + 1) |> map (\x -> x + 1)
+        |> map (\x -> x + 1) |> map (\x -> x + 1) |> map (\x -> x + 1) |> map (\x -> x + 1) |> map (\x -> x + 1)
+        |> map (\x -> x + 1) |> map (\x -> x + 1) |> map (\x -> x + 1) |> map (\x -> x + 1) |> map (\x -> x + 1)
+        |> map (\x -> x + 1) |> map (\x -> x + 1) |> map (\x -> x + 1) |> map (\x -> x + 1) |> map (\x -> x + 1)
+        |> map (\x -> x * 2) |> map (\x -> x * 2) |> map (\x -> x * 2) |> map (\x -> x * 2) |> map (\x -> x * 2)
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ =
+                        Debug.log "grow" (List.map (\n -> grow n (\x -> x + 3) item [ 1, 2 ]) [ 0, 1, 5, 40 ])
+
+                    _ =
+                        Debug.log "quad" (quad (\x -> x * 2) item [ 3 ])
+
+                    _ =
+                        Debug.log "three" ( pairUp item item [ 1, 2, 3 ], pairUp (map String.fromInt item) (succeed True) [ 4 ], pairUp (succeed 'c') (map (\x -> [ x ]) item) [ 5, 6 ] )
+
+                    _ =
+                        Debug.log "mutual" (List.map (\n -> evens (\x -> x > n) [ 1, 5, 9, 3, 7 ]) [ 0, 4, 8 ])
+
+                    _ =
+                        Debug.log "chain" (chain [ 1, 2 ])
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
