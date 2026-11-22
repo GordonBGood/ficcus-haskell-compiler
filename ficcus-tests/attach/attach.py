@@ -10,7 +10,7 @@ Each case is a directory cases/<id>/ with its sources (Main.elm, other modules),
 The expected results are the table expected.tsv (tab separated: id, outcome, error titles, text the output must contain):
   ACCEPT   `elm make` succeeds
   REJECT   `elm make` fails; the titles ("-- TITLE ----") are the third column, ';' separated
-  REJECTC  `elm make --output=x.c` fails with the `-- FICCUS: the program cannot be compiled to C yet` report only (third column: unused, fourth: text it must contain)
+  REJECTC  `elm make --output=x.c` fails with the `-- FICCUS: the program cannot be compiled to C yet` report only (third column: the title of another report when it is not that one, fourth: text it must contain)
   RUN      ACCEPT, and the program (a Platform.worker that prints with Debug.log) gives expected.out when run as JavaScript
            (node) and as C (`--output=x.c`, gcc/clang); the third column says which: js, c or js+c
 Packages of the cases (ficcus/*) live in packages/<author>/<name>/<version>/ and are entered in a private ELM_HOME (mkhome.py),
@@ -68,7 +68,7 @@ def one(case, elm, home, want):
         env = dict(os.environ, ELM_HOME=home)
         if want[0] == "REJECTC":       # a program the C path refuses (decision 5): the FICCUS report, exit status 1, no crash box, no "Success" after it
             rc, out = run([elm, "make", main, "--output=x.c", "--no-rc"], dst, env)
-            head = "-- FICCUS: the program cannot be compiled to C yet"
+            head = "-- " + (want[1] or "FICCUS: the program cannot be compiled to C yet")      # SIZED: a title in the second column is the report expected (INTEGER OUT OF RANGE, TYPE MISMATCH)
             bad = []
             if rc == 0: bad.append("exit 0")
             if head not in out: bad.append("no FICCUS report")

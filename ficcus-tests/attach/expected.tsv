@@ -134,3 +134,16 @@ sized-bound-word32	RUN	c
 sized-bound-word64	RUN	c	
 sized-bound-float32	RUN	c	
 sized-lit	RUN	c	
+sized-conv	RUN	c	
+sized-keys	RUN	c	
+sized-err-lit-word8	REJECTC	INTEGER OUT OF RANGE	does not fit
+sized-err-lit-int8	REJECTC	INTEGER OUT OF RANGE	does not fit
+sized-err-lit-int8-neg	REJECTC	INTEGER OUT OF RANGE	does not fit
+sized-err-lit-word-neg	REJECTC	INTEGER OUT OF RANGE	does not fit
+sized-err-lit-arith	REJECTC	INTEGER OUT OF RANGE	does not fit
+sized-err-mix-int	REJECTC	TYPE MISMATCH	
+sized-err-mix-sizes	REJECTC	TYPE MISMATCH	
+sized-err-pattern	REJECTC	TYPE MISMATCH	can never match
+sized-err-word64-tuple	REJECTC		has its own
+sized-err-float-literal	REJECTC	TYPE MISMATCH	
+sized-err-float32-idiv	REJECTC	NO MEMBER	idiv

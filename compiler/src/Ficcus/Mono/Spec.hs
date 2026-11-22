@@ -199,8 +199,18 @@ specialize modules marks =
         enums = Map.union (Sized.sizedEnums unions0) (builtin (Map.fromList (concatMap mmEnums modules)))
         start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions
         mainId = defIdOf (mmCtx m) (defKeyOf d)
-        final = execState (requestRoot mainId >>= \r0 -> drain >> return r0) start
-        root = Map.lookup (CKey mainId Nothing (Key [])) (sClones final)
+        final0 = execState (requestRoot mainId >>= \r0 -> drain >> return r0) start
+        root = Map.lookup (CKey mainId Nothing (Key [])) (sClones final0)
+        -- SIZED: a literal out of range is an error also in a definition that `main` does not reach: when a sized type is in the
+        -- program, the other definitions of the project are specialized too (their clones are dropped, only these reports are kept)
+        final =
+          if Map.null (Sized.sizedEnums unions0) then final0
+          else
+            let ids = [ i | m' <- modules, mmProject m', d' <- mmDefs m', let i = defIdOf (mmCtx m') (defKeyOf d')
+                          , not (Map.member (CKey i Nothing (Key [])) (sClones final0)) ]
+                extra = execState (mapM_ (\i -> requestRoot i >> drain) ids) final0
+                rangeErrs = [ e | e <- reverse (sErrors extra), "@@ INTEGER OUT OF RANGE" `List.isPrefixOf` e, e `notElem` sErrors final0 ]
+            in final0 { sErrors = reverse rangeErrs ++ sErrors final0 }
       in
       case (reverse (sErrors final), root) of
         ([], Just r) -> Right (MProgram (ordered (sDone final) r) (Just r) unions)

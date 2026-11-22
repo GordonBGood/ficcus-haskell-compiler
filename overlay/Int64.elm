@@ -41,7 +41,7 @@ fromString s =
 
 minValue : Int64
 minValue =
-    -9223372036854775808
+    -9223372036854775807 - 1
 
 
 maxValue : Int64
