@@ -24,6 +24,7 @@ import qualified String as S
 import qualified AST.Prim.TypeVar as T
 import qualified Reporting.Annotation as A
 import qualified Reporting.Error.Type as Error
+import qualified Type.Error as ET
 import qualified Type.Members as Members
 import qualified Type.Occurs as Occurs
 import Type.Type as Type
@@ -119,7 +120,7 @@ solve env rank pools state constraint =
 
             Unify.Err vars actualType expectedType ->
               do  introduce rank pools vars
-                  return $ addError state $
+                  return $ addError state $ noted state actualType expectedType $
                     Error.BadExpr region category actualType $
                       Error.typeReplace expectation expectedType
 
@@ -137,7 +138,7 @@ solve env rank pools state constraint =
 
             Unify.Err vars actualType expectedType ->
               do  introduce rank pools vars
-                  return $ addError state $
+                  return $ addError state $ noted state actualType expectedType $
                     Error.BadExpr region (Error.Local name) actualType $
                       Error.typeReplace expectation expectedType
 
@@ -163,7 +164,7 @@ solve env rank pools state constraint =
 
             Unify.Err vars actualType expectedType ->
               do  introduce rank pools vars
-                  return $ addError state1 $
+                  return $ addError state1 $ noted state1 actualType expectedType $
                     Error.BadExpr region (Error.Foreign name) actualType $
                       Error.typeReplace expectation expectedType
 
@@ -181,7 +182,7 @@ solve env rank pools state constraint =
 
             Unify.Err vars actualType expectedType ->
               do  introduce rank pools vars
-                  return $ addError state0 $
+                  return $ addError state0 $ noted state0 actualType expectedType $
                     Error.BadExpr region (Error.Operator op) actualType $
                       Error.typeReplace expectation expectedType
 
@@ -342,6 +343,14 @@ patternExpectationToVariable rank pools expectation =
 
 
 -- ERROR HELPERS
+
+
+-- Ficcus (ATTACH A3): a mismatch that involves a custom type with well known members says what is missing
+noted :: State -> ET.Type -> ET.Type -> Error.Error -> Error.Error
+noted state actualType expectedType err =
+  case Members.notesFor (_table state) actualType expectedType of
+    [] -> err
+    notes -> Error.WithNotes err notes
 
 
 addError :: State -> Error.Error -> State

@@ -7,16 +7,16 @@ type T = T Int
         zero : T
         zero = T 0
 
-        add : T -> Int -> T
-        add a _ = a
+        plus : T -> Int -> T
+        plus a _ = a
 
 
 sum : List a -> a
     where
         a has zero : a
-        a has add : a -> a -> a
+        a has plus : a -> a -> a
 sum xs =
-    List.foldl add zero xs
+    List.foldl plus zero xs
 
 
 main : Program () () ()

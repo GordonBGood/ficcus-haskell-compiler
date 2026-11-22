@@ -38,10 +38,10 @@ constraint-modules	RUN	c
 constraint-package	RUN	c	
 constraint-js	REJECT	CONSTRAINED FUNCTIONS	Main.sum
 constraint-no-member	REJECT	NO MEMBER	add : T -> T -> T
-constraint-no-members-at-all	REJECT	UNKNOWN MEMBER TYPE	The type is a `number` variable, which only the built-in types can be
+constraint-no-members-at-all	REJECT	UNKNOWN MEMBER TYPE	The type is a `number` variable, so it is not known which type is meant
 constraint-builtin	REJECT	NO MEMBER	built-in types (`Int`
 constraint-record	REJECT	NO MEMBER	built-in types (`Int`
-constraint-wrong-type	REJECT	MEMBER TYPE MISMATCH	T.add
+constraint-wrong-type	REJECT	MEMBER TYPE MISMATCH	T.plus
 constraint-missing	REJECT	MISSING CONSTRAINT	a has add : a -> a -> a
 constraint-no-signature	REJECT	MISSING CONSTRAINT	a has add : a -> a -> a
 constraint-given-mismatch	REJECT	MEMBER TYPE MISMATCH;MEMBER TYPE MISMATCH	the constraint `a has add`
@@ -78,3 +78,18 @@ constraint-top-nosig-hidden	REJECT	UNKNOWN MEMBER TYPE;UNKNOWN MEMBER TYPE	I can
 package-own-vector	RUN	c+js	
 package-own-vector-mixed	RUN	c	
 package-vector-only	RUN	c	
+a3-money	RUN	c	
+a3-bigint	RUN	c	
+a3-keys	RUN	c	
+a3-neq	RUN	c	
+a3-literals	RUN	c	
+a3-constraint-builtin	RUN	c	
+a3-err-missing-member	REJECT	TYPE MISMATCH	It is missing: `sub`, `mul`, `pow`, `neg`, `abs`, `fromInt`.
+a3-err-div	REJECT	TYPE MISMATCH;TYPE MISMATCH	The (/) operator is specifically for floating-point division
+a3-err-div-others	REJECT	NO MEMBER	`/` needs:
+a3-err-mix-int	REJECT	TYPE MISMATCH	do not mix: there is no automatic conversion
+a3-err-ambiguous-literal	REJECT	UNKNOWN MEMBER TYPE	cannot tell which type that is
+a3-err-wrong-shape	REJECT	WELL KNOWN MEMBER WITH THE WRONG TYPE	add : Money -> Money -> Money
+a3-err-no-signature	REJECT	WELL KNOWN MEMBER WITHOUT TYPE ANNOTATION	compare : Money -> Money -> Order
+a3-err-not-comparable	REJECT	TYPE MISMATCH	I do not know how to compare `Version` values
+a3-js	REJECT	CONSTRAINED FUNCTIONS	operators on custom types

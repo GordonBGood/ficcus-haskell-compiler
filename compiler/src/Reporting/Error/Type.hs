@@ -61,6 +61,7 @@ data Error
   -- Ficcus (ATTACH A3): a well known member (`add`, `compare`, ...) that has not the type the language needs
   | WellKnownShape A.Region String N.Name String        -- the type, the member, the type the member must have
   | WellKnownNoSignature A.Region String N.Name String  -- the same, for a member without a type annotation
+  | WithNotes Error [String]                             -- an error with more to say about the members of the types in it
 
 
 data MemberOwner
@@ -192,6 +193,11 @@ ptypeReplace expectation tipe =
 toReport :: Code.Source -> L.Localizer -> Error -> Report.Report
 toReport source localizer err =
   case err of
+    WithNotes inner notes ->
+      case toReport source localizer inner of
+        Report.Report title region suggestions message ->
+          Report.Report title region suggestions (D.stack (message : map D.reflow notes))
+
     BadExpr region category actualType expected ->
       toExprReport source localizer region category actualType expected
 

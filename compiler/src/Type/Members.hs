@@ -23,6 +23,7 @@ module Type.Members
   , Tools(..)
   , policyOf
   , shapeErrors
+  , notesFor
   , relax
   , relaxedUse
   , relaxedObligation
@@ -270,6 +271,70 @@ defaulting tools table env outer young pending
             Unify.Err vars _ _ -> _introduce tools vars
             Unify.Runaway _ -> return ()
 
+
+
+-- | (A3) what to add to a type mismatch that involves a custom type with well known members: a `number`, `comparable` or
+-- `appendable` that it does not fully have, or an `Int` or `Float` that meets it.  Nothing is added for a type
+-- that has no well known member (an ordinary Elm mistake keeps Elm's message).
+notesFor :: Table -> ET.Type -> ET.Type -> [String]
+notesFor table actual expected =
+  notes actual expected ++ notes expected actual
+  where
+    notes a b =
+      case (strip a, strip b) of
+        (ET.Type home name _, ET.FlexSuper super _) | Just (shown, _, have) <- membersOf home name ->
+          let
+            (what, required) = bundleOf super
+            missing = [ m | m <- required, m `notElem` have ]
+          in
+          if null missing || null have
+            then []
+            else
+              [ "`" ++ shown ++ "` can be used as a `" ++ what ++ "` when it defines all the members of `" ++ what ++ "` ("
+                ++ commas required ++ ") with the types the language needs. It is missing: " ++ commas missing ++ "." ]
+
+        (ET.Type home name _, ET.Type ohome oname _) | isIntOrFloat ohome oname, Just (shown, _, have) <- membersOf home name, all (`elem` have) WK.numberBundle ->
+          [ "`" ++ shown ++ "` and `" ++ T.nameToChars oname ++ "` do not mix: there is no automatic conversion."
+            ++ (if oname == T.int then " `" ++ shown ++ ".fromInt` makes a `" ++ shown ++ "` from an `Int`." else "") ]
+
+        _ -> []
+
+    strip t =
+      case t of
+        ET.Alias _ _ _ real -> strip real
+        _ -> t
+
+    isIntOrFloat home name =
+      home == ModuleName.basics && (name == T.int || name == T.float)
+
+    -- the members of the type that count: well known names with the type the language needs
+    membersOf home name =
+      case Map.lookup (Members.typeId home name) table of
+        Nothing -> Nothing
+        Just members ->
+          let
+            have =
+              [ m
+              | (member, Just (Can.Forall _ written)) <- Map.toList members
+              , let m = N.toChars member
+              , Just shape <- [WK.shapeOf m]
+              , WK.fits home name shape written
+              ]
+          in
+          if null have then Nothing else Just (T.nameToChars name, (), have)
+
+    bundleOf super =
+      case super of
+        ET.Number -> ("number", WK.numberBundle)
+        ET.Comparable -> ("comparable", WK.comparableBundle)
+        ET.Appendable -> ("appendable", WK.appendableBundle)
+        ET.CompAppend -> ("compappend", WK.comparableBundle ++ WK.appendableBundle)
+
+    commas xs =
+      case xs of
+        [] -> ""
+        [x] -> "`" ++ x ++ "`"
+        _ -> concatMap (++ ", ") (map (\x -> "`" ++ x ++ "`") (init xs)) ++ "`" ++ last xs ++ "`"
 
 
 -- OBLIGATIONS
