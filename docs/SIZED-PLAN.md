@@ -62,3 +62,26 @@ operations, not `-fwrapv`**; the UBSan runs of the gates confirm it, and a test 
 modules, `Ficcus.Mono.Sized`, the hooks, build `elmficN1`; 4. tests (attach cases, boundary program against the C oracle, fuzz of
 200 seeds, literal range errors, conversions, `Dict`/`List.sort`); 5. corpus scan (`vscan2.py`) for package modules named like
 these; 6. full gates `KEEP=1`; notes `docs/attach/SIZED-NOTES.md`-style report in this file, `bin/BUILDS.txt`.
+
+## 6. What was built, and where it differs from the plan above
+
+Code: `compiler/src/Ficcus/Mono/Sized.hs` (new: types, kernel ids, C text, literal ranges), `runtime/fic_sized.h` (new, emitted only by programs that
+use it, so the C text of other programs is unchanged: 32 of 32 suite outputs byte identical to `elmficA19`, `--rc` and `--no-rc`),
+`ficcus-tools/gen_sized.py` + `overlay/{Int8..Word64,Float32,Int64,Float64}.elm`. Small changes to upstream files: `Spec.hs` (the set of
+sized types from the marker unions, class, `memberRef`/`wellKnownRef` kernels, literals, `-x`, module functions, the unreached definitions
+pass, `holdsMember` exemption), `Kernel.hs` (arity and signature through `Sized`), `CGen.hs` (kernel text, `cmpExpr`, `showStmt`, class table,
+runtime emission), `CRuntime.hs`, `Overlay.hs` + `Make.hs` (the ten modules), `Exit.hs` (a message `@@ TITLE` is a report of its own),
+`Reporting/Error/Import.hs` (hint for the JS refusal), `elm.cabal`. No change in the solver: A3 already accepts a type with the members.
+
+Differences from the plan:
+* `Float32` is a double that always holds exactly a float (not a C `float`); the results are the same as C `float` arithmetic and the
+  tests compare with numpy `float32`. A separate formatter prints the shortest digits at float precision (`fic_sz_fmt_f32`).
+* A number pattern at a sized type (`case x of 0 ->`) is a TYPE MISMATCH: Elm types an integer pattern as `Int`. Not changed.
+* `-1 : Word8` is rejected (INTEGER OUT OF RANGE); `-128 : Int8` is accepted. A `Float` literal is not a `Float32` (`Float32.fromFloat 0.5`);
+  an integer literal is (`3 : Float32`, through `fromInt`, rounded to float).
+* The range check is in the specializer (the report is `-- INTEGER OUT OF RANGE`), so it needs the C output; it also covers definitions that
+  `main` does not reach (when a sized type is in the program the other project definitions are specialized once more and dropped).
+* `Word64` inside a list, tuple, record or custom type that is compared or used as a key is refused with the A3 limit message (held as signed
+  bits, the structural order would be wrong); a `Word64` key or value of its own is fine. `==` is fine everywhere.
+* `Int8(..)` has to be exported for the members, so the constructor `FicInt8Builtin` is visible; it is never a value a program should build.
+* Extras: `minValue`, `maxValue` in every integer module.
