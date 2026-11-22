@@ -85,3 +85,15 @@ Differences from the plan:
   bits, the structural order would be wrong); a `Word64` key or value of its own is fine. `==` is fine everywhere.
 * `Int8(..)` has to be exported for the members, so the constructor `FicInt8Builtin` is visible; it is never a value a program should build.
 * Extras: `minValue`, `maxValue` in every integer module.
+
+## 7. Gates
+
+Full `ficcus-tests/gates.sh`, `KEEP=1`, binary `elmficN1` (code commit f2595a30, gates.sh 7ddb8715), all green: runtime 0 non-ok (with `test_sized`), attach 153 cases 0 differ
+(`--rc`, ASan/UBSan, 0 live; 27 new `sized-*`), sized fuzz 40 seeds 0 differ (200 seeds run separately: 0 differ), stringdiff agree, types 267 PASS 1 XFAIL, JS identity 28 identical 0 different,
+examples 283 x3 (0 FAIL), fbip 0 failures, rcfaults 0 missed of 1362, rcfaults-big 0 missed of 295, rcgate-san ok, suite 16 PASS, typed corpus 581: 568 SAME, 12 BOTH_REJECT_SAME,
+1 VERDICT_DIFF (salix-aws-spec, as before), lib-rcsan 108 PASS 59 FIXED, elmdiff 1160 SAME + 15 apps SAME, 0 DIFF.
+C text of the 16 suite programs, `--rc` and `--no-rc`: identical to `elmficA19` (32 of 32).
+Corpus scan (`vscan2.py --names ...`, 1989 packages, 1819 applications): the only packages that expose a module named like a sized type are `folkertdev/elm-int64` and
+`lauber00/elm-int64` (module `Int64`; `folkertdev/elm-sha2` has an internal `Int64` too); none exposes `Int8 Int16 Int32 Word* Float32 Float64`. Types with these names exist in other
+modules (e.g. 510 files define a type or alias `Int64`, `Word8` 55, `Word16` 71) and are not affected: the overlay modules are only reached by `import`. Case `sized-package-module`
+checks that a package module named `Int64` or `Word16` wins in JS and C builds.
