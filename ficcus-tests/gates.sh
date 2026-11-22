@@ -40,6 +40,6 @@ step lib-rcsan; $R/ficcus-tests/libsuite.sh rcsan $B $(fresh lib) $S/libw --comp
 step elmdiff;  python3 elmdiff/elmdiff.py --a ./bin/elm0193 --b $B --pkgs corpus/pkgs-sample --apps corpus/apps --out $S/elmdiff80 --elm-home $(fresh ed) --timeout 120 > $G/elmdiff.txt 2>&1; tail -4 $G/elmdiff.txt
 # G53: the summary (the totals the steps above only show as the tail of their files)
 step summary
-awk -F'|' '/^## /{k=$0} /^\| [A-Z_]+ \| [0-9]+ \|$/{ if ($2 ~ /SAME/) s+=$3; else d+=$3 } END{printf "elmdiff: %d SAME, %d DIFF (packages and apps)\n", s, d}' $G/elmdiff.txt
+awk -F'|' '/^\| [A-Z_]+ \| [0-9]+ \|$/{ if ($2 == " SAME ") s+=$3; else d+=$3 } END{printf "elmdiff: %d SAME, %d DIFF (packages and apps)\n", s, d}' $G/elmdiff.txt
 awk '/^test /{t=1; next} t && NF==0{t=0} t{n++; if ($NF=="PASS") p++} END{printf "suite: %d PASS of %d programs, %d not PASS\n", p, n, n-p}' $G/suite.txt
 echo "=== DONE $(date +%T)"
