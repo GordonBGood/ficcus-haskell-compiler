@@ -1,7 +1,7 @@
 # ATTACH A3: well known members, operators, `number`, `comparable`, `appendable` (stage A3 of docs/ABILITIES-PROPOSAL.md, section 3.3)
 
-Branch `feat/a3` (worktree `ficcus-haskell-compiler-a3`, from `ficcus` 2e5f3b16), binary `bin/elmficA17`. Not merged: it waits for the review.
-Tests: `ficcus-tests/attach/` of the branch (`python3 ficcus-tests/attach/attach.py --elm bin/elmficA17 --rc`; 95 cases, 16 new: `a3-*`).
+Branch `feat/a3` (worktree `ficcus-haskell-compiler-a3`, from `ficcus` 2e5f3b16), binary `bin/elmficA18` (A17 before the review fixes of section 9).
+Tests: `ficcus-tests/attach/` of the branch (`python3 ficcus-tests/attach/attach.py --elm bin/elmficA17 --rc`; 122 cases, 43 new: `a3-*`).
 Note: `tests/attach` in the workspace is a symlink into the *main checkout* (`ficcus-haskell-compiler/`, branch feat/known-pass), so cases written
 there would land on the wrong branch; the new cases are in the worktree and `gates.sh` now runs from the worktree it lives in (section 8).
 
@@ -59,7 +59,7 @@ every other built-in type (Bool, Maybe, records, unit, ...) `eq`; functions noth
 
 ## 3. Solver changes (for the review)
 
-Nothing in `Type.Type`, `Type.Occurs`, `Type.Constrain.*`, `Type.Instantiate` changed. The line numbers are those of the branch head.
+Nothing in `Type.Occurs`, `Type.Instantiate` changed; the review round (section 9) added the home module to `CForeign`/`COperator` (`Type.Type`, `Type.Constrain.Expression`). The line numbers are those of the branch head.
 
 | file | lines | change |
 |---|---|---|
@@ -126,15 +126,20 @@ No change in `CGen`, the IR, the runtime or the Rc passes: a member call is an o
 
 ## 5. Not done, known limits
 
-1. **A type that holds a custom type with `eq` or `compare`** (a list, tuple, record, `Maybe`, `Dict` of `Money`, ...) used with `==`, `compare`, `<`, `Dict` keys: the C generator
-   builds structural code per type and does not call the member, so the specializer refuses with "the type ... inside it has its own `eq` member ... compare the parts yourself"
-   instead of generating code that ignores the member. Fix: have `CGen.eqExpr`/`cmpExpr` call the member clones (needs the clone ids and the ownership of their parameters in the `--rc` build). Fields of a user
-   union are not scanned (`type W = W Money` with `==` is structural).
+1. **A type that holds a custom type with `eq` or `compare`** (a list, tuple, record, `Maybe`, `Dict`, or a custom type with such a type in a constructor field) used with `==`, `/=`, `compare`,
+   `<`, `max`, `Dict`/`Set` keys, `List.member`, `sortBy`, ...: the C generator builds structural code per type and does not call the member, so the specializer refuses
+   (`Spec.holdsMember`, called from `wellKnownRef`) instead of generating code that ignores the member. The search follows type arguments, tuples, records and the constructor
+   fields of every custom type of every module (aliases are already expanded in the union table), with a set of the custom types entered, so recursive and mutually recursive types end.
+   The report names the type with the member and the path to it (`W > Name`). A custom type with the member itself is not searched: its own member is called. Fix to lift the
+   limit: have `CGen.eqExpr`/`cmpExpr` call the member clones (needs the clone ids and the ownership of their parameters in the `--rc` build).
+   Checked paths (all refused, cases `a3-c-holds-*`): `==` and `/=` on a union, recursive, mutually recursive, aliased, imported and generic (`same x y = x == y` at `W Name`)
+   types; `List.member`; `<` and `max` on a tuple, `List.maximum`; `Dict` keys (tuple, list), `Set.member`, `sortBy` with a record or tuple key. A type that does not hold a member type
+   keeps the structural code (`a3-holds-ok`).
 2. The JS output refuses operators on custom types (decision 6). `eq` by definition.
 3. `derive` is A4; sized integers are not part of this change (no sized `Int` types exist in the table: they would add rows to `builtinHas`).
 4. A well known member cannot have constraints of its own (`where` on its signature): WELL KNOWN MEMBER WITH THE WRONG TYPE.
 5. `hash`, `toString` are not well known members yet (proposal 3.3).
-6. A user function named `modBy` or `remainderBy` in an imported module is mistaken for Elm's one by `Type.Members.relax` when a type in sight has `mod`/`rem` (the solver knows the name, not the module of a `CForeign`).
+6. (fixed in the review round, section 9) `modBy` and `remainderBy` were relaxed by name; now only `elm/core` `Basics`.
 7. The `.types` dump of a relaxed use shows the type at which it is used (`Money -> Money -> Money`), not the scheme of `Basics.idiv`.
 
 ## 6. Errors (Elm's voice)
@@ -170,3 +175,29 @@ Full `ficcus-tests/gates.sh` (`KEEP=1`, binary `elmficA17`, code commit 9eafcedc
 Byte identity: the C text of the 16 suite programs, `--rc` and `--no-rc`, is identical between `elmficA16` and
 `elmficA17` (32 of 32), so no explanation of differences is needed.
 
+
+
+## 9. Review round (docs/review/REVIEW-A3.md)
+
+| finding | what was done |
+|---|---|
+| F1 | `holdsMember` follows constructor fields (section 5.1). `Ficcus.Mono.Spec`: `sUnions` in the state, `holdsMember tops unions member type` gives the path. Cases `a3-c-holds-*` (union, recursive, mutual, alias, generic, `List.member`, tuple, record, `Dict` key, `sortBy`, `Set`, imported type, imported holder and member type) and `a3-holds-ok` (no false positive; recursive and mutual types without a member compare structurally) |
+| F2 | `CForeign` and `COperator` carry the home module (`Type.Type`, `Type.Constrain.Expression`, `Type.Solve.instantiateUse`); `Members.relax` relaxes only `ModuleName.basics`. Cases `a3-err-lib-modby`, `a3-err-lib-remainderby` (TYPE MISMATCH as in Elm), `a3-modby-user` (a local `modBy`, an imported user `modBy` on Int, `Basics.modBy` at `Money`) |
+| F3 | every refusal of the specializer and the C generator is raised as `Exit.MakeFiccus` through the task error path (`Make.failWith`), rendered as `-- FICCUS: the program cannot be compiled to C yet`; no crash box (it came from `exitWith` inside the task, caught by the exception reporter), exit status 1, and `Reporting.attemptWithStyle` flushes stdout first so the front end's "Success! Compiled" line comes before the report, never after it. `attach.py` has the outcome REJECTC that checks all of this |
+| F5 | `number has div` is accepted by the type checker, so the suggestion is right. It exposed a bug (below, fixed): case `a3-rigid-div`, `a3-err-rigid-div` (the message) |
+| F6 | `a3-js-eq-imported` |
+| F4 | not fixed; case `a3-known-let-div` records the behaviour (C only) |
+| shapes 6, 7, 8, B2 | `a3-values`, `a3-param`, `a3-err-param-shape`, `a3-err-constraint-plus`, `a3-err-ambiguous-bundle`, `a3-err-ambiguous-number` |
+
+New findings and fixes of this round:
+
+* **F9 (fixed)**: a relaxed `/`, `//`, `modBy`, `remainderBy` inside a generic function with `a has div` (or `number has div`) called at `Float` or `Int` ended in `internal: instance of Basics.fdiv does not match its scheme`
+  (the instance type is the variable, the scheme says Float). `Spec.wellKnownRef` now maps that use to the built-in member (`builtinMember`).
+* **F10 (fixed)**: WELL KNOWN MEMBER WITH THE WRONG TYPE showed the expected type without the parameters of a parameterized type (`append : V -> V -> V`); it shows `V a -> V a -> V a`.
+* **F7 (open, found by the parameterized-type case)**: a member of a parameterized type applied to an unresolved number literal, `compare (V [ 1 ]) (V [ 2 ])` or `V [ 1 ] ++ V [ 2 ]` with `type V a = V (List a)`, compiles but the program crashes (SIGSEGV in `List.length`): the instance type has the `number` variable
+  unresolved and `mtypeOf` turns an unmapped variable into `ref`, so the clone of the member is keyed with `V ref` and the list holds unboxed Ints. With typed elements (`V [ one ]`, `one : Int`) it works (`a3-param` uses them). Present in A17, not caused by this round. Fix idea: default a `number` variable of an instance type to `Int` in `wellKnownRef`.
+* **F8 (open)**: the F4 program is accepted by `--output=x.c` and rejected by `--output=/dev/null` (`h needs Float`, as in Elm): the same source type checks differently in the two output modes. Not investigated.
+
+Gates of the review round (`KEEP=1`, `elmficA18`, code commit 673cec97), all green: runtime 0, stringdiff agree, attach 122 cases 0 differ (`--rc` ASan/UBSan), types 267 PASS 1 XFAIL, JS identity 28/0,
+examples 281 x3, fbip 0 failures, rcfaults 0 missed of 1362, rcfaults-big 0 missed of 295, rcgate-san ok, suite 16 PASS, typed corpus 581: 568 SAME, 12 BOTH_REJECT_SAME, 1 VERDICT_DIFF (salix-aws-spec, as before),
+lib-rcsan 108 PASS 59 FIXED, elmdiff 1160 + 15 SAME, 0 DIFF. C text of the 16 suite programs: identical to `elmficA16` in `--rc` and `--no-rc` (32 of 32).
