@@ -71,6 +71,8 @@ def scan_names(names, roots):
             if "elm.json" in fns:
                 projects.append(dp)
     projects.sort()
+    alt = "|".join(re.escape(n) for n in names)
+    any_re = re.compile(r"^(?:port\s+|effect\s+)?(module|import|type(?:\s+alias)?)\s+(" + alt + r")(?![A-Za-z0-9_.])", re.M)
     exposing = {n: [] for n in names}; modules = {n: [] for n in names}; types = {n: [] for n in names}; imports = {n: [] for n in names}
     npk = nap = 0
     for p in projects:
@@ -99,20 +101,20 @@ def scan_names(names, roots):
                 files.extend(elm_files(sd))
         for f in sorted(set(files)):
             text = read(f)
-            m = RE_MODULE.search(text)
             inside = os.path.realpath(f).startswith(os.path.realpath(p) + os.sep)
-            for n in names:
-                if inside and m and m.group(1) == n:
-                    modules[n].append(f)
-                if re.search(r"^type\s+(alias\s+)?%s\b" % n, text, re.M):
-                    types[n].append(f)
-                if re.search(r"^import\s+%s(\s|$)" % n, text, re.M):
+            for kw, n in any_re.findall(text):          # one pass over the file for all the names
+                if kw == "module":
+                    if inside:
+                        modules[n].append(f)
+                elif kw == "import":
                     imports[n].append(f)
+                else:
+                    types[n].append(f)
     print("elm.json files: %d packages, %d applications" % (npk, nap))
     for n in names:
         print("%s: packages exposing it: %d; modules named so: %d; files defining a type or alias so named: %d; files importing it: %d" % (
             n, len(exposing[n]), len(modules[n]), len(types[n]), len(imports[n])))
-        for label, lst in (("exposes", exposing[n]), ("module", modules[n]), ("defines", types[n]), ("imports", imports[n])):
+        for label, lst in (("exposes", exposing[n]), ("module", modules[n]), ("defines", sorted(set(types[n]))), ("imports", sorted(set(imports[n])))):
             for x in lst:
                 print("    %s  %s" % (label, x))
 

@@ -1,0 +1,1 @@
+{"desc": "a package that exposes modules named Int64 and Word16: the package wins over the overlay (module rule)", "deps": ["ficcus/int64pkg@1.0.0"]}
