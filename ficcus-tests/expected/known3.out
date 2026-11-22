@@ -1,0 +1,8 @@
+plus: [Ok (7,1),Ok (8,1),Ok (17,1),Ok (107,1)]
+twice: [Ok (7,2),Ok (14,2),Ok (21,2)]
+both: [Ok (10,2),Ok (15,2),Ok (20,2)]
+base: [Ok (9,1),Ok (14,1)]
+choose: [Err "other",Ok (4,1)]
+scaled: [Ok (1234,4),Ok (2468,4),Ok (8638,4)]
+fail: Err "nope"
+eof: Ok (0,0)

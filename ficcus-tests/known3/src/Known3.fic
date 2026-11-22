@@ -1,0 +1,230 @@
+module Known3 exposing (main)
+
+-- H16 W2 (K3 Caps): parser combinators whose arguments are known functions with captured variables (`succeed n`, a lambda that uses a
+-- local `n`, a captured function passed on to another combinator, the same captured function called twice), over a List Int source.
+-- Every output is compared with Elm.
+
+
+type alias State =
+    { rest : List Int, pos : Int }
+
+
+type Step a
+    = Good Bool a State
+    | Bad Bool String
+
+
+type alias Parser a =
+    State -> Step a
+
+
+succeed : a -> Parser a
+succeed a =
+    \s -> Good False a s
+
+
+fail : String -> Parser a
+fail msg =
+    \_ -> Bad False msg
+
+
+map : (a -> b) -> Parser a -> Parser b
+map f p =
+    \s ->
+        case p s of
+            Good c a s1 ->
+                Good c (f a) s1
+
+            Bad c m ->
+                Bad c m
+
+
+map2 : (a -> b -> c) -> Parser a -> Parser b -> Parser c
+map2 f pa pb =
+    \s ->
+        case pa s of
+            Bad c m ->
+                Bad c m
+
+            Good c1 a s1 ->
+                case pb s1 of
+                    Bad c2 m ->
+                        Bad (c1 || c2) m
+
+                    Good c2 b s2 ->
+                        Good (c1 || c2) (f a b) s2
+
+
+andThen : (a -> Parser b) -> Parser a -> Parser b
+andThen f pa =
+    \s ->
+        case pa s of
+            Bad c m ->
+                Bad c m
+
+            Good c1 a s1 ->
+                case f a s1 of
+                    Bad c2 m ->
+                        Bad (c1 || c2) m
+
+                    Good c2 b s2 ->
+                        Good (c1 || c2) b s2
+
+
+oneOf : List (Parser a) -> Parser a
+oneOf ps =
+    \s -> oneOfHelp s ps
+
+
+oneOfHelp : State -> List (Parser a) -> Step a
+oneOfHelp s ps =
+    case ps of
+        [] ->
+            Bad False "oneOf"
+
+        p :: rest ->
+            case p s of
+                Good c a s1 ->
+                    Good c a s1
+
+                Bad c m ->
+                    if c then
+                        Bad c m
+
+                    else
+                        oneOfHelp s rest
+
+
+item : (Int -> Bool) -> Parser Int
+item ok =
+    \s ->
+        case s.rest of
+            [] ->
+                Bad False "eof"
+
+            c :: r ->
+                if ok c then
+                    Good True c { rest = r, pos = s.pos + 1 }
+
+                else
+                    Bad False "no"
+
+
+many : Parser a -> Parser (List a)
+many p =
+    \s -> manyHelp p [] s
+
+
+manyHelp : Parser a -> List a -> State -> Step (List a)
+manyHelp p acc s =
+    case p s of
+        Good _ a s1 ->
+            manyHelp p (a :: acc) s1
+
+        Bad _ _ ->
+            Good (not (List.isEmpty acc)) (List.reverse acc) s
+
+
+run : Parser a -> String -> Result String ( a, Int )
+run p text =
+    case p { rest = List.map Char.toCode (String.toList text), pos = 0 } of
+        Good _ a s ->
+            Ok ( a, s.pos )
+
+        Bad _ m ->
+            Err m
+
+
+isDigit : Int -> Bool
+isDigit c =
+    c >= 48 && c <= 57
+
+
+digit : Parser Int
+digit =
+    map (\c -> c - 48) (item isDigit)
+
+
+
+-- captured variables
+
+
+{-| the lambda uses the local `n`: a known function with a capture, called at the head only inside `map`
+-}
+plus : Int -> Parser Int -> Parser Int
+plus n p =
+    map (\x -> x + n) p
+
+
+{-| `succeed n` with a local argument; two uses of the capturing function `g` as call heads inside one lambda
+-}
+twice : Int -> Parser Int
+twice n =
+    let
+        g x =
+            x * n
+    in
+    map2 (\a b -> g a + g b) digit digit
+
+
+{-| the captured function is passed on to another combinator (a use as a value): it is bound to a local first
+-}
+both : (Int -> Int -> Int) -> Parser Int -> Parser Int
+both f p =
+    map2 f p p
+
+
+withBase : Int -> Parser Int
+withBase base =
+    andThen (\d -> succeed (d + base)) digit
+
+
+choose : Int -> Parser Int
+choose n =
+    oneOf [ andThen (\d -> if d == n then succeed d else fail "other") digit, succeed -1 ]
+
+
+number : Parser Int
+number =
+    map (List.foldl (\d acc -> acc * 10 + d) 0) (many digit)
+
+
+scaled : Int -> Parser Int
+scaled k =
+    map (\v -> v * k) number
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ =
+                        Debug.log "plus" (List.map (\n -> run (plus n digit) "7") [ 0, 1, 10, 100 ])
+
+                    _ =
+                        Debug.log "twice" (List.map (\n -> run (twice n) "34") [ 1, 2, 3 ])
+
+                    _ =
+                        Debug.log "both" (List.map (\k -> run (both (\a b -> a * k + b) digit) "55") [ 1, 2, 3 ])
+
+                    _ =
+                        Debug.log "base" (List.map (\b -> run (withBase b) "9") [ 0, 5 ])
+
+                    _ =
+                        Debug.log "choose" (List.map (\n -> run (choose n) "4x") [ 3, 4 ])
+
+                    _ =
+                        Debug.log "scaled" (List.map (\k -> run (scaled k) "1234") [ 1, 2, 7 ])
+
+                    _ =
+                        Debug.log "fail" (run (plus 1 (fail "nope")) "1")
+
+                    _ =
+                        Debug.log "eof" (run number "")
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

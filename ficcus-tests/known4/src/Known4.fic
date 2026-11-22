@@ -1,0 +1,246 @@
+module Known4 exposing (main)
+
+-- H16 W2 (K4 Cycle): the recursive grammar in the cyclic form (`value` refers to `array` and `array` to `value` through `lazy`), parser
+-- combinators with static arguments (`symbol 44`), a list of parsers that is closed data, and a constant closure function.
+-- Every output is compared with Elm.
+
+
+type alias State =
+    { rest : List Int, pos : Int }
+
+
+type Step a
+    = Good Bool a State
+    | Bad Bool String
+
+
+type alias Parser a =
+    State -> Step a
+
+
+type Tree
+    = Leaf Int
+    | Node (List Tree)
+    | Nil
+
+
+succeed : a -> Parser a
+succeed a =
+    \s -> Good False a s
+
+
+map : (a -> b) -> Parser a -> Parser b
+map f p =
+    \s ->
+        case p s of
+            Good c a s1 ->
+                Good c (f a) s1
+
+            Bad c m ->
+                Bad c m
+
+
+map2 : (a -> b -> c) -> Parser a -> Parser b -> Parser c
+map2 f pa pb =
+    \s ->
+        case pa s of
+            Bad c m ->
+                Bad c m
+
+            Good c1 a s1 ->
+                case pb s1 of
+                    Bad c2 m ->
+                        Bad (c1 || c2) m
+
+                    Good c2 b s2 ->
+                        Good (c1 || c2) (f a b) s2
+
+
+keep : Parser (a -> b) -> Parser a -> Parser b
+keep pf pa =
+    map2 (\f a -> f a) pf pa
+
+
+ignore : Parser keep -> Parser skip -> Parser keep
+ignore pk ps =
+    map2 (\k _ -> k) pk ps
+
+
+oneOf : List (Parser a) -> Parser a
+oneOf ps =
+    \s -> oneOfHelp s ps
+
+
+oneOfHelp : State -> List (Parser a) -> Step a
+oneOfHelp s ps =
+    case ps of
+        [] ->
+            Bad False "oneOf"
+
+        p :: rest ->
+            case p s of
+                Good c a s1 ->
+                    Good c a s1
+
+                Bad c m ->
+                    if c then
+                        Bad c m
+
+                    else
+                        oneOfHelp s rest
+
+
+lazy : (() -> Parser a) -> Parser a
+lazy thunk =
+    \s -> thunk () s
+
+
+symbol : Int -> Parser ()
+symbol code =
+    \s ->
+        case s.rest of
+            c :: r ->
+                if c == code then
+                    Good True () { rest = r, pos = s.pos + 1 }
+
+                else
+                    Bad False "symbol"
+
+            [] ->
+                Bad False "symbol"
+
+
+chompWhile : (Int -> Bool) -> Parser Int
+chompWhile ok =
+    \s ->
+        case chompHelp ok 0 s of
+            Good _ v s1 ->
+                if s1.pos > s.pos then
+                    Good True v s1
+
+                else
+                    Bad False "digits"
+
+            Bad c m ->
+                Bad c m
+
+
+chompHelp : (Int -> Bool) -> Int -> State -> Step Int
+chompHelp ok acc s =
+    case s.rest of
+        c :: r ->
+            if ok c then
+                chompHelp ok (acc * 10 + c - 48) { rest = r, pos = s.pos + 1 }
+
+            else
+                Good (acc > 0) acc s
+
+        [] ->
+            Good (acc > 0) acc s
+
+
+sepBy : Parser a -> Parser () -> Parser (List a)
+sepBy item sep =
+    \s ->
+        case item s of
+            Bad c m ->
+                if c then
+                    Bad c m
+
+                else
+                    Good False [] s
+
+            Good c1 x s1 ->
+                sepByHelp item sep c1 [ x ] s1
+
+
+sepByHelp : Parser a -> Parser () -> Bool -> List a -> State -> Step (List a)
+sepByHelp item sep p acc s =
+    case keep (map (\_ y -> y) sep) item s of
+        Good c y s1 ->
+            sepByHelp item sep (p || c) (y :: acc) s1
+
+        Bad c m ->
+            if c then
+                Bad c m
+
+            else
+                Good p (List.reverse acc) s
+
+
+isDigit : Int -> Bool
+isDigit c =
+    c >= 48 && c <= 57
+
+
+number : Parser Tree
+number =
+    map (\n -> Leaf n) (chompWhile isDigit)
+
+
+nil : Parser Tree
+nil =
+    map (\_ -> Nil) (ignore (ignore (symbol 110) (symbol 105)) (symbol 108))
+
+
+array : Parser Tree
+array =
+    ignore (keep (ignore (succeed Node) (symbol 91)) (sepBy value (symbol 44))) (symbol 93)
+
+
+value : Parser Tree
+value =
+    lazy (\_ -> oneOf [ array, number, nil ])
+
+
+parse : String -> String
+parse text =
+    case value { rest = List.map Char.toCode (String.toList text), pos = 0 } of
+        Good _ t s ->
+            show t ++ " @" ++ String.fromInt s.pos
+
+        Bad _ m ->
+            "error " ++ m
+
+
+show : Tree -> String
+show t =
+    case t of
+        Leaf n ->
+            String.fromInt n
+
+        Nil ->
+            "nil"
+
+        Node ts ->
+            "[" ++ String.join "," (List.map show ts) ++ "]"
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ =
+                        Debug.log "p1" (parse "[1,2,[3,[4,nil],[]],5]")
+
+                    _ =
+                        Debug.log "p2" (parse "42")
+
+                    _ =
+                        Debug.log "p3" (parse "[[[[[[7]]]]]]")
+
+                    _ =
+                        Debug.log "p4" (parse "[1,,2]")
+
+                    _ =
+                        Debug.log "p5" (parse "x")
+
+                    _ =
+                        Debug.log "p6" (parse "[nil,nil,[nil]]")
+                in
+                ( (), Cmd.none )
+        , update = \_ _ -> ( (), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
