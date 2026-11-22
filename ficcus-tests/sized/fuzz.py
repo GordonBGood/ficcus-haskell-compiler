@@ -66,10 +66,10 @@ def gen_int(rng, t, depth, vars):
         (a, x), (b, y), (c, z), (d, w) = sub(), sub(), sub(), sub()
         cmp = rng.choice(["<", "<=", ">", ">=", "==", "/="])
         res = {"<": x < y, "<=": x <= y, ">": x > y, ">=": x >= y, "==": x == y, "/=": x != y}[cmp]
-        return "(if %s %s %s then %s else %s)" % (a, cmp, b, c, d), z if res else w
+        return "(if id%s %s %s %s then %s else %s)" % (M, a, cmp, b, c, d), z if res else w
     # if: on the order of two values
     (a, x), (b, y), (c, z) = sub(), sub(), sub()
-    return "(if compare %s %s == LT then %s else %s)" % (a, b, c, b), z if x < y else y
+    return "(if compare (id%s %s) %s == LT then %s else %s)" % (M, a, b, c, b), z if x < y else y
 
 def gen_f32(rng, depth, vars):
     t = BY_NAME["Float32"]
@@ -98,6 +98,7 @@ def program(seed):
     for t in INTS + [BY_NAME["Float32"]]:
         M = t.name
         imports.append("import %s exposing (%s)" % (M, M))
+        defs.append("id%s : %s -> %s\nid%s x =\n    x\n" % (M, M, M, M))
         vars = []
         for i in range(4):
             if t.isfloat:

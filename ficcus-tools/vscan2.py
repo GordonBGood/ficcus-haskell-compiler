@@ -13,6 +13,7 @@ Counts, over every elm.json below the given folders:
       file with `import Vector` (the module rule of 13 Nov: a core module
       added by Ficcus yields to a package module of the same name)
 Read only. Prints the counts and the hits.
+`--names Int8,Word8,...` (SIZED): the counts of (a) (b) (c) and the imports for those module names instead of `Vector`.
 """
 import json, os, re, sys
 
@@ -60,8 +61,70 @@ def elm_files(root):
                 yield os.path.join(dp, fn)
 
 
+def scan_names(names, roots):
+    """SIZED: the same three counts for several module names (--names Int8,Word8,...): packages exposing the module, application modules of
+    that name, files defining `type Name`, and the projects with `import Name`"""
+    projects = []
+    for r in roots:
+        for dp, dns, fns in os.walk(r):
+            dns[:] = [d for d in dns if d not in SKIP]
+            if "elm.json" in fns:
+                projects.append(dp)
+    projects.sort()
+    exposing = {n: [] for n in names}; modules = {n: [] for n in names}; types = {n: [] for n in names}; imports = {n: [] for n in names}
+    npk = nap = 0
+    for p in projects:
+        try:
+            j = json.loads(read(os.path.join(p, "elm.json")))
+        except ValueError:
+            continue
+        if not isinstance(j, dict):
+            continue
+        kind = j.get("type")
+        if kind == "package":
+            npk += 1
+            srcs = ["src"]
+            for n in names:
+                if n in exposed(j):
+                    exposing[n].append(p)
+        elif kind == "application":
+            nap += 1
+            srcs = j.get("source-directories", ["src"])
+        else:
+            continue
+        files = []
+        for sdir in srcs + ["tests"]:
+            sd = os.path.normpath(os.path.join(p, sdir))
+            if os.path.isdir(sd):
+                files.extend(elm_files(sd))
+        for f in sorted(set(files)):
+            text = read(f)
+            m = RE_MODULE.search(text)
+            inside = os.path.realpath(f).startswith(os.path.realpath(p) + os.sep)
+            for n in names:
+                if inside and m and m.group(1) == n:
+                    modules[n].append(f)
+                if re.search(r"^type\s+(alias\s+)?%s\b" % n, text, re.M):
+                    types[n].append(f)
+                if re.search(r"^import\s+%s(\s|$)" % n, text, re.M):
+                    imports[n].append(f)
+    print("elm.json files: %d packages, %d applications" % (npk, nap))
+    for n in names:
+        print("%s: packages exposing it: %d; modules named so: %d; files defining a type or alias so named: %d; files importing it: %d" % (
+            n, len(exposing[n]), len(modules[n]), len(types[n]), len(imports[n])))
+        for label, lst in (("exposes", exposing[n]), ("module", modules[n]), ("defines", types[n]), ("imports", imports[n])):
+            for x in lst:
+                print("    %s  %s" % (label, x))
+
+
 def main():
     here = os.path.dirname(os.path.realpath(__file__))
+    if "--names" in sys.argv:
+        i = sys.argv.index("--names")
+        names = sys.argv[i + 1].split(",")
+        rest = sys.argv[1:i] + sys.argv[i + 2:]
+        corpus = os.path.join(here, "..", "..", "corpus")
+        return scan_names(names, rest or [os.path.join(corpus, "pkgs"), os.path.join(corpus, "apps")])
     corpus = os.path.join(here, "..", "..", "corpus")
     roots = sys.argv[1:] or [os.path.join(corpus, "pkgs"), os.path.join(corpus, "apps")]
     projects = []

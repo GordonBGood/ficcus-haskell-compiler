@@ -195,7 +195,7 @@ specialize modules marks =
         builtin = if vecOn then Map.insert vectorTypeName False else id
         unions0 = (if vecOn then Map.adjust (\u -> u { usEnum = False }) vectorTypeName else id) (Map.fromList (concatMap mmUnions modules))
         -- SIZED: the sized integers and Float32 of the overlay are scalars (their union is not an enumeration)
-        unions = foldr (Map.adjust (\u -> u { usEnum = False })) unions0 (Map.keys (Map.filterWithKey (\k _ -> Map.member ("sized:" ++ k) (Sized.sizedEnums unions0)) unions0))
+        unions = foldr (Map.adjust (\u -> u { usEnum = False })) unions0 [ Sized.typeId sz | sz <- Sized.allSized, Map.member ("sized:" ++ Sized.typeId sz) (Sized.sizedEnums unions0) ]
         enums = Map.union (Sized.sizedEnums unions0) (builtin (Map.fromList (concatMap mmEnums modules)))
         start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions
         mainId = defIdOf (mmCtx m) (defKeyOf d)

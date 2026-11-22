@@ -150,3 +150,4 @@ sized-err-float32-idiv	REJECTC	NO MEMBER	idiv
 sized-js-refused	REJECT	MODULE NOT FOUND	does not support the sized integers
 sized-local-type	RUN	c	
 sized-local-module	RUN	js+c	
+sized-misc	RUN	c	

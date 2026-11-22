@@ -416,6 +416,72 @@ w64 =
     src = PRE % "\n".join(pre) + defs + POST % listsrc([e[0] for e in ex])
     return src, [e[1] for e in ex]
 
+def misc_case():
+    F = BY_NAME["Float32"]
+    pre = ["import Vector exposing (Vector)", "import Int8 exposing (Int8)", "import Word8 exposing (Word8)", "import Word16 exposing (Word16)",
+           "import Word64 exposing (Word64)", "import Float32 exposing (Float32)"]
+    defs = """
+
+bigger : comparable -> comparable -> comparable
+bigger a b =
+    if a > b then
+        a
+
+    else
+        b
+
+
+sum2 : number -> number -> number
+sum2 a b =
+    a + b
+
+
+scale : Int8 -> List Int8 -> List Int8
+scale k xs =
+    List.map (\\x -> x * k) xs
+
+
+vec : Vector Word8
+vec =
+    Vector.fromList [ 250, 3, 7 ]
+
+
+type alias Sample =
+    { weight : Float32, id : Word64, tag : Int8 }
+"""
+    ex = [
+        ('String.join "," (List.map Word8.toString (Vector.toList (Vector.push 255 vec)))', "250,3,7,255"),
+        ('Debug.toString (Vector.get 1 vec)', "Just 3"),
+        ('Word8.toString (Vector.foldl (+) 0 vec)', str((250 + 3 + 7) % 256)),
+        ('String.join "," (List.map Word8.toString (Vector.toList (Vector.map (\\x -> x + 10) vec)))', "4,13,17"),
+        ('Debug.toString vec', "Vector.fromList [250,3,7]"),
+        ('Debug.toString (Vector.set 0 (Word8.fromInt 9) vec == Vector.fromList [ 9, 3, 7 ])', "True"),
+        ('String.join "," (List.map Int8.toString (scale 100 [ 1, 2, 3 ]))', "100,-56,44"),
+        ('Word64.toString (bigger Word64.maxValue 5)', "18446744073709551615"),
+        ('Word64.toString (bigger 5 (Word64.fromInt -3))', "18446744073709551613"),
+        ('Int8.toString (bigger -3 -5)', "-3"), ('Word16.toString (sum2 65535 2)', "1"), ('Int8.toString (sum2 127 1)', "-128"),
+        ('String.fromInt (sum2 1 2)', "3"), ('String.fromFloat (sum2 1.5 2)', "3.5"), ('Float32.toString (sum2 (Float32.fromFloat 0.1) (Float32.fromFloat 0.2))', F.tostr(F.add(np.float32(0.1), F.fromint(0)) if False else F.add(np.float32(0.1), np.float32(0.2)))),
+        ('Float32.toString (max (Float32.fromFloat 0.5) 2)', "2"), ('Float32.toString (min (Float32.fromFloat 0.5) 2)', "0.5"),
+        ('String.join " " (List.map Float32.toString (List.sort [ Float32.fromFloat 0.5, 2, -1, Float32.fromFloat 0.25 ]))', "-1 0.25 0.5 2"),
+        ('Debug.toString { weight = Float32.fromFloat 0.1, id = Word64.maxValue, tag = Int8.fromInt -1 }', "{ id = 18446744073709551615, tag = -1, weight = 0.1 }"),
+        ('Debug.toString (samples == samples2)', "True"),
+        ('Word64.toString (List.foldl (\\sm acc -> acc + sm.id) 0 samples)', "5"),
+        ('Float32.toString (List.foldl (\\sm acc -> acc + sm.weight) 0 samples)', F.tostr(F.add(F.add(np.float32(0), np.float32(1.5)), np.float32(2.25)))),
+    ]
+    defs += """
+
+samples : List Sample
+samples =
+    [ { weight = Float32.fromFloat 1.5, id = 2, tag = 1 }, { weight = Float32.fromFloat 2.25, id = 3, tag = -1 } ]
+
+
+samples2 : List Sample
+samples2 =
+    List.map identity samples
+"""
+    src = PRE % "\n".join(pre) + defs + POST % listsrc([e[0] for e in ex])
+    return src, [e[1] for e in ex]
+
 def main():
     for t in INTS:
         src, exp = int_boundary(t)
@@ -424,6 +490,7 @@ def main():
     src, exp = lit_case(); write_case("sized-lit", src, exp)
     src, exp = conv_case(); write_case("sized-conv", src, exp)
     src, exp = keys_case(); write_case("sized-keys", src, exp)
+    src, exp = misc_case(); write_case("sized-misc", src, exp)
 
 if __name__ == "__main__":
     main()

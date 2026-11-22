@@ -156,7 +156,7 @@ sizedKernelSig cid = (`replicate` 's') <$> sizedKernelArity cid
 moduleFunctionOp :: Sized -> String -> Maybe String
 moduleFunctionOp s name =
   if name `elem` ["fromInt", "toInt", "toString", "and", "or", "xor", "complement", "shiftLeftBy", "shiftRightBy", "popCount", "fromFloat", "toFloat"]
-     && Just True == fmap (const True) (lookup name (opsOf s))
+     && name `elem` map fst (opsOf s)
     then Just name
     else Nothing
 
