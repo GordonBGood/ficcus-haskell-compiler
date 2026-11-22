@@ -29,3 +29,27 @@ inside its owner; that only matters for Inline's rule U, not for Known.
 Counters (FICCUS_KNOWN_STATS): aliases 3, aliases removed 3, value uses replaced 6, direct calls 0, new functions 0 (the copy kit is not used yet;
 with FICCUS_KNOWN_COPYTEST=1 it copied 32 families and refused 20 on shape, the scope check passed on all copies). Rule V alone does not move A2, as expected:
 the combinators receive `item` & co. as arguments, so no call head is an alias. Output equals the expected checksum in both modes.
+
+## W2 (binary elmficK3, commit 2daf14c9 + tests): copy kit fix, expansion, rules C and F
+
+Copy kit: renaming is scope aware (a name maps to "renamed" or "replaced by an atom" per scope; a family whose root captures a name that is also a
+binder of the family is refused as `copy-refused-capture-clash`, 0 times on A2). FICCUS_KNOWN_COPYTEST on A2: **52 of 52 families copied**, 0 refused,
+scope check passes (W1's "32 copied, 20 refused" were the same 52). Expansion: builders (a function whose body is a closure lifted out of it, or a call
+of a builder), non-recursive, when an argument is a known function or all are static; non-atomic arguments are let-bound in order; known functions
+with captures only where the body calls them. Rules C and F, rounds (2 on A2), sweep. A2 counters: 103 expansions, 9 floated, 5 memo hits, 4 const calls,
+2371 nodes added, 16 refusals (no known argument), none by budget.
+
+Measurement, one session, pass off against on, median of 5, correct checksum in all runs (load average about 2.4 from other sessions):
+
+| P1 A2 parse | time | allocations | closures | pap | C text | .text |
+|---|---|---|---|---|---|---|
+| 1 MB off | 161.6 ms | 17.69 M | 3.52 M | 0.11 M | 645 KB | 109 KB |
+| 1 MB on | 101.3 ms (1.60 x) | 9.59 M | 0.23 M | 0.11 M | 702 KB (1.09 x) | 108 KB |
+| 50 MB off | 7,998 ms | 832 M | 165.5 M | 5.0 M | | |
+| 50 MB on | 4,651 ms (1.72 x) | 451 M | 10.8 M | 5.0 M | | |
+
+Gap to the stage 1 targets (2.6 s, 3 x, 260 M allocations, 10 M closures, code <= 2 x): closures and code size are met or nearly (10.8 M against 10 M);
+time (4.65 s) and allocations (451 M) are not. Most of the rest are the `Good`/`Bad` step cells (stage 2) and the per iteration rebuilding of
+`keep (map ..) item` in `sepByHelp` (a recursive function with known function arguments: W3, keyed specialization).
+Open question 5: W2 alone keeps 1.7 x of the 4.1 x of hand S1 with `oneOf` unrolled by neither; whether W3 reaches 2.6 s is not answerable from these
+numbers (the 5 M paps and 7 M vector objects at 50 MB are untouched), it needs W3.
