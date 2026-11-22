@@ -55,6 +55,7 @@ import qualified System.FilePath as FP
 import System.FilePath ((</>), (<.>))
 
 import qualified File
+import qualified Ficcus.Flags as Flags
 
 import qualified AST.Prim.Module as Module
 import qualified Elm.Package as Pkg
@@ -101,7 +102,8 @@ newtype Stuff = Stuff FilePath
 
 getStuff :: Root -> IO Stuff
 getStuff (Root root) =
-  do  let dir = root </> "elm-stuff" </> V.toChars V.compiler
+  do  suffix <- Flags.getStuffSuffix   -- Ficcus (G43)
+      let dir = root </> "elm-stuff" </> (V.toChars V.compiler ++ suffix)
       Dir.createDirectoryIfMissing True dir
       return (Stuff dir)
 

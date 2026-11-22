@@ -9,6 +9,8 @@ module Ficcus.Flags
   , getOverlayOnlyPkgs
   , setCorePackages
   , getCorePackages
+  , setStuffSuffix
+  , getStuffSuffix
   , ficcusChecks
   )
   where
@@ -120,3 +122,21 @@ setCorePackages =
 getCorePackages :: IO Bool
 getCorePackages =
   readIORef corePackagesRef
+
+
+-- G43: a build to C that may use a core package keeps its caches in `elm-stuff/<version>-ficcus-core`, so that a later build to
+-- JavaScript in the same project never reads artifacts that contain the core package (Root.getStuff). Set by Make.run.
+{-# NOINLINE stuffSuffixRef #-}
+stuffSuffixRef :: IORef String
+stuffSuffixRef =
+  unsafePerformIO (newIORef "")
+
+
+setStuffSuffix :: String -> IO ()
+setStuffSuffix =
+  writeIORef stuffSuffixRef
+
+
+getStuffSuffix :: IO String
+getStuffSuffix =
+  readIORef stuffSuffixRef

@@ -6,6 +6,7 @@ module Ficcus.CorePackages
   , substitute
   , writeSource
   , readSetting
+  , mentionsCorePackage
   )
   where
 
@@ -75,3 +76,12 @@ readSetting elmJson =
         do  bytes <- B.readFile elmJson
             result <- D.fromByteString (D.oneOf [ D.field (B8.pack "ficcus-core-packages") D.bool, pure True ]) bytes
             return (either (const True) id (result :: Either (D.Error ()) Bool))
+
+
+-- | does the elm.json at this path name a package of the table (a build to C may then substitute it)?
+mentionsCorePackage :: FilePath -> IO Bool
+mentionsCorePackage elmJson =
+  do  exists <- Dir.doesFileExist elmJson
+      if not exists then return False else
+        do  bytes <- B.readFile elmJson
+            return (any (\c -> B8.pack ("\"" ++ _name c ++ "\"") `B.isInfixOf` bytes) corePackages)

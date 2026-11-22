@@ -116,6 +116,14 @@ run paths flags@(Flags _ _ _ report _ _ _) =
 runHelp :: R.Root -> [FilePath] -> Reporting.Style -> Flags -> IO (Either Exit.Make ())
 runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag noRcFlag) =
   let rcMode = not noRcFlag && (rcFlag || rcDefault) in
+  -- Ficcus (G43): the setting and the stuff directory of a build that may use a core package are decided before the root is locked
+  (do  setting <- CorePackages.readSetting (R.toAbsolutePath root (R.Relative "elm.json"))
+       Flags.setCorePackages setting
+       mentioned <- CorePackages.mentionsCorePackage (R.toAbsolutePath root (R.Relative "elm.json"))
+       case maybeOutput of
+         Just (Mono _) | setting && mentioned -> Flags.setStuffSuffix "-ficcus-core"
+         Just (FicC _) | setting && mentioned -> Flags.setStuffSuffix "-ficcus-core"
+         _ -> return ()) >>
   R.withRootLock root $ \writer stuff ->
   Task.run $
   do  desiredMode <- getMode debug optimize
@@ -126,7 +134,6 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag no
         _              -> return ()
       -- Ficcus (FIX2): the overlay is written, and its directory made known (Flags.setExtraSrcDir), before the dependencies are built, so
       -- that a package that imports the core `Vector` finds it (Details.crawlModule)
-      Task.io (Flags.setCorePackages =<< CorePackages.readSetting (R.toAbsolutePath root (R.Relative "elm.json")))
       overlayPaths <-
         case (paths, maybeOutput) of
           (_ : _, Just (Mono _)) -> Task.io (writeOverlay root)
