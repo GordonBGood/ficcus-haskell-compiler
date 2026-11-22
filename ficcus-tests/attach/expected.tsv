@@ -93,3 +93,4 @@ a3-err-wrong-shape	REJECT	WELL KNOWN MEMBER WITH THE WRONG TYPE	add : Money -> M
 a3-err-no-signature	REJECT	WELL KNOWN MEMBER WITHOUT TYPE ANNOTATION	compare : Money -> Money -> Order
 a3-err-not-comparable	REJECT	TYPE MISMATCH	I do not know how to compare `Version` values
 a3-js	REJECT	CONSTRAINED FUNCTIONS	operators on custom types
+a3-defaults	RUN	c	

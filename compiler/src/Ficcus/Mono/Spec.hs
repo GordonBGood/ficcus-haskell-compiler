@@ -949,7 +949,12 @@ specPat se pat@(A.At region p) =
         Can.PBool _ b -> mk (PLit (LInt (if b then 1 else 0)))
         Can.PChr c -> mk (PLit (LChar (ord c)))
         Can.PStr s -> mk (PLit (LString (unescape (ES.toChars s))))
-        Can.PInt n -> mk (PLit (LInt (fromIntegral n)))
+        Can.PInt n ->
+          do  -- (ATTACH A3) a pattern is matched by the structure of the value: a number pattern at a custom type has no meaning
+              custom <- customTypeOf se (Recorder.patKey region p)
+              case custom of
+                Just (TyCon tid _) -> report ("a number pattern at the type " ++ tid ++ " (it has fromInt, so a literal is a value of it, but a pattern cannot call a member; compare with == in an `if`), at " ++ regionText region) >> mk PWild
+                _ -> mk (PLit (LInt (fromIntegral n)))
         Can.PCtor { Can._p_name = name, Can._p_index = idx, Can._p_args = cargs } ->
           do  args <- mapM (specPat se . Can._arg) cargs
               mk (PCtor (N.toChars name) (Index.toMachine idx) args)
