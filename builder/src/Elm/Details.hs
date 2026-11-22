@@ -32,6 +32,7 @@ import qualified Data.Utf8 as Utf8
 import Data.Word (Word64)
 import qualified System.Directory as Dir
 import System.FilePath ((</>), (<.>))
+import System.IO (hPutStrLn, stderr)
 
 import qualified Bytes.Decode as D
 import qualified Bytes.Encode as E
@@ -54,6 +55,7 @@ import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Outline as Outline
 import qualified Elm.Package as Pkg
 import qualified Elm.Version as V
+import qualified Ficcus.CorePackages as CorePackages
 import qualified Ficcus.Flags as Flags
 import qualified Ficcus.TypesFile as TypesFile
 import qualified File
@@ -471,7 +473,16 @@ build writer key cache typed depsMVar pkg (Solver.Details vsn _) f fs =
                       return $ Left $ Nothing
 
                 Right directArtifacts ->
-                  do  let src = R.package cache pkg vsn </> "src"
+                  do  -- Ficcus (G43): in a build to C a core package replaces the Elm package of the same name (version inside its range)
+                      useCore <- Flags.getCorePackages
+                      keep <- Flags.getKeepModules
+                      src <-
+                        case (typed, CorePackages.substitute pkg vsn) of
+                          (Just st, Just core) | useCore && keep ->
+                            do  dir <- CorePackages.writeSource (R.packageTypesDir st) pkg core
+                                hPutStrLn stderr ("Ficcus: " ++ Pkg.toChars pkg ++ " " ++ V.toChars vsn ++ " is replaced by the core package")
+                                return dir
+                          _ -> return (R.package cache pkg vsn </> "src")
                       let foreignDeps = gatherForeignInterfaces directArtifacts
                       let exposedDict = Map.fromKeys (\_ -> ()) (Outline.flattenExposed exposed)
                       docsStatus <- if Maybe.isJust typed then return DocsNotNeeded else getDocsStatus cache pkg vsn
@@ -634,7 +645,7 @@ crawlOverlay foreignDeps mvar pkg src docsStatus name =
 
         Just dir ->
           do  let path = dir </> Module.toFilePath name <.> "elm"
-              exists <- if Module.toChars name == "Vector" then File.exists path else return False
+              exists <- if Module.toChars name `elem` ["Vector", "Bitwise64"] then File.exists path else return False
               if not exists
                 then return Nothing
                 else

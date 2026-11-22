@@ -7,6 +7,8 @@ module Ficcus.Flags
   , getExtraSrcDir
   , setOverlayOnlyPkgs
   , getOverlayOnlyPkgs
+  , setCorePackages
+  , getCorePackages
   , ficcusChecks
   )
   where
@@ -100,3 +102,21 @@ getOverlayOnlyPkgs =
 ficcusChecks :: Bool
 ficcusChecks =
   unsafePerformIO (readIORef keepModulesRef)
+
+
+-- G43: are the Ficcus core packages substituted for the Elm packages of the same name in a build to C? On unless the project's
+-- elm.json says `"ficcus-core-packages": false` (Ficcus.CorePackages). Written by Make.run.
+{-# NOINLINE corePackagesRef #-}
+corePackagesRef :: IORef Bool
+corePackagesRef =
+  unsafePerformIO (newIORef True)
+
+
+setCorePackages :: Bool -> IO ()
+setCorePackages =
+  writeIORef corePackagesRef
+
+
+getCorePackages :: IO Bool
+getCorePackages =
+  readIORef corePackagesRef

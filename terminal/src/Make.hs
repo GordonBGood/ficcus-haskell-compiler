@@ -25,6 +25,7 @@ import qualified AST.Optimized as Opt
 import qualified AST.Prim.Module as Module
 import qualified Build
 import qualified Elm.Details as Details
+import qualified Ficcus.CorePackages as CorePackages
 import qualified Ficcus.Flags as Flags
 import qualified Ficcus.Mono.CGen as CGen
 import qualified Ficcus.Mono.Facts as Facts
@@ -125,6 +126,7 @@ runHelp root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag no
         _              -> return ()
       -- Ficcus (FIX2): the overlay is written, and its directory made known (Flags.setExtraSrcDir), before the dependencies are built, so
       -- that a package that imports the core `Vector` finds it (Details.crawlModule)
+      Task.io (Flags.setCorePackages =<< CorePackages.readSetting (R.toAbsolutePath root (R.Relative "elm.json")))
       overlayPaths <-
         case (paths, maybeOutput) of
           (_ : _, Just (Mono _)) -> Task.io (writeOverlay root)
