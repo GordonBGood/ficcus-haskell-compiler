@@ -187,6 +187,7 @@ executable elm
         Ficcus.Mono.Ir
         Ficcus.Mono.Print
         Ficcus.Mono.Modules
+        Ficcus.Mono.Sized
         Ficcus.Mono.Kernel
         Ficcus.Mono.Spec
         Ficcus.Mono.Embed

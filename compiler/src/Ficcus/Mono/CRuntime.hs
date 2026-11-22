@@ -10,6 +10,7 @@ module Ficcus.Mono.CRuntime
   , bytesRuntime
   , regexRuntime
   , vectorRuntime
+  , sizedRuntime
   )
   where
 
@@ -84,3 +85,9 @@ regexRuntime =
 vectorRuntime :: String
 vectorRuntime =
   $(embedFiles [ "runtime/fic_vector.h" ])
+
+
+-- the sized integers and Float32 (docs/SIZED-PLAN.md; needs only the prelude): emitted only by programs that use them
+sizedRuntime :: String
+sizedRuntime =
+  $(embedFiles [ "runtime/fic_sized.h" ])

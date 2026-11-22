@@ -12,6 +12,7 @@ module Ficcus.Mono.Kernel
 
 
 import Ficcus.Mono.Class (AppClass(..), Key(..), KeyPart(..))
+import qualified Ficcus.Mono.Sized as Sized
 
 
 -- Ficcus, stage (iii) slice 1: the kernel table (decision A2).
@@ -27,6 +28,13 @@ import Ficcus.Mono.Class (AppClass(..), Key(..), KeyPart(..))
 -- | arity of a kernel function by callee id
 kernelArity :: String -> Maybe Int
 kernelArity cid =
+  case Sized.sizedKernelArity cid of
+    Just n -> Just n
+    Nothing -> kernelArityTable cid
+
+
+kernelArityTable :: String -> Maybe Int
+kernelArityTable cid =
   lookup cid $
     [ ("elm/core:Basics.add", 2), ("elm/core:Basics.sub", 2), ("elm/core:Basics.mul", 2), ("elm/core:Basics.mulRound53", 2)
     , ("elm/core:Basics.fdiv", 2), ("elm/core:Basics.idiv", 2), ("elm/core:Basics.pow", 2)
@@ -159,6 +167,7 @@ directKernelIds m n =
 kernelSig :: String -> Key -> Maybe String
 kernelSig cid key =
   case (cid, key) of
+    _ | Just sg <- Sized.sizedKernelSig cid -> Just sg
     ("elm/core:Basics.append", Key [ByApp AStr]) -> Just "bb"
     ("elm/core:Basics.append", _) -> Just "bo"           -- xs is copied (its elements are dup'd), ys becomes the tail of the result
     _ -> lookup cid table

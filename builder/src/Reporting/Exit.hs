@@ -1608,6 +1608,13 @@ data Make
 makeToReport :: Make -> Help.Report
 makeToReport make =
   case make of
+    -- SIZED: a message that starts with "@@ TITLE" is a report of its own, in Elm's voice (a literal out of range)
+    MakeFiccus (('@' : '@' : ' ' : titled) : more) ->
+      let (title, body) = break (== '\n') titled
+      in Help.docReport title Nothing
+           (D.vcat (map D.fromChars (drop 1 (lines body) ++ more)))
+           []
+
     MakeFiccus msgs ->
       Help.docReport "FICCUS: the program cannot be compiled to C yet" Nothing
         (D.vcat (map D.fromChars msgs))

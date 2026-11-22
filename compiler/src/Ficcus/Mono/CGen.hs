@@ -30,7 +30,7 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
-import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, prelude, regexRuntime, stringRuntime, vectorRuntime)
+import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, prelude, regexRuntime, sizedRuntime, stringRuntime, vectorRuntime)
 import Ficcus.Mono.Overlay (vectorMarker, vectorTypeName)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free (captures, refClass)
@@ -38,6 +38,7 @@ import Ficcus.Mono.Ir
 import Ficcus.Mono.Layout
 import Ficcus.Mono.Print (keyTextIx)
 import Ficcus.Mono.Spec (classOfM)
+import qualified Ficcus.Mono.Sized as Sized
 
 
 
@@ -137,6 +138,7 @@ generate rcMode program =
                     ++ (if any (`List.isInfixOf` body) ["fic_vector_", "FIC_VECTOR_"] then vectorRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_"] then closureRuntime ++ "\n" else "")
                     ++ (if "fic_fd_" `List.isInfixOf` body then fdlibmRuntime ++ "\n" else "")
+                    ++ (if any (`List.isInfixOf` body) ["fic_sz_", "FIC_SZ_"] then sizedRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_ja_", "fic_json_", "fic_jd_"] then jsArrayRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_"] then stringRuntime ++ "\n" else "")
                     -- the kernels of elm/json and elm/bytes, after the runtimes they are written with
@@ -1628,6 +1630,12 @@ kernelCall info cls name key args =
     ("ficcus:applyOwn", f : rest) -> closureCall True info cls f rest
     _ | Just op <- List.stripPrefix "elm/core:Elm.JsArray." name -> jsArrayCall info cls op key args
     _ | Just op <- List.stripPrefix "elm/core:Vector." name -> vectorCall info cls op key args
+    -- SIZED: the operations of the sized integers and Float32 (runtime/fic_sized.h)
+    _ | Just _ <- Sized.parseKernelId name ->
+      do  vals <- atoms info args
+          case Sized.kernelC name vals of
+            Just txt -> return txt
+            Nothing -> unsupported ("the sized kernel " ++ name)
     _ | name `elem` ["elm/core:String.foldl", "elm/core:String.foldr"], Key [ByClass cb] <- key, [f, acc, s] <- args ->
       do  avs <- atomsTo info [(f, CRef), (acc, cb), (s, CRef)]
           let fn = if name == "elm/core:String.foldl" then "fic_us_foldl" else "fic_us_foldr"
@@ -1891,6 +1899,7 @@ showStmt _ t sb v =
   case t of
     TyCon "elm/core:Basics.Int" [] -> emit ("fic_sb_int(" ++ sb ++ ", " ++ v ++ ");")
     TyCon "elm/core:Basics.Float" [] -> emit ("fic_sb_float(" ++ sb ++ ", " ++ v ++ ");")
+    TyCon n [] | Just sz <- Sized.sizedOfTypeId n -> emit (Sized.showC sz sb v)
     TyCon "elm/core:Char.Char" [] -> emit ("fic_sb_char(" ++ sb ++ ", " ++ v ++ ");")
     TyCon "elm/core:String.String" [] -> emit ("fic_sb_string(" ++ sb ++ ", " ++ v ++ ");")
     TyCon "elm/core:Basics.Bool" [] -> emit ("fic_sb_puts(" ++ sb ++ ", " ++ v ++ " ? \"True\" : \"False\");")
@@ -1997,7 +2006,7 @@ genHelpers info =
 
 
 clsOf :: Info -> MType -> Class
-clsOf info = classOfM (Map.map usEnum (iUnions info))
+clsOf info = classOfM (Map.union (Sized.sizedEnums (iUnions info)) (Map.map usEnum (iUnions info)))
 
 
 -- the constructors of a custom type with the arguments of the exact type put in
@@ -2042,6 +2051,7 @@ cmpExpr t a b =
     TyCon "elm/core:Basics.Int" [] -> return ("fic_i_cmp(" ++ a ++ ", " ++ b ++ ")")
     TyCon "elm/core:Char.Char" [] -> return ("fic_i_cmp((int64_t)" ++ a ++ ", (int64_t)" ++ b ++ ")")
     TyCon "elm/core:Basics.Float" [] -> return ("fic_f_cmp(" ++ a ++ ", " ++ b ++ ")")
+    TyCon n [] | Just sz <- Sized.sizedOfTypeId n -> return (Sized.cmpC sz a b)
     _ | isStringT t -> return ("fic_str_cmp(" ++ a ++ ", " ++ b ++ ")")
     _ -> do { h <- helper (HCmp t); return (h ++ "(" ++ a ++ ", " ++ b ++ ")") }
 

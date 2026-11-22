@@ -52,6 +52,7 @@ import qualified Elm.String as ES
 import Ficcus.Mono.Class
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel
+import qualified Ficcus.Mono.Sized as Sized
 import Ficcus.Mono.Overlay (overlayId, overlayModuleName, randomOverlayPrefix, vectorMarker, vectorModuleId, vectorTypeName)
 import Ficcus.Mono.Marks (Marks)
 import qualified Ficcus.Mono.Marks as Marks
@@ -192,8 +193,10 @@ specialize modules marks =
         -- never built: a reference class, not an enumeration. A module `Vector` of the project does not have it and is ordinary code
         vecOn = or [ n == vectorTypeName && [ c | (c, _, _) <- usCtors u ] == [vectorMarker] | m' <- modules, (n, u) <- mmUnions m' ]
         builtin = if vecOn then Map.insert vectorTypeName False else id
-        unions = (if vecOn then Map.adjust (\u -> u { usEnum = False }) vectorTypeName else id) (Map.fromList (concatMap mmUnions modules))
-        enums = builtin (Map.fromList (concatMap mmEnums modules))
+        unions0 = (if vecOn then Map.adjust (\u -> u { usEnum = False }) vectorTypeName else id) (Map.fromList (concatMap mmUnions modules))
+        -- SIZED: the sized integers and Float32 of the overlay are scalars (their union is not an enumeration)
+        unions = foldr (Map.adjust (\u -> u { usEnum = False })) unions0 (Map.keys (Map.filterWithKey (\k _ -> Map.member ("sized:" ++ k) (Sized.sizedEnums unions0)) unions0))
+        enums = Map.union (Sized.sizedEnums unions0) (builtin (Map.fromList (concatMap mmEnums modules)))
         start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions
         mainId = defIdOf (mmCtx m) (defKeyOf d)
         final = execState (requestRoot mainId >>= \r0 -> drain >> return r0) start
@@ -362,7 +365,13 @@ hiddenMembers did def scheme env hidden =
 memberRef :: MType -> String -> MType -> SM (Either String Ref)
 memberRef st member mtype =
   do  tops <- gets sTops
+      unions <- gets sUnions
       case st of
+        -- SIZED: the members of a sized type are kernels (the overlay's bodies only give the types)
+        TyCon tid _ | Just s <- Sized.sizedEnabled unions tid ->
+          return (case Sized.memberOp member of
+                    Just op -> sizedKernelRef s op
+                    Nothing -> Left ("the type " ++ Sized.typeName s ++ " has no member `" ++ member ++ "`"))
         TyCon tid _ | Map.member (tid ++ "$$" ++ member) tops -> memberClone tid member mtype
         _ -> builtinMember st member
 
@@ -440,6 +449,11 @@ wellKnownRef se cid inst =
       do  tops <- gets sTops
           unions <- gets sUnions
           case t of
+            -- SIZED: an operator at a sized type is its kernel
+            TyCon tid _ | Just s <- Sized.sizedEnabled unions tid, Just op <- Sized.operatorOp cid ->
+              case sizedKernelRef s op of
+                Right ref -> return (Just ref)
+                Left why -> report ("cannot specialize `" ++ cid ++ "` at " ++ mtypeText t ++ ": " ++ why) >> return (Just RNone)
             TyCon tid _ | Map.member (tid ++ "$$" ++ member) tops ->
               if cid `elem` derived
                 then return Nothing
@@ -471,6 +485,49 @@ wellKnownRef se cid inst =
                                ++ (if length path > 1 then " and is found inside it (" ++ List.intercalate " > " path ++ ")" else "")
                                ++ ", which the structural code for a list, tuple, record or other custom type does not call yet; compare the parts yourself")
           Nothing -> return ()
+
+
+-- (SIZED) `author/project:Int8.toInt`: the name and the type, when the module is the overlay's
+sizedModuleFunction :: Map.Map String UnionShape -> String -> Maybe (String, Sized.Sized)
+sizedModuleFunction unions cid =
+  case [ (n, sz) | sz <- Sized.allSized, Just n <- [List.stripPrefix ("author/project:" ++ Sized.typeName sz ++ ".") cid], Just _ <- [Sized.sizedEnabled unions (Sized.typeId sz)] ] of
+    r : _ -> Just r
+    [] -> Nothing
+
+
+-- (SIZED) the kernel of an operation of a sized type
+sizedKernelRef :: Sized.Sized -> String -> Either String Ref
+sizedKernelRef s op =
+  let cid = Sized.kernelId s op
+  in case kernelArity cid of
+       Just arity -> Right (RKernel cid (Key []) arity)
+       Nothing -> Left ("`" ++ cid ++ "` is not in the kernel table")
+
+
+-- (SIZED) the sized type of a node, when it is one of the overlay's
+sizedOfNode :: SEnv -> Recorder.Key -> SM (Maybe Sized.Sized)
+sizedOfNode se key =
+  case nodeType se key of
+    Just t | Right (TyCon tid _) <- mtypeOf (seEnv se) t ->
+      do  unions <- gets sUnions
+          return (Sized.sizedEnabled unions tid)
+    _ -> return Nothing
+
+
+-- (SIZED) an integer literal at a sized type: checked against the range at compile time, held as the constant (a Float32 beyond
+-- 2^24 is converted at run time so that it is rounded as C rounds)
+sizedLiteral :: SEnv -> Sized.Sized -> Bool -> Integer -> A.Region -> Class -> SM MExpr
+sizedLiteral se s negated n region cls =
+  case Sized.literalValue s negated n of
+    Left why ->
+      do  report ("@@ INTEGER OUT OF RANGE\n" ++ regionText region ++ " in " ++ seDid se ++ "\n\n" ++ why)
+          return (MExpr cls (MLit (LInt 0)))
+    Right v
+      | Sized.isFloat s ->
+          if Sized.literalNeedsCall s v
+            then return (MExpr cls (MCall (MExpr CRef (MKernel (Sized.kernelId s "fromInt") (Key []))) [MExpr CI64 (MLit (LInt v))]))
+            else return (MExpr cls (MLit (LFloat (fromIntegral v))))
+      | otherwise -> return (MExpr cls (MLit (LInt v)))
 
 
 -- the functions that are not the member itself but are made from it (the overlay: FicOverlay.ficLt ...)
@@ -513,6 +570,9 @@ holdsMember tops unions member t0 = fst (go Set.empty [] t0)
   where
     go seen path t =
       case t of
+        -- SIZED: a sized type is held as a scalar, which the structural code treats right (but Word64, held as signed bits, in an order)
+        TyCon tid _
+          | Just sz <- Sized.sizedEnabled unions tid -> (if member == "compare" && Sized.wordWithoutStructuralOrder sz then Just (reverse (tid : path)) else Nothing, seen)
         TyCon tid args
           | Map.member (tid ++ "$$" ++ member) tops -> (Just (reverse (tid : path)), seen)
           | otherwise ->
@@ -688,6 +748,7 @@ rowFieldsT enums env t =
 classOfName :: Map.Map String Bool -> String -> Int -> Class
 classOfName enums name _ =
   case name of
+    _ | Map.member ("sized:" ++ name) enums, Just s <- Sized.sizedOfTypeId name -> Sized.classOfSized s
     "elm/core:Basics.Int" -> CI64
     "elm/core:Basics.Float" -> CF64
     "elm/core:Char.Char" -> CU32
@@ -830,8 +891,10 @@ specExpr se (A.At region e) =
     Can.Str s -> return (MExpr CRef (MLit (LString (unescape (ES.toChars s)))))
     Can.Int n ->
       do  cls <- exprClass se region e
+          sz <- sizedOfNode se (Recorder.exprKey region e)
           custom <- customTypeOf se (Recorder.exprKey region e)
           case custom of
+            _ | Just s <- sz -> sizedLiteral se s False (toInteger n) region cls
             -- (ATTACH A3) an integer literal at a custom type is `fromInt` of it
             Just t@(TyCon tid _) ->
               do  r <- memberClone tid "fromInt" (shapeType WK.FromInt t)
@@ -843,20 +906,12 @@ specExpr se (A.At region e) =
     Can.Float f ->
       return (MExpr CF64 (MLit (LFloat (readDouble (BLC.unpack (BB.toLazyByteString (EF.toBuilder f)))))))
     Can.Unit -> return unitLit
-    Can.Negate x ->
-      do  cls <- exprClass se region e
-          x' <- specExpr se x
-          key <- keyOfType se (nodeType se (Recorder.exprKey region e))
-          custom <- customTypeOf se (Recorder.exprKey region e)
-          case custom of
-            -- (ATTACH A3) `-x` at a custom type is `neg x`
-            Just t@(TyCon tid _) ->
-              do  r <- memberClone tid "neg" (shapeType WK.Unary t)
-                  case r of
-                    Right (RClone c _ _) -> return (MExpr cls (MCall (MExpr CRef (MGlobal c)) [x']))
-                    Right _ -> report ("internal: neg of " ++ tid ++ " is not a function") >> return x'
-                    Left why -> report ("cannot specialize `-` at " ++ tid ++ ": " ++ why) >> return x'
-            _ -> return (MExpr cls (MCall (MExpr CRef (MKernel "elm/core:Basics.negate" key)) [x']))
+    Can.Negate (A.At ir (Can.Int n)) ->
+      do  sz <- sizedOfNode se (Recorder.exprKey region e)
+          case sz of
+            Just s -> exprClass se region e >>= sizedLiteral se s True (toInteger n) region
+            Nothing -> specNegate se region e (A.At ir (Can.Int n))
+    Can.Negate x -> specNegate se region e x
     Can.Pair a b ->
       do  cls <- exprClass se region e
           a' <- specExpr se a
@@ -1011,12 +1066,38 @@ specPat se pat@(A.At region p) =
         Can.PInt n ->
           do  -- (ATTACH A3) a pattern is matched by the structure of the value: a number pattern at a custom type has no meaning
               custom <- customTypeOf se (Recorder.patKey region p)
+              sz <- sizedOfNode se (Recorder.patKey region p)
               case custom of
+                -- (SIZED) a number pattern at a sized integer type is its value, checked against the range
+                _ | Just sdt <- sz, not (Sized.isFloat sdt) ->
+                      case Sized.literalValue sdt False (toInteger n) of
+                        Right v -> mk (PLit (LInt v))
+                        Left why -> report ("@@ INTEGER OUT OF RANGE\n" ++ regionText region ++ " in " ++ seDid se ++ "\n\n" ++ why) >> mk PWild
                 Just (TyCon tid _) -> report ("a number pattern at the type " ++ tid ++ " (it has fromInt, so a literal is a value of it, but a pattern cannot call a member; compare with == in an `if`), at " ++ regionText region) >> mk PWild
                 _ -> mk (PLit (LInt (fromIntegral n)))
         Can.PCtor { Can._p_name = name, Can._p_index = idx, Can._p_args = cargs } ->
           do  args <- mapM (specPat se . Can._arg) cargs
               mk (PCtor (N.toChars name) (Index.toMachine idx) args)
+
+
+-- `-x`: `neg` of a custom type (A3), the kernel of a sized type (SIZED), else Elm's `negate`
+specNegate :: SEnv -> A.Region -> Can.Expr_ -> Can.Expr -> SM MExpr
+specNegate se region e x =
+  do  cls <- exprClass se region e
+      x' <- specExpr se x
+      key <- keyOfType se (nodeType se (Recorder.exprKey region e))
+      sz <- sizedOfNode se (Recorder.exprKey region e)
+      custom <- customTypeOf se (Recorder.exprKey region e)
+      case custom of
+        _ | Just s <- sz -> return (MExpr cls (MCall (MExpr CRef (MKernel (Sized.kernelId s "neg") (Key []))) [x']))
+        -- (ATTACH A3) `-x` at a custom type is `neg x`
+        Just t@(TyCon tid _) ->
+          do  r <- memberClone tid "neg" (shapeType WK.Unary t)
+              case r of
+                Right (RClone c _ _) -> return (MExpr cls (MCall (MExpr CRef (MGlobal c)) [x']))
+                Right _ -> report ("internal: neg of " ++ tid ++ " is not a function") >> return x'
+                Left why -> report ("cannot specialize `-` at " ++ tid ++ ": " ++ why) >> return x'
+        _ -> return (MExpr cls (MCall (MExpr CRef (MKernel "elm/core:Basics.negate" key)) [x']))
 
 
 unsupported :: String -> A.Region -> SM MExpr
@@ -1350,6 +1431,7 @@ resolve se region e =
     foreignOrTopPlain cid00 =
       do  tops0 <- gets sTops
           vecOn <- gets sVector
+          unionsNow <- gets sUnions
           -- Random.peel (decision L31): the Int product is rounded to a double like Elm's (JavaScript's) `*`, the fork's roundTo53
           let cid0 = if cid00 == "elm/core:Basics.mul" && "elm/random:Random.peel" `List.isPrefixOf` seDid se then "elm/core:Basics.mulRound53" else cid00
           -- a kernel function written in Elm in the overlay (Ficcus.Mono.Overlay) is an ordinary definition (the overlay's own
@@ -1359,6 +1441,8 @@ resolve se region e =
             Nothing
               -- the Bitwise64 module of the overlay: its functions are the kernel functions of the same name
               | Just n <- List.stripPrefix "author/project:Bitwise64." cid0, Map.member "author/project:Bitwise64.ficBitwise64Overlay" tops0 -> foreignOrTop' ("elm/core:Bitwise64." ++ n)
+              -- SIZED: the conversions and bit operations of the module of a sized type are its kernels
+              | Just (n, sz) <- sizedModuleFunction unionsNow cid0, Just op <- Sized.moduleFunctionOp sz n -> foreignOrTop' (Sized.kernelId sz op)
               -- the Vector module of the overlay (V1): the functions of its first section are the intrinsics of the same name
               | vecOn, Just n <- List.stripPrefix vectorModuleId cid0, n `elem` [ k | (k, _, _) <- vectorKernels ] -> foreignOrTop' (vectorKernelId n)
               | otherwise -> foreignOrTop' cid0
