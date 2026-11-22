@@ -38,7 +38,8 @@ step suite;    python3 targets/run_all.py --san > $G/suite.txt 2>&1; tail -4 $G/
 step typed;    python3 $R/ficcus-tests/typed_check.py --elm $B --safe $W/tools/safe --elm-home $(fresh tc) --out $S/tcout --jobs 2 corpus/pkgs-sample corpus/apps > $G/typed.txt 2>&1; tail -3 $G/typed.txt
 step lib-rcsan; $R/ficcus-tests/libsuite.sh rcsan $B $(fresh lib) $S/libw --compare results/baseline.json > $G/lib.txt 2>&1; tail -4 $G/lib.txt
 step elmdiff;  python3 elmdiff/elmdiff.py --a ./bin/elm0193 --b $B --pkgs corpus/pkgs-sample --apps corpus/apps --out $S/elmdiff80 --elm-home $(fresh ed) --timeout 120 > $G/elmdiff.txt 2>&1; tail -4 $G/elmdiff.txt
-echo "=== SUMMARY (from $G)"
-echo "elmdiff: $(grep -E 'SAME|DIFF' $G/elmdiff.txt | tr '\n' ' ')"
-echo "suite:   $(grep -iE 'pass|fail' $G/suite.txt | tail -3 | tr '\n' ' ')"
+# G53: the summary (the totals the steps above only show as the tail of their files)
+step summary
+awk -F'|' '/^## /{k=$0} /^\| [A-Z_]+ \| [0-9]+ \|$/{ if ($2 ~ /SAME/) s+=$3; else d+=$3 } END{printf "elmdiff: %d SAME, %d DIFF (packages and apps)\n", s, d}' $G/elmdiff.txt
+awk '/^test /{t=1; next} t && NF==0{t=0} t{n++; if ($NF=="PASS") p++} END{printf "suite: %d PASS of %d programs, %d not PASS\n", p, n, n-p}' $G/suite.txt
 echo "=== DONE $(date +%T)"
