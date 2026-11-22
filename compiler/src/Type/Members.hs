@@ -191,7 +191,7 @@ policyOf flag table =
 -- | the well known members of this module's own types that do not have the type the language needs, or no
 -- type annotation (the members of imported types were checked in their own module)
 shapeErrors :: Can.Module -> [Error.Error]
-shapeErrors (Can.Module home _ _ decls _ _ _ _) =
+shapeErrors (Can.Module home _ _ decls unions _ _ _) =
   concatMap check (defsOf decls)
   where
     check def =
@@ -199,7 +199,9 @@ shapeErrors (Can.Module home _ _ decls _ _ _ _) =
         (Just (tipe, member), _) | Just shape <- WK.shapeOf (N.toChars member) ->
           let
             tname = T.nameFromString (S.fromChars tipe)
-            expected = WK.expectedText shape tipe
+            -- the type with its parameters (`V a`), as the member must be written
+            applied = tipe ++ concat [ " " ++ TV.varToChars v | Just u <- [Map.lookup tname unions], v <- Can._u_vars u ]
+            expected = WK.expectedText shape applied
           in
           case def of
             Can.Def (A.At region _) _ _ ->

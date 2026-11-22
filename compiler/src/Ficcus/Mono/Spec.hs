@@ -449,11 +449,19 @@ wellKnownRef se cid inst =
                       case r of
                         Left why -> report ("cannot specialize `" ++ cid ++ "` at " ++ mtypeText t ++ ": " ++ why) >> return (Just RNone)
                         Right ref -> return (Just ref)
+            -- a relaxed `/ // modBy remainderBy` inside a generic function (`a has div`) at Float or Int: its instance type is the
+            -- variable, which does not match the scheme of the kernel function (Float -> Float -> Float), so say which member it is
+            _ | isVar first, member `elem` ["div", "idiv", "mod", "rem"], t `elem` [TyCon "elm/core:Basics.Float" [], TyCon "elm/core:Basics.Int" []] ->
+              do  r <- builtinMember t member
+                  case r of
+                    Left why -> report ("cannot specialize `" ++ cid ++ "` at " ++ mtypeText t ++ ": " ++ why) >> return (Just RNone)
+                    Right ref -> return (Just ref)
             _ ->
               do  nested tops unions member t
                   return Nothing
     _ -> return Nothing
   where
+    isVar ty = case ty of { TVar {} -> True; TAlias _ _ _ real -> isVar real; _ -> False }
     -- `==` and the comparisons of a type that holds a custom type with the member (a list, a tuple, a record) would use
     -- the structural code of the C generator and so ignore the member: not supported yet (A3-NOTES section 6)
     nested tops unions member t =

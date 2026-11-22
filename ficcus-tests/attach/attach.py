@@ -10,6 +10,7 @@ Each case is a directory cases/<id>/ with its sources (Main.elm, other modules),
 The expected results are the table expected.tsv (tab separated: id, outcome, error titles, text the output must contain):
   ACCEPT   `elm make` succeeds
   REJECT   `elm make` fails; the titles ("-- TITLE ----") are the third column, ';' separated
+  REJECTC  `elm make --output=x.c` fails with the `-- FICCUS: the program cannot be compiled to C yet` report only (third column: unused, fourth: text it must contain)
   RUN      ACCEPT, and the program (a Platform.worker that prints with Debug.log) gives expected.out when run as JavaScript
            (node) and as C (`--output=x.c`, gcc/clang); the third column says which: js, c or js+c
 Packages of the cases (ficcus/*) live in packages/<author>/<name>/<version>/ and are entered in a private ELM_HOME (mkhome.py),
@@ -65,6 +66,17 @@ def one(case, elm, home, want):
         if os.path.exists(os.path.join(src, "expected.out")): shutil.copy(os.path.join(src, "expected.out"), dst)
         json.dump(elm_json(meta.get("deps", [])), open(os.path.join(dst, "elm.json"), "w"))
         env = dict(os.environ, ELM_HOME=home)
+        if want[0] == "REJECTC":       # a program the C path refuses (decision 5): the FICCUS report, exit status 1, no crash box, no "Success" after it
+            rc, out = run([elm, "make", main, "--output=x.c", "--no-rc"], dst, env)
+            head = "-- FICCUS: the program cannot be compiled to C yet"
+            bad = []
+            if rc == 0: bad.append("exit 0")
+            if head not in out: bad.append("no FICCUS report")
+            else:
+                if "bypassed the normal error reporting" in out: bad.append("crash box")
+                if "Success" in out.split(head, 1)[1]: bad.append("Success line after the report")
+            if want[2] and want[2] not in out: bad.append("text %r missing" % want[2])
+            return (("REJECTC", want[1]) if not bad else ("REJECTC-FAIL", ", ".join(bad))), not bad, out
         js = not (want[0] == "RUN" and "js" not in want[1].split("+"))     # a C-only RUN case is only checked, not generated as JavaScript
         if meta.get("c_only"):       # a program that needs the Ficcus overlay (a package importing Vector): there is no build without --output=x.c
             rc, out = 0, ""

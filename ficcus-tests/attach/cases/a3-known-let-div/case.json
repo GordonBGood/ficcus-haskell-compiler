@@ -1,0 +1,1 @@
+{"desc": "shape 3 (review F4, tracked, not fixed): records today behaviour; accepted by --output=x.c, rejected by --output=/dev/null (as Elm does)", "c_only": true}
