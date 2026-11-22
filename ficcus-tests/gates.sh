@@ -1,6 +1,6 @@
 #!/bin/bash
 # The serial regression gates of the compiler session (STAGE4-FIX1.md section 7). BIN=elmficNN [S=scratch dir] ficcus-tests/gates.sh; takes about one hour (FIX2: step list unchanged, plus stringdiff).
-# Expected: runtime 0 non-ok lines; attach 126 cases 0 differ; types 267 PASS 1 XFAIL (one case may flake under load: rerun); JS identity 28; examples 264 ok x3;
+# Expected: runtime 0 non-ok lines; attach 152 cases 0 differ; types 267 PASS 1 XFAIL (one case may flake under load: rerun); JS identity 28; examples 264 ok x3;
 # fbip 0 failures; faults 0 missed; suite PASS; typed 568/12/1; library no REGRESSION; elmdiff 1160 SAME + 15 apps.
 W=$(cd "$(dirname "$0")/../.." && pwd); R=${R:-$(cd "$(dirname "$0")/.." && pwd)}      # A3: the worktree this script is in (it was the main checkout)
 # Disk: every private ELM_HOME is a reflink copy where the file system has them (btrfs: no space used until a file is rewritten; a
@@ -9,7 +9,7 @@ W=$(cd "$(dirname "$0")/../.." && pwd); R=${R:-$(cd "$(dirname "$0")/.." && pwd)
 # what the run made, not removed.
 KEEP=${KEEP:-}
 if [ -z "$S" ]; then S=$(mktemp -d "${CLAUDE_CODE_TMPDIR:-${TMPDIR:-/tmp}}/gates.XXXXXX"); OWN=1; fi
-B=$W/bin/${BIN:-elmficA19}; G=$S/gates; mkdir -p $G; cd $W
+B=$W/bin/${BIN:-elmficN1}; G=$S/gates; mkdir -p $G; cd $W
 cleanup() {
   if [ -n "$KEEP" ]; then echo "KEEP=1: $S kept ($(du -sh $S | cut -f1))"; return; fi
   rm -rf "$S"/h_* "$S"/gates "$S"/tcout "$S"/elmdiff80 "$S"/jh "$S"/jw "$S"/libw "$S"/rt_*
@@ -22,6 +22,7 @@ fresh() { rm -rf $S/h_$1; mkdir -p $S/h_$1; cp -r --reflink=auto $W/elm-home-dif
 step() { echo "=== $1 $(date +%T)"; }
 step runtime;  mkdir -p $S/rt_tmp; (cd $R && TMPDIR=$S/rt_tmp sh runtime/test.sh 2>&1 | grep -vc "^ok" ; ) > $G/runtime.txt 2>&1; cat $G/runtime.txt
 step attach;   python3 $R/ficcus-tests/attach/attach.py --elm $B --rc > $G/attach.txt 2>&1; tail -1 $G/attach.txt
+step sized-fuzz; python3 $R/ficcus-tests/sized/fuzz.py --elm $B --seeds 40 --first 1000 -j 2 > $G/sizedfuzz.txt 2>&1; tail -1 $G/sizedfuzz.txt     # SIZED: 40 seeds of the 200 (expected: 40 seeds, 0 differ)
 step stringdiff; TMPDIR=$S python3 $R/ficcus-tests/stringdiff.py --elm $B --safe $W/tools/safe --elm-home $(fresh sd) --seeds 6 --cases 300 --san > $G/stringdiff.txt 2>&1; tail -1 $G/stringdiff.txt
 step types;    (cd tests/types && python3 typetests.py --elm $B --compare results/baseline.json > $G/types.txt 2>&1); tail -4 $G/types.txt
 step jsid;     $R/ficcus-tests/jsid.sh $W/bin/elm0193 $B $S/jh $S/jw > $G/jsid.txt 2>&1; tail -2 $G/jsid.txt
