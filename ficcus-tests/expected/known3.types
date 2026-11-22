@@ -1,0 +1,594 @@
+-- module Known3: problems=0 instances=117 instance-failures=0 defaulted=0
+-- equality-uses: total=1 at-function=0
+module author/project:Known3
+type Step   id: author/project:Known3.Step   params: 1   ctors: 2   layout: normal
+  ctor Good   id: author/project:Known3.Good   tag: 0   arity: 3   fields: Bool ;; v0 ;; State   sig: Bool -> v0 -> State -> Step v0   kinds: v0:any
+  ctor Bad   id: author/project:Known3.Bad   tag: 1   arity: 2   fields: Bool ;; String   sig: Bool -> String -> Step v0   kinds: v0:any
+def oneOfHelp :: State -> List (Parser a) -> Step a    [80:1-80:10]   id: author/project:Known3.oneOfHelp   sig: State -> List (Parser v0) -> Step v0   kinds: v0:any   group: author/project:Known3.oneOfHelp rec ann
+  80:11-80:12 PVar s :: State
+  80:13-80:15 PVar ps :: List (Parser a)
+  81:5-95:41 Case :: Step a
+    81:10-81:12 VarLocal :: List (Parser a)
+    82:9-82:11 PList :: List (Parser a)
+    83:13-83:30 Call :: Step a
+      83:13-83:16 VarCtor :: Bool -> String -> Step a   callee: author/project:Known3.Bad   instance: a := a   sig#: a457255e   subst: v0 := <<author/project:Known3.oneOfHelp|v0>>
+      83:17-83:22 VarCtor :: Bool   callee: elm/core:Basics.False
+      83:23-83:30 Str :: String
+    85:9-85:18 PCons :: List (Parser a)
+      85:9-85:10 PVar p :: Parser a
+      85:14-85:18 PVar rest :: List (Parser a)
+    86:13-95:41 Case :: Step a
+      86:18-86:21 Call :: Step a
+        86:18-86:19 VarLocal :: Parser a
+        86:20-86:21 VarLocal :: State
+      87:17-87:28 PCtor Good :: Step a
+        87:22-87:23 PVar c :: Bool
+        87:24-87:25 PVar a :: a
+        87:26-87:28 PVar s1 :: State
+      88:21-88:32 Call :: Step a
+        88:21-88:25 VarCtor :: Bool -> a -> State -> Step a   callee: author/project:Known3.Good   instance: a := a   sig#: 52ea0430   subst: v0 := <<author/project:Known3.oneOfHelp|v0>>
+        88:26-88:27 VarLocal :: Bool
+        88:28-88:29 VarLocal :: a
+        88:30-88:32 VarLocal :: State
+      90:17-90:24 PCtor Bad :: Step a
+        90:21-90:22 PVar c :: Bool
+        90:23-90:24 PVar m :: String
+      91:21-95:41 If :: Step a
+        91:24-91:25 VarLocal :: Bool
+        92:25-92:32 Call :: Step a
+          92:25-92:28 VarCtor :: Bool -> String -> Step a   callee: author/project:Known3.Bad   instance: a := a   sig#: a457255e   subst: v0 := <<author/project:Known3.oneOfHelp|v0>>
+          92:29-92:30 VarLocal :: Bool
+          92:31-92:32 VarLocal :: String
+        95:25-95:41 Call :: Step a
+          95:25-95:34 VarTopLevel :: State -> List (Parser a) -> Step a   callee: author/project:Known3.oneOfHelp   use: rec   sig#: b12297a7   subst: v0 := <<author/project:Known3.oneOfHelp|v0>>
+          95:35-95:36 VarLocal :: State
+          95:37-95:41 VarLocal :: List (Parser a)
+def manyHelp :: Parser a -> List a -> State -> Step (List a)    [119:1-119:9]   id: author/project:Known3.manyHelp   sig: Parser v0 -> List v0 -> State -> Step (List v0)   kinds: v0:any   group: author/project:Known3.manyHelp rec ann
+  119:10-119:11 PVar p :: Parser a
+  119:12-119:15 PVar acc :: List a
+  119:16-119:17 PVar s :: State
+  120:5-125:63 Case :: Step (List a)
+    120:10-120:13 Call :: Step a
+      120:10-120:11 VarLocal :: Parser a
+      120:12-120:13 VarLocal :: State
+    121:9-121:20 PCtor Good :: Step a
+      121:14-121:15 PAnything :: Bool
+      121:16-121:17 PVar a :: a
+      121:18-121:20 PVar s1 :: State
+    122:13-122:37 Call :: Step (List a)
+      122:13-122:21 VarTopLevel :: Parser a -> List a -> State -> Step (List a)   callee: author/project:Known3.manyHelp   use: rec   sig#: 976e7e5f   subst: v0 := <<author/project:Known3.manyHelp|v0>>
+      122:22-122:23 VarLocal :: Parser a
+      122:25-122:33 Binop :: List a   callee: elm/core:List.cons   instance: a := a   sig#: ddd4c5f2   subst: v0 := <<author/project:Known3.manyHelp|v0>>
+        122:25-122:26 VarLocal :: a
+        122:30-122:33 VarLocal :: List a
+      122:35-122:37 VarLocal :: State
+    124:9-124:16 PCtor Bad :: Step a
+      124:13-124:14 PAnything :: Bool
+      124:15-124:16 PAnything :: String
+    125:13-125:63 Call :: Step (List a)
+      125:13-125:17 VarCtor :: Bool -> List a -> State -> Step (List a)   callee: author/project:Known3.Good   instance: a := List a   sig#: 52ea0430   subst: v0 := List <<author/project:Known3.manyHelp|v0>>
+      125:19-125:40 Call :: Bool
+        125:19-125:22 VarForeign :: Bool -> Bool   callee: elm/core:Basics.not
+        125:24-125:40 Call :: Bool
+          125:24-125:36 VarForeign :: List a -> Bool   callee: elm/core:List.isEmpty   instance: a := a   sig#: 7c72915b   subst: v0 := <<author/project:Known3.manyHelp|v0>>
+          125:37-125:40 VarLocal :: List a
+      125:44-125:60 Call :: List a
+        125:44-125:56 VarForeign :: List a -> List a   callee: elm/core:List.reverse   instance: a := a   sig#: c2fcf511   subst: v0 := <<author/project:Known3.manyHelp|v0>>
+        125:57-125:60 VarLocal :: List a
+      125:62-125:63 VarLocal :: State
+def succeed :: a -> Parser a    [22:1-22:8]   id: author/project:Known3.succeed   sig: v0 -> Parser v0   kinds: v0:any   group: author/project:Known3.succeed nonrec ann
+  22:9-22:10 PVar a :: a
+  23:5-23:25 Lambda :: Parser a
+    23:6-23:7 PVar s :: State
+    23:11-23:25 Call :: Step a
+      23:11-23:15 VarCtor :: Bool -> a -> State -> Step a   callee: author/project:Known3.Good   instance: a := a   sig#: 52ea0430   subst: v0 := <<author/project:Known3.succeed|v0>>
+      23:16-23:21 VarCtor :: Bool   callee: elm/core:Basics.False
+      23:22-23:23 VarLocal :: a
+      23:24-23:25 VarLocal :: State
+def isDigit :: Int -> Bool    [139:1-139:8]   id: author/project:Known3.isDigit   sig: Int -> Bool   kinds:    group: author/project:Known3.isDigit nonrec ann
+  139:9-139:10 PVar c :: Int
+  140:5-140:23 Binop :: Bool   callee: elm/core:Basics.and
+    140:5-140:12 Binop :: Bool   callee: elm/core:Basics.ge   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      140:5-140:6 VarLocal :: Int
+      140:10-140:12 Int :: Int
+    140:16-140:23 Binop :: Bool   callee: elm/core:Basics.le   instance: comparable := Int   sig#: 2cdc0786   subst: v0 := Int
+      140:16-140:17 VarLocal :: Int
+      140:21-140:23 Int :: Int
+def andThen :: (a -> Parser b) -> Parser a -> Parser b    [59:1-59:8]   id: author/project:Known3.andThen   sig: (v0 -> Parser v1) -> Parser v0 -> Parser v1   kinds: v0:any,v1:any   group: author/project:Known3.andThen nonrec ann
+  59:9-59:10 PVar f :: a -> Parser b
+  59:11-59:13 PVar pa :: Parser a
+  60:5-71:45 Lambda :: Parser b
+    60:6-60:7 PVar s :: State
+    61:9-71:45 Case :: Step b
+      61:14-61:18 Call :: Step a
+        61:14-61:16 VarLocal :: Parser a
+        61:17-61:18 VarLocal :: State
+      62:13-62:20 PCtor Bad :: Step a
+        62:17-62:18 PVar c :: Bool
+        62:19-62:20 PVar m :: String
+      63:17-63:24 Call :: Step b
+        63:17-63:20 VarCtor :: Bool -> String -> Step b   callee: author/project:Known3.Bad   instance: a := b   sig#: a457255e   subst: v0 := <<author/project:Known3.andThen|v1>>
+        63:21-63:22 VarLocal :: Bool
+        63:23-63:24 VarLocal :: String
+      65:13-65:25 PCtor Good :: Step a
+        65:18-65:20 PVar c1 :: Bool
+        65:21-65:22 PVar a :: a
+        65:23-65:25 PVar s1 :: State
+      66:17-71:45 Case :: Step b
+        66:22-66:28 Call :: Step b
+          66:22-66:23 VarLocal :: a -> State -> Step b
+          66:24-66:25 VarLocal :: a
+          66:26-66:28 VarLocal :: State
+        67:21-67:29 PCtor Bad :: Step b
+          67:25-67:27 PVar c2 :: Bool
+          67:28-67:29 PVar m :: String
+        68:25-68:41 Call :: Step b
+          68:25-68:28 VarCtor :: Bool -> String -> Step b   callee: author/project:Known3.Bad   instance: a := b   sig#: a457255e   subst: v0 := <<author/project:Known3.andThen|v1>>
+          68:30-68:38 Binop :: Bool   callee: elm/core:Basics.or
+            68:30-68:32 VarLocal :: Bool
+            68:36-68:38 VarLocal :: Bool
+          68:40-68:41 VarLocal :: String
+        70:21-70:33 PCtor Good :: Step b
+          70:26-70:28 PVar c2 :: Bool
+          70:29-70:30 PVar b :: b
+          70:31-70:33 PVar s2 :: State
+        71:25-71:45 Call :: Step b
+          71:25-71:29 VarCtor :: Bool -> b -> State -> Step b   callee: author/project:Known3.Good   instance: a := b   sig#: 52ea0430   subst: v0 := <<author/project:Known3.andThen|v1>>
+          71:31-71:39 Binop :: Bool   callee: elm/core:Basics.or
+            71:31-71:33 VarLocal :: Bool
+            71:37-71:39 VarLocal :: Bool
+          71:41-71:42 VarLocal :: b
+          71:43-71:45 VarLocal :: State
+def oneOf :: List (Parser a) -> Parser a    [75:1-75:6]   id: author/project:Known3.oneOf   sig: List (Parser v0) -> Parser v0   kinds: v0:any   group: author/project:Known3.oneOf nonrec ann
+  75:7-75:9 PVar ps :: List (Parser a)
+  76:5-76:25 Lambda :: Parser a
+    76:6-76:7 PVar s :: State
+    76:11-76:25 Call :: Step a
+      76:11-76:20 VarTopLevel :: State -> List (Parser a) -> Step a   callee: author/project:Known3.oneOfHelp   use: gen   instance: a1 := a   sig#: b12297a7   subst: v0 := <<author/project:Known3.oneOf|v0>>
+      76:21-76:22 VarLocal :: State
+      76:23-76:25 VarLocal :: List (Parser a)
+def map2 :: (a -> b -> c) -> Parser a -> Parser b -> Parser c    [43:1-43:5]   id: author/project:Known3.map2   sig: (v0 -> v1 -> v2) -> Parser v0 -> Parser v1 -> Parser v2   kinds: v0:any,v1:any,v2:any   group: author/project:Known3.map2 nonrec ann
+  43:6-43:7 PVar f :: a -> b -> c
+  43:8-43:10 PVar pa :: Parser a
+  43:11-43:13 PVar pb :: Parser b
+  44:5-55:51 Lambda :: Parser c
+    44:6-44:7 PVar s :: State
+    45:9-55:51 Case :: Step c
+      45:14-45:18 Call :: Step a
+        45:14-45:16 VarLocal :: Parser a
+        45:17-45:18 VarLocal :: State
+      46:13-46:20 PCtor Bad :: Step a
+        46:17-46:18 PVar c :: Bool
+        46:19-46:20 PVar m :: String
+      47:17-47:24 Call :: Step c
+        47:17-47:20 VarCtor :: Bool -> String -> Step c   callee: author/project:Known3.Bad   instance: a := c   sig#: a457255e   subst: v0 := <<author/project:Known3.map2|v2>>
+        47:21-47:22 VarLocal :: Bool
+        47:23-47:24 VarLocal :: String
+      49:13-49:25 PCtor Good :: Step a
+        49:18-49:20 PVar c1 :: Bool
+        49:21-49:22 PVar a :: a
+        49:23-49:25 PVar s1 :: State
+      50:17-55:51 Case :: Step c
+        50:22-50:27 Call :: Step b
+          50:22-50:24 VarLocal :: Parser b
+          50:25-50:27 VarLocal :: State
+        51:21-51:29 PCtor Bad :: Step b
+          51:25-51:27 PVar c2 :: Bool
+          51:28-51:29 PVar m :: String
+        52:25-52:41 Call :: Step c
+          52:25-52:28 VarCtor :: Bool -> String -> Step c   callee: author/project:Known3.Bad   instance: a := c   sig#: a457255e   subst: v0 := <<author/project:Known3.map2|v2>>
+          52:30-52:38 Binop :: Bool   callee: elm/core:Basics.or
+            52:30-52:32 VarLocal :: Bool
+            52:36-52:38 VarLocal :: Bool
+          52:40-52:41 VarLocal :: String
+        54:21-54:33 PCtor Good :: Step b
+          54:26-54:28 PVar c2 :: Bool
+          54:29-54:30 PVar b :: b
+          54:31-54:33 PVar s2 :: State
+        55:25-55:51 Call :: Step c
+          55:25-55:29 VarCtor :: Bool -> c -> State -> Step c   callee: author/project:Known3.Good   instance: a := c   sig#: 52ea0430   subst: v0 := <<author/project:Known3.map2|v2>>
+          55:31-55:39 Binop :: Bool   callee: elm/core:Basics.or
+            55:31-55:33 VarLocal :: Bool
+            55:37-55:39 VarLocal :: Bool
+          55:42-55:47 Call :: c
+            55:42-55:43 VarLocal :: a -> b -> c
+            55:44-55:45 VarLocal :: a
+            55:46-55:47 VarLocal :: b
+          55:49-55:51 VarLocal :: State
+def many :: Parser a -> Parser (List a)    [114:1-114:5]   id: author/project:Known3.many   sig: Parser v0 -> Parser (List v0)   kinds: v0:any   group: author/project:Known3.many nonrec ann
+  114:6-114:7 PVar p :: Parser a
+  115:5-115:26 Lambda :: Parser (List a)
+    115:6-115:7 PVar s :: State
+    115:11-115:26 Call :: Step (List a)
+      115:11-115:19 VarTopLevel :: Parser a -> List a -> State -> Step (List a)   callee: author/project:Known3.manyHelp   use: gen   instance: a1 := a   sig#: 976e7e5f   subst: v0 := <<author/project:Known3.many|v0>>
+      115:20-115:21 VarLocal :: Parser a
+      115:22-115:24 List :: List a
+      115:25-115:26 VarLocal :: State
+def item :: (Int -> Bool) -> Parser Int    [99:1-99:5]   id: author/project:Known3.item   sig: (Int -> Bool) -> Parser Int   kinds:    group: author/project:Known3.item nonrec ann
+  99:6-99:8 PVar ok :: Int -> Bool
+  100:5-110:35 Lambda :: Parser Int
+    100:6-100:7 PVar s :: { pos : Int, rest : List Int }
+    101:9-110:35 Case :: Step Int
+      101:14-101:20 Access :: List Int
+        101:14-101:15 VarLocal :: { pos : Int, rest : List Int }
+      102:13-102:15 PList :: List Int
+      103:17-103:32 Call :: Step Int
+        103:17-103:20 VarCtor :: Bool -> String -> Step Int   callee: author/project:Known3.Bad   instance: a := Int   sig#: a457255e   subst: v0 := Int
+        103:21-103:26 VarCtor :: Bool   callee: elm/core:Basics.False
+        103:27-103:32 Str :: String
+      105:13-105:19 PCons :: List Int
+        105:13-105:14 PVar c :: Int
+        105:18-105:19 PVar r :: List Int
+      106:17-110:35 If :: Step Int
+        106:20-106:24 Call :: Bool
+          106:20-106:22 VarLocal :: Int -> Bool
+          106:23-106:24 VarLocal :: Int
+        107:21-107:62 Call :: Step Int
+          107:21-107:25 VarCtor :: Bool -> Int -> State -> Step Int   callee: author/project:Known3.Good   instance: a := Int   sig#: 52ea0430   subst: v0 := Int
+          107:26-107:30 VarCtor :: Bool   callee: elm/core:Basics.True
+          107:31-107:32 VarLocal :: Int
+          107:33-107:62 Record :: State
+            107:51-107:60 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+              107:51-107:56 Access :: Int
+                107:51-107:52 VarLocal :: { pos : Int, rest : List Int }
+              107:59-107:60 Int :: Int
+            107:42-107:43 VarLocal :: List Int
+        110:21-110:35 Call :: Step Int
+          110:21-110:24 VarCtor :: Bool -> String -> Step Int   callee: author/project:Known3.Bad   instance: a := Int   sig#: a457255e   subst: v0 := Int
+          110:25-110:30 VarCtor :: Bool   callee: elm/core:Basics.False
+          110:31-110:35 Str :: String
+def fail :: String -> Parser a    [27:1-27:5]   id: author/project:Known3.fail   sig: String -> Parser v0   kinds: v0:any   group: author/project:Known3.fail nonrec ann
+  27:6-27:9 PVar msg :: String
+  28:5-28:24 Lambda :: Parser a
+    28:6-28:7 PAnything :: State
+    28:11-28:24 Call :: Step a
+      28:11-28:14 VarCtor :: Bool -> String -> Step a   callee: author/project:Known3.Bad   instance: a := a   sig#: a457255e   subst: v0 := <<author/project:Known3.fail|v0>>
+      28:15-28:20 VarCtor :: Bool   callee: elm/core:Basics.False
+      28:21-28:24 VarLocal :: String
+def both :: (Int -> Int -> Int) -> Parser Int -> Parser Int    [173:1-173:5]   id: author/project:Known3.both   sig: (Int -> Int -> Int) -> Parser Int -> Parser Int   kinds:    group: author/project:Known3.both nonrec ann
+  173:6-173:7 PVar f :: Int -> Int -> Int
+  173:8-173:9 PVar p :: Parser Int
+  174:5-174:15 Call :: Parser Int
+    174:5-174:9 VarTopLevel :: (Int -> Int -> Int) -> Parser Int -> Parser Int -> Parser Int   callee: author/project:Known3.map2   use: gen   instance: a := Int, b := Int, c := Int   sig#: 08b1e165   subst: v0 := Int, v1 := Int, v2 := Int
+    174:10-174:11 VarLocal :: Int -> Int -> Int
+    174:12-174:13 VarLocal :: Parser Int
+    174:14-174:15 VarLocal :: Parser Int
+def run :: Parser a -> String -> Result String ( a, Int )    [129:1-129:4]   id: author/project:Known3.run   sig: Parser v0 -> String -> Result String ( v0, Int )   kinds: v0:any   group: author/project:Known3.run nonrec ann
+  129:5-129:6 PVar p :: Parser a
+  129:7-129:11 PVar text :: String
+  130:5-135:18 Case :: Result String ( a, Int )
+    130:10-130:73 Call :: Step a
+      130:10-130:11 VarLocal :: Parser a
+      130:12-130:73 Record :: State
+        130:70-130:71 Int :: Int
+        130:21-130:61 Call :: List Int
+          130:21-130:29 VarForeign :: (Char -> Int) -> List Char -> List Int   callee: elm/core:List.map   instance: a := Char, b := Int   sig#: 6a702f63   subst: v0 := Char, v1 := Int
+          130:30-130:41 VarForeign :: Char -> Int   callee: elm/core:Char.toCode
+          130:43-130:61 Call :: List Char
+            130:43-130:56 VarForeign :: String -> List Char   callee: elm/core:String.toList
+            130:57-130:61 VarLocal :: String
+    131:9-131:19 PCtor Good :: Step a
+      131:14-131:15 PAnything :: Bool
+      131:16-131:17 PVar a :: a
+      131:18-131:19 PVar s :: State
+    132:13-132:28 Call :: Result String ( a, Int )
+      132:13-132:15 VarCtor :: ( a, Int ) -> Result String ( a, Int )   callee: elm/core:Result.Ok   instance: error := String, value := ( a, Int )   sig#: 8f049c9f   subst: v0 := ( <<author/project:Known3.run|v0>>, Int ), v1 := String
+      132:16-132:28 Pair :: ( a, Int )
+        132:18-132:19 VarLocal :: a
+        132:21-132:26 Access :: Int
+          132:21-132:22 VarLocal :: { pos : Int, rest : List Int }
+    134:9-134:16 PCtor Bad :: Step a
+      134:13-134:14 PAnything :: Bool
+      134:15-134:16 PVar m :: String
+    135:13-135:18 Call :: Result String ( a, Int )
+      135:13-135:16 VarCtor :: String -> Result String ( a, Int )   callee: elm/core:Result.Err   instance: error := String, value := ( a, Int )   sig#: 8f04103f   subst: v0 := String, v1 := ( <<author/project:Known3.run|v0>>, Int )
+      135:17-135:18 VarLocal :: String
+def map :: (a -> b) -> Parser a -> Parser b    [32:1-32:4]   id: author/project:Known3.map   sig: (v0 -> v1) -> Parser v0 -> Parser v1   kinds: v0:any,v1:any   group: author/project:Known3.map nonrec ann
+  32:5-32:6 PVar f :: a -> b
+  32:7-32:8 PVar p :: Parser a
+  33:5-39:24 Lambda :: Parser b
+    33:6-33:7 PVar s :: State
+    34:9-39:24 Case :: Step b
+      34:14-34:17 Call :: Step a
+        34:14-34:15 VarLocal :: Parser a
+        34:16-34:17 VarLocal :: State
+      35:13-35:24 PCtor Good :: Step a
+        35:18-35:19 PVar c :: Bool
+        35:20-35:21 PVar a :: a
+        35:22-35:24 PVar s1 :: State
+      36:17-36:32 Call :: Step b
+        36:17-36:21 VarCtor :: Bool -> b -> State -> Step b   callee: author/project:Known3.Good   instance: a := b   sig#: 52ea0430   subst: v0 := <<author/project:Known3.map|v1>>
+        36:22-36:23 VarLocal :: Bool
+        36:25-36:28 Call :: b
+          36:25-36:26 VarLocal :: a -> b
+          36:27-36:28 VarLocal :: a
+        36:30-36:32 VarLocal :: State
+      38:13-38:20 PCtor Bad :: Step a
+        38:17-38:18 PVar c :: Bool
+        38:19-38:20 PVar m :: String
+      39:17-39:24 Call :: Step b
+        39:17-39:20 VarCtor :: Bool -> String -> Step b   callee: author/project:Known3.Bad   instance: a := b   sig#: a457255e   subst: v0 := <<author/project:Known3.map|v1>>
+        39:21-39:22 VarLocal :: Bool
+        39:23-39:24 VarLocal :: String
+def plus :: Int -> Parser Int -> Parser Int    [155:1-155:5]   id: author/project:Known3.plus   sig: Int -> Parser Int -> Parser Int   kinds:    group: author/project:Known3.plus nonrec ann
+  155:6-155:7 PVar n :: Int
+  155:8-155:9 PVar p :: Parser Int
+  156:5-156:24 Call :: Parser Int
+    156:5-156:8 VarTopLevel :: (Int -> Int) -> Parser Int -> Parser Int   callee: author/project:Known3.map   use: gen   instance: a := Int, b := Int   sig#: 2673dbff   subst: v0 := Int, v1 := Int
+    156:10-156:21 Lambda :: Int -> Int
+      156:11-156:12 PVar x :: Int
+      156:16-156:21 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        156:16-156:17 VarLocal :: Int
+        156:20-156:21 VarLocal :: Int
+    156:23-156:24 VarLocal :: Parser Int
+def digit :: Parser Int    [144:1-144:6]   id: author/project:Known3.digit   sig: Parser Int   kinds:    group: author/project:Known3.digit nonrec ann
+  145:5-145:37 Call :: Parser Int
+    145:5-145:8 VarTopLevel :: (Int -> Int) -> Parser Int -> Parser Int   callee: author/project:Known3.map   use: gen   instance: a := Int, b := Int   sig#: 2673dbff   subst: v0 := Int, v1 := Int
+    145:10-145:22 Lambda :: Int -> Int
+      145:11-145:12 PVar c :: Int
+      145:16-145:22 Binop :: Int   callee: elm/core:Basics.sub   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        145:16-145:17 VarLocal :: Int
+        145:20-145:22 Int :: Int
+    145:25-145:37 Call :: Parser Int
+      145:25-145:29 VarTopLevel :: (Int -> Bool) -> Parser Int   callee: author/project:Known3.item   use: gen
+      145:30-145:37 VarTopLevel :: Int -> Bool   callee: author/project:Known3.isDigit   use: gen
+def twice :: Int -> Parser Int    [162:1-162:6]   id: author/project:Known3.twice   sig: Int -> Parser Int   kinds:    group: author/project:Known3.twice nonrec ann
+  162:7-162:8 PVar n :: Int
+  def g :: Int -> Int    [164:9-164:10]   id: author/project:Known3.g@164:9   sig: Int -> Int   kinds:    group: author/project:Known3.g@164:9 nonrec inferred
+    164:11-164:12 PVar x :: Int
+    165:13-165:18 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+      165:13-165:14 VarLocal :: Int
+      165:17-165:18 VarLocal :: Int
+  167:5-167:41 Call :: Parser Int
+    167:5-167:9 VarTopLevel :: (Int -> Int -> Int) -> Parser Int -> Parser Int -> Parser Int   callee: author/project:Known3.map2   use: gen   instance: a := Int, b := Int, c := Int   sig#: 08b1e165   subst: v0 := Int, v1 := Int, v2 := Int
+    167:11-167:28 Lambda :: Int -> Int -> Int
+      167:12-167:13 PVar a :: Int
+      167:14-167:15 PVar b :: Int
+      167:19-167:28 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        167:19-167:22 Call :: Int
+          167:19-167:20 VarLocal :: Int -> Int   callee: author/project:Known3.g@164:9   use: gen
+          167:21-167:22 VarLocal :: Int
+        167:25-167:28 Call :: Int
+          167:25-167:26 VarLocal :: Int -> Int   callee: author/project:Known3.g@164:9   use: gen
+          167:27-167:28 VarLocal :: Int
+    167:30-167:35 VarTopLevel :: Parser Int   callee: author/project:Known3.digit   use: gen
+    167:36-167:41 VarTopLevel :: Parser Int   callee: author/project:Known3.digit   use: gen
+def choose :: Int -> Parser Int    [183:1-183:7]   id: author/project:Known3.choose   sig: Int -> Parser Int   kinds:    group: author/project:Known3.choose nonrec ann
+  183:8-183:9 PVar n :: Int
+  184:5-184:91 Call :: Parser Int
+    184:5-184:10 VarTopLevel :: List (Parser Int) -> Parser Int   callee: author/project:Known3.oneOf   use: gen   instance: a := Int   sig#: d41aa24d   subst: v0 := Int
+    184:11-184:91 List :: List (Parser Int)
+      184:13-184:77 Call :: Parser Int
+        184:13-184:20 VarTopLevel :: (Int -> Parser Int) -> Parser Int -> Parser Int   callee: author/project:Known3.andThen   use: gen   instance: a1 := Int, b := Int   sig#: 7a536cb5   subst: v0 := Int, v1 := Int
+        184:22-184:70 Lambda :: Int -> Parser Int
+          184:23-184:24 PVar d :: Int
+          184:28-184:70 If :: Parser Int
+            184:31-184:37 Binop :: Bool   callee: elm/core:Basics.eq   instance: a := Int   sig#: 2cdc0786   subst: v0 := Int
+              184:31-184:32 VarLocal :: Int
+              184:36-184:37 VarLocal :: Int
+            184:43-184:52 Call :: Parser Int
+              184:43-184:50 VarTopLevel :: Int -> Parser Int   callee: author/project:Known3.succeed   use: gen   instance: a2 := Int   sig#: 55209621   subst: v0 := Int
+              184:51-184:52 VarLocal :: Int
+            184:58-184:70 Call :: Parser Int
+              184:58-184:62 VarTopLevel :: String -> Parser Int   callee: author/project:Known3.fail   use: gen   instance: a3 := Int   sig#: 849d5193   subst: v0 := Int
+              184:63-184:70 Str :: String
+        184:72-184:77 VarTopLevel :: Parser Int   callee: author/project:Known3.digit   use: gen
+      184:79-184:89 Call :: Parser Int
+        184:79-184:86 VarTopLevel :: Int -> Parser Int   callee: author/project:Known3.succeed   use: gen   instance: a2 := Int   sig#: 55209621   subst: v0 := Int
+        184:87-184:89 Negate :: Int
+          184:88-184:89 Int :: Int
+def withBase :: Int -> Parser Int    [178:1-178:9]   id: author/project:Known3.withBase   sig: Int -> Parser Int   kinds:    group: author/project:Known3.withBase nonrec ann
+  178:10-178:14 PVar base :: Int
+  179:5-179:45 Call :: Parser Int
+    179:5-179:12 VarTopLevel :: (Int -> Parser Int) -> Parser Int -> Parser Int   callee: author/project:Known3.andThen   use: gen   instance: a := Int, b := Int   sig#: 7a536cb5   subst: v0 := Int, v1 := Int
+    179:14-179:38 Lambda :: Int -> Parser Int
+      179:15-179:16 PVar d :: Int
+      179:20-179:37 Call :: Parser Int
+        179:20-179:27 VarTopLevel :: Int -> Parser Int   callee: author/project:Known3.succeed   use: gen   instance: a1 := Int   sig#: 55209621   subst: v0 := Int
+        179:29-179:37 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          179:29-179:30 VarLocal :: Int
+          179:33-179:37 VarLocal :: Int
+    179:40-179:45 VarTopLevel :: Parser Int   callee: author/project:Known3.digit   use: gen
+def number :: Parser Int    [188:1-188:7]   id: author/project:Known3.number   sig: Parser Int   kinds:    group: author/project:Known3.number nonrec ann
+  189:5-189:60 Call :: Parser Int
+    189:5-189:8 VarTopLevel :: (List Int -> Int) -> Parser (List Int) -> Parser Int   callee: author/project:Known3.map   use: gen   instance: a := List Int, b := Int   sig#: 2673dbff   subst: v0 := List Int, v1 := Int
+    189:10-189:47 Call :: List Int -> Int
+      189:10-189:20 VarForeign :: (Int -> Int -> Int) -> Int -> List Int -> Int   callee: elm/core:List.foldl   instance: a := Int, b := Int   sig#: 8a8782c6   subst: v0 := Int, v1 := Int
+      189:22-189:44 Lambda :: Int -> Int -> Int
+        189:23-189:24 PVar d :: Int
+        189:25-189:28 PVar acc :: Int
+        189:32-189:44 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+          189:32-189:40 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+            189:32-189:35 VarLocal :: Int
+            189:38-189:40 Int :: Int
+          189:43-189:44 VarLocal :: Int
+      189:46-189:47 Int :: Int
+    189:50-189:60 Call :: Parser (List Int)
+      189:50-189:54 VarTopLevel :: Parser Int -> Parser (List Int)   callee: author/project:Known3.many   use: gen   instance: a1 := Int   sig#: 2cd2ca6a   subst: v0 := Int
+      189:55-189:60 VarTopLevel :: Parser Int   callee: author/project:Known3.digit   use: gen
+def scaled :: Int -> Parser Int    [193:1-193:7]   id: author/project:Known3.scaled   sig: Int -> Parser Int   kinds:    group: author/project:Known3.scaled nonrec ann
+  193:8-193:9 PVar k :: Int
+  194:5-194:29 Call :: Parser Int
+    194:5-194:8 VarTopLevel :: (Int -> Int) -> Parser Int -> Parser Int   callee: author/project:Known3.map   use: gen   instance: a := Int, b := Int   sig#: 2673dbff   subst: v0 := Int, v1 := Int
+    194:10-194:21 Lambda :: Int -> Int
+      194:11-194:12 PVar v :: Int
+      194:16-194:21 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+        194:16-194:17 VarLocal :: Int
+        194:20-194:21 VarLocal :: Int
+    194:23-194:29 VarTopLevel :: Parser Int   callee: author/project:Known3.number   use: gen
+def main :: Program () () ()    [198:1-198:5]   id: author/project:Known3.main   sig: Program () () ()   kinds:    group: author/project:Known3.main nonrec ann
+  199:5-230:10 Call :: Program () () ()
+    199:5-199:20 VarForeign :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () } -> Program () () ()   callee: elm/core:Platform.worker   instance: flags := (), model := (), msg := ()   sig#: 43ee8ef3   subst: v0 := (), v1 := (), v2 := ()
+    200:9-230:10 Record :: { init : () -> ( (), Cmd () ), update : () -> () -> ( (), Cmd () ), subscriptions : () -> Sub () }
+      201:13-227:33 Lambda :: () -> ( (), Cmd () )
+        201:14-201:15 PAnything :: ()
+        203:21-203:22 PAnything :: List (Result String ( Int, Int ))
+        204:25-204:100 Call :: List (Result String ( Int, Int ))
+          204:25-204:34 VarDebug :: String -> List (Result String ( Int, Int )) -> List (Result String ( Int, Int ))   callee: elm/core:Debug.log   instance: a := List (Result String ( Int, Int ))   sig#: 6ecaa5dd   subst: v0 := List (Result String ( Int, Int ))
+          204:35-204:41 Str :: String
+          204:43-204:100 Call :: List (Result String ( Int, Int ))
+            204:43-204:51 VarForeign :: (Int -> Result String ( Int, Int )) -> List Int -> List (Result String ( Int, Int ))   callee: elm/core:List.map   instance: a := Int, b := Result String ( Int, Int )   sig#: 6a702f63   subst: v0 := Int, v1 := Result String ( Int, Int )
+            204:53-204:81 Lambda :: Int -> Result String ( Int, Int )
+              204:54-204:55 PVar n :: Int
+              204:59-204:81 Call :: Result String ( Int, Int )
+                204:59-204:62 VarTopLevel :: Parser Int -> String -> Result String ( Int, Int )   callee: author/project:Known3.run   use: gen   instance: a := Int   sig#: 9e56ec4d   subst: v0 := Int
+                204:64-204:76 Call :: Parser Int
+                  204:64-204:68 VarTopLevel :: Int -> Parser Int -> Parser Int   callee: author/project:Known3.plus   use: gen
+                  204:69-204:70 VarLocal :: Int
+                  204:71-204:76 VarTopLevel :: Parser Int   callee: author/project:Known3.digit   use: gen
+                204:78-204:81 Str :: String
+            204:83-204:100 List :: List Int
+              204:85-204:86 Int :: Int
+              204:88-204:89 Int :: Int
+              204:91-204:93 Int :: Int
+              204:95-204:98 Int :: Int
+        206:21-206:22 PAnything :: List (Result String ( Int, Int ))
+        207:25-207:91 Call :: List (Result String ( Int, Int ))
+          207:25-207:34 VarDebug :: String -> List (Result String ( Int, Int )) -> List (Result String ( Int, Int ))   callee: elm/core:Debug.log   instance: a := List (Result String ( Int, Int ))   sig#: 6ecaa5dd   subst: v0 := List (Result String ( Int, Int ))
+          207:35-207:42 Str :: String
+          207:44-207:91 Call :: List (Result String ( Int, Int ))
+            207:44-207:52 VarForeign :: (Int -> Result String ( Int, Int )) -> List Int -> List (Result String ( Int, Int ))   callee: elm/core:List.map   instance: a := Int, b := Result String ( Int, Int )   sig#: 6a702f63   subst: v0 := Int, v1 := Result String ( Int, Int )
+            207:54-207:78 Lambda :: Int -> Result String ( Int, Int )
+              207:55-207:56 PVar n :: Int
+              207:60-207:78 Call :: Result String ( Int, Int )
+                207:60-207:63 VarTopLevel :: Parser Int -> String -> Result String ( Int, Int )   callee: author/project:Known3.run   use: gen   instance: a := Int   sig#: 9e56ec4d   subst: v0 := Int
+                207:65-207:72 Call :: Parser Int
+                  207:65-207:70 VarTopLevel :: Int -> Parser Int   callee: author/project:Known3.twice   use: gen
+                  207:71-207:72 VarLocal :: Int
+                207:74-207:78 Str :: String
+            207:80-207:91 List :: List Int
+              207:82-207:83 Int :: Int
+              207:85-207:86 Int :: Int
+              207:88-207:89 Int :: Int
+        209:21-209:22 PAnything :: List (Result String ( Int, Int ))
+        210:25-210:113 Call :: List (Result String ( Int, Int ))
+          210:25-210:34 VarDebug :: String -> List (Result String ( Int, Int )) -> List (Result String ( Int, Int ))   callee: elm/core:Debug.log   instance: a := List (Result String ( Int, Int ))   sig#: 6ecaa5dd   subst: v0 := List (Result String ( Int, Int ))
+          210:35-210:41 Str :: String
+          210:43-210:113 Call :: List (Result String ( Int, Int ))
+            210:43-210:51 VarForeign :: (Int -> Result String ( Int, Int )) -> List Int -> List (Result String ( Int, Int ))   callee: elm/core:List.map   instance: a := Int, b := Result String ( Int, Int )   sig#: 6a702f63   subst: v0 := Int, v1 := Result String ( Int, Int )
+            210:53-210:100 Lambda :: Int -> Result String ( Int, Int )
+              210:54-210:55 PVar k :: Int
+              210:59-210:100 Call :: Result String ( Int, Int )
+                210:59-210:62 VarTopLevel :: Parser Int -> String -> Result String ( Int, Int )   callee: author/project:Known3.run   use: gen   instance: a := Int   sig#: 9e56ec4d   subst: v0 := Int
+                210:64-210:94 Call :: Parser Int
+                  210:64-210:68 VarTopLevel :: (Int -> Int -> Int) -> Parser Int -> Parser Int   callee: author/project:Known3.both   use: gen
+                  210:70-210:87 Lambda :: Int -> Int -> Int
+                    210:71-210:72 PVar a :: Int
+                    210:73-210:74 PVar b :: Int
+                    210:78-210:87 Binop :: Int   callee: elm/core:Basics.add   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                      210:78-210:83 Binop :: Int   callee: elm/core:Basics.mul   instance: number := Int   sig#: 08810ccc   subst: v0 := Int
+                        210:78-210:79 VarLocal :: Int
+                        210:82-210:83 VarLocal :: Int
+                      210:86-210:87 VarLocal :: Int
+                  210:89-210:94 VarTopLevel :: Parser Int   callee: author/project:Known3.digit   use: gen
+                210:96-210:100 Str :: String
+            210:102-210:113 List :: List Int
+              210:104-210:105 Int :: Int
+              210:107-210:108 Int :: Int
+              210:110-210:111 Int :: Int
+        212:21-212:22 PAnything :: List (Result String ( Int, Int ))
+        213:25-213:89 Call :: List (Result String ( Int, Int ))
+          213:25-213:34 VarDebug :: String -> List (Result String ( Int, Int )) -> List (Result String ( Int, Int ))   callee: elm/core:Debug.log   instance: a := List (Result String ( Int, Int ))   sig#: 6ecaa5dd   subst: v0 := List (Result String ( Int, Int ))
+          213:35-213:41 Str :: String
+          213:43-213:89 Call :: List (Result String ( Int, Int ))
+            213:43-213:51 VarForeign :: (Int -> Result String ( Int, Int )) -> List Int -> List (Result String ( Int, Int ))   callee: elm/core:List.map   instance: a := Int, b := Result String ( Int, Int )   sig#: 6a702f63   subst: v0 := Int, v1 := Result String ( Int, Int )
+            213:53-213:79 Lambda :: Int -> Result String ( Int, Int )
+              213:54-213:55 PVar b :: Int
+              213:59-213:79 Call :: Result String ( Int, Int )
+                213:59-213:62 VarTopLevel :: Parser Int -> String -> Result String ( Int, Int )   callee: author/project:Known3.run   use: gen   instance: a := Int   sig#: 9e56ec4d   subst: v0 := Int
+                213:64-213:74 Call :: Parser Int
+                  213:64-213:72 VarTopLevel :: Int -> Parser Int   callee: author/project:Known3.withBase   use: gen
+                  213:73-213:74 VarLocal :: Int
+                213:76-213:79 Str :: String
+            213:81-213:89 List :: List Int
+              213:83-213:84 Int :: Int
+              213:86-213:87 Int :: Int
+        215:21-215:22 PAnything :: List (Result String ( Int, Int ))
+        216:25-216:90 Call :: List (Result String ( Int, Int ))
+          216:25-216:34 VarDebug :: String -> List (Result String ( Int, Int )) -> List (Result String ( Int, Int ))   callee: elm/core:Debug.log   instance: a := List (Result String ( Int, Int ))   sig#: 6ecaa5dd   subst: v0 := List (Result String ( Int, Int ))
+          216:35-216:43 Str :: String
+          216:45-216:90 Call :: List (Result String ( Int, Int ))
+            216:45-216:53 VarForeign :: (Int -> Result String ( Int, Int )) -> List Int -> List (Result String ( Int, Int ))   callee: elm/core:List.map   instance: a := Int, b := Result String ( Int, Int )   sig#: 6a702f63   subst: v0 := Int, v1 := Result String ( Int, Int )
+            216:55-216:80 Lambda :: Int -> Result String ( Int, Int )
+              216:56-216:57 PVar n :: Int
+              216:61-216:80 Call :: Result String ( Int, Int )
+                216:61-216:64 VarTopLevel :: Parser Int -> String -> Result String ( Int, Int )   callee: author/project:Known3.run   use: gen   instance: a := Int   sig#: 9e56ec4d   subst: v0 := Int
+                216:66-216:74 Call :: Parser Int
+                  216:66-216:72 VarTopLevel :: Int -> Parser Int   callee: author/project:Known3.choose   use: gen
+                  216:73-216:74 VarLocal :: Int
+                216:76-216:80 Str :: String
+            216:82-216:90 List :: List Int
+              216:84-216:85 Int :: Int
+              216:87-216:88 Int :: Int
+        218:21-218:22 PAnything :: List (Result String ( Int, Int ))
+        219:25-219:95 Call :: List (Result String ( Int, Int ))
+          219:25-219:34 VarDebug :: String -> List (Result String ( Int, Int )) -> List (Result String ( Int, Int ))   callee: elm/core:Debug.log   instance: a := List (Result String ( Int, Int ))   sig#: 6ecaa5dd   subst: v0 := List (Result String ( Int, Int ))
+          219:35-219:43 Str :: String
+          219:45-219:95 Call :: List (Result String ( Int, Int ))
+            219:45-219:53 VarForeign :: (Int -> Result String ( Int, Int )) -> List Int -> List (Result String ( Int, Int ))   callee: elm/core:List.map   instance: a := Int, b := Result String ( Int, Int )   sig#: 6a702f63   subst: v0 := Int, v1 := Result String ( Int, Int )
+            219:55-219:82 Lambda :: Int -> Result String ( Int, Int )
+              219:56-219:57 PVar k :: Int
+              219:61-219:82 Call :: Result String ( Int, Int )
+                219:61-219:64 VarTopLevel :: Parser Int -> String -> Result String ( Int, Int )   callee: author/project:Known3.run   use: gen   instance: a := Int   sig#: 9e56ec4d   subst: v0 := Int
+                219:66-219:74 Call :: Parser Int
+                  219:66-219:72 VarTopLevel :: Int -> Parser Int   callee: author/project:Known3.scaled   use: gen
+                  219:73-219:74 VarLocal :: Int
+                219:76-219:82 Str :: String
+            219:84-219:95 List :: List Int
+              219:86-219:87 Int :: Int
+              219:89-219:90 Int :: Int
+              219:92-219:93 Int :: Int
+        221:21-221:22 PAnything :: Result String ( Int, Int )
+        222:25-222:73 Call :: Result String ( Int, Int )
+          222:25-222:34 VarDebug :: String -> Result String ( Int, Int ) -> Result String ( Int, Int )   callee: elm/core:Debug.log   instance: a := Result String ( Int, Int )   sig#: 6ecaa5dd   subst: v0 := Result String ( Int, Int )
+          222:35-222:41 Str :: String
+          222:43-222:73 Call :: Result String ( Int, Int )
+            222:43-222:46 VarTopLevel :: Parser Int -> String -> Result String ( Int, Int )   callee: author/project:Known3.run   use: gen   instance: a := Int   sig#: 9e56ec4d   subst: v0 := Int
+            222:48-222:67 Call :: Parser Int
+              222:48-222:52 VarTopLevel :: Int -> Parser Int -> Parser Int   callee: author/project:Known3.plus   use: gen
+              222:53-222:54 Int :: Int
+              222:56-222:67 Call :: Parser Int
+                222:56-222:60 VarTopLevel :: String -> Parser Int   callee: author/project:Known3.fail   use: gen   instance: a1 := Int   sig#: 849d5193   subst: v0 := Int
+                222:61-222:67 Str :: String
+            222:70-222:73 Str :: String
+        224:21-224:22 PAnything :: Result String ( Int, Int )
+        225:25-225:55 Call :: Result String ( Int, Int )
+          225:25-225:34 VarDebug :: String -> Result String ( Int, Int ) -> Result String ( Int, Int )   callee: elm/core:Debug.log   instance: a := Result String ( Int, Int )   sig#: 6ecaa5dd   subst: v0 := Result String ( Int, Int )
+          225:35-225:40 Str :: String
+          225:42-225:55 Call :: Result String ( Int, Int )
+            225:42-225:45 VarTopLevel :: Parser Int -> String -> Result String ( Int, Int )   callee: author/project:Known3.run   use: gen   instance: a := Int   sig#: 9e56ec4d   subst: v0 := Int
+            225:46-225:52 VarTopLevel :: Parser Int   callee: author/project:Known3.number   use: gen
+            225:53-225:55 Str :: String
+        227:17-227:33 Pair :: ( (), Cmd () )
+          227:19-227:21 Unit :: ()
+          227:23-227:31 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      228:20-228:44 Lambda :: () -> () -> ( (), Cmd () )
+        228:21-228:22 PAnything :: ()
+        228:23-228:24 PAnything :: ()
+        228:28-228:44 Pair :: ( (), Cmd () )
+          228:30-228:32 Unit :: ()
+          228:34-228:42 VarForeign :: Cmd ()   callee: elm/core:Platform.Cmd.none   instance: msg := ()   sig#: ac14a2d9   subst: v0 := ()
+      229:27-229:41 Lambda :: () -> Sub ()
+        229:28-229:29 PAnything :: ()
+        229:33-229:41 VarForeign :: Sub ()   callee: elm/core:Platform.Sub.none   instance: msg := ()   sig#: d1f6d82f   subst: v0 := ()
+init: 0   id: author/project:Known3.oneOfHelp   kind: function   reads:    needs:    group: author/project:Known3.oneOfHelp
+init: 1   id: author/project:Known3.manyHelp   kind: function   reads:    needs:    group: author/project:Known3.manyHelp
+init: 2   id: author/project:Known3.succeed   kind: function   reads:    needs: 
+init: 3   id: author/project:Known3.isDigit   kind: function   reads:    needs: 
+init: 4   id: author/project:Known3.andThen   kind: function   reads:    needs: 
+init: 5   id: author/project:Known3.oneOf   kind: function   reads: author/project:Known3.oneOfHelp   needs: 
+init: 6   id: author/project:Known3.map2   kind: function   reads:    needs: 
+init: 7   id: author/project:Known3.many   kind: function   reads: author/project:Known3.manyHelp   needs: 
+init: 8   id: author/project:Known3.item   kind: function   reads:    needs: 
+init: 9   id: author/project:Known3.fail   kind: function   reads:    needs: 
+init: 10   id: author/project:Known3.both   kind: function   reads: author/project:Known3.map2   needs: 
+init: 11   id: author/project:Known3.run   kind: function   reads:    needs: 
+init: 12   id: author/project:Known3.map   kind: function   reads:    needs: 
+init: 13   id: author/project:Known3.plus   kind: function   reads: author/project:Known3.map   needs: 
+init: 14   id: author/project:Known3.digit   kind: value   reads: author/project:Known3.isDigit,author/project:Known3.item,author/project:Known3.map   needs:    init-dep: no
+init: 15   id: author/project:Known3.twice   kind: function   reads: author/project:Known3.map2,author/project:Known3.digit   needs: author/project:Known3.digit
+init: 16   id: author/project:Known3.choose   kind: function   reads: author/project:Known3.succeed,author/project:Known3.andThen,author/project:Known3.oneOf,author/project:Known3.fail,author/project:Known3.digit   needs: author/project:Known3.digit
+init: 17   id: author/project:Known3.withBase   kind: function   reads: author/project:Known3.succeed,author/project:Known3.andThen,author/project:Known3.digit   needs: author/project:Known3.digit
+init: 18   id: author/project:Known3.number   kind: value   reads: author/project:Known3.many,author/project:Known3.map,author/project:Known3.digit   needs: author/project:Known3.digit   init-dep: yes
+init: 19   id: author/project:Known3.scaled   kind: function   reads: author/project:Known3.map,author/project:Known3.number   needs: author/project:Known3.digit,author/project:Known3.number
+init: 20   id: author/project:Known3.main   kind: value   reads: author/project:Known3.fail,author/project:Known3.both,author/project:Known3.run,author/project:Known3.plus,author/project:Known3.digit,author/project:Known3.twice,author/project:Known3.choose,author/project:Known3.withBase,author/project:Known3.number,author/project:Known3.scaled   needs: author/project:Known3.digit,author/project:Known3.number   init-dep: yes

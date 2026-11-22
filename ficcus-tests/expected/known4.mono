@@ -1,0 +1,863 @@
+-- mono: stage (iii) slice 3b, modules=21
+-- module author/project:Known4 (project)
+clone c0   def: author/project:Known4.chompHelp   key: ()   kind: function   init: 1   needs: 
+clone c1   def: author/project:Known4.chompWhile   key: ()   kind: function   init: 2   needs: 
+clone c2   def: author/project:Known4.isDigit   key: ()   kind: function   init: 4   needs: 
+clone c3   def: author/project:Known4.symbol   key: ()   kind: function   init: 5   needs: 
+clone c4   def: author/project:Known4.show   key: ()   kind: function   init: 7   needs: 
+clone c5   def: author/project:Known4.nil   key: ()   kind: value   init: 13   needs: 
+clone c6   def: author/project:Known4.number   key: ()   kind: value   init: 14   needs: 
+clone c7   def: author/project:Known4.value   key: ()   kind: value   init: 17   needs: c5,c6,c8
+clone c8   def: author/project:Known4.array   key: ()   kind: value   init: 18   needs: c5,c6,c7
+clone c9   def: author/project:Known4.parse   key: ()   kind: function   init: 19   needs: c5,c6,c7,c8
+clone c10   def: author/project:Known4.main   key: ()   kind: value   init: 20   needs: c5,c6,c7,c8
+-- program: 62 clones, reachable from main, dependencies first
+clone c52   def: elm/core:List.foldl   key: (v0=u32; v1=ref)   name: foldl__u32__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: u32 :: xs :: ref :: ref
+      Call :: ref
+        Global c52 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: u32
+          Local acc :: ref
+        Local xs :: ref
+clone c61   def: elm/core:List.lambda@261:9   key: ()   outer: c53 (v0=u32)   kind: function   params: _pb61_0:u32 _pb61_1:ref   result: ref   lifted-from: c53
+  Call :: ref
+    Kernel elm/core:List.cons (v0=u32) :: ref
+    Local _pb61_0 :: u32
+    Local _pb61_1 :: ref
+clone c53   def: elm/core:List.reverse   key: (v0=u32)   name: reverse__u32   kind: function   params: list:ref   result: ref
+  Call :: ref
+    Global c52 :: ref
+    Global c61 :: ref
+    List :: ref
+    Local list :: ref
+clone c35   def: elm/core:List.foldrHelper   key: (v0=u32; v1=ref)   name: foldrHelper__u32__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
+  Case :: ref
+    Local ls :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch a :: u32 :: r1 :: ref :: ref
+      Case :: ref
+        Local r1 :: ref
+        branch [] :: ref
+          Call :: ref
+            Local fn :: ref
+            Local a :: u32
+            Local acc :: ref
+        branch b :: u32 :: r2 :: ref :: ref
+          Case :: ref
+            Local r2 :: ref
+            branch [] :: ref
+              Call :: ref
+                Local fn :: ref
+                Local a :: u32
+                Call :: ref
+                  Local fn :: ref
+                  Local b :: u32
+                  Local acc :: ref
+            branch c :: u32 :: r3 :: ref :: ref
+              Case :: ref
+                Local r3 :: ref
+                branch [] :: ref
+                  Call :: ref
+                    Local fn :: ref
+                    Local a :: u32
+                    Call :: ref
+                      Local fn :: ref
+                      Local b :: u32
+                      Call :: ref
+                        Local fn :: ref
+                        Local c :: u32
+                        Local acc :: ref
+                branch d :: u32 :: r4 :: ref :: ref
+                  Let res@200:41 :: ref
+                    If :: ref
+                      Call :: enum
+                        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                        Local ctr :: i64
+                        Lit 500 :: i64
+                      Call :: ref
+                        Global c52 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: ref
+                          Global c53 :: ref
+                          Local r4 :: ref
+                      Call :: ref
+                        Global c35 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: i64
+                          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                          Local ctr :: i64
+                          Lit 1 :: i64
+                        Local r4 :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local a :: u32
+                      Call :: ref
+                        Local fn :: ref
+                        Local b :: u32
+                        Call :: ref
+                          Local fn :: ref
+                          Local c :: u32
+                          Call :: ref
+                            Local fn :: ref
+                            Local d :: u32
+                            Local res@200:41 :: ref
+clone c15   def: elm/core:List.foldr   key: (v0=u32; v1=ref)   name: foldr__u32__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
+  Call :: ref
+    Global c35 :: ref
+    Local fn :: ref
+    Local acc :: ref
+    Lit 0 :: i64
+    Local ls :: ref
+clone c16   def: elm/core:List.lambda@125:10   key: ()   outer: c4 (v0=u32; v1=i64)   kind: function   params: x:u32 acc:ref   result: ref   lifted-from: c4
+  Call :: ref
+    Kernel elm/core:List.cons (v0=i64) :: ref
+    Call :: i64
+      Local f :: ref
+      Local x :: u32
+    Local acc :: ref
+clone c4   def: elm/core:List.map   key: (v0=u32; v1=i64)   name: map__u32__i64   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Global c15 :: ref
+    Global c16 :: ref
+    List :: ref
+    Local xs :: ref
+clone c5   def: author/project:Known4.lambda@198:34   key: ()   kind: function   params: _pb5_0:u32   result: i64   lifted-from: c2
+  Call :: i64
+    Kernel elm/core:Char.toCode () :: ref
+    Local _pb5_0 :: u32
+clone c17   def: elm/core:String.lambda@510:9   key: ()   kind: function   params: _pb17_0:u32 _pb17_1:ref   result: ref   lifted-from: c6
+  Call :: ref
+    Kernel elm/core:List.cons (v0=u32) :: ref
+    Local _pb17_0 :: u32
+    Local _pb17_1 :: ref
+clone c6   def: elm/core:String.toList   key: ()   kind: function   params: string:ref   result: ref
+  Call :: ref
+    Kernel elm/core:String.foldr (v0=ref) :: ref
+    Global c17 :: ref
+    List :: ref
+    Local string :: ref
+clone c19   def: author/project:Known4.lambda@95:5   key: ()   outer: c9 (v0=ref)   kind: function   params: s:struct(i64,ref)   result: ref   lifted-from: c9
+  Call :: ref
+    Local thunk :: ref
+    Lit () :: unit
+    Local s :: struct(i64,ref)
+clone c9   def: author/project:Known4.lazy   key: (v0=ref)   name: lazy__ref   kind: function   params: thunk:ref   result: ref
+  Global c19 :: ref
+clone c21   def: author/project:Known4.oneOfHelp   key: (v0=ref)   name: oneOfHelp__ref   kind: function   params: s:struct(i64,ref) ps:ref   result: ref
+  Case :: ref
+    Local ps :: ref
+    branch [] :: ref
+      Call :: ref
+        Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+        Lit 0 :: enum
+        Lit "oneOf" :: ref
+    branch p :: ref :: rest :: ref :: ref
+      Case :: ref
+        Call :: ref
+          Local p :: ref
+          Local s :: struct(i64,ref)
+        branch Good #0 c :: enum a :: ref s1 :: struct(i64,ref) :: ref
+          Call :: ref
+            Ctor Good tag 0 (v0=enum; v1=ref; v2=ref) :: ref
+            Local c :: enum
+            Local a :: ref
+            Local s1 :: struct(i64,ref)
+        branch Bad #1 c :: enum m :: ref :: ref
+          If :: ref
+            Local c :: enum
+            Call :: ref
+              Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+              Local c :: enum
+              Local m :: ref
+            Call :: ref
+              Global c21 :: ref
+              Local s :: struct(i64,ref)
+              Local rest :: ref
+clone c20   def: author/project:Known4.lambda@71:5   key: ()   outer: c11 (v0=ref)   kind: function   params: s:struct(i64,ref)   result: ref   lifted-from: c11
+  Call :: ref
+    Global c21 :: ref
+    Local s :: struct(i64,ref)
+    Local ps :: ref
+clone c11   def: author/project:Known4.oneOf   key: (v0=ref)   name: oneOf__ref   kind: function   params: ps:ref   result: ref
+  Global c20 :: ref
+clone c46   def: author/project:Known4.lambda@34:5   key: ()   outer: c28 (v0=i64; v1=ref)   kind: function   params: s:struct(i64,ref)   result: ref   lifted-from: c28
+  Case :: ref
+    Call :: ref
+      Local p :: ref
+      Local s :: struct(i64,ref)
+    branch Good #0 c :: enum a :: i64 s1 :: struct(i64,ref) :: ref
+      Call :: ref
+        Ctor Good tag 0 (v0=enum; v1=ref; v2=ref) :: ref
+        Local c :: enum
+        Call :: ref
+          Local f :: ref
+          Local a :: i64
+        Local s1 :: struct(i64,ref)
+    branch Bad #1 c :: enum m :: ref :: ref
+      Call :: ref
+        Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+        Local c :: enum
+        Local m :: ref
+clone c28   def: author/project:Known4.map   key: (v0=i64; v1=ref)   name: map__i64__ref   kind: function   params: f:ref p:ref   result: ref
+  Global c46 :: ref
+clone c29   def: author/project:Known4.lambda@178:10   key: ()   kind: function   params: n:i64   result: ref   lifted-from: c13
+  Call :: ref
+    Ctor Leaf tag 0 (v0=i64) :: ref
+    Local n :: i64
+clone c48   def: author/project:Known4.chompHelp   key: ()   kind: function   params: ok:ref acc:i64 s:struct(i64,ref)   result: ref
+  Case :: ref
+    Access .rest #1 :: ref
+      Local s :: struct(i64,ref)
+    branch c :: i64 :: r :: ref :: ref
+      If :: ref
+        Call :: enum
+          Local ok :: ref
+          Local c :: i64
+        Call :: ref
+          Global c48 :: ref
+          Local ok :: ref
+          Call :: i64
+            Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
+            Call :: i64
+              Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+              Call :: i64
+                Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
+                Local acc :: i64
+                Lit 10 :: i64
+              Local c :: i64
+            Lit 48 :: i64
+          Record pos rest :: struct(i64,ref)
+            Call :: i64
+              Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+              Access .pos #0 :: i64
+                Local s :: struct(i64,ref)
+              Lit 1 :: i64
+            Local r :: ref
+        Call :: ref
+          Ctor Good tag 0 (v0=enum; v1=i64; v2=ref) :: ref
+          Call :: enum
+            Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+            Local acc :: i64
+            Lit 0 :: i64
+          Local acc :: i64
+          Local s :: struct(i64,ref)
+    branch [] :: ref
+      Call :: ref
+        Ctor Good tag 0 (v0=enum; v1=i64; v2=ref) :: ref
+        Call :: enum
+          Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+          Local acc :: i64
+          Lit 0 :: i64
+        Local acc :: i64
+        Local s :: struct(i64,ref)
+clone c47   def: author/project:Known4.lambda@115:5   key: ()   kind: function   params: s:struct(i64,ref)   result: ref   lifted-from: c30
+  Case :: ref
+    Call :: ref
+      Global c48 :: ref
+      Local ok :: ref
+      Lit 0 :: i64
+      Local s :: struct(i64,ref)
+    branch Good #0 _ :: enum v :: i64 s1 :: struct(i64,ref) :: ref
+      If :: ref
+        Call :: enum
+          Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+          Access .pos #0 :: i64
+            Local s1 :: struct(i64,ref)
+          Access .pos #0 :: i64
+            Local s :: struct(i64,ref)
+        Call :: ref
+          Ctor Good tag 0 (v0=enum; v1=i64; v2=ref) :: ref
+          Lit 1 :: enum
+          Local v :: i64
+          Local s1 :: struct(i64,ref)
+        Call :: ref
+          Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+          Lit 0 :: enum
+          Lit "digits" :: ref
+    branch Bad #1 c :: enum m :: ref :: ref
+      Call :: ref
+        Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+        Local c :: enum
+        Local m :: ref
+clone c30   def: author/project:Known4.chompWhile   key: ()   kind: function   params: ok:ref   result: ref
+  Global c47 :: ref
+clone c31   def: author/project:Known4.isDigit   key: ()   kind: function   params: c:i64   result: enum
+  Call :: enum
+    Kernel elm/core:Basics.and () :: ref
+    Call :: enum
+      Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
+      Local c :: i64
+      Lit 48 :: i64
+    Call :: enum
+      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+      Local c :: i64
+      Lit 57 :: i64
+clone c13   def: author/project:Known4.number   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c28 :: ref
+    Global c29 :: ref
+    Call :: ref
+      Global c30 :: ref
+      Global c31 :: ref
+clone c49   def: author/project:Known4.lambda@34:5   key: ()   outer: c32 (v0=unit; v1=ref)   kind: function   params: s:struct(i64,ref)   result: ref   lifted-from: c32
+  Case :: ref
+    Call :: ref
+      Local p :: ref
+      Local s :: struct(i64,ref)
+    branch Good #0 c :: enum a :: unit s1 :: struct(i64,ref) :: ref
+      Call :: ref
+        Ctor Good tag 0 (v0=enum; v1=ref; v2=ref) :: ref
+        Local c :: enum
+        Call :: ref
+          Local f :: ref
+          Local a :: unit
+        Local s1 :: struct(i64,ref)
+    branch Bad #1 c :: enum m :: ref :: ref
+      Call :: ref
+        Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+        Local c :: enum
+        Local m :: ref
+clone c32   def: author/project:Known4.map   key: (v0=unit; v1=ref)   name: map__unit__ref   kind: function   params: f:ref p:ref   result: ref
+  Global c49 :: ref
+clone c33   def: author/project:Known4.lambda@183:10   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c14
+  Ctor Nil tag 2 () :: ref
+clone c60   def: author/project:Known4.lambda@45:5   key: ()   outer: c50 (v0=unit; v1=unit; v2=unit)   kind: function   params: s:struct(i64,ref)   result: ref   lifted-from: c50
+  Case :: ref
+    Call :: ref
+      Local pa :: ref
+      Local s :: struct(i64,ref)
+    branch Bad #1 c :: enum m :: ref :: ref
+      Call :: ref
+        Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+        Local c :: enum
+        Local m :: ref
+    branch Good #0 c1 :: enum a :: unit s1 :: struct(i64,ref) :: ref
+      Case :: ref
+        Call :: ref
+          Local pb :: ref
+          Local s1 :: struct(i64,ref)
+        branch Bad #1 c2 :: enum m :: ref :: ref
+          Call :: ref
+            Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+            Call :: enum
+              Kernel elm/core:Basics.or () :: ref
+              Local c1 :: enum
+              Local c2 :: enum
+            Local m :: ref
+        branch Good #0 c2 :: enum b :: unit s2 :: struct(i64,ref) :: ref
+          Call :: ref
+            Ctor Good tag 0 (v0=enum; v1=unit; v2=ref) :: ref
+            Call :: enum
+              Kernel elm/core:Basics.or () :: ref
+              Local c1 :: enum
+              Local c2 :: enum
+            Call :: unit
+              Local f :: ref
+              Local a :: unit
+              Local b :: unit
+            Local s2 :: struct(i64,ref)
+clone c50   def: author/project:Known4.map2   key: (v0=unit; v1=unit; v2=unit)   name: map2__unit__unit__unit   kind: function   params: f:ref pa:ref pb:ref   result: ref
+  Global c60 :: ref
+clone c51   def: author/project:Known4.lambda@66:11   key: ()   outer: c34 (v0=unit; v1=unit)   kind: function   params: k:unit _a1:unit   result: unit   lifted-from: c34
+  Local k :: unit
+clone c34   def: author/project:Known4.ignore   key: (v0=unit; v1=unit)   name: ignore__unit__unit   kind: function   params: pk:ref ps:ref   result: ref
+  Call :: ref
+    Global c50 :: ref
+    Global c51 :: ref
+    Local pk :: ref
+    Local ps :: ref
+clone c43   def: author/project:Known4.lambda@100:5   key: ()   kind: function   params: s:struct(i64,ref)   result: ref   lifted-from: c26
+  Case :: ref
+    Access .rest #1 :: ref
+      Local s :: struct(i64,ref)
+    branch c :: i64 :: r :: ref :: ref
+      If :: ref
+        Call :: enum
+          Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Int) :: ref
+          Local c :: i64
+          Local code :: i64
+        Call :: ref
+          Ctor Good tag 0 (v0=enum; v1=unit; v2=ref) :: ref
+          Lit 1 :: enum
+          Lit () :: unit
+          Record pos rest :: struct(i64,ref)
+            Call :: i64
+              Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+              Access .pos #0 :: i64
+                Local s :: struct(i64,ref)
+              Lit 1 :: i64
+            Local r :: ref
+        Call :: ref
+          Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+          Lit 0 :: enum
+          Lit "symbol" :: ref
+    branch [] :: ref
+      Call :: ref
+        Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+        Lit 0 :: enum
+        Lit "symbol" :: ref
+clone c26   def: author/project:Known4.symbol   key: ()   kind: function   params: code:i64   result: ref
+  Global c43 :: ref
+clone c14   def: author/project:Known4.nil   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c32 :: ref
+    Global c33 :: ref
+    Call :: ref
+      Global c34 :: ref
+      Call :: ref
+        Global c34 :: ref
+        Call :: ref
+          Global c26 :: ref
+          Lit 110 :: i64
+        Call :: ref
+          Global c26 :: ref
+          Lit 105 :: i64
+      Call :: ref
+        Global c26 :: ref
+        Lit 108 :: i64
+clone c55   def: author/project:Known4.lambda@45:5   key: ()   outer: c38 (v0=ref; v1=unit; v2=ref)   kind: function   params: s:struct(i64,ref)   result: ref   lifted-from: c38
+  Case :: ref
+    Call :: ref
+      Local pa :: ref
+      Local s :: struct(i64,ref)
+    branch Bad #1 c :: enum m :: ref :: ref
+      Call :: ref
+        Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+        Local c :: enum
+        Local m :: ref
+    branch Good #0 c1 :: enum a :: ref s1 :: struct(i64,ref) :: ref
+      Case :: ref
+        Call :: ref
+          Local pb :: ref
+          Local s1 :: struct(i64,ref)
+        branch Bad #1 c2 :: enum m :: ref :: ref
+          Call :: ref
+            Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+            Call :: enum
+              Kernel elm/core:Basics.or () :: ref
+              Local c1 :: enum
+              Local c2 :: enum
+            Local m :: ref
+        branch Good #0 c2 :: enum b :: unit s2 :: struct(i64,ref) :: ref
+          Call :: ref
+            Ctor Good tag 0 (v0=enum; v1=ref; v2=ref) :: ref
+            Call :: enum
+              Kernel elm/core:Basics.or () :: ref
+              Local c1 :: enum
+              Local c2 :: enum
+            Call :: ref
+              Local f :: ref
+              Local a :: ref
+              Local b :: unit
+            Local s2 :: struct(i64,ref)
+clone c38   def: author/project:Known4.map2   key: (v0=ref; v1=unit; v2=ref)   name: map2__ref__unit__ref   kind: function   params: f:ref pa:ref pb:ref   result: ref
+  Global c55 :: ref
+clone c39   def: author/project:Known4.lambda@66:11   key: ()   outer: c22 (v0=ref; v1=unit)   kind: function   params: k:ref _a1:unit   result: ref   lifted-from: c22
+  Local k :: ref
+clone c22   def: author/project:Known4.ignore   key: (v0=ref; v1=unit)   name: ignore__ref__unit   kind: function   params: pk:ref ps:ref   result: ref
+  Call :: ref
+    Global c38 :: ref
+    Global c39 :: ref
+    Local pk :: ref
+    Local ps :: ref
+clone c56   def: author/project:Known4.lambda@45:5   key: ()   outer: c40 (v0=ref; v1=ref; v2=ref)   kind: function   params: s:struct(i64,ref)   result: ref   lifted-from: c40
+  Case :: ref
+    Call :: ref
+      Local pa :: ref
+      Local s :: struct(i64,ref)
+    branch Bad #1 c :: enum m :: ref :: ref
+      Call :: ref
+        Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+        Local c :: enum
+        Local m :: ref
+    branch Good #0 c1 :: enum a :: ref s1 :: struct(i64,ref) :: ref
+      Case :: ref
+        Call :: ref
+          Local pb :: ref
+          Local s1 :: struct(i64,ref)
+        branch Bad #1 c2 :: enum m :: ref :: ref
+          Call :: ref
+            Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+            Call :: enum
+              Kernel elm/core:Basics.or () :: ref
+              Local c1 :: enum
+              Local c2 :: enum
+            Local m :: ref
+        branch Good #0 c2 :: enum b :: ref s2 :: struct(i64,ref) :: ref
+          Call :: ref
+            Ctor Good tag 0 (v0=enum; v1=ref; v2=ref) :: ref
+            Call :: enum
+              Kernel elm/core:Basics.or () :: ref
+              Local c1 :: enum
+              Local c2 :: enum
+            Call :: ref
+              Local f :: ref
+              Local a :: ref
+              Local b :: ref
+            Local s2 :: struct(i64,ref)
+clone c40   def: author/project:Known4.map2   key: (v0=ref; v1=ref; v2=ref)   name: map2__ref__ref__ref   kind: function   params: f:ref pa:ref pb:ref   result: ref
+  Global c56 :: ref
+clone c41   def: author/project:Known4.lambda@61:11   key: ()   outer: c23 (v0=ref; v1=ref)   kind: function   params: f:ref a:ref   result: ref   lifted-from: c23
+  Call :: ref
+    Local f :: ref
+    Local a :: ref
+clone c23   def: author/project:Known4.keep   key: (v0=ref; v1=ref)   name: keep__ref__ref   kind: function   params: pf:ref pa:ref   result: ref
+  Call :: ref
+    Global c40 :: ref
+    Global c41 :: ref
+    Local pf :: ref
+    Local pa :: ref
+clone c42   def: author/project:Known4.lambda@29:5   key: ()   outer: c24 (v0=ref)   kind: function   params: s:struct(i64,ref)   result: ref   lifted-from: c24
+  Call :: ref
+    Ctor Good tag 0 (v0=enum; v1=ref; v2=ref) :: ref
+    Lit 0 :: enum
+    Local a :: ref
+    Local s :: struct(i64,ref)
+clone c24   def: author/project:Known4.succeed   key: (v0=ref)   name: succeed__ref   kind: function   params: a:ref   result: ref
+  Global c42 :: ref
+clone c25   def: author/project:Known4.lambda@188:35   key: ()   kind: function   params: _pb25_0:ref   result: ref   lifted-from: c12
+  Call :: ref
+    Ctor Node tag 1 (v0=ref) :: ref
+    Local _pb25_0 :: ref
+clone c57   def: author/project:Known4.lambda@159:21   key: ()   outer: c45 (v0=ref)   kind: function   params: _a0:unit y:ref   result: ref   lifted-from: c45
+  Local y :: ref
+clone c62   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+  Case :: ref
+    Local list :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch x :: ref :: xs :: ref :: ref
+      Call :: ref
+        Global c62 :: ref
+        Local func :: ref
+        Call :: ref
+          Local func :: ref
+          Local x :: ref
+          Local acc :: ref
+        Local xs :: ref
+clone c63   def: elm/core:List.lambda@261:9   key: ()   outer: c59 (v0=ref)   kind: function   params: _pb63_0:ref _pb63_1:ref   result: ref   lifted-from: c59
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Local _pb63_0 :: ref
+    Local _pb63_1 :: ref
+clone c59   def: elm/core:List.reverse   key: (v0=ref)   name: reverse__ref   kind: function   params: list:ref   result: ref
+  Call :: ref
+    Global c62 :: ref
+    Global c63 :: ref
+    List :: ref
+    Local list :: ref
+clone c45   def: author/project:Known4.sepByHelp   key: (v0=ref)   name: sepByHelp__ref   kind: function   params: item:ref sep:ref p:enum acc:ref s:struct(i64,ref)   result: ref
+  Case :: ref
+    Let _oa58_0 :: ref
+      Call :: ref
+        Global c32 :: ref
+        Global c57 :: ref
+        Local sep :: ref
+      Let _oa58_1 :: ref
+        Local item :: ref
+        Let _oa58_2 :: ref
+          Local s :: struct(i64,ref)
+          Call :: ref
+            Call :: ref
+              Global c23 :: ref
+              Local _oa58_0 :: ref
+              Local _oa58_1 :: ref
+            Local _oa58_2 :: struct(i64,ref)
+    branch Good #0 c :: enum y :: ref s1 :: struct(i64,ref) :: ref
+      Call :: ref
+        Global c45 :: ref
+        Local item :: ref
+        Local sep :: ref
+        Call :: enum
+          Kernel elm/core:Basics.or () :: ref
+          Local p :: enum
+          Local c :: enum
+        Call :: ref
+          Kernel elm/core:List.cons (v0=ref) :: ref
+          Local y :: ref
+          Local acc :: ref
+        Local s1 :: struct(i64,ref)
+    branch Bad #1 c :: enum m :: ref :: ref
+      If :: ref
+        Local c :: enum
+        Call :: ref
+          Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+          Local c :: enum
+          Local m :: ref
+        Call :: ref
+          Ctor Good tag 0 (v0=enum; v1=ref; v2=ref) :: ref
+          Local p :: enum
+          Call :: ref
+            Global c59 :: ref
+            Local acc :: ref
+          Local s :: struct(i64,ref)
+clone c44   def: author/project:Known4.lambda@144:5   key: ()   outer: c27 (v0=ref)   kind: function   params: s:struct(i64,ref)   result: ref   lifted-from: c27
+  Case :: ref
+    Call :: ref
+      Local item :: ref
+      Local s :: struct(i64,ref)
+    branch Bad #1 c :: enum m :: ref :: ref
+      If :: ref
+        Local c :: enum
+        Call :: ref
+          Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+          Local c :: enum
+          Local m :: ref
+        Call :: ref
+          Ctor Good tag 0 (v0=enum; v1=ref; v2=ref) :: ref
+          Lit 0 :: enum
+          List :: ref
+          Local s :: struct(i64,ref)
+    branch Good #0 c1 :: enum x :: ref s1 :: struct(i64,ref) :: ref
+      Call :: ref
+        Global c45 :: ref
+        Local item :: ref
+        Local sep :: ref
+        Local c1 :: enum
+        List :: ref
+          Local x :: ref
+        Local s1 :: struct(i64,ref)
+clone c27   def: author/project:Known4.sepBy   key: (v0=ref)   name: sepBy__ref   kind: function   params: item:ref sep:ref   result: ref
+  Global c44 :: ref
+clone c3   def: author/project:Known4.value   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c9 :: ref
+    Global c10 :: ref
+clone c12   def: author/project:Known4.array   key: ()   kind: value   params:    result: ref
+  Call :: ref
+    Global c22 :: ref
+    Call :: ref
+      Global c23 :: ref
+      Call :: ref
+        Global c22 :: ref
+        Call :: ref
+          Global c24 :: ref
+          Global c25 :: ref
+        Call :: ref
+          Global c26 :: ref
+          Lit 91 :: i64
+      Call :: ref
+        Global c27 :: ref
+        Global c3 :: ref
+        Call :: ref
+          Global c26 :: ref
+          Lit 44 :: i64
+    Call :: ref
+      Global c26 :: ref
+      Lit 93 :: i64
+clone c10   def: author/project:Known4.lambda@193:11   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c3
+  Call :: ref
+    Global c11 :: ref
+    List :: ref
+      Global c12 :: ref
+      Global c13 :: ref
+      Global c14 :: ref
+clone c54   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldrHelper__ref__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
+  Case :: ref
+    Local ls :: ref
+    branch [] :: ref
+      Local acc :: ref
+    branch a :: ref :: r1 :: ref :: ref
+      Case :: ref
+        Local r1 :: ref
+        branch [] :: ref
+          Call :: ref
+            Local fn :: ref
+            Local a :: ref
+            Local acc :: ref
+        branch b :: ref :: r2 :: ref :: ref
+          Case :: ref
+            Local r2 :: ref
+            branch [] :: ref
+              Call :: ref
+                Local fn :: ref
+                Local a :: ref
+                Call :: ref
+                  Local fn :: ref
+                  Local b :: ref
+                  Local acc :: ref
+            branch c :: ref :: r3 :: ref :: ref
+              Case :: ref
+                Local r3 :: ref
+                branch [] :: ref
+                  Call :: ref
+                    Local fn :: ref
+                    Local a :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local b :: ref
+                      Call :: ref
+                        Local fn :: ref
+                        Local c :: ref
+                        Local acc :: ref
+                branch d :: ref :: r4 :: ref :: ref
+                  Let res@200:41 :: ref
+                    If :: ref
+                      Call :: enum
+                        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
+                        Local ctr :: i64
+                        Lit 500 :: i64
+                      Call :: ref
+                        Global c62 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: ref
+                          Global c59 :: ref
+                          Local r4 :: ref
+                      Call :: ref
+                        Global c54 :: ref
+                        Local fn :: ref
+                        Local acc :: ref
+                        Call :: i64
+                          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+                          Local ctr :: i64
+                          Lit 1 :: i64
+                        Local r4 :: ref
+                    Call :: ref
+                      Local fn :: ref
+                      Local a :: ref
+                      Call :: ref
+                        Local fn :: ref
+                        Local b :: ref
+                        Call :: ref
+                          Local fn :: ref
+                          Local c :: ref
+                          Call :: ref
+                            Local fn :: ref
+                            Local d :: ref
+                            Local res@200:41 :: ref
+clone c36   def: elm/core:List.foldr   key: (v0=ref; v1=ref)   name: foldr__ref__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
+  Call :: ref
+    Global c54 :: ref
+    Local fn :: ref
+    Local acc :: ref
+    Lit 0 :: i64
+    Local ls :: ref
+clone c37   def: elm/core:List.lambda@125:10   key: ()   outer: c18 (v0=ref; v1=ref)   kind: function   params: x:ref acc:ref   result: ref   lifted-from: c18
+  Call :: ref
+    Kernel elm/core:List.cons (v0=ref) :: ref
+    Call :: ref
+      Local f :: ref
+      Local x :: ref
+    Local acc :: ref
+clone c18   def: elm/core:List.map   key: (v0=ref; v1=ref)   name: map__ref__ref   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Global c36 :: ref
+    Global c37 :: ref
+    List :: ref
+    Local xs :: ref
+clone c8   def: author/project:Known4.show   key: ()   kind: function   params: t:ref   result: ref
+  Case :: ref
+    Local t :: ref
+    branch Leaf #0 n :: i64 :: ref
+      Call :: ref
+        Kernel elm/core:String.fromInt () :: ref
+        Local n :: i64
+    branch Nil #2 :: ref
+      Lit "nil" :: ref
+    branch Node #1 ts :: ref :: ref
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Lit "[" :: ref
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Call :: ref
+            Kernel elm/core:String.join () :: ref
+            Lit "," :: ref
+            Call :: ref
+              Global c18 :: ref
+              Global c8 :: ref
+              Local ts :: ref
+          Lit "]" :: ref
+clone c2   def: author/project:Known4.parse   key: ()   kind: function   params: text:ref   result: ref
+  Case :: ref
+    Let _oa7_0 :: ref
+      Record pos rest :: struct(i64,ref)
+        Lit 0 :: i64
+        Call :: ref
+          Global c4 :: ref
+          Global c5 :: ref
+          Call :: ref
+            Global c6 :: ref
+            Local text :: ref
+      Call :: ref
+        Global c3 :: ref
+        Local _oa7_0 :: struct(i64,ref)
+    branch Good #0 _ :: enum t :: ref s :: struct(i64,ref) :: ref
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Call :: ref
+          Global c8 :: ref
+          Local t :: ref
+        Call :: ref
+          Kernel elm/core:Basics.append (v0=app string) :: ref
+          Lit " @" :: ref
+          Call :: ref
+            Kernel elm/core:String.fromInt () :: ref
+            Access .pos #0 :: i64
+              Local s :: struct(i64,ref)
+    branch Bad #1 _ :: enum m :: ref :: ref
+      Call :: ref
+        Kernel elm/core:Basics.append (v0=app string) :: ref
+        Lit "error " :: ref
+        Local m :: ref
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
+  Seq :: struct(unit,unit)
+    Call :: ref
+      Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+      Lit "p1" :: ref
+      Call :: ref
+        Global c2 :: ref
+        Lit "[1,2,[3,[4,nil],[]],5]" :: ref
+    Seq :: struct(unit,unit)
+      Call :: ref
+        Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+        Lit "p2" :: ref
+        Call :: ref
+          Global c2 :: ref
+          Lit "42" :: ref
+      Seq :: struct(unit,unit)
+        Call :: ref
+          Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+          Lit "p3" :: ref
+          Call :: ref
+            Global c2 :: ref
+            Lit "[[[[[[7]]]]]]" :: ref
+        Seq :: struct(unit,unit)
+          Call :: ref
+            Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+            Lit "p4" :: ref
+            Call :: ref
+              Global c2 :: ref
+              Lit "[1,,2]" :: ref
+          Seq :: struct(unit,unit)
+            Call :: ref
+              Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+              Lit "p5" :: ref
+              Call :: ref
+                Global c2 :: ref
+                Lit "x" :: ref
+            Seq :: struct(unit,unit)
+              Call :: ref
+                Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
+                Lit "p6" :: ref
+                Call :: ref
+                  Global c2 :: ref
+                  Lit "[nil,nil,[nil]]" :: ref
+              Tuple :: struct(unit,unit)
+                Lit () :: unit
+                Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
+clone c0   def: author/project:Known4.main   key: ()   kind: value   params:    result: unit
+  Call :: unit
+    Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
+    Global c1 :: ref
