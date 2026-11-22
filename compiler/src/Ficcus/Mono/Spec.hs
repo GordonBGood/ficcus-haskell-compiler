@@ -1066,13 +1066,7 @@ specPat se pat@(A.At region p) =
         Can.PInt n ->
           do  -- (ATTACH A3) a pattern is matched by the structure of the value: a number pattern at a custom type has no meaning
               custom <- customTypeOf se (Recorder.patKey region p)
-              sz <- sizedOfNode se (Recorder.patKey region p)
               case custom of
-                -- (SIZED) a number pattern at a sized integer type is its value, checked against the range
-                _ | Just sdt <- sz, not (Sized.isFloat sdt) ->
-                      case Sized.literalValue sdt False (toInteger n) of
-                        Right v -> mk (PLit (LInt v))
-                        Left why -> report ("@@ INTEGER OUT OF RANGE\n" ++ regionText region ++ " in " ++ seDid se ++ "\n\n" ++ why) >> mk PWild
                 Just (TyCon tid _) -> report ("a number pattern at the type " ++ tid ++ " (it has fromInt, so a literal is a value of it, but a pattern cannot call a member; compare with == in an `if`), at " ++ regionText region) >> mk PWild
                 _ -> mk (PLit (LInt (fromIntegral n)))
         Can.PCtor { Can._p_name = name, Can._p_index = idx, Can._p_args = cargs } ->

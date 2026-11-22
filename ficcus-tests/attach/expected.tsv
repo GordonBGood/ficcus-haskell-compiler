@@ -125,3 +125,12 @@ a3-f7-literal	RUN	c
 a3-f7-err-literal-obligation	REJECT	UNKNOWN MEMBER TYPE	compare : number -> number -> Order
 a3-f8-closed-annotation	RUN	js+c	
 a3-f8-err-let-div-two-types	REJECT	TYPE MISMATCH	
+sized-bound-int8	RUN	c	
+sized-bound-int16	RUN	c	
+sized-bound-int32	RUN	c	
+sized-bound-word8	RUN	c	
+sized-bound-word16	RUN	c	
+sized-bound-word32	RUN	c	
+sized-bound-word64	RUN	c	
+sized-bound-float32	RUN	c	
+sized-lit	RUN	c	
