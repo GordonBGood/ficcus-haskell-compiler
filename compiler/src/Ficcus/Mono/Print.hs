@@ -35,7 +35,13 @@ renderProgram allModules program =
   header ++ concat (snd (List.mapAccumL one 0 modules)) ++ programLines
   where
     -- the overlay module (Ficcus.Mono.Overlay) is not part of the project: its marks and clones table stay out of the listing
-    modules = filter (\m -> mfName m `notElem` map ("author/project:" ++) supportModuleNames) allModules
+    modules0 = filter (\m -> mfName m `notElem` map ("author/project:" ++) supportModuleNames) allModules
+    -- H21: the sorts of the overlay import the overlay's `Vector`, so it is part of every build to C: listed only when another module uses it
+    -- (a `Vector` of the project itself has no `ficVectorOverlay`)
+    modules = filter (not . unusedVector) modules0
+    unusedVector m =
+      mfName m == "author/project:Vector" && any ((== "author/project:Vector.ficVectorOverlay") . dfId) (mfDefs m)
+        && not (any (any (List.isPrefixOf "author/project:Vector." . ufCallee) . mfUses) [ o | o <- modules0, mfName o /= "author/project:Vector" ])
     programLines =
       case program of
         Nothing -> []

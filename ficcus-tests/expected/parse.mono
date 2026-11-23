@@ -2403,17 +2403,69 @@ clone c121   def: author/project:Parse.lambda@20:21   key: ()   kind: function  
     Global c123 :: ref
     Local a :: ref
     Local rest :: ref
-clone c158   def: author/project:Parse.lambda@40:41   key: ()   kind: function   params: x:ref acc:ref   result: ref   lifted-from: c157
+clone c168   def: elm/parser:Parser.toAdvancedStep   key: (v0=ref; v1=ref)   name: toAdvancedStep__ref__ref   kind: function   params: step:ref   result: ref
+  Case :: ref
+    Local step :: ref
+    branch Loop #0 s :: ref :: ref
+      Call :: ref
+        Ctor Loop tag 0 (v0=ref) :: ref
+        Local s :: ref
+    branch Done #1 a :: ref :: ref
+      Call :: ref
+        Ctor Done tag 1 (v0=ref) :: ref
+        Local a :: ref
+clone c239   def: elm/parser:Parser.Advanced.lambda@270:13   key: ()   outer: c222 (v0=ref; v1=ref; v2=ref; v3=ref)   kind: function   params: s0:struct(i64,i64,ref,i64,i64,ref)   result: ref   lifted-from: c222
+  Case :: ref
+    Call :: ref
+      Local parse :: ref
+      Local s0 :: struct(i64,i64,ref,i64,i64,ref)
+    branch Good #0 p :: enum a :: ref s1 :: struct(i64,i64,ref,i64,i64,ref) :: ref
+      Call :: ref
+        Ctor Good tag 0 (v0=enum; v1=ref; v2=ref) :: ref
+        Local p :: enum
+        Call :: ref
+          Local func :: ref
+          Local a :: ref
+        Local s1 :: struct(i64,i64,ref,i64,i64,ref)
+    branch Bad #1 p :: enum x :: ref :: ref
+      Call :: ref
+        Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
+        Local p :: enum
+        Local x :: ref
+clone c222   def: elm/parser:Parser.Advanced.map   key: (v0=ref; v1=ref; v2=ref; v3=ref)   name: map__ref__ref__ref__ref   kind: function   params: func:ref _p1:ref   result: ref
+  Case :: ref
+    Local _p1 :: ref
+    branch Parser #0 parse :: ref :: ref
+      Call :: ref
+        Ctor Parser tag 0 (v0=ref) :: ref
+        Global c239 :: ref
+clone c167   def: elm/parser:Parser.map   key: (v0=ref; v1=ref)   name: map__ref__ref   kind: value   params:    result: ref
+  Global c222 :: ref
+clone c166   def: elm/parser:Parser.lambda@508:17   key: ()   outer: c128 (v0=ref; v1=ref)   kind: function   params: s:ref   result: ref   lifted-from: c128
+  Let _oa169_0 :: ref
+    Global c168 :: ref
+    Let _oa169_1 :: ref
+      Call :: ref
+        Local callback :: ref
+        Local s :: ref
+      Call :: ref
+        Global c167 :: ref
+        Local _oa169_0 :: ref
+        Local _oa169_1 :: ref
+clone c128   def: elm/parser:Parser.loop   key: (v0=ref; v1=ref)   name: loop__ref__ref   kind: function   params: state:ref callback:ref   result: ref
   Call :: ref
-    Ctor Mul tag 2 (v0=ref; v1=ref) :: ref
-    Local acc :: ref
-    Local x :: ref
-clone c157   def: author/project:Parse.lambda@40:21   key: ()   kind: function   params: a:ref b:ref   result: ref   lifted-from: c125
+    Global c165 :: ref
+    Local state :: ref
+    Global c166 :: ref
+clone c212   def: author/project:Parse.lambda@49:27   key: ()   kind: function   params: f:ref   result: ref   lifted-from: c163
   Call :: ref
-    Global c122 :: ref
-    Global c158 :: ref
-    Local a :: ref
-    Local b :: ref
+    Ctor Loop tag 0 (v0=ref) :: ref
+    Call :: ref
+      Kernel elm/core:List.cons (v0=ref) :: ref
+      Local f :: ref
+      Local acc :: ref
+clone c170   def: elm/parser:Parser.oneOf   key: (v0=ref)   name: oneOf__ref   kind: value   params:    result: ref
+  Global c135 :: ref
 clone c197   def: author/project:Parse.lambda@61:22   key: ()   kind: function   params: _pb197_0:f64   result: ref   lifted-from: c160
   Call :: ref
     Ctor Num tag 0 (v0=f64) :: ref
@@ -2821,35 +2873,6 @@ clone c201   def: elm/core:Set.fromList   key: (v0=type elm/core:String.String) 
     Global c236 :: ref
     Global c237 :: ref
     Local list :: ref
-clone c239   def: elm/parser:Parser.Advanced.lambda@270:13   key: ()   outer: c222 (v0=ref; v1=ref; v2=ref; v3=ref)   kind: function   params: s0:struct(i64,i64,ref,i64,i64,ref)   result: ref   lifted-from: c222
-  Case :: ref
-    Call :: ref
-      Local parse :: ref
-      Local s0 :: struct(i64,i64,ref,i64,i64,ref)
-    branch Good #0 p :: enum a :: ref s1 :: struct(i64,i64,ref,i64,i64,ref) :: ref
-      Call :: ref
-        Ctor Good tag 0 (v0=enum; v1=ref; v2=ref) :: ref
-        Local p :: enum
-        Call :: ref
-          Local func :: ref
-          Local a :: ref
-        Local s1 :: struct(i64,i64,ref,i64,i64,ref)
-    branch Bad #1 p :: enum x :: ref :: ref
-      Call :: ref
-        Ctor Bad tag 1 (v0=enum; v1=ref) :: ref
-        Local p :: enum
-        Local x :: ref
-clone c222   def: elm/parser:Parser.Advanced.map   key: (v0=ref; v1=ref; v2=ref; v3=ref)   name: map__ref__ref__ref__ref   kind: function   params: func:ref _p1:ref   result: ref
-  Case :: ref
-    Local _p1 :: ref
-    branch Parser #0 parse :: ref :: ref
-      Call :: ref
-        Ctor Parser tag 0 (v0=ref) :: ref
-        Global c239 :: ref
-clone c167   def: elm/parser:Parser.map   key: (v0=ref; v1=ref)   name: map__ref__ref   kind: value   params:    result: ref
-  Global c222 :: ref
-clone c207   def: author/project:Parse.lambda@66:29   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c160
-  Global c82 :: ref
 clone c253   def: elm/parser:Parser.Advanced.lambda@343:13   key: ()   outer: c238 (v0=ref; v1=ref; v2=ref)   kind: function   params: s:struct(i64,i64,ref,i64,i64,ref)   result: ref   lifted-from: c238
   Case :: ref
     Call :: ref
@@ -2865,8 +2888,24 @@ clone c238   def: elm/parser:Parser.Advanced.lazy   key: (v0=ref; v1=ref; v2=ref
     Global c253 :: ref
 clone c206   def: elm/parser:Parser.lazy   key: (v0=ref)   name: lazy__ref   kind: value   params:    result: ref
   Global c238 :: ref
-clone c170   def: elm/parser:Parser.oneOf   key: (v0=ref)   name: oneOf__ref   kind: value   params:    result: ref
-  Global c135 :: ref
+clone c158   def: author/project:Parse.lambda@40:41   key: ()   kind: function   params: x:ref acc:ref   result: ref   lifted-from: c157
+  Call :: ref
+    Ctor Mul tag 2 (v0=ref; v1=ref) :: ref
+    Local acc :: ref
+    Local x :: ref
+clone c157   def: author/project:Parse.lambda@40:21   key: ()   kind: function   params: a:ref b:ref   result: ref   lifted-from: c125
+  Call :: ref
+    Global c122 :: ref
+    Global c158 :: ref
+    Local a :: ref
+    Local b :: ref
+clone c171   def: author/project:Parse.lambda@29:27   key: ()   kind: function   params: t:ref   result: ref   lifted-from: c129
+  Call :: ref
+    Ctor Loop tag 0 (v0=ref) :: ref
+    Call :: ref
+      Kernel elm/core:List.cons (v0=ref) :: ref
+      Local t :: ref
+      Local acc :: ref
 clone c160   def: author/project:Parse.factor   key: ()   kind: value   params:    result: ref
   Let _oa211_0 :: ref
     List :: ref
@@ -2939,40 +2978,6 @@ clone c160   def: author/project:Parse.factor   key: ()   kind: value   params: 
     Call :: ref
       Global c170 :: ref
       Local _oa211_0 :: ref
-clone c168   def: elm/parser:Parser.toAdvancedStep   key: (v0=ref; v1=ref)   name: toAdvancedStep__ref__ref   kind: function   params: step:ref   result: ref
-  Case :: ref
-    Local step :: ref
-    branch Loop #0 s :: ref :: ref
-      Call :: ref
-        Ctor Loop tag 0 (v0=ref) :: ref
-        Local s :: ref
-    branch Done #1 a :: ref :: ref
-      Call :: ref
-        Ctor Done tag 1 (v0=ref) :: ref
-        Local a :: ref
-clone c166   def: elm/parser:Parser.lambda@508:17   key: ()   outer: c128 (v0=ref; v1=ref)   kind: function   params: s:ref   result: ref   lifted-from: c128
-  Let _oa169_0 :: ref
-    Global c168 :: ref
-    Let _oa169_1 :: ref
-      Call :: ref
-        Local callback :: ref
-        Local s :: ref
-      Call :: ref
-        Global c167 :: ref
-        Local _oa169_0 :: ref
-        Local _oa169_1 :: ref
-clone c128   def: elm/parser:Parser.loop   key: (v0=ref; v1=ref)   name: loop__ref__ref   kind: function   params: state:ref callback:ref   result: ref
-  Call :: ref
-    Global c165 :: ref
-    Local state :: ref
-    Global c166 :: ref
-clone c212   def: author/project:Parse.lambda@49:27   key: ()   kind: function   params: f:ref   result: ref   lifted-from: c163
-  Call :: ref
-    Ctor Loop tag 0 (v0=ref) :: ref
-    Call :: ref
-      Kernel elm/core:List.cons (v0=ref) :: ref
-      Local f :: ref
-      Local acc :: ref
 clone c163   def: author/project:Parse.mulTail   key: ()   kind: function   params: acc:ref   result: ref
   Let _oa219_0 :: ref
     List :: ref
@@ -3053,13 +3058,6 @@ clone c125   def: author/project:Parse.term   key: ()   kind: value   params:   
         Global c6 :: ref
         Local _oa164_0 :: ref
         Local _oa164_1 :: ref
-clone c171   def: author/project:Parse.lambda@29:27   key: ()   kind: function   params: t:ref   result: ref   lifted-from: c129
-  Call :: ref
-    Ctor Loop tag 0 (v0=ref) :: ref
-    Call :: ref
-      Kernel elm/core:List.cons (v0=ref) :: ref
-      Local t :: ref
-      Local acc :: ref
 clone c129   def: author/project:Parse.addTail   key: ()   kind: function   params: acc:ref   result: ref
   Let _oa178_0 :: ref
     List :: ref
@@ -3140,6 +3138,8 @@ clone c82   def: author/project:Parse.expr   key: ()   kind: value   params:    
         Global c6 :: ref
         Local _oa130_0 :: ref
         Local _oa130_1 :: ref
+clone c207   def: author/project:Parse.lambda@66:29   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c160
+  Global c82 :: ref
 clone c179   def: elm/parser:Parser.Advanced.lambda@769:13   key: ()   outer: c131 (v0=ref; v1=ref)   kind: function   params: s:struct(i64,i64,ref,i64,i64,ref)   result: ref   lifted-from: c131
   If :: ref
     Call :: enum

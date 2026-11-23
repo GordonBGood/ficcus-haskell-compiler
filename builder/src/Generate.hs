@@ -13,7 +13,9 @@ module Generate
 import Prelude hiding (cycle, print)
 import Control.Concurrent (readMVar)
 import Control.Monad (liftM2)
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Builder as B
+import qualified Data.ByteString.Char8 as BC
 import qualified Data.List as List
 import qualified Data.Map as Map
 import qualified Data.Map.Utils as Map
@@ -97,7 +99,13 @@ prod stuff details (Build.Artifacts pkg _ roots modules) =
 typeDumps :: R.Stuff -> Build.Artifacts -> IO B.Builder
 typeDumps stuff (Build.Artifacts _ _ _ modules) =
   do  let names = List.sort (filter (\n -> Module.toChars n `notElem` Overlay.supportModuleNames) (map moduleName modules))
-      parts <- traverse (readDump stuff) names
+      dumps <- traverse (\n -> (,) n <$> readDump stuff n) names
+      -- H21: the sorts of the overlay import the overlay's `Vector`, so it is part of every build to C; it is listed only when a module of
+      -- the project uses it (a `Vector` of the project itself has no `ficVectorOverlay`)
+      let overlayVector (n, bs) = Module.toChars n == "Vector" && BC.pack "id: author/project:Vector.ficVectorOverlay" `BS.isInfixOf` bs
+          others = [ bs | (n, bs) <- dumps, Module.toChars n /= "Vector" ]
+          unused (n, bs) = overlayVector (n, bs) && not (any (BC.pack "author/project:Vector." `BS.isInfixOf`) others)
+          parts = [ B.byteString bs <> B.char7 '\n' | d@(_, bs) <- dumps, not (unused d) ]
       packages <- packageDumps stuff
       return (mconcat parts <> packages)
 
@@ -144,13 +152,13 @@ moduleName modul =
     Build.Cached name _ _ -> name
 
 
-readDump :: R.Stuff -> Module.Name -> IO B.Builder
+readDump :: R.Stuff -> Module.Name -> IO BS.ByteString
 readDump stuff name =
   do  let path = R.typesFile stuff name
       found <- File.exists path
       if found
-        then (\bytes -> B.byteString bytes <> B.char7 '\n') <$> File.readUtf8 path
-        else return (B.string7 ("-- module " ++ Module.toChars name ++ ": no type dump (module was cached)\n"))
+        then File.readUtf8 path
+        else return (BC.pack ("-- module " ++ Module.toChars name ++ ": no type dump (module was cached)"))
 
 
 -- Ficcus: C back end (milestone 1: a dump of the reachable optimized graph)

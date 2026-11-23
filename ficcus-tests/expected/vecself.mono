@@ -24,6 +24,9 @@ mark author/project:Vector.unsafeGet   v0=any+element
 mark author/project:Vector.toIndexedHelp   v0=any+element
 mark author/project:Vector.foldrHelp   v0=any+element v1=any
 mark author/project:Vector.foldlHelp   v0=any+element v1=any
+mark author/project:Vector.sortWith   v0=any+element
+mark author/project:Vector.sortMember   v0=comparable+element
+mark author/project:Vector.sortPerm   v0=comparable+element
 mark author/project:Vector.fromList   v0=any+element
 mark author/project:Vector.toList   v0=any+element
 mark author/project:Vector.repeat   v0=any+element
@@ -38,19 +41,25 @@ mark author/project:Vector.foldr   v0=any+element v1=any
 mark author/project:Vector.foldl   v0=any+element v1=any
 mark author/project:Vector.empty   v0=any+element
 mark author/project:Vector.swap   v0=any+element
+mark author/project:Vector.sort   v0=comparable+element
 mark author/project:Vector.push   v0=any+element
 mark author/project:Vector.mapHelp   v0=any+element v1=any+element
 mark author/project:Vector.singleton   v0=any+element
 mark author/project:Vector.filterHelp   v0=any+element
 mark author/project:Vector.filter   v0=any+element
+mark author/project:Vector.permuteHelp   v0=any+element
+mark author/project:Vector.permute   v0=any+element
 mark author/project:Vector.indexedMapHelp   v0=any+element v1=any+element
 mark author/project:Vector.indexedMap   v0=any+element v1=any+element
 mark author/project:Vector.initializeHelp   v0=any+element
 mark author/project:Vector.initialize   v0=any+element
+mark author/project:Vector.sortPermMember   v0=comparable+element
 mark author/project:Vector.set   v0=any+element
 mark author/project:Vector.map   v0=any+element v1=any+element
+mark author/project:Vector.sortBy   v0=any+element v1=comparable+element
 mark author/project:Vector.get   v0=any+element
 clone c13   def: author/project:Vector.ficVectorOverlay   key: ()   kind: value   init: 0   needs: 
+clone c14   def: author/project:Vector.sortIdx   key: ()   kind: function   init: 12   needs: 
 -- program: 57 clones, reachable from main, dependencies first
 clone c3   def: author/project:VecSelf.e3@135:21   key: (v0=type elm/core:Basics.Int)   name: e3@135:21__i64   kind: function   params:    result: ref   lifted-from: c1
   Call :: ref

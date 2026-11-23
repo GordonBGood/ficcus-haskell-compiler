@@ -11,6 +11,9 @@ mark author/project:Vector.unsafeGet   v0=any+element
 mark author/project:Vector.toIndexedHelp   v0=any+element
 mark author/project:Vector.foldrHelp   v0=any+element v1=any
 mark author/project:Vector.foldlHelp   v0=any+element v1=any
+mark author/project:Vector.sortWith   v0=any+element
+mark author/project:Vector.sortMember   v0=comparable+element
+mark author/project:Vector.sortPerm   v0=comparable+element
 mark author/project:Vector.fromList   v0=any+element
 mark author/project:Vector.toList   v0=any+element
 mark author/project:Vector.repeat   v0=any+element
@@ -25,19 +28,25 @@ mark author/project:Vector.foldr   v0=any+element v1=any
 mark author/project:Vector.foldl   v0=any+element v1=any
 mark author/project:Vector.empty   v0=any+element
 mark author/project:Vector.swap   v0=any+element
+mark author/project:Vector.sort   v0=comparable+element
 mark author/project:Vector.push   v0=any+element
 mark author/project:Vector.mapHelp   v0=any+element v1=any+element
 mark author/project:Vector.singleton   v0=any+element
 mark author/project:Vector.filterHelp   v0=any+element
 mark author/project:Vector.filter   v0=any+element
+mark author/project:Vector.permuteHelp   v0=any+element
+mark author/project:Vector.permute   v0=any+element
 mark author/project:Vector.indexedMapHelp   v0=any+element v1=any+element
 mark author/project:Vector.indexedMap   v0=any+element v1=any+element
 mark author/project:Vector.initializeHelp   v0=any+element
 mark author/project:Vector.initialize   v0=any+element
+mark author/project:Vector.sortPermMember   v0=comparable+element
 mark author/project:Vector.set   v0=any+element
 mark author/project:Vector.map   v0=any+element v1=any+element
+mark author/project:Vector.sortBy   v0=any+element v1=comparable+element
 mark author/project:Vector.get   v0=any+element
 clone c3   def: author/project:Vector.ficVectorOverlay   key: ()   kind: value   init: 0   needs: 
+clone c4   def: author/project:Vector.sortIdx   key: ()   kind: function   init: 12   needs: 
 -- program: 27 clones, reachable from main, dependencies first
 clone c19   def: author/project:Vector.initializeHelp   key: (v0=type elm/core:Basics.Int)   name: initializeHelp__i64   kind: function   params: i:i64 n:i64 f:ref acc:ref   result: ref
   If :: ref
@@ -150,7 +159,7 @@ clone c7   def: author/project:Vector.update   key: (v0=type elm/core:Basics.Int
         Call :: i64
           Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
           Local v :: ref
-    Let x@153:13 :: ref
+    Let x@176:13 :: ref
       Call :: i64
         Kernel elm/core:Vector.unsafeGet (v0=type elm/core:Basics.Int) :: ref
         Local i :: i64
@@ -160,7 +169,7 @@ clone c7   def: author/project:Vector.update   key: (v0=type elm/core:Basics.Int
         Local i :: i64
         Call :: i64
           Local f :: ref
-          Local x@153:13 :: i64
+          Local x@176:13 :: i64
         Local v :: ref
     Local v :: ref
 clone c8   def: author/project:VecOrder.lambda@42:60   key: ()   kind: function   params: x:i64   result: i64   lifted-from: c1
@@ -307,7 +316,7 @@ clone c15   def: author/project:VecOrder.lambda@33:37   key: ()   kind: function
       Local x :: i64
       Lit 1 :: i64
 clone c24   def: author/project:Vector.reverseInPlace   key: (v0=type elm/core:Basics.Int)   name: reverseInPlace__i64   kind: function   params: i:i64 v:ref   result: ref
-  Let j@285:9 :: ref
+  Let j@308:9 :: ref
     Call :: i64
       Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
       Call :: i64
@@ -321,7 +330,7 @@ clone c24   def: author/project:Vector.reverseInPlace   key: (v0=type elm/core:B
       Call :: enum
         Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
         Local i :: i64
-        Local j@285:9 :: i64
+        Local j@308:9 :: i64
       Local v :: ref
       Call :: ref
         Global c24 :: ref
@@ -332,7 +341,7 @@ clone c24   def: author/project:Vector.reverseInPlace   key: (v0=type elm/core:B
         Call :: ref
           Kernel elm/core:Vector.unsafeSwap (v0=type elm/core:Basics.Int) :: ref
           Local i :: i64
-          Local j@285:9 :: i64
+          Local j@308:9 :: i64
           Local v :: ref
 clone c25   def: author/project:Vector.filterHelp   key: (v0=type elm/core:Basics.Int)   name: filterHelp__i64   kind: function   params: i:i64 p:ref v:ref acc:ref   result: ref
   If :: ref
@@ -341,7 +350,7 @@ clone c25   def: author/project:Vector.filterHelp   key: (v0=type elm/core:Basic
       Local i :: i64
       Lit 0 :: i64
     Local acc :: ref
-    Let x@276:13 :: ref
+    Let x@299:13 :: ref
       Call :: i64
         Kernel elm/core:Vector.unsafeGet (v0=type elm/core:Basics.Int) :: ref
         Local i :: i64
@@ -357,10 +366,10 @@ clone c25   def: author/project:Vector.filterHelp   key: (v0=type elm/core:Basic
         If :: ref
           Call :: enum
             Local p :: ref
-            Local x@276:13 :: i64
+            Local x@299:13 :: i64
           Call :: ref
             Kernel elm/core:Vector.push (v0=type elm/core:Basics.Int) :: ref
-            Local x@276:13 :: i64
+            Local x@299:13 :: i64
             Local acc :: ref
           Local acc :: ref
 clone c16   def: author/project:Vector.filter   key: (v0=type elm/core:Basics.Int)   name: filter__i64   kind: function   params: p:ref v:ref   result: ref

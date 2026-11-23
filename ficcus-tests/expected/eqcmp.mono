@@ -10,7 +10,7 @@ clone c6   def: author/project:EqCmp.build   key: ()   kind: function   init: 6 
 clone c7   def: author/project:EqCmp.ord   key: ()   kind: function   init: 8   needs: 
 clone c8   def: author/project:EqCmp.b2i   key: ()   kind: function   init: 9   needs: 
 clone c9   def: author/project:EqCmp.main   key: ()   kind: value   init: 10   needs: c4,c5
--- program: 113 clones, reachable from main, dependencies first
+-- program: 88 clones, reachable from main, dependencies first
 clone c2   def: author/project:EqCmp.b2i   key: ()   kind: function   params: x:enum   result: i64
   If :: i64
     Local x :: enum
@@ -89,21 +89,21 @@ clone c11   def: elm/core:Tuple.second   key: (v0=i64; v1=ref)   name: second__i
     Local _p0 :: struct(i64,ref)
     branch (_ :: i64, y :: ref) :: struct(i64,ref)
       Local y :: ref
-clone c41   def: elm/core:List.foldl   key: (v0=i64; v1=ref)   name: foldl__i64__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+clone c42   def: elm/core:List.foldl   key: (v0=i64; v1=ref)   name: foldl__i64__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
   Case :: ref
     Local list :: ref
     branch [] :: ref
       Local acc :: ref
     branch x :: i64 :: xs :: ref :: ref
       Call :: ref
-        Global c41 :: ref
+        Global c42 :: ref
         Local func :: ref
         Call :: ref
           Local func :: ref
           Local x :: i64
           Local acc :: ref
         Local xs :: ref
-clone c42   def: author/project:EqCmp.lambda@54:24   key: ()   kind: function   params: x:i64 acc:ref   result: ref   lifted-from: c12
+clone c43   def: author/project:EqCmp.lambda@54:24   key: ()   kind: function   params: x:i64 acc:ref   result: ref   lifted-from: c12
   Call :: ref
     Kernel elm/core:Basics.append (v0=app string) :: ref
     Local acc :: ref
@@ -120,26 +120,26 @@ clone c12   def: author/project:EqCmp.showInts   key: ()   kind: function   para
     Call :: ref
       Kernel elm/core:Basics.append (v0=app string) :: ref
       Call :: ref
-        Global c41 :: ref
         Global c42 :: ref
+        Global c43 :: ref
         Lit "" :: ref
         Local xs :: ref
       Lit "]" :: ref
-clone c43   def: elm/core:List.foldl   key: (v0=f64; v1=ref)   name: foldl__f64__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+clone c44   def: elm/core:List.foldl   key: (v0=f64; v1=ref)   name: foldl__f64__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
   Case :: ref
     Local list :: ref
     branch [] :: ref
       Local acc :: ref
     branch x :: f64 :: xs :: ref :: ref
       Call :: ref
-        Global c43 :: ref
+        Global c44 :: ref
         Local func :: ref
         Call :: ref
           Local func :: ref
           Local x :: f64
           Local acc :: ref
         Local xs :: ref
-clone c44   def: author/project:EqCmp.lambda@59:24   key: ()   kind: function   params: x:f64 acc:ref   result: ref   lifted-from: c13
+clone c45   def: author/project:EqCmp.lambda@59:24   key: ()   kind: function   params: x:f64 acc:ref   result: ref   lifted-from: c13
   Call :: ref
     Kernel elm/core:Basics.append (v0=app string) :: ref
     Local acc :: ref
@@ -156,26 +156,26 @@ clone c13   def: author/project:EqCmp.showFloats   key: ()   kind: function   pa
     Call :: ref
       Kernel elm/core:Basics.append (v0=app string) :: ref
       Call :: ref
-        Global c43 :: ref
         Global c44 :: ref
+        Global c45 :: ref
         Lit "" :: ref
         Local xs :: ref
       Lit "]" :: ref
-clone c45   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
+clone c46   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
   Case :: ref
     Local list :: ref
     branch [] :: ref
       Local acc :: ref
     branch x :: ref :: xs :: ref :: ref
       Call :: ref
-        Global c45 :: ref
+        Global c46 :: ref
         Local func :: ref
         Call :: ref
           Local func :: ref
           Local x :: ref
           Local acc :: ref
         Local xs :: ref
-clone c46   def: author/project:EqCmp.lambda@64:24   key: ()   kind: function   params: x:ref acc:ref   result: ref   lifted-from: c14
+clone c47   def: author/project:EqCmp.lambda@64:24   key: ()   kind: function   params: x:ref acc:ref   result: ref   lifted-from: c14
   Call :: ref
     Kernel elm/core:Basics.append (v0=app string) :: ref
     Local acc :: ref
@@ -190,12 +190,12 @@ clone c14   def: author/project:EqCmp.showStrings   key: ()   kind: function   p
     Call :: ref
       Kernel elm/core:Basics.append (v0=app string) :: ref
       Call :: ref
-        Global c45 :: ref
         Global c46 :: ref
+        Global c47 :: ref
         Lit "" :: ref
         Local xs :: ref
       Lit "]" :: ref
-clone c47   def: author/project:EqCmp.lambda@69:24   key: ()   kind: function   params: _p0:struct(i64,ref) acc:ref   result: ref   lifted-from: c15
+clone c48   def: author/project:EqCmp.lambda@69:24   key: ()   kind: function   params: _p0:struct(i64,ref) acc:ref   result: ref   lifted-from: c15
   Case :: ref
     Local _p0 :: struct(i64,ref)
     branch (n :: i64, s :: ref) :: struct(i64,ref)
@@ -224,23 +224,23 @@ clone c15   def: author/project:EqCmp.showPairs   key: ()   kind: function   par
     Call :: ref
       Kernel elm/core:Basics.append (v0=app string) :: ref
       Call :: ref
-        Global c45 :: ref
-        Global c47 :: ref
+        Global c46 :: ref
+        Global c48 :: ref
         Lit "" :: ref
         Local xs :: ref
       Lit "]" :: ref
-clone c108   def: elm/core:List.lambda@261:9   key: ()   outer: c98 (v0=ref)   kind: function   params: _pb108_0:ref _pb108_1:ref   result: ref   lifted-from: c98
+clone c86   def: elm/core:List.lambda@261:9   key: ()   outer: c76 (v0=ref)   kind: function   params: _pb86_0:ref _pb86_1:ref   result: ref   lifted-from: c76
   Call :: ref
     Kernel elm/core:List.cons (v0=ref) :: ref
-    Local _pb108_0 :: ref
-    Local _pb108_1 :: ref
-clone c98   def: elm/core:List.reverse   key: (v0=ref)   name: reverse__ref   kind: function   params: list:ref   result: ref
+    Local _pb86_0 :: ref
+    Local _pb86_1 :: ref
+clone c76   def: elm/core:List.reverse   key: (v0=ref)   name: reverse__ref   kind: function   params: list:ref   result: ref
   Call :: ref
-    Global c45 :: ref
-    Global c108 :: ref
+    Global c46 :: ref
+    Global c86 :: ref
     List :: ref
     Local list :: ref
-clone c77   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldrHelper__ref__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
+clone c64   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldrHelper__ref__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
   Case :: ref
     Local ls :: ref
     branch [] :: ref
@@ -286,14 +286,14 @@ clone c77   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldr
                         Local ctr :: i64
                         Lit 500 :: i64
                       Call :: ref
-                        Global c45 :: ref
+                        Global c46 :: ref
                         Local fn :: ref
                         Local acc :: ref
                         Call :: ref
-                          Global c98 :: ref
+                          Global c76 :: ref
                           Local r4 :: ref
                       Call :: ref
-                        Global c77 :: ref
+                        Global c64 :: ref
                         Local fn :: ref
                         Local acc :: ref
                         Call :: i64
@@ -314,25 +314,25 @@ clone c77   def: elm/core:List.foldrHelper   key: (v0=ref; v1=ref)   name: foldr
                             Local fn :: ref
                             Local d :: ref
                             Local res@200:41 :: ref
-clone c48   def: elm/core:List.foldr   key: (v0=ref; v1=ref)   name: foldr__ref__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
+clone c49   def: elm/core:List.foldr   key: (v0=ref; v1=ref)   name: foldr__ref__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
   Call :: ref
-    Global c77 :: ref
+    Global c64 :: ref
     Local fn :: ref
     Local acc :: ref
     Lit 0 :: i64
     Local ls :: ref
-clone c110   def: elm/core:List.lambda@261:9   key: ()   outer: c102 (v0=i64)   kind: function   params: _pb110_0:i64 _pb110_1:ref   result: ref   lifted-from: c102
+clone c87   def: elm/core:List.lambda@261:9   key: ()   outer: c84 (v0=i64)   kind: function   params: _pb87_0:i64 _pb87_1:ref   result: ref   lifted-from: c84
   Call :: ref
     Kernel elm/core:List.cons (v0=i64) :: ref
-    Local _pb110_0 :: i64
-    Local _pb110_1 :: ref
-clone c102   def: elm/core:List.reverse   key: (v0=i64)   name: reverse__i64   kind: function   params: list:ref   result: ref
+    Local _pb87_0 :: i64
+    Local _pb87_1 :: ref
+clone c84   def: elm/core:List.reverse   key: (v0=i64)   name: reverse__i64   kind: function   params: list:ref   result: ref
   Call :: ref
-    Global c41 :: ref
-    Global c110 :: ref
+    Global c42 :: ref
+    Global c87 :: ref
     List :: ref
     Local list :: ref
-clone c97   def: elm/core:List.foldrHelper   key: (v0=i64; v1=ref)   name: foldrHelper__i64__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
+clone c75   def: elm/core:List.foldrHelper   key: (v0=i64; v1=ref)   name: foldrHelper__i64__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
   Case :: ref
     Local ls :: ref
     branch [] :: ref
@@ -378,14 +378,14 @@ clone c97   def: elm/core:List.foldrHelper   key: (v0=i64; v1=ref)   name: foldr
                         Local ctr :: i64
                         Lit 500 :: i64
                       Call :: ref
-                        Global c41 :: ref
+                        Global c42 :: ref
                         Local fn :: ref
                         Local acc :: ref
                         Call :: ref
-                          Global c102 :: ref
+                          Global c84 :: ref
                           Local r4 :: ref
                       Call :: ref
-                        Global c97 :: ref
+                        Global c75 :: ref
                         Local fn :: ref
                         Local acc :: ref
                         Call :: i64
@@ -406,53 +406,53 @@ clone c97   def: elm/core:List.foldrHelper   key: (v0=i64; v1=ref)   name: foldr
                             Local fn :: ref
                             Local d :: i64
                             Local res@200:41 :: ref
-clone c75   def: elm/core:List.foldr   key: (v0=i64; v1=ref)   name: foldr__i64__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
+clone c62   def: elm/core:List.foldr   key: (v0=i64; v1=ref)   name: foldr__i64__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
   Call :: ref
-    Global c97 :: ref
+    Global c75 :: ref
     Local fn :: ref
     Local acc :: ref
     Lit 0 :: i64
     Local ls :: ref
-clone c78   def: elm/core:List.lambda@378:13   key: ()   outer: c49 (v0=i64)   kind: function   params: _pb78_0:i64 _pb78_1:ref   result: ref   lifted-from: c49
+clone c65   def: elm/core:List.lambda@378:13   key: ()   outer: c50 (v0=i64)   kind: function   params: _pb65_0:i64 _pb65_1:ref   result: ref   lifted-from: c50
   Call :: ref
     Kernel elm/core:List.cons (v0=i64) :: ref
-    Local _pb78_0 :: i64
-    Local _pb78_1 :: ref
-clone c49   def: elm/core:List.append   key: (v0=i64)   name: append__i64   kind: function   params: xs:ref ys:ref   result: ref
+    Local _pb65_0 :: i64
+    Local _pb65_1 :: ref
+clone c50   def: elm/core:List.append   key: (v0=i64)   name: append__i64   kind: function   params: xs:ref ys:ref   result: ref
   Case :: ref
     Local ys :: ref
     branch [] :: ref
       Local xs :: ref
     branch _ :: ref
       Call :: ref
-        Global c75 :: ref
-        Global c78 :: ref
+        Global c62 :: ref
+        Global c65 :: ref
         Local ys :: ref
         Local xs :: ref
 clone c16   def: elm/core:List.concat   key: (v0=i64)   name: concat__i64   kind: function   params: lists:ref   result: ref
   Call :: ref
-    Global c48 :: ref
     Global c49 :: ref
+    Global c50 :: ref
     List :: ref
     Local lists :: ref
-clone c79   def: elm/core:List.lambda@125:10   key: ()   outer: c50 (v0=i64; v1=ref)   kind: function   params: x:i64 acc:ref   result: ref   lifted-from: c50
+clone c66   def: elm/core:List.lambda@125:10   key: ()   outer: c51 (v0=i64; v1=ref)   kind: function   params: x:i64 acc:ref   result: ref   lifted-from: c51
   Call :: ref
     Kernel elm/core:List.cons (v0=ref) :: ref
     Call :: ref
       Local f :: ref
       Local x :: i64
     Local acc :: ref
-clone c50   def: elm/core:List.map   key: (v0=i64; v1=ref)   name: map__i64__ref   kind: function   params: f:ref xs:ref   result: ref
+clone c51   def: elm/core:List.map   key: (v0=i64; v1=ref)   name: map__i64__ref   kind: function   params: f:ref xs:ref   result: ref
   Call :: ref
-    Global c75 :: ref
-    Global c79 :: ref
+    Global c62 :: ref
+    Global c66 :: ref
     List :: ref
     Local xs :: ref
 clone c17   def: elm/core:List.concatMap   key: (v0=i64; v1=i64)   name: concatMap__i64__i64   kind: function   params: f:ref list:ref   result: ref
   Call :: ref
     Global c16 :: ref
     Call :: ref
-      Global c50 :: ref
+      Global c51 :: ref
       Local f :: ref
       Local list :: ref
 clone c18   def: author/project:EqCmp.lambda@172:74   key: ()   kind: function   params: x:i64   result: ref   lifted-from: c1
@@ -462,39 +462,39 @@ clone c18   def: author/project:EqCmp.lambda@172:74   key: ()   kind: function  
       Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Int) :: ref
       Local x :: i64
       Lit 10 :: i64
-clone c51   def: elm/core:List.foldl   key: (v0=i64; v1=i64)   name: foldl__i64__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
+clone c52   def: elm/core:List.foldl   key: (v0=i64; v1=i64)   name: foldl__i64__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
   Case :: i64
     Local list :: ref
     branch [] :: ref
       Local acc :: i64
     branch x :: i64 :: xs :: ref :: ref
       Call :: i64
-        Global c51 :: ref
+        Global c52 :: ref
         Local func :: ref
         Call :: i64
           Local func :: ref
           Local x :: i64
           Local acc :: i64
         Local xs :: ref
-clone c52   def: elm/core:List.lambda@252:10   key: ()   outer: c19 (v0=i64)   kind: function   params: _a0:i64 i:i64   result: i64   lifted-from: c19
+clone c53   def: elm/core:List.lambda@252:10   key: ()   outer: c19 (v0=i64)   kind: function   params: _a0:i64 i:i64   result: i64   lifted-from: c19
   Call :: i64
     Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
     Local i :: i64
     Lit 1 :: i64
 clone c19   def: elm/core:List.length   key: (v0=i64)   name: length__i64   kind: function   params: xs:ref   result: i64
   Call :: i64
-    Global c51 :: ref
     Global c52 :: ref
+    Global c53 :: ref
     Lit 0 :: i64
     Local xs :: ref
-clone c53   def: elm/core:List.rangeHelp   key: ()   kind: function   params: lo:i64 hi:i64 list:ref   result: ref
+clone c54   def: elm/core:List.rangeHelp   key: ()   kind: function   params: lo:i64 hi:i64 list:ref   result: ref
   If :: ref
     Call :: enum
       Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
       Local lo :: i64
       Local hi :: i64
     Call :: ref
-      Global c53 :: ref
+      Global c54 :: ref
       Local lo :: i64
       Call :: i64
         Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
@@ -507,218 +507,333 @@ clone c53   def: elm/core:List.rangeHelp   key: ()   kind: function   params: lo
     Local list :: ref
 clone c20   def: elm/core:List.range   key: ()   kind: function   params: lo:i64 hi:i64   result: ref
   Call :: ref
-    Global c53 :: ref
+    Global c54 :: ref
     Local lo :: i64
     Local hi :: i64
     List :: ref
-clone c89   def: elm/core:List.lambda@125:10   key: ()   outer: c60 (v0=ref; v1=i64)   kind: function   params: x:ref acc:ref   result: ref   lifted-from: c60
+clone c21   def: author/project:FicOverlaySort.listSort   key: (v0=type elm/core:Basics.Int)   name: listSort__i64   kind: function   params: xs:ref   result: ref
   Call :: ref
-    Kernel elm/core:List.cons (v0=i64) :: ref
-    Call :: i64
-      Local f :: ref
-      Local x :: ref
-    Local acc :: ref
-clone c60   def: elm/core:List.map   key: (v0=ref; v1=i64)   name: map__ref__i64   kind: function   params: f:ref xs:ref   result: ref
+    Kernel elm/core:Vector.toList (v0=type elm/core:Basics.Int) :: ref
+    Call :: ref
+      Kernel elm/core:Vector.sort (v0=type elm/core:Basics.Int) :: ref
+      Call :: ref
+        Kernel elm/core:Vector.fromList (v0=type elm/core:Basics.Int) :: ref
+        Local xs :: ref
+clone c22   def: author/project:FicOverlaySort.listSort   key: (v0=type elm/core:String.String)   name: listSort__t   kind: function   params: xs:ref   result: ref
   Call :: ref
-    Global c48 :: ref
-    Global c89 :: ref
-    List :: ref
-    Local xs :: ref
-clone c61   def: elm/core:Tuple.second   key: (v0=i64; v1=i64)   name: second__i64__i64   kind: function   params: _p0:struct(i64,i64)   result: i64
-  Case :: i64
-    Local _p0 :: struct(i64,i64)
-    branch (_ :: i64, y :: i64) :: struct(i64,i64)
-      Local y :: i64
-clone c92   def: author/project:FicOverlay.splitAt   key: (v0=ref)   name: splitAt__ref   kind: function   params: n:i64 xs:ref acc:ref   result: struct(ref,ref)
-  If :: struct(ref,ref)
+    Kernel elm/core:Vector.toList (v0=type elm/core:String.String) :: ref
+    Call :: ref
+      Kernel elm/core:Vector.sort (v0=type elm/core:String.String) :: ref
+      Call :: ref
+        Kernel elm/core:Vector.fromList (v0=type elm/core:String.String) :: ref
+        Local xs :: ref
+clone c23   def: author/project:FicOverlaySort.listSort   key: (v0=type elm/core:Basics.Float)   name: listSort__f64   kind: function   params: xs:ref   result: ref
+  Call :: ref
+    Kernel elm/core:Vector.toList (v0=type elm/core:Basics.Float) :: ref
+    Call :: ref
+      Kernel elm/core:Vector.sort (v0=type elm/core:Basics.Float) :: ref
+      Call :: ref
+        Kernel elm/core:Vector.fromList (v0=type elm/core:Basics.Float) :: ref
+        Local xs :: ref
+clone c24   def: author/project:FicOverlaySort.listSort   key: (v0=type (elm/core:Basics.Int, elm/core:String.String))   name: listSort__t   kind: function   params: xs:ref   result: ref
+  Call :: ref
+    Kernel elm/core:Vector.toList (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+    Call :: ref
+      Kernel elm/core:Vector.sort (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+      Call :: ref
+        Kernel elm/core:Vector.fromList (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+        Local xs :: ref
+clone c25   def: author/project:FicOverlaySort.listSort   key: (v0=type (elm/core:List.List elm/core:Basics.Int))   name: listSort__t   kind: function   params: xs:ref   result: ref
+  Call :: ref
+    Kernel elm/core:Vector.toList (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
+    Call :: ref
+      Kernel elm/core:Vector.sort (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
+      Call :: ref
+        Kernel elm/core:Vector.fromList (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
+        Local xs :: ref
+clone c77   def: author/project:Vector.permuteHelp   key: (v0=type elm/core:Basics.Int)   name: permuteHelp__i64   kind: function   params: k:i64 n:i64 v:ref idx:ref acc:ref   result: ref
+  If :: ref
     Call :: enum
-      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+      Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
+      Local k :: i64
       Local n :: i64
-      Lit 0 :: i64
-    Tuple :: struct(ref,ref)
+    Local acc :: ref
+    Call :: ref
+      Global c77 :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Local k :: i64
+        Lit 1 :: i64
+      Local n :: i64
+      Local v :: ref
+      Local idx :: ref
       Call :: ref
-        Global c98 :: ref
-        Local acc :: ref
-      Local xs :: ref
-    Case :: struct(ref,ref)
-      Local xs :: ref
-      branch [] :: ref
-        Tuple :: struct(ref,ref)
-          Call :: ref
-            Global c98 :: ref
-            Local acc :: ref
-          List :: ref
-      branch x :: ref :: rest :: ref :: ref
-        Call :: struct(ref,ref)
-          Global c92 :: ref
+        Kernel elm/core:Vector.push (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Kernel elm/core:Vector.unsafeGet (v0=type elm/core:Basics.Int) :: ref
           Call :: i64
-            Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
-            Local n :: i64
-            Lit 1 :: i64
-          Local rest :: ref
-          Call :: ref
-            Kernel elm/core:List.cons (v0=ref) :: ref
-            Local x :: ref
-            Local acc :: ref
-clone c105   def: author/project:FicOverlay.lambda@183:24   key: ()   outer: c93 (v0=ref)   kind: function   params: _pb105_0:ref _pb105_1:ref   result: ref   lifted-from: c93
-  Call :: ref
-    Kernel elm/core:List.cons (v0=ref) :: ref
-    Local _pb105_0 :: ref
-    Local _pb105_1 :: ref
-clone c106   def: author/project:FicOverlay.lambda@188:32   key: ()   outer: c93 (v0=ref)   kind: function   params: _pb106_0:ref _pb106_1:ref   result: ref   lifted-from: c93
-  Call :: ref
-    Kernel elm/core:List.cons (v0=ref) :: ref
-    Local _pb106_0 :: ref
-    Local _pb106_1 :: ref
-clone c93   def: author/project:FicOverlay.mergeLists   key: (v0=ref)   name: mergeLists__ref   kind: function   params: cmp:ref ls:ref rs:ref acc:ref   result: ref
-  Case :: ref
-    Local ls :: ref
-    branch [] :: ref
-      Call :: ref
-        Global c45 :: ref
-        Global c105 :: ref
-        Local rs :: ref
+            Kernel elm/core:Vector.unsafeGet (v0=type elm/core:Basics.Int) :: ref
+            Local k :: i64
+            Local idx :: ref
+          Local v :: ref
         Local acc :: ref
-    branch l :: ref :: lr :: ref :: ref
-      Case :: ref
-        Local rs :: ref
-        branch [] :: ref
-          Call :: ref
-            Global c45 :: ref
-            Global c106 :: ref
-            Local ls :: ref
-            Local acc :: ref
-        branch r :: ref :: rr :: ref :: ref
-          Case :: ref
-            Call :: enum
-              Local cmp :: ref
-              Local l :: ref
-              Local r :: ref
-            branch GT #2 :: enum
-              Call :: ref
-                Global c93 :: ref
-                Local cmp :: ref
-                Local ls :: ref
-                Local rr :: ref
-                Call :: ref
-                  Kernel elm/core:List.cons (v0=ref) :: ref
-                  Local r :: ref
-                  Local acc :: ref
-            branch _ :: enum
-              Call :: ref
-                Global c93 :: ref
-                Local cmp :: ref
-                Local lr :: ref
-                Local rs :: ref
-                Call :: ref
-                  Kernel elm/core:List.cons (v0=ref) :: ref
-                  Local l :: ref
-                  Local acc :: ref
-clone c71   def: author/project:FicOverlay.sortN   key: (v0=ref)   name: sortN__ref   kind: function   params: cmp:ref n:i64 xs:ref   result: ref
+clone c67   def: author/project:Vector.permute   key: (v0=type elm/core:Basics.Int)   name: permute__i64   kind: function   params: v:ref idx:ref   result: ref
+  Call :: ref
+    Global c77 :: ref
+    Lit 0 :: i64
+    Call :: i64
+      Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
+      Local idx :: ref
+    Local v :: ref
+    Local idx :: ref
+    Call :: ref
+      Kernel elm/core:Vector.withCapacity (v0=type elm/core:Basics.Int) :: ref
+      Call :: i64
+        Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
+        Local idx :: ref
+clone c78   def: author/project:Vector.mapHelp   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int)   name: mapHelp__i64__i64   kind: function   params: i:i64 n:i64 f:ref v:ref acc:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
+      Local i :: i64
+      Local n :: i64
+    Local acc :: ref
+    Call :: ref
+      Global c78 :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Local i :: i64
+        Lit 1 :: i64
+      Local n :: i64
+      Local f :: ref
+      Local v :: ref
+      Call :: ref
+        Kernel elm/core:Vector.push (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Local f :: ref
+          Call :: i64
+            Kernel elm/core:Vector.unsafeGet (v0=type elm/core:Basics.Int) :: ref
+            Local i :: i64
+            Local v :: ref
+        Local acc :: ref
+clone c68   def: author/project:Vector.map   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int)   name: map__i64__i64   kind: function   params: f:ref v:ref   result: ref
+  Call :: ref
+    Global c78 :: ref
+    Lit 0 :: i64
+    Call :: i64
+      Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
+      Local v :: ref
+    Local f :: ref
+    Local v :: ref
+    Call :: ref
+      Kernel elm/core:Vector.withCapacity (v0=type elm/core:Basics.Int) :: ref
+      Call :: i64
+        Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
+        Local v :: ref
+clone c55   def: author/project:Vector.sortBy   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int)   name: sortBy__i64__i64   kind: function   params: f:ref v:ref   result: ref
   If :: ref
     Call :: enum
       Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
-      Local n :: i64
+      Call :: i64
+        Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
+        Local v :: ref
       Lit 2 :: i64
-    Local xs :: ref
-    Let h@156:13 :: ref
-      Call :: i64
-        Kernel elm/core:Basics.idiv () :: ref
-        Local n :: i64
-        Lit 2 :: i64
-      Case :: ref
-        Call :: struct(ref,ref)
-          Global c92 :: ref
-          Local h@156:13 :: i64
-          Local xs :: ref
-          List :: ref
-        branch (left :: ref, right :: ref) :: struct(ref,ref)
-          Call :: ref
-            Global c93 :: ref
-            Local cmp :: ref
-            Call :: ref
-              Global c71 :: ref
-              Local cmp :: ref
-              Local h@156:13 :: i64
-              Local left :: ref
-            Call :: ref
-              Global c71 :: ref
-              Local cmp :: ref
-              Call :: i64
-                Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
-                Local n :: i64
-                Local h@156:13 :: i64
-              Local right :: ref
-            List :: ref
-clone c94   def: elm/core:List.foldl   key: (v0=ref; v1=i64)   name: foldl__ref__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
-  Case :: i64
-    Local list :: ref
-    branch [] :: ref
-      Local acc :: i64
-    branch x :: ref :: xs :: ref :: ref
-      Call :: i64
-        Global c94 :: ref
-        Local func :: ref
-        Call :: i64
-          Local func :: ref
-          Local x :: ref
-          Local acc :: i64
-        Local xs :: ref
-clone c95   def: elm/core:List.lambda@252:10   key: ()   outer: c72 (v0=ref)   kind: function   params: _a0:ref i:i64   result: i64   lifted-from: c72
-  Call :: i64
-    Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
-    Local i :: i64
-    Lit 1 :: i64
-clone c72   def: elm/core:List.length   key: (v0=ref)   name: length__ref   kind: function   params: xs:ref   result: i64
-  Call :: i64
-    Global c94 :: ref
-    Global c95 :: ref
-    Lit 0 :: i64
-    Local xs :: ref
-clone c35   def: author/project:FicOverlay.listSortWith   key: (v0=ref)   name: listSortWith__ref   kind: function   params: cmp:ref xs:ref   result: ref
-  Call :: ref
-    Global c71 :: ref
-    Local cmp :: ref
-    Call :: i64
-      Global c72 :: ref
-      Local xs :: ref
-    Local xs :: ref
-clone c62   def: author/project:FicOverlay.keyOrder   key: (v0=type elm/core:Basics.Int; v1=i64)   name: keyOrder__i64__i64   kind: function   params: _p0:struct(i64,i64) _p1:struct(i64,i64)   result: enum
-  Case :: enum
-    Local _p0 :: struct(i64,i64)
-    branch (a :: i64, _ :: i64) :: struct(i64,i64)
-      Case :: enum
-        Local _p1 :: struct(i64,i64)
-        branch (b :: i64, _ :: i64) :: struct(i64,i64)
-          Call :: enum
-            Kernel elm/core:Basics.compare (v0=type elm/core:Basics.Int) :: ref
-            Local a :: i64
-            Local b :: i64
-clone c63   def: author/project:FicOverlay.lambda@134:61   key: ()   outer: c26 (v0=i64; v1=type elm/core:Basics.Int)   kind: function   params: x:i64   result: struct(i64,i64)   lifted-from: c26
-  Tuple :: struct(i64,i64)
-    Call :: i64
-      Local f :: ref
-      Local x :: i64
-    Local x :: i64
-clone c26   def: author/project:FicOverlay.listSortBy   key: (v0=i64; v1=type elm/core:Basics.Int)   name: listSortBy__i64__i64   kind: function   params: f:ref xs:ref   result: ref
-  Call :: ref
-    Global c60 :: ref
-    Global c61 :: ref
+    Local v :: ref
     Call :: ref
-      Global c35 :: ref
-      Global c62 :: ref
+      Global c67 :: ref
+      Local v :: ref
       Call :: ref
-        Global c50 :: ref
-        Global c63 :: ref
-        Local xs :: ref
-clone c54   def: elm/core:Basics.identity   key: (v0=i64)   name: identity__i64   kind: function   params: x:i64   result: i64
-  Local x :: i64
-clone c21   def: elm/core:List.sort   key: (v0=type elm/core:Basics.Int)   name: sort__i64   kind: function   params: xs:ref   result: ref
+        Kernel elm/core:Vector.sortPerm (v0=type elm/core:Basics.Int) :: ref
+        Call :: ref
+          Global c68 :: ref
+          Local f :: ref
+          Local v :: ref
+clone c26   def: author/project:FicOverlaySort.listSortBy   key: (v0=type elm/core:Basics.Int; v1=type elm/core:Basics.Int)   name: listSortBy__i64__i64   kind: function   params: f:ref xs:ref   result: ref
   Call :: ref
-    Global c26 :: ref
-    Global c54 :: ref
-    Local xs :: ref
-clone c69   def: elm/core:List.lambda@125:10   key: ()   outer: c30 (v0=ref; v1=ref)   kind: function   params: x:ref acc:ref   result: ref   lifted-from: c30
+    Kernel elm/core:Vector.toList (v0=type elm/core:Basics.Int) :: ref
+    Call :: ref
+      Global c55 :: ref
+      Local f :: ref
+      Call :: ref
+        Kernel elm/core:Vector.fromList (v0=type elm/core:Basics.Int) :: ref
+        Local xs :: ref
+clone c27   def: author/project:EqCmp.lambda@182:72   key: ()   kind: function   params: x:i64   result: i64   lifted-from: c1
+  Call :: i64
+    Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
+    Local x :: i64
+clone c79   def: author/project:Vector.permuteHelp   key: (v0=type (elm/core:Basics.Int, elm/core:String.String))   name: permuteHelp__t   kind: function   params: k:i64 n:i64 v:ref idx:ref acc:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
+      Local k :: i64
+      Local n :: i64
+    Local acc :: ref
+    Call :: ref
+      Global c79 :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Local k :: i64
+        Lit 1 :: i64
+      Local n :: i64
+      Local v :: ref
+      Local idx :: ref
+      Call :: ref
+        Kernel elm/core:Vector.push (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+        Call :: struct(i64,ref)
+          Kernel elm/core:Vector.unsafeGet (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+          Call :: i64
+            Kernel elm/core:Vector.unsafeGet (v0=type elm/core:Basics.Int) :: ref
+            Local k :: i64
+            Local idx :: ref
+          Local v :: ref
+        Local acc :: ref
+clone c69   def: author/project:Vector.permute   key: (v0=type (elm/core:Basics.Int, elm/core:String.String))   name: permute__t   kind: function   params: v:ref idx:ref   result: ref
+  Call :: ref
+    Global c79 :: ref
+    Lit 0 :: i64
+    Call :: i64
+      Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
+      Local idx :: ref
+    Local v :: ref
+    Local idx :: ref
+    Call :: ref
+      Kernel elm/core:Vector.withCapacity (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+      Call :: i64
+        Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
+        Local idx :: ref
+clone c80   def: author/project:Vector.mapHelp   key: (v0=type (elm/core:Basics.Int, elm/core:String.String); v1=type elm/core:Basics.Int)   name: mapHelp__t__i64   kind: function   params: i:i64 n:i64 f:ref v:ref acc:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
+      Local i :: i64
+      Local n :: i64
+    Local acc :: ref
+    Call :: ref
+      Global c80 :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Local i :: i64
+        Lit 1 :: i64
+      Local n :: i64
+      Local f :: ref
+      Local v :: ref
+      Call :: ref
+        Kernel elm/core:Vector.push (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Local f :: ref
+          Call :: struct(i64,ref)
+            Kernel elm/core:Vector.unsafeGet (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+            Local i :: i64
+            Local v :: ref
+        Local acc :: ref
+clone c70   def: author/project:Vector.map   key: (v0=type (elm/core:Basics.Int, elm/core:String.String); v1=type elm/core:Basics.Int)   name: map__t__i64   kind: function   params: f:ref v:ref   result: ref
+  Call :: ref
+    Global c80 :: ref
+    Lit 0 :: i64
+    Call :: i64
+      Kernel elm/core:Vector.length (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+      Local v :: ref
+    Local f :: ref
+    Local v :: ref
+    Call :: ref
+      Kernel elm/core:Vector.withCapacity (v0=type elm/core:Basics.Int) :: ref
+      Call :: i64
+        Kernel elm/core:Vector.length (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+        Local v :: ref
+clone c56   def: author/project:Vector.sortBy   key: (v0=type (elm/core:Basics.Int, elm/core:String.String); v1=type elm/core:Basics.Int)   name: sortBy__t__i64   kind: function   params: f:ref v:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+      Call :: i64
+        Kernel elm/core:Vector.length (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+        Local v :: ref
+      Lit 2 :: i64
+    Local v :: ref
+    Call :: ref
+      Global c69 :: ref
+      Local v :: ref
+      Call :: ref
+        Kernel elm/core:Vector.sortPerm (v0=type elm/core:Basics.Int) :: ref
+        Call :: ref
+          Global c70 :: ref
+          Local f :: ref
+          Local v :: ref
+clone c28   def: author/project:FicOverlaySort.listSortBy   key: (v0=type (elm/core:Basics.Int, elm/core:String.String); v1=type elm/core:Basics.Int)   name: listSortBy__t__i64   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Kernel elm/core:Vector.toList (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+    Call :: ref
+      Global c56 :: ref
+      Local f :: ref
+      Call :: ref
+        Kernel elm/core:Vector.fromList (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+        Local xs :: ref
+clone c81   def: author/project:Vector.mapHelp   key: (v0=type (elm/core:Basics.Int, elm/core:String.String); v1=type elm/core:String.String)   name: mapHelp__t__t   kind: function   params: i:i64 n:i64 f:ref v:ref acc:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
+      Local i :: i64
+      Local n :: i64
+    Local acc :: ref
+    Call :: ref
+      Global c81 :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Local i :: i64
+        Lit 1 :: i64
+      Local n :: i64
+      Local f :: ref
+      Local v :: ref
+      Call :: ref
+        Kernel elm/core:Vector.push (v0=type elm/core:String.String) :: ref
+        Call :: ref
+          Local f :: ref
+          Call :: struct(i64,ref)
+            Kernel elm/core:Vector.unsafeGet (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+            Local i :: i64
+            Local v :: ref
+        Local acc :: ref
+clone c71   def: author/project:Vector.map   key: (v0=type (elm/core:Basics.Int, elm/core:String.String); v1=type elm/core:String.String)   name: map__t__t   kind: function   params: f:ref v:ref   result: ref
+  Call :: ref
+    Global c81 :: ref
+    Lit 0 :: i64
+    Call :: i64
+      Kernel elm/core:Vector.length (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+      Local v :: ref
+    Local f :: ref
+    Local v :: ref
+    Call :: ref
+      Kernel elm/core:Vector.withCapacity (v0=type elm/core:String.String) :: ref
+      Call :: i64
+        Kernel elm/core:Vector.length (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+        Local v :: ref
+clone c57   def: author/project:Vector.sortBy   key: (v0=type (elm/core:Basics.Int, elm/core:String.String); v1=type elm/core:String.String)   name: sortBy__t__t   kind: function   params: f:ref v:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
+      Call :: i64
+        Kernel elm/core:Vector.length (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+        Local v :: ref
+      Lit 2 :: i64
+    Local v :: ref
+    Call :: ref
+      Global c69 :: ref
+      Local v :: ref
+      Call :: ref
+        Kernel elm/core:Vector.sortPerm (v0=type elm/core:String.String) :: ref
+        Call :: ref
+          Global c71 :: ref
+          Local f :: ref
+          Local v :: ref
+clone c29   def: author/project:FicOverlaySort.listSortBy   key: (v0=type (elm/core:Basics.Int, elm/core:String.String); v1=type elm/core:String.String)   name: listSortBy__t__t   kind: function   params: f:ref xs:ref   result: ref
+  Call :: ref
+    Kernel elm/core:Vector.toList (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+    Call :: ref
+      Global c57 :: ref
+      Local f :: ref
+      Call :: ref
+        Kernel elm/core:Vector.fromList (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+        Local xs :: ref
+clone c58   def: elm/core:List.lambda@125:10   key: ()   outer: c30 (v0=ref; v1=ref)   kind: function   params: x:ref acc:ref   result: ref   lifted-from: c30
   Call :: ref
     Kernel elm/core:List.cons (v0=ref) :: ref
     Call :: ref
@@ -727,447 +842,146 @@ clone c69   def: elm/core:List.lambda@125:10   key: ()   outer: c30 (v0=ref; v1=
     Local acc :: ref
 clone c30   def: elm/core:List.map   key: (v0=ref; v1=ref)   name: map__ref__ref   kind: function   params: f:ref xs:ref   result: ref
   Call :: ref
-    Global c48 :: ref
-    Global c69 :: ref
-    List :: ref
-    Local xs :: ref
-clone c66   def: elm/core:Tuple.second   key: (v0=ref; v1=ref)   name: second__ref__ref   kind: function   params: _p0:struct(ref,ref)   result: ref
-  Case :: ref
-    Local _p0 :: struct(ref,ref)
-    branch (_ :: ref, y :: ref) :: struct(ref,ref)
-      Local y :: ref
-clone c67   def: author/project:FicOverlay.keyOrder   key: (v0=type elm/core:String.String; v1=ref)   name: keyOrder__t__ref   kind: function   params: _p0:struct(ref,ref) _p1:struct(ref,ref)   result: enum
-  Case :: enum
-    Local _p0 :: struct(ref,ref)
-    branch (a :: ref, _ :: ref) :: struct(ref,ref)
-      Case :: enum
-        Local _p1 :: struct(ref,ref)
-        branch (b :: ref, _ :: ref) :: struct(ref,ref)
-          Call :: enum
-            Kernel elm/core:Basics.compare (v0=type elm/core:String.String) :: ref
-            Local a :: ref
-            Local b :: ref
-clone c68   def: author/project:FicOverlay.lambda@134:61   key: ()   outer: c29 (v0=ref; v1=type elm/core:String.String)   kind: function   params: x:ref   result: struct(ref,ref)   lifted-from: c29
-  Tuple :: struct(ref,ref)
-    Call :: ref
-      Local f :: ref
-      Local x :: ref
-    Local x :: ref
-clone c29   def: author/project:FicOverlay.listSortBy   key: (v0=ref; v1=type elm/core:String.String)   name: listSortBy__ref__t   kind: function   params: f:ref xs:ref   result: ref
-  Call :: ref
-    Global c30 :: ref
-    Global c66 :: ref
-    Call :: ref
-      Global c35 :: ref
-      Global c67 :: ref
-      Call :: ref
-        Global c30 :: ref
-        Global c68 :: ref
-        Local xs :: ref
-clone c55   def: elm/core:Basics.identity   key: (v0=ref)   name: identity__ref   kind: function   params: x:ref   result: ref
-  Local x :: ref
-clone c22   def: elm/core:List.sort   key: (v0=type elm/core:String.String)   name: sort__t   kind: function   params: xs:ref   result: ref
-  Call :: ref
-    Global c29 :: ref
-    Global c55 :: ref
-    Local xs :: ref
-clone c99   def: elm/core:List.lambda@125:10   key: ()   outer: c80 (v0=ref; v1=f64)   kind: function   params: x:ref acc:ref   result: ref   lifted-from: c80
-  Call :: ref
-    Kernel elm/core:List.cons (v0=f64) :: ref
-    Call :: f64
-      Local f :: ref
-      Local x :: ref
-    Local acc :: ref
-clone c80   def: elm/core:List.map   key: (v0=ref; v1=f64)   name: map__ref__f64   kind: function   params: f:ref xs:ref   result: ref
-  Call :: ref
-    Global c48 :: ref
-    Global c99 :: ref
-    List :: ref
-    Local xs :: ref
-clone c81   def: elm/core:Tuple.second   key: (v0=f64; v1=f64)   name: second__f64__f64   kind: function   params: _p0:struct(f64,f64)   result: f64
-  Case :: f64
-    Local _p0 :: struct(f64,f64)
-    branch (_ :: f64, y :: f64) :: struct(f64,f64)
-      Local y :: f64
-clone c82   def: author/project:FicOverlay.keyOrder   key: (v0=type elm/core:Basics.Float; v1=f64)   name: keyOrder__f64__f64   kind: function   params: _p0:struct(f64,f64) _p1:struct(f64,f64)   result: enum
-  Case :: enum
-    Local _p0 :: struct(f64,f64)
-    branch (a :: f64, _ :: f64) :: struct(f64,f64)
-      Case :: enum
-        Local _p1 :: struct(f64,f64)
-        branch (b :: f64, _ :: f64) :: struct(f64,f64)
-          Call :: enum
-            Kernel elm/core:Basics.compare (v0=type elm/core:Basics.Float) :: ref
-            Local a :: f64
-            Local b :: f64
-clone c112   def: elm/core:List.lambda@261:9   key: ()   outer: c111 (v0=f64)   kind: function   params: _pb112_0:f64 _pb112_1:ref   result: ref   lifted-from: c111
-  Call :: ref
-    Kernel elm/core:List.cons (v0=f64) :: ref
-    Local _pb112_0 :: f64
-    Local _pb112_1 :: ref
-clone c111   def: elm/core:List.reverse   key: (v0=f64)   name: reverse__f64   kind: function   params: list:ref   result: ref
-  Call :: ref
-    Global c43 :: ref
-    Global c112 :: ref
-    List :: ref
-    Local list :: ref
-clone c109   def: elm/core:List.foldrHelper   key: (v0=f64; v1=ref)   name: foldrHelper__f64__ref   kind: function   params: fn:ref acc:ref ctr:i64 ls:ref   result: ref
-  Case :: ref
-    Local ls :: ref
-    branch [] :: ref
-      Local acc :: ref
-    branch a :: f64 :: r1 :: ref :: ref
-      Case :: ref
-        Local r1 :: ref
-        branch [] :: ref
-          Call :: ref
-            Local fn :: ref
-            Local a :: f64
-            Local acc :: ref
-        branch b :: f64 :: r2 :: ref :: ref
-          Case :: ref
-            Local r2 :: ref
-            branch [] :: ref
-              Call :: ref
-                Local fn :: ref
-                Local a :: f64
-                Call :: ref
-                  Local fn :: ref
-                  Local b :: f64
-                  Local acc :: ref
-            branch c :: f64 :: r3 :: ref :: ref
-              Case :: ref
-                Local r3 :: ref
-                branch [] :: ref
-                  Call :: ref
-                    Local fn :: ref
-                    Local a :: f64
-                    Call :: ref
-                      Local fn :: ref
-                      Local b :: f64
-                      Call :: ref
-                        Local fn :: ref
-                        Local c :: f64
-                        Local acc :: ref
-                branch d :: f64 :: r4 :: ref :: ref
-                  Let res@200:41 :: ref
-                    If :: ref
-                      Call :: enum
-                        Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
-                        Local ctr :: i64
-                        Lit 500 :: i64
-                      Call :: ref
-                        Global c43 :: ref
-                        Local fn :: ref
-                        Local acc :: ref
-                        Call :: ref
-                          Global c111 :: ref
-                          Local r4 :: ref
-                      Call :: ref
-                        Global c109 :: ref
-                        Local fn :: ref
-                        Local acc :: ref
-                        Call :: i64
-                          Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
-                          Local ctr :: i64
-                          Lit 1 :: i64
-                        Local r4 :: ref
-                    Call :: ref
-                      Local fn :: ref
-                      Local a :: f64
-                      Call :: ref
-                        Local fn :: ref
-                        Local b :: f64
-                        Call :: ref
-                          Local fn :: ref
-                          Local c :: f64
-                          Call :: ref
-                            Local fn :: ref
-                            Local d :: f64
-                            Local res@200:41 :: ref
-clone c100   def: elm/core:List.foldr   key: (v0=f64; v1=ref)   name: foldr__f64__ref   kind: function   params: fn:ref acc:ref ls:ref   result: ref
-  Call :: ref
-    Global c109 :: ref
-    Local fn :: ref
-    Local acc :: ref
-    Lit 0 :: i64
-    Local ls :: ref
-clone c101   def: elm/core:List.lambda@125:10   key: ()   outer: c83 (v0=f64; v1=ref)   kind: function   params: x:f64 acc:ref   result: ref   lifted-from: c83
-  Call :: ref
-    Kernel elm/core:List.cons (v0=ref) :: ref
-    Call :: ref
-      Local f :: ref
-      Local x :: f64
-    Local acc :: ref
-clone c83   def: elm/core:List.map   key: (v0=f64; v1=ref)   name: map__f64__ref   kind: function   params: f:ref xs:ref   result: ref
-  Call :: ref
-    Global c100 :: ref
-    Global c101 :: ref
-    List :: ref
-    Local xs :: ref
-clone c84   def: author/project:FicOverlay.lambda@134:61   key: ()   outer: c56 (v0=f64; v1=type elm/core:Basics.Float)   kind: function   params: x:f64   result: struct(f64,f64)   lifted-from: c56
-  Tuple :: struct(f64,f64)
-    Call :: f64
-      Local f :: ref
-      Local x :: f64
-    Local x :: f64
-clone c56   def: author/project:FicOverlay.listSortBy   key: (v0=f64; v1=type elm/core:Basics.Float)   name: listSortBy__f64__f64   kind: function   params: f:ref xs:ref   result: ref
-  Call :: ref
-    Global c80 :: ref
-    Global c81 :: ref
-    Call :: ref
-      Global c35 :: ref
-      Global c82 :: ref
-      Call :: ref
-        Global c83 :: ref
-        Global c84 :: ref
-        Local xs :: ref
-clone c57   def: elm/core:Basics.identity   key: (v0=f64)   name: identity__f64   kind: function   params: x:f64   result: f64
-  Local x :: f64
-clone c23   def: elm/core:List.sort   key: (v0=type elm/core:Basics.Float)   name: sort__f64   kind: function   params: xs:ref   result: ref
-  Call :: ref
-    Global c56 :: ref
-    Global c57 :: ref
-    Local xs :: ref
-clone c85   def: author/project:FicOverlay.keyOrder   key: (v0=type (elm/core:Basics.Int, elm/core:String.String); v1=ref)   name: keyOrder__t__ref   kind: function   params: _p0:struct(ref,ref) _p1:struct(ref,ref)   result: enum
-  Case :: enum
-    Local _p0 :: struct(ref,ref)
-    branch (a :: struct(i64,ref), _ :: ref) :: struct(ref,ref)
-      Case :: enum
-        Local _p1 :: struct(ref,ref)
-        branch (b :: struct(i64,ref), _ :: ref) :: struct(ref,ref)
-          Call :: enum
-            Kernel elm/core:Basics.compare (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
-            Local a :: struct(i64,ref)
-            Local b :: struct(i64,ref)
-clone c86   def: author/project:FicOverlay.lambda@134:61   key: ()   outer: c58 (v0=ref; v1=type (elm/core:Basics.Int, elm/core:String.String))   kind: function   params: x:ref   result: struct(ref,ref)   lifted-from: c58
-  Tuple :: struct(ref,ref)
-    Call :: struct(i64,ref)
-      Local f :: ref
-      Local x :: ref
-    Local x :: ref
-clone c58   def: author/project:FicOverlay.listSortBy   key: (v0=ref; v1=type (elm/core:Basics.Int, elm/core:String.String))   name: listSortBy__ref__t   kind: function   params: f:ref xs:ref   result: ref
-  Call :: ref
-    Global c30 :: ref
-    Global c66 :: ref
-    Call :: ref
-      Global c35 :: ref
-      Global c85 :: ref
-      Call :: ref
-        Global c30 :: ref
-        Global c86 :: ref
-        Local xs :: ref
-clone c24   def: elm/core:List.sort   key: (v0=type (elm/core:Basics.Int, elm/core:String.String))   name: sort__t   kind: function   params: xs:ref   result: ref
-  Call :: ref
+    Global c49 :: ref
     Global c58 :: ref
-    Global c55 :: ref
+    List :: ref
     Local xs :: ref
-clone c87   def: author/project:FicOverlay.keyOrder   key: (v0=type (elm/core:List.List elm/core:Basics.Int); v1=ref)   name: keyOrder__t__ref   kind: function   params: _p0:struct(ref,ref) _p1:struct(ref,ref)   result: enum
-  Case :: enum
-    Local _p0 :: struct(ref,ref)
-    branch (a :: ref, _ :: ref) :: struct(ref,ref)
-      Case :: enum
-        Local _p1 :: struct(ref,ref)
-        branch (b :: ref, _ :: ref) :: struct(ref,ref)
-          Call :: enum
-            Kernel elm/core:Basics.compare (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
-            Local a :: ref
-            Local b :: ref
-clone c88   def: author/project:FicOverlay.lambda@134:61   key: ()   outer: c59 (v0=ref; v1=type (elm/core:List.List elm/core:Basics.Int))   kind: function   params: x:ref   result: struct(ref,ref)   lifted-from: c59
-  Tuple :: struct(ref,ref)
-    Call :: ref
-      Local f :: ref
-      Local x :: ref
-    Local x :: ref
-clone c59   def: author/project:FicOverlay.listSortBy   key: (v0=ref; v1=type (elm/core:List.List elm/core:Basics.Int))   name: listSortBy__ref__t   kind: function   params: f:ref xs:ref   result: ref
-  Call :: ref
-    Global c30 :: ref
-    Global c66 :: ref
-    Call :: ref
-      Global c35 :: ref
-      Global c87 :: ref
-      Call :: ref
-        Global c30 :: ref
-        Global c88 :: ref
-        Local xs :: ref
-clone c25   def: elm/core:List.sort   key: (v0=type (elm/core:List.List elm/core:Basics.Int))   name: sort__t   kind: function   params: xs:ref   result: ref
-  Call :: ref
-    Global c59 :: ref
-    Global c55 :: ref
-    Local xs :: ref
-clone c27   def: author/project:EqCmp.lambda@182:72   key: ()   kind: function   params: x:i64   result: i64   lifted-from: c1
-  Call :: i64
-    Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
-    Local x :: i64
-clone c64   def: author/project:FicOverlay.keyOrder   key: (v0=type elm/core:Basics.Int; v1=ref)   name: keyOrder__i64__ref   kind: function   params: _p0:struct(i64,ref) _p1:struct(i64,ref)   result: enum
-  Case :: enum
-    Local _p0 :: struct(i64,ref)
-    branch (a :: i64, _ :: ref) :: struct(i64,ref)
-      Case :: enum
-        Local _p1 :: struct(i64,ref)
-        branch (b :: i64, _ :: ref) :: struct(i64,ref)
-          Call :: enum
-            Kernel elm/core:Basics.compare (v0=type elm/core:Basics.Int) :: ref
-            Local a :: i64
-            Local b :: i64
-clone c65   def: author/project:FicOverlay.lambda@134:61   key: ()   outer: c28 (v0=ref; v1=type elm/core:Basics.Int)   kind: function   params: x:ref   result: struct(i64,ref)   lifted-from: c28
-  Tuple :: struct(i64,ref)
-    Call :: i64
-      Local f :: ref
-      Local x :: ref
-    Local x :: ref
-clone c28   def: author/project:FicOverlay.listSortBy   key: (v0=ref; v1=type elm/core:Basics.Int)   name: listSortBy__ref__i64   kind: function   params: f:ref xs:ref   result: ref
-  Call :: ref
-    Global c30 :: ref
-    Global c11 :: ref
-    Call :: ref
-      Global c35 :: ref
-      Global c64 :: ref
-      Call :: ref
-        Global c30 :: ref
-        Global c65 :: ref
-        Local xs :: ref
 clone c31   def: author/project:EqCmp.lambda@185:75   key: ()   kind: function   params: p:struct(i64,ref,i64)   result: ref   lifted-from: c1
   Access .name #1 :: ref
     Local p :: struct(i64,ref,i64)
-clone c32   def: author/project:EqCmp.lambda@185:103   key: ()   kind: function   params: p:struct(i64,ref,i64)   result: i64   lifted-from: c1
-  Access .age #0 :: i64
-    Local p :: struct(i64,ref,i64)
-clone c90   def: author/project:FicOverlay.splitAt   key: (v0=i64)   name: splitAt__i64   kind: function   params: n:i64 xs:ref acc:ref   result: struct(ref,ref)
-  If :: struct(ref,ref)
+clone c82   def: author/project:Vector.permuteHelp   key: (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int})   name: permuteHelp__t   kind: function   params: k:i64 n:i64 v:ref idx:ref acc:ref   result: ref
+  If :: ref
     Call :: enum
-      Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
+      Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
+      Local k :: i64
       Local n :: i64
-      Lit 0 :: i64
-    Tuple :: struct(ref,ref)
+    Local acc :: ref
+    Call :: ref
+      Global c82 :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Local k :: i64
+        Lit 1 :: i64
+      Local n :: i64
+      Local v :: ref
+      Local idx :: ref
       Call :: ref
-        Global c102 :: ref
-        Local acc :: ref
-      Local xs :: ref
-    Case :: struct(ref,ref)
-      Local xs :: ref
-      branch [] :: ref
-        Tuple :: struct(ref,ref)
-          Call :: ref
-            Global c102 :: ref
-            Local acc :: ref
-          List :: ref
-      branch x :: i64 :: rest :: ref :: ref
-        Call :: struct(ref,ref)
-          Global c90 :: ref
+        Kernel elm/core:Vector.push (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int}) :: ref
+        Call :: struct(i64,ref,i64)
+          Kernel elm/core:Vector.unsafeGet (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int}) :: ref
           Call :: i64
-            Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
-            Local n :: i64
-            Lit 1 :: i64
-          Local rest :: ref
-          Call :: ref
-            Kernel elm/core:List.cons (v0=i64) :: ref
-            Local x :: i64
-            Local acc :: ref
-clone c103   def: author/project:FicOverlay.lambda@183:24   key: ()   outer: c91 (v0=i64)   kind: function   params: _pb103_0:i64 _pb103_1:ref   result: ref   lifted-from: c91
-  Call :: ref
-    Kernel elm/core:List.cons (v0=i64) :: ref
-    Local _pb103_0 :: i64
-    Local _pb103_1 :: ref
-clone c104   def: author/project:FicOverlay.lambda@188:32   key: ()   outer: c91 (v0=i64)   kind: function   params: _pb104_0:i64 _pb104_1:ref   result: ref   lifted-from: c91
-  Call :: ref
-    Kernel elm/core:List.cons (v0=i64) :: ref
-    Local _pb104_0 :: i64
-    Local _pb104_1 :: ref
-clone c91   def: author/project:FicOverlay.mergeLists   key: (v0=i64)   name: mergeLists__i64   kind: function   params: cmp:ref ls:ref rs:ref acc:ref   result: ref
-  Case :: ref
-    Local ls :: ref
-    branch [] :: ref
-      Call :: ref
-        Global c41 :: ref
-        Global c103 :: ref
-        Local rs :: ref
+            Kernel elm/core:Vector.unsafeGet (v0=type elm/core:Basics.Int) :: ref
+            Local k :: i64
+            Local idx :: ref
+          Local v :: ref
         Local acc :: ref
-    branch l :: i64 :: lr :: ref :: ref
-      Case :: ref
-        Local rs :: ref
-        branch [] :: ref
-          Call :: ref
-            Global c41 :: ref
-            Global c104 :: ref
-            Local ls :: ref
-            Local acc :: ref
-        branch r :: i64 :: rr :: ref :: ref
-          Case :: ref
-            Call :: enum
-              Local cmp :: ref
-              Local l :: i64
-              Local r :: i64
-            branch GT #2 :: enum
-              Call :: ref
-                Global c91 :: ref
-                Local cmp :: ref
-                Local ls :: ref
-                Local rr :: ref
-                Call :: ref
-                  Kernel elm/core:List.cons (v0=i64) :: ref
-                  Local r :: i64
-                  Local acc :: ref
-            branch _ :: enum
-              Call :: ref
-                Global c91 :: ref
-                Local cmp :: ref
-                Local lr :: ref
-                Local rs :: ref
-                Call :: ref
-                  Kernel elm/core:List.cons (v0=i64) :: ref
-                  Local l :: i64
-                  Local acc :: ref
-clone c70   def: author/project:FicOverlay.sortN   key: (v0=i64)   name: sortN__i64   kind: function   params: cmp:ref n:i64 xs:ref   result: ref
+clone c72   def: author/project:Vector.permute   key: (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int})   name: permute__t   kind: function   params: v:ref idx:ref   result: ref
+  Call :: ref
+    Global c82 :: ref
+    Lit 0 :: i64
+    Call :: i64
+      Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
+      Local idx :: ref
+    Local v :: ref
+    Local idx :: ref
+    Call :: ref
+      Kernel elm/core:Vector.withCapacity (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int}) :: ref
+      Call :: i64
+        Kernel elm/core:Vector.length (v0=type elm/core:Basics.Int) :: ref
+        Local idx :: ref
+clone c83   def: author/project:Vector.mapHelp   key: (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int}; v1=type elm/core:Basics.Int)   name: mapHelp__t__i64   kind: function   params: i:i64 n:i64 f:ref v:ref acc:ref   result: ref
+  If :: ref
+    Call :: enum
+      Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Int) :: ref
+      Local i :: i64
+      Local n :: i64
+    Local acc :: ref
+    Call :: ref
+      Global c83 :: ref
+      Call :: i64
+        Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
+        Local i :: i64
+        Lit 1 :: i64
+      Local n :: i64
+      Local f :: ref
+      Local v :: ref
+      Call :: ref
+        Kernel elm/core:Vector.push (v0=type elm/core:Basics.Int) :: ref
+        Call :: i64
+          Local f :: ref
+          Call :: struct(i64,ref,i64)
+            Kernel elm/core:Vector.unsafeGet (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int}) :: ref
+            Local i :: i64
+            Local v :: ref
+        Local acc :: ref
+clone c73   def: author/project:Vector.map   key: (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int}; v1=type elm/core:Basics.Int)   name: map__t__i64   kind: function   params: f:ref v:ref   result: ref
+  Call :: ref
+    Global c83 :: ref
+    Lit 0 :: i64
+    Call :: i64
+      Kernel elm/core:Vector.length (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int}) :: ref
+      Local v :: ref
+    Local f :: ref
+    Local v :: ref
+    Call :: ref
+      Kernel elm/core:Vector.withCapacity (v0=type elm/core:Basics.Int) :: ref
+      Call :: i64
+        Kernel elm/core:Vector.length (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int}) :: ref
+        Local v :: ref
+clone c59   def: author/project:Vector.sortBy   key: (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int}; v1=type elm/core:Basics.Int)   name: sortBy__t__i64   kind: function   params: f:ref v:ref   result: ref
   If :: ref
     Call :: enum
       Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Int) :: ref
-      Local n :: i64
-      Lit 2 :: i64
-    Local xs :: ref
-    Let h@156:13 :: ref
       Call :: i64
-        Kernel elm/core:Basics.idiv () :: ref
-        Local n :: i64
-        Lit 2 :: i64
-      Case :: ref
-        Call :: struct(ref,ref)
-          Global c90 :: ref
-          Local h@156:13 :: i64
-          Local xs :: ref
-          List :: ref
-        branch (left :: ref, right :: ref) :: struct(ref,ref)
-          Call :: ref
-            Global c91 :: ref
-            Local cmp :: ref
-            Call :: ref
-              Global c70 :: ref
-              Local cmp :: ref
-              Local h@156:13 :: i64
-              Local left :: ref
-            Call :: ref
-              Global c70 :: ref
-              Local cmp :: ref
-              Call :: i64
-                Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
-                Local n :: i64
-                Local h@156:13 :: i64
-              Local right :: ref
-            List :: ref
-clone c33   def: author/project:FicOverlay.listSortWith   key: (v0=i64)   name: listSortWith__i64   kind: function   params: cmp:ref xs:ref   result: ref
+        Kernel elm/core:Vector.length (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int}) :: ref
+        Local v :: ref
+      Lit 2 :: i64
+    Local v :: ref
+    Call :: ref
+      Global c72 :: ref
+      Local v :: ref
+      Call :: ref
+        Kernel elm/core:Vector.sortPerm (v0=type elm/core:Basics.Int) :: ref
+        Call :: ref
+          Global c73 :: ref
+          Local f :: ref
+          Local v :: ref
+clone c32   def: author/project:FicOverlaySort.listSortBy   key: (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int}; v1=type elm/core:Basics.Int)   name: listSortBy__t__i64   kind: function   params: f:ref xs:ref   result: ref
   Call :: ref
-    Global c70 :: ref
-    Local cmp :: ref
-    Call :: i64
-      Global c19 :: ref
-      Local xs :: ref
-    Local xs :: ref
-clone c34   def: author/project:EqCmp.lambda@186:77   key: ()   kind: function   params: x:i64 y:i64   result: enum   lifted-from: c1
+    Kernel elm/core:Vector.toList (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int}) :: ref
+    Call :: ref
+      Global c59 :: ref
+      Local f :: ref
+      Call :: ref
+        Kernel elm/core:Vector.fromList (v0=type {age:elm/core:Basics.Int, name:elm/core:String.String, score:elm/core:Basics.Int}) :: ref
+        Local xs :: ref
+clone c33   def: author/project:EqCmp.lambda@185:103   key: ()   kind: function   params: p:struct(i64,ref,i64)   result: i64   lifted-from: c1
+  Access .age #0 :: i64
+    Local p :: struct(i64,ref,i64)
+clone c34   def: author/project:FicOverlaySort.listSortWith   key: (v0=type elm/core:Basics.Int)   name: listSortWith__i64   kind: function   params: cmp:ref xs:ref   result: ref
+  Call :: ref
+    Kernel elm/core:Vector.toList (v0=type elm/core:Basics.Int) :: ref
+    Call :: ref
+      Kernel elm/core:Vector.sortWith (v0=type elm/core:Basics.Int) :: ref
+      Local cmp :: ref
+      Call :: ref
+        Kernel elm/core:Vector.fromList (v0=type elm/core:Basics.Int) :: ref
+        Local xs :: ref
+clone c35   def: author/project:EqCmp.lambda@186:77   key: ()   kind: function   params: x:i64 y:i64   result: enum   lifted-from: c1
   Call :: enum
     Kernel elm/core:Basics.compare (v0=type elm/core:Basics.Int) :: ref
     Local y :: i64
     Local x :: i64
-clone c36   def: author/project:EqCmp.lambda@187:80   key: ()   kind: function   params: _p0:struct(i64,ref) _p1:struct(i64,ref)   result: enum   lifted-from: c1
+clone c36   def: author/project:FicOverlaySort.listSortWith   key: (v0=type (elm/core:Basics.Int, elm/core:String.String))   name: listSortWith__t   kind: function   params: cmp:ref xs:ref   result: ref
+  Call :: ref
+    Kernel elm/core:Vector.toList (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+    Call :: ref
+      Kernel elm/core:Vector.sortWith (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+      Local cmp :: ref
+      Call :: ref
+        Kernel elm/core:Vector.fromList (v0=type (elm/core:Basics.Int, elm/core:String.String)) :: ref
+        Local xs :: ref
+clone c37   def: author/project:EqCmp.lambda@187:80   key: ()   kind: function   params: _p0:struct(i64,ref) _p1:struct(i64,ref)   result: enum   lifted-from: c1
   Case :: enum
     Local _p0 :: struct(i64,ref)
     branch (a :: i64, _ :: ref) :: struct(i64,ref)
@@ -1178,18 +992,18 @@ clone c36   def: author/project:EqCmp.lambda@187:80   key: ()   kind: function  
             Kernel elm/core:Basics.compare (v0=type elm/core:Basics.Int) :: ref
             Local a :: i64
             Local c :: i64
-clone c73   def: elm/core:List.lambda@345:9   key: ()   outer: c37 (v0=type elm/core:Basics.Int)   kind: function   params: _pb73_0:i64 _pb73_1:i64   result: i64   lifted-from: c37
+clone c60   def: elm/core:List.lambda@345:9   key: ()   outer: c38 (v0=type elm/core:Basics.Int)   kind: function   params: _pb60_0:i64 _pb60_1:i64   result: i64   lifted-from: c38
   Call :: i64
     Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
-    Local _pb73_0 :: i64
-    Local _pb73_1 :: i64
-clone c37   def: elm/core:List.sum   key: (v0=type elm/core:Basics.Int)   name: sum__i64   kind: function   params: numbers:ref   result: i64
+    Local _pb60_0 :: i64
+    Local _pb60_1 :: i64
+clone c38   def: elm/core:List.sum   key: (v0=type elm/core:Basics.Int)   name: sum__i64   kind: function   params: numbers:ref   result: i64
   Call :: i64
-    Global c51 :: ref
-    Global c73 :: ref
+    Global c52 :: ref
+    Global c60 :: ref
     Lit 0 :: i64
     Local numbers :: ref
-clone c107   def: elm/core:List.takeReverse   key: (v0=i64)   name: takeReverse__i64   kind: function   params: n:i64 list:ref kept:ref   result: ref
+clone c85   def: elm/core:List.takeReverse   key: (v0=i64)   name: takeReverse__i64   kind: function   params: n:i64 list:ref kept:ref   result: ref
   If :: ref
     Call :: enum
       Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
@@ -1202,7 +1016,7 @@ clone c107   def: elm/core:List.takeReverse   key: (v0=i64)   name: takeReverse_
         Local kept :: ref
       branch x :: i64 :: xs :: ref :: ref
         Call :: ref
-          Global c107 :: ref
+          Global c85 :: ref
           Call :: i64
             Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
             Local n :: i64
@@ -1212,15 +1026,15 @@ clone c107   def: elm/core:List.takeReverse   key: (v0=i64)   name: takeReverse_
             Kernel elm/core:List.cons (v0=i64) :: ref
             Local x :: i64
             Local kept :: ref
-clone c96   def: elm/core:List.takeTailRec   key: (v0=i64)   name: takeTailRec__i64   kind: function   params: n:i64 list:ref   result: ref
+clone c74   def: elm/core:List.takeTailRec   key: (v0=i64)   name: takeTailRec__i64   kind: function   params: n:i64 list:ref   result: ref
   Call :: ref
-    Global c102 :: ref
+    Global c84 :: ref
     Call :: ref
-      Global c107 :: ref
+      Global c85 :: ref
       Local n :: i64
       Local list :: ref
       List :: ref
-clone c74   def: elm/core:List.takeFast   key: (v0=i64)   name: takeFast__i64   kind: function   params: ctr:i64 n:i64 list:ref   result: ref
+clone c61   def: elm/core:List.takeFast   key: (v0=i64)   name: takeFast__i64   kind: function   params: ctr:i64 n:i64 list:ref   result: ref
   If :: ref
     Call :: enum
       Kernel elm/core:Basics.le (v0=type elm/core:Basics.Int) :: ref
@@ -1264,7 +1078,7 @@ clone c74   def: elm/core:List.takeFast   key: (v0=i64)   name: takeFast__i64   
                   Kernel elm/core:List.cons (v0=i64) :: ref
                   Local w :: i64
                   Call :: ref
-                    Global c96 :: ref
+                    Global c74 :: ref
                     Call :: i64
                       Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
                       Local n :: i64
@@ -1283,7 +1097,7 @@ clone c74   def: elm/core:List.takeFast   key: (v0=i64)   name: takeFast__i64   
                   Kernel elm/core:List.cons (v0=i64) :: ref
                   Local w :: i64
                   Call :: ref
-                    Global c74 :: ref
+                    Global c61 :: ref
                     Call :: i64
                       Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
                       Local ctr :: i64
@@ -1295,26 +1109,26 @@ clone c74   def: elm/core:List.takeFast   key: (v0=i64)   name: takeFast__i64   
                     Local tl :: ref
       branch _ :: struct(i64,ref)
         Local list :: ref
-clone c38   def: elm/core:List.take   key: (v0=i64)   name: take__i64   kind: function   params: n:i64 list:ref   result: ref
+clone c39   def: elm/core:List.take   key: (v0=i64)   name: take__i64   kind: function   params: n:i64 list:ref   result: ref
   Call :: ref
-    Global c74 :: ref
+    Global c61 :: ref
     Lit 0 :: i64
     Local n :: i64
     Local list :: ref
-clone c76   def: elm/core:List.lambda@125:10   key: ()   outer: c39 (v0=i64; v1=i64)   kind: function   params: x:i64 acc:ref   result: ref   lifted-from: c39
+clone c63   def: elm/core:List.lambda@125:10   key: ()   outer: c40 (v0=i64; v1=i64)   kind: function   params: x:i64 acc:ref   result: ref   lifted-from: c40
   Call :: ref
     Kernel elm/core:List.cons (v0=i64) :: ref
     Call :: i64
       Local f :: ref
       Local x :: i64
     Local acc :: ref
-clone c39   def: elm/core:List.map   key: (v0=i64; v1=i64)   name: map__i64__i64   kind: function   params: f:ref xs:ref   result: ref
+clone c40   def: elm/core:List.map   key: (v0=i64; v1=i64)   name: map__i64__i64   kind: function   params: f:ref xs:ref   result: ref
   Call :: ref
-    Global c75 :: ref
-    Global c76 :: ref
+    Global c62 :: ref
+    Global c63 :: ref
     List :: ref
     Local xs :: ref
-clone c40   def: author/project:EqCmp.lambda@188:92   key: ()   kind: function   params: i:i64   result: i64   lifted-from: c1
+clone c41   def: author/project:EqCmp.lambda@188:92   key: ()   kind: function   params: i:i64   result: i64   lifted-from: c1
   Call :: i64
     Kernel elm/core:Basics.modBy () :: ref
     Lit 1009 :: i64
@@ -2409,8 +2223,8 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                                                                                                                                   Global c30 :: ref
                                                                                                                                                                   Global c31 :: ref
                                                                                                                                                                   Call :: ref
-                                                                                                                                                                    Global c28 :: ref
                                                                                                                                                                     Global c32 :: ref
+                                                                                                                                                                    Global c33 :: ref
                                                                                                                                                                     List :: ref
                                                                                                                                                                       Record age name score :: struct(i64,ref,i64)
                                                                                                                                                                         Lit 30 :: i64
@@ -2431,8 +2245,8 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                                                                                                                                 Call :: ref
                                                                                                                                                                   Global c12 :: ref
                                                                                                                                                                   Call :: ref
-                                                                                                                                                                    Global c33 :: ref
                                                                                                                                                                     Global c34 :: ref
+                                                                                                                                                                    Global c35 :: ref
                                                                                                                                                                     List :: ref
                                                                                                                                                                       Lit 3 :: i64
                                                                                                                                                                       Lit 1 :: i64
@@ -2449,8 +2263,8 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                                                                                                                                   Call :: ref
                                                                                                                                                                     Global c15 :: ref
                                                                                                                                                                     Call :: ref
-                                                                                                                                                                      Global c35 :: ref
                                                                                                                                                                       Global c36 :: ref
+                                                                                                                                                                      Global c37 :: ref
                                                                                                                                                                       List :: ref
                                                                                                                                                                         Tuple :: struct(i64,ref)
                                                                                                                                                                           Lit 2 :: i64
@@ -2469,15 +2283,15 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                                                                                                                                     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                                                                     Lit "sort big" :: ref
                                                                                                                                                                     Call :: i64
-                                                                                                                                                                      Global c37 :: ref
+                                                                                                                                                                      Global c38 :: ref
                                                                                                                                                                       Call :: ref
-                                                                                                                                                                        Global c38 :: ref
+                                                                                                                                                                        Global c39 :: ref
                                                                                                                                                                         Lit 10 :: i64
                                                                                                                                                                         Call :: ref
                                                                                                                                                                           Global c21 :: ref
                                                                                                                                                                           Call :: ref
-                                                                                                                                                                            Global c39 :: ref
                                                                                                                                                                             Global c40 :: ref
+                                                                                                                                                                            Global c41 :: ref
                                                                                                                                                                             Call :: ref
                                                                                                                                                                               Global c20 :: ref
                                                                                                                                                                               Lit 1 :: i64
