@@ -10,6 +10,8 @@ Written by the review session (docs/review/REVIEW-1.md); adopted in FIX1 (docs/S
 H is the ELM_HOME with elm/core (a copy of elm-home-difftest/0.19.3 is fine). A failing seed is kept as DIR/seedN.fic with the reason
 in a comment; the exit status is 1 when any program was flagged. Serial, about 1.3 s per program."""
 import argparse, os, random, subprocess, sys, shutil, tempfile
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import libshape                                           # H16 W3 fix: library functions with known function arguments inside a worker
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 def _root():
@@ -26,6 +28,8 @@ HOME = None         # ELM_HOME
 
 PRELUDE = '''module Main exposing (main)
 
+import Array
+import Dict
 import Vector exposing (Vector)
 
 
@@ -137,7 +141,7 @@ ELEM = {"VS": "Str", "VI": "Int", "VR": "Rec", "VV": "VS", "VT": "Tup", "VM": "M
 
 class G:
     def __init__(self, seed):
-        self.r = random.Random(seed); self.n = 0
+        self.r = random.Random(seed); self.n = 0; self.seed = seed
 
     def fresh(self):
         self.n += 1; return "x%d" % self.n
@@ -288,6 +292,8 @@ class G:
 
     def program(self):
         out = [PRELUDE]; r = self.r; names = []
+        shp_defs, _ = libshape.shapes(random.Random("shape%d" % self.seed))   # its own generator: the programs above do not change
+        out.append(shp_defs)
         for k in range(r.randint(2, 4)):
             t = r.choice(VECS + VECS + ["Str", "Int"]); nm = "f%d" % k; names.append(nm)
             env = [(v, tt) for v, tt in PARAMS] * 2
@@ -297,6 +303,7 @@ class G:
         for nm in names:
             lines.append('Debug.log "%s fresh" (Debug.toString (%s (mkVS 3) (mkVI 4) (mkVR 3) (mkVV 3) (mkVT 3) (mkVM 4) (mkVC 3) (mkVW 3) 2 "p"))' % (nm, nm))
             lines.append('Debug.log "%s shared" (Debug.toString ( %s aS aI aR aV aT aM aC aW 3 "q", %s gVS aI aR gVV aT aM aC aW 1 "r" ))' % (nm, nm, nm))
+        lines.append('Debug.log "shapes" (Debug.toString [ shpView 1, shpUpdate 2, shpSubs 3, shpInit 4 ])')
         lines.append('Debug.log "kept" (Debug.toString ( ( aS, aI, aR ), ( aV, aT, aM ), ( aC, aW, gVV ) ))')
         out.append('''
 
@@ -336,13 +343,13 @@ main =
     Platform.worker
         { init =
             \\_ ->
-                if List.length results > 0 then
+                if List.length results + shpView 1 + shpInit 2 > 0 then
                     ( (), Cmd.none )
 
                 else
                     ( (), Cmd.none )
-        , update = \\_ m -> ( m, Cmd.none )
-        , subscriptions = \\_ -> Sub.none
+        , update = \\_ m -> if shpUpdate 3 > 100000000 then ( m, Cmd.none ) else ( m, Cmd.none )
+        , subscriptions = \\_ -> if shpSubs 4 > 100000000 then Sub.none else Sub.none
         }
 ''' % "\n    , ".join(lines))
         return "".join(out)

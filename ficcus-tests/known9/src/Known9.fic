@@ -1,0 +1,128 @@
+module Known9 exposing (main)
+
+-- H16 W3 fix (K9): List.foldl, List.map, Array.initialize called with a known function argument inside the four places of a worker: `init`, `update`, `subscriptions`
+-- and a `view` helper (an entry point of the runtime must keep its signature and its closedness whatever the pass does with the call), with a
+-- lambda that captures a local (`k`) and one that does not. The shape that the first gates of the pass missed (the specialization of a library
+-- function whose own specialization has an extra parameter for a captured lambda).
+
+import Array
+
+
+view : () -> String
+view _ =
+    let
+        k =
+            2
+
+        xs =
+            [ 1, 2, 3, 4, 5 ]
+
+        a =
+            List.foldl (\x acc -> acc + x * x) 0 xs
+
+        b =
+            List.foldl (\x acc -> acc + x * k) 0 xs
+
+        c =
+            List.map (\x -> x + 1) xs ++ List.map (\x -> x * k) xs
+
+        e =
+            Array.toList (Array.initialize 4 (\i -> i * i)) ++ Array.toList (Array.initialize 4 (\i -> i + k))
+    in
+    Debug.log "view lib" [ [ a ], [ b ], c, e ]
+        |> always "view"
+
+
+update : () -> () -> ( (), Cmd () )
+update _ _ =
+    let
+        k =
+            3
+
+        xs =
+            [ 1, 2, 3, 4, 5 ]
+
+        a =
+            List.foldl (\x acc -> acc + x * x) 0 xs
+
+        b =
+            List.foldl (\x acc -> acc + x * k) 0 xs
+
+        c =
+            List.map (\x -> x + 1) xs ++ List.map (\x -> x * k) xs
+
+        e =
+            Array.toList (Array.initialize 4 (\i -> i * i)) ++ Array.toList (Array.initialize 4 (\i -> i + k))
+    in
+    Debug.log "update lib" [ [ a ], [ b ], c, e ]
+        |> always ( (), Cmd.none )
+
+
+subscriptions : () -> Sub ()
+subscriptions _ =
+    let
+        k =
+            4
+
+        xs =
+            [ 1, 2, 3, 4, 5 ]
+
+        a =
+            List.foldl (\x acc -> acc + x * x) 0 xs
+
+        b =
+            List.foldl (\x acc -> acc + x * k) 0 xs
+
+        c =
+            List.map (\x -> x + 1) xs ++ List.map (\x -> x * k) xs
+
+        e =
+            Array.toList (Array.initialize 4 (\i -> i * i)) ++ Array.toList (Array.initialize 4 (\i -> i + k))
+    in
+    always Sub.none [ [ a ], [ b ], c, e ]
+
+
+init : () -> ( (), Cmd () )
+init _ =
+    let
+        k =
+            5
+
+        xs =
+            [ 1, 2, 3, 4, 5 ]
+
+        a =
+            List.foldl (\x acc -> acc + x * x) 0 xs
+
+        b =
+            List.foldl (\x acc -> acc + x * k) 0 xs
+
+        c =
+            List.map (\x -> x + 1) xs ++ List.map (\x -> x * k) xs
+
+        e =
+            Array.toList (Array.initialize 4 (\i -> i * i)) ++ Array.toList (Array.initialize 4 (\i -> i + k))
+    in
+    Debug.log "init lib" [ [ a ], [ b ], c, e ]
+        |> always
+            (let
+                _ =
+                    Debug.log "view" (view ())
+
+                _ =
+                    Debug.log "update" (Tuple.first (update () ()))
+
+                _ =
+                    Debug.log "subscriptions" (always 1 (subscriptions ()))
+             in
+             ( (), Cmd.none )
+            )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \f -> init f
+        , update = update
+        , subscriptions = subscriptions
+        }

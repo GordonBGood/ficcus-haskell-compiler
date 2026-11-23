@@ -1,0 +1,104 @@
+module Known8 exposing (main)
+
+-- H16 W3 fix (K8): Dict.partition called with a known function argument inside the four places of a worker: `init`, `update`, `subscriptions`
+-- and a `view` helper (an entry point of the runtime must keep its signature and its closedness whatever the pass does with the call), with a
+-- lambda that captures a local (`k`) and one that does not. The shape that the first gates of the pass missed (the specialization of a library
+-- function whose own specialization has an extra parameter for a captured lambda).
+
+import Dict
+
+
+view : () -> String
+view _ =
+    let
+        k =
+            2
+
+        d =
+            Dict.fromList [ ( 1, "a" ), ( 2, "bb" ), ( 3, "ccc" ), ( 4, "dddd" ) ]
+
+        ( a1, a2 ) =
+            Dict.partition (\key _ -> modBy 2 key == 0) d
+
+        ( b1, b2 ) =
+            Dict.partition (\key v -> key > k || String.length v > k) d
+    in
+    Debug.log "view partition" [ Dict.keys a1, Dict.keys a2, Dict.keys b1, Dict.keys b2 ]
+        |> always "view"
+
+
+update : () -> () -> ( (), Cmd () )
+update _ _ =
+    let
+        k =
+            3
+
+        d =
+            Dict.fromList [ ( 1, "a" ), ( 2, "bb" ), ( 3, "ccc" ), ( 4, "dddd" ) ]
+
+        ( a1, a2 ) =
+            Dict.partition (\key _ -> modBy 2 key == 0) d
+
+        ( b1, b2 ) =
+            Dict.partition (\key v -> key > k || String.length v > k) d
+    in
+    Debug.log "update partition" [ Dict.keys a1, Dict.keys a2, Dict.keys b1, Dict.keys b2 ]
+        |> always ( (), Cmd.none )
+
+
+subscriptions : () -> Sub ()
+subscriptions _ =
+    let
+        k =
+            4
+
+        d =
+            Dict.fromList [ ( 1, "a" ), ( 2, "bb" ), ( 3, "ccc" ), ( 4, "dddd" ) ]
+
+        ( a1, a2 ) =
+            Dict.partition (\key _ -> modBy 2 key == 0) d
+
+        ( b1, b2 ) =
+            Dict.partition (\key v -> key > k || String.length v > k) d
+    in
+    always Sub.none [ Dict.keys a1, Dict.keys a2, Dict.keys b1, Dict.keys b2 ]
+
+
+init : () -> ( (), Cmd () )
+init _ =
+    let
+        k =
+            5
+
+        d =
+            Dict.fromList [ ( 1, "a" ), ( 2, "bb" ), ( 3, "ccc" ), ( 4, "dddd" ) ]
+
+        ( a1, a2 ) =
+            Dict.partition (\key _ -> modBy 2 key == 0) d
+
+        ( b1, b2 ) =
+            Dict.partition (\key v -> key > k || String.length v > k) d
+    in
+    Debug.log "init partition" [ Dict.keys a1, Dict.keys a2, Dict.keys b1, Dict.keys b2 ]
+        |> always
+            (let
+                _ =
+                    Debug.log "view" (view ())
+
+                _ =
+                    Debug.log "update" (Tuple.first (update () ()))
+
+                _ =
+                    Debug.log "subscriptions" (always 1 (subscriptions ()))
+             in
+             ( (), Cmd.none )
+            )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \f -> init f
+        , update = update
+        , subscriptions = subscriptions
+        }

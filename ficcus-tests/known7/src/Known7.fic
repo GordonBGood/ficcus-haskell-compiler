@@ -1,0 +1,104 @@
+module Known7 exposing (main)
+
+-- H16 W3 fix (K7): Dict.filter called with a known function argument inside the four places of a worker: `init`, `update`, `subscriptions`
+-- and a `view` helper (an entry point of the runtime must keep its signature and its closedness whatever the pass does with the call), with a
+-- lambda that captures a local (`k`) and one that does not. The shape that the first gates of the pass missed (the specialization of a library
+-- function whose own specialization has an extra parameter for a captured lambda).
+
+import Dict
+
+
+view : () -> String
+view _ =
+    let
+        k =
+            2
+
+        d =
+            Dict.fromList [ ( 1, "a" ), ( 2, "bb" ), ( 3, "ccc" ), ( 4, "dddd" ) ]
+
+        a =
+            Dict.filter (\key _ -> modBy 2 key == 0) d
+
+        b =
+            Dict.filter (\key v -> key > k || String.length v > k) d
+    in
+    Debug.log "view filter" ( Dict.keys a, Dict.keys b, Dict.size (Dict.filter (\_ v -> String.length v > k - 3) d) )
+        |> always "view"
+
+
+update : () -> () -> ( (), Cmd () )
+update _ _ =
+    let
+        k =
+            3
+
+        d =
+            Dict.fromList [ ( 1, "a" ), ( 2, "bb" ), ( 3, "ccc" ), ( 4, "dddd" ) ]
+
+        a =
+            Dict.filter (\key _ -> modBy 2 key == 0) d
+
+        b =
+            Dict.filter (\key v -> key > k || String.length v > k) d
+    in
+    Debug.log "update filter" ( Dict.keys a, Dict.keys b, Dict.size (Dict.filter (\_ v -> String.length v > k - 3) d) )
+        |> always ( (), Cmd.none )
+
+
+subscriptions : () -> Sub ()
+subscriptions _ =
+    let
+        k =
+            4
+
+        d =
+            Dict.fromList [ ( 1, "a" ), ( 2, "bb" ), ( 3, "ccc" ), ( 4, "dddd" ) ]
+
+        a =
+            Dict.filter (\key _ -> modBy 2 key == 0) d
+
+        b =
+            Dict.filter (\key v -> key > k || String.length v > k) d
+    in
+    always Sub.none ( Dict.keys a, Dict.keys b, Dict.size (Dict.filter (\_ v -> String.length v > k - 3) d) )
+
+
+init : () -> ( (), Cmd () )
+init _ =
+    let
+        k =
+            5
+
+        d =
+            Dict.fromList [ ( 1, "a" ), ( 2, "bb" ), ( 3, "ccc" ), ( 4, "dddd" ) ]
+
+        a =
+            Dict.filter (\key _ -> modBy 2 key == 0) d
+
+        b =
+            Dict.filter (\key v -> key > k || String.length v > k) d
+    in
+    Debug.log "init filter" ( Dict.keys a, Dict.keys b, Dict.size (Dict.filter (\_ v -> String.length v > k - 3) d) )
+        |> always
+            (let
+                _ =
+                    Debug.log "view" (view ())
+
+                _ =
+                    Debug.log "update" (Tuple.first (update () ()))
+
+                _ =
+                    Debug.log "subscriptions" (always 1 (subscriptions ()))
+             in
+             ( (), Cmd.none )
+            )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \f -> init f
+        , update = update
+        , subscriptions = subscriptions
+        }

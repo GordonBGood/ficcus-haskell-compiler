@@ -22,6 +22,8 @@ For each program:
 A failing program is copied to --keep (default ficcus-tests/rcfuzz/) as seed<N>_<setting>.fic with the reason in a comment line: it
 stays as a test case (--replay). Exit status 1 on any failure. Serial; every program run goes through --safe (memory cap, timeout)."""
 import argparse, os, random, shutil, subprocess, sys, tempfile
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import libshape                                           # H16 W3 fix: library functions with known function arguments inside a worker
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
@@ -434,6 +436,7 @@ SIZE = {"Int": "%s", "Str": "String.length %s", "Bool": "szB %s", "LInt": "List.
 class Gen:
     def __init__(self, seed):
         self.r = random.Random(seed)
+        self.shape_r = random.Random("shape%d" % seed)       # H16 W3 fix: its own generator (the draws of the program above do not change)
         self.n = 0
         self.funs = []        # (name, [param types], result type)
         self.loops = []       # (name, type)
@@ -784,6 +787,8 @@ class Gen:
             body = self.gen(t, list(zip(names, ps)), 4, 4)
             out.append("\n\n%s : %s\n%s %s =\n    %s\n" % (name, " -> ".join(ELM[x] for x in ps + [t]), name, " ".join(names), body))
             self.funs.append((name, ps, t))
+        shp_defs, shp = libshape.shapes(self.shape_r)
+        out.append(shp_defs)
         outs = []
         for i in range(r.randint(4, 7)):
             t = r.choice([x for x in TYPES if x != "Fn"]) if r.random() < 0.9 else "Fn"
@@ -791,6 +796,8 @@ class Gen:
             outs.append((i, t, e))
         lets = "".join("\n                    o%d =\n                        Debug.log \"o%d\" %s\n" % (i, i, e if t != "Fn" else "(%s 3)" % e) for i, t, e in outs)
         total = " + ".join("(" + (SIZE[t] if t != "Fn" else "%s") % ("o%d" % i) + ")" for i, t, e in outs)
+        lets += "".join("\n                    %s =\n                        Debug.log \"%s\" (%s %d)\n" % (v, nm, nm, i + 1) for i, (v, nm) in enumerate([("shv", "shpView"), ("shi", "shpInit")]))
+        total += " + shv * 0 + shi * 0"
         out.append('''
 
 main : Program () () ()
@@ -804,8 +811,8 @@ main =
 
                 else
                     ( (), Cmd.none )
-        , update = \\_ m -> ( m, Cmd.none )
-        , subscriptions = \\_ -> Sub.none
+        , update = \\_ m -> if shpUpdate 3 > 100000000 then ( m, Cmd.none ) else ( m, Cmd.none )
+        , subscriptions = \\_ -> if shpSubs 4 > 100000000 then Sub.none else Sub.none
         }
 ''' % (lets, total))
         return "".join(out)

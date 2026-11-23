@@ -162,8 +162,11 @@ builders byId = grow direct
 knownRun :: MProgram -> (Either [String] MProgram, [(String, Int)])
 knownRun prog
   | not knownOn = (Right prog, [])
-  | otherwise = (if null errs then Right prog { mpClones = out } else Left errs, Map.toList (sStats st))
+  | otherwise = (if null errs then Right prog { mpClones = if safe then out else clones } else Left errs,
+                 Map.toList (sStats st) ++ [ ("closed-check-fallback", 1) | not safe ])
   where
+    -- the safety net: a result that is not closed (checkClosed) is never used, the program goes on as it was (with FICCUS_KNOWN_CHECK=1 it is an error)
+    safe = checkOn || null (checkClosed (iMain info) clones out)
     clones = mpClones prog
     byId0 = Map.fromList [ (mdClone d, d) | d <- clones ]
     info = mkInfo prog
@@ -177,7 +180,7 @@ knownRun prog
           nNew <- gets (\s -> length (sNew s) + length (sFloated s))
           bumpN (length clones + nNew - length kept) "removed"
           return (kept, terrs)
-    errs = testErrs ++ (if checkOn then checkScope out else [])
+    errs = testErrs ++ (if checkOn then checkScope out ++ checkClosed (iMain info) clones out else [])
 
 
 rounds :: Info -> Int -> K ()
@@ -657,6 +660,34 @@ checkScope clones =
     cid (CloneId n) = n
 
 
+-- | closedness (H16 W3 fix): the checks that `checkScope` cannot make because it counts the variables that a clone inherits from the lifted
+-- clones it refers to as bound.
+--   1. a top level clone (not lifted) has no captured variable, direct or inherited: its body is closed over globals;
+--   2. a lifted clone captures only what its owner has in scope (a parameter, a binder of the owner's body, or a captured variable of the owner);
+--   3. what the worker runtime calls by name (the clones `main` refers to) has no captured variable;
+--   4. no clone that existed before the pass has another parameter list (new clones are free to choose theirs): `fic_main` and the closure
+--      runtime call by the old signature.
+checkClosed :: Maybe CloneId -> [MDef] -> [MDef] -> [String]
+checkClosed mainId before after =
+  [ top d | d <- after, mdLifted d == Nothing, isJust (mdBody d), not (null (names (mdClone d))) ]
+  ++ [ own d o missing | d <- after, Just o <- [mdLifted d], Just od <- [Map.lookup o byId]
+                       , let scope = Set.unions [ Set.fromList (map fst (mdParams od)), Set.fromList (maybe [] binders (mdBody od)), Set.fromList (names o) ]
+                       , let missing = [ n | n <- names (mdClone d), not (Set.member n scope) ], not (null missing) ]
+  ++ [ "closed check: entry point c" ++ show (cid c) ++ " " ++ maybe "?" mdName (Map.lookup c byId) ++ " (referenced by main) has captured variable(s) " ++ unwords (names c)
+     | Just m <- [mainId], Just md <- [Map.lookup m byId], Just mb <- [mdBody md], c <- exprRefs mb, c /= m, not (null (names c)) ]
+  ++ [ "closed check: c" ++ show (cid (mdClone d)) ++ " " ++ mdName d ++ " changed its parameters from " ++ show (map fst (mdParams o)) ++ " to " ++ show (map fst (mdParams d))
+     | d <- after, Just o <- [Map.lookup (mdClone d) beforeById], map fst (mdParams o) /= map fst (mdParams d) ]
+  where
+    caps = captures after
+    byId = Map.fromList [ (mdClone d, d) | d <- after ]
+    beforeById = Map.fromList [ (mdClone d, d) | d <- before ]
+    names c = map fst (Map.findWithDefault [] c caps)
+    cid (CloneId n) = n
+    top d = "closed check: top level c" ++ show (cid (mdClone d)) ++ " " ++ mdName d ++ " has free variable(s) " ++ unwords (names (mdClone d))
+               ++ " (through " ++ unwords [ "c" ++ show (cid r) | r <- maybe [] exprRefs (mdBody d), not (null (names r)) ] ++ ")"
+    own d o missing = "closed check: c" ++ show (cid (mdClone d)) ++ " " ++ mdName d ++ " (lifted from c" ++ show (cid o) ++ ") captures " ++ unwords missing ++ ", which its owner does not bind"
+
+
 -- THE COPY KIT
 
 -- | the lifted clones that belong to the family of `root`: referenced from its body (or from another member) and lifted out of it, directly
@@ -712,7 +743,13 @@ copyFamily limit byId caps sub root newOwner =
           subClash = not (null fam) && any (\n -> Map.member n sub && n `elem` concatMap (maybe [] binders . mdBody) defs) (map fst (mdParams d))
           classOk = and [ maybe True (\a -> mRep a == c) (Map.lookup n sub) | (n, c) <- mdParams d ]
           size = sum (map nodeCount bodies)
-      in if clash || subClash then do { bump "copy-refused-capture-clash"; return Nothing }
+          -- H16 W3 fix: a lifted clone that the copy refers to but that is not part of the family (its owner is another clone) finds its captured
+          -- variables by name in the scope of the call. If one of those names is a parameter or binder that the copy renames or replaces (the
+          -- extra parameter of an earlier specialization, say), the copy would leave the name free: refuse
+          outsideCaptures = not (null [ () | r <- concatMap exprRefs bodies, r /= root, r `notElem` map mdClone fam
+                                           , (n, _) <- Map.findWithDefault [] r caps, n `elem` names ])
+      in if outsideCaptures then do { bump "copy-refused-outside-capture"; return Nothing }
+         else if clash || subClash then do { bump "copy-refused-capture-clash"; return Nothing }
          else if not classOk then do { bump "copy-refused-shape"; return Nothing }
          else if size > limit then do { bump "copy-refused-budget"; return Nothing }
          else
