@@ -35,6 +35,7 @@ module Ficcus.Mono.Inline
 
 import Control.Monad (foldM, forM)
 import Control.Monad.State.Strict (State, get, put, runState)
+import qualified Data.Graph as Graph
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import Data.Maybe (isJust, isNothing)
@@ -51,6 +52,12 @@ import Ficcus.Mono.Ir
 {-# NOINLINE inlineOn #-}
 inlineOn :: Bool
 inlineOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_INLINE"))
+
+
+-- H16 W5 (rule 1a): `FICCUS_NO_LIFTED_INLINE=1` keeps the lifted clones out of the table (as before); it only matters with the Known pass on
+{-# NOINLINE liftedInlineOn #-}
+liftedInlineOn :: Bool
+liftedInlineOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_LIFTED_INLINE"))
 
 
 -- the state: a counter for fresh names, and the number of rewrites done (rule A, rule B)
@@ -98,7 +105,13 @@ table clones =
       -- H16 W3: with the Known pass on, a reference to a lifted clone that captures nothing does not disqualify a body (it needs no scope)
       caps = if knownOn then captures clones else Map.empty
       liftedCap = Set.fromList [ mdClone d | d <- clones, mdLifted d /= Nothing, not (knownOn && null (Map.findWithDefault [("", CRef)] (mdClone d) caps)) ]
-      ok d = mdKind d == Function && mdLifted d == Nothing && not (Set.member (mdClone d) owners)
+      -- H16 W5: a lifted clone that captures nothing (the Known pass's copies of the parser combinators' lambdas) may be inlined like a global
+      -- function. A clone with captures stays out (its body names its owner's variables); so does a clone in a call cycle (a self call is
+      -- refused below; this adds mutual recursion).
+      cyclic = Set.fromList [ c | Graph.CyclicSCC cs <- Graph.stronglyConnComp [ (mdClone d, mdClone d, maybe [] exprRefs (mdBody d)) | d <- clones ], c <- cs ]
+      liftedFree d = knownOn && liftedInlineOn && mdLifted d /= Nothing && null (Map.findWithDefault [("", CRef)] (mdClone d) caps)
+                     && not (Set.member (mdClone d) cyclic)
+      ok d = mdKind d == Function && (mdLifted d == Nothing || liftedFree d) && not (Set.member (mdClone d) owners)
              && case mdBody d of
                   Just b -> size b <= sizeLimit && mdClone d `notElem` exprRefs b && not (hasLam b) && not (hasRecordPat b) && not (any (`Set.member` liftedCap) (exprRefs b))
                   Nothing -> False
