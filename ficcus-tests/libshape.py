@@ -52,12 +52,12 @@ type ShpStep a
     | ShpBad Bool String
 
 
-type alias (ShpState -> ShpStep a) =
+type alias ShpParser a =
     ShpState -> ShpStep a
 
 
-shpSymbol : Int -> Parser ()
-shpSymbol c =
+shpSym : Int -> ShpParser ()
+shpSym c =
     \s ->
         case s.src of
             h :: t ->
@@ -65,13 +65,13 @@ shpSymbol c =
                     ShpGood True () { src = t, pos = s.pos + 1 }
 
                 else
-                    ShpBad False "shpSymbol"
+                    ShpBad False "symbol"
 
             [] ->
                 ShpBad False "eof"
 
 
-shpDigit : Parser Int
+shpDigit : ShpParser Int
 shpDigit =
     \s ->
         case s.src of
@@ -80,13 +80,13 @@ shpDigit =
                     ShpGood True (h - 48) { src = t, pos = s.pos + 1 }
 
                 else
-                    ShpBad False "shpDigit"
+                    ShpBad False "digit"
 
             [] ->
                 ShpBad False "eof"
 
 
-shpMap : (a -> b) -> (ShpState -> ShpStep a) -> Parser b
+shpMap : (a -> b) -> ShpParser a -> ShpParser b
 shpMap f p =
     \s ->
         case p s of
@@ -97,7 +97,7 @@ shpMap f p =
                 ShpBad c m
 
 
-shpMap2 : (a -> b -> c) -> (ShpState -> ShpStep a) -> Parser b -> Parser c
+shpMap2 : (a -> b -> c) -> ShpParser a -> ShpParser b -> ShpParser c
 shpMap2 f pa pb =
     \s ->
         case pa s of
@@ -113,18 +113,8 @@ shpMap2 f pa pb =
                         ShpGood (c1 || c2) (f a b) s2
 
 
-shpIgnore : Parser shpKeep -> Parser skip -> Parser shpKeep
-shpIgnore pk ps =
-    shpMap2 (\k _ -> k) pk ps
-
-
-shpKeep : Parser (a -> b) -> (ShpState -> ShpStep a) -> Parser b
-shpKeep pf pa =
-    shpMap2 (\f a -> f a) pf pa
-
-
-shpOneOf2 : (ShpState -> ShpStep a) -> (ShpState -> ShpStep a) -> (ShpState -> ShpStep a)
-shpOneOf2 pa pb =
+shpOr : ShpParser a -> ShpParser a -> ShpParser a
+shpOr pa pb =
     \s ->
         case pa s of
             ShpGood c a s1 ->
@@ -143,8 +133,7 @@ shpOneOf2 pa pb =
                             ShpBad c2 m2
 
 
--- the loop is a local recursive function: its copy is a recursive lifted clone
-shpMany : (ShpState -> ShpStep a) -> Parser (List a)
+shpMany : ShpParser a -> ShpParser (List a)
 shpMany p =
     \s ->
         let
@@ -163,8 +152,7 @@ shpMany p =
         go [] s
 
 
-
-shpNum : ShpState -> ShpStep Int
+shpNum : ShpParser Int
 shpNum =
     shpMap (List.foldl (\d acc -> acc * 10 + d) 0) (shpMany shpDigit)
 
@@ -181,16 +169,16 @@ shpRes r =
 
 
 def parser_shape(r):
-    """(definitions, name): `shpParse : Int -> Int`, drawn from `r` after the draws of shapes() (those do not change)."""
+    """The definitions of `shpParse : Int -> Int`, drawn from `r` after the draws of shapes() (those do not change)."""
     c1, c2 = r.choice(",;:"), r.choice(",;:")
     forms = [
         "shpNum",
         "shpOr (shpMap2 (\\_ n -> n) (shpSym %d) shpNum) shpNum" % ord(c1),
         "shpMap2 (\\a b -> a * 3 + b) shpNum (shpMap2 (\\_ n -> n) (shpSym %d) shpNum)" % ord(c2),
-        "shpMap2 (\\_ n -> n) (shpSym (k + 44)) shpNum",                          # a copy with captures: the parser depends on k
+        "shpMap2 (\\_ n -> n) (shpSym (k + 44)) shpNum",                           # a copy with captures: the parser depends on k
         "shpMap (\\n -> n * k + 1) (shpMap2 (\\n _ -> n) shpNum (shpSym %d))" % ord(c1),
         "shpMap List.length (shpMany (shpMap2 (\\n _ -> n) shpDigit (shpSym %d)))" % ord(c2),   # a recursive copy
-        "shpMap List.sum (shpMany shpNum)",
+        "shpMap List.sum (shpMany (shpMap2 (\\_ n -> n) (shpSym %d) shpNum))" % ord(c1),
     ]
     terms = []
     for _ in range(3):
