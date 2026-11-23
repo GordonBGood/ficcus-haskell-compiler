@@ -1,6 +1,6 @@
 #!/bin/bash
 # The serial regression gates of the compiler session (STAGE4-FIX1.md section 7). BIN=elmficNN [S=scratch dir] ficcus-tests/gates.sh; takes about one hour (FIX2: step list unchanged, plus stringdiff).
-# Expected: runtime 0 non-ok lines; attach 159 cases 0 differ; types 267 PASS 1 XFAIL (one case may flake under load: rerun); JS identity 28; examples 290 ok x3 (the three modes must agree: a lower ex-rcsan count means FAIL lines);
+# Expected: runtime 0 non-ok lines; attach 159 cases 0 differ; types 267 PASS 1 XFAIL (one case may flake under load: rerun); JS identity 28; examples 296 ok x3 (the three modes must agree: a lower ex-rcsan count means FAIL lines);
 # fbip 0 failures; faults 0 missed; suite PASS; typed 568/12/1; library no REGRESSION; elmdiff 1160 SAME + 15 apps.
 W=$(cd "$(dirname "$0")/../.." && pwd); R=${R:-$(cd "$(dirname "$0")/.." && pwd)}      # A3: the worktree this script is in (it was the main checkout)
 # Disk: every private ELM_HOME is a reflink copy where the file system has them (btrfs: no space used until a file is rewritten; a
