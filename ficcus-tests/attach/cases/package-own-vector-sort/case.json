@@ -1,0 +1,1 @@
+{"desc": "H21 + module rule: a package with its own hidden module Vector, the project sorts lists (the sort overlay must not import the package Vector)", "deps": ["ficcus/ownvec@1.0.0"]}

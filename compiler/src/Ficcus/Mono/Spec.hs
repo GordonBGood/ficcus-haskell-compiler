@@ -561,6 +561,22 @@ wellKnownDerived se cid inst =
       , ("elm/core:Basics.neq", ("eq", "ficNeq")) ]
 
 
+-- | (H21 and ATTACH A3) `Vector.sort` and `Vector.sortPerm` (the kernels compare structurally) at an element type that has a `compare`
+-- member inside (a custom type with its own `compare`, a tuple, record or list holding one, or Word64, whose order is not the signed one):
+-- the definitions `sortMember`/`sortPermMember` of the Vector overlay, which sort with `compare`, so that the member is called (or the
+-- error of `wellKnownRef` is given for a type that holds one inside). `List.sort` and `List.sortBy` go through these two.
+vectorSortMember :: SEnv -> String -> Maybe TType -> SM (Maybe String)
+vectorSortMember se cid inst =
+  case (List.stripPrefix vectorModuleId cid, inst >>= peelFun 1) of
+    (Just n, Just ([first], _))
+      | n `elem` ["sort", "sortPerm"], Right (TyCon vt [e]) <- mtypeOf (seEnv se) first, vt == vectorTypeName ->
+          do  on <- gets sVector
+              tops <- gets sTops
+              unions <- gets sUnions
+              return (if on && holdsMember tops unions "compare" e /= Nothing then Just (vectorModuleId ++ n ++ "Member") else Nothing)
+    _ -> return Nothing
+
+
 -- the member of the exact type `t` that the language needs, as a type
 shapeType :: WK.Shape -> MType -> MType
 shapeType shape t =
@@ -1426,10 +1442,12 @@ resolve se region e =
       do  let instD = fmap (applyDefault (\n -> not (Map.member n (seEnv se))) . snd) schemeInst
           hooked <- wellKnownRef se cid00 instD
           dtv <- wellKnownDerived se cid00 instD
+          vsm <- vectorSortMember se cid00 instD
           tops1 <- gets sTops
           case (hooked, dtv >>= \o -> fmap (\src -> (o, src)) (Map.lookup o tops1)) of
             (Just ref, _) -> return ref
             (_, Just (o, src)) -> viaClone src o
+            _ | Just (o, src) <- vsm >>= \o -> fmap (\src -> (o, src)) (Map.lookup o tops1) -> viaClone src o
             _ -> foreignOrTopPlain cid00
 
     foreignOrTopPlain cid00 =

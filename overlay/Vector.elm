@@ -351,6 +351,21 @@ sortWith cmp v =
     sortWith cmp v
 
 
+{-| not exposed: `sort` for an element type that has a `compare` member (a custom type with its own `compare`, or Word64): the comparison
+is the member, so the kernel (which compares structurally) is not used (the specializer redirects `sort` to this for such types)
+-}
+sortMember : Vector comparable -> Vector comparable
+sortMember v =
+    sortWith compare v
+
+
+{-| not exposed: `sortPerm` for such an element type; stable like the kernel
+-}
+sortPermMember : Vector comparable -> Vector Int
+sortPermMember keys =
+    sortIdx (\i j -> compare (unsafeGet i keys) (unsafeGet j keys)) (initialize (length keys) identity)
+
+
 {-| not exposed: the elements in the order of the indices
 -}
 permute : Vector a -> Vector Int -> Vector a

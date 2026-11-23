@@ -293,6 +293,7 @@ writeOverlay root =
       own <- hasOwnVector root jsonText
       let sortFile = dir FP.</> Overlay.sortFileName
       writeFile sortFile (if own then Overlay.sortListSource else Overlay.sortSource)
+      writeFile (dir FP.</> "FicOverlaySort.list.txt") Overlay.sortListSource      -- read instead by Build.sortOverlaySource when a package exposes a `Vector`
       return (file : sortFile : parserFiles ++ randomFiles ++ jsonFiles ++ bytesFiles ++ regexFiles)
 
 

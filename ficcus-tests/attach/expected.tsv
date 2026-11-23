@@ -152,3 +152,9 @@ sized-local-type	RUN	c
 sized-local-module	RUN	js+c	
 sized-misc	RUN	c	
 sized-package-module	RUN	js+c	
+a3-sort-compare	RUN	c	
+a3-sortby-compare	RUN	c	
+a3-sortwith-compare	RUN	c	
+package-own-vector-sort	RUN	js+c	
+package-exposed-vector-sort	RUN	js+c	
+a3-sort-sized	RUN	c	

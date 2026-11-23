@@ -309,9 +309,22 @@ crawlModule env@(Env _ root _ projectType srcDirs buildID locals foreigns) mvar 
                 return $ SBadImport Import.NotFound
 
 
+-- Ficcus (H21b, module rule): the sorts of the overlay (FicOverlaySort) are written on the overlay's `Vector`. When a package of the program
+-- exposes a module named `Vector`, that module wins over the overlay's (see `crawlModule`) and the sorts would import it: then the list
+-- variant that `writeOverlay` (Make.hs) writes beside it is read instead (a `Vector` of the project itself is found by `writeOverlay`)
+sortOverlaySource :: Map.Map Module.Name Details.Foreign -> FilePath -> Module.Name -> B.ByteString -> IO B.ByteString
+sortOverlaySource foreigns path name source =
+  do  extra <- Flags.getExtraSrcDir
+      let inOverlay = maybe False (\d -> FP.addTrailingPathSeparator d `List.isPrefixOf` path) extra
+      if inOverlay && Module.toChars name == "FicOverlaySort" && any ((== "Vector") . Module.toChars) (Map.keys foreigns)
+        then File.readUtf8 (FP.replaceFileName path "FicOverlaySort.list.txt")
+        else return source
+
+
 crawlFile :: Env -> MVar StatusDict -> DocsNeed -> Module.Name -> AbsoluteElm -> File.Time -> Details.BuildID -> IO Status
-crawlFile env@(Env _ _ _ projectType _ buildID _ _) mvar docsNeed expectedName (AbsoluteElm path) time lastChange =
-  do  source <- File.readUtf8 path
+crawlFile env@(Env _ _ _ projectType _ buildID _ foreigns) mvar docsNeed expectedName (AbsoluteElm path) time lastChange =
+  do  source0 <- File.readUtf8 path
+      source <- sortOverlaySource foreigns path expectedName source0
       result <- Parse.fromByteString projectType source
       case result of
         Left err ->

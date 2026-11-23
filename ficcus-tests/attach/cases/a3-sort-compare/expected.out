@@ -1,0 +1,6 @@
+r: "sort 1.0.4 1.0.5 1.2.0 1.10.0 3.0.0"
+r: "desc 3 3 2 1"
+r: "empty 0"
+r: "many True"
+r: "many len 400"
+r: "descmany True"

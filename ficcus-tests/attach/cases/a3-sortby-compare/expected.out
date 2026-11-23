@@ -1,0 +1,5 @@
+r: "sortBy a a2 b c c2"
+r: "sortBy desc c c2 b a a2"
+r: "sortBy many len 400"
+r: "ref many True"
+r: "stable True"
