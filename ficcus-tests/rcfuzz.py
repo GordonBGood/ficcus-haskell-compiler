@@ -31,7 +31,7 @@ SETTINGS = {"default": {}, "proj": {"FICCUS_BORROW_PROJ": "1"}, "reuse": {"FICCU
 # FIX3 (docs/FLAGS.md section 4): one setting for each experiment switch that had none; `--settings nospec,noreuse,...` (not in the default run)
 for _name, _var in [("nospec", "NO_SPEC"), ("noreuse", "NO_REUSE"), ("noupdate", "NO_UPDATE_RULE"), ("notake", "NO_TAKE"), ("nolatespec", "NO_LATE_SPEC"),
                     ("nosteal", "NO_STEAL"), ("nostealrule", "NO_STEAL_RULE"), ("noinline", "NO_INLINE"), ("noclosteal", "NO_CLO_STEAL"),
-                    ("noaliaslet", "NO_ALIAS_LET"), ("nohybridclo", "NO_HYBRID_CLO")]:
+                    ("noaliaslet", "NO_ALIAS_LET"), ("nohybridclo", "NO_HYBRID_CLO"), ("nolifted", "NO_LIFTED_INLINE")]:
     SETTINGS[_name] = {"FICCUS_" + _var: "1"}
 EXPERIMENTS = [n for n in SETTINGS if n not in ("default", "proj", "reuse", "s3rule")]
 
@@ -789,6 +789,7 @@ class Gen:
             self.funs.append((name, ps, t))
         shp_defs, shp = libshape.shapes(self.shape_r)
         out.append(shp_defs)
+        out.append(libshape.parser_shape(self.shape_r))        # H16 W5: parser combinator copies (drawn after the shapes above)
         outs = []
         for i in range(r.randint(4, 7)):
             t = r.choice([x for x in TYPES if x != "Fn"]) if r.random() < 0.9 else "Fn"
@@ -796,8 +797,8 @@ class Gen:
             outs.append((i, t, e))
         lets = "".join("\n                    o%d =\n                        Debug.log \"o%d\" %s\n" % (i, i, e if t != "Fn" else "(%s 3)" % e) for i, t, e in outs)
         total = " + ".join("(" + (SIZE[t] if t != "Fn" else "%s") % ("o%d" % i) + ")" for i, t, e in outs)
-        lets += "".join("\n                    %s =\n                        Debug.log \"%s\" (%s %d)\n" % (v, nm, nm, i + 1) for i, (v, nm) in enumerate([("shv", "shpView"), ("shi", "shpInit")]))
-        total += " + shv * 0 + shi * 0"
+        lets += "".join("\n                    %s =\n                        Debug.log \"%s\" (%s %d)\n" % (v, nm, nm, i + 1) for i, (v, nm) in enumerate([("shv", "shpView"), ("shi", "shpInit"), ("shq", "shpParse")]))
+        total += " + shv * 0 + shi * 0 + shq * 0"
         out.append('''
 
 main : Program () () ()

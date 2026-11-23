@@ -1,0 +1,214 @@
+module Known10 exposing (main)
+
+-- H16 stage 2, W5 (rule 1a): a parser combinator library whose specialized copies are lifted lambdas. A copy that captures nothing is
+-- inlined into its caller and the `case` on its `Good`/`Bad` result is taken apart (rule A); a copy with captures (a parser built from a run time
+-- value) and a recursive copy (`many`'s local loop, `sepBy`'s) stay calls. Every result must be the same with the rule on and off.
+
+
+type alias State =
+    { src : List Int, pos : Int }
+
+
+type Step a
+    = Good Bool a State
+    | Bad Bool String
+
+
+type alias Parser a =
+    State -> Step a
+
+
+symbol : Int -> Parser ()
+symbol c =
+    \s ->
+        case s.src of
+            h :: t ->
+                if h == c then
+                    Good True () { src = t, pos = s.pos + 1 }
+
+                else
+                    Bad False "symbol"
+
+            [] ->
+                Bad False "eof"
+
+
+digit : Parser Int
+digit =
+    \s ->
+        case s.src of
+            h :: t ->
+                if h >= 48 && h <= 57 then
+                    Good True (h - 48) { src = t, pos = s.pos + 1 }
+
+                else
+                    Bad False "digit"
+
+            [] ->
+                Bad False "eof"
+
+
+map : (a -> b) -> Parser a -> Parser b
+map f p =
+    \s ->
+        case p s of
+            Good c a s1 ->
+                Good c (f a) s1
+
+            Bad c m ->
+                Bad c m
+
+
+map2 : (a -> b -> c) -> Parser a -> Parser b -> Parser c
+map2 f pa pb =
+    \s ->
+        case pa s of
+            Bad c m ->
+                Bad c m
+
+            Good c1 a s1 ->
+                case pb s1 of
+                    Bad c2 m ->
+                        Bad (c1 || c2) m
+
+                    Good c2 b s2 ->
+                        Good (c1 || c2) (f a b) s2
+
+
+ignore : Parser keep -> Parser skip -> Parser keep
+ignore pk ps =
+    map2 (\k _ -> k) pk ps
+
+
+keep : Parser (a -> b) -> Parser a -> Parser b
+keep pf pa =
+    map2 (\f a -> f a) pf pa
+
+
+oneOf2 : Parser a -> Parser a -> Parser a
+oneOf2 pa pb =
+    \s ->
+        case pa s of
+            Good c a s1 ->
+                Good c a s1
+
+            Bad c1 m1 ->
+                if c1 then
+                    Bad c1 m1
+
+                else
+                    case pb s of
+                        Good c a s1 ->
+                            Good c a s1
+
+                        Bad c2 m2 ->
+                            Bad c2 m2
+
+
+-- the loop is a local recursive function: its copy is a recursive lifted clone
+many : Parser a -> Parser (List a)
+many p =
+    \s ->
+        let
+            go acc st =
+                case p st of
+                    Good _ a s1 ->
+                        go (a :: acc) s1
+
+                    Bad c m ->
+                        if c then
+                            Bad c m
+
+                        else
+                            Good (not (List.isEmpty acc)) (List.reverse acc) st
+        in
+        go [] s
+
+
+-- capture-free copies only: the parsers are constants
+number : Parser Int
+number =
+    map (List.foldl (\d acc -> acc * 10 + d) 0) (many digit)
+
+
+pair : Parser ( Int, Int )
+pair =
+    map2 Tuple.pair
+        (ignore (ignore (ignore number (symbol 44)) (symbol 32)) (symbol 32))
+        number
+
+
+bracketed : Parser Int
+bracketed =
+    ignore (map2 (\_ n -> n) (symbol 91) number) (symbol 93)
+
+
+either : Parser Int
+either =
+    oneOf2 bracketed number
+
+
+-- a copy with captures: the parser depends on a run time value
+sepWith : Int -> Parser (List Int)
+sepWith sep =
+    many (ignore (map2 (\_ n -> n) (symbol sep) number) (symbol sep))
+
+
+-- a copy with captures through a function argument
+scaled : Int -> Parser Int
+scaled k =
+    map (\n -> n * k + 1) number
+
+
+chars : String -> List Int
+chars str =
+    List.map Char.toCode (String.toList str)
+
+
+run : Parser a -> String -> Step a
+run p str =
+    p { src = chars str, pos = 0 }
+
+
+show : (a -> String) -> Step a -> String
+show f r =
+    case r of
+        Good c a s ->
+            "Good " ++ Debug.toString c ++ " " ++ f a ++ " @" ++ String.fromInt s.pos
+
+        Bad c m ->
+            "Bad " ++ Debug.toString c ++ " " ++ m
+
+
+inputs : List String
+inputs =
+    [ "123", "[45]", "[67", "x", "", "12, 34", "7,  8", ",5,", "9,", "42abc" ]
+
+
+report : Int -> String -> List String
+report k str =
+    [ show String.fromInt (run number str)
+    , show (\( a, b ) -> String.fromInt a ++ "/" ++ String.fromInt b) (run pair str)
+    , show String.fromInt (run either str)
+    , show Debug.toString (run (sepWith (if k == 1 then 44 else 45)) str)
+    , show String.fromInt (run (scaled k) str)
+    , show Debug.toString (run (many (symbol 49)) str)
+    ]
+
+
+init : () -> ( (), Cmd () )
+init _ =
+    let
+        _ =
+            List.indexedMap (\i str -> Debug.log (String.fromInt i ++ " " ++ str) (report (modBy 3 i) str)) inputs
+    in
+    ( (), Cmd.none )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \f -> init f
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

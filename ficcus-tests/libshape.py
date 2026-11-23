@@ -37,3 +37,163 @@ def shapes(r):
                    % (name, name, _one(r, a, False), _one(r, b, True), _one(r, r.choice(fns), r.random() < 0.5)))
         names.append(name)
     return "".join(out), names
+
+
+# H16 W5 (rule 1a): a parser combinator library whose specialized copies are lifted lambdas: copies that capture nothing (inlined into callers),
+# a copy with captures (`k`), a recursive copy (`shpMany`'s local loop). Derived from ficcus-tests/known10. `shpParse : Int -> Int`.
+_PARSER_LIB = r"""
+
+type alias ShpState =
+    { src : List Int, pos : Int }
+
+
+type ShpStep a
+    = ShpGood Bool a ShpState
+    | ShpBad Bool String
+
+
+type alias (ShpState -> ShpStep a) =
+    ShpState -> ShpStep a
+
+
+shpSymbol : Int -> Parser ()
+shpSymbol c =
+    \s ->
+        case s.src of
+            h :: t ->
+                if h == c then
+                    ShpGood True () { src = t, pos = s.pos + 1 }
+
+                else
+                    ShpBad False "shpSymbol"
+
+            [] ->
+                ShpBad False "eof"
+
+
+shpDigit : Parser Int
+shpDigit =
+    \s ->
+        case s.src of
+            h :: t ->
+                if h >= 48 && h <= 57 then
+                    ShpGood True (h - 48) { src = t, pos = s.pos + 1 }
+
+                else
+                    ShpBad False "shpDigit"
+
+            [] ->
+                ShpBad False "eof"
+
+
+shpMap : (a -> b) -> (ShpState -> ShpStep a) -> Parser b
+shpMap f p =
+    \s ->
+        case p s of
+            ShpGood c a s1 ->
+                ShpGood c (f a) s1
+
+            ShpBad c m ->
+                ShpBad c m
+
+
+shpMap2 : (a -> b -> c) -> (ShpState -> ShpStep a) -> Parser b -> Parser c
+shpMap2 f pa pb =
+    \s ->
+        case pa s of
+            ShpBad c m ->
+                ShpBad c m
+
+            ShpGood c1 a s1 ->
+                case pb s1 of
+                    ShpBad c2 m ->
+                        ShpBad (c1 || c2) m
+
+                    ShpGood c2 b s2 ->
+                        ShpGood (c1 || c2) (f a b) s2
+
+
+shpIgnore : Parser shpKeep -> Parser skip -> Parser shpKeep
+shpIgnore pk ps =
+    shpMap2 (\k _ -> k) pk ps
+
+
+shpKeep : Parser (a -> b) -> (ShpState -> ShpStep a) -> Parser b
+shpKeep pf pa =
+    shpMap2 (\f a -> f a) pf pa
+
+
+shpOneOf2 : (ShpState -> ShpStep a) -> (ShpState -> ShpStep a) -> (ShpState -> ShpStep a)
+shpOneOf2 pa pb =
+    \s ->
+        case pa s of
+            ShpGood c a s1 ->
+                ShpGood c a s1
+
+            ShpBad c1 m1 ->
+                if c1 then
+                    ShpBad c1 m1
+
+                else
+                    case pb s of
+                        ShpGood c a s1 ->
+                            ShpGood c a s1
+
+                        ShpBad c2 m2 ->
+                            ShpBad c2 m2
+
+
+-- the loop is a local recursive function: its copy is a recursive lifted clone
+shpMany : (ShpState -> ShpStep a) -> Parser (List a)
+shpMany p =
+    \s ->
+        let
+            go acc st =
+                case p st of
+                    ShpGood _ a s1 ->
+                        go (a :: acc) s1
+
+                    ShpBad c m ->
+                        if c then
+                            ShpBad c m
+
+                        else
+                            ShpGood (not (List.isEmpty acc)) (List.reverse acc) st
+        in
+        go [] s
+
+
+
+shpNum : ShpState -> ShpStep Int
+shpNum =
+    shpMap (List.foldl (\d acc -> acc * 10 + d) 0) (shpMany shpDigit)
+
+
+shpRes : ShpStep Int -> Int
+shpRes r =
+    case r of
+        ShpGood c a s ->
+            (if c then 1000 else 0) + a * 7 + s.pos
+
+        ShpBad c _ ->
+            if c then 99 else 98
+"""
+
+
+def parser_shape(r):
+    """(definitions, name): `shpParse : Int -> Int`, drawn from `r` after the draws of shapes() (those do not change)."""
+    c1, c2 = r.choice(",;:"), r.choice(",;:")
+    forms = [
+        "shpNum",
+        "shpOr (shpMap2 (\\_ n -> n) (shpSym %d) shpNum) shpNum" % ord(c1),
+        "shpMap2 (\\a b -> a * 3 + b) shpNum (shpMap2 (\\_ n -> n) (shpSym %d) shpNum)" % ord(c2),
+        "shpMap2 (\\_ n -> n) (shpSym (k + 44)) shpNum",                          # a copy with captures: the parser depends on k
+        "shpMap (\\n -> n * k + 1) (shpMap2 (\\n _ -> n) shpNum (shpSym %d))" % ord(c1),
+        "shpMap List.length (shpMany (shpMap2 (\\n _ -> n) shpDigit (shpSym %d)))" % ord(c2),   # a recursive copy
+        "shpMap List.sum (shpMany shpNum)",
+    ]
+    terms = []
+    for _ in range(3):
+        text = "".join(r.choice("0123456789,;:") for _ in range(r.randint(3, 10)))
+        terms.append("shpRes ((%s) { src = List.map Char.toCode (String.toList \"%s\"), pos = 0 })" % (r.choice(forms), text))
+    return _PARSER_LIB + "\n\nshpParse : Int -> Int\nshpParse k =\n    " + "\n        + ".join(terms) + "\n"

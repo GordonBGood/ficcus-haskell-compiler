@@ -13,7 +13,8 @@ RT = os.path.join(HERE, "..", "..", "targets", "c")
 SAFE = os.path.join(HERE, "..", "ficcus-tools", "safe")
 SETTINGS = [("on+check", {"FICCUS_KNOWN_CHECK": "1"}), ("off", {"FICCUS_NO_KNOWN": "1"}),
             ("no-expand", {"FICCUS_KNOWN_NO_EXPAND": "1"}), ("budget20", {"FICCUS_KNOWN_BUDGET": "20", "FICCUS_KNOWN_SPEC_BUDGET": "20", "FICCUS_KNOWN_CHECK": "1"}),
-            ("no-spec", {"FICCUS_KNOWN_NO_SPEC": "1", "FICCUS_KNOWN_CHECK": "1"})]
+            ("no-spec", {"FICCUS_KNOWN_NO_SPEC": "1", "FICCUS_KNOWN_CHECK": "1"}),
+            ("no-lifted", {"FICCUS_NO_LIFTED_INLINE": "1", "FICCUS_KNOWN_CHECK": "1"})]
 SAN = ["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL", "-Wno-maybe-uninitialized"]
 
 

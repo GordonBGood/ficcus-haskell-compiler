@@ -292,8 +292,10 @@ class G:
 
     def program(self):
         out = [PRELUDE]; r = self.r; names = []
-        shp_defs, _ = libshape.shapes(random.Random("shape%d" % self.seed))   # its own generator: the programs above do not change
+        shp_r = random.Random("shape%d" % self.seed)   # its own generator: the programs above do not change
+        shp_defs, _ = libshape.shapes(shp_r)
         out.append(shp_defs)
+        out.append(libshape.parser_shape(shp_r))     # H16 W5: parser combinator copies
         for k in range(r.randint(2, 4)):
             t = r.choice(VECS + VECS + ["Str", "Int"]); nm = "f%d" % k; names.append(nm)
             env = [(v, tt) for v, tt in PARAMS] * 2
@@ -303,7 +305,7 @@ class G:
         for nm in names:
             lines.append('Debug.log "%s fresh" (Debug.toString (%s (mkVS 3) (mkVI 4) (mkVR 3) (mkVV 3) (mkVT 3) (mkVM 4) (mkVC 3) (mkVW 3) 2 "p"))' % (nm, nm))
             lines.append('Debug.log "%s shared" (Debug.toString ( %s aS aI aR aV aT aM aC aW 3 "q", %s gVS aI aR gVV aT aM aC aW 1 "r" ))' % (nm, nm, nm))
-        lines.append('Debug.log "shapes" (Debug.toString [ shpView 1, shpUpdate 2, shpSubs 3, shpInit 4 ])')
+        lines.append('Debug.log "shapes" (Debug.toString [ shpView 1, shpUpdate 2, shpSubs 3, shpInit 4, shpParse 5 ])')
         lines.append('Debug.log "kept" (Debug.toString ( ( aS, aI, aR ), ( aV, aT, aM ), ( aC, aW, gVV ) ))')
         out.append('''
 
