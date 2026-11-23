@@ -72,6 +72,8 @@ data Tab =
     , tQuiet :: Set.Set CloneId            -- clones that cannot print (no `Debug` kernel, no call of an unknown function, transitively)
     , tOwner :: Map.Map CloneId CloneId    -- the owner of each lifted clone
     , tCur :: Maybe CloneId                -- the clone whose body is being rewritten
+    , tScc :: Map.Map CloneId Int          -- H16 W5: the call cycle (strongly connected component with a cycle) of each clone in one
+    , tAdm :: Set.Set CloneId              -- H16 W5: the lifted clones admitted to the table
     }
 
 
@@ -106,11 +108,10 @@ table clones =
       caps = if knownOn then captures clones else Map.empty
       liftedCap = Set.fromList [ mdClone d | d <- clones, mdLifted d /= Nothing, not (knownOn && null (Map.findWithDefault [("", CRef)] (mdClone d) caps)) ]
       -- H16 W5: a lifted clone that captures nothing (the Known pass's copies of the parser combinators' lambdas) may be inlined like a global
-      -- function. A clone with captures stays out (its body names its owner's variables); so does a clone in a call cycle (a self call is
-      -- refused below; this adds mutual recursion).
-      cyclic = Set.fromList [ c | Graph.CyclicSCC cs <- Graph.stronglyConnComp [ (mdClone d, mdClone d, maybe [] exprRefs (mdBody d)) | d <- clones ], c <- cs ]
+      -- function. A clone with captures stays out (its body names its owner's variables). A clone is never put in place of a call inside its own
+      -- call cycle (`inlineDef` drops it from the table there; a self call is refused below).
+      sccs = Map.fromList [ (c, i) | (i, Graph.CyclicSCC cs) <- zip [0 :: Int ..] (Graph.stronglyConnComp [ (mdClone d, mdClone d, maybe [] exprRefs (mdBody d)) | d <- clones ]), c <- cs ]
       liftedFree d = knownOn && liftedInlineOn && mdLifted d /= Nothing && null (Map.findWithDefault [("", CRef)] (mdClone d) caps)
-                     && not (Set.member (mdClone d) cyclic)
       ok d = mdKind d == Function && (mdLifted d == Nothing || liftedFree d) && not (Set.member (mdClone d) owners)
              && case mdBody d of
                   Just b -> size b <= sizeLimit && mdClone d `notElem` exprRefs b && not (hasLam b) && not (hasRecordPat b) && not (any (`Set.member` liftedCap) (exprRefs b))
@@ -129,6 +130,7 @@ table clones =
         let qs' = Set.fromList [ mdClone d | d <- clones, Set.member (mdClone d) qs, Just b <- [mdBody d], quietIn qs b ]
         in if qs' == qs then qs else shrink qs'
   in Tab defs prod lifted (shrink quiet0) (Map.fromList [ (mdClone d, o) | d <- clones, Just o <- [mdLifted d] ]) Nothing
+        sccs (Set.filter (`Map.member` defs) lifted)
 
 
 -- | an expression that prints nothing and calls no unknown function (so it may be skipped when its value is not needed)
@@ -209,7 +211,10 @@ inlineDef :: Tab -> Maybe CloneId -> MDef -> M MDef
 inlineDef tab root d =
   case mdBody d of
     Just body | Just (mdClone d) /= root ->
-      do  body' <- rw tab { tCur = Just (mdClone d) } body
+      do  let me = mdClone d
+              -- a lifted clone of the same call cycle as this body is not put in place of a call
+              keep c = not (Set.member c (tAdm tab)) || case (Map.lookup c (tScc tab), Map.lookup me (tScc tab)) of { (Just i, Just j) -> i /= j; _ -> True }
+          body' <- rw tab { tCur = Just me, tDefs = Map.filterWithKey (\c _ -> keep c) (tDefs tab), tProd = Set.filter keep (tProd tab) } body
           return d { mdBody = Just body' }
     _ -> return d
 
