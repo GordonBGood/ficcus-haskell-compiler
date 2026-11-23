@@ -1,0 +1,171 @@
+module Known11 exposing (main)
+
+-- H16 stage 2, W5 (rule 1c): `case x of C y1 .. yn -> C y1 .. yn` returns `x`. Fires: an owned and a borrowed scrutinee, a scrutinee that is not a
+-- variable, a retyped `Bad` (`Step Int` matched, `Step String` rebuilt), a case where every branch is an identity. Must not fire: swapped
+-- fields, a changed field, a different constructor, a nullary constructor, a branch with a guard-like extra computation. Output must equal Elm's.
+
+
+type Step a
+    = Good Bool a Int
+    | Bad Bool String
+
+
+type Shape
+    = Circle Int Int
+    | Rect Int Int
+    | Dot
+
+
+mapStep : (a -> b) -> Step a -> Step b
+mapStep f r =
+    case r of
+        Good c a n ->
+            Good c (f a) n
+
+        Bad c m ->
+            Bad c m
+
+
+keepAll : Step Int -> Step Int
+keepAll r =
+    case r of
+        Good c a n ->
+            Good c a n
+
+        Bad c m ->
+            Bad c m
+
+
+keepBorrowed : Step Int -> ( Step Int, Int )
+keepBorrowed r =
+    ( case r of
+        Good c a n ->
+            Good c a n
+
+        Bad c m ->
+            Bad c m
+    , case r of
+        Good _ a _ ->
+            a
+
+        Bad _ _ ->
+            0
+    )
+
+
+fromCall : Int -> Step Int
+fromCall k =
+    case mapStep (\x -> x + k) (if k > 2 then Good True k 1 else Bad False "small") of
+        Good c a n ->
+            Good c a n
+
+        Bad c m ->
+            Bad c m
+
+
+swapped : Shape -> Shape
+swapped s =
+    case s of
+        Circle a b ->
+            Circle b a
+
+        Rect a b ->
+            Rect a b
+
+        Dot ->
+            Dot
+
+
+changed : Shape -> Shape
+changed s =
+    case s of
+        Circle a b ->
+            Circle a (b + 1)
+
+        Rect a b ->
+            Rect a b
+
+        Dot ->
+            Dot
+
+
+crossed : Shape -> Shape
+crossed s =
+    case s of
+        Circle a b ->
+            Rect a b
+
+        Rect a b ->
+            Circle a b
+
+        Dot ->
+            Dot
+
+
+twice : Shape -> Shape
+twice s =
+    case s of
+        Circle a a2 ->
+            Circle a a2
+
+        Rect a b ->
+            let
+                _ =
+                    Debug.log "rect" ( a, b )
+            in
+            Rect a b
+
+        Dot ->
+            Dot
+
+
+show : Step Int -> String
+show r =
+    case r of
+        Good c a n ->
+            "Good " ++ Debug.toString c ++ " " ++ String.fromInt a ++ " " ++ String.fromInt n
+
+        Bad c m ->
+            "Bad " ++ Debug.toString c ++ " " ++ m
+
+
+showS : Step String -> String
+showS r =
+    case r of
+        Good c a n ->
+            "GoodS " ++ Debug.toString c ++ " " ++ a ++ " " ++ String.fromInt n
+
+        Bad c m ->
+            "BadS " ++ Debug.toString c ++ " " ++ m
+
+
+shapes : Int -> List Shape
+shapes k =
+    [ Circle k 2, Rect 3 k, Dot ]
+
+
+init : () -> ( (), Cmd () )
+init _ =
+    let
+        steps k =
+            [ if modBy 2 k == 0 then Good (k > 3) k (k * 2) else Bad (k > 3) ("bad" ++ String.fromInt k) ]
+
+        _ =
+            List.map (\k -> Debug.log ("k" ++ String.fromInt k)
+                [ List.map (\r -> show (keepAll r)) (steps k)
+                , List.map (\r -> show (Tuple.first (keepBorrowed r)) ++ "/" ++ String.fromInt (Tuple.second (keepBorrowed r))) (steps k)
+                , List.map (\r -> showS (mapStep String.fromInt r)) (steps k)
+                , [ show (fromCall k) ]
+                , List.map (\s -> Debug.toString [ swapped s, changed s, crossed s, twice s ]) (shapes k)
+                ]) [ 1, 2, 3, 4 ]
+    in
+    ( (), Cmd.none )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \f -> init f
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
