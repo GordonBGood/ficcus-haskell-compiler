@@ -60,6 +60,12 @@ liftedInlineOn :: Bool
 liftedInlineOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_LIFTED_INLINE"))
 
 
+-- H16 W5 (rule 1c): `FICCUS_NO_IDENT=1` switches the case identity rule off (it also needs the Known pass on)
+{-# NOINLINE identOn #-}
+identOn :: Bool
+identOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_IDENT"))
+
+
 -- the state: a counter for fresh names, and the number of rewrites done (rule A, rule B)
 type M = State (Int, Int, Int)
 
@@ -268,9 +274,41 @@ rw tab (MExpr cls node) =
               case r of
                 Just e' -> do { (n, a, b) <- get; put (n, a, b + 1); return e' }
                 Nothing -> put saved >> return e
+        -- rule (I), H16 W5 rule 1c: `case x of C y1 .. yn -> C y1 .. yn` returns `x` (also retyped, `Bad c m` at `Step a` rebuilt at `Step b`)
+        MCase scrut bs | knownOn && identOn, Just mk <- caseIdentity cls scrut bs -> mk
         _ -> return e
   where
     sub = descend (rw tab)
+
+
+-- | rule (I): a branch `C y1 .. yn -> C y1 .. yn` (the same constructor, the pattern variables in order, nothing else in the branch) of a
+-- `case` on a heap object gives the scrutinee itself. The fields of the rebuilt cell are the fields of the matched one, so the cell is the same
+-- at any key whose constructor has these field classes; the pattern variable and the argument are one local, so their classes are equal. The
+-- scrutinee is let-bound first when it is not a variable. A `case` whose every branch is such an identity is the scrutinee.
+caseIdentity :: Class -> MExpr -> [(MPat, MExpr)] -> Maybe (M MExpr)
+caseIdentity cls scrut bs
+  | mRep scrut /= CRef || not (any isJust ids) = Nothing
+  | all isJust ids = Just (return scrut)
+  | otherwise =
+      case mNode scrut of
+        MLocal x | all (notBound x) bs -> Just (return (rebuild x scrut))
+                 | otherwise -> Nothing
+        _ -> Just (do { v <- fresh "id"; return (MExpr cls (MLetVal v scrut (rebuild v (MExpr CRef (MLocal v))))) })
+  where
+    ids = map identity bs
+    identity (MPat pc (PCtor n t ps), MExpr bc (MCall (MExpr _ (MCtor n' t' _)) args))
+      | n == n', t == t', not (null ps), length ps == length args, bc == CRef, pc == CRef
+      , Just vs <- mapM patVar ps, and (zipWith sameLocal vs args), distinct vs = Just (n, t, ps)
+    identity _ = Nothing
+    patVar (MPat c (PVar v)) = Just (v, c)
+    patVar _ = Nothing
+    sameLocal (v, c) (MExpr ac (MLocal w)) = v == w && c == ac
+    sameLocal _ _ = False
+    distinct vs = length (List.nub (map fst vs)) == length vs
+    notBound x (MPat _ p, _) = x `notElem` patVars (MPat CRef p)
+    rebuild x s' = MExpr cls (MCase s' (zipWith (rewrite (MExpr CRef (MLocal x))) ids bs))
+    rewrite x (Just (n, t, ps)) (MPat pc _, _) = (MPat pc (PCtor n t [ MPat c PWild | MPat c _ <- ps ]), x)
+    rewrite _ Nothing b = b
 
 
 -- the definition that rule (U) writes out
