@@ -186,6 +186,7 @@ executable elm
         Ficcus.Mono.Inline
         Ficcus.Mono.Known
         Ficcus.Mono.Twin
+        Ficcus.Mono.Unbox
         Ficcus.Mono.RcCheck
         Ficcus.Mono.Ir
         Ficcus.Mono.Print

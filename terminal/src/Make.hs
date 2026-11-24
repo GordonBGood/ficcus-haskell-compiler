@@ -39,6 +39,7 @@ import qualified Ficcus.Mono.Rc as Rc
 import qualified Ficcus.Mono.Inline as Inline
 import qualified Ficcus.Mono.Known as Known
 import qualified Ficcus.Mono.Twin as Twin
+import qualified Ficcus.Mono.Unbox as Unbox
 import qualified Ficcus.Mono.RcCheck as RcCheck
 import qualified Ficcus.Mono.Spec as Spec
 import qualified File
@@ -229,7 +230,28 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                             (Just pat, Right kp) | rcMode ->
                               Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones kp, pat `List.isInfixOf` Mono.mdName d ]))
                             _ -> return ()
-                          let rced = if rcMode then knownResult >>= \known -> Rc.rcProgram (Twin.twinProgram (Inline.inlineProgram known)) >>= mutated else Right program
+                          -- H16 W7a (rule 2): unboxed results of Known clones, between Inline and Twin; `base` = the first clone id Known can hand out
+                          let unboxBase = 1 + maximum (0 : [ n | d <- Mono.mpClones program, let Mono.CloneId n = Mono.mdClone d ])
+                          let unboxed = case knownResult of
+                                          Right known -> let ur = Unbox.unboxProgram unboxBase (Inline.inlineProgram known)
+                                                         in if null (Unbox.urErrors ur) then Right ur else Left (Unbox.urErrors ur)
+                                          Left errs0 -> Left errs0
+                          unboxStatsOn <- Task.io (System.Environment.lookupEnv "FICCUS_UNBOX_STATS")
+                          case (unboxStatsOn, unboxed) of
+                            (Just "1", Right ur) | rcMode -> Task.io (mapM_ (hPutStrLn stderr) (Unbox.urStats ur))
+                            _ -> return ()
+                          -- FICCUS_INLINE_DUMP=text, FICCUS_UNBOX_DUMP=text (debugging): the clones before and after the Unbox pass
+                          inlineDump <- Task.io (System.Environment.lookupEnv "FICCUS_INLINE_DUMP")
+                          case (inlineDump, knownResult) of
+                            (Just pat, Right kp) | rcMode ->
+                              Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones (Inline.inlineProgram kp), pat `List.isInfixOf` Mono.mdName d ]))
+                            _ -> return ()
+                          unboxDump <- Task.io (System.Environment.lookupEnv "FICCUS_UNBOX_DUMP")
+                          case (unboxDump, unboxed) of
+                            (Just pat, Right ur) | rcMode ->
+                              Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones (Unbox.urProgram ur), pat `List.isInfixOf` Mono.mdName d ]))
+                            _ -> return ()
+                          let rced = if rcMode then unboxed >>= \ur -> Rc.rcProgram (Twin.twinProgram (Unbox.urProgram ur)) >>= mutated else Right program
                           twinStatsOn <- Task.io (System.Environment.lookupEnv "FICCUS_TWIN_STATS")
                           case (twinStatsOn, rced) of
                             (Just "1", Right _) | rcMode -> Task.io (hPutStrLn stderr ("FICCUS_TWIN_STATS: (twins, twins that build a cell of their closure's size class) = " ++ show (Twin.twinStats (Twin.twinProgram (Inline.inlineProgram program)))))
