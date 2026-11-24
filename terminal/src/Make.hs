@@ -261,7 +261,13 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                               Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones prog, pat `List.isInfixOf` Mono.mdName d ]))
                             _ -> return ()
                           let counted = if rcMode then rced >>= \counted0 -> (case RcCheck.rcCheck counted0 of { [] -> Right counted0; errs -> Left errs }) else Right program
-                          case counted of
+                          -- H16 W7a: FICCUS_UNBOX_CHECK: every matched worker result is taken apart by an unpack, never by a view branch
+                          unboxChecked <- case (rcMode && Unbox.unboxCheckOn, counted) of
+                                            (True, Right c0) -> do { let { (msgs, nUnpack) = Unbox.checkCounted c0 }
+                                                                   ; case unboxStatsOn of { Just "1" -> Task.io (hPutStrLn stderr ("UNBOX unpacked sites " ++ show nUnpack)); _ -> return () }
+                                                                   ; return (if null msgs then counted else Left msgs) }
+                                            _ -> return counted
+                          case unboxChecked of
                             Left errs -> failWith errs
                             Right program' ->
                               case CGen.generate rcMode program' of

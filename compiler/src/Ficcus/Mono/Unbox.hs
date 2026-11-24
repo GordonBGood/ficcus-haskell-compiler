@@ -6,6 +6,8 @@ module Ficcus.Mono.Unbox
   , unboxOn
   , workerSuffix
   , hasWorkers
+  , checkCounted
+  , unboxCheckOn
   )
   where
 
@@ -46,14 +48,14 @@ import Ficcus.Mono.Layout (leavesOf)
 envIs :: String -> Bool
 envIs name = unsafePerformIO (fmap (== Just "1") (lookupEnv name))
 
--- | the rule is on with FICCUS_S2_UNBOX_ACYCLIC=1, off with =0 or FICCUS_S2_NO_UNBOX=1; unset: `unboxDefault` (off until the gates of W7a are green)
+-- | the rule is on with FICCUS_S2_UNBOX_ACYCLIC=1, off with =0 or FICCUS_S2_NO_UNBOX=1; unset: `unboxDefault` (on since the gates of W7a are green)
 {-# NOINLINE unboxOn #-}
 unboxOn :: Bool
 unboxOn = unsafePerformIO (fmap decide (lookupEnv "FICCUS_S2_UNBOX_ACYCLIC"))
   where decide v = case v of { Just "1" -> not (envIs "FICCUS_S2_NO_UNBOX"); Just "0" -> False; _ -> unboxDefault && not (envIs "FICCUS_S2_NO_UNBOX") }
 
 unboxDefault :: Bool
-unboxDefault = False
+unboxDefault = True
 
 {-# NOINLINE identOn #-}
 identOn :: Bool
@@ -66,6 +68,9 @@ noVecOn = envIs "FICCUS_S2_UNBOX_NOVEC"
 {-# NOINLINE checkOn #-}
 checkOn :: Bool
 checkOn = envIs "FICCUS_UNBOX_CHECK"
+
+unboxCheckOn :: Bool
+unboxCheckOn = checkOn
 
 {-# NOINLINE statsOn #-}
 statsOn :: Bool
@@ -527,7 +532,7 @@ site cx rec env cls fwdVar w h args alts =
                     fwdK = maybe (eFwd env) (\v -> Map.insert v (FwdCtor (cName ct) t argsOf) (eFwd env)) fwdVar
                 b <- rec env { eFill = fills, eFwd = fwdK } (akBody ak)
                 -- the fields: the pattern variables take the slots of the constructor
-                let binds = [ (x, c, leaves) | ((Just x, c), leaves) <- zip (akVars ak) fieldLeaves ]
+                let binds = [ (x, c, leaves) | ((Just x, c), leaves) <- zip (akVars ak) fieldLeaves, occurs x b ]
                     b' = foldr (\(x, c, leaves) acc -> MExpr (mRep acc) (MLetVal x (rebuild c leaves) acc)) b binds
                 return [(Just t, b')]
           Just _ -> return []
@@ -677,3 +682,26 @@ checkWorkers workers clones = concatMap check clones
         MCase s alts -> walk False me s ++ concat [ walk tl me b | (_, b) <- alts ]
         _ -> concatMap (walk False me) (children e)
     callArgs x = case mNode x of { MCall _ as -> as; _ -> [] }
+
+
+-- | FICCUS_UNBOX_CHECK, after the Rc pass: every call of a worker that is let bound and matched (the form that `case f_w .. of` takes in the counted
+-- program) must be matched by a branch that is an `MUnpack` of the result (the struct dies at the match: no dup of a field, no drop of a cell); a
+-- worker call anywhere else must be a tail leaf of a worker. Returns (messages, number of unpacked sites)
+checkCounted :: MProgram -> ([String], Int)
+checkCounted prog = (concat errs, sum counts)
+  where
+    workerIds = Set.fromList [ mdClone d | d <- mpClones prog, workerSuffix `List.isSuffixOf` mdName d ]
+    (errs, counts) = unzip [ (map (\e -> "unbox check (" ++ mdName d ++ ", after Rc): " ++ e) es, n) | d <- mpClones prog, Just b <- [mdBody d], let (es, n) = walk b ]
+    isWorkerCall e = case mNode e of { MCall h _ | MGlobal g <- mNode h, Set.member g workerIds -> True; _ -> False }
+    walk :: MExpr -> ([String], Int)
+    walk e =
+      case mNode e of
+        MLetVal t v b
+          | isWorkerCall v, MCase sc [(_, br)] <- mNode (stripDrops b), MLocal t' <- mNode sc, t' == t ->
+              let (es, n) = walk br
+              in case mNode br of
+                   MUnpack r _ _ inner | r == t -> let (es', n') = walk inner in (es' ++ es0 v, n' + 1)
+                   _ -> (["a worker result is matched by a view branch (fields dup'd, the struct dropped)"] ++ es ++ es0 v, n)
+        _ -> let rs = map walk (children e) in (concatMap fst rs, sum (map snd rs))
+    es0 v = concatMap fst (map walk (children v))
+    stripDrops x = case mNode x of { MDrop _ y -> stripDrops y; MDup _ y -> stripDrops y; _ -> x }
