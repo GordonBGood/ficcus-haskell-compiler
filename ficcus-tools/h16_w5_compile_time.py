@@ -3,7 +3,7 @@
 (FICCUS_NO_IDENT=1) and the defaults (1a + 1c).   python3 h16_w5_compile_time.py --elm BIN --elm-home H --h16a DIR [--runs 5]"""
 import argparse, json, os, shutil, statistics, subprocess, sys, tempfile, time
 HERE = os.path.dirname(os.path.abspath(__file__)); TESTS = os.path.join(HERE, "..", "ficcus-tests")
-MODES = [("off", {"FICCUS_NO_KNOWN": "1"}), ("1a", {"FICCUS_NO_IDENT": "1"}), ("on", {})]
+MODES = [("off", {"FICCUS_NO_KNOWN": "1"}), ("w5", {"FICCUS_S2_NO_SPINE": "1", "FICCUS_NO_INLINE2": "1"}), ("on", {})]   # W6: w5 = the W6 switches off
 
 def timeit(cmd, cwd, env, runs):
     ts = []
@@ -26,8 +26,8 @@ def main():
         res[t["name"]] = {m: timeit([elm, "make", os.path.relpath(src, d), "--output=" + out, "--rc"], d, dict(base, **e), a.runs) for m, e in MODES}
     d = os.path.join(tmp, "a2"); shutil.copytree(pb.P1, d); pb.set_config(d, 7500, 2)
     res["A2"] = {m: timeit([elm, "make", "src/JsonCombV.elm", "--output=" + out, "--rc"], d, dict(base, **e), a.runs) for m, e in MODES}
-    for n, r in res.items(): print("%-22s off %6.3f s   1a %6.3f s (%.2fx)   on %6.3f s (%.2fx)" % (n, r["off"], r["1a"], r["1a"] / r["off"], r["on"], r["on"] / r["off"]))
+    for n, r in res.items(): print("%-22s off %6.3f s   w5 %6.3f s (%.2fx)   on %6.3f s (%.2fx)" % (n, r["off"], r["w5"], r["w5"] / r["off"], r["on"], r["on"] / r["off"]))
     s = {m: sum(r[m] for n, r in res.items() if n != "A2") for m, _ in MODES}
-    print("suite total            off %6.3f s   1a %6.3f s (%.2fx)   on %6.3f s (%.2fx)" % (s["off"], s["1a"], s["1a"] / s["off"], s["on"], s["on"] / s["off"]))
+    print("suite total            off %6.3f s   w5 %6.3f s (%.2fx)   on %6.3f s (%.2fx)" % (s["off"], s["w5"], s["w5"] / s["off"], s["on"], s["on"] / s["off"]))
     shutil.rmtree(tmp)
 main()
