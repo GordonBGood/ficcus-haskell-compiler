@@ -40,6 +40,7 @@ import Ficcus.Mono.Ir
 import Ficcus.Mono.Layout
 import Ficcus.Mono.Print (keyTextIx)
 import Ficcus.Mono.Spec (classOfM)
+import Ficcus.Mono.Unbox (workerSuffix)
 import qualified Ficcus.Mono.Sized as Sized
 
 
@@ -199,6 +200,12 @@ program' info root clones =
             emit "#if defined(FIC_DROP_ALL) || defined(FIC_STATS)"
             emit "if (fic_shutdown() != 0) return 3;"
             emit "#endif"
+            -- H16 W7a: programs with unboxed results fill the unused reference slots with the counted sentinel `fic_nul0`: its count must be back at
+            -- FIC_IMMORTAL when the program has freed everything (-DFIC_UNBOX_CHECK; the test builds)
+            when (rcMode && any (\d -> workerSuffix `List.isSuffixOf` mdName d) clones) $
+              do  emit "#ifdef FIC_UNBOX_CHECK"
+                  emit "if (fic_live_objects == 0 && fic_nul0.rc != FIC_IMMORTAL) { fprintf(stderr, \"FIC_UNBOX_CHECK: the count of the sentinel drifted by %ld\\n\", (long)fic_nul0.rc - (long)FIC_IMMORTAL); return 3; }"
+                  emit "#endif"
             emit "return 0;"
       emit "}"
       emit ""

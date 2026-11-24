@@ -46,9 +46,14 @@ import Ficcus.Mono.Layout (leavesOf)
 envIs :: String -> Bool
 envIs name = unsafePerformIO (fmap (== Just "1") (lookupEnv name))
 
+-- | the rule is on with FICCUS_S2_UNBOX_ACYCLIC=1, off with =0 or FICCUS_S2_NO_UNBOX=1; unset: `unboxDefault` (off until the gates of W7a are green)
 {-# NOINLINE unboxOn #-}
 unboxOn :: Bool
-unboxOn = envIs "FICCUS_S2_UNBOX_ACYCLIC"
+unboxOn = unsafePerformIO (fmap decide (lookupEnv "FICCUS_S2_UNBOX_ACYCLIC"))
+  where decide v = case v of { Just "1" -> not (envIs "FICCUS_S2_NO_UNBOX"); Just "0" -> False; _ -> unboxDefault && not (envIs "FICCUS_S2_NO_UNBOX") }
+
+unboxDefault :: Bool
+unboxDefault = False
 
 {-# NOINLINE identOn #-}
 identOn :: Bool
@@ -459,37 +464,38 @@ filler c =
     _ -> MExpr c (MLit (LInt 0))
 
 
--- | the arguments of a constructor as atoms, one per leaf, in order (the arguments are evaluated in order, as in the cell)
+-- | the arguments of a constructor as atoms, one per leaf, in order (the arguments are evaluated in order, as in the cell). A struct inside a
+-- struct is a boxed leaf (a reference), as the class of the container says; the expression keeps its own class and the generator adapts it.
 flatten :: Cx -> [MExpr] -> ([MExpr] -> U MExpr) -> U MExpr
-flatten cx args0 k0 = many args0 k0
+flatten cx args0 k0 = many [ (a, mRep a) | a <- args0 ] k0
   where
     many [] k = k []
-    many (a : rest) k = one a (\ls -> many rest (\more -> k (ls ++ more)))
-    one a k =
-      case mRep a of
-        CStruct _ ->
+    many ((a, c) : rest) k = one a c (\ls -> many rest (\more -> k (ls ++ more)))
+    one a c k =
+      case c of
+        CStruct fs ->
           case mNode a of
-            MRecord xs -> many (map snd xs) k
-            MTuple xs -> many xs k
+            MRecord xs | length xs == length fs -> many (zip (map snd xs) fs) k
+            MTuple xs | length xs == length fs -> many (zip xs fs) k
             MLetVal x v b ->
               do  v' <- rwNT cx v
-                  inner <- one b k
+                  inner <- one b c k
                   return (MExpr (mRep inner) (MLetVal x v' inner))
             _ ->
               do  a' <- rwNT cx a
                   (bindIt, s) <- case mNode a' of
                                    MLocal n -> return (id, n)
                                    _ -> do { t <- freshN "ubv"; return (\b -> MExpr (mRep b) (MLetVal t a' b), t) }
-                  (pat, vars) <- patOf (mRep a)
+                  (pat, vars) <- patOf c
                   inner <- k vars
-                  return (bindIt (MExpr (mRep inner) (MCase (local (mRep a) s) [(pat, inner)])))
-        c ->
+                  return (bindIt (MExpr (mRep inner) (MCase (local c s) [(pat, inner)])))
+        _ ->
           do  a' <- rwNT cx a
               case mNode a' of
                 MLocal _ -> k [a']
                 MLit _ -> k [a']
                 MCtor _ _ _ -> k [a']
-                _ -> do { t <- freshN "ubv"; inner <- k [local c t]; return (MExpr (mRep inner) (MLetVal t a' inner)) }
+                _ -> do { t <- freshN "ubv"; inner <- k [local (mRep a') t]; return (MExpr (mRep inner) (MLetVal t a' inner)) }
     -- a pattern that binds every leaf of a struct class to a variable
     patOf c =
       case c of
@@ -614,7 +620,7 @@ unboxProgram base prog
     classTag' c = case c of { CRef -> "p"; CI64 -> "i"; CF64 -> "d"; CU32 -> "c"; CEnum -> "e"; CUnit -> "u"; CStruct _ -> "S" }
     stats =
       [ "FICCUS_UNBOX_STATS: workers " ++ show (Map.size workers) ++ ", refused " ++ show (length refusals) ++ ", base " ++ show base ]
-      ++ [ "UNBOX worker " ++ cname c ++ " " ++ nameOf c ++ " family " ++ show (wFam w) ++ " slots " ++ show (length (lAll (wLay w)))
+      ++ [ "UNBOX worker " ++ cname c ++ " " ++ nameOf c ++ " as " ++ cname (wId w) ++ " family " ++ show (wFam w) ++ " slots " ++ show (length (lAll (wLay w)))
              ++ " words " ++ show (lWords (wLay w)) ++ " classes " ++ concatMap classTag' (lAll (wLay w))
          | (c, w) <- Map.toList workers ]
       ++ [ "UNBOX refused " ++ cname c ++ " " ++ nameOf c ++ ": " ++ why | (c, why) <- refusals ]

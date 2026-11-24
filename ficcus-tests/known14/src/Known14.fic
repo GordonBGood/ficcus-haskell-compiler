@@ -1,0 +1,306 @@
+module Known14 exposing (main)
+
+-- H16 stage 2, W7a (rule 2, unboxed results): a result type with three constructors of mixed leaf classes (a flag and a value and a record that
+-- holds a list and an Int; a message; an Int and a Float), parsers made by combinators with known function arguments (so that the specialized
+-- copies are workers), and every way a result is used: matched at a call (direct), returned by a tail call, a self tail loop, a non tail
+-- recursion, stored in a list and in a record and matched later (the wrapper), returned from a closure (the entry), passed to a function, and
+-- matched with a wildcard and with nested constructor patterns (the call is not rewritten). Every output must equal the one of Elm 0.19.3, with
+-- the rule on and off.
+
+
+type alias State =
+    { src : List Int, pos : Int }
+
+
+type Step a
+    = Good Bool a State
+    | Bad Bool String
+    | Skip Int Float
+
+
+type alias Parser a =
+    State -> Step a
+
+
+symbol : Int -> Parser ()
+symbol c =
+    \s ->
+        case s.src of
+            h :: t ->
+                if h == c then
+                    Good True () { src = t, pos = s.pos + 1 }
+
+                else
+                    Bad False "symbol"
+
+            [] ->
+                Bad False "eof"
+
+
+digitP : Parser Int
+digitP =
+    \s ->
+        case s.src of
+            h :: t ->
+                if h >= 48 && h <= 57 then
+                    Good True (h - 48) { src = t, pos = s.pos + 1 }
+
+                else if h == 46 then
+                    Skip s.pos (toFloat h / 4)
+
+                else
+                    Bad False "digit"
+
+            [] ->
+                Bad False "eof"
+
+
+floatP : Parser Float
+floatP =
+    \s ->
+        case s.src of
+            h :: t ->
+                if h >= 48 && h <= 57 then
+                    Good True (toFloat (h - 48) / 2) { src = t, pos = s.pos + 1 }
+
+                else
+                    Skip h (toFloat h)
+
+            [] ->
+                Skip -1 0.5
+
+
+succeed : a -> Parser a
+succeed a =
+    \s -> Good False a s
+
+
+map : (a -> b) -> Parser a -> Parser b
+map f p =
+    \s ->
+        case p s of
+            Good c a s1 ->
+                Good c (f a) s1
+
+            Bad c m ->
+                Bad c m
+
+            Skip i x ->
+                Skip i x
+
+
+map2 : (a -> b -> c) -> Parser a -> Parser b -> Parser c
+map2 f pa pb =
+    \s ->
+        case pa s of
+            Bad c m ->
+                Bad c m
+
+            Skip i x ->
+                Skip (i + 1) (x * 2)
+
+            Good c1 a s1 ->
+                case pb s1 of
+                    Bad c2 m ->
+                        Bad (c1 || c2) m
+
+                    Skip i x ->
+                        Skip i x
+
+                    Good c2 b s2 ->
+                        Good (c1 || c2) (f a b) s2
+
+
+oneOf : List (Parser a) -> Parser a
+oneOf ps =
+    \s -> oneOfHelp s ps
+
+
+oneOfHelp : State -> List (Parser a) -> Step a
+oneOfHelp s ps =
+    case ps of
+        [] ->
+            Bad False "oneOf"
+
+        p :: rest ->
+            case p s of
+                Good c a s1 ->
+                    Good c a s1
+
+                Bad c m ->
+                    if c then
+                        Bad c m
+
+                    else
+                        oneOfHelp s rest
+
+                Skip i x ->
+                    Skip i x
+
+
+-- a self tail loop that returns the result of the last step
+many : Parser a -> Parser (List a)
+many p =
+    \s ->
+        let
+            go acc st =
+                case p st of
+                    Good _ a s1 ->
+                        go (a :: acc) s1
+
+                    Bad c m ->
+                        if c then
+                            Bad c m
+
+                        else
+                            Good (not (List.isEmpty acc)) (List.reverse acc) st
+
+                    Skip i x ->
+                        Skip (i + List.length acc) x
+        in
+        go [] s
+
+
+-- a non tail self recursion: n copies of a parser in a row, the results added up
+times : Int -> Parser Int -> Parser Int
+times n p =
+    \s ->
+        if n <= 0 then
+            Good False 0 s
+
+        else
+            case times (n - 1) p s of
+                Good c1 a s1 ->
+                    case p s1 of
+                        Good c2 b s2 ->
+                            Good (c1 || c2) (a + b) s2
+
+                        Bad c m ->
+                            Bad c m
+
+                        Skip i x ->
+                            Skip i x
+
+                other ->
+                    other
+
+
+-- the result passes through a tail call of another function
+via : Parser a -> Parser a
+via p =
+    \s -> p s
+
+
+-- a wildcard pattern and a nested pattern: the call is not rewritten
+describe : Step Int -> String
+describe r =
+    case r of
+        Good True 0 _ ->
+            "good zero"
+
+        Good _ a _ ->
+            "good " ++ String.fromInt a
+
+        _ ->
+            "other"
+
+
+chars : String -> List Int
+chars str =
+    List.map Char.toCode (String.toList str)
+
+
+start : String -> State
+start str =
+    { src = chars str, pos = 0 }
+
+
+show : (a -> String) -> Step a -> String
+show f r =
+    case r of
+        Good c a s ->
+            "Good " ++ Debug.toString c ++ " " ++ f a ++ " @" ++ String.fromInt s.pos
+
+        Bad c m ->
+            "Bad " ++ Debug.toString c ++ " " ++ m
+
+        Skip i x ->
+            "Skip " ++ String.fromInt i ++ " " ++ String.fromFloat x
+
+
+showL : Step (List Int) -> String
+showL =
+    show (\xs -> String.join "," (List.map String.fromInt xs))
+
+
+num : Parser Int
+num =
+    map (List.foldl (\d acc -> acc * 10 + d) 0) (many digitP)
+
+
+-- a result stored in a list and in a record, matched later
+stored : Parser Int -> String -> String
+stored p str =
+    let
+        r =
+            p (start str)
+
+        both =
+            [ r, r ]
+
+        rec =
+            { first = r, n = List.length both }
+    in
+    String.join "/" (List.map (show String.fromInt) both) ++ " " ++ show String.fromInt rec.first ++ " " ++ String.fromInt rec.n
+
+
+-- results made inside closures that are called through a list (the entry path)
+viaClosures : String -> List String
+viaClosures str =
+    List.map (\f -> show String.fromInt (f (start str)))
+        [ num
+        , map (\_ -> 5) (symbol 40)
+        , oneOf [ digitP, map (\_ -> 9) (symbol 120) ]
+        , times 3 digitP
+        ]
+
+
+ints : String -> List String
+ints str =
+    [ show String.fromInt (num (start str))
+    , show String.fromInt (via (map2 (\a b -> a * 10 + b) digitP digitP) (start str))
+    , show String.fromInt (oneOf [ digitP, map (\_ -> 8) (symbol 45), succeed 77 ] (start str))
+    , show String.fromInt (times 4 digitP (start str))
+    , showL (many digitP (start str))
+    , show String.fromFloat (map2 (\a b -> a + b) floatP floatP (start str))
+    , describe (num (start str))
+    , describe (digitP (start str))
+    ]
+
+
+inputs : List String
+inputs =
+    [ "", "1", "12", "123456", "-", "x", "9.5", ".", "00", "4455", "(", "1234x" ]
+
+
+init : () -> ( (), Cmd () )
+init _ =
+    let
+        _ =
+            List.indexedMap
+                (\i str ->
+                    Debug.log (String.fromInt i ++ " " ++ str)
+                        ( ints str, ( stored num str, stored (map2 (\a b -> a - b) digitP digitP) str ), viaClosures str )
+                )
+                inputs
+    in
+    ( (), Cmd.none )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \f -> init f
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
