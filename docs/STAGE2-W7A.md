@@ -76,7 +76,7 @@ attach 159 / 0 differ, sized-fuzz 40 seeds 0 differ, stringdiff all agree, types
 Fuzz: rcfuzz 200 seeds x {unbox, nounbox, unboxnoident, unboxnovec}: 0 failures, 0 generator problems (the programs are valid Elm 0.19.3: `--elm-check` on the first seeds);
 v2fuzz 200 seeds x {rule on + check, `FICCUS_S2_NO_UNBOX=1`, `FICCUS_S2_NO_UNBOX_IDENT=1`, `FICCUS_S2_UNBOX_NOVEC=1`}: 0 flagged. `known_tests.py`: all 17 programs in all 13
 settings, 390 builds ok. With `FICCUS_KNOWN_CHECK=1 FICCUS_UNBOX_CHECK=1`: the 16 suite programs compile (norc/rc identity table above), the examples in rc mode (295 of 296: see below),
-the library (see the line at the end of this section).
+the library rcsan (108 PASS + 59 FIXED, no REGRESSION).
 **Known, not caused by W7a:** `examples.py` in the mode `FICTEST_RC=1` without sanitizers (not a gate mode) fails the build of `unres.c` on `-Wfree-nonheap-object` of `fic_nul0` in
 `elmficW6` as well (the same 2 warnings at -O1 and 1 at -O2 in the C text of both binaries; `unres` gets no worker). It is the gcc warning of decision rev 169 for a program where the
 opaque `free` block does not apply; the three gate modes pass. To be looked at separately.
