@@ -31,7 +31,7 @@ SETTINGS = {"default": {}, "proj": {"FICCUS_BORROW_PROJ": "1"}, "reuse": {"FICCU
 # FIX3 (docs/FLAGS.md section 4): one setting for each experiment switch that had none; `--settings nospec,noreuse,...` (not in the default run)
 for _name, _var in [("nospec", "NO_SPEC"), ("noreuse", "NO_REUSE"), ("noupdate", "NO_UPDATE_RULE"), ("notake", "NO_TAKE"), ("nolatespec", "NO_LATE_SPEC"),
                     ("nosteal", "NO_STEAL"), ("nostealrule", "NO_STEAL_RULE"), ("noinline", "NO_INLINE"), ("noclosteal", "NO_CLO_STEAL"),
-                    ("noaliaslet", "NO_ALIAS_LET"), ("nohybridclo", "NO_HYBRID_CLO"), ("nolifted", "NO_LIFTED_INLINE")]:
+                    ("noaliaslet", "NO_ALIAS_LET"), ("nohybridclo", "NO_HYBRID_CLO"), ("nolifted", "NO_LIFTED_INLINE"), ("noident", "NO_IDENT"), ("noknown", "NO_KNOWN")]:
     SETTINGS[_name] = {"FICCUS_" + _var: "1"}
 EXPERIMENTS = [n for n in SETTINGS if n not in ("default", "proj", "reuse", "s3rule")]
 
