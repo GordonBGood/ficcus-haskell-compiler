@@ -32,8 +32,12 @@ SETTINGS = {"default": {}, "proj": {"FICCUS_BORROW_PROJ": "1"}, "reuse": {"FICCU
 for _name, _var in [("nospec", "NO_SPEC"), ("noreuse", "NO_REUSE"), ("noupdate", "NO_UPDATE_RULE"), ("notake", "NO_TAKE"), ("nolatespec", "NO_LATE_SPEC"),
                     ("nosteal", "NO_STEAL"), ("nostealrule", "NO_STEAL_RULE"), ("noinline", "NO_INLINE"), ("noclosteal", "NO_CLO_STEAL"),
                     ("noaliaslet", "NO_ALIAS_LET"), ("nohybridclo", "NO_HYBRID_CLO"), ("nolifted", "NO_LIFTED_INLINE"), ("noident", "NO_IDENT"), ("noknown", "NO_KNOWN"),
-                    ("nospine", "S2_NO_SPINE"), ("noinline2", "NO_INLINE2")]:
+                    ("nospine", "S2_NO_SPINE"), ("noinline2", "NO_INLINE2"), ("nounbox", "S2_NO_UNBOX"), ("noident2", "S2_NO_UNBOX_IDENT")]:
     SETTINGS[_name] = {"FICCUS_" + _var: "1"}
+# H16 W7a (rule 2): the rule on with its structural checks (the rule is on by default after the gates), without filler forwarding, without Vector leaves
+SETTINGS["unbox"] = {"FICCUS_S2_UNBOX_ACYCLIC": "1", "FICCUS_UNBOX_CHECK": "1"}
+SETTINGS["unboxnoident"] = {"FICCUS_S2_UNBOX_ACYCLIC": "1", "FICCUS_S2_NO_UNBOX_IDENT": "1", "FICCUS_UNBOX_CHECK": "1"}
+SETTINGS["unboxnovec"] = {"FICCUS_S2_UNBOX_ACYCLIC": "1", "FICCUS_S2_UNBOX_NOVEC": "1", "FICCUS_UNBOX_CHECK": "1"}
 EXPERIMENTS = [n for n in SETTINGS if n not in ("default", "proj", "reuse", "s3rule")]
 
 PRELUDE = '''module Main exposing (main)
@@ -791,6 +795,7 @@ class Gen:
         shp_defs, shp = libshape.shapes(self.shape_r)
         out.append(shp_defs)
         out.append(libshape.parser_shape(self.shape_r))        # H16 W5: parser combinator copies (drawn after the shapes above)
+        out.append(libshape.unbox_shape(self.shape_r))         # H16 W7a: unboxed results (drawn after the parser shapes)
         outs = []
         for i in range(r.randint(4, 7)):
             t = r.choice([x for x in TYPES if x != "Fn"]) if r.random() < 0.9 else "Fn"
@@ -798,7 +803,7 @@ class Gen:
             outs.append((i, t, e))
         lets = "".join("\n                    o%d =\n                        Debug.log \"o%d\" %s\n" % (i, i, e if t != "Fn" else "(%s 3)" % e) for i, t, e in outs)
         total = " + ".join("(" + (SIZE[t] if t != "Fn" else "%s") % ("o%d" % i) + ")" for i, t, e in outs)
-        lets += "".join("\n                    %s =\n                        Debug.log \"%s\" (%s %d)\n" % (v, nm, nm, i + 1) for i, (v, nm) in enumerate([("shv", "shpView"), ("shi", "shpInit"), ("shq", "shpParse")]))
+        lets += "".join("\n                    %s =\n                        Debug.log \"%s\" (%s %d)\n" % (v, nm, nm, i + 1) for i, (v, nm) in enumerate([("shv", "shpView"), ("shi", "shpInit"), ("shq", "shpParse"), ("shu", "ubxRun")]))
         total += " + shv * 0 + shi * 0 + shq * 0"
         out.append('''
 
@@ -828,7 +833,7 @@ ELM_JSON = '''{"type": "application", "source-directories": ["src"], "elm-versio
  "dependencies": {"direct": {"elm/core": "1.0.5"}, "indirect": {"elm/json": "1.1.3"}}, "test-dependencies": {"direct": {}, "indirect": {}}}
 '''
 CFLAGS = ["-std=c99", "-ffp-contract=off", "-w"]
-SAN = ["-O1", "-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL", "-DFIC_STATS"]
+SAN = ["-O1", "-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL", "-DFIC_STATS", "-DFIC_UNBOX_CHECK"]
 
 
 def sh(cmd, cwd=None, env=None, timeout=300):

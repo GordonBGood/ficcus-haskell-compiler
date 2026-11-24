@@ -239,3 +239,317 @@ def parser_shape(r):
         text = "".join(r.choice("0123456789,;:().") for _ in range(r.randint(2, 9)))
         terms.append("shpRes ((%s) { src = List.map Char.toCode (String.toList \"%s\"), pos = 0 })" % (r.choice(sp_forms), text))
     return _PARSER_LIB + "\n\nshpParse : Int -> Int\nshpParse k =\n    " + "\n        + ".join(terms) + "\n"
+
+
+# H16 W7a (rule 2, unboxed results of Known clones): a library whose combinators have known function arguments and a four constructor result type
+# with mixed leaf classes (S9: slots shared across constructors, each branch leaves different slots dead), identity after unpack (S10: the same
+# constructor again, another result type, owned and borrowed), a state with a Vector (V1 to V5: the vector is updated after the match, shared,
+# in a loop, next to the slot of `UBad`'s message, read then updated), producers with a local loop (not put in place of their calls), a self tail
+# loop, a non tail recursion. The module needs `import Vector exposing (Vector)`. `ubxRun : Int -> Int`.
+_UBX_LIB = r"""
+
+type alias UState =
+    { src : List Int, pos : Int, vec : Vector Int }
+
+
+type UQ a
+    = UOne Int String UState
+    | UTwo Float
+    | UThree ( Int, Int ) Bool a
+    | UFour String String
+    | UGood Bool a UState
+
+
+type alias UP a =
+    UState -> UQ a
+
+
+ubxItem : UP Int
+ubxItem =
+    \s ->
+        case s.src of
+            h :: t ->
+                if h < 10 then
+                    UOne h (String.fromInt h) { s | src = t, pos = s.pos + 1 }
+
+                else if h < 20 then
+                    UTwo (toFloat h / 3)
+
+                else if h < 30 then
+                    UThree ( h, s.pos ) (modBy 2 h == 0) h
+
+                else if h < 40 then
+                    UGood (h > 35) h { s | src = t, pos = s.pos + 1, vec = Vector.set (modBy 4 h) h s.vec }
+
+                else
+                    UFour (String.fromInt h) "big"
+
+            [] ->
+                UFour "eof" "end"
+
+
+ubxBump : (Int -> Int) -> UP Int
+ubxBump f =
+    \s ->
+        let
+            go i =
+                case Vector.get i s.vec of
+                    Just v ->
+                        if modBy 3 v == 0 && i < 3 then
+                            go (i + 1)
+
+                        else
+                            UGood True v { s | vec = Vector.set i (f v) s.vec, pos = s.pos + i }
+
+                    Nothing ->
+                        UFour "end" "vec"
+        in
+        go (modBy 4 s.pos)
+
+
+ubxRemap : (Int -> Int) -> UP Int -> UP Int
+ubxRemap f p =
+    \s ->
+        case p s of
+            UOne n m st ->
+                if n > 3 then
+                    UOne n m st
+
+                else
+                    UOne (f n) (m ++ "!") st
+
+            UTwo x ->
+                UTwo x
+
+            UThree ( a, b ) flag v ->
+                if flag then
+                    UThree ( b, a ) flag (f v)
+
+                else
+                    UTwo (toFloat a)
+
+            UFour c m ->
+                if String.length c > 2 then
+                    UFour c m
+
+                else
+                    UFour m c
+
+            UGood c a st ->
+                UGood (not c) (f a) st
+
+
+ubxToStr : (Int -> String) -> UP Int -> UP String
+ubxToStr f p =
+    \s ->
+        case p s of
+            UOne n m st ->
+                UOne n m st
+
+            UTwo x ->
+                UTwo x
+
+            UThree ab flag v ->
+                UThree ab flag (f v)
+
+            UFour c m ->
+                UFour c m
+
+            UGood c a st ->
+                UGood c (f a) st
+
+
+ubxChain : UP Int -> UP Int -> UP Int
+ubxChain p1 p2 =
+    \s ->
+        case p1 s of
+            UGood c n st ->
+                case p2 st of
+                    UGood c2 k st2 ->
+                        UGood (c || c2) (n + k) { st2 | vec = Vector.update 0 (\x -> x + k) st2.vec }
+
+                    other ->
+                        other
+
+            other ->
+                other
+
+
+ubxOneOf : List (UP a) -> UP a
+ubxOneOf ps =
+    \s -> ubxOneOfHelp s ps
+
+
+ubxOneOfHelp : UState -> List (UP a) -> UQ a
+ubxOneOfHelp s ps =
+    case ps of
+        [] ->
+            UFour "oneOf" "none"
+
+        p :: rest ->
+            case p s of
+                UGood c a s1 ->
+                    UGood c a s1
+
+                UFour _ _ ->
+                    ubxOneOfHelp s rest
+
+                other ->
+                    other
+
+
+ubxLoop : Int -> UP Int -> UP Int
+ubxLoop n p =
+    \s ->
+        let
+            go i acc st =
+                if i <= 0 then
+                    UGood (acc > 3) acc st
+
+                else
+                    case p st of
+                        UGood _ a st1 ->
+                            go (i - 1) (acc + a) { st1 | vec = Vector.update (modBy 4 i) (\x -> x + a) st1.vec }
+
+                        UFour c m ->
+                            UFour c m
+
+                        other ->
+                            other
+        in
+        go n 0 s
+
+
+ubxTimes : Int -> UP Int -> UP Int
+ubxTimes n p =
+    \s ->
+        if n <= 0 then
+            UGood False 0 s
+
+        else
+            case ubxTimes (n - 1) p s of
+                UGood c1 a s1 ->
+                    case p s1 of
+                        UGood c2 b s2 ->
+                            UGood (c1 || c2) (a + b) s2
+
+                        other ->
+                            other
+
+                other ->
+                    other
+
+
+ubxStart : List Int -> UState
+ubxStart xs =
+    { src = xs, pos = 0, vec = Vector.fromList [ 1, 2, 3, 4 ] }
+
+
+ubxSum : Vector Int -> Int
+ubxSum v =
+    Vector.foldl (\x acc -> acc * 3 + x) 0 v
+
+
+ubxRes : UQ Int -> Int
+ubxRes q =
+    case q of
+        UOne n m st ->
+            n * 3 + String.length m + st.pos + ubxSum st.vec
+
+        UTwo x ->
+            truncate (x * 10)
+
+        UThree ( a, b ) flag v ->
+            a + b * 7 + v + (if flag then 100 else 0)
+
+        UFour c m ->
+            String.length c * 11 + String.length m
+
+        UGood c a st ->
+            a * 5 + st.pos + ubxSum (Vector.set 1 77 st.vec) + (if c then 1000 else 0)
+
+
+-- the V shapes: the result is matched and the vector of the state is updated (V1), the caller keeps the state and reads it after (V2), the vector
+-- shares a slot with the message of UFour (V4), the vector is read, then updated (V5)
+ubxV : Int -> UP Int -> List Int -> Int
+ubxV shape p xs =
+    let
+        s =
+            ubxStart xs
+    in
+    case shape of
+        0 ->
+            case p s of
+                UGood _ a st ->
+                    a + ubxSum (Vector.update 2 (\x -> x * 2) st.vec)
+
+                other ->
+                    ubxRes other
+
+        1 ->
+            case p s of
+                UGood _ a st ->
+                    a + ubxSum (Vector.set 3 9 st.vec) + ubxSum s.vec
+
+                other ->
+                    ubxRes other
+
+        2 ->
+            case p s of
+                UFour c m ->
+                    String.length c + String.length m
+
+                UGood _ a st ->
+                    a + ubxSum (Vector.push 5 st.vec)
+
+                other ->
+                    ubxRes other
+
+        _ ->
+            case p s of
+                UGood _ a st ->
+                    let
+                        first =
+                            Maybe.withDefault -1 (Vector.get 0 st.vec)
+                    in
+                    a + first + ubxSum (Vector.set 0 (first * 2) st.vec)
+
+                other ->
+                    ubxRes other
+"""
+
+
+def unbox_shape(r):
+    """The definitions of `ubxRun : Int -> Int` (and the library above), drawn from `r` after every other draw of the generator."""
+    def lam():
+        return r.choice(["\\n -> n + %d" % r.randint(1, 9), "\\n -> n * %d" % r.randint(2, 4), "\\n -> n - %d" % r.randint(1, 3), "identity"])
+    prods = [
+        "ubxItem",
+        "ubxRemap (%s) ubxItem" % lam(),
+        "ubxRemap (%s) (ubxRemap (%s) ubxItem)" % (lam(), lam()),
+        "ubxBump (%s)" % lam(),
+        "ubxChain ubxItem ubxItem",
+        "ubxChain (ubxBump (%s)) (ubxRemap (%s) ubxItem)" % (lam(), lam()),
+        "ubxOneOf [ ubxBump (%s), ubxItem ]" % lam(),
+        "ubxOneOf [ ubxRemap (%s) ubxItem, ubxBump (%s), ubxItem ]" % (lam(), lam()),
+        "ubxLoop %d ubxItem" % r.randint(1, 4),
+        "ubxLoop %d (ubxBump (%s))" % (r.randint(1, 5), lam()),
+        "ubxTimes %d (ubxRemap (%s) ubxItem)" % (r.randint(1, 4), lam()),
+        "ubxTimes %d (ubxBump (%s))" % (r.randint(1, 3), lam()),
+    ]
+    terms = []
+    for _ in range(r.randint(4, 7)):
+        xs = "[ %s ]" % ", ".join(str(r.choice([1, 2, 3, 5, 9, 12, 15, 21, 24, 31, 36, 38, 45, 50])) for _ in range(r.randint(0, 6)))
+        p = r.choice(prods)
+        kind = r.randint(0, 6)
+        if kind <= 2:
+            terms.append("ubxRes ((%s) (ubxStart %s))" % (p, xs))
+        elif kind == 3:
+            terms.append("(let rr = (%s) (ubxStart %s) in ubxRes rr + List.length [ rr, rr ])" % (p, xs))        # stored: the wrapper
+        elif kind == 4:
+            terms.append("List.sum (List.map (\\f -> ubxRes (f (ubxStart %s))) [ %s, ubxItem ])" % (xs, p))     # a closure entry
+        elif kind == 5:
+            terms.append("ubxV %d (%s) %s" % (r.randint(0, 3), p, xs))
+        else:
+            terms.append("(case ubxToStr String.fromInt (%s) (ubxStart %s) of\n            UGood _ a st -> String.length a + st.pos\n            UFour c m -> String.length c + String.length m\n            _ -> 7)" % (p, xs))
+    return _UBX_LIB + "\n\nubxRun : Int -> Int\nubxRun k =\n    k + " + "\n        + ".join(terms) + "\n"

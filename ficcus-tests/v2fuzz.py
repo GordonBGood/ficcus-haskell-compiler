@@ -296,6 +296,7 @@ class G:
         shp_defs, _ = libshape.shapes(shp_r)
         out.append(shp_defs)
         out.append(libshape.parser_shape(shp_r))     # H16 W5: parser combinator copies
+        out.append(libshape.unbox_shape(shp_r))      # H16 W7a: unboxed results
         for k in range(r.randint(2, 4)):
             t = r.choice(VECS + VECS + ["Str", "Int"]); nm = "f%d" % k; names.append(nm)
             env = [(v, tt) for v, tt in PARAMS] * 2
@@ -305,7 +306,7 @@ class G:
         for nm in names:
             lines.append('Debug.log "%s fresh" (Debug.toString (%s (mkVS 3) (mkVI 4) (mkVR 3) (mkVV 3) (mkVT 3) (mkVM 4) (mkVC 3) (mkVW 3) 2 "p"))' % (nm, nm))
             lines.append('Debug.log "%s shared" (Debug.toString ( %s aS aI aR aV aT aM aC aW 3 "q", %s gVS aI aR gVV aT aM aC aW 1 "r" ))' % (nm, nm, nm))
-        lines.append('Debug.log "shapes" (Debug.toString [ shpView 1, shpUpdate 2, shpSubs 3, shpInit 4, shpParse 5 ])')
+        lines.append('Debug.log "shapes" (Debug.toString [ shpView 1, shpUpdate 2, shpSubs 3, shpInit 4, shpParse 5, ubxRun 6 ])')
         lines.append('Debug.log "kept" (Debug.toString ( ( aS, aI, aR ), ( aV, aT, aM ), ( aC, aW, gVV ) ))')
         out.append('''
 
@@ -374,7 +375,7 @@ def run(seed, keep):
     cf = ["gcc", "-std=c99", "-O1", "-ffp-contract=off", "-w", "-I", W + "/targets/c"]
     b = subprocess.run(cf + ["no-rc.c", "-o", "norc", "-lm"], cwd=w, capture_output=True, text=True)
     if b.returncode: return fail("cc norc: " + b.stderr[-800:])
-    b = subprocess.run(cf + ["-DFIC_STATS", "-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL", "rc.c", "-o", "rcsan", "-lm"], cwd=w, capture_output=True, text=True)
+    b = subprocess.run(cf + ["-DFIC_STATS", "-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL", "-DFIC_UNBOX_CHECK", "rc.c", "-o", "rcsan", "-lm"], cwd=w, capture_output=True, text=True)
     if b.returncode: return fail("cc rc: " + b.stderr[-800:])
     try:
         o = subprocess.run(["./norc"], cwd=w, capture_output=True, timeout=60)

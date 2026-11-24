@@ -1,0 +1,219 @@
+module Known15 exposing (main)
+
+-- H16 stage 2, W7a (rule 2): a result type with four constructors whose leaves are of mixed classes (so that slots are shared across the
+-- constructors and each branch leaves a different set of slots dead: filler drops), and identity after unpack: a branch that returns the matched
+-- constructor again, with the same result type and with another type (`Bad c m` at `Step a` returned at `Step b`), under a condition, from an
+-- owned and from a borrowed scrutinee. Output equals Elm 0.19.3 with the rule on and off.
+
+
+type alias State =
+    { src : List Int, pos : Int }
+
+
+type Q a
+    = One Int String State
+    | Two Float
+    | Three ( Int, Int ) Bool a
+    | Four String String
+
+
+type alias P a =
+    State -> Q a
+
+
+item : P Int
+item =
+    \s ->
+        case s.src of
+            h :: t ->
+                if h < 10 then
+                    One h (String.fromInt h) { src = t, pos = s.pos + 1 }
+
+                else if h < 20 then
+                    Two (toFloat h / 3)
+
+                else if h < 30 then
+                    Three ( h, s.pos ) (modBy 2 h == 0) h
+
+                else
+                    Four (String.fromInt h) "big"
+
+            [] ->
+                Four "eof" "end"
+
+
+-- every branch rebuilds a constructor: the same constructor under a condition (identity), another constructor, a swap of the two strings
+remap : (Int -> Int) -> P Int -> P Int
+remap f p =
+    \s ->
+        case p s of
+            One n m st ->
+                if n > 3 then
+                    One n m st
+
+                else
+                    One (f n) (m ++ "!") st
+
+            Two x ->
+                Two x
+
+            Three ( a, b ) flag v ->
+                if flag then
+                    Three ( b, a ) flag (f v)
+
+                else
+                    Two (toFloat a)
+
+            Four c m ->
+                if String.length c > 2 then
+                    Four c m
+
+                else
+                    Four m c
+
+
+-- retyped identity: Four and Two are passed on at another type
+toStr : (Int -> String) -> P Int -> P String
+toStr f p =
+    \s ->
+        case p s of
+            One n m st ->
+                One n m st
+
+            Two x ->
+                Two x
+
+            Three ab flag v ->
+                Three ab flag (f v)
+
+            Four c m ->
+                Four c m
+
+
+-- the scrutinee is borrowed (a parameter that the caller keeps), and the result is also used by the caller
+twice : P Int -> State -> ( Q Int, Q Int )
+twice p s =
+    let
+        r =
+            p s
+    in
+    ( r
+    , case r of
+        One n m st ->
+            One (n + 1) m st
+
+        other ->
+            other
+    )
+
+
+chain : P Int -> P Int -> P Int
+chain p1 p2 =
+    \s ->
+        case p1 s of
+            One n m st ->
+                case p2 st of
+                    One k m2 st2 ->
+                        One (n + k) (m ++ m2) st2
+
+                    other ->
+                        other
+
+            other ->
+                other
+
+
+-- a producer with a local loop (not put in place of its calls): its results are matched at direct calls of the copies
+scan : (Int -> Bool) -> P Int -> P Int
+scan ok p =
+    \s ->
+        let
+            go st n =
+                case p st of
+                    One k m st1 ->
+                        if ok k then
+                            One (k + n) m st1
+
+                        else
+                            go st1 (n + 1)
+
+                    Four c m ->
+                        Four c m
+
+                    Two x ->
+                        if x > 8 then
+                            Two (x + toFloat n)
+
+                        else
+                            go { src = List.drop 1 st.src, pos = st.pos + 1 } (n + 2)
+
+                    Three ab f v ->
+                        Three ab f v
+        in
+        go s 0
+
+
+start : List Int -> State
+start xs =
+    { src = xs, pos = 0 }
+
+
+show : (a -> String) -> Q a -> String
+show f q =
+    case q of
+        One n m st ->
+            "One " ++ String.fromInt n ++ " " ++ m ++ " @" ++ String.fromInt st.pos
+
+        Two x ->
+            "Two " ++ String.fromFloat x
+
+        Three ( a, b ) flag v ->
+            "Three " ++ String.fromInt a ++ "," ++ String.fromInt b ++ " " ++ Debug.toString flag ++ " " ++ f v
+
+        Four c m ->
+            "Four " ++ c ++ " " ++ m
+
+
+run : List Int -> List String
+run xs =
+    let
+        s =
+            start xs
+
+        ( r1, r2 ) =
+            twice (remap (\n -> n * 2) item) s
+    in
+    [ show String.fromInt (remap (\n -> n + 100) item s)
+    , show identity (toStr String.fromInt item s)
+    , show identity (toStr (\n -> String.fromInt (n * 3)) (remap (\n -> n - 1) item) s)
+    , show String.fromInt r1
+    , show String.fromInt r2
+    , show String.fromInt (chain item item s)
+    , show String.fromInt (chain (remap (\n -> n + 7) item) (remap (\n -> n * 5) item) s)
+    , show String.fromInt (scan (\n -> n > 4) item s)
+    , show String.fromInt (scan (\n -> modBy 2 n == 0) (remap (\n -> n + 1) item) s)
+    , show identity (toStr String.fromInt (scan (\n -> n < 3) item) s)
+    ]
+
+
+inputs : List (List Int)
+inputs =
+    [ [], [ 1 ], [ 5, 2 ], [ 2, 7, 1 ], [ 12 ], [ 4, 15 ], [ 22, 3 ], [ 24 ], [ 40 ], [ 1, 40 ], [ 3, 3, 3 ], [ 9, 30 ], [ 2, 21 ], [ 0 ], [ 11, 0 ] ]
+
+
+init : () -> ( (), Cmd () )
+init _ =
+    let
+        _ =
+            List.indexedMap (\i xs -> Debug.log (String.fromInt i) (run xs)) inputs
+    in
+    ( (), Cmd.none )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \f -> init f
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

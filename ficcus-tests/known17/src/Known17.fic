@@ -1,0 +1,115 @@
+module Known17 exposing (main)
+
+-- H16 stage 2, W7a (rule 2): the cases where the rule must not fire (no worker; the output is the same as with the rule off): a result that is a
+-- Maybe built by a library function and returned as a variable, a function whose leaves are not constructor applications (a result taken from a
+-- list), a call cycle (mutual recursion through a known function), a result whose worker would need more than 8 slot words (ten Float fields in
+-- one constructor and ten Int fields in another), and results that are only used as values (stored, compared).
+
+
+type Wide
+    = Wide1 Float Float Float Float Float Float Float Float Float Float
+    | Wide2 Int Int Int Int Int Int Int Int Int Int
+    | Wide3 String
+
+
+wide : (Int -> Float) -> Int -> Wide
+wide f n =
+    if n == 0 then
+        Wide3 "zero"
+
+    else if modBy 2 n == 0 then
+        Wide1 (f n) (f (n + 1)) (f (n + 2)) (f (n + 3)) (f (n + 4)) (f (n + 5)) (f (n + 6)) (f (n + 7)) (f (n + 8)) (f (n + 9))
+
+    else
+        Wide2 n (n + 1) (n + 2) (n + 3) (n + 4) (n + 5) (n + 6) (n + 7) (n + 8) (n + 9)
+
+
+showW : Wide -> String
+showW w =
+    case w of
+        Wide1 a _ _ _ _ _ _ _ _ j ->
+            "W1 " ++ String.fromFloat (a + j)
+
+        Wide2 a _ _ _ _ _ _ _ _ j ->
+            "W2 " ++ String.fromInt (a + j)
+
+        Wide3 s ->
+            "W3 " ++ s
+
+
+-- a result taken from a list: not a constructor application
+pick : (Int -> Int) -> List (Maybe Int) -> Int -> Maybe Int
+pick f xs i =
+    case List.drop i xs of
+        h :: _ ->
+            h
+
+        [] ->
+            Just (f i)
+
+
+-- mutual recursion through a function argument: a call cycle
+type Tok
+    = Num Int
+    | Stop String
+
+
+even : (Int -> Int) -> Int -> Tok
+even f n =
+    if n <= 0 then
+        Num (f n)
+
+    else
+        odd f (n - 1)
+
+
+odd : (Int -> Int) -> Int -> Tok
+odd f n =
+    if n <= 0 then
+        Stop "odd"
+
+    else
+        even f (n - 1)
+
+
+showT : Tok -> String
+showT t =
+    case t of
+        Num n ->
+            "Num " ++ String.fromInt n
+
+        Stop s ->
+            "Stop " ++ s
+
+
+-- only used as values
+values : (Int -> Float) -> List Wide
+values f =
+    [ wide f 0, wide f 1, wide f 2 ]
+
+
+init : () -> ( (), Cmd () )
+init _ =
+    let
+        _ =
+            Debug.log "wide" (List.map (\n -> showW (wide (\k -> toFloat k / 2) n)) [ 0, 1, 2, 3, 4 ])
+
+        _ =
+            Debug.log "pick" (List.map (\i -> pick (\k -> k * 3) [ Nothing, Just 5, Just 6 ] i) [ 0, 1, 2, 3, 4 ])
+
+        _ =
+            Debug.log "cycle" (List.map (\n -> showT (even (\k -> k + 10) n)) [ 0, 1, 2, 3, 4, 5 ])
+
+        _ =
+            Debug.log "values" (List.map showW (values (\k -> toFloat k * 1.5)))
+    in
+    ( (), Cmd.none )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \f -> init f
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
