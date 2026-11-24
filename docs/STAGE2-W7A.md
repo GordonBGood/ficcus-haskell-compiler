@@ -69,6 +69,18 @@ a worker, compared by depth) was NOT measured: no test program has a worker in a
 a call cycle and not a worker in B). X3 (sret tail calls): worker to worker tail calls exist in the A2 chain (`oneOfHelp` and its forwarders); ASan/-O2 runs and the 50 MB run
 have no stack growth (the process uses the same 783 MB at 50 MB as before).
 
+## Gates and fuzz (final binary `bin/elmficW7a`, rule on by default; the gates once with `KEEP=1`)
+attach 159 / 0 differ, sized-fuzz 40 seeds 0 differ, stringdiff all agree, types 267 PASS + 1 XFAIL, JS identity 28, examples 296 x3 (plain, `FIC_DROP_ALL`, rc + sanitizers), fbip
+0 failures, rcfaults **2317 mutations, 0 missed** (known14 to known16 are now in the default list: 166 caught for known16 alone) and rcfaults-big 229 / 0 missed, rcgate-san ok, suite
+16 PASS, typed 568 SAME / 12 BOTH_REJECT_SAME / 1 VERDICT_DIFF (as before), library rcsan 108 PASS + 59 FIXED, no REGRESSION, elmdiff **1175 SAME, 0 DIFF**.
+Fuzz: rcfuzz 200 seeds x {unbox, nounbox, unboxnoident, unboxnovec}: 0 failures, 0 generator problems (the programs are valid Elm 0.19.3: `--elm-check` on the first seeds);
+v2fuzz 200 seeds x {rule on + check, `FICCUS_S2_NO_UNBOX=1`, `FICCUS_S2_NO_UNBOX_IDENT=1`, `FICCUS_S2_UNBOX_NOVEC=1`}: 0 flagged. `known_tests.py`: all 17 programs in all 13
+settings, 390 builds ok. With `FICCUS_KNOWN_CHECK=1 FICCUS_UNBOX_CHECK=1`: the 16 suite programs compile (norc/rc identity table above), the examples in rc mode (295 of 296: see below),
+the library (see the line at the end of this section).
+**Known, not caused by W7a:** `examples.py` in the mode `FICTEST_RC=1` without sanitizers (not a gate mode) fails the build of `unres.c` on `-Wfree-nonheap-object` of `fic_nul0` in
+`elmficW6` as well (the same 2 warnings at -O1 and 1 at -O2 in the C text of both binaries; `unres` gets no worker). It is the gcc warning of decision rev 169 for a program where the
+opaque `free` block does not apply; the three gate modes pass. To be looked at separately.
+
 ## Refused, and what is left for W7b and later
 * Cycles (B): the `lambda@67:5` copies, two `sepByHelp`, two `lambda@468:5`, `oneOfHelp` copies in a cycle: 33.3 M allocations (W7b: SCC all or nothing, worker to worker sret tail calls).
 * A worker whose tail callee is not a worker is refused instead of re-boxing with `case g .. of C -> {..}` (design 3.3): with A2's chains it costs the 3 forwarders of `wordHelp`
