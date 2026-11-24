@@ -41,6 +41,7 @@ import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 
 import Ficcus.Mono.Class
+import Ficcus.Mono.Free (refClass)
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Layout (leavesOf)
 
@@ -685,7 +686,7 @@ checkWorkers workers clones = concatMap check clones
 
 
 -- | FICCUS_UNBOX_CHECK, after the Rc pass: every call of a worker that is let bound and matched (the form that `case f_w .. of` takes in the counted
--- program) must be matched by a branch that is an `MUnpack` of the result (the struct dies at the match: no dup of a field, no drop of a cell); a
+-- program; only for a result with a reference leaf: a struct of scalars has no counts) must be matched by a branch that is an `MUnpack` of the result (the struct dies at the match: no dup of a field, no drop of a cell); a
 -- worker call anywhere else must be a tail leaf of a worker. Returns (messages, number of unpacked sites)
 checkCounted :: MProgram -> ([String], Int)
 checkCounted prog = (concat errs, sum counts)
@@ -697,7 +698,7 @@ checkCounted prog = (concat errs, sum counts)
     walk e =
       case mNode e of
         MLetVal t v b
-          | isWorkerCall v, MCase sc [(_, br)] <- mNode (stripDrops b), MLocal t' <- mNode sc, t' == t ->
+          | isWorkerCall v, refClass (mRep v), MCase sc [(_, br)] <- mNode (stripDrops b), MLocal t' <- mNode sc, t' == t ->
               let (es, n) = walk br
               in case mNode br of
                    MUnpack r _ _ inner | r == t -> let (es', n') = walk inner in (es' ++ es0 v, n' + 1)
