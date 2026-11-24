@@ -59,6 +59,11 @@ copyTestOn = unsafePerformIO (fmap (== Just "1") (lookupEnv "FICCUS_KNOWN_COPYTE
 expandOn :: Bool
 expandOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_KNOWN_NO_EXPAND"))
 
+-- H16 stage 2 rule 1b (spine specialization): FICCUS_S2_NO_SPINE=1 turns it off
+{-# NOINLINE spineOn #-}
+spineOn :: Bool
+spineOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_S2_NO_SPINE"))
+
 {-# NOINLINE specOn #-}
 specOn :: Bool
 specOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_KNOWN_NO_SPEC"))
@@ -73,10 +78,12 @@ budget = unsafePerformIO (fmap (fromMaybe 200 . (>>= readMaybe)) (lookupEnv "FIC
 
 
 -- the budgets of section 1.4 of the design note
-maxRounds, perOriginMax, programFloor :: Int
+maxRounds, perOriginMax, programFloor, spineMax, spinePerOriginMax :: Int
 maxRounds = 3
 perOriginMax = 32
 programFloor = 20000
+spineMax = 8                 -- rule 1b: the longest static list that is specialized (cells)
+spinePerOriginMax = 64       -- rule 1b: spine copies per original function (they do not count against perOriginMax)
 
 
 data St = St
@@ -97,6 +104,8 @@ data St = St
   , sCur :: CloneId                      -- the clone whose body is being rewritten (the owner of new lifted copies)
   , sSpec :: Map.Map (CloneId, [String]) (CloneId, [(String, Class)])
       -- W3: specializations by key (the function, the known function of each argument); the clone and its extra parameters (captured variables)
+  , sTails :: Map.Map CloneId CloneId    -- rule 1b: a static list value -> the static list value of its tail
+  , sSpineN :: Map.Map CloneId Int       -- rule 1b: spine copies per original function
   }
 
 type K = State St
@@ -171,7 +180,7 @@ knownRun prog
     byId0 = Map.fromList [ (mdClone d, d) | d <- clones ]
     info = mkInfo prog
     start = St 0 (1 + maximum (0 : [ n | d <- clones, let CloneId n = mdClone d ])) Map.empty byId0 [] [] Map.empty Map.empty Map.empty
-              (captures clones) Map.empty 0 [] Map.empty (CloneId 0) Map.empty
+              (captures clones) Map.empty 0 [] Map.empty (CloneId 0) Map.empty Map.empty Map.empty
     ((out, testErrs), st) = runState go start
     go =
       do  terrs <- if copyTestOn then copyTest byId0 (sCaps start) clones else return []
@@ -318,10 +327,114 @@ rw info env e =
           return e { mNode = MLetVal n v' b' }
     MCase s bs ->
       do  s' <- rw info env s
-          bs' <- mapM (\(p, b) -> do { b' <- rw info (foldr Map.delete env (patVars p)) b; return (p, b') }) bs
-          return e { mNode = MCase s' bs' }
+          red <- spineCase info s' bs
+          case red of
+            Just b' -> rw info env b'
+            Nothing ->
+              do  bs' <- mapM (\(p, b) -> do { b' <- rw info (foldr Map.delete env (patVars p)) b; return (p, b') }) bs
+                  return e { mNode = MCase s' bs' }
     MLam ps b -> do { b' <- rw info (foldr (Map.delete . fst) env ps) b; return e { mNode = MLam ps b' } }
     _ -> mapChildrenM (rw info env) e
+
+
+-- RULE 1b (H16 stage 2, docs/STAGE2-W6.md): spine specialization of static lists of known functions.
+-- A static spine is a Value clone whose body is a list of at most `spineMax` capture-free known functions (`oneOf [a, b, c]` after rule F).
+
+-- the functions of a static spine
+spineOf :: Info -> St -> MExpr -> Maybe [CloneId]
+spineOf info st a =
+  case mNode a of
+    MGlobal g | Just d <- Map.lookup g (sDefs st), mdKind d == Value, Just b <- mdBody d, MList xs <- mNode b
+              , length xs <= spineMax
+              , Just fs <- mapM (\x -> case mNode x of { MGlobal l | Just _ <- staticCode info st l -> Just l; _ -> Nothing }) xs -> Just fs
+    _ -> Nothing
+
+
+-- the parameter `p` of `c` is only the scrutinee of `case p of [] -> ..; h :: t -> ..` (head and tail variables or wildcards), and the tail
+-- is only passed at the same position to `c` itself
+spineParam :: CloneId -> [String] -> String -> [MExpr] -> Bool
+spineParam c ps p = all go
+  where
+    idx = List.elemIndex p ps
+    go e = case mNode e of
+      MCase s bs | MLocal x <- mNode s, x == p -> all okBranch bs && all (go . snd) bs
+      MLocal x -> x /= p
+      _ -> all go (children e)
+    okBranch (pt, b) = case mpNode pt of
+      PNil -> True
+      PWild -> True
+      PCons h t -> okH h && okT t b
+      _ -> False
+    okH h = case mpNode h of { PVar _ -> True; PWild -> True; _ -> False }
+    okT t b = case mpNode t of { PWild -> True; PVar v -> tailUses v b; _ -> False }
+    tailUses v e = case mNode e of
+      MCall h as | MGlobal g <- mNode h, g == c -> and [ (Just i == idx && isV v a) || tailUses v a | (i, a) <- zip [0 :: Int ..] as ]
+      MLocal x -> x /= v
+      _ -> all (tailUses v) (children e)
+    isV v x = case mNode x of { MLocal q -> q == v; _ -> False }
+
+
+-- `case G of ..` with G a static spine: the branch that matches, with the head and tail variables replaced (the head by the function, the
+-- tail by the static value of the rest of the list). Only the patterns that `spineParam` admits.
+spineCase :: Info -> MExpr -> [(MPat, MExpr)] -> K (Maybe MExpr)
+spineCase info s bs
+  | not spineOn || not (all admitted bs) = return Nothing
+  | otherwise =
+  do  st <- get
+      case (spineOf info st s, mNode s) of
+        (Just fs, MGlobal g) ->
+          case dropWhile (not . matches fs) bs of
+            [] -> return Nothing
+            ((pt, b) : _) ->
+              do  bump "spine-reductions"
+                  case (mpNode pt, fs) of
+                    (PCons h t, f : _) ->
+                      do  tl <- case mpNode t of { PVar v -> fmap (\a -> [(v, a)]) (tailValue g s); _ -> return [] }
+                          let hs = case mpNode h of { PVar v -> [(v, MExpr (mpRep h) (MGlobal f))]; _ -> [] }
+                          return (Just (substLocals (Map.fromList (hs ++ tl)) b))
+                    _ -> return (Just b)
+        _ -> return Nothing
+  where
+    admitted (pt, _) = case mpNode pt of
+      PNil -> True
+      PWild -> True
+      PCons h t -> okAtom h && okAtom t
+      _ -> False
+    okAtom x = case mpNode x of { PVar _ -> True; PWild -> True; _ -> False }
+    matches fs (pt, _) = case mpNode pt of { PNil -> null fs; PWild -> True; PCons _ _ -> not (null fs); _ -> False }
+
+
+-- the static value of the tail of the static spine `g` (made once)
+tailValue :: CloneId -> MExpr -> K MExpr
+tailValue g s =
+  do  st <- get
+      case Map.lookup g (sTails st) of
+        Just t -> return (MExpr (mRep s) (MGlobal t))
+        Nothing ->
+          case Map.lookup g (sDefs st) >>= mdBody of
+            Just b | MList (_ : rest) <- mNode b ->
+              do  (a, _) <- floatData (MExpr (mRep b) (MList rest))
+                  case mNode a of
+                    MGlobal t -> modify' (\s' -> s' { sTails = Map.insert g t (sTails s') })
+                    _ -> return ()
+                  bump "spine-tails"
+                  return a
+            _ -> return s
+
+
+-- replace the free occurrences of the given locals by atoms (binders shadow)
+substLocals :: Map.Map String MExpr -> MExpr -> MExpr
+substLocals sub0 = go sub0
+  where
+    go sub e
+      | Map.null sub = e
+      | otherwise =
+          case mNode e of
+            MLocal n | Just a <- Map.lookup n sub -> a
+            MLetVal n v b -> e { mNode = MLetVal n (go sub v) (go (Map.delete n sub) b) }
+            MCase s bs -> e { mNode = MCase (go sub s) [ (p, go (foldr Map.delete sub (patVars p)) b) | (p, b) <- bs ] }
+            MLam ps b -> e { mNode = MLam ps (go (foldr (Map.delete . fst) sub ps) b) }
+            _ -> runIdentity (mapChildrenM (Identity . go sub) e)
 
 
 -- a call whose head and arguments are rewritten
@@ -524,6 +637,7 @@ trySpecialize info env e h c d args
           pick (a, k) p
             | k == KFun && usefulParam p bodies = Just a
             | k == KFunCap && usefulParam p bodies && headOrSelf c ps p bodies = Just a
+            | k == KStatic, spineOn, null fam, Just _ <- spineOf info st0 a, spineParam c ps p bodies = Just a
             | otherwise = Nothing
           picks = zipWith pick cl ps
           origin = Map.findWithDefault c c (sOrigin st0)
@@ -533,13 +647,16 @@ trySpecialize info env e h c d args
           key = (c, map shape picks)
           extras = List.nubBy (\x y -> fst x == fst y)
                      [ nc | Just a <- picks, MGlobal l <- [mNode a], nc <- Map.findWithDefault [] l (sCaps st0) ]
+          isSpine = or [ True | Just a <- picks, Just _ <- [spineOf info st0 a] ]
+          spineUsed = Map.findWithDefault 0 origin (sSpineN st0)
           dyn = [ a | (a, Nothing) <- zip args picks ]
           callOf sid ex = e { mNode = MCall (h { mNode = MGlobal sid }) (dyn ++ [ MExpr cls (MLocal n) | (n, cls) <- ex ]) }
       if all (== Nothing) (map (fmap (const ())) picks) then return Nothing
       else case Map.lookup key (sSpec st0) of
         Just (sid, ex) -> do { bump "spec-memo-hits"; return (Just (callOf sid ex)) }
         Nothing
-          | used >= perOriginMax -> refuse "spec-per-origin-budget"
+          | isSpine && spineUsed >= spinePerOriginMax -> refuse "spine-per-origin-budget"
+          | not isSpine && used >= perOriginMax -> refuse "spec-per-origin-budget"
           | size > specBudget -> refuse "spec-family-size"
           | sAdded st0 + size > max programFloor (iSize info) -> refuse "spec-program-budget"
           | otherwise ->
@@ -554,6 +671,7 @@ trySpecialize info env e h c d args
                                      , mdOwn = [], mdTwin = Nothing, mdCapsOwned = False, mdInit = Nothing, mdNeeds = [] }
                           bumpN size "nodes-added"
                           bump "specializations"
+                          when isSpine (do { bump "spine-specializations"; modify' (\s -> s { sSpineN = Map.insertWith (+) origin 1 (sSpineN s) }) })
                           bump ("specialize:" ++ mdName d)
                           registerCopies origin c size (nd : copies)
                           modify' (\s -> s { sSpec = Map.insert key (sid, extras) (sSpec s) })

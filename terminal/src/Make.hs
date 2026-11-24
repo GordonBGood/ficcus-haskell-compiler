@@ -223,6 +223,12 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                           case knownStatsOn of
                             Just "1" | rcMode -> Task.io (hPutStrLn stderr ("FICCUS_KNOWN_STATS: " ++ show knownCounters))
                             _ -> return ()
+                          -- FICCUS_KNOWN_DUMP=text (debugging): print the clones of Known's output whose definition name contains the text
+                          knownDump <- Task.io (System.Environment.lookupEnv "FICCUS_KNOWN_DUMP")
+                          case (knownDump, knownResult) of
+                            (Just pat, Right kp) | rcMode ->
+                              Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones kp, pat `List.isInfixOf` Mono.mdName d ]))
+                            _ -> return ()
                           let rced = if rcMode then knownResult >>= \known -> Rc.rcProgram (Twin.twinProgram (Inline.inlineProgram known)) >>= mutated else Right program
                           twinStatsOn <- Task.io (System.Environment.lookupEnv "FICCUS_TWIN_STATS")
                           case (twinStatsOn, rced) of
