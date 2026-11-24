@@ -66,6 +66,13 @@ identOn :: Bool
 identOn = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_IDENT"))
 
 
+-- H16 W6 (rule A, relaxed copy limit): `FICCUS_NO_COPYOK2=1` restores the old limit (a consumer branch used by more than one leaf of the
+-- producer must be tiny); it also needs the Known pass on
+{-# NOINLINE copyOk2On #-}
+copyOk2On :: Bool
+copyOk2On = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_COPYOK2"))
+
+
 -- the state: a counter for fresh names, and the number of rewrites done (rule A, rule B)
 type M = State (Int, Int, Int)
 
@@ -372,6 +379,16 @@ ruleT tab cls parts x dflt =
                         Nothing -> (MExpr cls (MCase e bs), n))
 
 
+-- H16 W6: a branch that may be copied to a few leaves: small, binds nothing itself (no renaming needed), no lifted clone in it
+smallCopy :: Tab -> MExpr -> Bool
+smallCopy tab b = size b <= copyMaxSize && null (binders b) && not (any (`Set.member` tLifted tab) (exprRefs b))
+
+
+copyMaxSize, copyMaxUses :: Int
+copyMaxSize = 24
+copyMaxUses = 4
+
+
 tinyCopy :: Tab -> MExpr -> Bool
 tinyCopy tab b = size b <= 6 && null (binders b) && not (any (`Set.member` tLifted tab) (exprRefs b))
 
@@ -491,6 +508,7 @@ ruleA tab cls re scrut bs
                  else
                    let counts = Map.fromListWith (+) [ (i, 1 :: Int) | Just i <- picks ]
                        copyOk i = Map.findWithDefault 0 i counts <= 1 || tiny (snd (bs !! i))
+                                  || (knownOn && copyOk2On && Map.findWithDefault 0 i counts <= copyMaxUses && smallCopy tab (snd (bs !! i)))
                    in if all copyOk (Map.keys counts) then push tab cls re counts bs e else return Nothing
   where
     tiny = tinyCopy tab
