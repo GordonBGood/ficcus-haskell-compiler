@@ -152,6 +152,40 @@ shpMany p =
         go [] s
 
 
+shpOneOf : List (ShpParser a) -> ShpParser a
+shpOneOf ps =
+    \s -> shpOneOfHelp s ps
+
+
+shpOneOfHelp : ShpState -> List (ShpParser a) -> ShpStep a
+shpOneOfHelp s ps =
+    case ps of
+        [] ->
+            ShpBad False "oneOf"
+
+        p :: rest ->
+            case p s of
+                ShpGood c a s1 ->
+                    ShpGood c a s1
+
+                ShpBad c m ->
+                    if c then
+                        ShpBad c m
+
+                    else
+                        shpOneOfHelp s rest
+
+
+shpLazy : (() -> ShpParser a) -> ShpParser a
+shpLazy thunk =
+    \s -> thunk () s
+
+
+shpNest : ShpParser Int
+shpNest =
+    shpLazy (\_ -> shpOneOf [ shpMap2 (\_ d -> d + 1) (shpSym 40) (shpMap2 (\d _ -> d) shpNest (shpSym 41)), shpMap (\_ -> 0) (shpSym 46) ])
+
+
 shpNum : ShpParser Int
 shpNum =
     shpMap (List.foldl (\d acc -> acc * 10 + d) 0) (shpMany shpDigit)
@@ -166,6 +200,12 @@ shpRes r =
         ShpBad c _ ->
             if c then 99 else 98
 """
+
+
+def shp_alt(r, c1, c2):
+    """One alternative of a static `oneOf` list."""
+    return r.choice(["shpNum", "shpMap (\\_ -> %d) (shpSym %d)" % (r.randint(0, 9), ord(r.choice(",;:"))), "shpMap2 (\\_ n -> n + 1) (shpSym %d) shpNum" % ord(c1),
+                     "shpMap (\\_ -> 7) (shpMap2 (\\_ n -> n) (shpSym %d) (shpSym %d))" % (ord(c1), ord(c2)), "shpDigit"])
 
 
 def parser_shape(r):
@@ -184,4 +224,18 @@ def parser_shape(r):
     for _ in range(3):
         text = "".join(r.choice("0123456789,;:") for _ in range(r.randint(3, 10)))
         terms.append("shpRes ((%s) { src = List.map Char.toCode (String.toList \"%s\"), pos = 0 })" % (r.choice(forms), text))
+    # H16 W6 (rule 1b): `oneOf` over static lists of 1 to 8 parsers (the spine rule fires), a recursive grammar, and the cases where it must not fire
+    # (a parser that captures `k`, a list used as a value). Drawn after the draws above.
+    sp = [shp_alt(r, c1, c2) for _ in range(r.randint(1, 8))]
+    sp_forms = [
+        "shpOneOf [ %s ]" % ", ".join(sp),
+        "shpOneOf [ %s, shpNum ]" % sp[0],
+        "shpMap2 (\\a b -> a * 5 + b) (shpOneOf [ %s ]) (shpOneOf [ shpNum, %s ])" % (", ".join(sp[:3]), sp[-1]),
+        "shpMap2 (\\a b -> a + b) shpNest shpNest",
+        "shpOneOf [ shpMap (\\_ -> k) (shpSym 59), shpMap (\\_ -> k + 1) (shpSym (k + 44)), shpNum ]",           # a parser that captures k: no spine
+        "(let ps = [ %s ] in shpMap (\\n -> n + List.length ps) (shpOneOf ps))" % ", ".join(sp[:2]),         # the list is also a value
+    ]
+    for _ in range(3):
+        text = "".join(r.choice("0123456789,;:().") for _ in range(r.randint(2, 9)))
+        terms.append("shpRes ((%s) { src = List.map Char.toCode (String.toList \"%s\"), pos = 0 })" % (r.choice(sp_forms), text))
     return _PARSER_LIB + "\n\nshpParse : Int -> Int\nshpParse k =\n    " + "\n        + ".join(terms) + "\n"

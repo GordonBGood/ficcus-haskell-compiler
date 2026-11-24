@@ -15,7 +15,9 @@ SETTINGS = [("on+check", {"FICCUS_KNOWN_CHECK": "1"}), ("off", {"FICCUS_NO_KNOWN
             ("no-expand", {"FICCUS_KNOWN_NO_EXPAND": "1"}), ("budget20", {"FICCUS_KNOWN_BUDGET": "20", "FICCUS_KNOWN_SPEC_BUDGET": "20", "FICCUS_KNOWN_CHECK": "1"}),
             ("no-spec", {"FICCUS_KNOWN_NO_SPEC": "1", "FICCUS_KNOWN_CHECK": "1"}),
             ("no-lifted", {"FICCUS_NO_LIFTED_INLINE": "1", "FICCUS_KNOWN_CHECK": "1"}),
-            ("no-ident", {"FICCUS_NO_IDENT": "1", "FICCUS_KNOWN_CHECK": "1"})]
+            ("no-ident", {"FICCUS_NO_IDENT": "1", "FICCUS_KNOWN_CHECK": "1"}),
+            ("no-spine", {"FICCUS_S2_NO_SPINE": "1", "FICCUS_KNOWN_CHECK": "1"}),
+            ("no-inline2", {"FICCUS_NO_INLINE2": "1", "FICCUS_KNOWN_CHECK": "1"})]
 SAN = ["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL", "-Wno-maybe-uninitialized"]
 
 

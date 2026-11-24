@@ -1,0 +1,240 @@
+module Known13 exposing (main)
+
+-- H16 stage 2, W6 (rule 1b): the rule must NOT fire. The list of parsers is used as a value (its length is taken and it is passed on), a
+-- parser of the list captures a run time value, the list has more than 8 parsers, the list is built from a run time argument, and a copy of
+-- `oneOfHelp` keeps a list that is also stored in a record. Every result must be the same with the rule on and off.
+
+
+type alias State =
+    { src : List Int, pos : Int }
+
+
+type Step a
+    = Good Bool a State
+    | Bad Bool String
+
+
+type alias Parser a =
+    State -> Step a
+
+
+symbol : Int -> Parser ()
+symbol c =
+    \s ->
+        case s.src of
+            h :: t ->
+                if h == c then
+                    Good True () { src = t, pos = s.pos + 1 }
+
+                else
+                    Bad False "symbol"
+
+            [] ->
+                Bad False "eof"
+
+
+succeed : a -> Parser a
+succeed a =
+    \s -> Good False a s
+
+
+map : (a -> b) -> Parser a -> Parser b
+map f p =
+    \s ->
+        case p s of
+            Good c a s1 ->
+                Good c (f a) s1
+
+            Bad c m ->
+                Bad c m
+
+
+map2 : (a -> b -> c) -> Parser a -> Parser b -> Parser c
+map2 f pa pb =
+    \s ->
+        case pa s of
+            Bad c m ->
+                Bad c m
+
+            Good c1 a s1 ->
+                case pb s1 of
+                    Bad c2 m ->
+                        Bad (c1 || c2) m
+
+                    Good c2 b s2 ->
+                        Good (c1 || c2) (f a b) s2
+
+
+oneOf : List (Parser a) -> Parser a
+oneOf ps =
+    \s -> oneOfHelp s ps
+
+
+oneOfHelp : State -> List (Parser a) -> Step a
+oneOfHelp s ps =
+    case ps of
+        [] ->
+            Bad False "oneOf"
+
+        p :: rest ->
+            case p s of
+                Good c a s1 ->
+                    Good c a s1
+
+                Bad c m ->
+                    if c then
+                        Bad c m
+
+                    else
+                        oneOfHelp s rest
+
+
+lazy : (() -> Parser a) -> Parser a
+lazy thunk =
+    \s -> thunk () s
+
+
+chars : String -> List Int
+chars str =
+    List.map Char.toCode (String.toList str)
+
+
+run : Parser a -> String -> Step a
+run p str =
+    p { src = chars str, pos = 0 }
+
+
+show : (a -> String) -> Step a -> String
+show f r =
+    case r of
+        Good c a s ->
+            "Good " ++ Debug.toString c ++ " " ++ f a ++ " @" ++ String.fromInt s.pos
+
+        Bad c m ->
+            "Bad " ++ Debug.toString c ++ " " ++ m
+
+
+count : List (Parser a) -> Int
+count ps =
+    List.length ps
+
+
+-- the list is also used as a value
+withCount : Parser Int
+withCount =
+    let
+        ps =
+            [ map (\_ -> 1) (symbol 97), map (\_ -> 2) (symbol 98) ]
+    in
+    \s ->
+        case oneOfHelp s ps of
+            Good c a s1 ->
+                Good c (a + 100 * count ps) s1
+
+            Bad c m ->
+                Bad c m
+
+
+-- a parser that captures a run time value
+capturing : Int -> Parser Int
+capturing k =
+    oneOf [ map (\_ -> k) (symbol 97), map (\_ -> k + 1) (symbol k) ]
+
+
+-- more than 8 alternatives
+nine : Parser Int
+nine =
+    oneOf
+        [ map (\_ -> 0) (symbol 48)
+        , map (\_ -> 1) (symbol 49)
+        , map (\_ -> 2) (symbol 50)
+        , map (\_ -> 3) (symbol 51)
+        , map (\_ -> 4) (symbol 52)
+        , map (\_ -> 5) (symbol 53)
+        , map (\_ -> 6) (symbol 54)
+        , map (\_ -> 7) (symbol 55)
+        , map (\_ -> 8) (symbol 56)
+        ]
+
+
+-- the list comes from a run time argument
+fromList : List Int -> Parser Int
+fromList cs =
+    oneOf (List.map (\c -> map (\_ -> c) (symbol c)) cs)
+
+
+-- the list is stored in a record that is passed on
+type alias Grammar =
+    { alts : List (Parser Int), name : String }
+
+
+grammar : Grammar
+grammar =
+    { alts = [ map (\_ -> 5) (symbol 101), map (\_ -> 6) (symbol 102) ], name = "g" }
+
+
+useGrammar : Grammar -> Parser Int
+useGrammar g =
+    \s -> oneOfHelp s g.alts
+
+
+-- the tail of the list is used for something else than the recursive call: the parameter is not a spine
+lenHelp : State -> List (Parser Int) -> Step Int
+lenHelp s ps =
+    case ps of
+        [] ->
+            Bad False "len"
+
+        p :: rest ->
+            case p s of
+                Good c a s1 ->
+                    Good c (a + 1000 * List.length rest) s1
+
+                Bad _ _ ->
+                    lenHelp s rest
+
+
+lenAlts : List (Parser Int)
+lenAlts =
+    [ map (\_ -> 1) (symbol 97), map (\_ -> 2) (symbol 98), map (\_ -> 3) (symbol 99) ]
+
+
+lenP : Parser Int
+lenP =
+    \s -> lenHelp s lenAlts
+
+
+inputs : List String
+inputs =
+    [ "a", "b", "c", "0", "8", "9", "e", "f", "x", "" ]
+
+
+report : Int -> String -> List String
+report k str =
+    [ show String.fromInt (run withCount str)
+    , show String.fromInt (run (capturing (97 + k)) str)
+    , show String.fromInt (run nine str)
+    , show String.fromInt (run (fromList [ 97, 98, 48 + k ]) str)
+    , show String.fromInt (run (useGrammar grammar) str)
+    , show String.fromInt (run lenP str)
+    , grammar.name ++ String.fromInt (List.length grammar.alts)
+    ]
+
+
+init : () -> ( (), Cmd () )
+init _ =
+    let
+        _ =
+            List.indexedMap (\i str -> Debug.log (String.fromInt i ++ " " ++ str) (report (modBy 3 i) str)) inputs
+    in
+    ( (), Cmd.none )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \f -> init f
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+

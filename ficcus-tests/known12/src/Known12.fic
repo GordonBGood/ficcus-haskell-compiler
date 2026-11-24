@@ -1,0 +1,197 @@
+module Known12 exposing (main)
+
+-- H16 stage 2, W6 (rule 1b): `oneOf` applied to a static list of known parsers (lists of 1, 2, 3, 7 parsers, a list inside a list of
+-- alternatives, and a recursive grammar tied through `lazy`). The spine specialization turns `oneOfHelp s list` into a chain of direct calls.
+-- Every result must be the same with the rule on and off.
+
+
+type alias State =
+    { src : List Int, pos : Int }
+
+
+type Step a
+    = Good Bool a State
+    | Bad Bool String
+
+
+type alias Parser a =
+    State -> Step a
+
+
+symbol : Int -> Parser ()
+symbol c =
+    \s ->
+        case s.src of
+            h :: t ->
+                if h == c then
+                    Good True () { src = t, pos = s.pos + 1 }
+
+                else
+                    Bad False "symbol"
+
+            [] ->
+                Bad False "eof"
+
+
+succeed : a -> Parser a
+succeed a =
+    \s -> Good False a s
+
+
+map : (a -> b) -> Parser a -> Parser b
+map f p =
+    \s ->
+        case p s of
+            Good c a s1 ->
+                Good c (f a) s1
+
+            Bad c m ->
+                Bad c m
+
+
+map2 : (a -> b -> c) -> Parser a -> Parser b -> Parser c
+map2 f pa pb =
+    \s ->
+        case pa s of
+            Bad c m ->
+                Bad c m
+
+            Good c1 a s1 ->
+                case pb s1 of
+                    Bad c2 m ->
+                        Bad (c1 || c2) m
+
+                    Good c2 b s2 ->
+                        Good (c1 || c2) (f a b) s2
+
+
+oneOf : List (Parser a) -> Parser a
+oneOf ps =
+    \s -> oneOfHelp s ps
+
+
+oneOfHelp : State -> List (Parser a) -> Step a
+oneOfHelp s ps =
+    case ps of
+        [] ->
+            Bad False "oneOf"
+
+        p :: rest ->
+            case p s of
+                Good c a s1 ->
+                    Good c a s1
+
+                Bad c m ->
+                    if c then
+                        Bad c m
+
+                    else
+                        oneOfHelp s rest
+
+
+lazy : (() -> Parser a) -> Parser a
+lazy thunk =
+    \s -> thunk () s
+
+
+chars : String -> List Int
+chars str =
+    List.map Char.toCode (String.toList str)
+
+
+run : Parser a -> String -> Step a
+run p str =
+    p { src = chars str, pos = 0 }
+
+
+show : (a -> String) -> Step a -> String
+show f r =
+    case r of
+        Good c a s ->
+            "Good " ++ Debug.toString c ++ " " ++ f a ++ " @" ++ String.fromInt s.pos
+
+        Bad c m ->
+            "Bad " ++ Debug.toString c ++ " " ++ m
+
+
+digitP : Parser Int
+digitP =
+    \s ->
+        case s.src of
+            h :: t ->
+                if h >= 48 && h <= 57 then
+                    Good True (h - 48) { src = t, pos = s.pos + 1 }
+
+                else
+                    Bad False "digit"
+
+            [] ->
+                Bad False "eof"
+
+
+one : Parser Int
+one =
+    oneOf [ map (\_ -> 1) (symbol 97) ]
+
+
+two : Parser Int
+two =
+    oneOf [ map (\_ -> 2) (symbol 98), map (\_ -> 3) (symbol 99) ]
+
+
+three : Parser Int
+three =
+    oneOf [ digitP, map (\_ -> 10) (symbol 120), succeed 99 ]
+
+
+seven : Parser Int
+seven =
+    oneOf
+        [ map (\_ -> 1) (symbol 49)
+        , map (\_ -> 2) (symbol 50)
+        , map (\_ -> 3) (symbol 51)
+        , map2 (\_ b -> b + 40) (symbol 52) digitP
+        , map2 (\_ b -> b + 50) (symbol 53) (oneOf [ digitP, map (\_ -> 0) (symbol 45) ])
+        , map (\_ -> 6) (symbol 54)
+        , map (\_ -> 7) (symbol 55)
+        ]
+
+
+-- a recursive grammar: nested brackets, the depth is the result
+depth : Parser Int
+depth =
+    lazy (\_ -> oneOf [ map2 (\_ d -> d + 1) (symbol 40) (map2 (\d _ -> d) depth (symbol 41)), succeed 0 ])
+
+
+inputs : List String
+inputs =
+    [ "a", "b", "c", "x", "7", "z", "", "1", "3", "47", "5-", "58", "6", "(())", "((", "()x", "9" ]
+
+
+report : String -> List String
+report str =
+    [ show String.fromInt (run one str)
+    , show String.fromInt (run two str)
+    , show String.fromInt (run three str)
+    , show String.fromInt (run seven str)
+    , show String.fromInt (run depth str)
+    ]
+
+
+init : () -> ( (), Cmd () )
+init _ =
+    let
+        _ =
+            List.indexedMap (\i str -> Debug.log (String.fromInt i ++ " " ++ str) (report str)) inputs
+    in
+    ( (), Cmd.none )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \f -> init f
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
