@@ -39,7 +39,7 @@ Static prediction (workers' removable allocations from the estimate's site table
 | 50 MB parse time | 8,151 ms | 1,785 ms | **1,246 ms** (-30 % vs W6; 6.5 x pass off) |
 | 50 MB parse allocations | 832.1 M | 156.9 M | **90.35 M** |
 | 50 MB dups / drops | 928.9 / 713.7 M | 196.1 / 185.9 M | 167.0 / 169.0 M |
-| 1 MB parse time / allocations | 173 ms / 17.69 M | 38 ms / 3.33 M | MS1 ms / 1.92 M |
+| 1 MB parse time / allocations | 169 ms / 17.69 M | 37.5 ms / 3.33 M | 25.4 ms / 1.92 M |
 | C text / `.text` | 645 / 109 KB | 710 / 81 KB | 835 / 75 KB (1.29 x / 0.68 x of pass off; budget 1.5 x / 1.3 x) |
 | compile time A2 (`--rc`, median of 5) | 0.913 s | 0.996 s | 1.084 s (1.19 x pass off, 1.09 x W6; budget 1.5 x) |
 | compile time, 16 suite programs (total) | 10.625 s | 10.685 s | 10.636 s (1.00 x) |
