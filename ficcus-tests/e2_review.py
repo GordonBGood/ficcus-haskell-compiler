@@ -40,7 +40,7 @@ TESTS = {
     "R11PortsBad": ("gate", dict(T, FIC_PORTS_IN="{D}/ports/R11PortsBad.in"), 1, "Q6: an incoming value that does not decode: crash 4, exit 1"),
     "R12Crash": ("gate", T, 1, "Q7: Debug.todo with a timer pending and a port message queued"),
     # fail today
-    "R4Delay": ("target", T, 0, "Q5: node truncates a fractional delay and makes a delay above 2^31-1 ms (or Infinity) 1 ms"),
+    "R4Delay": ("gate", T, 0, "Q5 (fix 2): node truncates a fractional delay and makes a delay above 2^31-1 ms (or Infinity) 1 ms"),
     "R9Slow": ("target", {"TZ": "UTC"}, 0, "Q5 (real time): after a slow update an interval does not fire its missed ticks back to back"),
     # divergences to decide (not counted)
     "R1KillTwice": ("info", T, 0, "Q1: Elm crashes on a second kill of a killed process (TypeError); Ficcus continues"),

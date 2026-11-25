@@ -475,8 +475,9 @@ static FIC_UNUSED void fic_platform_enqueue(fic_ref cmd, fic_ref sub) {
  *
  * One thread. The loop runs the timers in order of (deadline, creation); each one resumes a process (Process.sleep) or spawns its task
  * (Time.every's setInterval), and the scheduler then runs everything that became runnable before the next timer: one event at a time,
- * as one JavaScript turn. The program ends when no timer is left (node ends when nothing is pending). A delay below 1 ms is 1 ms, as in
- * node (so `sleep 0` and `sleep 1` wait the same and run in the order they were made); an interval re-arms from its previous deadline.
+ * as one JavaScript turn. The program ends when no timer is left (node ends when nothing is pending). Delays as node takes them
+ * (fic_timer_delay): outside [1, 2^31-1] ms is 1 ms, else truncated (so `sleep 0`, `sleep 1.5` and `sleep 1` wait the same and run in
+ * the order they were made); an interval re-arms from its previous deadline.
  * Clock: Time.now is the wall clock in ms (Date.now), the timers use the monotonic clock. FIC_TIME=<ms> (decision D-fx-7, tests): a
  * virtual clock that starts at that time; the loop never sleeps, it moves the clock to the next deadline, so the order and the values
  * of a program with timers are the same on every run. Debug.log output is flushed before the loop waits. */
@@ -534,7 +535,12 @@ static void fic_tm_down(size_t i) {
     t = fic_tm[i]; fic_tm[i] = fic_tm[m]; fic_tm[m] = t; i = m;
   }
 }
-/* a timer for a process (one count) and, for an interval, its task (one count); delay as setTimeout/setInterval: below 1 is 1 */
+/* a delay as node's setTimeout/setInterval take it (E2 review fix 2, checked on node 21): a delay outside [1, 2^31-1] ms (below 1,
+   NaN, above 2^31-1, Infinity; tested before truncation, so 2147483647.2 is out) is 1 ms, any other is truncated to whole ms; equal
+   delays then fire in creation order. The result is a whole number in [1, 2^31-1], so a deadline is always finite. */
+static double fic_timer_delay(double ms) { return (ms >= 1 && ms <= 2147483647.0) ? (double)(int64_t)ms : 1; }
+
+/* a timer for a process (one count) and, for an interval, its task (one count); ms is a delay from fic_timer_delay */
 static void fic_tm_add(fic_proc *p, fic_ref task, double ms, double period) {
   if (fic_tm_len == fic_tm_cap) {
     size_t cap = fic_tm_cap == 0 ? 16 : fic_tm_cap * 2;
@@ -542,7 +548,6 @@ static void fic_tm_add(fic_proc *p, fic_ref task, double ms, double period) {
     if (t == NULL) abort();
     fic_tm = t; fic_tm_cap = cap;
   }
-  if (!(ms >= 1)) ms = 1;
   FIC_RC_DUP(&p->h);
   fic_tm[fic_tm_len].deadline = fic_loop_now() + ms; fic_tm[fic_tm_len].seq = fic_tm_seq++;
   fic_tm[fic_tm_len].proc = &p->h; fic_tm[fic_tm_len].task = task; fic_tm[fic_tm_len].period = period;
@@ -569,8 +574,8 @@ static void fic_tm_cancel(fic_proc *p) {
 static void fic_sched_bind_async(fic_proc *p, fic_task_bind *b) {
   if (b == NULL) { fic_tm_cancel(p); return; }
   switch (b->kind) {
-  case FIC_BIND_SLEEP: fic_tm_add(p, NULL, b->ms, 0); break;
-  case FIC_BIND_INTERVAL: { double ms = b->ms; if (!(ms >= 1)) ms = 1; FIC_RC_DUP(b->a.p); fic_tm_add(p, b->a.p, ms, ms); break; }
+  case FIC_BIND_SLEEP: fic_tm_add(p, NULL, fic_timer_delay(b->ms), 0); break;
+  case FIC_BIND_INTERVAL: { double ms = fic_timer_delay(b->ms); FIC_RC_DUP(b->a.p); fic_tm_add(p, b->a.p, ms, ms); break; }
   default: fprintf(stderr, "internal: a binding of kind %u\n", (unsigned)b->kind); abort();
   }
 }
@@ -650,9 +655,11 @@ static FIC_UNUSED void fic_sched_run(void) {
       if (t.deadline > now) {
 #if defined(__unix__) || defined(__APPLE__)
         struct timespec d;
-        double w = t.deadline - now;
+        double w = t.deadline - now;               /* in (0, 2^31-1]: deadlines are finite (fic_timer_delay), so the casts are defined */
+        long ns;
         fflush(stdout);
-        d.tv_sec = (time_t)(w / 1000); d.tv_nsec = (long)((w - (double)d.tv_sec * 1000) * 1e6);
+        d.tv_sec = (time_t)(w / 1000); ns = (long)((w - (double)d.tv_sec * 1000) * 1e6);
+        d.tv_nsec = ns < 0 ? 0 : ns > 999999999L ? 999999999L : ns;
         nanosleep(&d, NULL);
 #endif
         continue;
