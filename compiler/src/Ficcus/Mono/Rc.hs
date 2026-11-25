@@ -186,7 +186,8 @@ trySplit ctx env live e
           do  k <- gets rsSplitN
               modify' (\s -> s { rsSplitN = k + 1, rsSplits = (rsClone s, rsWhere s) : rsSplits s })
               let names = Map.fromList [ (i, f) | (i, f, _) <- plFields plan ]
-                  var i = "_sp" ++ show k ++ "_" ++ Map.findWithDefault ("f" ++ show i) i names
+                  -- by position (E1p review fix 1): a field called `f0` at another position cannot give a second variable of the same name
+                  var i = "_sp" ++ show k ++ "_" ++ show i ++ maybe "" ("_" ++) (Map.lookup i names)
                   body = rewriteSplit m fs plan var
                   pat = MPat (CStruct fs) (PRecord [ (i, var i, c) | (i, _, c) <- plFields plan ])
               return (Just (MExpr (mRep e) (MCase (MExpr (CStruct fs) (MLocal m)) [(pat, body)])))

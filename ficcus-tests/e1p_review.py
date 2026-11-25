@@ -3,7 +3,7 @@
 function 1000 (R13: 300000) times by a self tail call and prints the result with Debug.log. Goldens in expected/e1pr_*.out
 (Elm 0.19.3 under node, made from the same source with --goldens).
 
-  E1pR1Name         TARGET: a record field named `f0` collides with the split's fallback variable name (compile fails today)
+  E1pR1Name         a record field named `f0` beside a field the split does not read (fixed: split variables named by position)
   E1pR10Alias       negative: `let old = m` read by field after `setA m`: exactly 1960 copies (fewer = an unsound in-place write)
   E1pR11Capture     negative: closures capture m and an alias of m, then a helper writes m.a: exactly 1960 copies
   E1pR13TailBranch  positive: m rebuilt / returned whole / passed to a writing helper / wrapped in a nested record per branch;
@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RT = os.path.join(HERE, "..", "..", "targets", "c")
 SAN = ["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL", "-Wno-maybe-uninitialized"]
 # (program, copies: ("=", n) exact or ("<=", n) at most, target: True when it fails today and is a fix target)
-PROGRAMS = [("E1pR1Name", ("<=", 0), True), ("E1pR10Alias", ("=", 1960), False), ("E1pR11Capture", ("=", 1960), False),
+PROGRAMS = [("E1pR1Name", ("<=", 0), False), ("E1pR10Alias", ("=", 1960), False), ("E1pR11Capture", ("=", 1960), False),
             ("E1pR13TailBranch", ("<=", 5), False), ("E1pR14LambdaSet", ("<=", 5), True)]
 
 

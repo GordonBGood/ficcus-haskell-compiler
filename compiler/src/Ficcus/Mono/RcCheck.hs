@@ -337,6 +337,8 @@ caseOf s bs =
       results <-
         mapM (\(p, b) ->
                 do  modify' (\st -> st { cxScope = s0 })
+                    let allNames = map fst (patBinders p)
+                    forM_ (take 1 (allNames List.\\ List.nub allNames)) (\n -> bad ("a pattern binds the name " ++ n ++ " twice"))
                     let binders = [ n | (n, c) <- patBinders p, refClass c ]
                     forM_ binders (\n -> modify' (\st -> st { cxScope = Map.insert n (V False 0 root) (cxScope st) }))
                     branchBody root p b
