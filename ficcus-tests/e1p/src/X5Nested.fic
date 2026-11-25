@@ -1,0 +1,48 @@
+module X5Nested exposing (main)
+
+import Array exposing (Array)
+
+
+type alias Inner =
+    { a : Array Int, k : Int }
+
+
+type alias Model =
+    { inner : Inner, n : Int }
+
+
+type Msg
+    = Step
+
+
+initModel : Model
+initModel =
+    { inner = { a = Array.repeat 100 0, k = 0 }, n = 1000 }
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update _ m =
+    let
+        { inner, n } =
+            m
+
+        { a, k } =
+            inner
+
+        m2 =
+            { inner = { a = Array.set (modBy 100 n) n a, k = k + 1 }, n = n - 1 }
+    in
+    if m2.n == 0 then
+        ( Debug.log "final" (Array.slice 0 5 m2.inner.a) |> (\_ -> m2), Cmd.none )
+
+    else
+        ( m2, Cmd.none )
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init = \_ -> ( initModel, Cmd.none )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

@@ -1,0 +1,55 @@
+module X3CallerLive exposing (main)
+
+import Array exposing (Array)
+import Dict exposing (Dict)
+
+
+type alias Model =
+    { a : Array Int, d : Dict Int Int, n : Int }
+
+
+type Msg
+    = Step
+
+
+initModel : Model
+initModel =
+    { a = Array.repeat 100 0, d = Dict.singleton 1 1, n = 1000 }
+
+
+final : Model -> Model
+final m =
+    if m.n == 0 then
+        Debug.log "final" { m | a = Array.slice 0 5 m.a }
+
+    else
+        m
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update _ { a, d, n } =
+    let
+        r =
+            setA { a = a, d = d, n = n }
+
+        a2 =
+            r.a
+
+        n2 =
+            r.n
+    in
+    ( final { a = a2, d = Dict.insert (modBy 7 n) n d, n = n2 }, Cmd.none )
+
+
+setA : Model -> Model
+setA { a, d, n } =
+    { a = Array.set (modBy 100 n) n a, d = d, n = n - 1 }
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init = \_ -> ( initModel, Cmd.none )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }
