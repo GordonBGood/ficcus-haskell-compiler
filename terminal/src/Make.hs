@@ -216,6 +216,9 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                                                  maybe (Left ["FICCUS_RC_MUTATE: there is no reset or reuse number " ++ show k]) Right (Rc.rcMutate True k prog)
                                                Just ('s' : digits) | Just k <- readMaybeInt digits ->
                                                  maybe (Left ["FICCUS_RC_MUTATE: there is no S6 site number " ++ show k]) Right (Rc.rcMutateS6 k prog)
+                                               -- "pN" (E1p): the faults at the split sites (Rc.rcMutateSplit)
+                                               Just ('p' : digits) | Just k <- readMaybeInt digits ->
+                                                 maybe (Left ["FICCUS_RC_MUTATE: there is no split fault number " ++ show k]) Right (Rc.rcMutateSplit k prog)
                                                _ -> case mutation >>= readMaybeInt of
                                                       Nothing -> Right prog
                                                       Just k -> maybe (Left ["FICCUS_RC_MUTATE: there is no dup or drop number " ++ show k]) Right (Rc.rcMutate False k prog)

@@ -4,6 +4,7 @@ module Ficcus.Mono.Rc
   ( rcProgram
   , rcProgramStats
   , rcMutate
+  , rcMutateSplit
   , rcMutateS6
   )
   where
@@ -861,3 +862,66 @@ rcMutateS6 n program =
         MFreeTok t b -> MFreeTok t <$> mut b
         other -> return other
 
+
+-- | E1p fault injection (`FICCUS_RC_MUTATE=pK`): the K-th fault at a split site (an `MUnpack` of a split: its case binds `_sp` variables),
+-- which the checker must reject. Per site, in this order:
+--   1. a field dropped twice: the first variable that takes leaves is dropped at the start of the unpack's body (and still used there);
+--   2. the drop of an unused field skipped: a reference field the split does not bind is taken by a variable nothing uses (a leak);
+--      only where the struct has such a field;
+--   3. a field moved and also read: the body first reads a reference field of the struct itself, which the unpack has consumed.
+rcMutateSplit :: Int -> MProgram -> Maybe MProgram
+rcMutateSplit n program =
+  let (clones', total) = runState (mapM mutDef (mpClones program)) 0
+  in if total > n then Just program { mpClones = clones' } else Nothing
+  where
+    hit :: State Int Bool
+    hit = do { k <- get; put (k + 1); return (k == n) }
+    mutDef d =
+      case mdBody d of
+        Nothing -> return d
+        Just b -> do { b' <- mut b; return d { mdBody = Just b' } }
+    isSplit fs = not (null fs) && all (\(_, v, _) -> "_sp" `List.isPrefixOf` v) fs
+    mut :: MExpr -> State Int MExpr
+    mut e =
+      case mNode e of
+        MCase sc [(p@(MPat pc (PRecord fs)), MExpr bc (MUnpack s c@(CStruct cfs) bs b))] | isSplit fs ->
+          do  b1 <- mut b
+              let refFields = [ (i, fc) | (i, fc) <- zip [0 :: Int ..] cfs, refClass fc ]
+                  unbound = [ (i, fc) | (i, fc) <- refFields, i `notElem` [ j | (j, _, _) <- fs ] ]
+              m1 <- case bs of { (v, vc, _) : _ -> fmap (\h -> if h then Just (bs, fs, MExpr bc (MDrop [(v, vc)] b1)) else Nothing) hit; [] -> return Nothing }
+              m2 <- case unbound of
+                      (i, fc) : _ -> fmap (\h -> if h then Just (bs ++ [("_spmut", fc, leafRange cfs i)], fs ++ [(i, "_spmut", fc)], b1) else Nothing) hit
+                      [] -> return Nothing
+              m3 <- case refFields of
+                      (i, fc) : _ ->
+                        fmap (\h -> if h then Just (bs, fs, MExpr bc (MLetVal "_spmut" (MExpr fc (MOwn (MExpr fc (MAccess (MExpr c (MLocal s)) "f" i))))
+                                                                     (MExpr bc (MDrop [("_spmut", fc)] b1))))
+                                    else Nothing) hit
+                      [] -> return Nothing
+              let (bs', fs', b') = case (m1, m2, m3) of
+                    (Just r, _, _) -> r
+                    (_, Just r, _) -> r
+                    (_, _, Just r) -> r
+                    _ -> (bs, fs, b1)
+              sc' <- mut sc
+              return e { mNode = MCase sc' [(p { mpNode = PRecord fs', mpRep = pc }, MExpr bc (MUnpack s c bs' b'))] }
+        node -> do { node' <- kids node; return e { mNode = node' } }
+    kids node =
+      case node of
+        MCall f as -> do { f' <- mut f; as' <- mapM mut as; return (MCall f' as') }
+        MIf bs f -> do { bs' <- mapM (\(c, b) -> do { c' <- mut c; b' <- mut b; return (c', b') }) bs; f' <- mut f; return (MIf bs' f') }
+        MLetVal v x b -> do { x' <- mut x; b' <- mut b; return (MLetVal v x' b') }
+        MSeq a b -> do { a' <- mut a; b' <- mut b; return (MSeq a' b') }
+        MCase sc bs -> do { sc' <- mut sc; bs' <- mapM (\(pt, b) -> do { b' <- mut b; return (pt, b') }) bs; return (MCase sc' bs') }
+        MAccess r f i -> do { r' <- mut r; return (MAccess r' f i) }
+        MRecord fs -> do { fs' <- mapM (\(f, x) -> do { x' <- mut x; return (f, x') }) fs; return (MRecord fs') }
+        MTuple xs -> MTuple <$> mapM mut xs
+        MList xs -> MList <$> mapM mut xs
+        MDup vs b -> MDup vs <$> mut b
+        MDrop vs b -> MDrop vs <$> mut b
+        MOwn b -> MOwn <$> mut b
+        MUnpack sv c bs b -> MUnpack sv c bs <$> mut b
+        MSpec sv fcs bs mt b -> MSpec sv fcs bs mt <$> mut b
+        MReuse t b -> MReuse t <$> mut b
+        MFreeTok t b -> MFreeTok t <$> mut b
+        other -> return other
