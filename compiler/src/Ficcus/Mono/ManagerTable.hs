@@ -111,8 +111,9 @@ mapCloneAt :: [MDef] -> (Class, Class) -> Maybe MDef
 mapCloneAt ds pr = List.find (\d -> case mdKey d of { Key [ByClass a, ByClass b] -> (boxedC a, boxedC b) == pr; _ -> False }) ds
 
 
--- | the pair index of a `Cmd.map` (True) or `Sub.map` (False) node at the key of its kernel (`(a -> msg) -> Cmd a -> Cmd msg`);
--- 0 when no manager has a map function at the pair (then no leaf ever reaches it)
+-- | the pair index of a `Cmd.map` (True) or `Sub.map` (False) node at the key of its kernel (`(a -> msg) -> Cmd a -> Cmd msg`).
+-- Every map node finds its pair: `mapPairs` collects the pairs from the same keys (and Spec clones every manager's map function at
+-- every pair). The fallback 0 needs a key that is not `[ByClass a, ByClass b]`, which these kernels never have (E2 review Q3).
 pairIndex :: MapPairs -> Bool -> Key -> Int
 pairIndex ps isCmd key =
   case key of

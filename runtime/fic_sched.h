@@ -13,8 +13,12 @@
  * The run queue, a process's root, stack and mailbox, a router's process, the manager table and the timer heap each hold one count.
  * The protocol of the model (D-fx-3) is the generated stepper's (fic_app_step): this file never sees the model.
  *
- * Deviations from Elm, all decided (D-fx-6): a message to a process that waits in a binding does not run the binding again (Elm's
- * `_Scheduler_rawSend` + `_Scheduler_step` would); a resume after a kill is a no-op (a process killed while it sleeps stays dead). */
+ * As Elm (corrected by the E2 review, D-fx-6): a message to a process that waits in a binding runs the binding again, as Elm's
+ * `_Scheduler_rawSend` + `_Scheduler_step` do (fic_sched_step -> fic_sched_bind; only the outgoing port's manager gets mail while it
+ * sleeps, and its order needs the re-run: test R5PortBacklog). Deviations from Elm, all decided (D-fx-6): a resume after a kill is a
+ * no-op (a process killed while it sleeps stays dead); a kill clears the stack, so a self kill ends the process (Elm keeps the stack and
+ * continues; Elm code cannot reach this, no task gets its own id); a second kill of a killed process is a no-op (Elm 0.19.3 crashes:
+ * `_Scheduler_kill` reads `null.$`; test R1KillTwice). */
 #ifndef FIC_SCHED_H
 #define FIC_SCHED_H
 
