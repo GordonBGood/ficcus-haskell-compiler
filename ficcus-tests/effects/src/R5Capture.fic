@@ -1,0 +1,49 @@
+module R5Capture exposing (main)
+
+-- a closure stored in the model captures the array of the old model (a second owner, like a tagger); the in-place set must not
+-- change what the closure sees
+
+import Array exposing (Array)
+
+
+type alias Model =
+    { a : Array Int, old : Int -> Int, seen : List Int, n : Int }
+
+
+type Msg
+    = Step
+
+
+initModel : Model
+initModel =
+    { a = Array.repeat 4 0, old = \_ -> -1, seen = [], n = 12 }
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update _ m =
+    let
+        k =
+            modBy 4 m.n
+
+        m2 =
+            { m
+                | a = Array.set k m.n m.a
+                , old = \i -> Array.get i m.a |> Maybe.withDefault -2
+                , seen = m.old k :: m.seen
+                , n = m.n - 1
+            }
+    in
+    if m2.n == 0 then
+        ( Debug.log "final" ( Array.toList m2.a, m2.seen, ( m2.old 0, m2.old 1, m2.old 2 ) ) |> always m2, Cmd.none )
+
+    else
+        ( m2, Cmd.none )
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init = \_ -> ( initModel, Cmd.none )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

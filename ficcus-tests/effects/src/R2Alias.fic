@@ -1,0 +1,48 @@
+module R2Alias exposing (main)
+
+-- two fields share one array (b = old a) every third step; a is then set in place only when b no longer holds it
+
+import Array exposing (Array)
+
+
+type alias Model =
+    { a : Array Int, b : Array Int, n : Int }
+
+
+type Msg
+    = Step
+
+
+initModel : Model
+initModel =
+    { a = Array.repeat 10 0, b = Array.empty, n = 30 }
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update _ m =
+    if m.n <= 0 then
+        ( m, Cmd.none )
+
+    else if modBy 3 m.n == 0 then
+        done { a = Array.set (modBy 10 m.n) m.n m.a, b = m.a, n = m.n - 1 }
+
+    else
+        done { m | a = Array.set (modBy 10 m.n) m.n m.a, n = m.n - 1 }
+
+
+done : Model -> ( Model, Cmd Msg )
+done m =
+    if m.n == 0 then
+        ( Debug.log "final" m, Cmd.none )
+
+    else
+        ( m, Cmd.none )
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init = \_ -> ( initModel, Cmd.none )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

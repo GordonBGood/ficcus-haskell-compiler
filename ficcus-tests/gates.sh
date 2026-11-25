@@ -1,7 +1,7 @@
 #!/bin/bash
 # The serial regression gates of the compiler session (STAGE4-FIX1.md section 7). BIN=elmficNN [S=scratch dir] ficcus-tests/gates.sh; takes about one hour (FIX2: step list unchanged, plus stringdiff).
 # Expected: runtime 0 non-ok lines; attach 159 cases 0 differ; types 267 PASS 1 XFAIL (one case may flake under load: rerun); JS identity 28; examples 296 ok x3 (the three modes must agree: a lower ex-rcsan count means FAIL lines);
-# fbip 0 failures; faults 0 missed; suite PASS; typed 568/12/1; library no REGRESSION; elmdiff 1160 SAME + 15 apps.
+# fbip 0 failures; e1review all ok; faults 0 missed; suite PASS; typed 568/12/1; library no REGRESSION; elmdiff 1160 SAME + 15 apps.
 W=$(cd "$(dirname "$0")/../.." && pwd); R=${R:-$(cd "$(dirname "$0")/.." && pwd)}      # A3: the worktree this script is in (it was the main checkout)
 # Disk: every private ELM_HOME is a reflink copy where the file system has them (btrfs: no space used until a file is rewritten; a
 # hard link would be unsafe, elm rewrites artifacts.dat in place), and everything the run made under $S is removed when it ends, also
@@ -31,6 +31,7 @@ step examples; (cd $R && python3 ficcus-tests/examples.py --elm $B --safe $W/too
 step ex-dropall; (cd $R && FIC_DROP_ALL=1 python3 ficcus-tests/examples.py --elm $B --safe $W/tools/safe --elm-home $H > $G/ex2.txt 2>&1); grep -c "^ok" $G/ex2.txt; grep -E "FAIL" $G/ex2.txt | head
 step ex-rcsan; (cd $R && FICTEST_RC=1 FICTEST_SAN=1 python3 ficcus-tests/examples.py --elm $B --safe $W/tools/safe --elm-home $H > $G/ex3.txt 2>&1); grep -c "^ok" $G/ex3.txt; grep -E "FAIL" $G/ex3.txt | head
 step fbip;     python3 $R/ficcus-tests/fbip_check.py --elm $B --elm-home $H --safe $W/tools/safe > $G/fbip.txt 2>&1; tail -2 $G/fbip.txt
+step e1review; python3 $R/ficcus-tests/e1_review.py --elm $B --elm-home $H --targets > $G/e1review.txt 2>&1; tail -1 $G/e1review.txt     # E1 review (docs/E1-REVIEW.md): model ownership, R1..R5 with targets (expected: e1_review: all ok)
 step rcfaults; python3 $R/ficcus-tests/rccheck_faults.py --elm $B --elm-home $H > $G/faults.txt 2>&1; tail -2 $G/faults.txt
 step rcfaults-big; python3 $R/ficcus-tests/rccheck_faults.py --elm $B --elm-home $H --only vec,fbip,reuse,evo,parse --sample 0.02 --seed 1 > $G/faults2.txt 2>&1; tail -2 $G/faults2.txt
 step rcgate-san; python3 $R/ficcus-tests/rc_gate.py --elm $B --elm-home $H --san > $G/rcgate.txt 2>&1; tail -3 $G/rcgate.txt

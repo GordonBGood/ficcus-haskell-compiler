@@ -1,0 +1,41 @@
+module R1Partial exposing (main)
+
+-- partial record update: d is kept, a is set (the common Elm idiom)
+
+import Array exposing (Array)
+import Dict exposing (Dict)
+
+
+type alias Model =
+    { a : Array Int, d : Dict Int Int, n : Int }
+
+
+type Msg
+    = Step
+
+
+initModel : Model
+initModel =
+    { a = Array.repeat 100 0, d = Dict.singleton 1 1, n = 1000 }
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update _ m =
+    let
+        m2 =
+            { m | a = Array.set (modBy 100 m.n) m.n m.a, n = m.n - 1 }
+    in
+    if m2.n == 0 then
+        ( Debug.log "final" { m2 | a = Array.slice 0 5 m2.a }, Cmd.none )
+
+    else
+        ( m2, Cmd.none )
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init = \_ -> ( initModel, Cmd.none )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

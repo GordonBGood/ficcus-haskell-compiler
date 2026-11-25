@@ -1,0 +1,1 @@
+final: { a = Array.fromList [100,1,2,3,4], d = Dict.fromList [(1,1)], n = 0 }

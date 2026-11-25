@@ -1,0 +1,42 @@
+module R4LambdaRef exposing (main)
+
+-- fields read inside a lambda, a field read in one branch only, the whole model logged on another branch
+
+import Array exposing (Array)
+
+
+type alias Model =
+    { a : Array Int, xs : List Int, n : Int }
+
+
+type Msg
+    = Step
+
+
+initModel : Model
+initModel =
+    { a = Array.repeat 6 0, xs = [ 1, 2, 3 ], n = 20 }
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update _ m =
+    if m.n == 0 then
+        ( m, Cmd.none )
+
+    else if m.n == 1 then
+        ( Debug.log "final" { m | n = 0 }, Cmd.none )
+
+    else if modBy 5 m.n == 0 then
+        ( { m | a = Array.map (\x -> x + m.n + List.length m.xs) m.a, n = m.n - 1 }, Cmd.none )
+
+    else
+        ( { m | a = Array.set (modBy 6 m.n) (List.foldl (+) m.n m.xs) m.a, xs = m.n :: m.xs, n = m.n - 1 }, Cmd.none )
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init = \_ -> ( List.foldl (\_ mm -> Tuple.first (update Step mm)) initModel (List.range 1 20), Cmd.none )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }
