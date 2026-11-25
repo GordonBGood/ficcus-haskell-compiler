@@ -23,6 +23,7 @@ import qualified AST.Prim.TypeName as T
 import qualified AST.Prim.Name as N
 import qualified Data.Map.Strict as Map
 import Ficcus.Mono.Class (MType(..))
+import Ficcus.Mono.Effects (Manager, managerOf)
 import Ficcus.Mono.Ir (UnionShape(..))
 import qualified AST.Prim.TypeVar as TV
 import qualified Data.Index as Index
@@ -38,11 +39,12 @@ data ModuleData =
     , mmDefs :: [Can.Def]              -- top level definitions, dependencies first (Elm's order)
     , mmEnums :: [(String, Bool)]      -- custom types of the module (`Module.Type`), True when every constructor is nullary
     , mmUnions :: [(String, UnionShape)]   -- the same types with their constructors (for generated equality and comparison)
+    , mmManager :: Maybe Manager       -- E1 step 2: the header of an `effect module` (Ficcus.Mono.Effects)
     }
 
 
 fromCanonical :: Bool -> Can.Module -> Typed -> ModuleData
-fromCanonical isProject canonical@(Can.Module home _ _ decls unions _ _ _) typed =
+fromCanonical isProject canonical@(Can.Module home _ _ decls unions _ _ effects) typed =
   ModuleData
     { mmName = moduleLabel canonical
     , mmProject = isProject
@@ -50,6 +52,7 @@ fromCanonical isProject canonical@(Can.Module home _ _ decls unions _ _ _) typed
     , mmDefs = declsToDefs decls
     , mmEnums = [ (moduleChars home ++ "." ++ N.toChars (T.nameToName tname), isEnum opts) | (tname, Can.Union _ _ _ opts) <- Map.toList unions ]
     , mmUnions = [ (moduleChars home ++ "." ++ N.toChars (T.nameToName tname), shapeOf u) | (tname, u) <- Map.toList unions ]
+    , mmManager = managerOf (moduleChars home) effects
     }
   where
     isEnum opts = case opts of { Can.Enum -> True; _ -> False }

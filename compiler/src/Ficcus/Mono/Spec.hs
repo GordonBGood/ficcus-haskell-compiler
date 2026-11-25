@@ -52,7 +52,7 @@ import qualified Elm.String as ES
 import Ficcus.Mono.Class
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel
-import Ficcus.Mono.Effects (effectClassOf)
+import Ficcus.Mono.Effects (Manager(..), effectClassOf, leafKernelId, managerKernelId, mapKernelKind, noStepper)
 import qualified Ficcus.Mono.Sized as Sized
 import Ficcus.Mono.Overlay (overlayId, overlayModuleName, randomOverlayPrefix, vectorMarker, vectorModuleId, vectorTypeName)
 import Ficcus.Mono.Marks (Marks)
@@ -148,6 +148,10 @@ data S =
     , sPvClass :: Map.Map String Class            -- the class of the variable that holds such a clone's value
     , sVector :: Bool                             -- the program has the overlay's built-in `Vector` (V1): its functions are intrinsics
     , sUnions :: Map.Map String UnionShape        -- (ATTACH A3) every custom type, for `holdsMember`
+    , sManagers :: Map.Map String Manager         -- (E1 step 2) the effect modules of the program, by home
+    , sLeafHomes :: Set.Set String                -- the managers whose `command` or `subscription` the program uses
+    , sMapPairs :: Set.Set (Bool, Class, Class)   -- the (Cmd?, a, b) class pairs of the program's `Cmd.map`/`Sub.map`
+    , sAppMsg :: Maybe Class                      -- the class of the program's `msg` (set by `specWorker`)
     }
 
 
@@ -198,9 +202,11 @@ specialize modules marks =
         -- SIZED: the sized integers and Float32 of the overlay are scalars (their union is not an enumeration)
         unions = foldr (Map.adjust (\u -> u { usEnum = False })) unions0 [ Sized.typeId sz | sz <- Sized.allSized, Map.member ("sized:" ++ Sized.typeId sz) (Sized.sizedEnums unions0) ]
         enums = Map.union (Sized.sizedEnums unions0) (builtin (Map.fromList (concatMap mmEnums modules)))
-        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions
+        managers = Map.fromList [ (mgHome mg, mg) | m' <- modules, Just mg <- [mmManager m'] ]
+        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions managers Set.empty Set.empty Nothing
         mainId = defIdOf (mmCtx m) (defKeyOf d)
-        final0 = execState (requestRoot mainId >>= \r0 -> drain >> return r0) start
+        -- E1 step 2: the effect managers the program reaches are cloned after everything else (their clones get the last ids)
+        final0 = execState (requestRoot mainId >>= \r0 -> drain >> managerPhase mainId >> return r0) start
         root = Map.lookup (CKey mainId Nothing (Key [])) (sClones final0)
         -- SIZED: a literal out of range is an error also in a definition that `main` does not reach: when a sized type is in the
         -- program, the other definitions of the project are specialized too (their clones are dropped, only these reports are kept)
@@ -1394,6 +1400,14 @@ resolve se region e =
                Just src -> viaClone src did
                Nothing -> report ("internal: local definition " ++ did ++ " is not in scope of the specializer") >> return RNone
         _ -> return (RLocal (N.toChars name))
+    Can.VarTopLevel h n | N.toChars n `elem` ["command", "subscription"] ->
+      do  mgrs <- gets sManagers
+          tops <- gets sTops
+          let home = moduleChars h
+          let cid = home ++ "." ++ N.toChars n
+          case (Map.lookup home mgrs, Map.member cid tops) of
+            (Just _, False) -> leafRef home
+            _ -> foreignOrTop cid
     Can.VarTopLevel h n -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.VarForeign h n _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.VarOperator _ h n _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
@@ -1413,6 +1427,16 @@ resolve se region e =
   where
     ctx = seCtx se
     raw = Map.lookup (Recorder.exprKey region e) (_nodes (_typed ctx))
+
+    -- E1 step 2: `command`/`subscription` of an effect module: the leaf kernel of its home, keyed by the class of `msg` at this use
+    -- (`MyCmd msg -> Cmd msg`)
+    leafRef home =
+      case nodeType se (Recorder.exprKey region e) >>= peelFun 1 of
+        Just (_, res) | Just m <- typeArg res ->
+          do  c <- classOfTy se m
+              modify' (\st -> st { sLeafHomes = Set.insert home (sLeafHomes st) })
+              return (RKernel (leafKernelId home) (Key [ByClass (boxed c)]) 1)
+        _ -> report ("internal: no type for the leaf of the effect manager " ++ home ++ " at " ++ regionText region) >> return RNone
     arrows t = case t of { Can.TLambda _ r -> 1 + arrows r; _ -> 0 :: Int }
 
     -- `type alias P = { x : Int, y : Float }` makes a constructor function `P`: its result type is the alias,
@@ -1476,12 +1500,23 @@ resolve se region e =
                 Nothing -> return RNone
                 Just (scheme, s) ->
                   do  key <- keyFor se cid scheme s (const False)
+                      recordMapPair cid
                       return (RKernel cid key arity)
         Nothing ->
           do  tops <- gets sTops
               case Map.lookup cid tops of
                 Nothing -> report ("`" ++ cid ++ "` has no definition and is not in the kernel table (at " ++ regionText region ++ ")") >> return RNone
                 Just src -> viaClone src cid
+
+    -- E1 step 2: the class pair (a, b) of a `Cmd.map`/`Sub.map` (`(a -> b) -> Cmd a -> Cmd b`): the managers' map functions are
+    -- cloned at it
+    recordMapPair cid =
+      case mapKernelKind cid of
+        Just isCmd | Just (TFun a b) <- fmap strip (nodeType se (Recorder.exprKey region e) >>= peelFun 1 >>= \(ps, _) -> case ps of { p : _ -> Just p; [] -> Nothing }) ->
+          do  ca <- classOfTy se a
+              cb <- classOfTy se b
+              modify' (\st -> st { sMapPairs = Set.insert (isCmd, boxed ca, boxed cb) (sMapPairs st) })
+        _ -> return ()
 
     viaClone src did =
       do  ms <- subst did
@@ -1495,6 +1530,84 @@ resolve se region e =
                   return (RClone c (length (defArgs (srcDef src)) - hiddenN) (null (defArgs (srcDef src)) && srcOwner src == Nothing))
 
 
+-- E1 STEP 2: EFFECT MANAGERS (Ficcus.Mono.Effects)
+
+
+-- | after the program is specialized: the managers whose leaves it uses are cloned (init, onEffects, onSelfMsg at the program's
+-- `msg` class, cmdMap/subMap at every map pair), which can reach new leaves and map pairs, until nothing changes; then the table is
+-- appended to the arguments of `main`'s worker call
+managerPhase :: String -> SM ()
+managerPhase mainId =
+  do  appMsg <- gets sAppMsg
+      case appMsg of
+        Nothing -> return ()
+        Just msgC -> loop msgC Nothing
+  where
+    loop msgC seen =
+      do  homes <- gets sLeafHomes
+          pairs <- gets sMapPairs
+          if seen == Just (homes, pairs)
+            then
+              do  entries <- mapM (requestManager msgC pairs) (Set.toList homes)
+                  clones <- gets sClones
+                  case Map.lookup (CKey mainId Nothing (Key [])) clones of
+                    Just r | not (null entries) -> modify' (\st -> st { sDone = Map.adjust (appendWorkerArgs entries) r (sDone st) })
+                    _ -> return ()
+            else
+              do  mapM_ (requestManager msgC pairs) (Set.toList homes)
+                  drain
+                  loop msgC (Just (homes, pairs))
+
+
+-- | the arguments added to `main`'s worker call (E1: managers in step 2, update and subscriptions in step 3)
+appendWorkerArgs :: [MExpr] -> MDef -> MDef
+appendWorkerArgs extra d =
+  d { mdBody = fmap (\b -> case b of { MExpr c (MCall f args) -> MExpr c (MCall f (args ++ extra)); _ -> b }) (mdBody d) }
+
+
+-- | the clones of one manager and its table entry `managerKernelId home (init, onEffects, onSelfMsg, cmdMaps.., subMaps..)`
+requestManager :: Class -> Set.Set (Bool, Class, Class) -> String -> SM MExpr
+requestManager msgC pairs home =
+  do  mgrs <- gets sManagers
+      let mg = Map.lookup home mgrs
+      core <- mapM (\n -> managerClone (home ++ "." ++ n) (const (Just msgC))) ["init", "onEffects", "onSelfMsg"]
+      cmdMaps <- if maybe True (\m -> mgCmd m == Nothing) mg then return [] else mapM (mapClone "cmdMap") [ (a, b) | (True, a, b) <- Set.toList pairs ]
+      subMaps <- if maybe True (\m -> mgSub m == Nothing) mg then return [] else mapM (mapClone "subMap") [ (a, b) | (False, a, b) <- Set.toList pairs ]
+      return (MExpr CRef (MCall (MExpr CRef (MKernel (managerKernelId home) (Key []))) [ MExpr CRef (MGlobal c) | Just c <- core ++ cmdMaps ++ subMaps ]))
+  where
+    -- `cmdMap : (a -> b) -> MyCmd a -> MyCmd b`: the variables of the tagger's argument and result
+    mapClone n (ca, cb) =
+      managerCloneWith (home ++ "." ++ n) $ \scheme v ->
+        case strip scheme of
+          TFun f _ | TFun (TVar va _ _) (TVar vb _ _) <- strip f -> if v == va then Just ca else if v == vb then Just cb else Nothing
+          _ -> Nothing
+    managerClone did classOf = managerCloneWith did (\_ v -> classOf v)
+    managerCloneWith did classOf =
+      do  tops <- gets sTops
+          case Map.lookup did tops of
+            Nothing -> report ("the effect manager " ++ home ++ " has no `" ++ did ++ "`") >> return Nothing
+            Just src ->
+              case Map.lookup (defKeyOf (srcDef src)) (_defs (_typed (srcCtx src))) of
+                Nothing -> report ("no scheme recorded for " ++ did) >> return Nothing
+                Just scheme ->
+                  do  let kinds = kindList scheme
+                      parts <- forM (canonVars scheme) $ \(v, i) ->
+                        case classOf scheme v of
+                          Just c | (if i < length kinds then kinds !! i else "any") == "any" -> return (ByClass (boxed c))
+                          _ -> report ("cannot key the variable " ++ v ++ " of the effect manager function " ++ did) >> return (ByClass CRef)
+                      fmap Just (requestClone (CKey did Nothing (Key parts)) src)
+
+
+-- | the one type argument of a type (`Cmd msg`), through aliases
+typeArg :: TType -> Maybe TType
+typeArg t =
+  case t of
+    TCon _ _ [a] -> Just a
+    TAlias _ _ _ real -> typeArg real
+    _ -> Nothing
+
+
+
 -- Platform.worker { init = \flags -> ..., ... }: the init lambda becomes a clone of its own; update and
 -- subscriptions are never run (commands are ignored, STAGE3-PLAN R9)
 specWorker :: SEnv -> A.Region -> A.Region -> Can.Expr_ -> [Can.Expr] -> SM MExpr
@@ -1502,7 +1615,14 @@ specWorker se region fregion f args =
   case args of
     [A.At _ (Can.Record fields)] | [A.At _ (Can.Lambda [pat] body)] <- [ x | (k, x) <- Map.toList fields, N.toChars k == "init" ] ->
       do  _ <- return fregion
-          cls <- exprClass se region (Can.Call (A.At fregion f) args)
+          let call = Can.Call (A.At fregion f) args
+          cls <- exprClass se region call
+          -- E1 step 2: the class of the program's `msg` (`Program flags model msg`), the key of the effect managers
+          case fmap strip (nodeType se (Recorder.exprKey region call)) of
+            Just (TCon _ _ [_, _, msgT]) | not noStepper ->
+              do  mc <- classOfTy se msgT
+                  modify' (\st -> st { sAppMsg = Just (boxed mc) })
+            _ -> return ()
           key <- do ref <- resolve se fregion f
                     return (case ref of { RKernel _ k _ -> k; _ -> Key [] })
           initId <- freshId

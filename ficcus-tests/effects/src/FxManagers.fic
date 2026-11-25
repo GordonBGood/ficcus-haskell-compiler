@@ -1,0 +1,45 @@
+module FxManagers exposing (main)
+
+-- E1 step 2 (docs/EFFECTS-CHECK.md): the Task manager compiled from its Elm source. Task.perform reaches the leaf of
+-- elm/core:Task, so the specializer clones Task.init, onEffects, onSelfMsg at the class of Msg and Task.cmdMap at the class
+-- pair of the Cmd.map below (Inner -> Msg). The C generator stops at the scheduler kernels (E2); the .mono listing shows the clones.
+
+import Task
+
+
+type Inner
+    = Got Int
+
+
+type Msg
+    = Wrap Inner
+    | Done Int
+
+
+start : ( Int, Cmd Msg )
+start =
+    ( 0
+    , Cmd.batch
+        [ Task.perform Done (Task.succeed 1)
+        , Cmd.map Wrap (Task.perform Got (Task.succeed 2))
+        ]
+    )
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg model =
+    case msg of
+        Wrap (Got n) ->
+            ( model + n, Cmd.none )
+
+        Done n ->
+            ( model + n, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> start
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

@@ -33,7 +33,7 @@ import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 
 import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, platformRuntime, prelude, regexRuntime, sizedRuntime, sortRuntime, stringRuntime, vectorRuntime)
-import Ficcus.Mono.Effects (noStepper)
+import Ficcus.Mono.Effects (managerHome, noStepper)
 import Ficcus.Mono.Overlay (vectorMarker, vectorTypeName)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free (captures, refClass)
@@ -181,6 +181,7 @@ program' info root clones =
       indented (forM_ values (\d -> emit (globalName d ++ " = " ++ valueName d ++ "();")))
       emit "}"
       emit ""
+      modify' (\g -> g { gWhere = "" })        -- the program shape is not inside a clone
       initFn <- workerInit info root
       emit "static int fic_main(void) {"
       indented $
@@ -285,8 +286,12 @@ constOf info fuel e
 workerInit :: Info -> CloneId -> CG (Maybe MDef)
 workerInit info root =
   case Map.lookup root (iClones info) >>= mdBody of
-    Just (MExpr _ (MCall (MExpr _ (MKernel "elm/core:Platform.worker" _)) [MExpr _ (MGlobal i)])) ->
-      return (Map.lookup i (iClones info))
+    Just (MExpr _ (MCall (MExpr _ (MKernel "elm/core:Platform.worker" _)) (MExpr _ (MGlobal i) : rest))) ->
+      do  -- E1 step 2: the manager table (Ficcus.Mono.Effects); the managers run on the scheduler, which is E2
+          case [ h | MExpr _ (MCall (MExpr _ (MKernel k _)) _) <- rest, Just h <- [managerHome k] ] of
+            [] -> return ()
+            hs -> () <$ failWith ("the effect managers " ++ List.intercalate ", " hs ++ " need the scheduler, which the C generator does not have yet (effects slice E2)")
+          return (Map.lookup i (iClones info))
     _ ->
       do  _ <- failWith "main is not `Platform.worker { init = \\flags -> ... }` (the only program shape supported in slice 1)"
           return Nothing

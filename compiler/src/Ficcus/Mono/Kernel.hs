@@ -13,7 +13,7 @@ module Ficcus.Mono.Kernel
 
 
 import Ficcus.Mono.Class (AppClass(..), Key(..), KeyPart(..))
-import Ficcus.Mono.Effects (effectKernels)
+import Ficcus.Mono.Effects (effectKernels, leafHome)
 import qualified Ficcus.Mono.Sized as Sized
 
 
@@ -32,6 +32,7 @@ kernelArity :: String -> Maybe Int
 kernelArity cid =
   case Sized.sizedKernelArity cid of
     Just n -> Just n
+    Nothing | Just _ <- leafHome cid -> Just 1          -- E1 step 2: the leaf constructor of an effect manager (Ficcus.Mono.Effects)
     Nothing -> kernelArityTable cid
 
 
@@ -172,6 +173,7 @@ kernelSig :: String -> Key -> Maybe String
 kernelSig cid key =
   case (cid, key) of
     _ | Just sg <- Sized.sizedKernelSig cid -> Just sg
+    _ | Just _ <- leafHome cid -> Just "o"
     ("elm/core:Basics.append", Key [ByApp AStr]) -> Just "bb"
     ("elm/core:Basics.append", _) -> Just "bo"           -- xs is copied (its elements are dup'd), ys becomes the tail of the result
     _ -> lookup cid table

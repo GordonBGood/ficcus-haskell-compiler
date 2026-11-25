@@ -4,6 +4,14 @@ module Ficcus.Mono.Effects
   , effectClassOf
   , effectKernels
   , bagNoneKernel
+  -- step 2: effect managers
+  , Manager(..)
+  , managerOf
+  , leafKernelId
+  , leafHome
+  , managerKernelId
+  , managerHome
+  , mapKernelKind
   )
   where
 
@@ -23,6 +31,11 @@ module Ficcus.Mono.Effects
 import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 
+import qualified Data.List as List
+
+import qualified AST.Canonical as Can
+import qualified AST.Prim.TypeName as T
+import qualified AST.Prim.Name as N
 import Ficcus.Mono.Class (Class(..))
 
 
@@ -64,3 +77,77 @@ effectKernels =
   , ("elm/core:Platform.Sub.batch", 1, "o"), ("elm/core:Platform.Sub.map", 2, "oo")
   ]
 
+
+
+-- STEP 2: EFFECT MANAGERS COMPILED FROM THEIR ELM SOURCE (EFFECTS-CHECK section 5, step 2)
+--
+-- An `effect module X where { command = MyCmd, subscription = MySub }` is a state machine whose five functions (`init`, `onEffects`,
+-- `onSelfMsg`, `cmdMap`, `subMap`) are ordinary Elm definitions of the module. Elm's JS output registers them with
+-- `_Platform_createManager` and makes `command`/`subscription` the leaf constructor `_Platform_leaf("X")` (Optimize.Module.addEffects,
+-- Generate.JavaScript.generateManager). Here:
+--
+--   * `command`/`subscription` of a manager (a name with no definition: the canonicalizer adds it to the module's scope) is the
+--     kernel `leafKernelId home` of arity 1, keyed by the class of its `msg` at the use (the value is stored: signature "o");
+--   * when the program uses a leaf of a home, the specializer clones the manager's `init`, `onEffects` and `onSelfMsg` at the class of the
+--     program's `msg` (after `gatherEffects` every command and subscription that reaches a manager is at the program's message type),
+--     and its `cmdMap`/`subMap` at every class pair (a, b) of a `Cmd.map`/`Sub.map` of the program (the dispatch applies a map node's
+--     tagger with the manager's own map function at that pair);
+--   * the table is kept in `main`'s worker call (Ficcus.Mono.Spec), one `managerKernelId home` call per manager with the clones as
+--     arguments: init, onEffects, onSelfMsg, then the cmdMap clones, then the subMap clones (each clone's key says its pair). `main`
+--     is not counted or generated, and its references keep the clones alive through the later passes.
+--
+-- The scheduler kernels these clones call are E2 (step 4): until then the C generator reports them by name.
+
+
+-- | an effect module: its home (`elm/core:Task`) and the names of its command and subscription types
+data Manager =
+  Manager
+    { mgHome :: String
+    , mgCmd :: Maybe String
+    , mgSub :: Maybe String
+    }
+  deriving (Show)
+
+
+managerOf :: String -> Can.Effects -> Maybe Manager
+managerOf home effects =
+  case effects of
+    Can.Manager _ _ _ m ->
+      Just $ case m of
+        Can.Cmd c -> Manager home (Just (tname c)) Nothing
+        Can.Sub sb -> Manager home Nothing (Just (tname sb))
+        Can.Fx c sb -> Manager home (Just (tname c)) (Just (tname sb))
+    _ -> Nothing
+  where
+    tname = N.toChars . T.nameToName
+
+
+leafPrefix, managerPrefix :: String
+leafPrefix = "elm/core:Platform.leaf@"
+managerPrefix = "ficcus:manager@"
+
+
+-- | the leaf constructor of a manager (`command`, `subscription`)
+leafKernelId :: String -> String
+leafKernelId home = leafPrefix ++ home
+
+
+leafHome :: String -> Maybe String
+leafHome = List.stripPrefix leafPrefix
+
+
+-- | the entry of the manager table in `main` (never called; not in the kernel table)
+managerKernelId :: String -> String
+managerKernelId home = managerPrefix ++ home
+
+
+managerHome :: String -> Maybe String
+managerHome = List.stripPrefix managerPrefix
+
+
+-- | `Cmd.map` (Just True) and `Sub.map` (Just False)
+mapKernelKind :: String -> Maybe Bool
+mapKernelKind n
+  | n == "elm/core:Platform.Cmd.map" = Just True
+  | n == "elm/core:Platform.Sub.map" = Just False
+  | otherwise = Nothing
