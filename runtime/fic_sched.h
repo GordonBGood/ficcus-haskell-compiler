@@ -477,7 +477,7 @@ static FIC_UNUSED void fic_platform_enqueue(fic_ref cmd, fic_ref sub) {
  * (Time.every's setInterval), and the scheduler then runs everything that became runnable before the next timer: one event at a time,
  * as one JavaScript turn. The program ends when no timer is left (node ends when nothing is pending). Delays as node takes them
  * (fic_timer_delay): outside [1, 2^31-1] ms is 1 ms, else truncated (so `sleep 0`, `sleep 1.5` and `sleep 1` wait the same and run in
- * the order they were made); an interval re-arms from its previous deadline.
+ * the order they were made); an interval re-arms from the time its tick runs (node's rule).
  * Clock: Time.now is the wall clock in ms (Date.now), the timers use the monotonic clock. FIC_TIME=<ms> (decision D-fx-7, tests): a
  * virtual clock that starts at that time; the loop never sleeps, it moves the clock to the next deadline, so the order and the values
  * of a program with timers are the same on every run. Debug.log output is flushed before the loop waits. */
@@ -672,8 +672,11 @@ static FIC_UNUSED void fic_sched_run(void) {
       if (p->root != FIC_NONE && p->root->tag == FIC_TAG_TASK_BIND) fic_sched_resume(p, fic_task_succeed(FIC_W_UNIT, 0));
       FIC_RC_DROP(t.proc);
     } else {                                                        /* setInterval: re-arm, then spawn the task */
+      /* E2 review fix 3: as node (listOnTimeout: start = getLibuvNow() before the callback, insert(timer, repeat, start) after it), the
+         next deadline is the time the tick runs plus the period, not the previous deadline plus the period: after a slow update the
+         missed ticks are not fired back to back. Under FIC_TIME the loop time is the deadline, so nothing changes there. */
       fic_ref task = t.task;
-      fic_tm[fic_tm_len] = t; fic_tm[fic_tm_len].deadline = t.deadline + t.period; fic_tm[fic_tm_len].seq = fic_tm_seq++;
+      fic_tm[fic_tm_len] = t; fic_tm[fic_tm_len].deadline = fic_loop_now() + t.period; fic_tm[fic_tm_len].seq = fic_tm_seq++;
       if (fic_tm_len == fic_tm_cap) abort();
       fic_tm_up(fic_tm_len++);
       FIC_RC_DUP(task);

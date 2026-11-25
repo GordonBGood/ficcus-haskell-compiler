@@ -39,9 +39,9 @@ TESTS = {
                  "Q6: port order, record field order, output, Json.Value both ways, Int 1.0/1e3/-0/3e9"),
     "R11PortsBad": ("gate", dict(T, FIC_PORTS_IN="{D}/ports/R11PortsBad.in"), 1, "Q6: an incoming value that does not decode: crash 4, exit 1"),
     "R12Crash": ("gate", T, 1, "Q7: Debug.todo with a timer pending and a port message queued"),
-    # fail today
+    # targets of the review, gates since fixes 2 and 3
     "R4Delay": ("gate", T, 0, "Q5 (fix 2): node truncates a fractional delay and makes a delay above 2^31-1 ms (or Infinity) 1 ms"),
-    "R9Slow": ("target", {"TZ": "UTC"}, 0, "Q5 (real time): after a slow update an interval does not fire its missed ticks back to back"),
+    "R9Slow": ("gate", {"TZ": "UTC"}, 0, "Q5 (fix 3, real time): after a slow update an interval does not fire its missed ticks back to back"),
     # divergences to decide (not counted)
     "R1KillTwice": ("info", T, 0, "Q1: Elm crashes on a second kill of a killed process (TypeError); Ficcus continues"),
     "R10ZoneKolkata": ("info", dict(T, TZ="Asia/Kolkata", __src="R10Zone"), 0, "Q9: ICU names the zone Asia/Calcutta, Ficcus gives TZ as set"),
