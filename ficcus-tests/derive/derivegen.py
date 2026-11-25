@@ -258,9 +258,9 @@ type Contact = Contact { email : Email, tags : List String } where derive compar
 
 # ---- uses: the C generator refuses a derived member (bodies come with A4b to A4f) ----
 
-case("c-use-refused", "REJECTC", "", "`Color.compare` is not generated yet", {"Main.elm": worker(COLOR, "Color.compare Red Blue")}, C_JSON)
-case("c-operator-refused", "REJECTC", "", "`Color.compare` is not generated yet", {"Main.elm": worker(COLOR, "Red < Blue")}, C_JSON)
-case("c-enum-refused", "REJECTC", "", "`Color.enumerate` is not generated yet", {"Main.elm": worker(COLOR, "List.length Color.enumerate")}, C_JSON)
+case("c-use-refused", "REJECTC", "", "the derived member `Color.compare` (derive line at", {"Main.elm": worker(COLOR, "Color.compare Red Blue")}, C_JSON)
+case("c-operator-refused", "REJECTC", "", "the derived member `Color.compare` (derive line at", {"Main.elm": worker(COLOR, "Red < Blue")}, C_JSON)
+case("c-enum-refused", "REJECTC", "", "the derived member `Color.enumerate` (derive line at", {"Main.elm": worker(COLOR, "List.length Color.enumerate")}, C_JSON)
 
 # ---- the JavaScript output refuses any program with a derive line ----
 

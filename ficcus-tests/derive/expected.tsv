@@ -22,9 +22,9 @@ operator-param-not-yet	REJECT	TYPE MISMATCH	Tree
 constraint-builtin-not-yet	REJECT	NO MEMBER	
 ok-opaque	RUN	c	
 ok-cross-module	RUN	c	
-c-use-refused	REJECTC		`Color.compare` is not generated yet
-c-operator-refused	REJECTC		`Color.compare` is not generated yet
-c-enum-refused	REJECTC		`Color.enumerate` is not generated yet
+c-use-refused	REJECTC		the derived member `Color.compare` (derive line at
+c-operator-refused	REJECTC		the derived member `Color.compare` (derive line at
+c-enum-refused	REJECTC		the derived member `Color.enumerate` (derive line at
 js-refused	REJECT	DERIVED MEMBERS	Main.Color derives compare, hash
 js-refused-module	REJECT	DERIVED MEMBERS	Email.Email derives compare
 js-plain	RUN	js+c	
