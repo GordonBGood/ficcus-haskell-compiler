@@ -23,6 +23,7 @@ import qualified Canonicalize.Environment.Foreign as Foreign
 import qualified Canonicalize.Environment.Local as Local
 import qualified Canonicalize.Expression as Expr
 import qualified Canonicalize.Constraints as Constraints
+import qualified Canonicalize.Derive as Derive
 import qualified Canonicalize.Members as Members
 import qualified Canonicalize.Pattern as Pattern
 import qualified Canonicalize.Type as Type
@@ -49,7 +50,13 @@ type Result i w a =
 
 
 canonicalize :: Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Result i [W.Warning] Can.Module
-canonicalize pkg ifaces modul@(Src.Module _ exports docs imports values _ _ binops effects) =
+canonicalize pkg ifaces modul0 =
+  do  (modul, derived) <- Derive.prepare modul0     -- Ficcus (A4a): the `derive` lines become members
+      canonicalizeModule pkg ifaces modul >>= Derive.finish ifaces derived
+
+
+canonicalizeModule :: Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Result i [W.Warning] Can.Module
+canonicalizeModule pkg ifaces modul@(Src.Module _ exports docs imports values _ _ binops effects) =
   do  let home = ModuleName.Canonical pkg (Src.getName modul)
       let cbinops = Map.fromList (map canonicalizeBinop binops)
 

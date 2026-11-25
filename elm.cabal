@@ -144,6 +144,7 @@ executable elm
         AST.Optimized
         AST.Members
         AST.WellKnown
+        AST.Derive
         AST.Constraints
         Parse.Constraints
         Canonicalize.Constraints
@@ -169,6 +170,7 @@ executable elm
         Canonicalize.Expression
         Canonicalize.Kind
         Canonicalize.Members
+        Canonicalize.Derive
         Canonicalize.Module
         Canonicalize.Pattern
         Canonicalize.Type
@@ -242,6 +244,7 @@ executable elm
         Reporting.Doc
         Reporting.Error
         Reporting.Error.Canonicalize
+        Reporting.Error.Derive
         Reporting.Error.Docs
         Reporting.Error.Import
         Reporting.Error.Kind

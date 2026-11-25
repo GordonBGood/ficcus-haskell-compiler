@@ -31,6 +31,7 @@ import qualified Data.Index as Index
 import qualified Elm.ModuleName as ModuleName
 import qualified Reporting.Annotation as A
 import qualified Reporting.Doc as D
+import qualified Reporting.Error.Derive as Derive
 import qualified Reporting.Error.Kind as Kind
 import Reporting.Doc (Doc, (<+>))
 import qualified Reporting.Render.Code as Code
@@ -97,6 +98,7 @@ data Error
   | TupleLargerThanThree A.Region
   | TypeVarsUnboundInUnion A.Region T.Name [T.Var] (T.Var, A.Region) [(T.Var, A.Region)]
   | TypeVarsMessedUpInAlias A.Region T.Name [T.Var] [(T.Var, A.Region)] [(T.Var, A.Region)]
+  | Derive Derive.Error                                        -- Ficcus (A4a): a `derive` line
 
 
 data DuplicatePatternContext
@@ -304,6 +306,7 @@ toReport source err =
     NotFoundVar     r p n ns -> notFound source r p n "variable" ns Members.displayName
     NotFoundType    r p n ns -> notFound source r p n "type"     ns T.nameToChars
     NotFoundMember  r t n ms -> notFoundMember source r t n ms
+    Derive e -> Derive.toReport source e
     AmbiguousMember r t n h hs -> ambiguousMember source r t n h hs
 
     ConstraintTwice var member r1 r2 ->

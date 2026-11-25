@@ -40,6 +40,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 
+import qualified AST.Derive as Derive
 import qualified AST.Canonical as Can
 import qualified AST.Constraints as Constraints
 import qualified AST.Prim.Module as Module
@@ -1044,6 +1045,11 @@ specExpr se (A.At region e) =
     Can.VarForeign {} -> specRef se region e
     Can.VarDebug {} -> specRef se region e
     Can.VarOperator {} -> specRef se region e
+    Can.VarKernel home name
+      | String.toChars (Module.kernelToString home) == Derive.kernelHome ->
+          -- Ficcus (A4a): a derived member has a signature but no body yet
+          do  report ("the derived member `" ++ Derive.stubDisplay name ++ "` is not generated yet (A4a checks the `derive` line and gives the member its type; the bodies come with A4b to A4f), used at " ++ regionText region)
+              return unitLit
     Can.VarKernel home name -> unsupported ("the kernel function Elm.Kernel." ++ String.toChars (Module.kernelToString home) ++ "." ++ N.toChars name ++ " (it has no Elm body; the runtime table is Ficcus.Mono.Kernel)") region
     _ -> unsupported ("expression " ++ Recorder.exprKind e) region
 
@@ -1423,6 +1429,7 @@ resolve se region e =
     Can.Binop _ h n _ _ _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.VarDebug _ n _ -> foreignOrTop ("elm/core:Debug." ++ N.toChars n)
     -- `Elm.Kernel.Basics.log x` written directly in an elm/core body (logBase): a kernel function without variables
+    Can.VarKernel home _ | String.toChars (Module.kernelToString home) == Derive.kernelHome -> return RNone    -- A4a: reported by spec
     Can.VarKernel home name ->
       let kmod = String.toChars (Module.kernelToString home)
       in case [ (cid, a) | cid <- directKernelIds kmod (N.toChars name), Just a <- [kernelArity cid] ] of

@@ -208,6 +208,9 @@ data CustomType
   --
   | CT_Member Decl Cursor             -- Ficcus (ATTACH A1): a member in the `where` block
   | CT_IndentMember Cursor
+  | CT_Derive Cursor                  -- Ficcus (A4a): a member name expected after `derive` or a comma
+  | CT_DeriveComma Cursor             -- a comma expected between the names of a `derive` line
+  | CT_DeriveSpace Space Cursor
 
 
 
@@ -2243,6 +2246,46 @@ toCustomTypeReport source customType startCur =
                   ]
               ]
           )
+
+    CT_DeriveSpace space cur ->
+      toSpaceReport source space cur
+
+    CT_Derive cur ->
+      deriveReport source startCur cur
+        "I was expecting the name of a member next: after `derive` and after each comma comes a\
+        \ member name in lower case, such as `compare` or `toString`."
+
+    CT_DeriveComma cur ->
+      deriveReport source startCur cur
+        "I was expecting a comma here, or the end of the line: the members of a `derive` line are\
+        \ separated by commas."
+
+
+-- Ficcus (A4a)
+deriveReport :: Code.Source -> Cursor -> Cursor -> String -> Report.Report
+deriveReport source startCur cur message =
+  let
+    surroundings = A.Region startCur cur
+    region = toRegion cur
+  in
+  Report.Report "UNFINISHED DERIVE LINE" region [] $
+    Code.toSnippet source surroundings (Just region)
+      (
+        D.reflow $
+          "I am partway through parsing the `derive` line of a custom type, but I got stuck here:"
+      ,
+        D.stack
+          [ D.reflow message
+          , D.indent 4 $ D.vcat
+              [ D.fillSep [D.cyan "type","Color","=","Red","|","Green","|","Blue"]
+              , D.indent 4 $ D.fillSep [D.cyan "where"]
+              , D.indent 8 $ D.fillSep [D.cyan "derive","compare,","hash,","toString"]
+              ]
+          , D.reflow $
+              "The word `derive` starts such a line only in the `where` block of a type; the line lists\
+              \ the members the compiler writes for the type."
+          ]
+      )
 
 
 customTypeNote :: D.Doc

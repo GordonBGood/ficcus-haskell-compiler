@@ -9,6 +9,7 @@ module Nitpick.Constraints
 import qualified Data.Map as Map
 
 import qualified AST.Constraints as Constraints
+import qualified AST.Derive as Derive
 import qualified AST.Optimized as Opt
 
 
@@ -40,7 +41,7 @@ constrainedNodes nodes =
         _ -> []
 
     isMarker (Opt.Global _ name) =
-      name == Constraints.customOperators
+      name == Constraints.customOperators || Derive.markerText name /= Nothing    -- Ficcus (A4a): a `derive` line
 
     hiddenFirst body =
       case body of

@@ -1971,6 +1971,7 @@ data Generate
   = GenerateCannotLoadArtifacts
   | GenerateCannotOptimizeDebugValues Module.Name [Module.Name]
   | GenerateConstrainedFunctions [String]     -- Ficcus (ATTACH A2)
+  | GenerateDerivedMembers [String]           -- Ficcus (A4a): `Main.Color derives compare, hash`
 
 
 toGenerateReport :: Generate -> Help.Report
@@ -1991,6 +1992,16 @@ toGenerateReport problem =
         , D.reflow
             "The C output supports them (every use is compiled for its own types, so the members are\
             \ called directly). Compile with an output file that ends in `.c`:"
+        , D.indent 4 $ D.green "elm make src/Main.elm --output=main.c"
+        ]
+
+    GenerateDerivedMembers types ->
+      Help.report "DERIVED MEMBERS" Nothing
+        "This program has types with a `derive` line:"
+        [ D.indent 4 $ D.red $ D.vcat $ map D.fromChars types
+        , D.reflow
+            "The JavaScript output does not support derived members yet. The C output does:\
+            \ compile with an output file that ends in `.c`:"
         , D.indent 4 $ D.green "elm make src/Main.elm --output=main.c"
         ]
 

@@ -14,6 +14,7 @@ import qualified Data.NonEmptyList as NE
 import qualified AST.Source as Src
 import qualified AST.Canonical as Can
 import qualified AST.Constraints as Constraints
+import qualified AST.Derive as Derive
 import qualified AST.Members as AMembers
 import qualified AST.Optimized as Opt
 import qualified AST.Prim.Module as Module
@@ -125,7 +126,13 @@ typeCheckTypedIO ifaces canonical =
 -- Ficcus (ATTACH A3): a module that uses operators at a custom type gets a marker node in its object graph (the
 -- JavaScript output refuses it, Nitpick.Constraints); the annotation the solver made for the marker is dropped
 markCustomOperators :: Can.Module -> Map.Map N.Name Can.Annotation -> Opt.LocalGraph -> (Map.Map N.Name Can.Annotation, Opt.LocalGraph)
-markCustomOperators (Can.Module home _ _ decls _ _ _ _) annotations objects@(Opt.LocalGraph main nodes fields) =
+markCustomOperators canonical annotations1 objects =
+  markCustomOperators1 canonical (Map.filterWithKey (\name _ -> Derive.markerText name == Nothing) annotations1) objects
+  -- Ficcus (A4a): the markers of the `derive` lines (Canonicalize.Derive) stay in the object graph, not in the interface
+
+
+markCustomOperators1 :: Can.Module -> Map.Map N.Name Can.Annotation -> Opt.LocalGraph -> (Map.Map N.Name Can.Annotation, Opt.LocalGraph)
+markCustomOperators1 (Can.Module home _ _ decls _ _ _ _) annotations objects@(Opt.LocalGraph main nodes fields) =
   if Map.member Constraints.customOperators annotations || definesEq
     then
       ( Map.delete Constraints.customOperators annotations

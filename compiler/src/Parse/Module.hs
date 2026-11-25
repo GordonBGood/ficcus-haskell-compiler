@@ -19,6 +19,7 @@ import qualified Elm.Compiler.Imports as Imports
 import qualified Elm.Package as Pkg
 import qualified Parse.Declaration as Decl
 import qualified Parse.Keyword as Keyword
+import qualified Parse.Members as Members
 import qualified Parse.Space as Space
 import qualified Parse.Symbol as Symbol
 import qualified Parse.Variable as Var
@@ -90,9 +91,10 @@ chompModule projectType =
 
 
 checkModule :: ProjectType -> Module -> Either E.Error Src.Module
-checkModule projectType (Module maybeHeader imports infixes decls) =
+checkModule projectType (Module maybeHeader imports0 infixes decls) =
   let
     (values, unions, aliases, ports) = categorizeDecls [] [] [] [] decls
+    imports = Members.deriveImports values imports0     -- Ficcus (A4a): Json.Encode, Json.Decode for derived members
   in
   case maybeHeader of
     Just (Header name effects exports docs) ->

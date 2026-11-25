@@ -7,6 +7,7 @@ module Parse.Keyword
   , infix_, left_, right_, non_
   , module_, import_, exposing_, as_
   , effect_, where_, command_, subscription_
+  , derive_
   )
   where
 
@@ -41,5 +42,6 @@ effect_       :: (Cursor -> x) -> Parser x (); effect_       = [keyword|effect|]
 where_        :: (Cursor -> x) -> Parser x (); where_        = [keyword|where|]
 command_      :: (Cursor -> x) -> Parser x (); command_      = [keyword|command|]
 subscription_ :: (Cursor -> x) -> Parser x (); subscription_ = [keyword|subscription|]
+derive_       :: (Cursor -> x) -> Parser x (); derive_       = [keyword|derive|]    -- Ficcus (A4a): only at the start of a line of the `where` block of a type
 
 

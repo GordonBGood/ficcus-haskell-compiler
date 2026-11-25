@@ -27,6 +27,7 @@ import qualified System.FilePath as FP
 
 import qualified ThreadSafe.Fork as Fork
 
+import qualified AST.Derive as Derive
 import qualified AST.Members as Members
 import qualified AST.Optimized as Opt
 import qualified AST.Prim.Module as Module
@@ -206,7 +207,11 @@ checkForConstraints :: Objects -> Task ()
 checkForConstraints (Objects (Opt.GlobalGraph foreignNodes _) locals) =
   case concatMap NitpickConstraints.constrainedNodes (foreignNodes : map (\(Opt.LocalGraph _ nodes _) -> nodes) (Map.elems locals)) of
     [] -> return ()
-    globals -> Task.throw (Exit.GenerateConstrainedFunctions (List.sort (map toChars globals)))
+    globals ->
+      -- Ficcus (A4a): a type with a `derive` line has its own report
+      case [ Module.toChars home ++ "." ++ tipe ++ " derives " ++ members | Opt.Global (ModuleName.Canonical _ home) name <- globals, Just (tipe, members) <- [Derive.markerText name] ] of
+        [] -> Task.throw (Exit.GenerateConstrainedFunctions (List.sort (map toChars globals)))
+        derived -> Task.throw (Exit.GenerateDerivedMembers (List.sort derived))
   where
     toChars (Opt.Global (ModuleName.Canonical _ home) name)
       | name == Constraints.customOperators = Module.toChars home ++ ": operators on custom types (`+`, `<`, `==`, ...)"
