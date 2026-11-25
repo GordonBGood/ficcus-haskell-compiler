@@ -81,7 +81,7 @@ emptyTable =
   Map.empty
 
 
--- | from the interfaces of the imports (the values `T$$m`, there when `T` is exported with `(..)`; and the
+-- | from the interfaces of the imports (the values `T$$m`, there when the type `T` is exported, with or without `(..)`; and the
 -- values `pkg:Module.T$$m` that an interface carries) and the definitions of the module itself
 toTable :: Map.Map Module.Name I.Interface -> Can.Module -> Table
 toTable ifaces (Can.Module home _ _ decls _ _ _ _) =

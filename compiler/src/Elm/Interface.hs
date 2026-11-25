@@ -154,15 +154,17 @@ restrictValues exports dict =
       dict
 
     Can.Export types values _ ->
-      -- Ficcus (ATTACH A1): `Money(..)` exports the members of Money (names `Money$$add`) with its variants
+      -- Ficcus (ATTACH A1, G70 rule of rev 176): an exported type exports its members (names `Money$$add`), whether it
+      -- is exported open (`Money(..)`) or opaque (`Money`); `(..)` decides only the constructors
       let
-        openTypes = [ T.nameToChars name | (name, (_, Can.ExportUnionOpen)) <- Map.toList types ]
-        isOpenMember name =
+        exportedTypes = [ T.nameToChars name | (name, (_, export)) <- Map.toList types, isUnion export ]
+        isUnion export = case export of { Can.ExportAlias -> False ; _ -> True }
+        isExportedMember name =
           case Members.split name of
-            Just (tipe, _) -> tipe `elem` openTypes
+            Just (tipe, _) -> tipe `elem` exportedTypes
             Nothing        -> False
       in
-      Map.union (Map.intersection dict values) (Map.filterWithKey (\name _ -> isOpenMember name) dict)
+      Map.union (Map.intersection dict values) (Map.filterWithKey (\name _ -> isExportedMember name) dict)
 
 
 restrictUnions :: Can.Exports -> Map.Map T.Name Can.Union -> Map.Map T.Name Union

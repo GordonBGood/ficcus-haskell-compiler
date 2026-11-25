@@ -1,5 +1,5 @@
 {
- "desc": "A2: a type exported without (..) shows no members to the importer, so it cannot satisfy a constraint there",
+ "desc": "G70 (rev 176): Vault is exported without (..) but its members are visible (only secret): the constraint needs add and zero, so NO MEMBER lists secret (A2b said: no members seen)",
  "deps": [
   "ficcus/vault@1.0.0"
  ]

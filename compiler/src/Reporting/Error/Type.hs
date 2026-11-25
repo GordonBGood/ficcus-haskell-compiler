@@ -230,8 +230,8 @@ toReport source localizer err =
                   [] ->
                     D.reflow $
                       "That type has no members that I can see here. Members are defined in a `where` block\
-                      \ under a custom type declaration, and a module that defines a type must export it\
-                      \ with `(..)` to share its members."
+                      \ under a custom type declaration, and a module that defines a type must export the\
+                      \ type to share its members."
 
                   _ ->
                     D.stack

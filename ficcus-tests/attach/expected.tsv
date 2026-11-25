@@ -52,7 +52,7 @@ constraint-unused-var	REJECT	AMBIGUOUS CONSTRAINT	mentions the type variable `b`
 constraint-syntax	REJECT	PROBLEM IN CONSTRAINT	a has add as plus
 constraint-empty	REJECT	UNFINISHED CONSTRAINTS	has
 constraint-member-unsigned	REJECT	MEMBER WITHOUT TYPE ANNOTATION	T.zero
-constraint-closed-type	REJECT	NO MEMBER	to share its members
+constraint-closed-type	REJECT	NO MEMBER	That type has these members
 constraint-body-error	REJECT	TYPE MISMATCH	add
 constraint-let	REJECT	CONSTRAINTS ON A LOCAL DEFINITION	top-level definition
 constraint-let-mono	RUN	c	
