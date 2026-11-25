@@ -133,7 +133,8 @@ generate rcMode program =
         g0 = G [] 0 0 [] Nothing [] False "" Map.empty [] [] Set.empty Set.empty Set.empty rcMode Map.empty Set.empty "" [] 0 ""
         final = execState (program' info root clones) g0
       in
-      case reverse (gErrors final) of
+      -- a program with effect managers (E1: no scheduler yet) gets that one message, not the kernels of the managers' own code
+      case (\es -> case filter (scheduler `List.isInfixOf`) es of { [] -> es; e2 -> e2 }) (reverse (gErrors final)) of
         [] ->
           let extra = concatMap structDef (Set.toList (gExtraStructs final))
                       ++ map objectDef (Set.toList (gExtraObjs final)) ++ concatMap vecDescDef (Set.toList (gVecDescs final)) ++ reverse (gProtos final)
@@ -287,6 +288,10 @@ constOf info fuel e
         _ -> Nothing
 
 
+scheduler :: String
+scheduler = "need the scheduler, which the C generator does not have yet (effects slice E2)"
+
+
 -- main = Platform.worker { init = ... }
 workerInit :: Info -> CloneId -> CG (Maybe MDef)
 workerInit info root =
@@ -295,7 +300,8 @@ workerInit info root =
       do  -- E1 step 2: the manager table (Ficcus.Mono.Effects); the managers run on the scheduler, which is E2
           case [ h | MExpr _ (MCall (MExpr _ (MKernel k _)) _) <- rest, Just h <- [managerHome k] ] of
             [] -> return ()
-            hs -> () <$ failWith ("the effect managers " ++ List.intercalate ", " hs ++ " need the scheduler, which the C generator does not have yet (effects slice E2)")
+            hs -> () <$ failWith ("the effect managers " ++ List.intercalate ", " hs ++ " " ++ scheduler ++ ": the program uses them (for example"
+                                  ++ " Task.perform or Time.every in init, update or subscriptions), even if no message ever reaches that code")
           return (Map.lookup i (iClones info))
     _ ->
       do  _ <- failWith "main is not `Platform.worker { init = \\flags -> ... }` (the only program shape supported in slice 1)"

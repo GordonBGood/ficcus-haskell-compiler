@@ -1,0 +1,30 @@
+module S2Perform exposing (main)
+
+-- E1 review fix 3: Task.perform in update. W7a compiled it (update was never cloned); E1 stops with the E2 message until the scheduler exists
+
+import Task
+
+
+type Msg
+    = Tick Int
+    | Got Int
+
+
+init : () -> ( Int, Cmd Msg )
+init _ =
+    ( Debug.log "init" 1, Cmd.none )
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg m =
+    case msg of
+        Tick k ->
+            ( m + k, Task.perform Got (Task.succeed 3) )
+
+        Got k ->
+            ( m + k, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker { init = \_ -> ( Debug.log "init" 1, Cmd.none ), update = update, subscriptions = \_ -> Sub.none }
