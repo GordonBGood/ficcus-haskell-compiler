@@ -1,0 +1,57 @@
+module E2Order exposing (main)
+
+-- Effects E2 step 4: the order of synchronous commands (docs/EFFECTS-DESIGN.md 1.4 and 1.8). The Task manager gets the commands of a
+-- batch in reverse order; each Task.perform of a task that does not wait is a process whose update runs inside the dispatch of init;
+-- the commands of those updates wait for the batch in progress (_Platform_enqueueEffects). Nested batches and Cmd.map.
+
+import Task
+
+
+type Inner
+    = In Int
+
+
+type Msg
+    = A
+    | B
+    | C
+    | Wrap Inner
+    | E
+    | A1
+    | A2 String
+
+
+update : Msg -> List String -> ( List String, Cmd Msg )
+update msg log =
+    let
+        name =
+            Debug.toString msg
+    in
+    case Debug.log "update" msg of
+        A ->
+            ( name :: log, Cmd.batch [ Task.perform (\_ -> A1) (Task.succeed ()), Task.perform A2 (Task.succeed "x") ] )
+
+        A1 ->
+            ( name :: log, Cmd.map identity (Task.perform A2 (Task.succeed "from A1")) )
+
+        _ ->
+            ( name :: log, Cmd.none )
+
+
+main : Program () (List String) Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( []
+                , Cmd.batch
+                    [ Task.perform (\_ -> A) (Task.succeed ())
+                    , Task.perform (\_ -> B) (Task.succeed ())
+                    , Cmd.batch [ Task.perform (\_ -> C) (Task.succeed ()), Cmd.map Wrap (Task.perform In (Task.succeed 4)), Cmd.none ]
+                    , Cmd.none
+                    , Task.perform (\_ -> E) (Task.succeed ())
+                    ]
+                )
+        , update = update
+        , subscriptions = \log -> always Sub.none (Debug.log "subscriptions" (List.length log))
+        }

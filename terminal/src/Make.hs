@@ -32,6 +32,7 @@ import qualified Ficcus.Mono.Facts as Facts
 import qualified Ficcus.Mono.Ir as Mono
 import qualified Ficcus.Mono.Members as MonoMembers
 import qualified Ficcus.Mono.ModelUnpack as ModelUnpack
+import qualified Ficcus.Mono.ManagerTable as ManagerTable
 import qualified Ficcus.Mono.Marks as Marks
 import qualified Ficcus.Mono.Modules as Modules
 import qualified Ficcus.Mono.Overlay as Overlay
@@ -271,9 +272,15 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                           case unboxChecked of
                             Left errs -> failWith errs
                             Right program' ->
-                              case CGen.generate rcMode program' of
-                                Left errs -> failWith errs
-                                Right text -> generate writer style target (B.stringUtf8 text) (Build.getRootNames artifacts)
+                              do  -- E2: the order of the effect managers of Elm's JS output (only programs with managers load the objects)
+                                  order <- if ManagerTable.hasManagers program' then Task.mapError Exit.MakeBadGenerate (Generate.managerOrder stuff details artifacts) else return []
+                                  orderDump <- Task.io (System.Environment.lookupEnv "FICCUS_MANAGER_ORDER")
+                                  case orderDump of
+                                    Just "1" -> Task.io (hPutStrLn stderr ("FICCUS_MANAGER_ORDER: " ++ show order))
+                                    _ -> return ()
+                                  case CGen.generateWith order rcMode program' of
+                                    Left errs -> failWith errs
+                                    Right text -> generate writer style target (B.stringUtf8 text) (Build.getRootNames artifacts)
 
                 Just (C target) ->
                   case getNoMains artifacts of

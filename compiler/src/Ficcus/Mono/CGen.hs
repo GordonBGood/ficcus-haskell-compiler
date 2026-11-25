@@ -2,6 +2,7 @@
 {-# LANGUAGE PatternGuards #-}
 module Ficcus.Mono.CGen
   ( generate
+  , generateWith
   )
   where
 
@@ -32,9 +33,11 @@ import qualified Data.Set as Set
 import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 
-import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, platformRuntime, prelude, regexRuntime, sizedRuntime, sortRuntime, stringRuntime, vectorRuntime)
-import Ficcus.Mono.Effects (managerHome, noStepper)
+import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, platformRuntime, prelude, schedRuntime, regexRuntime, sizedRuntime, sortRuntime, stringRuntime, vectorRuntime)
+import Ficcus.Mono.Effects (leafHome, managerHome, noStepper)
 import Ficcus.Mono.Program (Shape(..), programShape)
+import Ficcus.Mono.ManagerOrder (Entry)
+import Ficcus.Mono.ManagerTable (MgrEntry(..), MapPairs(..), managerEntries, mapPairs, pairIndex, mgrIndex)
 import Ficcus.Mono.Overlay (vectorMarker, vectorTypeName)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free (captures, refClass)
@@ -86,6 +89,8 @@ data Info =
     , iUnions :: Map.Map String UnionShape
     , iObjs :: Set.Set [Class]       -- the object layouts and struct types the clones define
     , iStructs :: Set.Set [Class]
+    , iMgrs :: [MgrEntry]            -- E2: the effect managers in Elm's order (Ficcus.Mono.ManagerTable)
+    , iPairs :: MapPairs             -- E2: the class pairs of the managers' cmdMap/subMap clones
     }
 
 
@@ -122,19 +127,25 @@ fresh base =
 
 -- | the C text of a program, or the messages
 generate :: Bool -> MProgram -> Either [String] String
-generate rcMode program =
+generate = generateWith []
+
+
+-- | E2: with the order of the effect managers of Elm's JS output (Ficcus.Mono.ManagerOrder; Make computes it when the program has managers)
+generateWith :: [Entry] -> Bool -> MProgram -> Either [String] String
+generateWith order rcMode program =
   case mpMain program of
     Nothing -> Left [ "internal: no main" ]
     Just root ->
       let
         clones = mpClones program
-        info = Info (Map.fromList [ (mdClone d, d) | d <- clones ]) (captures clones) (mpUnions program)
-                    (Set.fromList (allObjects clones)) (Set.fromList (structsOf clones))
+        byId0 = Map.fromList [ (mdClone d, d) | d <- clones ]
+        mgrs = managerEntries order byId0 root
+        info = Info byId0 (captures clones) (mpUnions program)
+                    (Set.fromList (allObjects clones)) (Set.fromList (structsOf clones)) mgrs (mapPairs mgrs)
         g0 = G [] 0 0 [] Nothing [] False "" Map.empty [] [] Set.empty Set.empty Set.empty rcMode Map.empty Set.empty "" [] 0 ""
         final = execState (program' info root clones) g0
       in
-      -- a program with effect managers (E1: no scheduler yet) gets that one message, not the kernels of the managers' own code
-      case (\es -> case filter (scheduler `List.isInfixOf`) es of { [] -> es; e2 -> e2 }) (reverse (gErrors final)) of
+      case reverse (gErrors final) of
         [] ->
           let extra = concatMap structDef (Set.toList (gExtraStructs final))
                       ++ map objectDef (Set.toList (gExtraObjs final)) ++ concatMap vecDescDef (Set.toList (gVecDescs final)) ++ reverse (gProtos final)
@@ -145,7 +156,7 @@ generate rcMode program =
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
           in Right ((if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n"
                     ++ (if any (`List.isInfixOf` body) ["fic_vector_", "FIC_VECTOR_"] then vectorRuntime ++ "\n" else "")
-                    ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_", "fic_vsort"] then closureRuntime ++ "\n" else "")
+                    ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_task_", "fic_bag_leaf", "fic_bag_batch", "fic_bag_map", "fic_mgr_def", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_", "fic_vsort"] then closureRuntime ++ "\n" else "")
                     ++ (if "fic_vsort" `List.isInfixOf` body then sortRuntime ++ "\n" else "")
                     ++ (if "fic_fd_" `List.isInfixOf` body then fdlibmRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_sz_", "FIC_SZ_"] then sizedRuntime ++ "\n" else "")
@@ -156,6 +167,8 @@ generate rcMode program =
                     ++ (if "fic_bytes_" `List.isInfixOf` body then bytesRuntime ++ "\n" else "")
                     ++ (if "fic_re_" `List.isInfixOf` body then regexRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_bag_", "fic_app_model"] then platformRuntime ++ "\n" else "")
+                    -- E2: the scheduler and the dispatch, only for programs that use a task, a bag or a manager
+                    ++ (if any (`List.isInfixOf` body) ["fic_task_", "fic_bag_leaf", "fic_bag_batch", "fic_bag_map", "fic_mgr_def"] then schedRuntime ++ "\n" else "")
                     ++ "\n" ++ body)
         errs -> Left errs
 
@@ -288,20 +301,12 @@ constOf info fuel e
         _ -> Nothing
 
 
-scheduler :: String
-scheduler = "need the scheduler, which the C generator does not have yet (effects slice E2)"
-
-
 -- main = Platform.worker { init = ... }
 workerInit :: Info -> CloneId -> CG (Maybe MDef)
 workerInit info root =
   case Map.lookup root (iClones info) >>= mdBody of
     Just (MExpr _ (MCall (MExpr _ (MKernel "elm/core:Platform.worker" _)) (MExpr _ (MGlobal i) : rest))) ->
-      do  -- E1 step 2: the manager table (Ficcus.Mono.Effects); the managers run on the scheduler, which is E2
-          case [ h | MExpr _ (MCall (MExpr _ (MKernel k _)) _) <- rest, Just h <- [managerHome k] ] of
-            [] -> return ()
-            hs -> () <$ failWith ("the effect managers " ++ List.intercalate ", " hs ++ " " ++ scheduler ++ ": the program uses them (for example"
-                                  ++ " Task.perform or Time.every in init, update or subscriptions), even if no message ever reaches that code")
+      do  _ <- return rest                -- E2: the manager table is read by Ficcus.Mono.ManagerTable (iMgrs)
           return (Map.lookup i (iClones info))
     _ ->
       do  _ <- failWith "main is not `Platform.worker { init = \\flags -> ... }` (the only program shape supported in slice 1)"
@@ -324,6 +329,7 @@ workerInit info root =
 stepperSection :: Info -> (MDef, MDef) -> CG ()
 stepperSection info (ud, sd) =
   do  rcMode <- gets gRc
+      let fx = not (null (iMgrs info))
       let caps = Map.findWithDefault [] (mdClone ud) (iCaptured info) ++ Map.findWithDefault [] (mdClone sd) (iCaptured info)
       when (not (null caps)) (() <$ failWith "internal: the update or subscriptions of the program captures variables")
       case (mdParams ud, paramOwns ud, mdParams sd, paramOwns sd, mdResult ud) of
@@ -332,12 +338,12 @@ stepperSection info (ud, sd) =
               emit ("static " ++ classType modelC ++ " fic_app_model;")
               emit ""
               -- subscriptions: the slot is borrowed (a count of its own when the parameter is owned)
-              emit "static void fic_app_subscriptions(void) {"
+              -- E2: with effect managers the result goes to the dispatch (fic_app_subs); without, E1's text exactly
+              emit (if fx then "static fic_ref fic_app_subs(void) {" else "static void fic_app_subscriptions(void) {")
               indented $
                 do  when (rcMode && subOwn == Owned) (dupVars' modelC "fic_app_model")
                     emit (classType (mdResult sd) ++ " fic_sub = " ++ functionName sd ++ "(fic_app_model);")
-                    if rcMode then dropPaths (mdResult sd) "fic_sub" else emit "(void)fic_sub;"
-                    emit "/* E2: the subscriptions go to the managers */"
+                    if fx then emit "return fic_sub;" else do { if rcMode then dropPaths (mdResult sd) "fic_sub" else emit "(void)fic_sub;"; emit "/* E2: the subscriptions go to the managers */" }
               emit "}"
               emit ""
               emit ("static FIC_UNUSED void fic_app_step(" ++ classType msgC ++ " fic_msg) {")
@@ -351,14 +357,30 @@ stepperSection info (ud, sd) =
                     when (rcMode && msgOwn == Borrowed) (dropPaths msgC "fic_msg")
                     m' <- adaptOwn resModelC modelC "fic_r.f0"
                     emit ("fic_app_model = " ++ m' ++ ";")
-                    if rcMode then dropPaths cmdC "fic_r.f1" else return ()
-                    emit "/* E2: the commands are dispatched */"
-                    emit "fic_app_subscriptions();"
-                    emit "#ifdef FIC_STATS"
-                    emit "fic_model_leave();"
-                    emit "#endif"
+                    if fx
+                      then
+                        do  emit "fic_ref fic_sub = fic_app_subs();"
+                            emit "#ifdef FIC_STATS"
+                            emit "fic_model_leave();"
+                            emit "#endif"
+                            emit "fic_platform_enqueue(fic_r.f1, fic_sub);      /* E2: _Platform_enqueueEffects */"
+                      else
+                        do  if rcMode then dropPaths cmdC "fic_r.f1" else return ()
+                            emit "/* E2: the commands are dispatched */"
+                            emit "fic_app_subscriptions();"
+                            emit "#ifdef FIC_STATS"
+                            emit "fic_model_leave();"
+                            emit "#endif"
               emit "}"
               emit ""
+              -- E2: sendToApp (the binding of Platform.sendToApp): the message as a closure word
+              when fx $
+                do  emit "static void fic_app_send(fic_word fic_w) {"
+                    indented $
+                      do  m <- adaptOwn (abiClass msgC) msgC ("fic_w" ++ wordSel msgC)
+                          emit ("fic_app_step(" ++ m ++ ");")
+                    emit "}"
+                    emit ""
         _ -> () <$ failWith "internal: the update or subscriptions of the program has an unexpected shape"
   where
     dropPaths c v = mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths c v)
@@ -366,16 +388,24 @@ stepperSection info (ud, sd) =
 
 -- the part of `fic_main` from init to the end of the program's model
 stepperMain :: Info -> MDef -> MDef -> CG ()
-stepperMain _ initD ud =
+stepperMain info initD ud =
   do  rcMode <- gets gRc
+      let fx = not (null (iMgrs info))
       case (mdResult initD, mdParams ud) of
         (CStruct [resModelC, cmdC], [(_, msgC), (_, modelC)]) ->
           do  emit (classType (mdResult initD) ++ " fic_res = " ++ functionName initD ++ "(0);")
               m <- adaptOwn resModelC modelC "fic_res.f0"
               emit ("fic_app_model = " ++ m ++ ";")
-              when rcMode (mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths cmdC "fic_res.f1"))
-              emit "/* E2: the commands of init are dispatched */"
-              emit "fic_app_subscriptions();"
+              if fx
+                then
+                  do  managerTable info
+                      emit "fic_app_send_fn = fic_app_send;"
+                      emit "fic_platform_setup();                    /* E2: _Platform_setupEffects */"
+                      emit "fic_platform_enqueue(fic_res.f1, fic_app_subs());"
+                else
+                  do  when rcMode (mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths cmdC "fic_res.f1"))
+                      emit "/* E2: the commands of init are dispatched */"
+                      emit "fic_app_subscriptions();"
               emit "#ifdef FIC_STEP_TEST"
               if msgC `elem` [CI64, CF64, CU32, CEnum, CUnit]
                 then
@@ -385,11 +415,37 @@ stepperMain _ initD ud =
                       emit ("{ long fic_i; for (fic_i = 0; fic_i < (long)(FIC_STEP_TEST); fic_i++) fic_app_step((" ++ classType msgC ++ ")(FIC_STEP_TEST_MSG)); }")
                 else emit "#error \"FIC_STEP_TEST needs a message type of a scalar class\""
               emit "#endif"
+              when fx (emit "fic_sched_run();                         /* E2: the event loop, until no source is left */")
               emit "#ifdef FIC_STATS"
               emit "fic_model_report();"
               emit "#endif"
+              when fx (emit "fic_platform_teardown();                 /* E2: the effect state, so a counted program ends with nothing live */")
               when rcMode (mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths modelC "fic_app_model"))
         _ -> () <$ failWith "internal: the init of the program does not return a pair"
+
+
+-- E2: the manager table (runtime/fic_sched.h `fic_mgr_def`), in Elm's order (Ficcus.Mono.ManagerTable): init (a task, one count for the
+-- table), onEffects, onSelfMsg and the map functions as closures (static: top level clones capture nothing)
+managerTable :: Info -> CG ()
+managerTable info =
+  forM_ (zip [0 :: Int ..] (iMgrs info)) $ \(i, me) ->
+    do  let n = show i
+            clo d = closureValue info d
+            arr nm ds = if null ds then return "NULL" else
+                          do  vs <- mapM clo ds
+                              emit ("static const fic_ref " ++ nm ++ "[] = { " ++ List.intercalate ", " vs ++ " };")
+                              return nm
+        initV <- genExpr info (MExpr CRef (MGlobal (mdClone (meInit me))))
+        emit ("fic_ref fic_mi" ++ n ++ " = " ++ initV ++ ";")
+        emit ("FIC_RC_DUP(fic_mi" ++ n ++ ");")
+        eff <- clo (meOnEffects me)
+        slf <- clo (meOnSelf me)
+        cm <- arr ("fic_mcm" ++ n) (meCmdMaps me)
+        sm <- arr ("fic_msm" ++ n) (meSubMaps me)
+        let stateRef = case mdParams (meOnEffects me) of { [] -> False; ps -> abiClass (snd (last ps)) == CRef }
+            b x = if x then "1" else "0"
+        emit ("fic_mgr_def(" ++ show (meHome me) ++ ", fic_mi" ++ n ++ ", " ++ eff ++ ", " ++ slf ++ ", " ++ cm ++ ", " ++ sm ++ ", "
+              ++ b (meHasCmd me) ++ ", " ++ b (meHasSub me) ++ ", " ++ b stateRef ++ ");")
 
 
 -- NAMES AND TYPES
@@ -765,7 +821,9 @@ closureRefs info e =
     MCall (MExpr _ (MGlobal c)) args
       | Just d <- Map.lookup c (iClones info), isFunction d, length args == length (mdParams d) -> concatMap (closureRefs info) args
       | otherwise -> c : concatMap (closureRefs info) args
-    MCall (MExpr _ (MKernel "elm/core:Platform.worker" _)) _ -> []
+    -- E2: the manager table of the worker call needs the closures of the managers' functions
+    MCall (MExpr _ (MKernel "elm/core:Platform.worker" _)) args ->
+      [ c | MExpr _ (MCall (MExpr _ (MKernel k _)) margs) <- args, Just _ <- [managerHome k], MExpr _ (MGlobal c) <- margs ]
     MGlobal c -> [c]
     _ -> concatMap (closureRefs info) (children e)
 
@@ -1742,6 +1800,48 @@ kernelValue info name key =
 -- A value of a type variable of a decoder (`succeed x`, the result of the function of `map`) is a word of the closure ABI; the
 -- runtime gets its class code ('p' a reference, 'i', 'd', 'c', 'e'). `decodeValue` and `decodeString` build the `Result` here, where
 -- the class of the result is known. The readers of `Bytes.Decode` return the pair (new offset, value) as a struct.
+-- E2 (runtime/fic_sched.h): the kernels of the scheduler and the platform. A value that crosses a task or a bag is a closure word; whether
+-- it is a reference is the class at the call site (a struct is boxed by `atomsTo`).
+effectCall :: Info -> String -> Key -> [MExpr] -> Maybe (CG String)
+effectCall info name key args =
+  case (name, args) of
+    ("elm/core:Task.succeed", [v]) -> Just (value "fic_task_succeed" v)
+    ("elm/core:Task.fail", [v]) -> Just (value "fic_task_fail" v)
+    ("elm/core:Task.andThen", [_, _]) -> call "fic_task_and_then"
+    ("elm/core:Task.onError", [_, _]) -> call "fic_task_on_error"
+    ("elm/core:Scheduler.spawn", [_]) -> call "fic_task_spawn_unit"     -- Task.spawnCmd, annotated `Task x ()` (runtime/fic_sched.h)
+    ("elm/core:Process.spawn", [_]) -> call "fic_task_spawn"
+    ("elm/core:Process.kill", [_]) -> call "fic_task_kill"
+    ("elm/core:Platform.sendToApp", [r, v]) -> Just (routed "fic_task_send_to_app" r v)
+    ("elm/core:Platform.sendToSelf", [r, v]) -> Just (routed "fic_task_send_to_self" r v)
+    ("elm/core:Platform.Cmd.batch", [_]) -> call "fic_bag_batch"
+    ("elm/core:Platform.Sub.batch", [_]) -> call "fic_bag_batch"
+    ("elm/core:Platform.Cmd.map", [_, _]) -> Just (mapped True)
+    ("elm/core:Platform.Sub.map", [_, _]) -> Just (mapped False)
+    _ | Just home <- leafHome name, [v] <- args ->
+          Just $
+            case mgrIndex (iMgrs info) home of
+              Nothing -> failWith ("internal: the leaf of the effect manager " ++ home ++ " has no entry in the manager table")
+              Just i | abiClass (mRep v) == CRef ->
+                do  a <- concat <$> atomsTo info [(v, CRef)]
+                    return ("fic_bag_leaf(" ++ show i ++ "u, fic_w_p(" ++ a ++ "), 1)")
+              Just _ -> failWith ("internal: the value of a leaf of " ++ home ++ " is not a reference")
+    _ -> Nothing
+  where
+    call fn = Just (do { vs <- atoms info args; return (fn ++ "(" ++ List.intercalate ", " vs ++ ")") })
+    isRef v = if abiClass (mRep v) == CRef then "1" else "0"
+    value fn v =
+      do  a <- concat <$> atomsTo info [(v, abiClass (mRep v))]
+          return (fn ++ "(" ++ wordMk (mRep v) a ++ ", " ++ isRef v ++ ")")
+    routed fn r v =
+      do  ab <- atomsTo info [(r, CRef), (v, abiClass (mRep v))]
+          let (a, b) = case ab of { [x, y] -> (x, y); _ -> ("", "") }
+          return (fn ++ "(" ++ a ++ ", " ++ wordMk (mRep v) b ++ ", " ++ isRef v ++ ")")
+    mapped isCmd =
+      do  vs <- atoms info args
+          return ("fic_bag_map(" ++ List.intercalate ", " vs ++ ", " ++ show (pairIndex (iPairs info) isCmd key) ++ "u)")
+
+
 jsonBytesCall :: Info -> Class -> String -> Key -> [MExpr] -> Maybe (CG String)
 jsonBytesCall info cls name key args =
   case (name, args) of
@@ -1913,6 +2013,7 @@ kernelCall info cls name key args =
           let fn = if name == "elm/core:String.foldl" then "fic_us_foldl" else "fic_us_foldr"
           adaptOwn cb cls (fn ++ "(" ++ (avs !! 0) ++ ", " ++ (if boxedClass cb == CRef then "2u" else "0u") ++ ", " ++ wordMk cb (avs !! 1) ++ ", " ++ (avs !! 2) ++ ")" ++ wordSel cb)
     _ | Just act <- jsonBytesCall info cls name key args -> act
+    _ | Just act <- effectCall info name key args -> act
     _ ->
       do  vals <- atoms info args
           case (name, vals) of

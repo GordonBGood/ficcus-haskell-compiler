@@ -2,6 +2,7 @@
 module Ficcus.Mono.Effects
   ( noStepper
   , effectClassOf
+  , kernelTypeIds
   , effectKernels
   , bagNoneKernel
   -- step 2: effect managers
@@ -48,12 +49,15 @@ noStepper = unsafePerformIO (fmap (== Just "1") (lookupEnv "FICCUS_NO_STEPPER"))
 effectClassOf :: String -> Maybe Class
 effectClassOf name
   | noStepper = if name `elem` ["elm/core:Platform.Cmd.Cmd", "elm/core:Platform.Sub.Sub", "elm/core:Platform.Program"] then Just CUnit else Nothing
-  | name `elem` kernelTypes = Just CRef
+  | name `elem` kernelTypeIds = Just CRef
   | otherwise = Nothing
-  where
-    kernelTypes =
-      [ "elm/core:Platform.Cmd.Cmd", "elm/core:Platform.Sub.Sub", "elm/core:Platform.Program"
-      , "elm/core:Platform.Task", "elm/core:Platform.ProcessId", "elm/core:Platform.Router" ]
+
+
+-- | the kernel types of the platform: references to runtime objects (runtime/fic_sched.h), never unions of the program
+kernelTypeIds :: [String]
+kernelTypeIds =
+  [ "elm/core:Platform.Cmd.Cmd", "elm/core:Platform.Sub.Sub", "elm/core:Platform.Program"
+  , "elm/core:Platform.Task", "elm/core:Platform.ProcessId", "elm/core:Platform.Router" ]
 
 
 -- | `Cmd.none` and `Sub.none`: kernel values (arity 0), the static empty bag

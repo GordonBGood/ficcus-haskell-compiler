@@ -13,6 +13,7 @@ module Ficcus.Mono.CRuntime
   , sizedRuntime
   , sortRuntime
   , platformRuntime
+  , schedRuntime
   )
   where
 
@@ -105,3 +106,10 @@ sortRuntime =
 platformRuntime :: String
 platformRuntime =
   $(embedFiles [ "runtime/fic_platform.h" ])
+
+
+-- E2 (docs/EFFECTS-CHECK.md steps 4 to 8): the scheduler, the managers' dispatch, the event loop (needs the closure runtime); emitted only
+-- by programs that use a task, a bag or a manager
+schedRuntime :: String
+schedRuntime =
+  $(embedFiles [ "runtime/fic_sched.h" ])

@@ -4,6 +4,7 @@ module Generate
   , dev
   , prod
   , c
+  , managerOrder
   , typeDumps
   , repl
   )
@@ -31,6 +32,7 @@ import qualified AST.Optimized as Opt
 import qualified AST.Prim.Module as Module
 import qualified AST.Prim.Name as N
 import qualified Ficcus.Mono.Overlay as Overlay
+import qualified Ficcus.Mono.ManagerOrder as ManagerOrder
 import qualified Build
 import qualified Elm.Compiler.Type.Extract as Extract
 import qualified Elm.Details as Details
@@ -168,6 +170,15 @@ c stuff details (Build.Artifacts pkg _ roots modules) =
       let graph = objectsToGlobalGraph objects
       let mains = gatherMains pkg objects roots
       return $ GC.dump graph mains
+
+
+-- Ficcus effects E2: the order of the effect managers and ports, as the JS generator emits them (Ficcus.Mono.ManagerOrder)
+managerOrder :: R.Stuff -> Details.Details -> Build.Artifacts -> Task [ManagerOrder.Entry]
+managerOrder stuff details (Build.Artifacts pkg _ roots modules) =
+  do  objects <- finalizeObjects =<< loadObjects stuff details modules
+      let graph = objectsToGlobalGraph objects
+      let mains = gatherMains pkg objects roots
+      return $ ManagerOrder.managerOrder graph (Map.keys mains)
 
 
 repl :: R.Stuff -> Details.Details -> Bool -> Build.ReplArtifacts -> N.Name -> Task B.Builder

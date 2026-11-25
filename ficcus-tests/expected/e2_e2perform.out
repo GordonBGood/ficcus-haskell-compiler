@@ -1,0 +1,8 @@
+init: 1
+subscriptions: 1
+update: Tick 5
+model: 6
+subscriptions: 6
+update: Got 10
+model: 16
+subscriptions: 16

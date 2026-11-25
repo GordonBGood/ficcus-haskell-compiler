@@ -1,0 +1,52 @@
+module E2Tasks exposing (main)
+
+-- Effects E2 step 4: the Task combinators on the scheduler: andThen, onError, fail, attempt, map2, sequence, mapError; a failing
+-- spawned task is silent; Process.spawn gives an id, Process.kill of a finished process does nothing.
+
+import Process
+import Task exposing (Task)
+
+
+type Msg
+    = Done String
+    | Res (Result String Int)
+    | Pair ( Int, String )
+    | Seq (List Int)
+    | Spawned
+    | Killed
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        Spawned ->
+            ( n + 1, Task.perform (\_ -> Killed) (Process.spawn (Task.succeed 1) |> Task.andThen Process.kill) )
+
+        _ ->
+            ( n + 1, Cmd.none )
+
+
+chain : Task x String
+chain =
+    Task.succeed "a" |> Task.andThen (\x -> Task.succeed (x ++ "b")) |> Task.map (\x -> x ++ "c")
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( 0
+                , Cmd.batch
+                    [ Task.perform Done chain
+                    , Task.attempt Res (Task.fail "boom" |> Task.onError (\e -> Task.succeed (String.length e)))
+                    , Task.attempt Res (Task.succeed 1 |> Task.andThen (\_ -> Task.fail "chained failure"))
+                    , Task.attempt Res (Task.fail 7 |> Task.mapError String.fromInt)
+                    , Task.perform Pair (Task.map2 Tuple.pair (Task.succeed 1) (Task.succeed "two"))
+                    , Task.perform Seq (Task.sequence [ Task.succeed 1, Task.succeed 2, Task.succeed 3 ])
+                    , Task.perform (\_ -> Spawned) (Process.spawn (Task.fail "silent" |> Task.andThen (\_ -> Task.succeed 0)))
+                    ]
+                )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

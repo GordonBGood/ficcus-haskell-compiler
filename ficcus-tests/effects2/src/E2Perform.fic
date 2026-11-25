@@ -1,0 +1,30 @@
+module E2Perform exposing (main)
+
+-- E1 open point (d): a worker whose update mentions Task.perform compiles (E1 stopped with the E2 message) and runs as Elm does.
+-- init asks for Tick 5; update answers Tick with Task.perform Got, Got ends the chain.
+
+import Task
+
+
+type Msg
+    = Tick Int
+    | Got Int
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg m =
+    case Debug.log "update" msg of
+        Tick k ->
+            ( Debug.log "model" (m + k), Task.perform Got (Task.succeed (k * 2)) )
+
+        Got k ->
+            ( Debug.log "model" (m + k), Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( Debug.log "init" 1, Task.perform Tick (Task.succeed 5) )
+        , update = update
+        , subscriptions = \m -> always Sub.none (Debug.log "subscriptions" m)
+        }

@@ -2,8 +2,9 @@
 """Effects slice E1 (docs/EFFECTS-CHECK.md steps 1 to 3; programs in ficcus-tests/effects/, Elm 0.19.3 goldens in expected/):
 
   FxManagers  step 2: the .mono listing has the Task manager cloned from Elm (init, onEffects, onSelfMsg at Msg, cmdMap at the
-              Cmd.map pair) and the manager table in main; the C generator stops with the E2 message (no scheduler yet).
-  S2Perform   review fix 3: Task.perform in update: the compiler stops with the E2 message alone (W7a compiled it; until E2).
+              Cmd.map pair) and the manager table in main; since E2 (the scheduler) the C program runs and ends with nothing live.
+  S2Perform   review fix 3: Task.perform in update stopped with the E2 message in E1; since E2 it compiles in both modes and its
+              output equals Elm's (also a test of ficcus-tests/effects_e2.py).
   SubsOrder   step 3: subscriptions runs after init, as in Elm (golden), --rc and --no-rc.
   G17b        step 3: N = 100000 steps of the typed stepper (-DFIC_STEP_TEST=100000) over a record model with a Dict and an Array;
   G17bFields  output = golden, live 0, and the FIC_STATS model line: 0 model copies, 199200 updates in place, 0 reuse misses.
@@ -52,17 +53,18 @@ def main():
             "Kernel ficcus:manager@elm/core:Task", "Kernel elm/core:Platform.leaf@elm/core:Task"]
     missing = [w for w in want if w not in mono]
     report(p.returncode == 0 and not missing, "FxManagers .mono: Task manager clones and table", "missing " + ", ".join(missing))
-    p = make(a, d, "FxManagers", os.path.join(tmp, "fx.c"), ["--rc"])
-    msg = (p.stdout + p.stderr).decode()
-    report(p.returncode != 0 and "the effect managers elm/core:Task need the scheduler" in msg, "FxManagers C: stops at the scheduler (E2)", msg[-300:])
+    # E2: the scheduler exists, the program runs (it prints nothing) and ends with nothing live
+    c = os.path.join(tmp, "fx.c"); p = make(a, d, "FxManagers", c, ["--rc"])
+    r, err = build_run(c, os.path.join(tmp, "fx"), SAN + ["-DFIC_STATS"]) if p.returncode == 0 else (None, (p.stdout + p.stderr).decode()[-300:])
+    report(r is not None and r.returncode == 0 and " live 0 " in r.stderr.decode(), "FxManagers C: runs on the scheduler (E2), live 0",
+           err or (r.stdout + r.stderr).decode()[-300:])
 
-    # E1 review fix 3: a worker whose update mentions Task.perform (compiled by W7a, which never ran update) stops with the E2 message
-    # alone (not the unsupported kernels of the manager's own code), in both modes, until E2
+    # E1 review fix 3, then E2: a worker whose update mentions Task.perform compiles in both modes and prints what Elm prints
     for flags in (["--rc"], ["--no-rc"]):
-        p = make(a, d, "S2Perform", os.path.join(tmp, "s2.c"), flags)
-        msg = (p.stdout + p.stderr).decode()
-        report(p.returncode == 1 and "the effect managers elm/core:Task need the scheduler" in msg and "the kernel function" not in msg
-               and "Task.perform or Time.every" in msg, "S2Perform %s: Task.perform in update stops with the E2 message alone" % flags[0], msg[-400:])
+        c = os.path.join(tmp, "s2.c"); p = make(a, d, "S2Perform", c, flags)
+        r, err = build_run(c, os.path.join(tmp, "s2"), ["-O2"]) if p.returncode == 0 else (None, (p.stdout + p.stderr).decode()[-400:])
+        report(r is not None and r.returncode == 0 and r.stdout.decode() == "init: 1\n", "S2Perform %s: Task.perform in update compiles and runs (E2)" % flags[0],
+               err or (r.stdout + r.stderr).decode()[-300:])
 
     # step 3: order of init and subscriptions
     want = open(os.path.join(HERE, "expected", "subsorder.out")).read()

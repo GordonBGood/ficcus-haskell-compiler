@@ -41,6 +41,7 @@ import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 
 import Ficcus.Mono.Class
+import Ficcus.Mono.Effects (kernelTypeIds)
 import Ficcus.Mono.Free (refClass)
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Layout (leavesOf)
@@ -689,7 +690,7 @@ checkWorkers workers clones = concatMap check clones
 -- program; only for a result with a reference leaf: a struct of scalars has no counts) must be matched by a branch that is an `MUnpack` of the result (the struct dies at the match: no dup of a field, no drop of a cell); a
 -- worker call anywhere else must be a tail leaf of a worker. Returns (messages, number of unpacked sites)
 checkCounted :: MProgram -> ([String], Int)
-checkCounted prog = (concat errs, sum counts)
+checkCounted prog = (kernelResults prog ++ concat errs, sum counts)
   where
     workerIds = Set.fromList [ mdClone d | d <- mpClones prog, workerSuffix `List.isSuffixOf` mdName d ]
     (errs, counts) = unzip [ (map (\e -> "unbox check (" ++ mdName d ++ ", after Rc): " ++ e) es, n) | d <- mpClones prog, Just b <- [mdBody d], let (es, n) = walk b ]
@@ -706,3 +707,20 @@ checkCounted prog = (concat errs, sum counts)
         _ -> let rs = map walk (children e) in (concatMap fst rs, sum (map snd rs))
     es0 v = concatMap fst (map walk (children v))
     stripDrops x = case mNode x of { MDrop _ y -> stripDrops y; MDup _ y -> stripDrops y; _ -> x }
+
+
+-- | E2 (E1 open point (c), docs/EFFECTS-CHECK.md section 4): no worker for a clone whose result is a kernel type (Task, Cmd, Sub,
+-- Program, ProcessId, Router: runtime objects that the scheduler and the dispatch hold and apply through closures, never unions). Rule 2
+-- takes only clones whose leaves are constructor applications, and a kernel type has no constructor a program can apply, so this does not
+-- happen; the check makes sure. The constructors a worker's result can be are the ones its wrapper builds the cell with.
+kernelResults :: MProgram -> [String]
+kernelResults prog =
+  [ "unbox check (" ++ mdName d ++ "): a worker for a clone whose result is the kernel type " ++ t
+  | d <- mpClones prog, not (workerSuffix `List.isSuffixOf` mdName d), Just b <- [mdBody d]
+  , any (`Set.member` workerIds) (calls b)
+  , n <- ctors b, Just t <- [Map.lookup n ctorType], t `elem` kernelTypeIds ]
+  where
+    workerIds = Set.fromList [ mdClone d | d <- mpClones prog, workerSuffix `List.isSuffixOf` mdName d ]
+    ctorType = Map.fromList [ (n, t) | (t, u) <- Map.toList (mpUnions prog), (n, _, _) <- usCtors u ]
+    calls e = [ g | MGlobal g <- [mNode e] ] ++ concatMap calls (children e)
+    ctors e = [ n | MCtor n _ _ <- [mNode e] ] ++ concatMap ctors (children e)

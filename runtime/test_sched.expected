@@ -1,0 +1,17 @@
+FIC_STATS: allocs 66 live 0 peak 11 dup 74 drop 62 free_slow 46 reuse_hit 0 reuse_miss 0 inplace 0 copied 0 pap_steal 0 clo_steal 0 vec_copy 0
+-- chain
+a 1
+b 2
+-- failure skips andThen, onError catches
+x 5
+caught 100
+-- success skips onError
+ok 7
+-- a failed spawned task is silent
+-- spawn order: the child first, then the parent
+child1 10
+child2 11
+parent 0
+-- kill of a finished process, then sendToApp
+after kill 0
+app 42

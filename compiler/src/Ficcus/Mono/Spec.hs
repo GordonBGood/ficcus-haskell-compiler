@@ -1633,7 +1633,11 @@ requestManager msgC pairs home =
       core <- mapM (\n -> managerClone (home ++ "." ++ n) (const (Just msgC))) ["init", "onEffects", "onSelfMsg"]
       cmdMaps <- if maybe True (\m -> mgCmd m == Nothing) mg then return [] else mapM (mapClone "cmdMap") [ (a, b) | (True, a, b) <- Set.toList pairs ]
       subMaps <- if maybe True (\m -> mgSub m == Nothing) mg then return [] else mapM (mapClone "subMap") [ (a, b) | (False, a, b) <- Set.toList pairs ]
-      return (MExpr CRef (MCall (MExpr CRef (MKernel (managerKernelId home) (Key []))) [ MExpr CRef (MGlobal c) | Just c <- core ++ cmdMaps ++ subMaps ]))
+      -- E2: the entry starts with two flags, whether the manager has commands and subscriptions (the arity of its onEffects)
+      let flag b = MExpr CI64 (MLit (LInt (if b then 1 else 0)))
+      return (MExpr CRef (MCall (MExpr CRef (MKernel (managerKernelId home) (Key [])))
+                (flag (maybe False (\m -> mgCmd m /= Nothing) mg) : flag (maybe False (\m -> mgSub m /= Nothing) mg)
+                   : [ MExpr CRef (MGlobal c) | Just c <- core ++ cmdMaps ++ subMaps ])))
   where
     -- `cmdMap : (a -> b) -> MyCmd a -> MyCmd b`: the variables of the tagger's argument and result
     mapClone n (ca, cb) =

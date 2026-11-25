@@ -1,0 +1,47 @@
+module G17c exposing (main)
+
+-- Effects E2, G17 companion (c) (docs/EFFECTS-CHECK.md section 3): the init model is a closed literal, which the compiler may make an
+-- immortal global (Known rule F). Its first update must copy (a static object is never unique) and every later one write in place:
+-- exactly 1 model copy in 50 steps. Output = Elm.
+
+import Array exposing (Array)
+import Task
+
+
+type alias Model =
+    { a : Array Int, n : Int }
+
+
+type Msg
+    = Step
+
+
+initModel : Model
+initModel =
+    { a = Array.fromList [ 0, 0, 0, 0, 0, 0, 0, 0 ], n = 50 }
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update _ m =
+    if m.n <= 0 then
+        ( m, Cmd.none )
+
+    else
+        let
+            m2 =
+                { m | a = Array.set (modBy 8 m.n) m.n m.a, n = m.n - 1 }
+        in
+        if m2.n == 0 then
+            ( Debug.log "model" m2, Cmd.none )
+
+        else
+            ( m2, Task.perform (\_ -> Step) (Task.succeed ()) )
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init = \_ -> ( initModel, Task.perform (\_ -> Step) (Task.succeed ()) )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

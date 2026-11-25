@@ -1,0 +1,8 @@
+update: Spawned
+update: Seq [1,2,3]
+update: Pair (1,"two")
+update: Res (Err "7")
+update: Res (Err "chained failure")
+update: Res (Ok 4)
+update: Done "abc"
+update: Killed
