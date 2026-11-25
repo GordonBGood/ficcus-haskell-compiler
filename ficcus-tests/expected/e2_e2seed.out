@@ -1,0 +1,8 @@
+step from seed 42: [50,4,44,41]
+update: Chained (6,4)
+update: Weighted "common"
+update: Pair (0,"b")
+update: Ints [5,0,7,8,7]
+update: Float 0.6631545209780559
+update: Int 66
+update: Plain "task"

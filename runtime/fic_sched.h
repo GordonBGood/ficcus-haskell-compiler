@@ -615,10 +615,23 @@ static fic_ref fic_zone_name(void) {
   return fic_str_new("", (int64_t)strlen(""));
 }
 
+/* Random.generate (step 6): elm/random's manager is compiled unchanged; its init seeds from Time.now. FIC_SEED=<n> (D-fx-7) replaces the
+   time that the Time.now of the Random manager's own process reads (its init: `initialSeed (posixToMillis time)`), so the seed is n and
+   nothing else changes; FIC_TIME fixes it too, with the rest of the clock. */
+static int64_t fic_random_seed_time(fic_proc *p) {
+  const char *v = getenv("FIC_SEED");
+  int i;
+  if (v != NULL && *v != 0)
+    for (i = 0; i < fic_nmgr; i++)
+      if (strcmp(fic_mgrs[i].name, "elm/random:Random") == 0 && fic_mgrs[i].router != FIC_NONE && ((fic_router *)fic_mgrs[i].router)->proc == &p->h)
+        return (int64_t)strtoll(v, NULL, 10);
+  return fic_time_now_ms();
+}
+
 /* the bindings of the clock complete at once (fic_sched_bind) */
 static void fic_sched_bind_clock(fic_proc *p, fic_task_bind *b) {
   switch (b->kind) {
-  case FIC_BIND_NOW: { fic_word t = fic_ap1(b->a.p, 0u, fic_w_i(fic_time_now_ms())); fic_sched_resume(p, fic_task_succeed(t, 1)); break; }
+  case FIC_BIND_NOW: { fic_word t = fic_ap1(b->a.p, 0u, fic_w_i(fic_random_seed_time(p))); fic_sched_resume(p, fic_task_succeed(t, 1)); break; }
   case FIC_BIND_HERE: fic_sched_resume(p, fic_task_succeed(fic_w_i(fic_zone_offset()), 0)); break;
   case FIC_BIND_ZONE: fic_sched_resume(p, fic_task_succeed(fic_w_p(fic_zone_name()), 1)); break;
   default: abort();

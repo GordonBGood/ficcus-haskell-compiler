@@ -1,0 +1,59 @@
+module E2Random exposing (main)
+
+-- Effects E2 step 6: Random.generate through elm/random's own manager (compiled from Elm, unchanged), seeded from Time.now at its init.
+-- With the clock fixed (FIC_TIME for C; Date.now for node) the values equal Elm's. Several generators in one batch (the manager runs
+-- them in list order, which is the reverse of the batch), a generate from update, Random.step from a fixed seed (pure), and a
+-- Task.perform in the same batch (two managers: Elm's order is Task, then Random).
+
+import Random
+import Task
+
+
+type Msg
+    = Int Int
+    | Float Float
+    | Ints (List Int)
+    | Pair ( Int, String )
+    | Weighted String
+    | Chained ( Int, Int )
+    | Plain String
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        Int _ ->
+            if n == 0 then
+                ( n + 1, Random.generate Int (Random.int -1000 1000) )
+
+            else
+                ( n + 1, Cmd.none )
+
+        _ ->
+            ( n + 1, Cmd.none )
+
+
+stepped : List Int
+stepped =
+    Tuple.first (Random.step (Random.list 4 (Random.int 0 99)) (Random.initialSeed 42))
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( always 0 (Debug.log "step from seed 42" stepped)
+                , Cmd.batch
+                    [ Random.generate Int (Random.int 1 100)
+                    , Random.generate Float (Random.float 0 1)
+                    , Task.perform Plain (Task.succeed "task")
+                    , Random.generate Ints (Random.list 5 (Random.int 0 9))
+                    , Random.generate Pair (Random.pair (Random.int 0 1) (Random.uniform "a" [ "b", "c" ]))
+                    , Random.generate Weighted (Random.weighted ( 1, "rare" ) [ ( 9, "common" ) ])
+                    , Random.generate Chained (Random.int 1 6 |> Random.andThen (\a -> Random.map (\b -> ( a, b )) (Random.int 1 a)))
+                    ]
+                )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

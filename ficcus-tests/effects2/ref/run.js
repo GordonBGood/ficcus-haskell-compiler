@@ -8,6 +8,9 @@ const out = [];
 console.log = (...a) => out.push(a.join(" "));
 console.warn = () => {};
 process.on("exit", () => { if (out.length) process.stdout.write(out.join("\n") + "\n"); });
+// FIC_TIME (the C program's virtual clock): Date.now is that time, so Time.now and the seed of Random.generate equal the C program's.
+// The timers of node still run in real time (the tests print nothing that depends on the clock but these).
+if (process.env.FIC_TIME) { const t = Number(process.env.FIC_TIME); Date.now = () => t; }
 const mod = require(path.resolve(process.argv[2]));
 const Elm = mod.Elm || global.Elm;
 const app = Elm[process.argv[3]].init({});
