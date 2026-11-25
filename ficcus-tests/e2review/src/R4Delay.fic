@@ -1,0 +1,44 @@
+module R4Delay exposing (main)
+
+-- E2 review Q5: delays as node's setTimeout takes them: a fraction is cut (1.5 waits like 1, in the order made; 2.7 like 2) and a
+-- delay above 2^31-1 ms (also Infinity) is 1 ms (node prints a TimeoutOverflowWarning on stderr; browsers also truncate to a 32 bit
+-- integer). All are made in one step, so their order is decided by the delay alone.
+
+import Process
+import Task exposing (Task)
+
+
+type Msg
+    = Slept String
+
+
+after : Float -> String -> Cmd Msg
+after ms s =
+    Task.perform Slept (Process.sleep ms |> Task.map (\_ -> s))
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    ( n + 1, Debug.log "update" msg |> (\_ -> Cmd.none) )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                -- the Task manager runs its list in the reverse of the batch: the last entry is made first
+                ( 0
+                , Cmd.batch
+                    [ after 40 "forty"
+                    , after 1.0e10 "huge"
+                    , after (1 / 0) "infinity"
+                    , after 2.7 "two-point-seven"
+                    , after 2 "two"
+                    , after 1 "one"
+                    , after 1.5 "one-point-five"
+                    ]
+                )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

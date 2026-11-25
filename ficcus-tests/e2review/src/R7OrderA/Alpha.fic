@@ -1,0 +1,8 @@
+module R7OrderA.Alpha exposing (cmd)
+
+import Random
+
+
+cmd : (Int -> msg) -> Cmd msg
+cmd f =
+    Random.generate f (Random.int 1 6)

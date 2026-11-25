@@ -1,0 +1,16 @@
+module X6Element exposing (main)
+
+-- E2 review Q4: Browser.element is not a worker: a clear compile error (the GUI platform is D-fx-1 step 3).
+
+import Browser
+import Html
+
+
+main : Program () Int ()
+main =
+    Browser.element
+        { init = \_ -> ( 0, Cmd.none )
+        , view = \_ -> Html.text "x"
+        , update = \_ n -> ( n, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

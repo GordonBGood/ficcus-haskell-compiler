@@ -1,0 +1,55 @@
+module R9Slow exposing (main)
+
+-- E2 review Q5 (real time: run without FIC_TIME): Time.every 5 with one slow update (the second tick computes for tens of ms in C,
+-- hundreds in JavaScript). node's setInterval re-arms from the start of the late callback, so after the stall the ticks keep their
+-- 5 ms spacing; an interval re-armed from its previous deadline fires the missed ticks back to back (gaps of 0 ms). The program prints
+-- whether any two consecutive ticks came less than 2 ms apart.
+
+import Time
+
+
+type alias Model =
+    { ticks : List Int, work : Int }
+
+
+heavy : Int -> Int
+heavy n =
+    List.foldl (\i acc -> modBy 1000003 (acc * 31 + i)) 7 (List.range 1 n)
+
+
+update : Time.Posix -> Model -> ( Model, Cmd Time.Posix )
+update t m =
+    let
+        ms =
+            Time.posixToMillis t
+
+        work =
+            if List.length m.ticks == 1 then
+                heavy 3000000
+
+            else
+                0
+
+        ticks =
+            ms :: m.ticks
+
+        gaps =
+            List.map2 (-) ticks (List.drop 1 ticks)
+
+        _ =
+            if List.length ticks == 40 then
+                Debug.log "ticks less than 2 ms apart" (List.any (\g -> g < 2) (List.take 30 gaps))
+
+            else
+                False
+    in
+    ( { m | ticks = ticks, work = m.work + work }, Cmd.none )
+
+
+main : Program () Model Time.Posix
+main =
+    Platform.worker
+        { init = \_ -> ( { ticks = [], work = 0 }, Cmd.none )
+        , update = update
+        , subscriptions = \m -> if List.length m.ticks < 40 then Time.every 5 identity else Sub.none
+        }

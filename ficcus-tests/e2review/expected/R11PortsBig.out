@@ -1,0 +1,7 @@
+update: GotJson <internals>
+aOut: "2"
+aOut: "1"
+bOut: {"z":null,"name":"r1","pair":[1,0.5],"tags":["té","\"q\""],"score":null}
+plain text
+jsonOut: {"b":1,"a":[0.1,1e+21,0,1.5e-7],"s":"\u0001 😀"}
+jsonOut: {"big":123456789012345680,"ok":9007199254740992}

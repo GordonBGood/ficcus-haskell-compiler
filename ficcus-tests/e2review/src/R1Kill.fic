@@ -1,0 +1,95 @@
+module R1Kill exposing (main)
+
+-- E2 review Q1: Process.kill against Elm 0.19.3's scheduler. (a) a child killed while it waits in the run queue after a synchronous
+-- binding (Time.now yields to the queue, not to the host); (b) a child killed while it sleeps, after it printed; (c) a finished child
+-- killed (Elm crashes on a second kill of a killed process: TypeError in _Scheduler_kill; see R1KillTwice); (d) three children, the middle one killed after it ran; (e) a sleeper killed from a later update through its id in
+-- the model.
+
+import Process
+import Task exposing (Task)
+import Time
+
+
+type Msg
+    = Done String
+    | Pid Process.Id
+    | Killed
+
+
+say : String -> Task x String
+say s =
+    Task.succeed s |> Task.map (Debug.log "say")
+
+
+yieldThen : String -> Task x String
+yieldThen s =
+    Time.now |> Task.andThen (\_ -> say s)
+
+
+caseA : Task x String
+caseA =
+    Process.spawn (say "a-child" |> Task.andThen (\_ -> yieldThen "a-child-after-now (never)"))
+        |> Task.andThen Process.kill
+        |> Task.andThen (\_ -> say "a-parent")
+
+
+caseB : Task x String
+caseB =
+    Process.spawn (say "b1" |> Task.andThen (\_ -> Process.sleep 5) |> Task.andThen (\_ -> say "b2 (never)"))
+        |> Task.andThen (\p -> Time.now |> Task.andThen (\_ -> Process.kill p))
+        |> Task.andThen (\_ -> say "b-parent")
+
+
+caseC : Task x String
+caseC =
+    Process.spawn (say "c1")
+        |> Task.andThen Process.kill
+        |> Task.andThen (\_ -> say "c-parent")
+
+
+caseD : Task x String
+caseD =
+    Process.spawn (yieldThen "d-x")
+        |> Task.andThen
+            (\_ ->
+                Process.spawn (yieldThen "d-y")
+                    |> Task.andThen
+                        (\py ->
+                            Process.spawn (yieldThen "d-z")
+                                |> Task.andThen (\_ -> Process.kill py)
+                        )
+            )
+        |> Task.andThen (\_ -> say "d-parent")
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case msg of
+        Pid p ->
+            let
+                _ =
+                    Debug.log "update" "Pid"
+            in
+            ( n + 1, Task.perform (\_ -> Killed) (Process.kill p) )
+
+        _ ->
+            ( n + 1, Debug.log "update" msg |> (\_ -> Cmd.none) )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( 0
+                , Cmd.batch
+                    [ Task.perform Done caseA
+                    , Task.perform Done caseB
+                    , Task.perform Done caseC
+                    , Task.perform Done caseD
+                    , Task.perform Pid (Process.spawn (Process.sleep 20 |> Task.andThen (\_ -> say "e (never)")))
+                    ]
+                )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

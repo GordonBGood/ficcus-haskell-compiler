@@ -1,0 +1,33 @@
+module R1KillTwice exposing (main)
+
+-- E2 review Q1: a second Process.kill of a killed process. Elm 0.19.3 crashes (`_Scheduler_kill` reads `proc.__root.$` of null:
+-- TypeError, node exit 1, the say lines before it printed); Ficcus does nothing. Not a gate: a decision to record (D-fx-6).
+
+import Process
+import Task exposing (Task)
+
+
+type Msg
+    = Done String
+
+
+say : String -> Task x String
+say s =
+    Task.succeed s |> Task.map (Debug.log "say")
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( 0
+                , Task.perform Done
+                    (Process.spawn (Process.sleep 5 |> Task.andThen (\_ -> say "never"))
+                        |> Task.andThen (\p -> Process.kill p |> Task.andThen (\_ -> say "killed once") |> Task.andThen (\_ -> Process.kill p))
+                        |> Task.andThen (\_ -> say "killed twice")
+                    )
+                )
+        , update = \msg n -> ( n + 1, Debug.log "update" msg |> (\_ -> Cmd.none) )
+        , subscriptions = \_ -> Sub.none
+        }

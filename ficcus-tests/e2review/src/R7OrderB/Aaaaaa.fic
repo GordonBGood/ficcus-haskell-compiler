@@ -1,0 +1,9 @@
+module R7OrderB.Aaaaaa exposing (cmd)
+
+import Process
+import Task
+
+
+cmd : (Int -> msg) -> Cmd msg
+cmd f =
+    Task.perform (\_ -> f 4) (Process.sleep 0)

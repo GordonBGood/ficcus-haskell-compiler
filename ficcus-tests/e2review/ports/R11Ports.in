@@ -1,0 +1,9 @@
+intIn 1
+intIn 1.0
+intIn 1e3
+intIn -0
+intIn 3000000000
+floatIn 2
+floatIn 2.5
+recIn {"name":"n","count":2,"ok":true,"f":1,"extra":[1,2]}
+jsonIn {"z":1,"a":[true,null,"xé\n\u0001"],"n":-0.5,"e":1e21,"neg0":-0.0}

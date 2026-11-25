@@ -1,0 +1,51 @@
+module R8Every exposing (main)
+
+-- E2 review Q5: two Time.every intervals (30 and 70 ms) whose subscriptions come and go: A stops after 4 ticks, B continues on the
+-- same interval (no restart), then A is subscribed again (a new interval from that moment). Ticks at least 10 ms apart, so node's
+-- real timers and the virtual clock give one order.
+
+import Time
+
+
+type Msg
+    = A Int
+    | B Int
+
+
+type alias Model =
+    { a : Int, b : Int }
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg m =
+    case Debug.log "update" msg of
+        A _ ->
+            ( { m | a = m.a + 1 }, Cmd.none )
+
+        B _ ->
+            ( { m | b = m.b + 1 }, Cmd.none )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions m =
+    Sub.batch
+        [ if m.a < 4 || (m.b >= 4 && m.a < 6) then
+            Time.every 30 (\_ -> A m.a)
+
+          else
+            Sub.none
+        , if m.b < 4 then
+            Time.every 70 (\_ -> B m.b)
+
+          else
+            Sub.none
+        ]
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init = \_ -> ( { a = 0, b = 0 }, Cmd.none )
+        , update = update
+        , subscriptions = subscriptions
+        }

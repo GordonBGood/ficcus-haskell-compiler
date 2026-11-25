@@ -1,0 +1,77 @@
+port module R11PortsBad exposing (main)
+
+-- E2 review Q6: an incoming value that does not decode is Elm crash 4 (stdout so far, exit 1); the lines after it are not sent.
+
+import Json.Decode as D
+import Json.Encode as E
+
+
+port bOut : { name : String, pair : ( Int, Float ), tags : List String, score : Maybe Int, z : () } -> Cmd msg
+
+
+port aOut : String -> Cmd msg
+
+
+port output : String -> Cmd msg
+
+
+port jsonOut : E.Value -> Cmd msg
+
+
+port intIn : (Int -> msg) -> Sub msg
+
+
+port floatIn : (Float -> msg) -> Sub msg
+
+
+port jsonIn : (D.Value -> msg) -> Sub msg
+
+
+port recIn : ({ name : String, count : Int, ok : Bool, f : Float } -> msg) -> Sub msg
+
+
+type Msg
+    = GotInt Int
+    | GotFloat Float
+    | GotJson D.Value
+    | GotRec { name : String, count : Int, ok : Bool, f : Float }
+
+
+rec : Int -> { name : String, pair : ( Int, Float ), tags : List String, score : Maybe Int, z : () }
+rec i =
+    { name = "r" ++ String.fromInt i, pair = ( i, 0.5 ), tags = [ "t\u{00E9}", "\"q\"" ], score = if i > 1 then Just i else Nothing, z = () }
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        GotInt i ->
+            ( n + 1, Cmd.batch [ bOut (rec i), aOut ("from " ++ String.fromInt i), output ("text " ++ String.fromInt i) ] )
+
+        GotFloat f ->
+            ( n + 1, aOut (String.fromFloat f) )
+
+        GotJson v ->
+            ( n + 1, jsonOut v )
+
+        GotRec r ->
+            ( n + 1, aOut r.name )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( 0
+                , Cmd.batch
+                    [ aOut "1"
+                    , bOut (rec 1)
+                    , aOut "2"
+                    , output "plain text"
+                    , jsonOut (E.object [ ( "b", E.int 1 ), ( "a", E.list E.float [ 0.1, 1.0e21, -0.0, 1.5e-7 ] ), ( "s", E.string "\u{0001}\u{2028}\u{1F600}" ) ])
+                    ]
+                )
+        , update = update
+        , subscriptions = \_ -> Sub.batch [ intIn GotInt, floatIn GotFloat, jsonIn GotJson, recIn GotRec ]
+        }

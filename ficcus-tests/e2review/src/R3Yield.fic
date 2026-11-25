@@ -1,0 +1,57 @@
+module R3Yield exposing (main)
+
+-- E2 review Q1 and Q5: what yields. sleep 0 yields to the host (after everything runnable now), Time.now only to the run queue;
+-- delays below 1 (0, 0.5, -3, NaN) are 1 ms and run in the order made, with sleep 1; a sleep 0 made by an update that a sleep 0 woke
+-- runs after the other sleep 0s of the first round; Time.here and getZoneName are synchronous too.
+
+import Process
+import Task exposing (Task)
+import Time
+
+
+type Msg
+    = Slept String
+    | Again String
+
+
+say : String -> Task x String
+say s =
+    Task.succeed s |> Task.map (Debug.log "say")
+
+
+after : Float -> String -> Cmd Msg
+after ms s =
+    Task.perform Slept (Process.sleep ms |> Task.andThen (\_ -> say s))
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        Slept "zero" ->
+            ( n + 1, Cmd.batch [ Task.perform Again (Process.sleep 0 |> Task.andThen (\_ -> say "zero-again")), Task.perform Again (Time.here |> Task.andThen (\_ -> say "here")) ] )
+
+        _ ->
+            ( n + 1, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( 0
+                , Cmd.batch
+                    [ after 0 "zero"
+                    , after 1 "one"
+                    , Task.perform Slept (Time.now |> Task.andThen (\_ -> say "now"))
+                    , after 0.5 "half"
+                    , after -3 "negative"
+                    , after (0 / 0) "nan"
+                    , Task.perform Slept (Time.getZoneName |> Task.andThen (\_ -> say "zone"))
+                    , after 0 "zero-b"
+                    , Task.perform Slept (say "sync")
+                    ]
+                )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

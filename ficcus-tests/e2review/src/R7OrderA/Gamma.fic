@@ -1,0 +1,8 @@
+module R7OrderA.Gamma exposing (sub)
+
+import Time
+
+
+sub : (Int -> msg) -> Sub msg
+sub f =
+    Time.every 1 (\_ -> f 3)

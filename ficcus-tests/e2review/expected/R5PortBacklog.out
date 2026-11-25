@@ -1,0 +1,31 @@
+update: Sync 4
+update: Sync 3
+update: Sync 2
+update: Sync 1
+out: "init"
+out: "from-sync-4"
+update: Tick 1
+out: "from-sync-3"
+out: "from-sync-2"
+out: "from-sync-1"
+out2: 101
+out2: 1
+update: Tick 2
+out2: 102
+out2: 2
+update: Tick 3
+out2: 103
+out2: 3
+update: Tick 4
+out2: 104
+out2: 4
+update: Tick 5
+out2: 105
+out2: 5
+update: Tick 6
+out2: 106
+out2: 6
+update: Tick 7
+out2: 107
+out2: 7
+update: Tick 8

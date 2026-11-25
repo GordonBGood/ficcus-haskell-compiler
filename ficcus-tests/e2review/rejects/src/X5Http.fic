@@ -1,0 +1,15 @@
+module X5Http exposing (main)
+-- E2 review Q4: Http (an effect manager of elm/http) in a worker: a clear compile error (D-fx-8: Http is last).
+
+import Http
+
+
+
+
+main : Program () Int ()
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Http.get { url = "http://localhost:1/", expect = Http.expectString (\_ -> ()) } )
+        , update = \_ n -> ( n, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

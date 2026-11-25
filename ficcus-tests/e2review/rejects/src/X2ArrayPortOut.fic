@@ -1,0 +1,15 @@
+port module X2ArrayPortOut exposing (main)
+-- E2 review Q6: an outgoing port of an Array payload: a clear compile error that names the type (not done in E2).
+
+import Array exposing (Array)
+
+port outArr : Array Int -> Cmd msg
+
+
+main : Program () Int ()
+main =
+    Platform.worker
+        { init = \_ -> ( 0, outArr (Array.fromList [ 1, 2 ]) )
+        , update = \_ n -> ( n, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

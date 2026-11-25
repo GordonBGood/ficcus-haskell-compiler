@@ -1,0 +1,33 @@
+update: GotInt 1
+update: GotInt 1
+update: GotInt 1000
+update: GotInt 0
+update: GotInt 3000000000
+update: GotFloat 2
+update: GotFloat 2.5
+update: GotRec { f = 1, ok = True, name = "n", count = 2 }
+update: GotJson <internals>
+aOut: "2"
+aOut: "1"
+bOut: {"z":null,"name":"r1","pair":[1,0.5],"tags":["té","\"q\""],"score":null}
+plain text
+jsonOut: {"b":1,"a":[0.1,1e+21,0,1.5e-7],"s":"\u0001 😀"}
+aOut: "from 1"
+bOut: {"z":null,"name":"r1","pair":[1,0.5],"tags":["té","\"q\""],"score":null}
+text 1
+aOut: "from 1"
+bOut: {"z":null,"name":"r1","pair":[1,0.5],"tags":["té","\"q\""],"score":null}
+text 1
+aOut: "from 1000"
+bOut: {"z":null,"name":"r1000","pair":[1000,0.5],"tags":["té","\"q\""],"score":1000}
+text 1000
+aOut: "from 0"
+bOut: {"z":null,"name":"r0","pair":[0,0.5],"tags":["té","\"q\""],"score":null}
+text 0
+aOut: "from 3000000000"
+bOut: {"z":null,"name":"r3000000000","pair":[3000000000,0.5],"tags":["té","\"q\""],"score":3000000000}
+text 3000000000
+aOut: "2"
+aOut: "2.5"
+aOut: "n"
+jsonOut: {"z":1,"a":[true,null,"xé\n\u0001"],"n":-0.5,"e":1e+21,"neg0":0}

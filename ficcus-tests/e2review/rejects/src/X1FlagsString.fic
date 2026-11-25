@@ -1,0 +1,13 @@
+module X1FlagsString exposing (main)
+-- E2 review Q6: a worker with flags (String; today init gets a NULL string): Ficcus must stop with a clear compile error (not done in E2).
+
+
+
+
+main : Program String Int ()
+main =
+    Platform.worker
+        { init = \f -> ( String.length (Debug.log "flags" f), Cmd.none )
+        , update = \_ n -> ( n, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

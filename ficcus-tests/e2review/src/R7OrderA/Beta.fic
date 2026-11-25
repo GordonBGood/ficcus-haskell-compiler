@@ -1,0 +1,8 @@
+module R7OrderA.Beta exposing (cmd)
+
+import Task
+
+
+cmd : (Int -> msg) -> Cmd msg
+cmd f =
+    Task.perform f (Task.succeed 2)

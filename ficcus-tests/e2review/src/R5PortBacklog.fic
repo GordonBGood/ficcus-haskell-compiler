@@ -1,0 +1,56 @@
+port module R5PortBacklog exposing (main)
+
+-- E2 review Q1/Q6 (D-fx-6): the outgoing port's manager waits in `sleep 0` between deliveries. In Elm every `fx` message that reaches
+-- it while it waits runs the sleep binding again (`_Scheduler_rawSend` + `_Scheduler_step`), so each update adds a timer whose late
+-- resume lets the manager take its next message early. Here four synchronous updates in init each send a port message while a chain
+-- of sleep 0 ticks runs and sends on a second port: the port lines come earlier relative to the ticks in Elm than with one sleep 0 per message.
+
+import Process
+import Task
+
+
+port out : String -> Cmd msg
+
+
+port out2 : Int -> Cmd msg
+
+
+type Msg
+    = Sync Int
+    | Tick Int
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        Sync k ->
+            ( n + 1, out ("from-sync-" ++ String.fromInt k) )
+
+        Tick k ->
+            ( n + 1
+            , if k < 8 then
+                Cmd.batch [ out2 k, Task.perform Tick (Process.sleep 0 |> Task.map (\_ -> k + 1)), out2 (100 + k) ]
+
+              else
+                Cmd.none
+            )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( 0
+                , Cmd.batch
+                    [ Task.perform Tick (Process.sleep 0 |> Task.map (\_ -> 1))
+                    , out "init"
+                    , Task.perform Sync (Task.succeed 1)
+                    , Task.perform Sync (Task.succeed 2)
+                    , Task.perform Sync (Task.succeed 3)
+                    , Task.perform Sync (Task.succeed 4)
+                    ]
+                )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

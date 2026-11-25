@@ -1,0 +1,13 @@
+module X1Flags exposing (main)
+-- E2 review Q6: a worker with flags (Int): Ficcus must stop with a clear compile error (not done in E2).
+
+
+
+
+main : Program Int Int ()
+main =
+    Platform.worker
+        { init = \f -> ( Debug.log "flags" f, Cmd.none )
+        , update = \_ n -> ( n, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

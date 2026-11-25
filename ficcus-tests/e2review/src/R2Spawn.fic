@@ -1,0 +1,70 @@
+module R2Spawn exposing (main)
+
+-- E2 review Q1: a process that spawns during its own step (the child runs first, up to its first block, then the parent), nested
+-- three deep, with synchronous bindings (Time.now) and sleep 0 between, two such trees in one batch (the Task manager's list is the
+-- batch reversed), and a spawn inside a Task.sequence and a Task.map2.
+
+import Process
+import Task exposing (Task)
+import Time
+
+
+type Msg
+    = Done String
+    | Many (List String)
+
+
+say : String -> Task x String
+say s =
+    Task.succeed s |> Task.map (Debug.log "say")
+
+
+yieldThen : String -> Task x String
+yieldThen s =
+    Time.now |> Task.andThen (\_ -> say s)
+
+
+spawnSay : Task x a -> Task x ()
+spawnSay t =
+    Process.spawn t |> Task.map (\_ -> ())
+
+
+tree : String -> Task x String
+tree p =
+    say (p ++ "1")
+        |> Task.andThen
+            (\_ ->
+                spawnSay
+                    (say (p ++ "-c1")
+                        |> Task.andThen (\_ -> spawnSay (say (p ++ "-g1") |> Task.andThen (\_ -> yieldThen (p ++ "-g2"))))
+                        |> Task.andThen (\_ -> yieldThen (p ++ "-c2"))
+                        |> Task.andThen (\_ -> Process.sleep 0)
+                        |> Task.andThen (\_ -> say (p ++ "-c3"))
+                    )
+            )
+        |> Task.andThen (\_ -> say (p ++ "2"))
+        |> Task.andThen (\_ -> spawnSay (yieldThen (p ++ "-d1")))
+        |> Task.andThen (\_ -> yieldThen (p ++ "3"))
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    ( n + 1, Debug.log "update" msg |> (\_ -> Cmd.none) )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( 0
+                , Cmd.batch
+                    [ Task.perform Done (tree "P")
+                    , Task.perform Done (tree "Q")
+                    , Task.perform Many (Task.sequence [ yieldThen "s1", spawnSay (say "s-child") |> Task.andThen (\_ -> say "s2"), say "s3" ])
+                    , Task.perform Done (Task.map2 (++) (spawnSay (yieldThen "m-child") |> Task.andThen (\_ -> say "m1")) (yieldThen "m2"))
+                    ]
+                )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

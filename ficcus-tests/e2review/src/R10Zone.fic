@@ -1,0 +1,39 @@
+module R10Zone exposing (main)
+
+-- E2 review Q9: Time.here (the offset of the local zone now) and Time.getZoneName, printed through elm/time's functions (the hour and
+-- minute of the epoch in the zone). Compared with node for zones without daylight time (UTC, Asia/Kolkata); the C side is also run
+-- for America/Edmonton and Europe/Berlin in January and July (FIC_TIME), see docs/E2-REVIEW.md.
+
+import Task
+import Time
+
+
+type Msg
+    = Here Time.Zone
+    | Name Time.ZoneName
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case msg of
+        Here z ->
+            let
+                epoch =
+                    Time.millisToPosix 0
+
+                _ =
+                    Debug.log "here (hour, minute of the epoch)" ( Time.toHour z epoch, Time.toMinute z epoch, Time.toDay z epoch )
+            in
+            ( n + 1, Cmd.none )
+
+        Name name ->
+            ( n + 1, Debug.log "zone name" name |> (\_ -> Cmd.none) )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Cmd.batch [ Task.perform Here Time.here, Task.perform Name Time.getZoneName ] )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

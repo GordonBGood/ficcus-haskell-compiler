@@ -1,0 +1,15 @@
+port module X3ArrayPortIn exposing (main)
+-- E2 review Q6: an incoming port of a payload with an Array inside a record: a clear compile error that names the type.
+
+import Array exposing (Array)
+
+port inArr : ({ xs : Array Int } -> msg) -> Sub msg
+
+
+main : Program () Int ()
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Cmd.none )
+        , update = \_ n -> ( n, Cmd.none )
+        , subscriptions = \_ -> inArr (\_ -> ())
+        }

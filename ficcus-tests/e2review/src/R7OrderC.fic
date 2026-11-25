@@ -1,0 +1,40 @@
+port module R7OrderC exposing (main)
+
+-- E2 review Q4: the order of the managers and ports (Elm's dependency walk from main) with helper modules of permuted names. Observable:
+-- which of Task and Random answers first after init's dispatch, and the order of the first 1 ms timers (the port's sleep 0, the Task
+-- manager's Process.sleep 0, Time's interval).
+
+import R7OrderC.Qq
+import R7OrderC.Qqq
+import R7OrderC.Qqqq
+import R7OrderC.Q
+
+
+port p : String -> Cmd msg
+
+
+port incoming : (String -> msg) -> Sub msg
+
+
+type Msg
+    = Got String Int
+    | Port String
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        Got "tim" _ ->
+            ( n + 1, p "tick" )
+
+        _ ->
+            ( n, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Cmd.batch [ R7OrderC.Q.cmd (Got "rnd"), p "p", R7OrderC.Qqqq.cmd (Got "tsk"), R7OrderC.Qqq.cmd (Got "slp") ] )
+        , update = update
+        , subscriptions = \n -> Sub.batch [ incoming Port, if n < 2 then R7OrderC.Qq.sub (Got "tim") else Sub.none ]
+        }

@@ -1,0 +1,38 @@
+port module R12Crash exposing (main)
+
+-- E2 review Q7: a crash (Debug.todo in update) while a timer is pending and an outgoing port message waits for its sleep 0: stdout
+-- up to the crash is the same; the exit status differs by design (Elm under node: an exception, exit 1; Ficcus: abort).
+
+import Process
+import Task
+
+
+port out : String -> Cmd msg
+
+
+type Msg
+    = Boom
+    | Late
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        Boom ->
+            if n == 0 then
+                Debug.todo "boom"
+
+            else
+                ( n, Cmd.none )
+
+        Late ->
+            ( n + 1, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Cmd.batch [ out "queued", Task.perform (\_ -> Late) (Process.sleep 10), Task.perform (\_ -> Boom) (Process.sleep 1) ] )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

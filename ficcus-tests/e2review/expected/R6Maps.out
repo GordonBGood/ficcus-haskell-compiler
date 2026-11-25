@@ -1,0 +1,52 @@
+tagger u: ()
+update: Unit ()
+tagger t: (2,True)
+update: Tup (2,True)
+tagger r: { k = 1, s = "a" }
+update: Rec { k = 1, s = "a" }
+tagger f: 3
+update: Flt 3
+tagger i4: Green
+tagger o2: IC Green
+update: Outer (IC Green)
+tagger i1: 5
+tagger o1: IA 5
+update: Outer (IA 5)
+tagger l: [5,7,1]
+update: Lst [5,7,1]
+tagger i3: 568
+tagger o2: IA 568
+update: Outer (IA 568)
+tagger i2: "x"
+tagger o2: IB "x"
+update: Outer (IB "x")
+tagger again2: IB "x!"
+tagger again: Outer (IB "x!")
+update: Wrap (Outer (IB "x!"))
+tagger sw: Outer (IB "direct hello")
+update: Wrap (Outer (IB "direct hello"))
+tagger si: "hello"
+tagger so: IB "hello"
+update: Outer (IB "hello")
+tagger again2: IB "hello!"
+tagger again: Outer (IB "hello!")
+update: Wrap (Outer (IB "hello!"))
+tagger sw: Outer (IB "direct world")
+update: Wrap (Outer (IB "direct world"))
+tagger si: "world"
+tagger so: IB "world"
+update: Outer (IB "world")
+tagger again2: IB "world!"
+tagger again: Outer (IB "world!")
+update: Wrap (Outer (IB "world!"))
+out: 7
+tagger w3: 1.5
+tagger w2: Flt 1.5
+tagger w1: Wrap (Flt 1.5)
+update: Wrap (Wrap (Flt 1.5))
+tagger time: Tick 17
+update: Wrap (Tick 17)
+tagger time: Tick 117
+update: Wrap (Tick 117)
+tagger time: Tick 217
+update: Wrap (Tick 217)
