@@ -1,0 +1,6 @@
+update: (D,0)
+update: (B,1)
+update: (A,2)
+out: "port1"
+update: (C,3)
+out: "port-from-A"

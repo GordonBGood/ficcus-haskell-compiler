@@ -1,0 +1,6 @@
+input "alpha"
+inRec {"x": 7, "y": "why", "z": [2.5, true], "extra": 1}
+input "beta"
+inRec {"x": -1, "y": null, "z": [3, false]}
+inValue {"a": [1, 2.5, "s", null, true], "b": {}}
+input "gamma"

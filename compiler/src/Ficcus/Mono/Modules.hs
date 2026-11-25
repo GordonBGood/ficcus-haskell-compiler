@@ -40,6 +40,7 @@ data ModuleData =
     , mmEnums :: [(String, Bool)]      -- custom types of the module (`Module.Type`), True when every constructor is nullary
     , mmUnions :: [(String, UnionShape)]   -- the same types with their constructors (for generated equality and comparison)
     , mmManager :: Maybe Manager       -- E1 step 2: the header of an `effect module` (Ficcus.Mono.Effects)
+    , mmPorts :: [(String, Bool)]      -- E2 step 7: the ports of a `port module` (`Module.name`, outgoing?)
     }
 
 
@@ -53,6 +54,9 @@ fromCanonical isProject canonical@(Can.Module home _ _ decls unions _ _ effects)
     , mmEnums = [ (moduleChars home ++ "." ++ N.toChars (T.nameToName tname), isEnum opts) | (tname, Can.Union _ _ _ opts) <- Map.toList unions ]
     , mmUnions = [ (moduleChars home ++ "." ++ N.toChars (T.nameToName tname), shapeOf u) | (tname, u) <- Map.toList unions ]
     , mmManager = managerOf (moduleChars home) effects
+    , mmPorts = case effects of
+                  Can.Ports ps -> [ (moduleChars home ++ "." ++ N.toChars n, case p of { Can.Outgoing {} -> True; Can.Incoming {} -> False }) | (n, p) <- Map.toList ps ]
+                  _ -> []
     }
   where
     isEnum opts = case opts of { Can.Enum -> True; _ -> False }

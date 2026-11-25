@@ -52,7 +52,7 @@ import qualified Elm.String as ES
 import Ficcus.Mono.Class
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel
-import Ficcus.Mono.Effects (Manager(..), effectClassOf, leafKernelId, managerKernelId, mapKernelKind, noStepper)
+import Ficcus.Mono.Effects (Manager(..), effectClassOf, leafKernelId, managerKernelId, mapKernelKind, noStepper, portKernelId)
 import qualified Ficcus.Mono.Sized as Sized
 import Ficcus.Mono.Overlay (overlayId, overlayModuleName, randomOverlayPrefix, vectorMarker, vectorModuleId, vectorTypeName)
 import Ficcus.Mono.Marks (Marks)
@@ -153,6 +153,7 @@ data S =
     , sMapPairs :: Set.Set (Bool, Class, Class)   -- the (Cmd?, a, b) class pairs of the program's `Cmd.map`/`Sub.map`
     , sAppMsg :: Maybe Class                      -- the class of the program's `msg` (set by `specWorker`)
     , sWorkerFields :: Maybe (SEnv, Can.Expr, Can.Expr)   -- (E1 step 3) `update` and `subscriptions` of the worker, cloned by `workerPhase`
+    , sPorts :: Map.Map String Bool               -- (E2 step 7) the ports of the program (`Module.name`, outgoing?)
     }
 
 
@@ -204,7 +205,8 @@ specialize modules marks =
         unions = foldr (Map.adjust (\u -> u { usEnum = False })) unions0 [ Sized.typeId sz | sz <- Sized.allSized, Map.member ("sized:" ++ Sized.typeId sz) (Sized.sizedEnums unions0) ]
         enums = Map.union (Sized.sizedEnums unions0) (builtin (Map.fromList (concatMap mmEnums modules)))
         managers = Map.fromList [ (mgHome mg, mg) | m' <- modules, Just mg <- [mmManager m'] ]
-        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions managers Set.empty Set.empty Nothing Nothing
+        ports = Map.fromList (concatMap mmPorts modules)
+        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions managers Set.empty Set.empty Nothing Nothing ports
         mainId = defIdOf (mmCtx m) (defKeyOf d)
         -- E1 step 2: the effect managers the program reaches are cloned after everything else (their clones get the last ids)
         -- E1 step 3: update and subscriptions likewise (workerPhase), before the managers their bodies can reach
@@ -1411,7 +1413,11 @@ resolve se region e =
           case (Map.lookup home mgrs, Map.member cid tops) of
             (Just _, False) -> leafRef home
             _ -> foreignOrTop cid
-    Can.VarTopLevel h n -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
+    Can.VarTopLevel h n ->
+      do  ports <- gets sPorts
+          case Map.lookup (moduleChars h ++ "." ++ N.toChars n) ports of
+            Just isOut -> portRef isOut (N.toChars n)
+            Nothing -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.VarForeign h n _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.VarOperator _ h n _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.Binop _ h n _ _ _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
@@ -1441,6 +1447,16 @@ resolve se region e =
               return (RKernel (leafKernelId home) (Key [ByClass (boxed c)]) 1)
         _ -> report ("internal: no type for the leaf of the effect manager " ++ home ++ " at " ++ regionText region) >> return RNone
     arrows t = case t of { Can.TLambda _ r -> 1 + arrows r; _ -> 0 :: Int }
+
+    -- E2 step 7: a port is the leaf kernel of its manager, keyed by the payload type (`T -> Cmd msg`, `(T -> msg) -> Sub msg`)
+    portRef isOut name =
+      case nodeType se (Recorder.exprKey region e) >>= peelFun 1 of
+        Just (p : _, _) ->
+          let payload = if isOut then Just p else case strip p of { TFun a _ -> Just a; _ -> Nothing }
+          in case fmap (mtypeOf (seEnv se)) payload of
+               Just (Right m) -> return (RKernel (portKernelId isOut name) (Key [ByType m]) 1)
+               _ -> report ("internal: no payload type for the port " ++ name ++ " at " ++ regionText region) >> return RNone
+        _ -> report ("internal: no type for the port " ++ name ++ " at " ++ regionText region) >> return RNone
 
     -- `type alias P = { x : Int, y : Float }` makes a constructor function `P`: its result type is the alias,
     -- and the arguments are the fields in the order of the declaration (the field type carries the index)

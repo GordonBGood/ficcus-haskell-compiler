@@ -1,0 +1,13 @@
+update: Wrapped (Got "alpha")
+update: Rec { x = 7, y = Just "why", z = (2.5,True) }
+update: Wrapped (Got "beta")
+update: Rec { x = -1, y = Nothing, z = (3,False) }
+update: Value <internals>
+update: Wrapped (Got "gamma")
+init
+0: got alpha
+outRec: {"name":"rec","pair":[7,true],"tags":["7","why"],"unit":null,"score":2.5,"nothing":null}
+2: got beta
+outRec: {"name":"rec","pair":[-1,false],"tags":["-1","none"],"unit":null,"score":3,"nothing":null}
+{"a":[1,2.5,"s",null,true],"b":{}}
+5: got gamma

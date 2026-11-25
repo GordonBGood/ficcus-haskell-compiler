@@ -13,7 +13,7 @@ module Ficcus.Mono.Kernel
 
 
 import Ficcus.Mono.Class (AppClass(..), Key(..), KeyPart(..))
-import Ficcus.Mono.Effects (effectKernels, leafHome)
+import Ficcus.Mono.Effects (effectKernels, leafHome, portOf)
 import qualified Ficcus.Mono.Sized as Sized
 
 
@@ -33,6 +33,7 @@ kernelArity cid =
   case Sized.sizedKernelArity cid of
     Just n -> Just n
     Nothing | Just _ <- leafHome cid -> Just 1          -- E1 step 2: the leaf constructor of an effect manager (Ficcus.Mono.Effects)
+    Nothing | Just _ <- portOf cid -> Just 1            -- E2 step 7: a port (the leaf of its manager)
     Nothing -> kernelArityTable cid
 
 
@@ -174,6 +175,7 @@ kernelSig cid key =
   case (cid, key) of
     _ | Just sg <- Sized.sizedKernelSig cid -> Just sg
     _ | Just _ <- leafHome cid -> Just "o"
+    _ | Just (isOut, _) <- portOf cid -> Just (if isOut then "b" else "o")     -- E2: the value is encoded at once; the tagger is stored
     ("elm/core:Basics.append", Key [ByApp AStr]) -> Just "bb"
     ("elm/core:Basics.append", _) -> Just "bo"           -- xs is copied (its elements are dup'd), ys becomes the tail of the result
     _ -> lookup cid table

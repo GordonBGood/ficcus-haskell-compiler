@@ -13,6 +13,9 @@ module Ficcus.Mono.Effects
   , managerKernelId
   , managerHome
   , mapKernelKind
+  -- E2 step 7: ports
+  , portKernelId
+  , portOf
   )
   where
 
@@ -158,3 +161,28 @@ mapKernelKind n
   | n == "elm/core:Platform.Cmd.map" = Just True
   | n == "elm/core:Platform.Sub.map" = Just False
   | otherwise = Nothing
+
+
+
+-- E2 STEP 7: PORTS (docs/EFFECTS-DESIGN.md 1.7, D-fx-4)
+--
+-- A `port out : T -> Cmd msg` is a manager of the run time named by the port (Elm: `_Platform_outgoingPort("out", encoder)`, which
+-- registers it in `_Platform_effectManagers` beside the Elm managers, in the same order) whose leaf holds the value already encoded to
+-- JSON (the encoder is the C generator's, from the payload type `T` in the key: Elm encodes in onEffects, which is the same value); a
+-- `port inn : (T -> msg) -> Sub msg` is one whose leaf holds the tagger. Both are kernels of arity 1 keyed by the payload type.
+
+portPrefix :: Bool -> String
+portPrefix isOut = if isOut then "ficcus:port-out@" else "ficcus:port-in@"
+
+
+portKernelId :: Bool -> String -> String
+portKernelId isOut name = portPrefix isOut ++ name
+
+
+-- | (outgoing?, the port's name) of a port kernel
+portOf :: String -> Maybe (Bool, String)
+portOf cid =
+  case (List.stripPrefix (portPrefix True) cid, List.stripPrefix (portPrefix False) cid) of
+    (Just n, _) -> Just (True, n)
+    (_, Just n) -> Just (False, n)
+    _ -> Nothing

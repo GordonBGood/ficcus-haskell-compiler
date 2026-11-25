@@ -34,10 +34,10 @@ import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 
 import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, platformRuntime, prelude, schedRuntime, regexRuntime, sizedRuntime, sortRuntime, stringRuntime, vectorRuntime)
-import Ficcus.Mono.Effects (leafHome, managerHome, noStepper)
+import Ficcus.Mono.Effects (leafHome, managerHome, noStepper, portOf)
 import Ficcus.Mono.Program (Shape(..), programShape)
 import Ficcus.Mono.ManagerOrder (Entry)
-import Ficcus.Mono.ManagerTable (MgrEntry(..), MapPairs(..), managerEntries, mapPairs, pairIndex, mgrIndex)
+import Ficcus.Mono.ManagerTable (MgrEntry(..), Slot(..), MapPairs(..), managerSlots, mapPairs, mapCloneAt, pairIndex, mgrIndex)
 import Ficcus.Mono.Overlay (vectorMarker, vectorTypeName)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free (captures, refClass)
@@ -89,7 +89,7 @@ data Info =
     , iUnions :: Map.Map String UnionShape
     , iObjs :: Set.Set [Class]       -- the object layouts and struct types the clones define
     , iStructs :: Set.Set [Class]
-    , iMgrs :: [MgrEntry]            -- E2: the effect managers in Elm's order (Ficcus.Mono.ManagerTable)
+    , iMgrs :: [Slot]                -- E2: the effect managers and ports in Elm's order (Ficcus.Mono.ManagerTable)
     , iPairs :: MapPairs             -- E2: the class pairs of the managers' cmdMap/subMap clones
     }
 
@@ -139,9 +139,9 @@ generateWith order rcMode program =
       let
         clones = mpClones program
         byId0 = Map.fromList [ (mdClone d, d) | d <- clones ]
-        mgrs = managerEntries order byId0 root
+        mgrs = managerSlots order byId0 root
         info = Info byId0 (captures clones) (mpUnions program)
-                    (Set.fromList (allObjects clones)) (Set.fromList (structsOf clones)) mgrs (mapPairs mgrs)
+                    (Set.fromList (allObjects clones)) (Set.fromList (structsOf clones)) mgrs (mapPairs clones)
         g0 = G [] 0 0 [] Nothing [] False "" Map.empty [] [] Set.empty Set.empty Set.empty rcMode Map.empty Set.empty "" [] 0 ""
         final = execState (program' info root clones) g0
       in
@@ -158,14 +158,14 @@ generateWith order rcMode program =
           in Right ((if usesSched then "#define _POSIX_C_SOURCE 200809L      /* E2: the clock and the timers of runtime/fic_sched.h */\n" else "")
                     ++ (if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n"
                     ++ (if any (`List.isInfixOf` body) ["fic_vector_", "FIC_VECTOR_"] then vectorRuntime ++ "\n" else "")
-                    ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_task_", "fic_bag_leaf", "fic_bag_batch", "fic_bag_map", "fic_mgr_def", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_", "fic_vsort"] then closureRuntime ++ "\n" else "")
+                    ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_task_", "fic_bag_leaf", "fic_bag_batch", "fic_bag_map", "fic_mgr_def", "fic_port_", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_", "fic_vsort"] then closureRuntime ++ "\n" else "")
                     ++ (if "fic_vsort" `List.isInfixOf` body then sortRuntime ++ "\n" else "")
                     ++ (if "fic_fd_" `List.isInfixOf` body then fdlibmRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_sz_", "FIC_SZ_"] then sizedRuntime ++ "\n" else "")
-                    ++ (if any (`List.isInfixOf` body) ["fic_ja_", "fic_json_", "fic_jd_"] then jsArrayRuntime ++ "\n" else "")
-                    ++ (if any (`List.isInfixOf` body) ["fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_"] then stringRuntime ++ "\n" else "")
+                    ++ (if any (`List.isInfixOf` body) ["fic_ja_", "fic_json_", "fic_jd_", "fic_port_"] then jsArrayRuntime ++ "\n" else "")
+                    ++ (if any (`List.isInfixOf` body) ["fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_port_", "fic_bytes_", "fic_re_"] then stringRuntime ++ "\n" else "")
                     -- the kernels of elm/json and elm/bytes, after the runtimes they are written with
-                    ++ (if any (`List.isInfixOf` body) ["fic_json_", "fic_jd_"] then jsonRuntime ++ "\n" else "")
+                    ++ (if any (`List.isInfixOf` body) ["fic_json_", "fic_jd_", "fic_port_"] then jsonRuntime ++ "\n" else "")
                     ++ (if "fic_bytes_" `List.isInfixOf` body then bytesRuntime ++ "\n" else "")
                     ++ (if "fic_re_" `List.isInfixOf` body then regexRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_bag_", "fic_app_model"] then platformRuntime ++ "\n" else "")
@@ -193,6 +193,8 @@ program' info root clones =
       closureSection info (closureClones info clones)
       forM_ funs (genFunction info)
       forM_ values (genValue info)
+      -- E2 step 7: the decoders of the incoming ports, which fic_main names (helpers are generated here, before it)
+      forM_ [ t | SPort False _ t <- iMgrs info ] (\t -> helper (HPortDecW t))
       genHelpers info
       emit "static void fic_init(void) {"
       indented (forM_ values (\d -> emit (globalName d ++ " = " ++ valueName d ++ "();")))
@@ -404,6 +406,8 @@ stepperMain info initD ud =
                       emit "fic_app_send_fn = fic_app_send;"
                       emit "fic_platform_setup();                    /* E2: _Platform_setupEffects */"
                       emit "fic_platform_enqueue(fic_res.f1, fic_app_subs());"
+                      -- E2 step 7: the runner sends the incoming port messages of FIC_PORTS_IN after init, before the loop
+                      when (not (null [ () | SPort False _ _ <- iMgrs info ])) (emit "fic_ports_script();")
                 else
                   do  when rcMode (mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths cmdC "fic_res.f1"))
                       emit "/* E2: the commands of init are dispatched */"
@@ -430,24 +434,37 @@ stepperMain info initD ud =
 -- table), onEffects, onSelfMsg and the map functions as closures (static: top level clones capture nothing)
 managerTable :: Info -> CG ()
 managerTable info =
-  forM_ (zip [0 :: Int ..] (iMgrs info)) $ \(i, me) ->
-    do  let n = show i
-            clo d = closureValue info d
-            arr nm ds = if null ds then return "NULL" else
-                          do  vs <- mapM clo ds
-                              emit ("static const fic_ref " ++ nm ++ "[] = { " ++ List.intercalate ", " vs ++ " };")
-                              return nm
-        initV <- genExpr info (MExpr CRef (MGlobal (mdClone (meInit me))))
-        emit ("fic_ref fic_mi" ++ n ++ " = " ++ initV ++ ";")
-        emit ("FIC_RC_DUP(fic_mi" ++ n ++ ");")
-        eff <- clo (meOnEffects me)
-        slf <- clo (meOnSelf me)
-        cm <- arr ("fic_mcm" ++ n) (meCmdMaps me)
-        sm <- arr ("fic_msm" ++ n) (meSubMaps me)
-        let stateRef = case mdParams (meOnEffects me) of { [] -> False; ps -> abiClass (snd (last ps)) == CRef }
-            b x = if x then "1" else "0"
-        emit ("fic_mgr_def(" ++ show (meHome me) ++ ", fic_mi" ++ n ++ ", " ++ eff ++ ", " ++ slf ++ ", " ++ cm ++ ", " ++ sm ++ ", "
-              ++ b (meHasCmd me) ++ ", " ++ b (meHasSub me) ++ ", " ++ b stateRef ++ ");")
+  do  -- E2 step 7: for the Sub.map nodes over an incoming port, whether the inner message of each Sub.map pair is a reference
+      when (not (null [ () | SPort False _ _ <- iMgrs info ])) $
+        do  emit ("static const unsigned char fic_subpair_tab[] = { " ++ List.intercalate ", " ("0" : [ if abiClass a == CRef then "1" else "0" | (a, _) <- mpSub (iPairs info) ]) ++ " };")
+            emit "fic_subpair_ref = fic_subpair_tab;"
+      forM_ (zip [0 :: Int ..] (iMgrs info)) $ \(i, sl) ->
+        case sl of
+          SElm me -> elmManager i me
+          SPort True name _ -> emit ("fic_port_out_def(" ++ show name ++ ");")
+          SPort False name t ->
+            do  dec <- helper (HPortDecW t)
+                emit ("fic_port_in_def(" ++ show name ++ ", " ++ dec ++ ", " ++ (if abiClass (clsOf info t) == CRef then "1" else "0") ++ ");")
+  where
+    elmManager i me =
+      do  let n = show i
+              clo d = closureValue info d
+              arr nm ds pairs =
+                if null ds || null pairs then return "NULL" else
+                  do  vs <- mapM (\pr -> maybe (return "(fic_ref)0") clo (mapCloneAt ds pr)) pairs
+                      emit ("static const fic_ref " ++ nm ++ "[] = { " ++ List.intercalate ", " vs ++ " };")
+                      return nm
+          initV <- genExpr info (MExpr CRef (MGlobal (mdClone (meInit me))))
+          emit ("fic_ref fic_mi" ++ n ++ " = " ++ initV ++ ";")
+          emit ("FIC_RC_DUP(fic_mi" ++ n ++ ");")
+          eff <- clo (meOnEffects me)
+          slf <- clo (meOnSelf me)
+          cm <- arr ("fic_mcm" ++ n) (meCmdMaps me) (mpCmd (iPairs info))
+          sm <- arr ("fic_msm" ++ n) (meSubMaps me) (mpSub (iPairs info))
+          let stateRef = case mdParams (meOnEffects me) of { [] -> False; ps -> abiClass (snd (last ps)) == CRef }
+              b x = if x then "1" else "0"
+          emit ("fic_mgr_def(" ++ show (meHome me) ++ ", fic_mi" ++ n ++ ", " ++ eff ++ ", " ++ slf ++ ", " ++ cm ++ ", " ++ sm ++ ", "
+                ++ b (meHasCmd me) ++ ", " ++ b (meHasSub me) ++ ", " ++ b stateRef ++ ");")
 
 
 -- NAMES AND TYPES
@@ -1826,6 +1843,19 @@ effectCall info name key args =
     ("elm/core:Platform.Sub.batch", [_]) -> call "fic_bag_batch"
     ("elm/core:Platform.Cmd.map", [_, _]) -> Just (mapped True)
     ("elm/core:Platform.Sub.map", [_, _]) -> Just (mapped False)
+    -- E2 step 7: a port's leaf: an outgoing port's value encoded to JSON now (borrowed), an incoming port's tagger (stored)
+    _ | Just (isOut, pname) <- portOf name, [v] <- args, Key [ByType t] <- key ->
+          Just $
+            case mgrIndex (iMgrs info) pname of
+              Nothing -> failWith ("internal: the port " ++ pname ++ " has no entry in the manager table")
+              Just i
+                | isOut ->
+                    do  a <- concat <$> atomsTo info [(v, mRep v)]
+                        enc <- portEncode t a
+                        return ("fic_bag_leaf(" ++ show i ++ "u, fic_w_p(" ++ enc ++ "), 1)")
+                | otherwise ->
+                    do  a <- concat <$> atomsTo info [(v, CRef)]
+                        return ("fic_bag_leaf(" ++ show i ++ "u, fic_w_p(" ++ a ++ "), 1)")
     _ | Just home <- leafHome name, [v] <- args ->
           Just $
             case mgrIndex (iMgrs info) home of
@@ -1848,6 +1878,191 @@ effectCall info name key args =
     mapped isCmd =
       do  vs <- atoms info args
           return ("fic_bag_map(" ++ List.intercalate ", " vs ++ ", " ++ show (pairIndex (iPairs info) isCmd key) ++ "u)")
+
+
+-- E2 STEP 7: THE CONVERTERS OF PORTS (Elm's Optimize.Port.toEncoder / toDecoder, as C helpers by type)
+--
+-- Payload types as Elm allows them: Int, Float, Bool, String, Json.Value, (), Maybe, List, tuples and records of these (Array: not yet).
+-- Encoding is Elm's: Maybe Nothing is null, a tuple an array, a record an object with its fields in alphabetical order (Elm's
+-- `Map.toList`), () null. Decoding is Elm's: Int takes an integral number, Float any number, a tuple an array at least as long, a record
+-- an object that has the fields (others are ignored), Maybe is null or the value.
+
+-- | the JSON of a value of type t (borrowed): an owned Json value (inline for the primitives)
+portEncode :: MType -> String -> CG String
+portEncode t v =
+  case t of
+    TyCon "elm/core:Basics.Int" [] -> return ("fic_json_int(" ++ v ++ ")")
+    TyCon "elm/core:Basics.Float" [] -> return ("fic_json_float(" ++ v ++ ")")
+    TyCon "elm/core:Basics.Bool" [] -> return ("fic_json_bool(" ++ v ++ ")")
+    TyUnit -> return "fic_json_null()"
+    TyCon "elm/core:String.String" [] -> return ("fic_dup(" ++ v ++ ")")              -- a String is a Json string
+    TyCon "elm/json:Json.Encode.Value" [] -> return ("fic_dup(" ++ v ++ ")")
+    _ -> do { h <- helper (HPortEnc t); return (h ++ "(" ++ v ++ ")") }
+
+
+portEncBody :: Info -> MType -> CG ()
+portEncBody info t =
+  case t of
+    TyCon "elm/core:List.List" [e] ->
+      do  let ec = clsOf info e
+              fcs = [boxedClass ec, CRef]
+              next = fl fcs 1 ("((" ++ objType fcs ++ " *)p)")
+          needObj fcs
+          needClass info ec
+          emit "int64_t n = 0, i = 0;"
+          emit "fic_ref p, r;"
+          emit ("for (p = x; " ++ tagOf "p" ++ " != 0u; p = " ++ next ++ ") n++;")
+          emit "r = fic_ja_new(n, FIC_TAG_VEC_REF);"
+          emit ("for (p = x; " ++ tagOf "p" ++ " != 0u; p = " ++ next ++ ") {")
+          indented $
+            do  emit (objType fcs ++ " *c = (" ++ objType fcs ++ " *)p;")
+                ev <- readF fcs 0 "c" ec
+                ev' <- variable ec ev
+                j <- portEncode e ev'
+                emit ("fic_ja_data(r)[i++].p = " ++ j ++ ";")
+          emit "}"
+          emit "return r;"
+    TyCon "elm/core:Maybe.Maybe" [e] | Just (jt, fe) <- justOf info e ->
+      do  let fcs = [boxedClass (clsOf info fe)]
+          needObj fcs
+          emit ("if (" ++ tagOf "x" ++ " == " ++ show jt ++ "u) {")
+          indented $
+            do  emit (objType fcs ++ " *o = (" ++ objType fcs ++ " *)x;")
+                v <- readF fcs 0 "o" (clsOf info fe)
+                v' <- variable (clsOf info fe) v
+                j <- portEncode fe v'
+                emit ("return " ++ j ++ ";")
+          emit "}"
+          emit "return fic_json_null();"
+    TyTuple ts ->
+      do  emit ("fic_ref r = fic_ja_new(" ++ show (length ts) ++ ", FIC_TAG_VEC_REF);")
+          forM_ (zip [0 :: Int ..] ts) $ \(i, ty) ->
+            do  v <- structField info (clsOf info t) ty i "x"
+                v' <- variable (clsOf info ty) v
+                j <- portEncode ty v'
+                emit ("fic_ja_data(r)[" ++ show i ++ "].p = " ++ j ++ ";")
+          emit "return r;"
+    -- the fields in the order of Elm's `Map.toList` over field names (AST.Prim.Name: by length, then by bytes), as Elm's encoder
+    -- builds the object: {"name":..,"pair":..,"tags":..,"score":..}
+    TyRecord fs ->
+      do  let n = show (length fs)
+              elmOrder = List.sortOn (\(_, (name, _)) -> (length name, name)) (zip [0 :: Int ..] fs)
+          emit ("fic_ref k = fic_ja_new(" ++ n ++ ", FIC_TAG_VEC_REF), v = fic_ja_new(" ++ n ++ ", FIC_TAG_VEC_REF);")
+          forM_ (zip [0 :: Int ..] elmOrder) $ \(slot, (i, (name, ty))) ->
+            do  key <- staticLiteral name
+                emit ("FIC_RC_DUP(" ++ key ++ ");")
+                emit ("fic_ja_data(k)[" ++ show slot ++ "].p = " ++ key ++ ";")
+                fv <- structField info (clsOf info t) ty i "x"
+                fv' <- variable (clsOf info ty) fv
+                j <- portEncode ty fv'
+                emit ("fic_ja_data(v)[" ++ show slot ++ "].p = " ++ j ++ ";")
+          emit "return fic_json_obj_new(k, v);"
+    _ ->
+      do  failUnit ("a port of type " ++ mtypeText t ++ " (the C generator converts Int, Float, Bool, String, Json.Value, (), Maybe, List, tuples and records; not Array yet)")
+          emit "return fic_json_null();"
+
+
+-- | Just's tag and field type in Maybe t
+justOf :: Info -> MType -> Maybe (Int, MType)
+justOf info e =
+  case ctorsOf info "elm/core:Maybe.Maybe" [e] of
+    Just ctors | [(tag, f)] <- [ (tg, f) | (_, tg, [f]) <- ctors ] -> Just (tag, f)
+    _ -> Nothing
+
+
+portDecBody :: Info -> MType -> CG ()
+portDecBody info t =
+  case t of
+    TyCon "elm/core:Basics.Int" [] ->
+      do  emit "if (j->tag == FIC_TAG_JINT) { *out = ((fic_jint *)j)->i; return 1; }"
+          emit "if (j->tag == FIC_TAG_JFLOAT) { double d = ((fic_jfloat *)j)->d; if (d == floor(d) && d > -9.2e18 && d < 9.2e18) { *out = (int64_t)d; return 1; } }"
+          emit "return 0;"
+    TyCon "elm/core:Basics.Float" [] ->
+      do  emit "if (j->tag == FIC_TAG_JINT) { *out = (double)((fic_jint *)j)->i; return 1; }"
+          emit "if (j->tag == FIC_TAG_JFLOAT) { *out = ((fic_jfloat *)j)->d; return 1; }"
+          emit "return 0;"
+    TyCon "elm/core:Basics.Bool" [] -> emit "if (j->tag != FIC_TAG_JBOOL) return 0;" >> emit "*out = ((fic_jbool *)j)->b;" >> emit "return 1;"
+    TyCon "elm/core:String.String" [] -> emit "if (j->tag != FIC_TAG_STRING) return 0;" >> emit "FIC_RC_DUP(j);" >> emit "*out = j;" >> emit "return 1;"
+    TyCon "elm/json:Json.Encode.Value" [] -> emit "FIC_RC_DUP(j);" >> emit "*out = j;" >> emit "return 1;"
+    TyUnit -> emit "if (j->tag != FIC_TAG_JNULL) return 0;" >> emit "*out = 0;" >> emit "return 1;"
+    TyCon "elm/core:List.List" [e] ->
+      do  let ec = clsOf info e
+          needClass info ec
+          d <- helper (HPortDec e)
+          emit "int64_t i;"
+          emit "fic_ref acc;"
+          emit "if (j->tag != FIC_TAG_VEC_REF) return 0;"
+          emit "i = fic_json_len(j);"
+          emit "acc = fic_nil();"
+          emit "while (i-- > 0) {"
+          indented $
+            do  emit (classType ec ++ " ev;")
+                emit ("if (!" ++ d ++ "(fic_json_at(j, i), &ev)) { FIC_RC_DROP(acc); return 0; }")
+                ev' <- adaptOwn ec (boxedClass ec) "ev"
+                c <- allocObj [boxedClass ec, CRef] 1 [ev', "acc"]
+                emit ("acc = " ++ c ++ ";")
+          emit "}"
+          emit "*out = acc;"
+          emit "return 1;"
+    TyCon "elm/core:Maybe.Maybe" [e] | Just (jt, fe) <- justOf info e, Just ctors <- ctorsOf info "elm/core:Maybe.Maybe" [e]
+                                     , [nt] <- [ tg | (_, tg, []) <- ctors ] ->
+      do  let fc = clsOf info fe
+          needClass info fc
+          d <- helper (HPortDec fe)
+          emit "if (j->tag == FIC_TAG_JNULL) {"
+          indented $
+            do  nothing <- nullaryOwned nt
+                emit ("*out = " ++ nothing ++ ";")
+                emit "return 1;"
+          emit "}"
+          emit "{"
+          indented $
+            do  emit (classType fc ++ " v;")
+                emit ("if (!" ++ d ++ "(j, &v)) return 0;")
+                vb <- adaptOwn fc (boxedClass fc) "v"
+                o <- allocObj [boxedClass fc] jt [vb]
+                emit ("*out = " ++ o ++ ";")
+                emit "return 1;"
+          emit "}"
+    TyTuple ts ->
+      do  emit ("if (j->tag != FIC_TAG_VEC_REF || fic_json_len(j) < " ++ show (length ts) ++ ") return 0;")
+          vs <- parts [ ("fic_json_at(j, " ++ show i ++ ")", ty, i) | (i, ty) <- zip [0 :: Int ..] ts ]
+          emit ("*out = (" ++ classType (clsOf info t) ++ "){ " ++ List.intercalate ", " vs ++ " };")
+          emit "return 1;"
+    TyRecord fs ->
+      do  emit "fic_ref keys, vals;"
+          emit "if (j->tag != FIC_TAG_JOBJ) return 0;"
+          emit "keys = ((fic_jobj *)j)->keys; vals = ((fic_jobj *)j)->vals;"
+          srcs <- forM (zip [0 :: Int ..] fs) $ \(i, (name, ty)) ->
+            do  key <- staticLiteral name
+                emit ("int64_t k" ++ show i ++ " = fic_json_find_key(keys, " ++ key ++ ");")
+                return ("fic_json_at(vals, k" ++ show i ++ ")", ty, i)
+          emit ("if (" ++ List.intercalate " || " [ "k" ++ show i ++ " < 0" | (_, _, i) <- srcs ] ++ ") return 0;")
+          vs <- parts srcs
+          emit ("*out = (" ++ classType (clsOf info t) ++ "){ " ++ List.intercalate ", " vs ++ " };")
+          emit "return 1;"
+    _ ->
+      do  failUnit ("a port of type " ++ mtypeText t ++ " (the C generator converts Int, Float, Bool, String, Json.Value, (), Maybe, List, tuples and records; not Array yet)")
+          emit "return 0;"
+  where
+    -- the parts of a struct (field i of the struct class: a nested struct is held boxed), decoded in order; a failure releases the
+    -- parts decoded before it
+    parts srcs =
+      do  rcMode <- gets gRc
+          let fieldCls i = case clsOf info t of { CStruct fcs | i < length fcs -> fcs !! i; _ -> CRef }
+              go done [] = return (reverse done)
+              go done ((src, ty, i) : rest) =
+                do  let c = clsOf info ty
+                    needClass info c
+                    d <- helper (HPortDec ty)
+                    v <- fresh "pv"
+                    emit (classType c ++ " " ++ v ++ ";")
+                    let drops = if rcMode then concat [ [ "fic_drop(" ++ p ++ ");" | p <- refPaths dc dv ] | (dv, dc) <- done ] else []
+                    emit ("if (!" ++ d ++ "(" ++ src ++ ", &" ++ v ++ ")) { " ++ concat drops ++ " return 0; }")
+                    v' <- adaptOwn c (fieldCls i) v
+                    fv <- if v' == v then return v else do { w <- fresh "pw"; emit (classType (fieldCls i) ++ " " ++ w ++ " = " ++ v' ++ ";"); return w }
+                    go ((fv, fieldCls i) : done) rest
+          map fst <$> go [] srcs
 
 
 jsonBytesCall :: Info -> Class -> String -> Key -> [MExpr] -> Maybe (CG String)
@@ -2328,6 +2543,9 @@ data HKey
   | HVecToList Class
   | HVecSortCmp Class          -- H21d: `a > b` through a user comparison function (closure) on element addresses
   | HVecCmp MType              -- H21: the comparator on element addresses of a Vector sort (FIC_SORT_CMP)
+  | HPortEnc MType             -- E2 step 7: a value of an outgoing port to JSON (borrowed; an owned Json value)
+  | HPortDec MType             -- E2 step 7: JSON of an incoming port to a value (1, or 0 when the JSON does not fit the type)
+  | HPortDecW MType            -- the same as a closure word (the run time's fic_port_decode)
   deriving (Eq, Ord)
 
 
@@ -2362,6 +2580,9 @@ helper k =
         HVecSortCmp _ -> "fic_vsw_"
         HShow _ -> "fic_show_"
         HShowTree _ -> "fic_showtree_"
+        HPortEnc _ -> "fic_penc_"
+        HPortDec _ -> "fic_pdec_"
+        HPortDecW _ -> "fic_pdecw_"
 
 
 -- the object layout / struct type a helper needs: defined at HELPER_MARK unless a clone defines it already
@@ -2461,6 +2682,18 @@ genHelper info k name =
     HApp c -> withProto ("static fic_ref " ++ name ++ "(fic_ref xs, fic_ref ys)") (appBody c)
     HShow t -> withProto ("static void " ++ name ++ "(fic_sb *b, " ++ classType (clsOf info t) ++ " x)") (needClass info (clsOf info t) >> emit "(void)x;" >> showBody t)
     HShowTree e -> withProto ("static void " ++ name ++ "(fic_sb *b, fic_ref x, int *first)") (showTreeBody e)
+    HPortEnc t -> withProto ("static fic_ref " ++ name ++ "(" ++ classType (clsOf info t) ++ " x)") (needClass info (clsOf info t) >> emit "(void)x;" >> portEncBody info t)
+    HPortDec t -> withProto ("static int " ++ name ++ "(fic_ref j, " ++ classType (clsOf info t) ++ " *out)") (needClass info (clsOf info t) >> portDecBody info t)
+    HPortDecW t ->
+      withProto ("static int " ++ name ++ "(fic_ref j, fic_word *out)") $
+        do  let c = clsOf info t
+            needClass info c
+            d <- helper (HPortDec t)
+            emit (classType c ++ " v;")
+            emit ("if (!" ++ d ++ "(j, &v)) return 0;")
+            w <- adaptOwn c (abiClass c) "v"
+            emit ("*out = " ++ wordMk c w ++ ";")
+            emit "return 1;"
     HFromList c -> withProto ("static fic_ref " ++ name ++ "(int64_t max, fic_ref xs, fic_ref *rest)") (fromListBody c)
     HVecFromList c -> withProto ("static fic_ref " ++ name ++ "(fic_ref xs)") (vecFromListBody c)
     HVecToList c -> withProto ("static fic_ref " ++ name ++ "(fic_ref v)") (vecToListBody c)

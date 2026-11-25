@@ -1,0 +1,56 @@
+port module E2PortsIn exposing (main)
+
+-- Effects E2 step 7: incoming ports from a script (FIC_PORTS_IN = effects2/ports/E2PortsIn.in; workertests T12's inputs), sent after init;
+-- each message updates at once. A Sub.map over a port composes the taggers. Payloads of the types Elm allows: a record with a list, a
+-- Maybe and a tuple, both ways; the outgoing JSON is Elm's (fields in alphabetical order, Nothing as null, a tuple as an array).
+
+import Json.Encode as E
+
+
+port input : (String -> msg) -> Sub msg
+
+
+port inRec : ({ x : Int, y : Maybe String, z : ( Float, Bool ) } -> msg) -> Sub msg
+
+
+port inValue : (E.Value -> msg) -> Sub msg
+
+
+port output : String -> Cmd msg
+
+
+port outRec : { name : String, tags : List String, score : Maybe Float, pair : ( Int, Bool ), nothing : Maybe Int, unit : () } -> Cmd msg
+
+
+type Inner
+    = Got String
+
+
+type Msg
+    = Wrapped Inner
+    | Rec { x : Int, y : Maybe String, z : ( Float, Bool ) }
+    | Value E.Value
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        Wrapped (Got s) ->
+            ( n + 1, output (String.fromInt n ++ ": got " ++ s) )
+
+        Rec r ->
+            ( n + 1
+            , outRec { name = "rec", tags = [ String.fromInt r.x, Maybe.withDefault "none" r.y ], score = Just (Tuple.first r.z), pair = ( r.x, Tuple.second r.z ), nothing = Nothing, unit = () }
+            )
+
+        Value v ->
+            ( n + 1, output (E.encode 0 v) )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, output "init" )
+        , update = update
+        , subscriptions = \_ -> Sub.batch [ Sub.map Wrapped (input Got), inRec Rec, inValue Value ]
+        }

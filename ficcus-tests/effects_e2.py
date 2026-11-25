@@ -31,7 +31,14 @@ TESTS = {
     "G17s": (T, ">0", None, "G17 (b): Task.perform (Done m) (Process.sleep 0) captures the model: copies"),
     "E2Random": (T, None, None, "step 6: Random.generate (Elm's manager) seeded from Time.now, values = Elm's with the clock fixed"),
     "E2Seed": ({"FIC_SEED": "7", "__ref": {"FIC_TIME": "7"}}, None, None, "step 6: FIC_SEED=7 gives Elm's values for Date.now = 7"),
+    "E2Ports": (T, None, None, "step 7: design 1.8: outgoing ports asynchronous, interleaved with synchronous and sleeping tasks"),
+    "E2PortsIn": (dict(T, FIC_PORTS_IN="{HERE}/effects2/ports/E2PortsIn.in"), None, None,
+                  "step 7: incoming ports from a script, Sub.map over a port, records, lists, Maybe, tuples, Json.Value both ways"),
 }
+
+
+def envOf(env):
+    return {k: v.replace("{HERE}", HERE) for k, v in env.items() if not k.startswith("__")}
 
 
 def run(cmd, **kw):
@@ -50,11 +57,11 @@ def goldens(a, names):
         p = run([os.path.abspath(a.ref), "make", "src/%s.elm" % n, "--output=" + js], cwd=proj, env=dict(os.environ, ELM_HOME=a.elm_home))
         if p.returncode != 0:
             print("FAIL %s: the reference compiler: %s" % (n, (p.stdout + p.stderr).decode()[-400:])); bad += 1; continue
-        r = run(["node", os.path.join(HERE, "effects2", "ref", "run.js"), js, n], env=dict(os.environ, **env.get("__ref", env)), timeout=600)
+        r = run(["node", os.path.join(HERE, "effects2", "ref", "run.js"), js, n], env=dict(os.environ, **envOf(env.get("__ref", env))), timeout=600)
         out = r.stdout.decode()
         open(os.path.join(HERE, "expected", "e2_%s.out" % n.lower()), "w").write(out)
         # E1 open point (b): the order in which Elm registers the managers and ports (_Platform_effectManagers)
-        order = re.findall(r"_Platform_effectManagers\['(\w+)'\] = |_Platform_(?:outgoing|incoming)Port\('(\w+)'", open(js).read())
+        order = re.findall(r"_Platform_effectManagers\['(\w+)'\] = |_Platform_(?:outgoing|incoming)Port\(\s*'(\w+)'", open(js).read())
         names = [a or b for a, b in order]
         of = os.path.join(HERE, "expected", "e2_%s.order" % n.lower())
         if names: open(of, "w").write(" ".join(names) + "\n")
@@ -94,7 +101,7 @@ def check(a, names):
                 b = run(["gcc", "-std=c99", "-ffp-contract=off", "-w", *cf, "-DFIC_STATS", "-I", RT, c, "-o", exe, "-lm"])
                 if b.returncode != 0:
                     report(False, "%s %s %s builds" % (n, flag, tag), b.stderr.decode()[-300:]); continue
-                r = run([exe], env=dict(os.environ, **{k: v for k, v in env.items() if not k.startswith("__")}), timeout=600)
+                r = run([exe], env=dict(os.environ, **envOf(env)), timeout=600)
                 out, err = r.stdout.decode(), r.stderr.decode()
                 got = filt(out) if filt else out
                 m = re.search(r"FIC_STATS model: steps (\d+) inplace (\d+) copied (\d+) vec_copy (\d+) reuse_miss (\d+) model_copies (\d+)", err)

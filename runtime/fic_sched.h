@@ -312,6 +312,7 @@ typedef struct fic_mgr {
   fic_ref cmds, subs;                           /* the lists being gathered by a dispatch */
   void (*port_out)(fic_word value);             /* an outgoing port: prints the value (step 7) */
   fic_ref port_subs;                            /* an incoming port: the current subscriptions (step 7) */
+  int port_ref;                                 /* an incoming port: its payload is a reference */
 } fic_mgr;
 
 #ifndef FIC_MAX_MGR
@@ -395,7 +396,7 @@ static FIC_UNUSED void fic_platform_setup(void) {
 /* ---- dispatch (Platform.js: enqueueEffects, dispatchEffects, gatherEffects, toEffect, insert) ---- */
 
 typedef struct fic_taggers { fic_ref f; uint32_t pair; const struct fic_taggers *rest; } fic_taggers;
-static fic_word fic_port_in_compose(fic_ref outer, fic_ref inner);  /* step 7 */
+static fic_word fic_port_in_compose(fic_ref outer, fic_ref inner, uint32_t pair, int payload_ref);  /* step 7 */
 
 static void fic_gather(int is_cmd, fic_ref bag, const fic_taggers *tg) {
   switch (bag->tag) {
@@ -408,7 +409,7 @@ static void fic_gather(int is_cmd, fic_ref bag, const fic_taggers *tg) {
     for (t = tg; t != NULL; t = t->rest) {                         /* the innermost tagger first */
       FIC_RC_DUP(t->f);
       if (g->kind == FIC_MGR_ELM) v = fic_ap2(is_cmd ? g->cmd_maps[t->pair] : g->sub_maps[t->pair], 3u, fic_w_p(t->f), v);
-      else if (g->kind == FIC_MGR_PORT_IN) v = fic_port_in_compose(t->f, v.p);
+      else if (g->kind == FIC_MGR_PORT_IN) v = fic_port_in_compose(t->f, v.p, t->pair, g->port_ref);
       else FIC_RC_DROP(t->f);                                      /* an outgoing port's cmdMap ignores the tagger */
     }
     if (is_cmd) g->cmds = fic_sched_cons(v.p, g->cmds); else g->subs = fic_sched_cons(v.p, g->subs);
@@ -675,7 +676,160 @@ static FIC_UNUSED void fic_sched_run(void) {
   fflush(stdout);
 }
 
-static fic_word fic_port_in_compose(fic_ref outer, fic_ref inner) { (void)outer; (void)inner; abort(); }
+/* ---- ports (step 7; docs/EFFECTS-DESIGN.md 1.7, D-fx-4) ----
+ *
+ * A port is a manager of the run time, in the table in Elm's order (`_Platform_effectManagers`).
+ * Outgoing (`port out : T -> Cmd msg`): Elm's manager exactly: init is `Process.sleep 0`, onEffects delivers every value of the list (in
+ * list order: the reverse of the batch) to the subscribers and returns init again, so delivery is asynchronous (after the current turn).
+ * The C program has one subscriber, the runner: it prints `<port>: <JSON>` on stdout (the JSON of JSON.stringify; the same stream as
+ * Debug.log), except a String on a port named `output`, which is printed as its text (workertests' harness: runner.js prints the
+ * strings of `output`). The leaf already holds the JSON (the generated encoder ran when the command was made: the value is the same).
+ * Incoming (`port inn : (T -> msg) -> Sub msg`): onEffects keeps the subscription list; `fic_port_send` decodes the JSON with the generated
+ * decoder (a value that does not fit is Elm's crash 4: the message and exit 1) and calls sendToApp with each tagger's message, at once.
+ * The runner sends the lines of the file in FIC_PORTS_IN (`<port> <JSON>`) after init, before the loop starts, as workertests' runner
+ * sends its inputs after `init` returns. A Sub.map over an incoming port composes the taggers (Elm's incomingPortMap). */
+
+static const unsigned char *fic_subpair_ref;     /* (generated) per Sub.map pair: is the inner message a reference */
+
+typedef struct { fic_hdr h; const fic_code *code; fic_ref outer; fic_ref inner; uint32_t aref, pref; } fic_port_compose_clo;
+static fic_word fic_port_compose_entry(fic_ref self, fic_word x) {
+  fic_port_compose_clo *c = (fic_port_compose_clo *)self;
+  fic_word m = fic_ap1(c->inner, c->pref, x);
+  return fic_ap1(c->outer, c->aref, m);
+}
+static const fic_code fic_port_compose_code = { (void (*)(void))fic_port_compose_entry, 1u FIC_CODE_OWN0 };
+/* a tagger of an incoming port under a Sub.map of the given pair (both consumed) */
+static fic_word fic_port_in_compose(fic_ref outer, fic_ref inner, uint32_t pair, int payload_ref) {
+  fic_port_compose_clo *c = (fic_port_compose_clo *)fic_alloc(sizeof(fic_port_compose_clo), FIC_TAG_CLOSURE, 2);
+  c->code = &fic_port_compose_code; c->outer = outer; c->inner = inner;
+  c->aref = fic_subpair_ref != NULL && fic_subpair_ref[pair + 1] ? 1u : 0u; c->pref = payload_ref ? 1u : 0u;
+  return fic_w_p(&c->h);
+}
+
+/* the onSelfMsg of a port: never called (a port has no self messages) */
+static fic_word fic_port_self_entry(fic_ref self, fic_word router, fic_word msg, fic_word state) {
+  (void)self; (void)msg; (void)state; FIC_RC_DROP(router.p);
+  return fic_w_p(fic_task_succeed(FIC_W_UNIT, 0));
+}
+static const fic_code fic_port_self_code = { (void (*)(void))fic_port_self_entry, 3u FIC_CODE_OWN0 };
+static fic_clo fic_port_self_clo = { { FIC_IMMORTAL, FIC_TAG_CLOSURE, 0, 0 }, &fic_port_self_code };
+
+static fic_mgr *fic_port_def(const char *name, int kind) {
+  fic_mgr *m;
+  if (fic_nmgr == FIC_MAX_MGR) { fprintf(stderr, "too many effect managers\n"); abort(); }
+  m = &fic_mgrs[fic_nmgr++];
+  memset(m, 0, sizeof *m);
+  m->name = name; m->kind = kind; m->on_self = &fic_port_self_clo.h;
+  m->router = FIC_NONE; m->cmds = FIC_NONE; m->subs = FIC_NONE; m->port_subs = fic_none();
+  return m;
+}
+
+#ifdef FIC_TAG_JNULL
+/* outgoing: onEffects router cmds state = deliver each value, then init (sleep 0) again */
+static fic_word fic_port_out_effects(fic_ref self, fic_word router, fic_word cmds, fic_word state) {
+  fic_mgr *g = &fic_mgrs[((fic_router *)router.p)->mgr];
+  fic_ref l;
+  (void)self; (void)state;
+  for (l = cmds.p; l->tag == 1u; l = ((fic_sched_cell *)l)->tail) {
+    fic_ref v = ((fic_sched_cell *)l)->head;
+    if (v->tag == FIC_TAG_STRING && strcmp(g->name, "output") == 0) {          /* workertests' runner: the text of `output` */
+      fwrite(FIC_STR(v)->data, 1, (size_t)FIC_STR(v)->len, stdout); fputc('\n', stdout);
+    } else {
+      fic_ref text = fic_json_encode(0, v);
+      fputs(g->name, stdout); fputs(": ", stdout);
+      fwrite(FIC_STR(text)->data, 1, (size_t)FIC_STR(text)->len, stdout); fputc('\n', stdout);
+      FIC_RC_DROP(text);
+    }
+  }
+  FIC_RC_DROP(router.p); FIC_RC_DROP(cmds.p);
+  FIC_RC_DUP(g->init);
+  return fic_w_p(g->init);
+}
+static const fic_code fic_port_out_code = { (void (*)(void))fic_port_out_effects, 3u FIC_CODE_OWN0 };
+static fic_clo fic_port_out_clo = { { FIC_IMMORTAL, FIC_TAG_CLOSURE, 0, 0 }, &fic_port_out_code };
+
+static FIC_UNUSED void fic_port_out_def(const char *name) {
+  fic_mgr *m = fic_port_def(name, FIC_MGR_PORT_OUT);
+  m->init = fic_task_sleep(0); m->on_effects = &fic_port_out_clo.h; m->has_cmd = 1; m->has_sub = 0; m->state_ref = 0;
+}
+
+/* incoming: onEffects router subs state = keep the subscriptions */
+static fic_word fic_port_in_effects(fic_ref self, fic_word router, fic_word subs, fic_word state) {
+  fic_mgr *g = &fic_mgrs[((fic_router *)router.p)->mgr];
+  fic_ref old = g->port_subs;
+  (void)self; (void)state;
+  g->port_subs = subs.p;
+  FIC_RC_DROP(old); FIC_RC_DROP(router.p);
+  return fic_w_p(fic_task_succeed(FIC_W_UNIT, 0));
+}
+static const fic_code fic_port_in_code = { (void (*)(void))fic_port_in_effects, 3u FIC_CODE_OWN0 };
+static fic_clo fic_port_in_clo = { { FIC_IMMORTAL, FIC_TAG_CLOSURE, 0, 0 }, &fic_port_in_code };
+
+typedef int (*fic_port_decode)(fic_ref json, fic_word *out);
+static fic_port_decode fic_port_decoders[FIC_MAX_MGR];
+
+static FIC_UNUSED void fic_port_in_def(const char *name, fic_port_decode dec, int payload_ref) {
+  fic_mgr *m = fic_port_def(name, FIC_MGR_PORT_IN);
+  m->init = fic_task_succeed(FIC_W_UNIT, 0); m->on_effects = &fic_port_in_clo.h; m->has_cmd = 0; m->has_sub = 1; m->state_ref = 0;
+  m->port_ref = payload_ref;
+  fic_port_decoders[fic_nmgr - 1] = dec;
+}
+
+/* app.ports.<name>.send(value): json borrowed */
+static void fic_port_send(const char *name, fic_ref json) {
+  int i;
+  for (i = 0; i < fic_nmgr; i++) {
+    fic_mgr *g = &fic_mgrs[i];
+    if (g->kind == FIC_MGR_PORT_IN && strcmp(g->name, name) == 0) {
+      fic_word v;
+      fic_ref subs, l;
+      if (!fic_port_decoders[i](json, &v)) {
+        fflush(stdout);
+        fprintf(stderr, "Trying to send an unexpected type of value through port `%s`\n", name);
+        exit(1);
+      }
+      subs = g->port_subs;
+      FIC_RC_DUP(subs);                                    /* the list of this moment, as Elm's loop over `subs` */
+      for (l = subs; l->tag == 1u; l = ((fic_sched_cell *)l)->tail) {
+        if (g->port_ref) FIC_RC_DUP(v.p);
+        fic_app_send_fn(fic_ap1(((fic_sched_cell *)l)->head, g->port_ref ? 1u : 0u, v));
+      }
+      FIC_RC_DROP(subs);
+      if (g->port_ref) FIC_RC_DROP(v.p);
+      return;
+    }
+  }
+  fflush(stdout);
+  fprintf(stderr, "there is no incoming port `%s`\n", name);
+  exit(1);
+}
+
+/* the runner's script: FIC_PORTS_IN names a file of lines `<port> <JSON>` */
+static FIC_UNUSED void fic_ports_script(void) {
+  const char *path = getenv("FIC_PORTS_IN");
+  FILE *f;
+  char line[65536];
+  if (path == NULL || *path == 0) return;
+  f = fopen(path, "r");
+  if (f == NULL) { fprintf(stderr, "FIC_PORTS_IN: cannot open %s\n", path); exit(1); }
+  while (fgets(line, sizeof line, f) != NULL) {
+    char *sp = strchr(line, ' ');
+    size_t n = strlen(line);
+    fic_ref text, json;
+    while (n > 0 && (line[n - 1] == '\n' || line[n - 1] == '\r')) line[--n] = 0;
+    if (n == 0) continue;
+    if (sp == NULL) { fprintf(stderr, "FIC_PORTS_IN: no JSON on the line: %s\n", line); exit(1); }
+    *sp = 0;
+    text = fic_str_new(sp + 1, (int64_t)strlen(sp + 1));
+    json = fic_json_parse(text);
+    FIC_RC_DROP(text);
+    if (json == NULL) { fprintf(stderr, "FIC_PORTS_IN: not JSON: %s\n", sp + 1); exit(1); }
+    fic_port_send(line, json);
+    FIC_RC_DROP(json);
+  }
+  fclose(f);
+}
+#endif
 
 /* ---- the end of the program (step 8): the effect state is released, so a counted program ends with nothing live ---- */
 

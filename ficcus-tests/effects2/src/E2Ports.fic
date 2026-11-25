@@ -1,0 +1,51 @@
+port module E2Ports exposing (main)
+
+-- Effects E2 step 7: the order test of docs/EFFECTS-DESIGN.md 1.8. Synchronous Task.performs update inside init's dispatch (D, B, A:
+-- the batch reversed); outgoing port messages are delivered later, after a `sleep 0` of the port's manager, also those made in init;
+-- a sleeping Task.perform (C) comes after the port's first delivery, and the port message made by A's update after C.
+
+import Process
+import Task
+
+
+port out : String -> Cmd msg
+
+
+type Msg
+    = A
+    | B
+    | C
+    | D
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    let
+        _ =
+            Debug.log "update" ( msg, n )
+    in
+    case msg of
+        A ->
+            ( n + 1, out "port-from-A" )
+
+        _ ->
+            ( n + 1, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( 0
+                , Cmd.batch
+                    [ Task.perform (\_ -> A) (Task.succeed ())
+                    , Task.perform (\_ -> B) (Task.succeed ())
+                    , out "port1"
+                    , Task.perform (\_ -> C) (Process.sleep 0)
+                    , Task.perform (\_ -> D) (Task.succeed ())
+                    ]
+                )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }
