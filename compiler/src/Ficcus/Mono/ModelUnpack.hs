@@ -23,6 +23,10 @@ module Ficcus.Mono.ModelUnpack
 -- Field reads are pure, so the result is the same. A use of the whole `m` (returned unchanged, captured by a lambda) is kept: it holds
 -- the leaves as before, and only on that path. Not done: helpers that `update` passes the model to (the same Rc limitation; the
 -- general fix is a per-leaf move in the Rc pass). FICCUS_NO_MODEL_UNPACK=1 switches it off (G17b shows the copies).
+--
+-- The record update `{ m | a = e }` is lowered by Spec to `let _upK = m in { a = e, d = _upK.d }`: `_upK` would hold a count on every
+-- leaf while `e` runs (docs/E1-REVIEW.md Q1, R1Partial: 2 copies per step). Where `_upK` is only read field by field, it is `m` itself:
+-- its reads become reads of `m` and the `let` goes (dealias), before the fields are bound.
 
 
 import qualified Data.List as List
@@ -54,12 +58,38 @@ unpackDef :: MDef -> MDef
 unpackDef d =
   case (mdParams d, mdBody d) of
     ([_, (m, mc@(CStruct _))], Just body) | refClass mc ->
-      let fields = List.nubBy (\(_, i, _) (_, j, _) -> i == j) (List.sortOn (\(_, i, _) -> i) (reads' m body))
+      let fields = List.nubBy (\(_, i, _) (_, j, _) -> i == j) (List.sortOn (\(_, i, _) -> i) (reads' m body0))
           var i = "_mf" ++ show i ++ "_" ++ m
-          body' = substAccess m var body
+          body0 = dealias m body
+          body' = substAccess m (\a -> MExpr (mRep a) (MLocal (var (accessPos a)))) body0
           wrap (f, i, c) acc = MExpr (mRep acc) (MLetVal (var i) (MExpr c (MAccess (MExpr mc (MLocal m)) f i)) acc)
       in if null fields then d else d { mdBody = Just (foldr wrap body' fields) }
     _ -> d
+  where
+    accessPos a = case mNode a of { MAccess _ _ i -> i; _ -> -1 }
+
+
+-- `let _upK = m in b` (a record update of m), where b reads _upK only field by field and does not rebind m: b with _upK.f := m.f
+dealias :: String -> MExpr -> MExpr
+dealias m e =
+  case mNode e of
+    MLetVal t v@(MExpr _ (MLocal n)) b
+      | n == m, "_up" `List.isPrefixOf` t, t /= m, not (bareUse t b), not (rebinds m b) ->
+          dealias m (substAccess t (\a -> case mNode a of { MAccess _ f i -> MExpr (mRep a) (MAccess v f i); _ -> a }) b)
+    _ -> descend m (dealias m) e
+
+
+-- t used other than as the record of a field read
+bareUse :: String -> MExpr -> Bool
+bareUse t e =
+  case mNode e of
+    MAccess (MExpr _ (MLocal n)) _ _ | n == t -> False
+    MLocal n -> n == t
+    _ -> any (bareUse t) (children e)
+
+
+rebinds :: String -> MExpr -> Bool
+rebinds m e = shadows m e || any (rebinds m) (children e)
 
 
 -- the fields read directly from `m` (name, position, class), outside binders that shadow it
@@ -71,14 +101,17 @@ reads' m e =
       | otherwise -> concatMap (reads' m) (children e)
 
 
-substAccess :: String -> (Int -> String) -> MExpr -> MExpr
-substAccess m var e =
+-- every read of a field of m (outside binders that shadow it) replaced by `new` of the read
+substAccess :: String -> (MExpr -> MExpr) -> MExpr -> MExpr
+substAccess m new e =
   case mNode e of
-    MAccess (MExpr _ (MLocal n)) _ i | n == m -> MExpr (mRep e) (MLocal (var i))
-    _ -> rebuild e
-  where
-    go = substAccess m var
-    rebuild x@(MExpr c node) =
+    MAccess (MExpr _ (MLocal n)) _ _ | n == m -> new e
+    _ -> descend m (substAccess m new) e
+
+
+-- go on the children of an expression where m is still the parameter (a binder of m keeps its scope unchanged)
+descend :: String -> (MExpr -> MExpr) -> MExpr -> MExpr
+descend m go x@(MExpr c node) =
       case node of
         MCall f args -> MExpr c (MCall (go f) (map go args))
         MLam ps b | m `elem` map fst ps -> x
