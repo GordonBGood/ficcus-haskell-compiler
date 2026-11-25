@@ -193,6 +193,7 @@ executable elm
         Ficcus.Mono.Modules
         Ficcus.Mono.Sized
         Ficcus.Mono.Kernel
+        Ficcus.Mono.Effects
         Ficcus.Mono.Spec
         Ficcus.Mono.Embed
         Ficcus.Mono.Overlay

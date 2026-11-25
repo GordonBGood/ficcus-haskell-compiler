@@ -32,7 +32,8 @@ import qualified Data.Set as Set
 import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 
-import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, prelude, regexRuntime, sizedRuntime, sortRuntime, stringRuntime, vectorRuntime)
+import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, platformRuntime, prelude, regexRuntime, sizedRuntime, sortRuntime, stringRuntime, vectorRuntime)
+import Ficcus.Mono.Effects (noStepper)
 import Ficcus.Mono.Overlay (vectorMarker, vectorTypeName)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free (captures, refClass)
@@ -152,6 +153,7 @@ generate rcMode program =
                     ++ (if any (`List.isInfixOf` body) ["fic_json_", "fic_jd_"] then jsonRuntime ++ "\n" else "")
                     ++ (if "fic_bytes_" `List.isInfixOf` body then bytesRuntime ++ "\n" else "")
                     ++ (if "fic_re_" `List.isInfixOf` body then regexRuntime ++ "\n" else "")
+                    ++ (if "fic_bag_" `List.isInfixOf` body then platformRuntime ++ "\n" else "")
                     ++ "\n" ++ body)
         errs -> Left errs
 
@@ -1618,8 +1620,9 @@ kernelValue info name key =
     "elm/core:Elm.JsArray.empty" | Key [ByClass c] <- key -> return ("fic_ja_empty(" ++ vecTag c ++ ")")
     "elm/core:Basics.e" -> return "2.718281828459045"
     "elm/core:Basics.pi" -> return "3.141592653589793"
-    "elm/core:Platform.Cmd.none" -> return "0"
-    "elm/core:Platform.Sub.none" -> return "0"
+    -- E1: the static empty bag (runtime/fic_platform.h); 0 of the unit class with FICCUS_NO_STEPPER=1 (before E1)
+    "elm/core:Platform.Cmd.none" -> bagNone
+    "elm/core:Platform.Sub.none" -> bagNone
     -- elm/json: the primitive decoders are static objects (an owned reference to one), `null` is a static value
     "elm/json:Json.Decode.string" -> return "fic_jd_prim(FIC_JD_STRING)"
     "elm/json:Json.Decode.bool" -> return "fic_jd_prim(FIC_JD_BOOL)"
@@ -1629,6 +1632,10 @@ kernelValue info name key =
     "author/project:FicOverlayJson.objectKeys" -> return "fic_jd_prim(FIC_JD_KEYS)"
     "elm/json:Json.Encode.null" -> return "fic_json_null()"
     _ -> failWith ("kernel value `" ++ name ++ "` is not supported by the C generator yet")
+  where
+    -- inline, like fic_jd_prim (not bound: a temporary would renumber every later one): a caller that mentions an atom twice only
+    -- adds counts to an immortal object
+    bagNone = return (if noStepper then "0" else "fic_bag_none_ref()")
 
 
 -- THE KERNELS OF elm/json AND elm/bytes (runtime/fic_json.h, runtime/fic_bytes.h; STAGE4-PLAN section 8)

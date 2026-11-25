@@ -52,6 +52,7 @@ import qualified Elm.String as ES
 import Ficcus.Mono.Class
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel
+import Ficcus.Mono.Effects (effectClassOf)
 import qualified Ficcus.Mono.Sized as Sized
 import Ficcus.Mono.Overlay (overlayId, overlayModuleName, randomOverlayPrefix, vectorMarker, vectorModuleId, vectorTypeName)
 import Ficcus.Mono.Marks (Marks)
@@ -775,6 +776,7 @@ classOfName :: Map.Map String Bool -> String -> Int -> Class
 classOfName enums name _ =
   case name of
     _ | Map.member ("sized:" ++ name) enums, Just s <- Sized.sizedOfTypeId name -> Sized.classOfSized s
+    _ | Just c <- effectClassOf name -> c           -- E1: the platform kernel types (Ficcus.Mono.Effects)
     "elm/core:Basics.Int" -> CI64
     "elm/core:Basics.Float" -> CF64
     "elm/core:Char.Char" -> CU32
@@ -787,9 +789,6 @@ classOfName enums name _ =
     "elm/bytes:Bytes.Bytes" -> CRef
     "elm/regex:Regex.Regex" -> CRef            -- declared with one constructor without fields: the compiled program (runtime/fic_regex.h)
     "author/project:FicOverlayRegex.Caps" -> CRef
-    "elm/core:Platform.Cmd.Cmd" -> CUnit       -- commands are ignored by Platform.worker (STAGE3-PLAN R9)
-    "elm/core:Platform.Sub.Sub" -> CUnit
-    "elm/core:Platform.Program" -> CUnit
     _ -> case Map.lookup name enums of { Just True -> CEnum; _ -> CRef }
 
 

@@ -12,6 +12,7 @@ module Ficcus.Mono.CRuntime
   , vectorRuntime
   , sizedRuntime
   , sortRuntime
+  , platformRuntime
   )
   where
 
@@ -98,3 +99,9 @@ sizedRuntime =
 sortRuntime :: String
 sortRuntime =
   $(embedFiles [ "runtime/fic_sort.h" ])
+
+
+-- E1 (docs/EFFECTS-CHECK.md): the platform objects (the static empty bag of `Cmd.none`/`Sub.none`); emitted only by programs that use them
+platformRuntime :: String
+platformRuntime =
+  $(embedFiles [ "runtime/fic_platform.h" ])

@@ -13,6 +13,7 @@ module Ficcus.Mono.Kernel
 
 
 import Ficcus.Mono.Class (AppClass(..), Key(..), KeyPart(..))
+import Ficcus.Mono.Effects (effectKernels)
 import qualified Ficcus.Mono.Sized as Sized
 
 
@@ -79,6 +80,7 @@ kernelArityTable cid =
     , ("elm/core:Platform.Cmd.none", 0), ("elm/core:Platform.Sub.none", 0)
     ]
     ++ jsonKernels ++ bytesKernels ++ regexKernels ++ [ (vectorKernelId n, k) | (n, k, _) <- vectorKernels ]
+    ++ [ (n, k) | (n, k, _) <- effectKernels ]      -- E1: the scheduler and platform kernels (Ficcus.Mono.Effects)
 
 
 -- elm/json (runtime/fic_json.h). The functions of Json.Encode and Json.Decode that are kernel functions in Elm are kernels here by the
@@ -211,6 +213,7 @@ kernelSig cid key =
       ]
       ++ [ (n, replicate k 's') | (n, k) <- scalarKernels ]
       ++ [ (vectorKernelId n, sig) | (n, _, sig) <- vectorKernels ]
+      ++ [ (n, sig) | (n, _, sig) <- effectKernels ]
       -- elm/json: a function that builds a decoder consumes what it stores (decoders, closures, the constant of succeed and null,
       -- the message of fail, the list of oneOf); running a decoder borrows it and the value; Encode.string returns its argument
       ++ [ ("elm/json:Json.Encode.encode", "sb"), ("elm/json:Json.Encode.string", "o"), ("elm/json:Json.Encode.int", "s"), ("elm/json:Json.Encode.float", "s")
