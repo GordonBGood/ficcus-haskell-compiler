@@ -1,0 +1,49 @@
+module E1pR14LambdaSet exposing (main)
+
+import Array exposing (Array)
+import Dict exposing (Dict)
+
+
+type alias Model =
+    { a : Array Int, d : Dict Int Int, n : Int }
+
+
+initModel : Model
+initModel =
+    { a = Array.repeat 100 0, d = Dict.singleton 1 1, n = 0 }
+
+
+setA : Model -> Model
+setA m =
+    { m | a = Array.set (modBy 100 m.n) (m.n + 1) m.a, n = m.n + 1 }
+
+
+show : Model -> ( List Int, List ( Int, Int ), Int )
+show m =
+    ( Array.toList (Array.slice 0 8 m.a), List.take 5 (Dict.toList m.d), m.n )
+
+
+loop : Int -> Model -> Model
+loop k m =
+    if k == 0 then
+        m
+
+    else
+        loop (k - 1) (step k m)
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( always () (Debug.log "r" (show (loop 1000 initModel))), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+-- R14 (target): a field read inside a lambda captures the whole struct, so it is never split, and the array written in the
+-- same expression copies every step (1960 copies in 1000 steps, also on elmficG70a). E1's D-fx-3 text guarantees no copy for
+-- "fields read under a lambda" in update; this is that shape in a helper (the same happens in update, with the stepper).
+step : Int -> Model -> Model
+step k m =
+    { m | a = Array.set (modBy 100 m.n) (m.n + 1) m.a, d = Dict.map (\_ v -> v + m.n) m.d, n = m.n + 1 }

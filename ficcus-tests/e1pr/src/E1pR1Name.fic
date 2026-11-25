@@ -1,0 +1,33 @@
+module E1pR1Name exposing (main)
+
+-- R1 (target): a record with a field named like the split's fallback names (`f0`, `f1`, ..). When a split binds every field (the
+-- struct is used whole) and a field is not read, its variable is called `_spK_f<i>`, which can be the name of a read field: two
+-- pattern variables with one name. `g`: RcCheck rejects ("_sp0_f0 has 1 count(s) left"); `h`: RcCheck accepts and gcc rejects
+-- ("conflicting types for v__sp1_f0"). Elm compiles both.
+
+
+type alias R =
+    { a : List Int, f0 : List Int }
+
+
+type alias S =
+    { b : Int, f0 : List Int }
+
+
+g : R -> ( List Int, R )
+g m =
+    ( 5 :: m.f0, m )
+
+
+h : S -> ( List Int, S )
+h m =
+    ( 6 :: m.f0, m )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( always () (Debug.log "r" ( g { a = [ 1, 2 ], f0 = [ 10, 20, 30 ] }, h { b = 7, f0 = [ 40 ] } )), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

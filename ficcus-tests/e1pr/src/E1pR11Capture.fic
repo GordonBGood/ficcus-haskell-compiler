@@ -1,0 +1,62 @@
+module E1pR11Capture exposing (main)
+
+import Array exposing (Array)
+import Dict exposing (Dict)
+
+
+type alias Model =
+    { a : Array Int, d : Dict Int Int, n : Int }
+
+
+initModel : Model
+initModel =
+    { a = Array.repeat 100 0, d = Dict.singleton 1 1, n = 0 }
+
+
+setA : Model -> Model
+setA m =
+    { m | a = Array.set (modBy 100 m.n) (m.n + 1) m.a, n = m.n + 1 }
+
+
+show : Model -> ( List Int, List ( Int, Int ), Int )
+show m =
+    ( Array.toList (Array.slice 0 8 m.a), List.take 5 (Dict.toList m.d), m.n )
+
+
+loop : Int -> Model -> Model
+loop k m =
+    if k == 0 then
+        m
+
+    else
+        loop (k - 1) (step k m)
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( always () (Debug.log "r" (show (loop 1000 initModel))), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+
+-- H11 (negative): a closure captures m (and another an alias of m), then a helper writes m.a; the closures run afterwards and
+-- must see the old array (no split of a captured struct; 1000 copies)
+step : Int -> Model -> Model
+step k m =
+    let
+        old =
+            m
+
+        f x =
+            x + Maybe.withDefault -1 (Array.get (modBy 100 m.n) m.a)
+
+        g x =
+            x * 2 + Maybe.withDefault -1 (Array.get (modBy 100 old.n) old.a)
+
+        m2 =
+            setA m
+    in
+    { m2 | d = Dict.insert (modBy 7 k) (f (g k)) m2.d }
