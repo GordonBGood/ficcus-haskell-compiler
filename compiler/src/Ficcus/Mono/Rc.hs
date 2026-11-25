@@ -2,6 +2,7 @@
 {-# LANGUAGE PatternGuards #-}
 module Ficcus.Mono.Rc
   ( rcProgram
+  , rcProgramStats
   , rcMutate
   , rcMutateS6
   )
@@ -46,6 +47,7 @@ import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig, unsafeGetKernel, applyOwnKernel, takeFor, isTakeKernel)
 import Ficcus.Mono.Layout (leavesOf, nptrOf, objSizeClass)
+import Ficcus.Mono.LeafSplit (SplitFacts(..), Plan(..), planSplit, rewriteSplit, leafSplitOn)
 import Ficcus.Mono.Reuse
 import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
@@ -60,6 +62,9 @@ data RS =
     { rsN :: Int
     , rsErrors :: [String]
     , rsWhere :: String
+    , rsClone :: CloneId
+    , rsSplitN :: Int                        -- E1p: the counter of the split variables (`_sp<N>_<field>`), apart from `fresh`
+    , rsSplits :: [(CloneId, String)]        -- E1p: one entry per split, for FICCUS_SPLIT_STATS
     }
 
 
@@ -74,28 +79,39 @@ data Ctx =
     , cViews :: Map.Map String String        -- a pattern variable that is only a view into its scrutinee, and the owned variable that keeps it alive
     , cLate :: Map.Map String Cell           -- S6: the owned scrutinee variables whose drop becomes a drop specialization where they die (`lateSpec`)
     , cDeferred :: Set.Set String            -- S6: the pattern variables of those scrutinees: views that do not keep the scrutinee alive
+    , cTwinCaps :: Set.Set String            -- E1p: the owned captured variables of a twin (never split, v1)
+    , cFacts :: SplitFacts                   -- E1p: what the split analysis (Ficcus.Mono.LeafSplit) needs of the program
     }
 
 
 -- | the program with counts; the root (`main = Platform.worker ...`) is left alone
 rcProgram :: MProgram -> Either [String] MProgram
-rcProgram program0 =
+rcProgram = fst . rcProgramStats
+
+
+-- | the program with counts, and (E1p) the splits per clone: (clone, definition name, number of splits), clones without a split left out
+rcProgramStats :: MProgram -> (Either [String] MProgram, [(CloneId, String, Int)])
+rcProgramStats program0 =
   let clones = inferBorrow (mpUnions program0) (mpMain program0) (mpClones program0)
       program = program0 { mpClones = clones }
       caps = captures clones
-      ctx = Ctx (Map.fromList [ (mdClone d, d) | d <- clones ]) caps (ownCtx caps clones) Map.empty Map.empty Set.empty
-      (clones', errs) = evalState (do { cs <- mapM (rcDef ctx (mpMain program)) clones; es <- gets rsErrors; return (cs, es) }) (RS 0 [] "")
-  in if null errs then Right program { mpClones = clones' } else Left (reverse errs)
+      byId = Map.fromList [ (mdClone d, d) | d <- clones ]
+      ctx = Ctx byId caps (ownCtx caps clones) Map.empty Map.empty Set.empty Set.empty (SplitFacts caps byId)
+      (clones', errs, splits) =
+        evalState (do { cs <- mapM (rcDef ctx (mpMain program)) clones; es <- gets rsErrors; sp <- gets rsSplits; return (cs, es, sp) })
+                  (RS 0 [] "" (CloneId 0) 0 [])
+      stats = [ (c, n, length g) | g@((c, n) : _) <- List.group (reverse splits) ]
+  in (if null errs then Right program { mpClones = clones' } else Left (reverse errs), stats)
 
 
 rcDef :: Ctx -> Maybe CloneId -> MDef -> RM MDef
 rcDef ctx root d =
   case mdBody d of
     Just body | Just (mdClone d) /= root ->
-      do  modify' (\s -> s { rsWhere = mdName d })
+      do  modify' (\s -> s { rsWhere = mdName d, rsClone = mdClone d })
           let ownedCaps = if mdCapsOwned d then [ (n, c) | (n, c) <- Map.findWithDefault [] (mdClone d) (cCaps ctx), refClass c ] else []   -- a twin (Ficcus.Mono.Twin)
           let env = Map.fromList ([ (n, c) | ((n, c), o) <- zip (mdParams d) (paramOwns d), refClass c, o == Owned ] ++ ownedCaps)
-          body' <- rc ctx env Set.empty body
+          body' <- rc ctx { cTwinCaps = Set.fromList (map fst ownedCaps) } env Set.empty body
           return d { mdBody = Just body' }
     _ -> return d
 
@@ -133,8 +149,38 @@ rc ctx env live e =
       case [ (r, cell) | (r, _) <- dead, Just cell <- [Map.lookup r (cLate ctx)] ] of
         (r, cell) : _ -> lateSpec ctx env live e r cell
         [] ->
-          do  e' <- rcNode ctx env' live e
+          do  split <- trySplit ctx env' live e
+              e' <- rcNode ctx env' live (maybe e id split)
               return (if null dead then e' else MExpr (mRep e) (MDrop dead e'))
+
+
+-- | E1p, the leaf split (docs/E1P-DESIGN.md section 2): an owned struct variable `m` that dies in `e`, whose uses in `e` are field
+-- reads and owned whole uses, and where that saves a count (Ficcus.Mono.LeafSplit.planSplit), is taken apart at the start of `e`:
+-- `case m of { f = _spN_f, .. } -> e[m.f := _spN_f, m := { .. }]`. `rcCase` makes it an `MUnpack` (`unpackable`): each read field
+-- takes its leaves without a dup, the other reference leaves are dropped there, and from then on the fields are ordinary owned
+-- variables (the last read moves). The first candidate in name order is split here; the next one, if it still pays, in the branch.
+trySplit :: Ctx -> Env -> Live -> MExpr -> RM (Maybe MExpr)
+trySplit ctx env live e
+  | not leafSplitOn = return Nothing
+  | otherwise =
+      let free = fvOf ctx e
+          roots = Set.fromList (Map.elems (cViews ctx))
+          candidates =
+            [ (m, fs, plan)
+            | (m, sc@(CStruct fs)) <- Map.toList env, refClass sc, not (Set.member m live), Map.member m free
+            , not (Set.member m roots), not (Map.member m (cLate ctx)), not (Set.member m (cDeferred ctx)), not (Set.member m (cTwinCaps ctx))
+            , Just plan <- [planSplit (cFacts ctx) m fs e] ]
+      in
+      case candidates of
+        [] -> return Nothing
+        (m, fs, plan) : _ ->
+          do  k <- gets rsSplitN
+              modify' (\s -> s { rsSplitN = k + 1, rsSplits = (rsClone s, rsWhere s) : rsSplits s })
+              let names = Map.fromList [ (i, f) | (i, f, _) <- plFields plan ]
+                  var i = "_sp" ++ show k ++ "_" ++ Map.findWithDefault ("f" ++ show i) i names
+                  body = rewriteSplit m fs plan var
+                  pat = MPat (CStruct fs) (PRecord [ (i, var i, c) | (i, _, c) <- plFields plan ])
+              return (Just (MExpr (mRep e) (MCase (MExpr (CStruct fs) (MLocal m)) [(pat, body)])))
 
 
 -- | S6, the late drop specialization (docs/STAGE4-S6.md). `r` is an owned variable that was matched against one constructor, some arm
@@ -806,3 +852,4 @@ rcMutateS6 n program =
         MReuse t b -> MReuse t <$> mut b
         MFreeTok t b -> MFreeTok t <$> mut b
         other -> return other
+

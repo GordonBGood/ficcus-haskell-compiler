@@ -31,6 +31,7 @@ import qualified Ficcus.Mono.CGen as CGen
 import qualified Ficcus.Mono.Facts as Facts
 import qualified Ficcus.Mono.Ir as Mono
 import qualified Ficcus.Mono.Members as MonoMembers
+import qualified Ficcus.Mono.LeafSplit as LeafSplit
 import qualified Ficcus.Mono.ModelUnpack as ModelUnpack
 import qualified Ficcus.Mono.ManagerTable as ManagerTable
 import qualified Ficcus.Mono.Marks as Marks
@@ -253,7 +254,13 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                             (Just pat, Right ur) | rcMode ->
                               Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones (Unbox.urProgram ur), pat `List.isInfixOf` Mono.mdName d ]))
                             _ -> return ()
-                          let rced = if rcMode then unboxed >>= \ur -> Rc.rcProgram (ModelUnpack.unpackModel (Twin.twinProgram (Unbox.urProgram ur))) >>= mutated else Right program
+                          let rcRun = fmap (\ur -> Rc.rcProgramStats (ModelUnpack.unpackModel (Twin.twinProgram (Unbox.urProgram ur)))) unboxed
+                          let rced = if rcMode then rcRun >>= \(r, _) -> r >>= mutated else Right program
+                          -- E1p: FICCUS_SPLIT_STATS=1 prints the leaf splits per clone (Ficcus.Mono.LeafSplit)
+                          case rcRun of
+                            Right (_, splits) | rcMode, LeafSplit.splitStatsOn ->
+                              Task.io (mapM_ (\(Mono.CloneId c, name, k) -> hPutStrLn stderr ("FICCUS_SPLIT_STATS: c" ++ show c ++ " " ++ name ++ " " ++ show k)) splits)
+                            _ -> return ()
                           twinStatsOn <- Task.io (System.Environment.lookupEnv "FICCUS_TWIN_STATS")
                           case (twinStatsOn, rced) of
                             (Just "1", Right _) | rcMode -> Task.io (hPutStrLn stderr ("FICCUS_TWIN_STATS: (twins, twins that build a cell of their closure's size class) = " ++ show (Twin.twinStats (Twin.twinProgram (Inline.inlineProgram program)))))
