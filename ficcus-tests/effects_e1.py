@@ -8,8 +8,11 @@
   SubsOrder   step 3: subscriptions runs after init, as in Elm (golden), --rc and --no-rc.
   G17b        step 3: N = 100000 steps of the typed stepper (-DFIC_STEP_TEST=100000) over a record model with a Dict and an Array;
   G17bFields  output = golden, live 0, and the FIC_STATS model line: 0 model copies, 199200 updates in place, 0 reuse misses.
-              The switches show what each part is for: FICCUS_NO_MODEL_UNPACK=1 copies in both programs, FICCUS_NO_MODEL_SEED=1 copies
-              in G17bFields (its update only reads fields, so the ordinary rules borrow the model).
+              The switches show what each part is for: with the E2g pass (FICCUS_NO_LEAFSPLIT=1) FICCUS_NO_MODEL_SEED=1 copies in
+              G17bFields (ModelUnpack's `let _mf = m.f` bindings are field reads, so the ordinary rules borrow the model); since E1p
+              (ModelUnpack off) the inference sees `Array.set .. m.a` and owns the model without the seed, so it does not copy. E1p: the leaf split in Rc replaces ModelUnpack (off by default since E1p): 0 copies with
+              or without it (FICCUS_NO_MODEL_UNPACK=0 turns it back on); without both (FICCUS_NO_LEAFSPLIT=1 FICCUS_NO_MODEL_UNPACK=1)
+              both programs copy, and FICCUS_NO_LEAFSPLIT=1 alone (the E2g pass: ModelUnpack on) gives 0.
 Each counted program is built with gcc -O2 and under ASan + UBSan (no pool).
   python3 ficcus-tests/effects_e1.py --elm bin/elmficNN --elm-home H        exit 1 on any failure"""
 import argparse, os, re, shutil, subprocess, sys, tempfile
@@ -18,8 +21,13 @@ RT = os.path.join(HERE, "..", "..", "targets", "c")
 SAN = ["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL", "-Wno-maybe-uninitialized"]
 N = 100000
 # (program, golden, switches, expected model copies: 0 or ">0")
-G17 = [("G17b", "g17b", {}, "0"), ("G17b", "g17b", {"FICCUS_NO_MODEL_UNPACK": "1"}, ">0"), ("G17b", "g17b", {"FICCUS_NO_MODEL_SEED": "1"}, "0"),
-       ("G17bFields", "g17b", {}, "0"), ("G17bFields", "g17b", {"FICCUS_NO_MODEL_SEED": "1"}, ">0"), ("G17bFields", "g17b", {"FICCUS_NO_MODEL_UNPACK": "1"}, ">0")]
+NOSPLIT = {"FICCUS_NO_LEAFSPLIT": "1"}
+NEITHER = {"FICCUS_NO_LEAFSPLIT": "1", "FICCUS_NO_MODEL_UNPACK": "1"}
+G17 = [("G17b", "g17b", {}, "0"), ("G17b", "g17b", {"FICCUS_NO_MODEL_UNPACK": "0"}, "0"), ("G17b", "g17b", NOSPLIT, "0"), ("G17b", "g17b", NEITHER, ">0"),
+       ("G17b", "g17b", {"FICCUS_NO_MODEL_SEED": "1"}, "0"),
+       ("G17bFields", "g17b", {}, "0"), ("G17bFields", "g17b", {"FICCUS_NO_MODEL_SEED": "1"}, "0"),
+       ("G17bFields", "g17b", dict(NOSPLIT, FICCUS_NO_MODEL_SEED="1"), ">0"), ("G17bFields", "g17b", {"FICCUS_NO_MODEL_UNPACK": "0"}, "0"),
+       ("G17bFields", "g17b", NOSPLIT, "0"), ("G17bFields", "g17b", NEITHER, ">0")]
 
 
 def make(a, d, mod, out, flags, env=None):

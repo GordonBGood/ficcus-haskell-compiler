@@ -34,8 +34,8 @@ module Ficcus.Mono.Rc
 -- The independent checker of the result is Ficcus.Mono.RcCheck.
 
 
-import Control.Monad (foldM)
-import Control.Monad.State.Strict (State, evalState, get, gets, modify', put, runState)
+import Control.Monad (foldM, when)
+import Control.Monad.State.Strict (State, evalState, execState, get, gets, modify', put, runState)
 import qualified Data.List as List
 import Data.Maybe (isJust)
 import qualified Data.Map.Strict as Map
@@ -81,6 +81,7 @@ data Ctx =
     , cDeferred :: Set.Set String            -- S6: the pattern variables of those scrutinees: views that do not keep the scrutinee alive
     , cTwinCaps :: Set.Set String            -- E1p: the owned captured variables of a twin (never split, v1)
     , cFacts :: SplitFacts                   -- E1p: what the split analysis (Ficcus.Mono.LeafSplit) needs of the program
+    , cSplit :: Bool                         -- E1p: is the leaf split on (`leafSplitOn`; off in the run that only counts `fresh` names)
     }
 
 
@@ -96,7 +97,7 @@ rcProgramStats program0 =
       program = program0 { mpClones = clones }
       caps = captures clones
       byId = Map.fromList [ (mdClone d, d) | d <- clones ]
-      ctx = Ctx byId caps (ownCtx caps clones) Map.empty Map.empty Set.empty Set.empty (SplitFacts caps byId)
+      ctx = Ctx byId caps (ownCtx caps clones) Map.empty Map.empty Set.empty Set.empty (SplitFacts caps byId) leafSplitOn
       (clones', errs, splits) =
         evalState (do { cs <- mapM (rcDef ctx (mpMain program)) clones; es <- gets rsErrors; sp <- gets rsSplits; return (cs, es, sp) })
                   (RS 0 [] "" (CloneId 0) 0 [])
@@ -111,7 +112,14 @@ rcDef ctx root d =
       do  modify' (\s -> s { rsWhere = mdName d, rsClone = mdClone d })
           let ownedCaps = if mdCapsOwned d then [ (n, c) | (n, c) <- Map.findWithDefault [] (mdClone d) (cCaps ctx), refClass c ] else []   -- a twin (Ficcus.Mono.Twin)
           let env = Map.fromList ([ (n, c) | ((n, c), o) <- zip (mdParams d) (paramOwns d), refClass c, o == Owned ] ++ ownedCaps)
-          body' <- rc ctx { cTwinCaps = Set.fromList (map fst ownedCaps) } env Set.empty body
+          let ctx' = ctx { cTwinCaps = Set.fromList (map fst ownedCaps) }
+          s0 <- get
+          body' <- rc ctx' env Set.empty body
+          -- E1p: a clone with a split may use more or fewer `fresh` names; the counter goes on from where the pass without the split
+          -- would have left it, so that the rc_N names of every other clone are those of the pass without the split
+          s1 <- get
+          when (length (rsSplits s1) /= length (rsSplits s0)) $
+            put s1 { rsN = rsN (execState (rc ctx' { cSplit = False } env Set.empty body) s0) }
           return d { mdBody = Just body' }
     _ -> return d
 
@@ -161,7 +169,7 @@ rc ctx env live e =
 -- variables (the last read moves). The first candidate in name order is split here; the next one, if it still pays, in the branch.
 trySplit :: Ctx -> Env -> Live -> MExpr -> RM (Maybe MExpr)
 trySplit ctx env live e
-  | not leafSplitOn = return Nothing
+  | not (cSplit ctx) = return Nothing
   | otherwise =
       let free = fvOf ctx e
           roots = Set.fromList (Map.elems (cViews ctx))
