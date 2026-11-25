@@ -2000,8 +2000,8 @@ toGenerateReport problem =
         "This program has types with a `derive` line:"
         [ D.indent 4 $ D.red $ D.vcat $ map D.fromChars types
         , D.reflow
-            "The JavaScript output does not support derived members yet. The C output does:\
-            \ compile with an output file that ends in `.c`:"
+            "The JavaScript output does not support derived members yet. Compile with an output file\
+            \ that ends in `.c`:"
         , D.indent 4 $ D.green "elm make src/Main.elm --output=main.c"
         ]
 

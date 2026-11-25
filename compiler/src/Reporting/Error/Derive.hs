@@ -193,10 +193,21 @@ pickOne tipe member =
 shadowHint :: String -> String -> String -> D.Doc
 shadowHint modul tipe member =
   D.toSimpleHint $
-    "Two different functions named `" ++ member ++ "` are a trap: `" ++ modul ++ "." ++ member ++ "` is the function of the module,\
-    \ and `" ++ tipe ++ "." ++ member ++ "` is the member (the two names are the same one when the module is named like the type).\
-    \ Remove `" ++ member ++ "` from the module (or rename it): the derived member then answers to the name `" ++ tipe ++ "."
-    ++ member ++ "`, so the calls stay as they are."
+    ( if lastPart modul == tipe
+        then
+          "Here `" ++ tipe ++ "." ++ member ++ "` would mean the function of the module, and the derived member would be\
+          \ reachable only as `" ++ modul ++ "." ++ tipe ++ "." ++ member ++ "`."
+        else
+          "Two different functions named `" ++ member ++ "` in one module are a trap: `" ++ modul ++ "." ++ member
+          ++ "` would be the function and `" ++ tipe ++ "." ++ member ++ "` the derived member."
+    )
+    ++ " Remove `" ++ member ++ "` from the module (or rename it): the derived member answers to `" ++ tipe ++ "." ++ member
+    ++ "`, so calls written `" ++ tipe ++ "." ++ member ++ "` stay as they are."
+
+
+lastPart :: String -> String
+lastPart chars =
+  reverse (takeWhile (/= '.') (reverse chars))
 
 
 hint :: String -> D.Doc

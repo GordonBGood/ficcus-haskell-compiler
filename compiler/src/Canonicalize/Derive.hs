@@ -322,10 +322,10 @@ lacks table member path tipe =
       Nothing
 
     Can.TPair a b ->
-      firstOf [ (path ++ " > element 1", a), (path ++ " > element 2", b) ]
+      firstOf [ (path ++ " > tuple element 1", a), (path ++ " > tuple element 2", b) ]
 
     Can.TTriple a b c ->
-      firstOf [ (path ++ " > element 1", a), (path ++ " > element 2", b), (path ++ " > element 3", c) ]
+      firstOf [ (path ++ " > tuple element 1", a), (path ++ " > tuple element 2", b), (path ++ " > tuple element 3", c) ]
 
     Can.TRecord fields _ ->
       firstOf [ (path ++ " > " ++ N.toChars f, t) | (f, Can.FieldType _ t) <- Map.toAscList fields ]
@@ -344,7 +344,7 @@ lacks table member path tipe =
           | tid == vectorId && member == "compare" ->
               Just (DE.NotYet path (render tipe) "the order of a `Vector` comes with the Vector parity work")
           | otherwise ->
-              firstOf [ (path ++ " > " ++ label, t) | (label, t) <- zip labels args ]
+              firstOf [ (path ++ " > " ++ T.nameToChars name ++ " " ++ label, t) | (label, t) <- zip labels args ]
 
         Nothing ->
           case Map.lookup tid table >>= Map.lookup (fromChars member) of

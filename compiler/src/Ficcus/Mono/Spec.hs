@@ -1048,7 +1048,7 @@ specExpr se (A.At region e) =
     Can.VarKernel home name
       | String.toChars (Module.kernelToString home) == Derive.kernelHome ->
           -- Ficcus (A4a): a derived member has a signature but no body yet
-          do  report ("the derived member `" ++ Derive.stubDisplay name ++ "` is not generated yet (A4a checks the `derive` line and gives the member its type; the bodies come with A4b to A4f), used at " ++ regionText region)
+          do  report ("the derived member `" ++ Derive.stubDisplay name ++ "` (derive line at " ++ regionText region ++ ") is not generated yet: A4a checks the `derive` line and gives the member its type, the bodies come with A4b to A4f; a program that uses a derived member cannot be compiled to C before then")
               return unitLit
     Can.VarKernel home name -> unsupported ("the kernel function Elm.Kernel." ++ String.toChars (Module.kernelToString home) ++ "." ++ N.toChars name ++ " (it has no Elm body; the runtime table is Ficcus.Mono.Kernel)") region
     _ -> unsupported ("expression " ++ Recorder.exprKind e) region
