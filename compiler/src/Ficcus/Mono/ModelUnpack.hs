@@ -24,9 +24,10 @@ module Ficcus.Mono.ModelUnpack
 -- the leaves as before, and only on that path. Not done: helpers that `update` passes the model to (the same Rc limitation; the
 -- general fix is a per-leaf move in the Rc pass). FICCUS_NO_MODEL_UNPACK=1 switches it off (G17b shows the copies).
 --
--- E1p: that general fix is the leaf split (Ficcus.Mono.LeafSplit, in the Rc pass), which reaches the same targets (R1 to R5, G17b, the
--- e1p programs) without this pass, so it is OFF by default while the split is on; FICCUS_NO_MODEL_UNPACK=0 turns it back on.
--- With FICCUS_NO_LEAFSPLIT=1 it is on (the E2g pass exactly) unless FICCUS_NO_MODEL_UNPACK=1. To be deleted in a later cleanup.
+-- E1p: that general fix is the leaf split (Ficcus.Mono.LeafSplit, in the Rc pass). The split reaches the copy targets (R1 to R5, G17b,
+-- the e1p programs) without this pass, but this pass is still ON by default: without it a model whose fields a lambda reads is not
+-- split (the lambda captures it) and `update`'s dup and drop counts grow (docs/E1P-REVIEW.md Q4, fix 2: SubsOrder, R4Lambda, G17s).
+-- FICCUS_NO_MODEL_UNPACK=1 turns it off.
 --
 -- The record update `{ m | a = e }` is lowered by Spec to `let _upK = m in { a = e, d = _upK.d }`: `_upK` would hold a count on every
 -- leaf while `e` runs (docs/E1-REVIEW.md Q1, R1Partial: 2 copies per step). Where `_upK` is only read field by field, it is `m` itself:
@@ -41,15 +42,12 @@ import System.IO.Unsafe (unsafePerformIO)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free (refClass)
 import Ficcus.Mono.Ir
-import Ficcus.Mono.LeafSplit (leafSplitOn)
 import Ficcus.Mono.Program (Shape(..), programShape)
 
 
 {-# NOINLINE noUnpack #-}
 noUnpack :: Bool
-noUnpack = unsafePerformIO $
-  do  v <- lookupEnv "FICCUS_NO_MODEL_UNPACK"
-      return (case v of { Just "1" -> True; Just "0" -> False; _ -> leafSplitOn })
+noUnpack = unsafePerformIO (fmap (== Just "1") (lookupEnv "FICCUS_NO_MODEL_UNPACK"))
 
 
 unpackModel :: MProgram -> MProgram
