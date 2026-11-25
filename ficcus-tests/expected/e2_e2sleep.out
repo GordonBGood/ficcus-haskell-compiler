@@ -1,0 +1,7 @@
+update: Done "sync"
+update: Slept 0
+update: Seq [1,2,3]
+update: Spawned
+update: Slept 20
+update: Slept 5
+update: Slept 60

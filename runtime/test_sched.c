@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 /* Standalone tests of the scheduler (fic_sched.h, effects slice E2): the order of the run queue, spawn order (the child runs first,
    up to its first wait; then the parent), andThen/onError frames (a failure skips andThen frames, a success skips onError frames), the
    silent end of a failed spawned task, kill of a finished process, sendToApp through the program's hook; with the event loop (step 5):
@@ -5,6 +6,7 @@
    resume is a no-op), Time.every-like intervals. Counted (-DFIC_RC -DFIC_STATS): everything is freed at the end. Build and run: runtime/test.sh */
 #include "fic_rt.h"
 #include "fic_base.h"
+#include "fic_string.h"
 #include "fic_closure.h"
 #include "fic_sched.h"
 
@@ -24,6 +26,10 @@ static fic_ref log_then(const char *tag, next_fn next) {
 }
 static fic_ref succ_plus1(int64_t v) { return fic_task_succeed(fic_w_i(v + 1), 0); }
 static fic_ref fail_100(int64_t v) { (void)v; return fic_task_fail(fic_w_i(100), 0); }
+
+/* the process the interval test kills: `woke` continues with `kill stop_target` */
+static fic_ref stop_target;
+static fic_ref fic_task_kill_of(int64_t v) { (void)v; return fic_task_kill(stop_target); }
 
 /* sendToApp hook */
 static void app_send(fic_word m) { printf("app %lld\n", (long long)m.i); }
@@ -58,6 +64,38 @@ int main(void) {
     run(fic_task_and_then(log_then("after kill", succ_plus1), fic_task_kill(done)));
     FIC_RC_DROP(done);
     run(fic_task_send_to_app(FIC_NONE, fic_w_i(42), 0));
+  }
+
+  /* the event loop on the virtual clock (as FIC_TIME) */
+  fic_clock_virtual = 1; fic_clock_base = 1000; fic_clock_vnow = 0;
+
+  printf("-- timers: deadline order, equal deadlines in creation order, a delay below 1 is 1, sleep 0 yields\n");
+  run(fic_task_and_then(log_then("t30", succ_plus1), fic_task_sleep(30)));
+  run(fic_task_and_then(log_then("t0", succ_plus1), fic_task_sleep(0)));
+  run(fic_task_and_then(log_then("t1", succ_plus1), fic_task_sleep(1)));
+  run(fic_task_and_then(log_then("t10", succ_plus1), fic_task_sleep(10)));
+  run(fic_task_and_then(log_then("sync", succ_plus1), fic_task_succeed(fic_w_i(3), 0)));
+  fic_sched_run();
+  printf("clock %g\n", fic_loop_now());
+
+  printf("-- kill of a sleeping process: its timer is gone, the loop ends at once\n");
+  {
+    fic_ref sleeper = fic_sched_raw_spawn(fic_task_and_then(log_then("never", succ_plus1), fic_task_sleep(1000)));
+    run(fic_task_and_then(log_then("killed", succ_plus1), fic_task_kill(sleeper)));
+    FIC_RC_DROP(sleeper);
+    printf("timers %zu\n", fic_tm_len);
+    fic_sched_run();
+    printf("clock %g\n", fic_loop_now());
+  }
+
+  printf("-- an interval spawns its task every period until it is killed\n");
+  {
+    fic_ref ticker = fic_sched_raw_spawn(fic_task_interval(25, fic_task_and_then(log_then("tick", succ_plus1), fic_task_succeed(fic_w_i(0), 0))));
+    run(fic_task_and_then(log_then("stop", succ_plus1), fic_task_and_then(log_then("woke", fic_task_kill_of), fic_task_sleep(80))));
+    stop_target = ticker;
+    fic_sched_run();
+    FIC_RC_DROP(ticker);
+    printf("clock %g timers %zu\n", fic_loop_now(), fic_tm_len);
   }
 
   fic_platform_teardown();

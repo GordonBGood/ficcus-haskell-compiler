@@ -1,0 +1,46 @@
+module E2Time exposing (main)
+
+-- Effects E2 step 5: elm/time on the event loop. Time.every ticks until the model says stop, then the subscription goes away and the
+-- Time manager kills its interval process, so the program ends (no timer left). Time.now, Time.here and Time.getZoneName (run with
+-- TZ=UTC on both sides; FIC_TIME fixes the C clock): only values that do not depend on the clock are printed.
+
+import Task
+import Time
+
+
+type Msg
+    = Tick Time.Posix
+    | Now Time.Posix
+    | Zone Time.Zone
+    | ZoneName Time.ZoneName
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case msg of
+        Tick _ ->
+            ( Debug.log "tick" (n + 1), Cmd.none )
+
+        Now t ->
+            ( Debug.log "now is after 2001" (Time.posixToMillis t > 1000000000000) |> always n, Cmd.none )
+
+        Zone z ->
+            ( Debug.log "hour of 3600000 in the zone" (Time.toHour z (Time.millisToPosix 3600000)) |> always n, Cmd.none )
+
+        ZoneName z ->
+            ( Debug.log "zone name" z |> always n, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Cmd.batch [ Task.perform Now Time.now, Task.perform Zone Time.here, Task.perform ZoneName Time.getZoneName ] )
+        , update = update
+        , subscriptions =
+            \n ->
+                if n < 4 then
+                    Time.every 50 Tick
+
+                else
+                    Sub.none
+        }

@@ -154,7 +154,9 @@ generateWith order rcMode program =
               body = unlines (concatMap (\l -> if l == helperMark then extra else if l == siteMark then siteBlock (reverse (gSiteTab final)) else if l == "  /* PK_RELEASE */" then [ "  fic_us_release();" | pkUsed ] else [l]) (reverse (gOut final)))
               pkUsed = any (\l -> any (`List.isInfixOf` l) ["fic_pk_", "fic_us_slice("]) (gOut final)     -- the position cache of the string kernels (fic_us_off)
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
-          in Right ((if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n"
+              usesSched = any (`List.isInfixOf` body) ["fic_task_", "fic_bag_leaf", "fic_bag_batch", "fic_bag_map", "fic_mgr_def"]
+          in Right ((if usesSched then "#define _POSIX_C_SOURCE 200809L      /* E2: the clock and the timers of runtime/fic_sched.h */\n" else "")
+                    ++ (if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n"
                     ++ (if any (`List.isInfixOf` body) ["fic_vector_", "FIC_VECTOR_"] then vectorRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_task_", "fic_bag_leaf", "fic_bag_batch", "fic_bag_map", "fic_mgr_def", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_", "fic_vsort"] then closureRuntime ++ "\n" else "")
                     ++ (if "fic_vsort" `List.isInfixOf` body then sortRuntime ++ "\n" else "")
@@ -168,7 +170,7 @@ generateWith order rcMode program =
                     ++ (if "fic_re_" `List.isInfixOf` body then regexRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_bag_", "fic_app_model"] then platformRuntime ++ "\n" else "")
                     -- E2: the scheduler and the dispatch, only for programs that use a task, a bag or a manager
-                    ++ (if any (`List.isInfixOf` body) ["fic_task_", "fic_bag_leaf", "fic_bag_batch", "fic_bag_map", "fic_mgr_def"] then schedRuntime ++ "\n" else "")
+                    ++ (if usesSched then schedRuntime ++ "\n" else "")
                     ++ "\n" ++ body)
         errs -> Left errs
 
@@ -1814,6 +1816,12 @@ effectCall info name key args =
     ("elm/core:Process.kill", [_]) -> call "fic_task_kill"
     ("elm/core:Platform.sendToApp", [r, v]) -> Just (routed "fic_task_send_to_app" r v)
     ("elm/core:Platform.sendToSelf", [r, v]) -> Just (routed "fic_task_send_to_self" r v)
+    -- E2 step 5: the event loop's bindings (runtime/fic_sched.h)
+    ("elm/core:Process.sleep", [_]) -> call "fic_task_sleep"
+    ("elm/core:Time.now", [_]) -> call "fic_task_now"
+    ("elm/time:Time.setInterval", [_, _]) -> call "fic_task_interval"
+    ("author/project:FicOverlayTime.hereOffset", [_]) -> Just (do { _ <- atoms info args; return "fic_task_here()" })
+    ("author/project:FicOverlayTime.zoneName", [_]) -> Just (do { _ <- atoms info args; return "fic_task_zone()" })
     ("elm/core:Platform.Cmd.batch", [_]) -> call "fic_bag_batch"
     ("elm/core:Platform.Sub.batch", [_]) -> call "fic_bag_batch"
     ("elm/core:Platform.Cmd.map", [_, _]) -> Just (mapped True)

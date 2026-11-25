@@ -1085,7 +1085,8 @@ specPat se pat@(A.At region p) =
         Can.PAlias q n -> (\x -> MPat cls (PAlias x (N.toChars n))) <$> specPat se q
         Can.PRecord names ->
           do  let t = Map.lookup (Recorder.patKey region p) (_nodes (_typed (seCtx se)))
-              case t of
+              -- E2: through aliases (`onEffects router subs {processes}` on `State msg`, elm/time's manager)
+              case fmap strip t of
                 Just (TRecord fs Nothing) ->
                   do  fields <- forM (zip [0 :: Int ..] (Map.toList fs)) $ \(i, (k, ft)) ->
                         if k `elem` names then (\c -> [(i, N.toChars k, c)]) <$> classOfTy se (applyDefault (\v -> not (Map.member v (seEnv se))) ft) else return []
@@ -1730,3 +1731,4 @@ unescape str =
       | c >= '0' && c <= '9' = ord c - 48
       | c >= 'a' && c <= 'f' = ord c - 87
       | otherwise = ord c - 55
+

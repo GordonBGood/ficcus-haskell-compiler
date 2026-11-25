@@ -318,6 +318,7 @@ writeOverlay root =
       jsonText <- if hasJson then readFileStrict elmJson else return ""
       let usesParser = "elm/parser" `List.isInfixOf` jsonText
       let usesRandom = "elm/random" `List.isInfixOf` jsonText
+      let usesTime = "\"elm/time\"" `List.isInfixOf` jsonText       -- E2 step 5
       -- the overlays of elm/json and elm/bytes import the package: whenever elm.json lists it, as a direct or as an indirect
       -- dependency (L42: an application may reach it only through another package; for a build to C Details.verifyApp counts
       -- it as direct, so that the overlay can import it)
@@ -333,6 +334,7 @@ writeOverlay root =
                            return []
       parserFiles <- optional usesParser Overlay.parserFileName Overlay.parserSource
       randomFiles <- optional usesRandom Overlay.randomFileName Overlay.randomSource
+      timeFiles <- optional usesTime Overlay.timeFileName Overlay.timeSource
       jsonFiles <- optional usesJson Overlay.jsonFileName Overlay.jsonSource
       bytesFiles <- optional usesBytes Overlay.bytesFileName Overlay.bytesSource
       regexFiles <- optional usesRegex Overlay.regexFileName Overlay.regexSource
@@ -342,7 +344,7 @@ writeOverlay root =
       let sortFile = dir FP.</> Overlay.sortFileName
       writeFile sortFile (if own then Overlay.sortListSource else Overlay.sortSource)
       writeFile (dir FP.</> "FicOverlaySort.list.txt") Overlay.sortListSource      -- read instead by Build.sortOverlaySource when a package exposes a `Vector`
-      return (file : sortFile : parserFiles ++ randomFiles ++ jsonFiles ++ bytesFiles ++ regexFiles)
+      return (file : sortFile : parserFiles ++ randomFiles ++ timeFiles ++ jsonFiles ++ bytesFiles ++ regexFiles)
 
 
 -- | does a source directory of elm.json hold a module named `Vector` (`Vector.elm` or `Vector.fic`)?

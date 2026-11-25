@@ -196,6 +196,7 @@ static void fic_proc_pop(fic_proc *p) {
 static void (*fic_app_send_fn)(fic_word msg);                      /* sendToApp: update, stepper, enqueueEffects (generated) */
 static void fic_sched_bind_async(fic_proc *p, fic_task_bind *b);   /* the bindings that wait: Process.sleep, Time.every (step 5) */
 static fic_ref fic_sched_receive(fic_proc *p, fic_task_recv *r, fic_mail *m);   /* a manager's loop (below) */
+static void fic_sched_bind_clock(fic_proc *p, fic_task_bind *b);   /* Time.now, here, getZoneName (step 5) */
 
 /* the bindings that complete at once: their callback resumes the process (which then waits in the queue behind the others, as in
    Elm), or, for a spawn, the child first */
@@ -232,6 +233,9 @@ static void fic_sched_bind(fic_proc *p) {
     fic_app_send_fn(b->b);
     fic_sched_resume(p, fic_task_succeed(FIC_W_UNIT, 0));
     break; }
+  case FIC_BIND_NOW: case FIC_BIND_HERE: case FIC_BIND_ZONE:
+    fic_sched_bind_clock(p, b);
+    break;
   default:
     fic_sched_bind_async(p, b);
     break;
@@ -466,14 +470,199 @@ static FIC_UNUSED void fic_platform_enqueue(fic_ref cmd, fic_ref sub) {
   fic_fx_active = 0;
 }
 
-/* ---- the event loop (step 5) and the ports (step 7) ---- */
+/* ---- the event loop (step 5; docs/EFFECTS-DESIGN.md 3.3, D-fx-5, D-fx-7) ----
+ *
+ * One thread. The loop runs the timers in order of (deadline, creation); each one resumes a process (Process.sleep) or spawns its task
+ * (Time.every's setInterval), and the scheduler then runs everything that became runnable before the next timer: one event at a time,
+ * as one JavaScript turn. The program ends when no timer is left (node ends when nothing is pending). A delay below 1 ms is 1 ms, as in
+ * node (so `sleep 0` and `sleep 1` wait the same and run in the order they were made); an interval re-arms from its previous deadline.
+ * Clock: Time.now is the wall clock in ms (Date.now), the timers use the monotonic clock. FIC_TIME=<ms> (decision D-fx-7, tests): a
+ * virtual clock that starts at that time; the loop never sleeps, it moves the clock to the next deadline, so the order and the values
+ * of a program with timers are the same on every run. Debug.log output is flushed before the loop waits. */
 
-static void fic_sched_bind_async(fic_proc *p, fic_task_bind *b) {
-  (void)p; (void)b;
-  fprintf(stderr, "internal: a binding that waits needs the event loop\n"); abort();
+#include <time.h>
+#if defined(__unix__) || defined(__APPLE__)
+#  include <unistd.h>
+#endif
+
+typedef struct { double deadline; uint64_t seq; fic_ref proc; fic_ref task; double period; } fic_timer;
+static fic_timer *fic_tm; static size_t fic_tm_len, fic_tm_cap;
+static uint64_t fic_tm_seq;
+static int fic_clock_virtual = -1;            /* -1 not read yet, 0 real, 1 FIC_TIME */
+static double fic_clock_vnow, fic_clock_base;
+
+static double fic_clock_mono(void) {
+#if defined(CLOCK_MONOTONIC)
+  struct timespec t;
+  clock_gettime(CLOCK_MONOTONIC, &t);
+  return (double)t.tv_sec * 1000.0 + (double)t.tv_nsec / 1e6;
+#else
+  return (double)clock() * 1000.0 / CLOCKS_PER_SEC;
+#endif
 }
+static void fic_clock_init(void) {
+  const char *v;
+  if (fic_clock_virtual >= 0) return;
+  v = getenv("FIC_TIME");
+  if (v != NULL && *v != 0) { fic_clock_virtual = 1; fic_clock_base = strtod(v, NULL); fic_clock_vnow = 0; }
+  else { fic_clock_virtual = 0; fic_clock_base = fic_clock_mono(); }
+}
+/* the time of the loop in ms since the start (monotonic, or virtual) */
+static double fic_loop_now(void) { fic_clock_init(); return fic_clock_virtual ? fic_clock_vnow : fic_clock_mono() - fic_clock_base; }
+/* Time.now: ms since the epoch */
+static int64_t fic_time_now_ms(void) {
+  fic_clock_init();
+  if (fic_clock_virtual) return (int64_t)(fic_clock_base + fic_clock_vnow);
+#if defined(CLOCK_REALTIME)
+  { struct timespec t; clock_gettime(CLOCK_REALTIME, &t); return (int64_t)t.tv_sec * 1000 + (int64_t)(t.tv_nsec / 1000000); }
+#else
+  return (int64_t)time(NULL) * 1000;
+#endif
+}
+
+static int fic_tm_less(const fic_timer *a, const fic_timer *b) { return a->deadline < b->deadline || (a->deadline == b->deadline && a->seq < b->seq); }
+static void fic_tm_up(size_t i) {
+  while (i > 0) { size_t p = (i - 1) / 2; fic_timer t; if (!fic_tm_less(&fic_tm[i], &fic_tm[p])) break; t = fic_tm[i]; fic_tm[i] = fic_tm[p]; fic_tm[p] = t; i = p; }
+}
+static void fic_tm_down(size_t i) {
+  for (;;) {
+    size_t l = 2 * i + 1, r = l + 1, m = i; fic_timer t;
+    if (l < fic_tm_len && fic_tm_less(&fic_tm[l], &fic_tm[m])) m = l;
+    if (r < fic_tm_len && fic_tm_less(&fic_tm[r], &fic_tm[m])) m = r;
+    if (m == i) return;
+    t = fic_tm[i]; fic_tm[i] = fic_tm[m]; fic_tm[m] = t; i = m;
+  }
+}
+/* a timer for a process (one count) and, for an interval, its task (one count); delay as setTimeout/setInterval: below 1 is 1 */
+static void fic_tm_add(fic_proc *p, fic_ref task, double ms, double period) {
+  if (fic_tm_len == fic_tm_cap) {
+    size_t cap = fic_tm_cap == 0 ? 16 : fic_tm_cap * 2;
+    fic_timer *t = (fic_timer *)realloc(fic_tm, cap * sizeof(fic_timer));
+    if (t == NULL) abort();
+    fic_tm = t; fic_tm_cap = cap;
+  }
+  if (!(ms >= 1)) ms = 1;
+  FIC_RC_DUP(&p->h);
+  fic_tm[fic_tm_len].deadline = fic_loop_now() + ms; fic_tm[fic_tm_len].seq = fic_tm_seq++;
+  fic_tm[fic_tm_len].proc = &p->h; fic_tm[fic_tm_len].task = task; fic_tm[fic_tm_len].period = period;
+  fic_tm_up(fic_tm_len++);
+  p->timer = 1;
+}
+static fic_timer fic_tm_pop_at(size_t i) {
+  fic_timer t = fic_tm[i];
+  fic_tm[i] = fic_tm[--fic_tm_len];
+  if (i < fic_tm_len) { fic_tm_down(i); fic_tm_up(i); }
+  return t;
+}
+/* the cancel function of a binding (clearTimeout, clearInterval): removes the timers of p */
+static void fic_tm_cancel(fic_proc *p) {
+  size_t i = 0;
+  while (i < fic_tm_len) {
+    if (fic_tm[i].proc == &p->h) { fic_timer t = fic_tm_pop_at(i); FIC_RC_DROP(t.proc); if (t.task != NULL) FIC_RC_DROP(t.task); i = 0; }
+    else i++;
+  }
+  p->timer = -1;
+}
+
+/* the bindings that wait (Process.sleep, Time.setInterval); with b == NULL: cancel the pending one of p (kill) */
+static void fic_sched_bind_async(fic_proc *p, fic_task_bind *b) {
+  if (b == NULL) { fic_tm_cancel(p); return; }
+  switch (b->kind) {
+  case FIC_BIND_SLEEP: fic_tm_add(p, NULL, b->ms, 0); break;
+  case FIC_BIND_INTERVAL: { double ms = b->ms; if (!(ms >= 1)) ms = 1; FIC_RC_DUP(b->a.p); fic_tm_add(p, b->a.p, ms, ms); break; }
+  default: fprintf(stderr, "internal: a binding of kind %u\n", (unsigned)b->kind); abort();
+  }
+}
+
+static FIC_UNUSED fic_ref fic_task_sleep(double ms) { return fic_task_bind_new(FIC_BIND_SLEEP, FIC_W_UNIT, FIC_W_UNIT, 0, ms); }
+/* Time.setInterval interval task: a binding that never completes; every `interval` ms it spawns the task */
+static FIC_UNUSED fic_ref fic_task_interval(double ms, fic_ref task) { return fic_task_bind_new(FIC_BIND_INTERVAL, fic_w_p(task), FIC_W_UNIT, 1, ms); }
+/* Time.now = Elm.Kernel.Time.now millisToPosix: the result of the function is a Posix (a reference) */
+static FIC_UNUSED fic_ref fic_task_now(fic_ref f) { return fic_task_bind_new(FIC_BIND_NOW, fic_w_p(f), FIC_W_UNIT, 1, 0); }
+/* Time.here and Time.getZoneName (overlay/FicOverlayTime.elm): the offset of the local zone now, in minutes east of UTC (Elm:
+   -(new Date()).getTimezoneOffset()), and the name of the zone (Intl's timeZone: TZ, else the link /etc/localtime, else "") */
+static FIC_UNUSED fic_ref fic_task_here(void) { return fic_task_bind_new(FIC_BIND_HERE, FIC_W_UNIT, FIC_W_UNIT, 0, 0); }
+static FIC_UNUSED fic_ref fic_task_zone(void) { return fic_task_bind_new(FIC_BIND_ZONE, FIC_W_UNIT, FIC_W_UNIT, 0, 0); }
+
+static int64_t fic_zone_offset(void) {
+#if defined(__unix__) || defined(__APPLE__)
+  time_t t = (time_t)(fic_time_now_ms() / 1000);
+  struct tm lt, gt;
+  if (localtime_r(&t, &lt) != NULL && gmtime_r(&t, &gt) != NULL) {     /* tm_gmtoff is not POSIX: the difference of the two */
+    int64_t days = lt.tm_year != gt.tm_year ? (lt.tm_year > gt.tm_year ? 1 : -1) : (int64_t)(lt.tm_yday - gt.tm_yday);
+    return days * 1440 + (int64_t)(lt.tm_hour - gt.tm_hour) * 60 + (int64_t)(lt.tm_min - gt.tm_min);
+  }
+#endif
+  return 0;
+}
+static fic_ref fic_zone_name(void) {
+  const char *tz = getenv("TZ");
+  char buf[256];
+  if (tz != NULL && *tz == ':') tz++;
+  if (tz != NULL && *tz != 0 && strchr(tz, ',') == NULL) return fic_str_new(tz, (int64_t)strlen(tz));
+#if defined(__unix__) || defined(__APPLE__)
+  {
+    ssize_t n = readlink("/etc/localtime", buf, sizeof buf - 1);
+    if (n > 0) {
+      const char *z;
+      buf[n] = 0;
+      z = strstr(buf, "zoneinfo/");
+      if (z != NULL) return fic_str_new(z + 9, (int64_t)strlen(z + 9));
+    }
+  }
+#endif
+  (void)buf;
+  return fic_str_new("", (int64_t)strlen(""));
+}
+
+/* the bindings of the clock complete at once (fic_sched_bind) */
+static void fic_sched_bind_clock(fic_proc *p, fic_task_bind *b) {
+  switch (b->kind) {
+  case FIC_BIND_NOW: { fic_word t = fic_ap1(b->a.p, 0u, fic_w_i(fic_time_now_ms())); fic_sched_resume(p, fic_task_succeed(t, 1)); break; }
+  case FIC_BIND_HERE: fic_sched_resume(p, fic_task_succeed(fic_w_i(fic_zone_offset()), 0)); break;
+  case FIC_BIND_ZONE: fic_sched_resume(p, fic_task_succeed(fic_w_p(fic_zone_name()), 1)); break;
+  default: abort();
+  }
+}
+
+/* run the timers until none is left */
+static FIC_UNUSED void fic_sched_run(void) {
+  fic_clock_init();
+  while (fic_tm_len != 0) {
+    fic_timer t = fic_tm[0];
+    if (fic_clock_virtual) { if (t.deadline > fic_clock_vnow) fic_clock_vnow = t.deadline; }
+    else {
+      double now = fic_loop_now();
+      if (t.deadline > now) {
+#if defined(__unix__) || defined(__APPLE__)
+        struct timespec d;
+        double w = t.deadline - now;
+        fflush(stdout);
+        d.tv_sec = (time_t)(w / 1000); d.tv_nsec = (long)((w - (double)d.tv_sec * 1000) * 1e6);
+        nanosleep(&d, NULL);
+#endif
+        continue;
+      }
+    }
+    t = fic_tm_pop_at(0);
+    if (t.task == NULL) {                                           /* Process.sleep: resume the process with () */
+      fic_proc *p = (fic_proc *)t.proc;
+      p->timer = -1;
+      if (p->root != FIC_NONE && p->root->tag == FIC_TAG_TASK_BIND) fic_sched_resume(p, fic_task_succeed(FIC_W_UNIT, 0));
+      FIC_RC_DROP(t.proc);
+    } else {                                                        /* setInterval: re-arm, then spawn the task */
+      fic_ref task = t.task;
+      fic_tm[fic_tm_len] = t; fic_tm[fic_tm_len].deadline = t.deadline + t.period; fic_tm[fic_tm_len].seq = fic_tm_seq++;
+      if (fic_tm_len == fic_tm_cap) abort();
+      fic_tm_up(fic_tm_len++);
+      FIC_RC_DUP(task);
+      { fic_ref q = fic_sched_raw_spawn(task); FIC_RC_DROP(q); }
+    }
+  }
+  fflush(stdout);
+}
+
 static fic_word fic_port_in_compose(fic_ref outer, fic_ref inner) { (void)outer; (void)inner; abort(); }
-static FIC_UNUSED void fic_sched_run(void) { }
 
 /* ---- the end of the program (step 8): the effect state is released, so a counted program ends with nothing live ---- */
 
@@ -494,6 +683,8 @@ static FIC_UNUSED void fic_platform_teardown(void) {
     FIC_RC_DROP(g->init); FIC_RC_DROP(g->on_effects); FIC_RC_DROP(g->on_self); FIC_RC_DROP(g->port_subs);
   }
   fic_nmgr = 0;
+  while (fic_tm_len != 0) { fic_timer t = fic_tm[--fic_tm_len]; FIC_RC_DROP(t.proc); if (t.task != NULL) FIC_RC_DROP(t.task); }
+  free(fic_tm); fic_tm = NULL; fic_tm_cap = 0;
   free(fic_rq); fic_rq = NULL; fic_rq_cap = fic_rq_len = fic_rq_head = 0;
   free(fic_fxq); fic_fxq = NULL; fic_fxq_cap = fic_fxq_len = fic_fxq_head = 0;
 }

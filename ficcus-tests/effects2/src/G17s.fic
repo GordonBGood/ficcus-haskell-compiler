@@ -1,0 +1,51 @@
+module G17s exposing (main)
+
+-- Effects E2, G17 companion (b) (docs/EFFECTS-CHECK.md section 3): `Task.perform (\_ -> Done m) (Process.sleep 0)` captures the model in
+-- a command whose task waits on the loop; the model is updated meanwhile, and the captured one must keep its values (copies > 0).
+
+import Array exposing (Array)
+import Process
+import Task
+
+
+type alias Model =
+    { a : Array Int, n : Int }
+
+
+type Msg
+    = Start
+    | Done Model
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg m =
+    case msg of
+        Start ->
+            let
+                m2 =
+                    { m | a = Array.set 0 (m.n + 100) m.a, n = m.n + 1 }
+            in
+            ( m2, Cmd.batch [ Task.perform (\_ -> Done m) (Process.sleep 0), Task.perform (\_ -> Done m2) (Task.succeed ()) ] )
+
+        Done old ->
+            let
+                m2 =
+                    { m | a = Array.set 1 (old.n + 1000) m.a, n = m.n + 1 }
+
+                _ =
+                    Debug.log "captured, now" ( Array.toList old.a, Array.toList m2.a )
+            in
+            if m2.n < 9 then
+                ( m2, Task.perform (\_ -> Start) (Task.succeed ()) )
+
+            else
+                ( m2, Cmd.none )
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init = \_ -> ( { a = Array.repeat 3 0, n = 0 }, Task.perform (\_ -> Start) (Task.succeed ()) )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

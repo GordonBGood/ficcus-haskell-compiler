@@ -79,6 +79,9 @@ effectKernels =
   , ("elm/core:Platform.sendToApp", 2, "bo"), ("elm/core:Platform.sendToSelf", 2, "bo")
   , ("elm/core:Platform.Cmd.batch", 1, "o"), ("elm/core:Platform.Cmd.map", 2, "oo")
   , ("elm/core:Platform.Sub.batch", 1, "o"), ("elm/core:Platform.Sub.map", 2, "oo")
+    -- E2 step 5: elm/time's kernels (`Elm.Kernel.Time.now millisToPosix`, `setInterval`) and the two of overlay/FicOverlayTime.elm
+  , ("elm/core:Time.now", 1, "o"), ("elm/time:Time.setInterval", 2, "so")
+  , ("author/project:FicOverlayTime.hereOffset", 1, "s"), ("author/project:FicOverlayTime.zoneName", 1, "s")
   ]
 
 

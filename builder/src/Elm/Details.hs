@@ -271,12 +271,12 @@ verifyApp writer env time outline@(Outline.AppOutline elmVersion srcDirs direct 
   then
     do  stated <- checkAppDeps outline
         actual <- verifyConstraints env (Map.map Con.exactly stated)
-        -- Ficcus (L42): the overlays of elm/json, elm/bytes, elm/parser, elm/random and elm/regex (Ficcus.Mono.Overlay) import the
+        -- Ficcus (L42): the overlays of elm/json, elm/bytes, elm/parser, elm/random, elm/regex and elm/time (E2) (Ficcus.Mono.Overlay) import the
         -- package, which an application that reaches it only through another package lists as indirect: for a build to C (or
-        -- `.mono`) these five count as direct here, so that their interfaces are public. Build.checkModule lets only the overlay
+        -- `.mono`) these six count as direct here, so that their interfaces are public. Build.checkModule lets only the overlay
         -- modules import them (Flags.getOverlayOnlyPkgs): for the program Elm's rule is unchanged.
         promote <- Task.io Flags.getKeepModules
-        let overlayPkgs = Map.map (const ()) (Map.filterWithKey (\k _ -> Pkg.toChars k `elem` ["elm/json", "elm/bytes", "elm/parser", "elm/random", "elm/regex"]) actual)
+        let overlayPkgs = Map.map (const ()) (Map.filterWithKey (\k _ -> Pkg.toChars k `elem` ["elm/json", "elm/bytes", "elm/parser", "elm/random", "elm/regex", "elm/time"]) actual)
         let directDeps = if promote then Map.union (Map.map (const ()) direct) overlayPkgs else Map.map (const ()) direct
         Task.io (Flags.setOverlayOnlyPkgs (if promote then map Pkg.toChars (Map.keys (Map.difference overlayPkgs direct)) else []))
         if Map.size stated == Map.size actual

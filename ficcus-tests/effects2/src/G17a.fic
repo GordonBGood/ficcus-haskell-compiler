@@ -1,0 +1,43 @@
+module G17a exposing (main)
+
+-- Effects E2, G17 companion (a) (docs/EFFECTS-CHECK.md section 3): a subscription tagger captures the whole model (`\_ -> Tick m`).
+-- The Time manager keeps the tagger until the next subscriptions, so at each tick the model's array has a second owner and the update
+-- must copy it (model copies > 0), never write it in place: the old model the tagger carries must keep its values. Output = Elm.
+
+import Array exposing (Array)
+import Time
+
+
+type alias Model =
+    { a : Array Int, n : Int }
+
+
+type Msg
+    = Tick Model
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update (Tick old) m =
+    let
+        m2 =
+            { m | a = Array.set (modBy 4 m.n) (m.n * 10) m.a, n = m.n + 1 }
+
+        _ =
+            Debug.log "old, new" ( Array.toList old.a, Array.toList m2.a )
+    in
+    ( m2, Cmd.none )
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init = \_ -> ( { a = Array.repeat 4 0, n = 0 }, Cmd.none )
+        , update = update
+        , subscriptions =
+            \m ->
+                if m.n < 6 then
+                    Time.every 10 (\_ -> Tick m)
+
+                else
+                    Sub.none
+        }

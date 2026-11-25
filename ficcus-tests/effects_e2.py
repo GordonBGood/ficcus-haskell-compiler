@@ -15,6 +15,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RT = os.path.join(HERE, "..", "..", "targets", "c")
 SAN = ["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL", "-Wno-maybe-uninitialized"]
 
+# the clock of the tests with timers: the C program's FIC_TIME (a virtual clock, no waiting), and the zone on both sides
+T = {"FIC_TIME": "1700000000000", "TZ": "UTC"}
 # name: (environment, model copies wanted (None: not checked), filter of the output or None, what it tests)
 TESTS = {
     "S2Perform": ({}, None, None, "E1 (d): Task.perform in update, no message ever comes"),
@@ -23,6 +25,10 @@ TESTS = {
     "E2Tasks": ({}, None, None, "step 4: andThen, onError, fail, attempt, map2, sequence, mapError, silent failure, spawn and kill"),
     "G17": ({}, 0, None, "G17: 100000 Task.perform steps over a Dict and Array model, 0 model copies"),
     "G17c": ({}, 1, None, "G17 (c): a closed literal init model, exactly 1 model copy"),
+    "E2Sleep": (T, None, None, "step 5: Process.sleep order, sleep 0 yields, a killed sleeper never wakes, the loop ends"),
+    "E2Time": (T, None, None, "step 5: Time.every until unsubscribed, Time.now, here and getZoneName (TZ=UTC)"),
+    "G17a": (T, ">0", None, "G17 (a): a Time.every tagger captures the model: copies, the old model keeps its values"),
+    "G17s": (T, ">0", None, "G17 (b): Task.perform (Done m) (Process.sleep 0) captures the model: copies"),
 }
 
 
@@ -45,6 +51,12 @@ def goldens(a, names):
         r = run(["node", os.path.join(HERE, "effects2", "ref", "run.js"), js, n], env=dict(os.environ, **env), timeout=600)
         out = r.stdout.decode()
         open(os.path.join(HERE, "expected", "e2_%s.out" % n.lower()), "w").write(out)
+        # E1 open point (b): the order in which Elm registers the managers and ports (_Platform_effectManagers)
+        order = re.findall(r"_Platform_effectManagers\['(\w+)'\] = |_Platform_(?:outgoing|incoming)Port\('(\w+)'", open(js).read())
+        names = [a or b for a, b in order]
+        of = os.path.join(HERE, "expected", "e2_%s.order" % n.lower())
+        if names: open(of, "w").write(" ".join(names) + "\n")
+        elif os.path.exists(of): os.remove(of)
         print("golden %s: %d lines%s" % (n, out.count("\n"), "" if r.returncode == 0 else " (node exit %d)" % r.returncode))
     shutil.rmtree(tmp, ignore_errors=True)
     return bad
@@ -65,9 +77,16 @@ def check(a, names):
         if filt: want = filt(want)
         for flag in ("--rc", "--no-rc"):
             c = os.path.join(tmp, n + flag + ".c")
-            p = run([os.path.abspath(a.elm), "make", "src/%s.fic" % n, "--output=" + c, flag], cwd=d, env=dict(os.environ, ELM_HOME=a.elm_home))
+            p = run([os.path.abspath(a.elm), "make", "src/%s.fic" % n, "--output=" + c, flag], cwd=d,
+                    env=dict(os.environ, ELM_HOME=a.elm_home, FICCUS_MANAGER_ORDER="1"))
             if p.returncode != 0:
                 report(False, "%s %s compiles" % (n, flag), (p.stdout + p.stderr).decode()[-400:]); continue
+            of = os.path.join(HERE, "expected", "e2_%s.order" % n.lower())
+            if flag == "--rc" and os.path.exists(of):
+                m = re.search(r"FICCUS_MANAGER_ORDER: \[(.*)\]", (p.stdout + p.stderr).decode())
+                got = [x.split(":")[-1].split(".")[-1] if k == "EManager" else x for k, x in re.findall(r'(EManager|EPortOut|EPortIn) "([^"]*)"', m.group(1))] if m else []
+                want_o = open(of).read().split()
+                report(got == want_o, "%s: managers and ports in Elm's order (%s)" % (n, " ".join(want_o)), "got " + " ".join(got))
             for tag, cf in ((("O2", ["-O2"]), ("san", SAN)) if flag == "--rc" else (("O2", ["-O2"]),)):
                 exe = os.path.join(tmp, n + flag + tag)
                 b = run(["gcc", "-std=c99", "-ffp-contract=off", "-w", *cf, "-DFIC_STATS", "-I", RT, c, "-o", exe, "-lm"])
@@ -81,9 +100,9 @@ def check(a, names):
                 live = re.search(r"FIC_STATS: allocs \d+ live (\d+)", err)
                 ok = r.returncode == 0 and got == want
                 if flag == "--rc": ok = ok and live is not None and live.group(1) == "0"
-                if copies is not None and flag == "--rc": ok = ok and mc == copies
+                if copies is not None and flag == "--rc": ok = ok and (mc > 0 if copies == ">0" else mc == copies)
                 report(ok, "%s %s %s: output = Elm%s%s" % (n, flag, tag, ", live 0" if flag == "--rc" else "",
-                                                           (", model copies %d (want %d)" % (mc, copies)) if copies is not None and flag == "--rc" else ""),
+                                                           (", model copies %d (want %s)" % (mc, copies)) if copies is not None and flag == "--rc" else ""),
                        "exit %d\n--- got\n%s\n--- stderr\n%s" % (r.returncode, got[-600:], err[-600:]))
     shutil.rmtree(tmp, ignore_errors=True)
     return bad

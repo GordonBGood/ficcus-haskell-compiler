@@ -1,0 +1,56 @@
+module E2Sleep exposing (main)
+
+-- Effects E2 step 5: Process.sleep on the event loop. Timers fire in order of deadline; sleep 0 yields to the loop (the synchronous
+-- commands of the same batch run first); Task.sequence waits for its sleeping element; a process killed while it sleeps never wakes
+-- (the Debug.log in its continuation never prints); the program ends when no timer is left.
+
+import Process
+import Task exposing (Task)
+
+
+type Msg
+    = Slept Int
+    | Done String
+    | Seq (List Int)
+    | Spawned
+
+
+sleeper : Int -> Cmd Msg
+sleeper ms =
+    Task.perform Slept (Process.sleep (toFloat ms) |> Task.map (\_ -> ms))
+
+
+victim : Task x ()
+victim =
+    Process.sleep 30 |> Task.map (\_ -> Debug.log "never" ())
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        Slept 20 ->
+            ( n + 1, sleeper 5 )
+
+        _ ->
+            ( n + 1, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( 0
+                , Cmd.batch
+                    [ sleeper 60
+                    , sleeper 20
+                    , sleeper 0
+                    , Task.perform Done (Task.succeed "sync")
+                    , Task.perform Seq (Task.sequence [ Task.succeed 1, Process.sleep 5 |> Task.map (\_ -> 2), Task.succeed 3 ])
+                    , Task.perform (\_ -> Spawned)
+                        (Process.spawn victim |> Task.andThen (\id -> Process.sleep 10 |> Task.andThen (\_ -> Process.kill id)))
+                    ]
+                )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

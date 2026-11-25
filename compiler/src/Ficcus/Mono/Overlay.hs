@@ -7,6 +7,7 @@ module Ficcus.Mono.Overlay
   , overlayFileName
   , overlayId
   , randomSource, randomFileName, randomOverlayPrefix
+  , timeSource, timeFileName
   , bitwise64Source
   , bitwise64FileName
   , sizedSources
@@ -48,7 +49,7 @@ overlayModuleName = "FicOverlay"
 -- | the modules that are not part of the project in the listings (`x.mono`, `x.types`): the overlay of elm/core and the Elm parts of
 -- the Json and Bytes kernels, which are compiled into every project that lists the package
 supportModuleNames :: [String]
-supportModuleNames = [overlayModuleName, "FicOverlaySort", "FicOverlayJson", "FicOverlayBytes", "FicOverlayRegex"]
+supportModuleNames = [overlayModuleName, "FicOverlaySort", "FicOverlayJson", "FicOverlayBytes", "FicOverlayRegex", "FicOverlayTime"]
 
 
 overlayFileName :: FilePath
@@ -68,6 +69,9 @@ overlayId cid =
         "elm/core:List.sortWith" -> Just ("author/project:FicOverlaySort.listSortWith")
         "elm/parser:Parser.Advanced.multiComment" -> Just "author/project:FicOverlayParser.multiComment"
         "elm/random:Random.float" -> Just "author/project:FicOverlayRandom.float"
+        -- E2 step 5: elm/time's zone tasks on the C run time's kernels (overlay/FicOverlayTime.elm)
+        "elm/time:Time.here" -> Just "author/project:FicOverlayTime.here"
+        "elm/time:Time.getZoneName" -> Just "author/project:FicOverlayTime.getZoneName"
         _ | Just n <- List.stripPrefix "elm/json:Json.Encode." cid, n `elem` ["list", "array", "set", "object", "dict"] ->
               Just ("author/project:FicOverlayJson.encode" ++ capital n)
           | Just n <- List.stripPrefix "elm/json:Json.Decode." cid, n `elem` ["array", "keyValuePairs", "map3", "map4", "map5", "map6", "map7", "map8"] ->
@@ -167,6 +171,16 @@ randomSource =
 
 randomFileName :: FilePath
 randomFileName = "FicOverlayRandom.elm"
+
+
+-- E2 step 5: the elm/time overlay (overlay/FicOverlayTime.elm): compiled only into projects that depend on elm/time
+timeSource :: String
+timeSource =
+  $(embedFiles [ "overlay/FicOverlayTime.elm" ])
+
+
+timeFileName :: FilePath
+timeFileName = "FicOverlayTime.elm"
 
 
 -- | the module whose own calls are not redirected (the overlay of `Random.float` calls `Random.float`)

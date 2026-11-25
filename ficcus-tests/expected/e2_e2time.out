@@ -1,0 +1,7 @@
+zone name: Name "UTC"
+hour of 3600000 in the zone: 1
+now is after 2001: True
+tick: 1
+tick: 2
+tick: 3
+tick: 4
