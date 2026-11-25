@@ -152,6 +152,7 @@ data S =
     , sLeafHomes :: Set.Set String                -- the managers whose `command` or `subscription` the program uses
     , sMapPairs :: Set.Set (Bool, Class, Class)   -- the (Cmd?, a, b) class pairs of the program's `Cmd.map`/`Sub.map`
     , sAppMsg :: Maybe Class                      -- the class of the program's `msg` (set by `specWorker`)
+    , sWorkerFields :: Maybe (SEnv, Can.Expr, Can.Expr)   -- (E1 step 3) `update` and `subscriptions` of the worker, cloned by `workerPhase`
     }
 
 
@@ -203,10 +204,11 @@ specialize modules marks =
         unions = foldr (Map.adjust (\u -> u { usEnum = False })) unions0 [ Sized.typeId sz | sz <- Sized.allSized, Map.member ("sized:" ++ Sized.typeId sz) (Sized.sizedEnums unions0) ]
         enums = Map.union (Sized.sizedEnums unions0) (builtin (Map.fromList (concatMap mmEnums modules)))
         managers = Map.fromList [ (mgHome mg, mg) | m' <- modules, Just mg <- [mmManager m'] ]
-        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions managers Set.empty Set.empty Nothing
+        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions managers Set.empty Set.empty Nothing Nothing
         mainId = defIdOf (mmCtx m) (defKeyOf d)
         -- E1 step 2: the effect managers the program reaches are cloned after everything else (their clones get the last ids)
-        final0 = execState (requestRoot mainId >>= \r0 -> drain >> managerPhase mainId >> return r0) start
+        -- E1 step 3: update and subscriptions likewise (workerPhase), before the managers their bodies can reach
+        final0 = execState (requestRoot mainId >>= \r0 -> drain >> workerPhase mainId >> managerPhase mainId >> return r0) start
         root = Map.lookup (CKey mainId Nothing (Key [])) (sClones final0)
         -- SIZED: a literal out of range is an error also in a definition that `main` does not reach: when a sized type is in the
         -- program, the other definitions of the project are specialized too (their clones are dropped, only these reports are kept)
@@ -1530,6 +1532,64 @@ resolve se region e =
                   return (RClone c (length (defArgs (srcDef src)) - hiddenN) (null (defArgs (srcDef src)) && srcOwner src == Nothing))
 
 
+-- E1 STEP 3: THE PROGRAM'S UPDATE AND SUBSCRIPTIONS (docs/EFFECTS-DESIGN.md D-fx-3 amended)
+
+
+-- | `update` and `subscriptions` of the worker become clones that the typed stepper of the C generator calls directly (the model as a
+-- struct by value, never through a closure). They are appended to `main`'s worker call after `init`: `worker init update subscriptions`
+-- (then the managers of step 2). Done after the first drain, so the clones of the rest of the program keep their ids (and names).
+workerPhase :: String -> SM ()
+workerPhase mainId =
+  do  pending <- gets sWorkerFields
+      case pending of
+        Nothing -> return ()
+        Just (se, u, sb) ->
+          do  uc <- workerFn se "update" 2 u
+              sc <- workerFn se "subscriptions" 1 sb
+              drain
+              clones <- gets sClones
+              case Map.lookup (CKey mainId Nothing (Key [])) clones of
+                Just r -> modify' (\st -> st { sDone = Map.adjust (appendWorkerArgs [MExpr CRef (MGlobal uc), MExpr CRef (MGlobal sc)]) r (sDone st) })
+                Nothing -> return ()
+
+
+-- | a field of the worker as a function clone of `arity` parameters: a lambda of that many parameters is a clone of its own (like
+-- `init`); a top level function of that arity is its clone; anything else (`always Sub.none`, a lambda that returns a lambda) is a
+-- clone that applies the value (a closure call, so the model goes through the word ABI: correct, without the D-fx-3 guarantee)
+workerFn :: SEnv -> String -> Int -> Can.Expr -> SM CloneId
+workerFn se name arity fieldExpr@(A.At region e) =
+  case e of
+    Can.Lambda pats body | length pats == arity ->
+      do  fid <- freshId
+          let se' = se { seClone = fid }
+          ps <- forM (zip [0 :: Int ..] pats) (param se')
+          body0 <- specExpr se' body
+          body' <- wrapParams se' (zip pats ps) body0
+          modify' (\st -> st { sDone = Map.insert fid (MDef fid name (Key []) Function ps (mRep body') (Just body') Nothing [] (Just (seClone se)) [] [] Nothing False) (sDone st) })
+          return fid
+    _ | isVarLike e ->
+          do  ref <- resolve se region e
+              case ref of
+                RClone c n False | n == arity -> return c
+                _ -> applied
+    _ -> applied
+  where
+    applied =
+      case nodeType se (Recorder.exprKey region e) >>= peelFun arity of
+        Nothing -> report ("the `" ++ name ++ "` of Platform.worker is not a function of " ++ show arity ++ " arguments at " ++ regionText region) >> freshId
+        Just (ptys, rty) ->
+          do  fid <- freshId
+              let se' = se { seClone = fid }
+              pcls <- mapM (classOfTy se) ptys
+              rcls <- classOfTy se rty
+              f <- specExpr se' fieldExpr
+              let ps = [ ("_w" ++ show i, c) | (i, c) <- zip [0 :: Int ..] pcls ]
+              let body = MExpr rcls (MCall f [ MExpr c (MLocal p) | (p, c) <- ps ])
+              modify' (\st -> st { sDone = Map.insert fid (MDef fid name (Key []) Function ps rcls (Just body) Nothing [] (Just (seClone se)) [] [] Nothing False) (sDone st) })
+              return fid
+
+
+
 -- E1 STEP 2: EFFECT MANAGERS (Ficcus.Mono.Effects)
 
 
@@ -1625,6 +1685,10 @@ specWorker se region fregion f args =
             _ -> return ()
           key <- do ref <- resolve se fregion f
                     return (case ref of { RKernel _ k _ -> k; _ -> Key [] })
+          -- E1 step 3: update and subscriptions are cloned after the rest of the program (`workerPhase`: the existing clones keep their ids)
+          case ([ x | (k, x) <- Map.toList fields, N.toChars k == "update" ], [ x | (k, x) <- Map.toList fields, N.toChars k == "subscriptions" ]) of
+            ([u], [sb]) | not noStepper -> modify' (\st -> st { sWorkerFields = Just (se, u, sb) })
+            _ -> return ()
           initId <- freshId
           p <- param se (0, pat)
           body' <- specExpr (se { seClone = initId }) body

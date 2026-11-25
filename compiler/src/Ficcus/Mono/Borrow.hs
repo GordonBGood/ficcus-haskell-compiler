@@ -40,6 +40,7 @@ import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel (kernelSig, updateKernels)
 import Ficcus.Mono.Layout (objSizeClass)
+import Ficcus.Mono.Program (modelSeeds)
 import Ficcus.Mono.Reuse
 
 
@@ -71,7 +72,10 @@ inferBorrow unions root clones0 = go (map start clones0)
            | MGlobal c <- mNode h, Just d <- Map.lookup c byId, mdKind d == Function, length args == length (mdParams d) ->
                [ (c, i) | (i, a, (_, pc)) <- zip3 [0 :: Int ..] args (mdParams d), mRep a /= pc ]
          _ -> [])
-    updates = updateParams clones0
+    -- E1 step 3 (D-fx-3 amended): the model parameter of the program's `update` is owned whatever its body does (the seed), and it is
+    -- an extra root of the update rule
+    seeds = modelSeeds root clones0
+    updates = Set.union seeds (if updateRule then updateParamsFrom seeds clones0 else Set.empty)
     start d = d { mdOwn = [ if refClass c && not (Set.member (mdClone d, i) mismatched) then Borrowed else Owned | (i, (_, c)) <- zip [0 :: Int ..] (mdParams d) ] }
     go cs =
       let ctx = ownCtx caps cs
@@ -82,7 +86,7 @@ inferBorrow unions root clones0 = go (map start clones0)
         Just body | mdKind d == Function, Just (mdClone d) /= root ->
           let consumed = Set.unions [ownedVars ctx body, tailBad ctx d, if projRule then projOwned ctx d else Set.empty, if reuseRule then reuseOwned ctx d else Set.empty,
                                        if hybridRule then hybridOwned unions recTypes sccs ctx d else Set.empty,
-                                       if updateRule then Set.fromList [ n | (c, n) <- Set.toList updates, c == mdClone d ] else Set.empty]
+                                       Set.fromList [ n | (c, n) <- Set.toList updates, c == mdClone d ]]
               now = [ if o == Owned || Set.member n consumed then Owned else Borrowed | ((n, _), o) <- zip (mdParams d) (paramOwns d) ]
           in d { mdOwn = now }
         _ -> d
@@ -377,8 +381,8 @@ updateRule = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICCUS_NO_UPDATE_RU
 -- `Array.set`, `setHelp`, `push`, a user's wrapper type or a loop). Without it the hybrid rule leaves `Array.set arr` borrowed (a
 -- single match in a function that does not recurse), the caller keeps its count and every update copies.
 -- The result: the updated parameters of every clone (a fixed point over all clones, independent of the other rules).
-updateParams :: [MDef] -> Set.Set (CloneId, String)
-updateParams clones = go Set.empty
+updateParamsFrom :: Set.Set (CloneId, String) -> [MDef] -> Set.Set (CloneId, String)
+updateParamsFrom seeds clones = go seeds
   where
     byId = Map.fromList [ (mdClone d, d) | d <- clones ]
     go set =

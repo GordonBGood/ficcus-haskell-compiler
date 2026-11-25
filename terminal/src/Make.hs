@@ -31,6 +31,7 @@ import qualified Ficcus.Mono.CGen as CGen
 import qualified Ficcus.Mono.Facts as Facts
 import qualified Ficcus.Mono.Ir as Mono
 import qualified Ficcus.Mono.Members as MonoMembers
+import qualified Ficcus.Mono.ModelUnpack as ModelUnpack
 import qualified Ficcus.Mono.Marks as Marks
 import qualified Ficcus.Mono.Modules as Modules
 import qualified Ficcus.Mono.Overlay as Overlay
@@ -251,7 +252,7 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                             (Just pat, Right ur) | rcMode ->
                               Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones (Unbox.urProgram ur), pat `List.isInfixOf` Mono.mdName d ]))
                             _ -> return ()
-                          let rced = if rcMode then unboxed >>= \ur -> Rc.rcProgram (Twin.twinProgram (Unbox.urProgram ur)) >>= mutated else Right program
+                          let rced = if rcMode then unboxed >>= \ur -> Rc.rcProgram (ModelUnpack.unpackModel (Twin.twinProgram (Unbox.urProgram ur))) >>= mutated else Right program
                           twinStatsOn <- Task.io (System.Environment.lookupEnv "FICCUS_TWIN_STATS")
                           case (twinStatsOn, rced) of
                             (Just "1", Right _) | rcMode -> Task.io (hPutStrLn stderr ("FICCUS_TWIN_STATS: (twins, twins that build a cell of their closure's size class) = " ++ show (Twin.twinStats (Twin.twinProgram (Inline.inlineProgram program)))))

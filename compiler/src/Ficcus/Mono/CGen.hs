@@ -34,6 +34,7 @@ import System.IO.Unsafe (unsafePerformIO)
 
 import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, platformRuntime, prelude, regexRuntime, sizedRuntime, sortRuntime, stringRuntime, vectorRuntime)
 import Ficcus.Mono.Effects (managerHome, noStepper)
+import Ficcus.Mono.Program (Shape(..), programShape)
 import Ficcus.Mono.Overlay (vectorMarker, vectorTypeName)
 import Ficcus.Mono.Class
 import Ficcus.Mono.Free (captures, refClass)
@@ -153,7 +154,7 @@ generate rcMode program =
                     ++ (if any (`List.isInfixOf` body) ["fic_json_", "fic_jd_"] then jsonRuntime ++ "\n" else "")
                     ++ (if "fic_bytes_" `List.isInfixOf` body then bytesRuntime ++ "\n" else "")
                     ++ (if "fic_re_" `List.isInfixOf` body then regexRuntime ++ "\n" else "")
-                    ++ (if "fic_bag_" `List.isInfixOf` body then platformRuntime ++ "\n" else "")
+                    ++ (if any (`List.isInfixOf` body) ["fic_bag_", "fic_app_model"] then platformRuntime ++ "\n" else "")
                     ++ "\n" ++ body)
         errs -> Left errs
 
@@ -183,12 +184,16 @@ program' info root clones =
       emit ""
       modify' (\g -> g { gWhere = "" })        -- the program shape is not inside a clone
       initFn <- workerInit info root
+      -- E1 step 3: the typed stepper (D-fx-3 amended), after everything else so no temporary of the clones is renumbered
+      let step = programShape (Just root) (iClones info) >>= shStep
+      forM_ step (stepperSection info)
       emit "static int fic_main(void) {"
       indented $
         do  rcMode <- gets gRc
             emit "fic_init();"
             case initFn of
               Just d
+                | Just (ud, _) <- step -> stepperMain info d ud
                 | rcMode && refClass (mdResult d) ->
                     do  emit (classType (mdResult d) ++ " fic_res = " ++ functionName d ++ "(0);")
                         mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths (mdResult d) "fic_res")
@@ -296,6 +301,89 @@ workerInit info root =
       do  _ <- failWith "main is not `Platform.worker { init = \\flags -> ... }` (the only program shape supported in slice 1)"
           return Nothing
 
+
+
+-- E1 STEP 3: THE TYPED STEPPER (docs/EFFECTS-DESIGN.md D-fx-3 amended; Ficcus.Mono.Program)
+--
+-- The runtime owns one slot, `fic_app_model`, of the model's own class (a record is a struct by value, no box). `fic_app_step(msg)`
+-- is Elm's `sendToApp`: it MOVES the model out of the slot into `update` (whose model parameter the borrow inference makes owned: the
+-- seed), stores the model `update` returns, then calls `subscriptions` with the slot borrowed. No uncounted pointer to the model survives
+-- a call, so every in-place update in `update` sees the true count. The commands and subscriptions are dropped until the scheduler
+-- dispatches them (E2). FIC_STATS adds a line with the counters (in place, copied, vector copies, reuse misses) between the
+-- stepper's entry and exit. FIC_STEP_TEST=n (test builds, G17b) runs n steps after `init` with the message FIC_STEP_TEST_MSG (default
+-- 0: the first constructor of a message type of a scalar class).
+
+
+-- the model slot, `fic_app_subscriptions` and `fic_app_step`
+stepperSection :: Info -> (MDef, MDef) -> CG ()
+stepperSection info (ud, sd) =
+  do  rcMode <- gets gRc
+      let caps = Map.findWithDefault [] (mdClone ud) (iCaptured info) ++ Map.findWithDefault [] (mdClone sd) (iCaptured info)
+      when (not (null caps)) (() <$ failWith "internal: the update or subscriptions of the program captures variables")
+      case (mdParams ud, paramOwns ud, mdParams sd, paramOwns sd, mdResult ud) of
+        ([(_, msgC), (_, modelC)], [msgOwn, modelOwn], [(_, subModelC)], [subOwn], CStruct [resModelC, cmdC]) | subModelC == modelC ->
+          do  emit ("/* E1: the model slot and the typed stepper (D-fx-3 amended) */")
+              emit ("static " ++ classType modelC ++ " fic_app_model;")
+              emit ""
+              -- subscriptions: the slot is borrowed (a count of its own when the parameter is owned)
+              emit "static void fic_app_subscriptions(void) {"
+              indented $
+                do  when (rcMode && subOwn == Owned) (dupVars' modelC "fic_app_model")
+                    emit (classType (mdResult sd) ++ " fic_sub = " ++ functionName sd ++ "(fic_app_model);")
+                    if rcMode then dropPaths (mdResult sd) "fic_sub" else emit "(void)fic_sub;"
+                    emit "/* E2: the subscriptions go to the managers */"
+              emit "}"
+              emit ""
+              emit ("static FIC_UNUSED void fic_app_step(" ++ classType msgC ++ " fic_msg) {")
+              indented $
+                do  emit "#ifdef FIC_STATS"
+                    emit "fic_model_enter();"
+                    emit "#endif"
+                    emit (classType modelC ++ " fic_m = fic_app_model;            /* moved out of the slot */")
+                    emit (classType (mdResult ud) ++ " fic_r = " ++ functionName ud ++ "(fic_msg, fic_m);")
+                    when (rcMode && modelOwn == Borrowed) (dropPaths modelC "fic_m")
+                    when (rcMode && msgOwn == Borrowed) (dropPaths msgC "fic_msg")
+                    m' <- adaptOwn resModelC modelC "fic_r.f0"
+                    emit ("fic_app_model = " ++ m' ++ ";")
+                    if rcMode then dropPaths cmdC "fic_r.f1" else return ()
+                    emit "/* E2: the commands are dispatched */"
+                    emit "fic_app_subscriptions();"
+                    emit "#ifdef FIC_STATS"
+                    emit "fic_model_leave();"
+                    emit "#endif"
+              emit "}"
+              emit ""
+        _ -> () <$ failWith "internal: the update or subscriptions of the program has an unexpected shape"
+  where
+    dropPaths c v = mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths c v)
+
+
+-- the part of `fic_main` from init to the end of the program's model
+stepperMain :: Info -> MDef -> MDef -> CG ()
+stepperMain _ initD ud =
+  do  rcMode <- gets gRc
+      case (mdResult initD, mdParams ud) of
+        (CStruct [resModelC, cmdC], [(_, msgC), (_, modelC)]) ->
+          do  emit (classType (mdResult initD) ++ " fic_res = " ++ functionName initD ++ "(0);")
+              m <- adaptOwn resModelC modelC "fic_res.f0"
+              emit ("fic_app_model = " ++ m ++ ";")
+              when rcMode (mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths cmdC "fic_res.f1"))
+              emit "/* E2: the commands of init are dispatched */"
+              emit "fic_app_subscriptions();"
+              emit "#ifdef FIC_STEP_TEST"
+              if msgC `elem` [CI64, CF64, CU32, CEnum, CUnit]
+                then
+                  do  emit "#ifndef FIC_STEP_TEST_MSG"
+                      emit "#define FIC_STEP_TEST_MSG 0"
+                      emit "#endif"
+                      emit ("{ long fic_i; for (fic_i = 0; fic_i < (long)(FIC_STEP_TEST); fic_i++) fic_app_step((" ++ classType msgC ++ ")(FIC_STEP_TEST_MSG)); }")
+                else emit "#error \"FIC_STEP_TEST needs a message type of a scalar class\""
+              emit "#endif"
+              emit "#ifdef FIC_STATS"
+              emit "fic_model_report();"
+              emit "#endif"
+              when rcMode (mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths modelC "fic_app_model"))
+        _ -> () <$ failWith "internal: the init of the program does not return a pair"
 
 
 -- NAMES AND TYPES

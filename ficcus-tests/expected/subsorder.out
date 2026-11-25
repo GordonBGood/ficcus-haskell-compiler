@@ -1,0 +1,2 @@
+init: { n = 3, xs = [1,2,3] }
+subscriptions: 9
