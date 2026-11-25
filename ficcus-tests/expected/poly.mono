@@ -4,7 +4,7 @@ mark author/project:Poly.biggest   v0=comparable
 mark author/project:Poly.getX   v0=row
 clone c0   def: author/project:Poly.results   key: ()   kind: value   init: 4   needs: 
 clone c1   def: author/project:Poly.main   key: ()   kind: value   init: 5   needs: c0
--- program: 23 clones, reachable from main, dependencies first
+-- program: 25 clones, reachable from main, dependencies first
 clone c13   def: author/project:Poly.id2@35:9   key: (v0=i64)   name: id2@35:9__i64   kind: function   params: y:i64   result: i64   lifted-from: c2
   Local y :: i64
 clone c14   def: author/project:Poly.id2@35:9   key: (v0=ref)   name: id2@35:9__ref   kind: function   params: y:ref   result: ref   lifted-from: c2
@@ -203,16 +203,24 @@ clone c2   def: author/project:Poly.results   key: ()   kind: value   params:   
           Call :: i64
             Global c12 :: ref
             List :: ref
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Seq :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Seq :: struct(unit,ref)
     Call :: ref
       Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:String.String)) :: ref
       Lit "r" :: ref
       Global c2 :: ref
-    Tuple :: struct(unit,unit)
+    Tuple :: struct(unit,ref)
       Lit () :: unit
-      Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Poly.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+      Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c23   def: update   key: ()   kind: function   params: _a0:unit _a1:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c24   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Poly.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c23 :: ref
+    Global c24 :: ref

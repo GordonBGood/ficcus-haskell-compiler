@@ -5,7 +5,7 @@ clone c1   def: author/project:Evo.t   key: ()   kind: function   init: 1   need
 clone c2   def: author/project:Evo.f   key: ()   kind: function   init: 2   needs: 
 clone c3   def: author/project:Evo.go   key: ()   kind: function   init: 3   needs: 
 clone c4   def: author/project:Evo.main   key: ()   kind: value   init: 4   needs: 
--- program: 13 clones, reachable from main, dependencies first
+-- program: 15 clones, reachable from main, dependencies first
 clone c3   def: author/project:Evo.t   key: ()   kind: function   params: s:ref n:i64   result: i64
   Call :: i64
     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
@@ -376,18 +376,26 @@ clone c2   def: author/project:Evo.go   key: ()   kind: function   params: _a0:u
                                         Local lam@42:5 :: i64
                                       Local pipe@43:5 :: i64
                                     Local ignored@32:5 :: i64
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Seq :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Seq :: struct(unit,ref)
     Call :: i64
       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
       Lit "result" :: ref
       Call :: i64
         Global c2 :: ref
         Lit () :: unit
-    Tuple :: struct(unit,unit)
+    Tuple :: struct(unit,ref)
       Lit () :: unit
-      Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Evo.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+      Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c14   def: update   key: ()   kind: function   params: _a0:unit m:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Local m :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c15   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Evo.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c14 :: ref
+    Global c15 :: ref

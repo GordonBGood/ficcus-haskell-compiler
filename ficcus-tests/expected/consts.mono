@@ -14,7 +14,7 @@ clone c10   def: author/project:Consts.sumTo   key: ()   kind: function   init: 
 clone c11   def: author/project:Consts.twice   key: ()   kind: value   init: 11   needs: c0,c4,c8,c9
 clone c12   def: author/project:Consts.fromOther   key: ()   kind: value   init: 12   needs: c0,c4,c8,c9,c11
 clone c13   def: author/project:Consts.main   key: ()   kind: value   init: 13   needs: c0,c1,c2,c3,c4,c6,c7,c8,c9,c11,c12
--- program: 15 clones, reachable from main, dependencies first
+-- program: 17 clones, reachable from main, dependencies first
 clone c2   def: author/project:Consts.limit   key: ()   kind: value   params:    result: i64
   Lit 1000 :: i64
 clone c3   def: author/project:Consts.negLimit   key: ()   kind: value   params:    result: i64
@@ -84,8 +84,8 @@ clone c14   def: author/project:Consts.sumTo   key: ()   kind: function   params
             Local n :: i64
             Global c2 :: i64
         Global c5 :: i64
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Seq :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Seq :: struct(unit,ref)
     Call :: ref
       Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
       Lit "ints" :: ref
@@ -96,7 +96,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
         Global c5 :: i64
         Global c6 :: i64
         Global c7 :: i64
-    Seq :: struct(unit,unit)
+    Seq :: struct(unit,ref)
       Call :: struct(f64,f64,f64)
         Kernel elm/core:Debug.log (v0=type (elm/core:Basics.Float, elm/core:Basics.Float, elm/core:Basics.Float)) :: ref
         Lit "floats" :: ref
@@ -107,7 +107,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Kernel elm/core:Basics.mul (v0=type elm/core:Basics.Float) :: ref
             Global c8 :: f64
             Global c9 :: f64
-      Seq :: struct(unit,unit)
+      Seq :: struct(unit,ref)
         Call :: struct(u32,i64)
           Kernel elm/core:Debug.log (v0=type (elm/core:Char.Char, elm/core:Basics.Int)) :: ref
           Lit "char" :: ref
@@ -116,7 +116,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Call :: i64
               Kernel elm/core:Char.toCode () :: ref
               Global c10 :: u32
-        Seq :: struct(unit,unit)
+        Seq :: struct(unit,ref)
           Call :: struct(enum,enum,enum)
             Kernel elm/core:Debug.log (v0=type (elm/core:Basics.Bool, elm/core:Basics.Bool, elm/core:Basics.Bool)) :: ref
             Lit "bools" :: ref
@@ -129,7 +129,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Call :: enum
                   Kernel elm/core:Basics.not () :: ref
                   Global c12 :: enum
-          Seq :: struct(unit,unit)
+          Seq :: struct(unit,ref)
             Call :: ref
               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
               Lit "case" :: ref
@@ -141,7 +141,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Call :: ref
                   Global c13 :: ref
                   Lit 5 :: i64
-            Seq :: struct(unit,unit)
+            Seq :: struct(unit,ref)
               Call :: i64
                 Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                 Lit "loop" :: ref
@@ -149,10 +149,18 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Global c14 :: ref
                   Lit 1000 :: i64
                   Lit 0 :: i64
-              Tuple :: struct(unit,unit)
+              Tuple :: struct(unit,ref)
                 Lit () :: unit
-                Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Consts.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+                Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c15   def: update   key: ()   kind: function   params: _a0:unit _a1:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c16   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Consts.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c15 :: ref
+    Global c16 :: ref

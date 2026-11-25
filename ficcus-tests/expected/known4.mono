@@ -11,7 +11,7 @@ clone c7   def: author/project:Known4.value   key: ()   kind: value   init: 17  
 clone c8   def: author/project:Known4.array   key: ()   kind: value   init: 18   needs: c5,c6,c7
 clone c9   def: author/project:Known4.parse   key: ()   kind: function   init: 19   needs: c5,c6,c7,c8
 clone c10   def: author/project:Known4.main   key: ()   kind: value   init: 20   needs: c5,c6,c7,c8
--- program: 62 clones, reachable from main, dependencies first
+-- program: 64 clones, reachable from main, dependencies first
 clone c52   def: elm/core:List.foldl   key: (v0=u32; v1=ref)   name: foldl__u32__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
   Case :: ref
     Local list :: ref
@@ -811,53 +811,61 @@ clone c2   def: author/project:Known4.parse   key: ()   kind: function   params:
         Kernel elm/core:Basics.append (v0=app string) :: ref
         Lit "error " :: ref
         Local m :: ref
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Seq :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Seq :: struct(unit,ref)
     Call :: ref
       Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
       Lit "p1" :: ref
       Call :: ref
         Global c2 :: ref
         Lit "[1,2,[3,[4,nil],[]],5]" :: ref
-    Seq :: struct(unit,unit)
+    Seq :: struct(unit,ref)
       Call :: ref
         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
         Lit "p2" :: ref
         Call :: ref
           Global c2 :: ref
           Lit "42" :: ref
-      Seq :: struct(unit,unit)
+      Seq :: struct(unit,ref)
         Call :: ref
           Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
           Lit "p3" :: ref
           Call :: ref
             Global c2 :: ref
             Lit "[[[[[[7]]]]]]" :: ref
-        Seq :: struct(unit,unit)
+        Seq :: struct(unit,ref)
           Call :: ref
             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
             Lit "p4" :: ref
             Call :: ref
               Global c2 :: ref
               Lit "[1,,2]" :: ref
-          Seq :: struct(unit,unit)
+          Seq :: struct(unit,ref)
             Call :: ref
               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
               Lit "p5" :: ref
               Call :: ref
                 Global c2 :: ref
                 Lit "x" :: ref
-            Seq :: struct(unit,unit)
+            Seq :: struct(unit,ref)
               Call :: ref
                 Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                 Lit "p6" :: ref
                 Call :: ref
                   Global c2 :: ref
                   Lit "[nil,nil,[nil]]" :: ref
-              Tuple :: struct(unit,unit)
+              Tuple :: struct(unit,ref)
                 Lit () :: unit
-                Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Known4.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+                Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c64   def: update   key: ()   kind: function   params: _a0:unit _a1:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c65   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Known4.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c64 :: ref
+    Global c65 :: ref

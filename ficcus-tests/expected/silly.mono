@@ -1,7 +1,7 @@
 -- mono: stage (iii) slice 3b, modules=21
 -- module author/project:Silly (project)
 clone c0   def: author/project:Silly.main   key: ()   kind: value   init: 2   needs: 
--- program: 22 clones, reachable from main, dependencies first
+-- program: 24 clones, reachable from main, dependencies first
 clone c19   def: elm/core:List.foldl   key: (v0=i64; v1=ref)   name: foldl__i64__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
   Case :: ref
     Local list :: ref
@@ -280,8 +280,8 @@ clone c2   def: author/project:Silly.silly   key: (v0=i64)   name: silly__i64   
           Local _oa9_0 :: ref
 clone c3   def: author/project:Silly.silly2   key: (v0=i64)   name: silly2__i64   kind: value   params:    result: ref
   Global c2 :: ref
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let l2@32:21 :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Let l2@32:21 :: struct(unit,ref)
     Call :: ref
       Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
       Lit "ints" :: ref
@@ -300,7 +300,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
           Call :: ref
             Global c3 :: ref
             Local _oa4_0 :: ref
-    Let l1@29:21 :: struct(unit,unit)
+    Let l1@29:21 :: struct(unit,ref)
       Call :: ref
         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
         Lit "strings" :: ref
@@ -316,7 +316,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Global c5 :: ref
             List :: ref
               Lit "x" :: ref
-      If :: struct(unit,unit)
+      If :: struct(unit,ref)
         Call :: enum
           Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
           Call :: i64
@@ -328,13 +328,21 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
               Kernel elm/core:String.length () :: ref
               Local l2@32:21 :: ref
           Lit 0 :: i64
-        Tuple :: struct(unit,unit)
+        Tuple :: struct(unit,ref)
           Lit () :: unit
-          Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-        Tuple :: struct(unit,unit)
+          Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+        Tuple :: struct(unit,ref)
           Lit () :: unit
-          Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Silly.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+          Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c25   def: update   key: ()   kind: function   params: _a0:unit m:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Local m :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c26   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Silly.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c25 :: ref
+    Global c26 :: ref

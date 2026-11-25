@@ -9,7 +9,7 @@ mark author/project:Num.addLimit   v0=number
 clone c0   def: author/project:Num.intResult   key: ()   kind: value   init: 5   needs: 
 clone c1   def: author/project:Num.floatResult   key: ()   kind: value   init: 6   needs: 
 clone c2   def: author/project:Num.main   key: ()   kind: value   init: 7   needs: c0,c1
--- program: 18 clones, reachable from main, dependencies first
+-- program: 20 clones, reachable from main, dependencies first
 clone c2   def: author/project:Num.limit   key: (v0=type elm/core:Basics.Int)   name: limit__i64   kind: value   params:    result: i64
   Lit 100 :: i64
 clone c3   def: author/project:Num.limit   key: (v0=type elm/core:Basics.Float)   name: limit__f64   kind: value   params:    result: f64
@@ -172,8 +172,8 @@ clone c8   def: author/project:Num.combine   key: (v0=type elm/core:Basics.Float
           Lit 1.0 :: f64
           Lit 0 :: i64
       Lit () :: unit
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Seq :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Seq :: struct(unit,ref)
     Call :: i64
       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
       Lit "limit int" :: ref
@@ -181,7 +181,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
         Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
         Global c2 :: i64
         Lit 0 :: i64
-    Seq :: struct(unit,unit)
+    Seq :: struct(unit,ref)
       Call :: f64
         Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
         Lit "limit float" :: ref
@@ -189,7 +189,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
           Kernel elm/core:Basics.add (v0=type elm/core:Basics.Float) :: ref
           Global c3 :: f64
           Lit 0.5 :: f64
-      Seq :: struct(unit,unit)
+      Seq :: struct(unit,ref)
         Call :: f64
           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
           Lit "bigger float" :: ref
@@ -197,31 +197,31 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Kernel elm/core:Basics.fdiv () :: ref
             Global c4 :: f64
             Lit 8.0 :: f64
-        Seq :: struct(unit,unit)
+        Seq :: struct(unit,ref)
           Call :: i64
             Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
             Lit "int" :: ref
             Global c5 :: i64
-          Seq :: struct(unit,unit)
+          Seq :: struct(unit,ref)
             Call :: f64
               Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
               Lit "float" :: ref
               Global c6 :: f64
-            Seq :: struct(unit,unit)
+            Seq :: struct(unit,ref)
               Call :: unit
                 Kernel elm/core:Debug.log (v0=type ()) :: ref
                 Lit "combine int" :: ref
                 Call :: unit
                   Global c7 :: ref
                   Lit 1000 :: i64
-              Seq :: struct(unit,unit)
+              Seq :: struct(unit,ref)
                 Call :: unit
                   Kernel elm/core:Debug.log (v0=type ()) :: ref
                   Lit "combine float" :: ref
                   Call :: unit
                     Global c8 :: ref
                     Lit 100.5 :: f64
-                Seq :: struct(unit,unit)
+                Seq :: struct(unit,ref)
                   Call :: i64
                     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                     Lit "add" :: ref
@@ -229,7 +229,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                       Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
                       Lit 1 :: i64
                       Lit 2 :: i64
-                  Seq :: struct(unit,unit)
+                  Seq :: struct(unit,ref)
                     Call :: f64
                       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                       Lit "addf" :: ref
@@ -237,10 +237,18 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                         Kernel elm/core:Basics.add (v0=type elm/core:Basics.Float) :: ref
                         Lit 1.25 :: f64
                         Lit 2.0 :: f64
-                    Tuple :: struct(unit,unit)
+                    Tuple :: struct(unit,ref)
                       Lit () :: unit
-                      Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Num.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+                      Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c18   def: update   key: ()   kind: function   params: _a0:unit _a1:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c19   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Num.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c18 :: ref
+    Global c19 :: ref

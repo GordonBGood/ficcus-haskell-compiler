@@ -1,21 +1,21 @@
 -- mono: stage (iii) slice 3b, modules=21
 -- module author/project:Log (project)
 clone c0   def: author/project:Log.main   key: ()   kind: value   init: 0   needs: 
--- program: 2 clones, reachable from main, dependencies first
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Seq :: struct(unit,unit)
+-- program: 4 clones, reachable from main, dependencies first
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Seq :: struct(unit,ref)
     Call :: i64
       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
       Lit "int" :: ref
       Lit 42 :: i64
-    Seq :: struct(unit,unit)
+    Seq :: struct(unit,ref)
       Call :: i64
         Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
         Lit "negative" :: ref
         Call :: i64
           Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
           Lit 7 :: i64
-      Seq :: struct(unit,unit)
+      Seq :: struct(unit,ref)
         Call :: i64
           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
           Lit "big" :: ref
@@ -23,12 +23,12 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Kernel elm/core:Basics.pow (v0=type elm/core:Basics.Int) :: ref
             Lit 2 :: i64
             Lit 40 :: i64
-        Seq :: struct(unit,unit)
+        Seq :: struct(unit,ref)
           Call :: f64
             Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
             Lit "float" :: ref
             Lit 1.5 :: f64
-          Seq :: struct(unit,unit)
+          Seq :: struct(unit,ref)
             Call :: f64
               Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
               Lit "sum" :: ref
@@ -36,34 +36,34 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Kernel elm/core:Basics.add (v0=type elm/core:Basics.Float) :: ref
                 Lit 0.1 :: f64
                 Lit 0.2 :: f64
-            Seq :: struct(unit,unit)
+            Seq :: struct(unit,ref)
               Call :: f64
                 Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                 Lit "whole" :: ref
                 Lit 100.0 :: f64
-              Seq :: struct(unit,unit)
+              Seq :: struct(unit,ref)
                 Call :: f64
                   Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                   Lit "tiny" :: ref
                   Lit 1.0e-7 :: f64
-                Seq :: struct(unit,unit)
+                Seq :: struct(unit,ref)
                   Call :: f64
                     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                     Lit "huge" :: ref
                     Lit 1.0e21 :: f64
-                  Seq :: struct(unit,unit)
+                  Seq :: struct(unit,ref)
                     Call :: f64
                       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                       Lit "long" :: ref
                       Lit 1.2345678901234568e20 :: f64
-                    Seq :: struct(unit,unit)
+                    Seq :: struct(unit,ref)
                       Call :: f64
                         Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                         Lit "half" :: ref
                         Call :: f64
                           Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Float) :: ref
                           Lit 2.5 :: f64
-                      Seq :: struct(unit,unit)
+                      Seq :: struct(unit,ref)
                         Call :: f64
                           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                           Lit "inf" :: ref
@@ -71,7 +71,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                             Kernel elm/core:Basics.fdiv () :: ref
                             Lit 1.0 :: f64
                             Lit 0.0 :: f64
-                        Seq :: struct(unit,unit)
+                        Seq :: struct(unit,ref)
                           Call :: f64
                             Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                             Lit "nan" :: ref
@@ -79,17 +79,17 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                               Kernel elm/core:Basics.fdiv () :: ref
                               Lit 0.0 :: f64
                               Lit 0.0 :: f64
-                          Seq :: struct(unit,unit)
+                          Seq :: struct(unit,ref)
                             Call :: ref
                               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                               Lit "string" :: ref
                               Lit "plain" :: ref
-                            Seq :: struct(unit,unit)
+                            Seq :: struct(unit,ref)
                               Call :: ref
                                 Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                 Lit "escapes" :: ref
                                 Lit "quote\" back\\ line\nend" :: ref
-                              Seq :: struct(unit,unit)
+                              Seq :: struct(unit,ref)
                                 Call :: ref
                                   Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                   Lit "joined" :: ref
@@ -104,10 +104,18 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                       Call :: ref
                                         Kernel elm/core:String.fromFloat () :: ref
                                         Lit 0.5 :: f64
-                                Tuple :: struct(unit,unit)
+                                Tuple :: struct(unit,ref)
                                   Lit () :: unit
-                                  Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Log.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+                                  Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c2   def: update   key: ()   kind: function   params: _a0:unit _a1:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c3   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Log.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c2 :: ref
+    Global c3 :: ref

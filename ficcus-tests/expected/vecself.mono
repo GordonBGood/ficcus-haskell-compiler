@@ -60,7 +60,7 @@ mark author/project:Vector.sortBy   v0=any+element v1=comparable+element
 mark author/project:Vector.get   v0=any+element
 clone c13   def: author/project:Vector.ficVectorOverlay   key: ()   kind: value   init: 0   needs: 
 clone c14   def: author/project:Vector.sortIdx   key: ()   kind: function   init: 12   needs: 
--- program: 57 clones, reachable from main, dependencies first
+-- program: 59 clones, reachable from main, dependencies first
 clone c3   def: author/project:VecSelf.e3@135:21   key: (v0=type elm/core:Basics.Int)   name: e3@135:21__i64   kind: function   params:    result: ref   lifted-from: c1
   Call :: ref
     Kernel elm/core:Vector.set (v0=type ({}, elm/core:Basics.Int)) :: ref
@@ -1252,11 +1252,11 @@ clone c14   def: author/project:VecSelf.arrHelper   key: ()   kind: function   p
       Lit 0 :: i64
       Lit 1 :: i64
       Local v :: ref
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let _pv3 :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Let _pv3 :: struct(unit,ref)
     Call :: ref
       Global c3 :: ref
-    Let e2@132:21 :: struct(unit,unit)
+    Let e2@132:21 :: struct(unit,ref)
       Call :: ref
         Kernel elm/core:Vector.append (v0=type ()) :: ref
         Call :: ref
@@ -1271,7 +1271,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Kernel elm/core:Vector.repeat (v0=type ()) :: ref
             Lit 3 :: i64
             Lit () :: unit
-      Let e1@129:21 :: struct(unit,unit)
+      Let e1@129:21 :: struct(unit,ref)
         Call :: ref
           Kernel elm/core:Vector.push (v0=type {}) :: ref
           Record  :: struct()
@@ -1279,7 +1279,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Kernel elm/core:Vector.repeat (v0=type {}) :: ref
             Lit 2 :: i64
             Record  :: struct()
-        Seq :: struct(unit,unit)
+        Seq :: struct(unit,ref)
           Call :: struct(ref,ref,ref)
             Kernel elm/core:Debug.log (v0=type (((author/project:Vector.Vector {}), elm/core:Basics.Int, (author/project:Vector.Vector ())), (elm/core:Basics.Int, (elm/core:Maybe.Maybe {})), (author/project:Vector.Vector ({}, elm/core:Basics.Int)))) :: ref
             Lit "empty" :: ref
@@ -1302,11 +1302,11 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Lit 1 :: i64
                   Local e1@129:21 :: ref
               Local _pv3 :: ref
-          Let v@95:21 :: struct(unit,unit)
+          Let v@95:21 :: struct(unit,ref)
             Call :: ref
               Global c4 :: ref
               Lit () :: unit
-            Seq :: struct(unit,unit)
+            Seq :: struct(unit,ref)
               Call :: struct(ref,ref)
                 Kernel elm/core:Debug.log (v0=type ((author/project:Vector.Vector elm/core:Basics.Int), (author/project:Vector.Vector elm/core:Basics.Int))) :: ref
                 Lit "twice" :: ref
@@ -1319,7 +1319,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                     Call :: ref
                       Global c4 :: ref
                       Lit () :: unit
-              Seq :: struct(unit,unit)
+              Seq :: struct(unit,ref)
                 Call :: struct(ref,ref)
                   Kernel elm/core:Debug.log (v0=type ((author/project:Vector.Vector elm/core:Basics.Int), (author/project:Vector.Vector elm/core:Basics.Int))) :: ref
                   Lit "viaLetVar" :: ref
@@ -1332,7 +1332,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                       Call :: ref
                         Global c4 :: ref
                         Lit () :: unit
-                Seq :: struct(unit,unit)
+                Seq :: struct(unit,ref)
                   Call :: struct(ref,ref)
                     Kernel elm/core:Debug.log (v0=type ((author/project:Vector.Vector elm/core:Basics.Int), (author/project:Vector.Vector elm/core:Basics.Int))) :: ref
                     Lit "viaLet" :: ref
@@ -1345,7 +1345,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                         Call :: ref
                           Global c4 :: ref
                           Lit () :: unit
-                  Seq :: struct(unit,unit)
+                  Seq :: struct(unit,ref)
                     Call :: struct(ref,ref,ref)
                       Kernel elm/core:Debug.log (v0=type ((author/project:Vector.Vector elm/core:Basics.Int), (author/project:Vector.Vector elm/core:Basics.Int), (author/project:Vector.Vector elm/core:Basics.Int))) :: ref
                       Lit "viaIf" :: ref
@@ -1364,7 +1364,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                           Call :: ref
                             Global c4 :: ref
                             Lit () :: unit
-                    Seq :: struct(unit,unit)
+                    Seq :: struct(unit,ref)
                       Call :: struct(ref,ref)
                         Kernel elm/core:Debug.log (v0=type ((author/project:Vector.Vector elm/core:Basics.Int), (author/project:Vector.Vector elm/core:Basics.Int))) :: ref
                         Lit "fromLen" :: ref
@@ -1377,7 +1377,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                             Call :: ref
                               Global c4 :: ref
                               Lit () :: unit
-                      Seq :: struct(unit,unit)
+                      Seq :: struct(unit,ref)
                         Call :: struct(ref,ref)
                           Kernel elm/core:Debug.log (v0=type ((author/project:Vector.Vector elm/core:Basics.Int), (author/project:Vector.Vector elm/core:Basics.Int))) :: ref
                           Lit "mapped" :: ref
@@ -1390,7 +1390,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                               Call :: ref
                                 Global c4 :: ref
                                 Lit () :: unit
-                        Seq :: struct(unit,unit)
+                        Seq :: struct(unit,ref)
                           Call :: struct(ref,ref)
                             Kernel elm/core:Debug.log (v0=type ((author/project:Vector.Vector elm/core:Basics.Int), (author/project:Vector.Vector elm/core:Basics.Int))) :: ref
                             Lit "slice" :: ref
@@ -1405,17 +1405,17 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                 Call :: ref
                                   Global c4 :: ref
                                   Lit () :: unit
-                          Let _pv12 :: struct(unit,unit)
+                          Let _pv12 :: struct(unit,ref)
                             Call :: ref
                               Global c12 :: ref
-                            Seq :: struct(unit,unit)
+                            Seq :: struct(unit,ref)
                               Call :: struct(ref,ref)
                                 Kernel elm/core:Debug.log (v0=type ((author/project:Vector.Vector elm/core:Basics.Int), (elm/core:Array.Array elm/core:Basics.Int))) :: ref
                                 Lit "shared" :: ref
                                 Tuple :: struct(ref,ref)
                                   Local v@95:21 :: ref
                                   Local _pv12 :: ref
-                              Seq :: struct(unit,unit)
+                              Seq :: struct(unit,ref)
                                 Call :: struct(ref,ref,ref)
                                   Kernel elm/core:Debug.log (v0=type ((elm/core:Array.Array elm/core:Basics.Int), (elm/core:Array.Array elm/core:Basics.Int), (elm/core:Array.Array elm/core:Basics.Int))) :: ref
                                   Lit "array" :: ref
@@ -1433,10 +1433,18 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                         List :: ref
                                           Lit 7 :: i64
                                           Lit 8 :: i64
-                                Tuple :: struct(unit,unit)
+                                Tuple :: struct(unit,ref)
                                   Lit () :: unit
-                                  Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:VecSelf.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+                                  Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c57   def: update   key: ()   kind: function   params: _a0:unit m:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Local m :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c58   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:VecSelf.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c57 :: ref
+    Global c58 :: ref

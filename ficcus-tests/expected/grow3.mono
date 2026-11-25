@@ -3,7 +3,7 @@
 mark author/project:Grow3.rg   v0=row
 mark author/project:Grow3.rg2   v0=row
 clone c0   def: author/project:Grow3.main   key: ()   kind: value   init: 2   needs: 
--- program: 6 clones, reachable from main, dependencies first
+-- program: 8 clones, reachable from main, dependencies first
 clone c7   def: author/project:Grow3.rg   key: (v0=layout {inner:ref})   name: rg__row   kind: function   params: v:struct(i64,ref)   result: i64
   If :: i64
     Call :: enum
@@ -66,8 +66,8 @@ clone c3   def: author/project:Grow3.rg   key: (v0=layout {y:f64})   name: rg__r
       Call :: i64
         Global c4 :: ref
         Local _oa6_0 :: struct(i64,ref)
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  If :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  If :: struct(unit,ref)
     Call :: enum
       Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
       Call :: i64
@@ -91,13 +91,21 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Lit 0 :: i64
                   Lit 2.5 :: f64
       Lit 0 :: i64
-    Tuple :: struct(unit,unit)
+    Tuple :: struct(unit,ref)
       Lit () :: unit
-      Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-    Tuple :: struct(unit,unit)
+      Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+    Tuple :: struct(unit,ref)
       Lit () :: unit
-      Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Grow3.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+      Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c9   def: update   key: ()   kind: function   params: _a0:unit m:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Local m :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c10   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Grow3.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c9 :: ref
+    Global c10 :: ref

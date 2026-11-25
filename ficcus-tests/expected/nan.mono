@@ -7,7 +7,7 @@ clone c3   def: author/project:Nan.listOfNan   key: ()   kind: value   init: 3  
 clone c4   def: author/project:Nan.b2i   key: ()   kind: function   init: 4   needs: 
 clone c5   def: author/project:Nan.six   key: ()   kind: function   init: 5   needs: 
 clone c6   def: author/project:Nan.main   key: ()   kind: value   init: 6   needs: c1,c2,c3
--- program: 21 clones, reachable from main, dependencies first
+-- program: 23 clones, reachable from main, dependencies first
 clone c5   def: author/project:Nan.b2i   key: ()   kind: function   params: x:enum   result: i64
   If :: i64
     Local x :: enum
@@ -364,32 +364,32 @@ clone c14   def: elm/core:Dict.size   key: (v0=f64; v1=ref)   name: size__f64__r
     Global c19 :: ref
     Lit 0 :: i64
     Local dict :: ref
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Seq :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Seq :: struct(unit,ref)
     Call :: unit
       Global c2 :: ref
       Lit "nan nan" :: ref
       Global c3 :: f64
       Global c3 :: f64
-    Seq :: struct(unit,unit)
+    Seq :: struct(unit,ref)
       Call :: unit
         Global c2 :: ref
         Lit "nan one" :: ref
         Global c3 :: f64
         Global c4 :: f64
-      Seq :: struct(unit,unit)
+      Seq :: struct(unit,ref)
         Call :: unit
           Global c2 :: ref
           Lit "one nan" :: ref
           Global c4 :: f64
           Global c3 :: f64
-        Seq :: struct(unit,unit)
+        Seq :: struct(unit,ref)
           Call :: unit
             Global c2 :: ref
             Lit "one one" :: ref
             Global c4 :: f64
             Global c4 :: f64
-          Seq :: struct(unit,unit)
+          Seq :: struct(unit,ref)
             Call :: unit
               Global c2 :: ref
               Lit "inf nan" :: ref
@@ -398,7 +398,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Lit 1.0 :: f64
                 Lit 0.0 :: f64
               Global c3 :: f64
-            Seq :: struct(unit,unit)
+            Seq :: struct(unit,ref)
               Call :: i64
                 Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                 Lit "nan < 1" :: ref
@@ -408,7 +408,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                     Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Float) :: ref
                     Global c3 :: f64
                     Lit 1.0 :: f64
-              Seq :: struct(unit,unit)
+              Seq :: struct(unit,ref)
                 Call :: i64
                   Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                   Lit "nan > 1" :: ref
@@ -418,7 +418,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                       Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Float) :: ref
                       Global c3 :: f64
                       Lit 1.0 :: f64
-                Seq :: struct(unit,unit)
+                Seq :: struct(unit,ref)
                   Call :: i64
                     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                     Lit "nan <= 1" :: ref
@@ -428,7 +428,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                         Kernel elm/core:Basics.le (v0=type elm/core:Basics.Float) :: ref
                         Global c3 :: f64
                         Lit 1.0 :: f64
-                  Seq :: struct(unit,unit)
+                  Seq :: struct(unit,ref)
                     Call :: i64
                       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                       Lit "nan >= 1" :: ref
@@ -438,7 +438,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                           Kernel elm/core:Basics.ge (v0=type elm/core:Basics.Float) :: ref
                           Global c3 :: f64
                           Lit 1.0 :: f64
-                    Seq :: struct(unit,unit)
+                    Seq :: struct(unit,ref)
                       Call :: i64
                         Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                         Lit "1 < nan" :: ref
@@ -448,7 +448,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                             Kernel elm/core:Basics.lt (v0=type elm/core:Basics.Float) :: ref
                             Lit 1.0 :: f64
                             Global c3 :: f64
-                      Seq :: struct(unit,unit)
+                      Seq :: struct(unit,ref)
                         Call :: i64
                           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                           Lit "1 > nan" :: ref
@@ -458,7 +458,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                               Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Float) :: ref
                               Lit 1.0 :: f64
                               Global c3 :: f64
-                        Seq :: struct(unit,unit)
+                        Seq :: struct(unit,ref)
                           Call :: i64
                             Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                             Lit "nan == nan" :: ref
@@ -468,7 +468,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                 Kernel elm/core:Basics.eq (v0=type elm/core:Basics.Float) :: ref
                                 Global c3 :: f64
                                 Global c3 :: f64
-                          Seq :: struct(unit,unit)
+                          Seq :: struct(unit,ref)
                             Call :: i64
                               Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                               Lit "nan /= nan" :: ref
@@ -478,7 +478,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                   Kernel elm/core:Basics.neq (v0=type elm/core:Basics.Float) :: ref
                                   Global c3 :: f64
                                   Global c3 :: f64
-                            Seq :: struct(unit,unit)
+                            Seq :: struct(unit,ref)
                               Call :: f64
                                 Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                                 Lit "max nan 1" :: ref
@@ -486,7 +486,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                   Global c6 :: ref
                                   Global c3 :: f64
                                   Global c4 :: f64
-                              Seq :: struct(unit,unit)
+                              Seq :: struct(unit,ref)
                                 Call :: f64
                                   Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                                   Lit "max 1 nan" :: ref
@@ -494,7 +494,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                     Global c6 :: ref
                                     Global c4 :: f64
                                     Global c3 :: f64
-                                Seq :: struct(unit,unit)
+                                Seq :: struct(unit,ref)
                                   Call :: f64
                                     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                                     Lit "min nan 1" :: ref
@@ -502,7 +502,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                       Global c7 :: ref
                                       Global c3 :: f64
                                       Global c4 :: f64
-                                  Seq :: struct(unit,unit)
+                                  Seq :: struct(unit,ref)
                                     Call :: f64
                                       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                                       Lit "min 1 nan" :: ref
@@ -510,7 +510,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                         Global c7 :: ref
                                         Global c4 :: f64
                                         Global c3 :: f64
-                                    Seq :: struct(unit,unit)
+                                    Seq :: struct(unit,ref)
                                       Call :: i64
                                         Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                         Lit "tuple eq" :: ref
@@ -524,7 +524,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                             Tuple :: struct(f64,i64)
                                               Global c3 :: f64
                                               Lit 1 :: i64
-                                      Seq :: struct(unit,unit)
+                                      Seq :: struct(unit,ref)
                                         Call :: i64
                                           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                           Lit "tuple cmp" :: ref
@@ -538,7 +538,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                               Tuple :: struct(f64,i64)
                                                 Global c3 :: f64
                                                 Lit 2 :: i64
-                                        Seq :: struct(unit,unit)
+                                        Seq :: struct(unit,ref)
                                           Call :: i64
                                             Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                             Lit "tuple cmp 2" :: ref
@@ -552,7 +552,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                 Tuple :: struct(i64,f64)
                                                   Lit 2 :: i64
                                                   Global c3 :: f64
-                                          Seq :: struct(unit,unit)
+                                          Seq :: struct(unit,ref)
                                             Call :: i64
                                               Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                               Lit "tuple lt" :: ref
@@ -566,7 +566,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                   Tuple :: struct(f64,i64)
                                                     Global c3 :: f64
                                                     Lit 2 :: i64
-                                            Seq :: struct(unit,unit)
+                                            Seq :: struct(unit,ref)
                                               Call :: i64
                                                 Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                 Lit "list eq" :: ref
@@ -578,7 +578,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                       Global c3 :: f64
                                                     List :: ref
                                                       Global c3 :: f64
-                                              Seq :: struct(unit,unit)
+                                              Seq :: struct(unit,ref)
                                                 Call :: i64
                                                   Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                   Lit "list cmp" :: ref
@@ -590,7 +590,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                         Global c3 :: f64
                                                       List :: ref
                                                         Global c3 :: f64
-                                                Seq :: struct(unit,unit)
+                                                Seq :: struct(unit,ref)
                                                   Call :: i64
                                                     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                     Lit "list cmp 2" :: ref
@@ -604,7 +604,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                         List :: ref
                                                           Lit 1.0 :: f64
                                                           Lit 2.0 :: f64
-                                                  Seq :: struct(unit,unit)
+                                                  Seq :: struct(unit,ref)
                                                     Call :: i64
                                                       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                       Lit "same ref list" :: ref
@@ -614,7 +614,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                           Kernel elm/core:Basics.eq (v0=type (elm/core:List.List elm/core:Basics.Float)) :: ref
                                                           Global c9 :: ref
                                                           Global c9 :: ref
-                                                    Let d@95:21 :: struct(unit,unit)
+                                                    Let d@95:21 :: struct(unit,ref)
                                                       Call :: ref
                                                         Global c10 :: ref
                                                         Global c3 :: f64
@@ -628,7 +628,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                             Tuple :: struct(f64,ref)
                                                               Lit 2.0 :: f64
                                                               Lit "b" :: ref
-                                                      Seq :: struct(unit,unit)
+                                                      Seq :: struct(unit,ref)
                                                         Call :: ref
                                                           Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                                           Lit "dict get 2" :: ref
@@ -639,7 +639,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                               Global c13 :: ref
                                                               Lit 2.0 :: f64
                                                               Local d@95:21 :: ref
-                                                        Seq :: struct(unit,unit)
+                                                        Seq :: struct(unit,ref)
                                                           Call :: ref
                                                             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                                             Lit "dict get 1" :: ref
@@ -650,7 +650,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                                 Global c13 :: ref
                                                                 Lit 1.0 :: f64
                                                                 Local d@95:21 :: ref
-                                                          Seq :: struct(unit,unit)
+                                                          Seq :: struct(unit,ref)
                                                             Call :: ref
                                                               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                                               Lit "dict get nan" :: ref
@@ -661,17 +661,25 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                                   Global c13 :: ref
                                                                   Global c3 :: f64
                                                                   Local d@95:21 :: ref
-                                                            Seq :: struct(unit,unit)
+                                                            Seq :: struct(unit,ref)
                                                               Call :: i64
                                                                 Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                 Lit "dict size" :: ref
                                                                 Call :: i64
                                                                   Global c14 :: ref
                                                                   Local d@95:21 :: ref
-                                                              Tuple :: struct(unit,unit)
+                                                              Tuple :: struct(unit,ref)
                                                                 Lit () :: unit
-                                                                Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Nan.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+                                                                Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c21   def: update   key: ()   kind: function   params: _a0:unit _a1:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c22   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Nan.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c21 :: ref
+    Global c22 :: ref

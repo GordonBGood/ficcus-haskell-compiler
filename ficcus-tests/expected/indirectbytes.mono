@@ -1,7 +1,7 @@
 -- mono: stage (iii) slice 3b, modules=27
 -- module author/project:IndirectBytes (project)
 clone c0   def: author/project:IndirectBytes.main   key: ()   kind: value   init: 0   needs: 
--- program: 78 clones, reachable from main, dependencies first
+-- program: 80 clones, reachable from main, dependencies first
 clone c18   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
   Case :: ref
     Local list :: ref
@@ -1438,8 +1438,8 @@ clone c3   def: author/project:IndirectBytes.lambda@15:55   key: ()   kind: func
       Call :: ref
         Global c6 :: ref
         Local _oa7_0 :: ref
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let a@14:21 :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Let a@14:21 :: struct(unit,ref)
     Call :: ref
       Kernel elm/core:Debug.log (v0=type (elm/core:List.List (elm/core:Maybe.Maybe elm/core:String.String))) :: ref
       Lit "result" :: ref
@@ -1450,7 +1450,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
           Lit "aGVsbG8gd29ybGQ=" :: ref
           Lit "Zmlj" :: ref
           Lit "not base64!" :: ref
-    If :: struct(unit,unit)
+    If :: struct(unit,ref)
       Call :: enum
         Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
         Call :: i64
@@ -1459,13 +1459,21 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Kernel elm/core:Debug.toString (v0=type (elm/core:List.List (elm/core:Maybe.Maybe elm/core:String.String))) :: ref
             Local a@14:21 :: ref
         Lit 0 :: i64
-      Tuple :: struct(unit,unit)
+      Tuple :: struct(unit,ref)
         Lit () :: unit
-        Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-      Tuple :: struct(unit,unit)
+        Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+      Tuple :: struct(unit,ref)
         Lit () :: unit
-        Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:IndirectBytes.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+        Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c83   def: update   key: ()   kind: function   params: _a0:unit m:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Local m :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c84   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:IndirectBytes.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c83 :: ref
+    Global c84 :: ref

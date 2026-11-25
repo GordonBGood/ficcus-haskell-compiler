@@ -4,7 +4,7 @@ mark author/project:Fibonacci.countFibsTo   v0=number
 mark author/project:Fibonacci.worker@19:9   v0=number v1=number
 mark author/project:Fibonacci.limit   v0=number
 clone c0   def: author/project:Fibonacci.main   key: ()   kind: value   init: 2   needs: 
--- program: 5 clones, reachable from main, dependencies first
+-- program: 7 clones, reachable from main, dependencies first
 clone c4   def: author/project:Fibonacci.worker@19:9   key: (v1=type elm/core:Basics.Int)   outer: c2 (v0=type elm/core:Basics.Int)   name: worker@19:9__i64   kind: function   params: f:i64 s:i64 cnt:i64   result: i64   lifted-from: c2
   If :: i64
     Call :: enum
@@ -37,8 +37,8 @@ clone c3   def: author/project:Fibonacci.limit   key: (v0=type elm/core:Basics.I
       Lit 2 :: i64
       Lit 53 :: i64
     Lit 1 :: i64
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let answer@37:21 :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Let answer@37:21 :: struct(unit,ref)
     Call :: ref
       Kernel elm/core:Basics.append (v0=app string) :: ref
       Lit "Found " :: ref
@@ -58,15 +58,23 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
               Kernel elm/core:String.fromInt () :: ref
               Global c3 :: i64
             Lit " inclusive." :: ref
-    Seq :: struct(unit,unit)
+    Seq :: struct(unit,ref)
       Call :: unit
         Kernel elm/core:Debug.log (v0=type ()) :: ref
         Local answer@37:21 :: ref
         Lit () :: unit
-      Tuple :: struct(unit,unit)
+      Tuple :: struct(unit,ref)
         Lit () :: unit
-        Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Fibonacci.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+        Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c5   def: update   key: ()   kind: function   params: _a0:unit _a1:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c6   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Fibonacci.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c5 :: ref
+    Global c6 :: ref

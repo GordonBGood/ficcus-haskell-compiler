@@ -7,7 +7,7 @@ clone c3   def: author/project:Str2.mu   key: ()   kind: function   init: 3   ne
 clone c4   def: author/project:Str2.mi   key: ()   kind: function   init: 4   needs: 
 clone c5   def: author/project:Str2.mf   key: ()   kind: function   init: 5   needs: 
 clone c6   def: author/project:Str2.main   key: ()   kind: value   init: 6   needs: 
--- program: 43 clones, reachable from main, dependencies first
+-- program: 45 clones, reachable from main, dependencies first
 clone c2   def: author/project:Str2.showL   key: ()   kind: function   params: xs:ref   result: ref
   Call :: ref
     Kernel elm/core:Basics.append (v0=app string) :: ref
@@ -577,8 +577,8 @@ clone c19   def: elm/core:List.length   key: (v0=ref)   name: length__ref   kind
     Global c28 :: ref
     Lit 0 :: i64
     Local xs :: ref
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let l11@93:21 :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Let l11@93:21 :: struct(unit,ref)
     Call :: ref
       Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
       Lit "chars" :: ref
@@ -611,7 +611,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Kernel elm/core:String.append () :: ref
             Lit "ab" :: ref
             Lit "cd" :: ref
-    Let l10@90:21 :: struct(unit,unit)
+    Let l10@90:21 :: struct(unit,ref)
       Call :: ref
         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
         Lit "toFloat" :: ref
@@ -642,7 +642,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
               Lit "123456.789" :: ref
               Lit "1e21" :: ref
               Lit "2.5e-7" :: ref
-      Let l9@87:21 :: struct(unit,unit)
+      Let l9@87:21 :: struct(unit,ref)
         Call :: ref
           Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
           Lit "toInt" :: ref
@@ -666,7 +666,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Lit "1e3" :: ref
                 Lit "999999999" :: ref
                 Lit "-0" :: ref
-        Let l8@84:21 :: struct(unit,unit)
+        Let l8@84:21 :: struct(unit,ref)
           Call :: ref
             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
             Lit "reverse repeat" :: ref
@@ -706,7 +706,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Lit "" :: ref
                   Lit "-" :: ref
                   Lit "ab" :: ref
-          Let l7@81:21 :: struct(unit,unit)
+          Let l7@81:21 :: struct(unit,ref)
             Call :: ref
               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
               Lit "filter any all" :: ref
@@ -751,7 +751,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                       Kernel elm/core:String.all () :: ref
                       Global c15 :: ref
                       Lit "" :: ref
-            Let l6@78:21 :: struct(unit,unit)
+            Let l6@78:21 :: struct(unit,ref)
               Call :: ref
                 Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                 Lit "split" :: ref
@@ -793,7 +793,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                             Kernel elm/core:String.split () :: ref
                             Lit "," :: ref
                             Lit "," :: ref
-              Let l5@75:21 :: struct(unit,unit)
+              Let l5@75:21 :: struct(unit,ref)
                 Call :: ref
                   Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                   Lit "indexes" :: ref
@@ -836,7 +836,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                           Kernel elm/core:String.indices () :: ref
                           Lit "an" :: ref
                           Lit "banana" :: ref
-                Let l4@72:21 :: struct(unit,unit)
+                Let l4@72:21 :: struct(unit,ref)
                   Call :: ref
                     Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                     Lit "contains" :: ref
@@ -886,7 +886,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                             Kernel elm/core:String.endsWith () :: ref
                             Lit "x" :: ref
                             Lit "hello" :: ref
-                  Let l3@69:21 :: struct(unit,unit)
+                  Let l3@69:21 :: struct(unit,ref)
                     Call :: ref
                       Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                       Lit "trim" :: ref
@@ -911,7 +911,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                           Call :: ref
                             Kernel elm/core:String.trim () :: ref
                             Lit "\160x\12288" :: ref
-                    Let l2@66:21 :: struct(unit,unit)
+                    Let l2@66:21 :: struct(unit,ref)
                       Call :: ref
                         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                         Lit "lines" :: ref
@@ -934,7 +934,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                               Call :: ref
                                 Kernel elm/core:String.lines () :: ref
                                 Lit "\n" :: ref
-                      Let l1@63:21 :: struct(unit,unit)
+                      Let l1@63:21 :: struct(unit,ref)
                         Call :: ref
                           Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                           Lit "uncons" :: ref
@@ -956,7 +956,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                 Call :: ref
                                   Kernel elm/core:String.uncons () :: ref
                                   Lit "" :: ref
-                        If :: struct(unit,unit)
+                        If :: struct(unit,ref)
                           Call :: enum
                             Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
                             Call :: i64
@@ -974,13 +974,21 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                 Local l10@90:21 :: ref
                                 Local l11@93:21 :: ref
                             Lit 0 :: i64
-                          Tuple :: struct(unit,unit)
+                          Tuple :: struct(unit,ref)
                             Lit () :: unit
-                            Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-                          Tuple :: struct(unit,unit)
+                            Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+                          Tuple :: struct(unit,ref)
                             Lit () :: unit
-                            Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Str2.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+                            Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c43   def: update   key: ()   kind: function   params: _a0:unit m:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Local m :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c44   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Str2.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c43 :: ref
+    Global c44 :: ref

@@ -5,7 +5,7 @@ clone c0   def: author/project:EqFun.inc   key: ()   kind: function   init: 0   
 clone c1   def: author/project:EqFun.dec   key: ()   kind: function   init: 1   needs: 
 clone c2   def: author/project:EqFun.b2i   key: ()   kind: function   init: 2   needs: 
 clone c3   def: author/project:EqFun.main   key: ()   kind: value   init: 3   needs: 
--- program: 6 clones, reachable from main, dependencies first
+-- program: 8 clones, reachable from main, dependencies first
 clone c2   def: author/project:EqFun.b2i   key: ()   kind: function   params: x:enum   result: i64
   If :: i64
     Local x :: enum
@@ -25,8 +25,8 @@ clone c5   def: author/project:EqFun.a@37:21   key: (v0=type elm/core:Basics.Int
   Record a f :: struct(i64,ref)
     Lit 1 :: i64
     Global c3 :: ref
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Seq :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Seq :: struct(unit,ref)
     Call :: i64
       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
       Lit "differs before the function" :: ref
@@ -40,7 +40,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
           Record a f :: struct(i64,ref)
             Lit 2 :: i64
             Global c4 :: ref
-    Seq :: struct(unit,unit)
+    Seq :: struct(unit,ref)
       Call :: i64
         Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
         Lit "reaches the function" :: ref
@@ -54,15 +54,15 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Record a f :: struct(i64,ref)
               Lit 1 :: i64
               Global c4 :: ref
-      Seq :: struct(unit,unit)
+      Seq :: struct(unit,ref)
         Call :: i64
           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
           Lit "not reached" :: ref
           Lit 0 :: i64
-        Let _pv5 :: struct(unit,unit)
+        Let _pv5 :: struct(unit,ref)
           Call :: struct(i64,ref)
             Global c5 :: ref
-          Seq :: struct(unit,unit)
+          Seq :: struct(unit,ref)
             Call :: i64
               Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
               Lit "same function" :: ref
@@ -74,10 +74,18 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Record a f :: struct(i64,ref)
                     Lit 1 :: i64
                     Global c3 :: ref
-            Tuple :: struct(unit,unit)
+            Tuple :: struct(unit,ref)
               Lit () :: unit
-              Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:EqFun.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+              Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c6   def: update   key: ()   kind: function   params: _a0:unit _a1:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c7   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:EqFun.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c6 :: ref
+    Global c7 :: ref

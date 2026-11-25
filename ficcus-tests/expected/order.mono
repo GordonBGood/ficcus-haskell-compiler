@@ -11,7 +11,7 @@ clone c7   def: author/project:Order.ts   key: ()   kind: function   init: 7   n
 clone c8   def: author/project:Order.f3   key: ()   kind: function   init: 8   needs: 
 clone c9   def: author/project:Order.t   key: ()   kind: function   init: 9   needs: 
 clone c10   def: author/project:Order.main   key: ()   kind: value   init: 10   needs: 
--- program: 18 clones, reachable from main, dependencies first
+-- program: 20 clones, reachable from main, dependencies first
 clone c2   def: author/project:Order.t   key: ()   kind: function   params: tag:ref x:i64   result: i64
   Call :: i64
     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
@@ -122,8 +122,8 @@ clone c16   def: author/project:Order.unPair   key: ()   kind: function   params
         Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
         Local x :: i64
         Local y :: i64
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let letted@152:21 :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Let letted@152:21 :: struct(unit,ref)
     Let x@157:29 :: i64
       Call :: i64
         Global c2 :: ref
@@ -146,7 +146,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
             Local y@154:29 :: i64
             Local w@160:29 :: i64
-    Let headed@100:21 :: struct(unit,unit)
+    Let headed@100:21 :: struct(unit,ref)
       Let _oa4_0 :: i64
         Lit "h0" :: ref
         Let _oa4_1 :: i64
@@ -168,7 +168,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Local _oa4_1 :: i64
                 Local _oa4_2 :: i64
                 Local _oa4_3 :: i64
-      Let chain2@84:21 :: struct(unit,unit)
+      Let chain2@84:21 :: struct(unit,ref)
         Call :: i64
           Global c5 :: ref
           Call :: i64
@@ -177,7 +177,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
               Global c2 :: ref
               Lit "c1" :: ref
               Lit 5 :: i64
-        Let chain@81:21 :: struct(unit,unit)
+        Let chain@81:21 :: struct(unit,ref)
           Call :: i64
             Global c7 :: ref
             Call :: i64
@@ -194,7 +194,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Global c2 :: ref
                 Lit "p1" :: ref
                 Lit 1 :: i64
-          Let cased@132:21 :: struct(unit,unit)
+          Let cased@132:21 :: struct(unit,ref)
             Case :: i64
               Tuple :: struct(i64,i64)
                 Call :: i64
@@ -212,7 +212,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Local n :: i64
               branch _ :: struct(i64,i64)
                 Lit 0 :: i64
-            Let back3@96:21 :: struct(unit,unit)
+            Let back3@96:21 :: struct(unit,ref)
               Call :: i64
                 Global c7 :: ref
                 Call :: i64
@@ -229,7 +229,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                     Global c2 :: ref
                     Lit "b3" :: ref
                     Lit 4 :: i64
-              Let back2@93:21 :: struct(unit,unit)
+              Let back2@93:21 :: struct(unit,ref)
                 Let _oa10_0 :: i64
                   Call :: i64
                     Global c2 :: ref
@@ -245,7 +245,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                         Global c9 :: ref
                         Local _oa10_0 :: i64
                       Local _oa10_1 :: i64
-                Let part@141:21 :: struct(unit,unit)
+                Let part@141:21 :: struct(unit,ref)
                   Let g@143:29 :: i64
                     Let _pa12_0 :: ref
                       Call :: i64
@@ -264,7 +264,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                         Global c2 :: ref
                         Lit "pa3" :: ref
                         Lit 3 :: i64
-                  Let ctor@114:21 :: struct(unit,unit)
+                  Let ctor@114:21 :: struct(unit,ref)
                     Call :: ref
                       Ctor Pair tag 0 (v0=i64; v1=i64) :: ref
                       Call :: i64
@@ -275,7 +275,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                         Global c2 :: ref
                         Lit "k2" :: ref
                         Lit 2 :: i64
-                    Let cond@124:21 :: struct(unit,unit)
+                    Let cond@124:21 :: struct(unit,ref)
                       If :: i64
                         Call :: enum
                           Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
@@ -292,7 +292,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                           Global c2 :: ref
                           Lit "i3" :: ref
                           Lit 3 :: i64
-                      Let back@90:21 :: struct(unit,unit)
+                      Let back@90:21 :: struct(unit,ref)
                         Call :: i64
                           Global c8 :: ref
                           Call :: i64
@@ -303,7 +303,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                             Global c2 :: ref
                             Lit "q2" :: ref
                             Lit 2 :: i64
-                        Let args@77:21 :: struct(unit,unit)
+                        Let args@77:21 :: struct(unit,ref)
                           Call :: i64
                             Global c11 :: ref
                             Call :: i64
@@ -318,7 +318,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                               Global c2 :: ref
                               Lit "a3" :: ref
                               Lit 3 :: i64
-                          Let tup@108:21 :: struct(unit,unit)
+                          Let tup@108:21 :: struct(unit,ref)
                             Tuple :: struct(i64,i64,i64)
                               Call :: i64
                                 Global c2 :: ref
@@ -332,7 +332,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                 Global c2 :: ref
                                 Lit "t3" :: ref
                                 Lit 3 :: i64
-                            Let str@148:21 :: struct(unit,unit)
+                            Let str@148:21 :: struct(unit,ref)
                               Call :: ref
                                 Kernel elm/core:Basics.append (v0=app string) :: ref
                                 Call :: ref
@@ -346,7 +346,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                   Call :: ref
                                     Global c13 :: ref
                                     Lit "s3" :: ref
-                              Let rec@104:21 :: struct(unit,unit)
+                              Let rec@104:21 :: struct(unit,ref)
                                 Record a m z :: struct(i64,i64,i64)
                                   Call :: i64
                                     Global c2 :: ref
@@ -360,7 +360,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                     Global c2 :: ref
                                     Lit "rz" :: ref
                                     Lit 1 :: i64
-                                Let ops@118:21 :: struct(unit,unit)
+                                Let ops@118:21 :: struct(unit,ref)
                                   Call :: i64
                                     Kernel elm/core:Basics.sub (v0=type elm/core:Basics.Int) :: ref
                                     Call :: i64
@@ -383,7 +383,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                       Global c2 :: ref
                                       Lit "o4" :: ref
                                       Lit 4 :: i64
-                                  Let lst@111:21 :: struct(unit,unit)
+                                  Let lst@111:21 :: struct(unit,ref)
                                     List :: ref
                                       Call :: i64
                                         Global c2 :: ref
@@ -397,7 +397,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                         Global c2 :: ref
                                         Lit "l3" :: ref
                                         Lit 3 :: i64
-                                    Let cmp@121:21 :: struct(unit,unit)
+                                    Let cmp@121:21 :: struct(unit,ref)
                                       Call :: enum
                                         Kernel elm/core:Basics.or () :: ref
                                         Call :: enum
@@ -432,49 +432,49 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                             Global c2 :: ref
                                             Lit "e6" :: ref
                                             Lit 5 :: i64
-                                      Seq :: struct(unit,unit)
+                                      Seq :: struct(unit,ref)
                                         Call :: i64
                                           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                           Lit "args" :: ref
                                           Local args@77:21 :: i64
-                                        Seq :: struct(unit,unit)
+                                        Seq :: struct(unit,ref)
                                           Call :: i64
                                             Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                             Lit "chain" :: ref
                                             Local chain@81:21 :: i64
-                                          Seq :: struct(unit,unit)
+                                          Seq :: struct(unit,ref)
                                             Call :: i64
                                               Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                               Lit "chain2" :: ref
                                               Local chain2@84:21 :: i64
-                                            Seq :: struct(unit,unit)
+                                            Seq :: struct(unit,ref)
                                               Call :: i64
                                                 Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                 Lit "back" :: ref
                                                 Local back@90:21 :: i64
-                                              Seq :: struct(unit,unit)
+                                              Seq :: struct(unit,ref)
                                                 Call :: i64
                                                   Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                   Lit "back2" :: ref
                                                   Local back2@93:21 :: i64
-                                                Seq :: struct(unit,unit)
+                                                Seq :: struct(unit,ref)
                                                   Call :: i64
                                                     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                     Lit "back3" :: ref
                                                     Local back3@96:21 :: i64
-                                                  Seq :: struct(unit,unit)
+                                                  Seq :: struct(unit,ref)
                                                     Call :: i64
                                                       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                       Lit "headed" :: ref
                                                       Local headed@100:21 :: i64
-                                                    Seq :: struct(unit,unit)
+                                                    Seq :: struct(unit,ref)
                                                       Call :: i64
                                                         Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                         Lit "rec" :: ref
                                                         Call :: i64
                                                           Global c14 :: ref
                                                           Local rec@104:21 :: struct(i64,i64,i64)
-                                                      Seq :: struct(unit,unit)
+                                                      Seq :: struct(unit,ref)
                                                         Call :: i64
                                                           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                           Lit "tup" :: ref
@@ -488,26 +488,26 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                                   Local a :: i64
                                                                   Local b :: i64
                                                                 Local c :: i64
-                                                        Seq :: struct(unit,unit)
+                                                        Seq :: struct(unit,ref)
                                                           Call :: i64
                                                             Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                             Lit "lst" :: ref
                                                             Call :: i64
                                                               Global c15 :: ref
                                                               Local lst@111:21 :: ref
-                                                          Seq :: struct(unit,unit)
+                                                          Seq :: struct(unit,ref)
                                                             Call :: i64
                                                               Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                               Lit "ctor" :: ref
                                                               Call :: i64
                                                                 Global c16 :: ref
                                                                 Local ctor@114:21 :: ref
-                                                            Seq :: struct(unit,unit)
+                                                            Seq :: struct(unit,ref)
                                                               Call :: i64
                                                                 Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                 Lit "ops" :: ref
                                                                 Local ops@118:21 :: i64
-                                                              Seq :: struct(unit,unit)
+                                                              Seq :: struct(unit,ref)
                                                                 Call :: i64
                                                                   Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                   Lit "cmp" :: ref
@@ -515,35 +515,43 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                                     Local cmp@121:21 :: enum
                                                                     Lit 1 :: i64
                                                                     Lit 0 :: i64
-                                                                Seq :: struct(unit,unit)
+                                                                Seq :: struct(unit,ref)
                                                                   Call :: i64
                                                                     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                     Lit "cond" :: ref
                                                                     Local cond@124:21 :: i64
-                                                                  Seq :: struct(unit,unit)
+                                                                  Seq :: struct(unit,ref)
                                                                     Call :: i64
                                                                       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                       Lit "cased" :: ref
                                                                       Local cased@132:21 :: i64
-                                                                    Seq :: struct(unit,unit)
+                                                                    Seq :: struct(unit,ref)
                                                                       Call :: i64
                                                                         Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                         Lit "part" :: ref
                                                                         Local part@141:21 :: i64
-                                                                      Seq :: struct(unit,unit)
+                                                                      Seq :: struct(unit,ref)
                                                                         Call :: ref
                                                                           Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                                                           Lit "str" :: ref
                                                                           Local str@148:21 :: ref
-                                                                        Seq :: struct(unit,unit)
+                                                                        Seq :: struct(unit,ref)
                                                                           Call :: i64
                                                                             Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                             Lit "letted" :: ref
                                                                             Local letted@152:21 :: i64
-                                                                          Tuple :: struct(unit,unit)
+                                                                          Tuple :: struct(unit,ref)
                                                                             Lit () :: unit
-                                                                            Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Order.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+                                                                            Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c20   def: update   key: ()   kind: function   params: _a0:unit _a1:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c21   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Order.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c20 :: ref
+    Global c21 :: ref

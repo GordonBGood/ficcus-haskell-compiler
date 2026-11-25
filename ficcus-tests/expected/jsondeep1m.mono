@@ -4,7 +4,7 @@ clone c0   def: author/project:JsonDeep1m.nested   key: ()   kind: function   in
 clone c1   def: author/project:JsonDeep1m.depth   key: ()   kind: value   init: 1   needs: 
 clone c2   def: author/project:JsonDeep1m.check   key: ()   kind: function   init: 2   needs: c1
 clone c3   def: author/project:JsonDeep1m.main   key: ()   kind: value   init: 3   needs: c1
--- program: 12 clones, reachable from main, dependencies first
+-- program: 14 clones, reachable from main, dependencies first
 clone c11   def: elm/core:String.repeatHelp   key: ()   kind: function   params: n:i64 chunk:ref result:ref   result: ref
   If :: ref
     Call :: enum
@@ -165,28 +165,36 @@ clone c2   def: author/project:JsonDeep1m.check   key: ()   kind: function   par
                   Lit " depth error" :: ref
     branch _ :: struct(ref,ref)
       Lit "not valid JSON" :: ref
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let b@47:21 :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Let b@47:21 :: struct(unit,ref)
     Call :: ref
       Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
       Lit "1000000" :: ref
       Call :: ref
         Global c2 :: ref
         Lit 1000000 :: i64
-    If :: struct(unit,unit)
+    If :: struct(unit,ref)
       Call :: enum
         Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
         Call :: i64
           Kernel elm/core:String.length () :: ref
           Local b@47:21 :: ref
         Lit 0 :: i64
-      Tuple :: struct(unit,unit)
+      Tuple :: struct(unit,ref)
         Lit () :: unit
-        Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-      Tuple :: struct(unit,unit)
+        Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+      Tuple :: struct(unit,ref)
         Lit () :: unit
-        Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:JsonDeep1m.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+        Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c12   def: update   key: ()   kind: function   params: _a0:unit m:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Local m :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c13   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:JsonDeep1m.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c12 :: ref
+    Global c13 :: ref

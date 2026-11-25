@@ -47,7 +47,7 @@ mark author/project:Vector.sortBy   v0=any+element v1=comparable+element
 mark author/project:Vector.get   v0=any+element
 clone c3   def: author/project:Vector.ficVectorOverlay   key: ()   kind: value   init: 0   needs: 
 clone c4   def: author/project:Vector.sortIdx   key: ()   kind: function   init: 12   needs: 
--- program: 27 clones, reachable from main, dependencies first
+-- program: 29 clones, reachable from main, dependencies first
 clone c19   def: author/project:Vector.initializeHelp   key: (v0=type elm/core:Basics.Int)   name: initializeHelp__i64   kind: function   params: i:i64 n:i64 f:ref acc:ref   result: ref
   If :: ref
     Call :: enum
@@ -406,18 +406,18 @@ clone c18   def: author/project:VecOrder.total   key: ()   kind: function   para
     Global c26 :: ref
     Lit 0 :: i64
     Local v :: ref
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let b@29:21 :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Let b@29:21 :: struct(unit,ref)
     Call :: ref
       Global c2 :: ref
       Lit 3 :: i64
       Global c3 :: ref
-    Let d@35:21 :: struct(unit,unit)
+    Let d@35:21 :: struct(unit,ref)
       Call :: ref
         Global c5 :: ref
         Global c6 :: ref
         Local b@29:21 :: ref
-      Let f@41:21 :: struct(unit,unit)
+      Let f@41:21 :: struct(unit,ref)
         Call :: ref
           Global c7 :: ref
           Call :: i64
@@ -426,19 +426,19 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Lit 1 :: i64
           Global c8 :: ref
           Local d@35:21 :: ref
-        Let g@44:21 :: struct(unit,unit)
+        Let g@44:21 :: struct(unit,ref)
           Call :: i64
             Global c9 :: ref
             Global c10 :: ref
             Lit 0 :: i64
             Local f@41:21 :: ref
-          Let h@47:21 :: struct(unit,unit)
+          Let h@47:21 :: struct(unit,ref)
             Call :: i64
               Global c11 :: ref
               Global c12 :: ref
               Lit 0 :: i64
               Local f@41:21 :: ref
-            Let k@50:21 :: struct(unit,unit)
+            Let k@50:21 :: struct(unit,ref)
               Call :: ref
                 Global c7 :: ref
                 Call :: i64
@@ -447,7 +447,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Lit 9 :: i64
                 Global c13 :: ref
                 Local f@41:21 :: ref
-              Let a@26:21 :: struct(unit,unit)
+              Let a@26:21 :: struct(unit,ref)
                 Call :: ref
                   Kernel elm/core:Vector.fromList (v0=type elm/core:Basics.Int) :: ref
                   List :: ref
@@ -463,17 +463,17 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                       Global c4 :: ref
                       Lit "lit3" :: ref
                       Lit 3 :: i64
-                Let c@32:21 :: struct(unit,unit)
+                Let c@32:21 :: struct(unit,ref)
                   Call :: ref
                     Global c14 :: ref
                     Global c15 :: ref
                     Local a@26:21 :: ref
-                  Let e@38:21 :: struct(unit,unit)
+                  Let e@38:21 :: struct(unit,ref)
                     Call :: ref
                       Global c16 :: ref
                       Global c17 :: ref
                       Local c@32:21 :: ref
-                    Seq :: struct(unit,unit)
+                    Seq :: struct(unit,ref)
                       Call :: ref
                         Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
                         Lit "result" :: ref
@@ -498,10 +498,18 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                           Call :: i64
                             Global c18 :: ref
                             Local k@50:21 :: ref
-                      Tuple :: struct(unit,unit)
+                      Tuple :: struct(unit,ref)
                         Lit () :: unit
-                        Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:VecOrder.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+                        Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c27   def: update   key: ()   kind: function   params: _a0:unit m:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Local m :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c28   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:VecOrder.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c27 :: ref
+    Global c28 :: ref

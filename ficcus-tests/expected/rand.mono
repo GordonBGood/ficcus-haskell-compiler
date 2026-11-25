@@ -4,7 +4,7 @@ clone c0   def: author/project:FicOverlayRandom.float   key: ()   kind: function
 -- module author/project:Rand (project)
 clone c1   def: author/project:Rand.run   key: ()   kind: function   init: 1   needs: 
 clone c2   def: author/project:Rand.main   key: ()   kind: value   init: 2   needs: 
--- program: 52 clones, reachable from main, dependencies first
+-- program: 54 clones, reachable from main, dependencies first
 clone c17   def: elm/core:List.foldl   key: (v0=unit; v1=i64)   name: foldl__unit__i64   kind: function   params: func:ref acc:i64 list:ref   result: i64
   Case :: i64
     Local list :: ref
@@ -841,13 +841,21 @@ clone c2   def: author/project:Rand.run   key: ()   kind: function   params: _a0
             Call :: ref
               Global c9 :: ref
               Lit 3 :: i64
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(i64,unit)   lifted-from: c0
-  Tuple :: struct(i64,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(i64,ref)   lifted-from: c0
+  Tuple :: struct(i64,ref)
     Call :: i64
       Global c2 :: ref
       Lit () :: unit
-    Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Rand.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c52   def: update   key: ()   kind: function   params: _a0:unit model:i64   result: struct(i64,ref)   lifted-from: c0
+  Tuple :: struct(i64,ref)
+    Local model :: i64
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c53   def: subscriptions   key: ()   kind: function   params: _a0:i64   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Rand.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=i64; v2=unit) :: ref
     Global c1 :: ref
+    Global c52 :: ref
+    Global c53 :: ref

@@ -26,7 +26,7 @@ clone c6   def: author/project:Clo.nats   key: ()   kind: function   init: 11   
 clone c7   def: author/project:Clo.add3   key: ()   kind: function   init: 12   needs: 
 clone c8   def: author/project:Clo.add   key: ()   kind: function   init: 13   needs: 
 clone c9   def: author/project:Clo.main   key: ()   kind: value   init: 14   needs: 
--- program: 100 clones, reachable from main, dependencies first
+-- program: 102 clones, reachable from main, dependencies first
 clone c2   def: author/project:Clo.compose   key: (v0=i64; v1=ref; v2=i64)   name: compose__i64__ref__i64   kind: function   params: g:ref f:ref x:i64   result: ref
   Call :: ref
     Local g :: ref
@@ -840,8 +840,8 @@ clone c63   def: author/project:Clo.lambda@149:31   key: ()   kind: function   p
     Call :: i64
       Global c6 :: ref
       Local _pv65 :: struct(i64,i64)
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let composedString@115:21 :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Let composedString@115:21 :: struct(unit,ref)
     Call :: ref
       Global c2 :: ref
       Global c3 :: ref
@@ -849,24 +849,24 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
         Lit 1 :: i64
         Global c5 :: ref
       Lit 41 :: i64
-    Let structResult@195:21 :: struct(unit,unit)
+    Let structResult@195:21 :: struct(unit,ref)
       Call :: i64
         Global c6 :: ref
         Call :: struct(i64,i64)
           Global c7 :: ref
           Global c8 :: ref
           Lit 5 :: i64
-      Let floatClosure@199:21 :: struct(unit,unit)
+      Let floatClosure@199:21 :: struct(unit,ref)
         Call :: f64
           Global c9 :: ref
           Global c10 :: ref
           Lit 4.0 :: f64
-        Let twiceString@105:21 :: struct(unit,unit)
+        Let twiceString@105:21 :: struct(unit,ref)
           Call :: ref
             Global c11 :: ref
             Global c12 :: ref
             Lit "hi" :: ref
-          Let ninePartial@243:21 :: struct(unit,unit)
+          Let ninePartial@243:21 :: struct(unit,ref)
             Let p@245:29 :: i64
               Let _pa14_0 :: ref
                 Lit 1 :: i64
@@ -889,7 +889,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Call :: i64
                   Global c15 :: ref
                   Global c13 :: ref
-            Let twiceTuple@108:21 :: struct(unit,unit)
+            Let twiceTuple@108:21 :: struct(unit,ref)
               Call :: i64
                 Global c6 :: ref
                 Call :: struct(i64,i64)
@@ -898,7 +898,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Tuple :: struct(i64,i64)
                     Lit 1 :: i64
                     Lit 1 :: i64
-              Let nineDirect@240:21 :: struct(unit,unit)
+              Let nineDirect@240:21 :: struct(unit,ref)
                 Call :: i64
                   Global c13 :: ref
                   Lit 1 :: i64
@@ -910,7 +910,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Lit 7 :: i64
                   Lit 8 :: i64
                   Lit 9 :: i64
-                Let mappedRefs@219:21 :: struct(unit,unit)
+                Let mappedRefs@219:21 :: struct(unit,ref)
                   Call :: ref
                     Global c17 :: ref
                     Global c18 :: ref
@@ -922,21 +922,21 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                         Lit "a" :: ref
                         Lit "b" :: ref
                         Lit "c" :: ref
-                  Let arityMixed@181:21 :: struct(unit,unit)
+                  Let arityMixed@181:21 :: struct(unit,ref)
                     Call :: ref
                       Global c21 :: ref
                       Global c22 :: ref
                       Lit "x" :: ref
                       Lit "y" :: ref
                       Lit 7 :: i64
-                    Let structArg@192:21 :: struct(unit,unit)
+                    Let structArg@192:21 :: struct(unit,ref)
                       Call :: i64
                         Global c24 :: ref
                         Global c6 :: ref
                         Tuple :: struct(i64,i64)
                           Lit 20 :: i64
                           Lit 22 :: i64
-                      Let streamSum@188:21 :: struct(unit,unit)
+                      Let streamSum@188:21 :: struct(unit,ref)
                         Call :: i64
                           Global c25 :: ref
                           Lit 5 :: i64
@@ -944,7 +944,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                             Global c26 :: ref
                             Lit 1 :: i64
                           Lit 0 :: i64
-                        Let overLocal@132:21 :: struct(unit,unit)
+                        Let overLocal@132:21 :: struct(unit,ref)
                           Let _oa28_0 :: i64
                             Lit 10 :: i64
                             Let _oa28_1 :: i64
@@ -954,30 +954,30 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                   Global c27 :: ref
                                   Local _oa28_0 :: i64
                                 Local _oa28_1 :: i64
-                          Let backPiped@206:21 :: struct(unit,unit)
+                          Let backPiped@206:21 :: struct(unit,ref)
                             Call :: ref
                               Kernel elm/core:String.fromInt () :: ref
                               Call :: i64
                                 Global c4 :: ref
                                 Lit 1 :: i64
                                 Lit 2 :: i64
-                            Let _pv52 :: struct(unit,unit)
+                            Let _pv52 :: struct(unit,ref)
                               Call :: i64
                                 Global c52 :: ref
-                              Let partial3@122:21 :: struct(unit,unit)
+                              Let partial3@122:21 :: struct(unit,ref)
                                 Let _pa30_0 :: ref
                                   Lit 1 :: i64
                                   Let _pa30_1 :: ref
                                     Lit 2 :: i64
                                     Global c30 :: ref
-                                Let _pv53 :: struct(unit,unit)
+                                Let _pv53 :: struct(unit,ref)
                                   Call :: i64
                                     Global c53 :: ref
-                                  Let plusTen@119:21 :: struct(unit,unit)
+                                  Let plusTen@119:21 :: struct(unit,ref)
                                     Let _pa31_0 :: ref
                                       Lit 10 :: i64
                                       Global c31 :: ref
-                                    Let partialSum@125:21 :: struct(unit,unit)
+                                    Let partialSum@125:21 :: struct(unit,ref)
                                       Call :: i64
                                         Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
                                         Call :: i64
@@ -991,26 +991,26 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                         Call :: i64
                                           Local partial3@122:21 :: ref
                                           Lit 3 :: i64
-                                      Let arity3@178:21 :: struct(unit,unit)
+                                      Let arity3@178:21 :: struct(unit,ref)
                                         Call :: i64
                                           Global c32 :: ref
                                           Global c29 :: ref
                                           Lit 1 :: i64
                                           Lit 2 :: i64
                                           Lit 3 :: i64
-                                        Let _pv56 :: struct(unit,unit)
+                                        Let _pv56 :: struct(unit,ref)
                                           Call :: i64
                                             Global c56 :: ref
-                                          Let _pv57 :: struct(unit,unit)
+                                          Let _pv57 :: struct(unit,ref)
                                             Call :: ref
                                               Global c57 :: ref
-                                            Let _pv97 :: struct(unit,unit)
+                                            Let _pv97 :: struct(unit,ref)
                                               Call :: i64
                                                 Global c97 :: ref
-                                              Let _pv54 :: struct(unit,unit)
+                                              Let _pv54 :: struct(unit,ref)
                                                 Call :: i64
                                                   Global c54 :: ref
-                                                Let piped@203:21 :: struct(unit,unit)
+                                                Let piped@203:21 :: struct(unit,ref)
                                                   Call :: i64
                                                     Global c4 :: ref
                                                     Lit 2 :: i64
@@ -1018,13 +1018,13 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                       Global c4 :: ref
                                                       Lit 1 :: i64
                                                       Lit 5 :: i64
-                                                  Let _pv36 :: struct(unit,unit)
+                                                  Let _pv36 :: struct(unit,ref)
                                                     Call :: ref
                                                       Global c36 :: ref
-                                                    Let _pv55 :: struct(unit,unit)
+                                                    Let _pv55 :: struct(unit,ref)
                                                       Call :: i64
                                                         Global c55 :: ref
-                                                      Let unboxed@250:21 :: struct(unit,unit)
+                                                      Let unboxed@250:21 :: struct(unit,ref)
                                                         Call :: i64
                                                           Global c33 :: ref
                                                           Global c4 :: ref
@@ -1033,7 +1033,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                             Global c34 :: ref
                                                             Global c35 :: ref
                                                             Local _pv36 :: ref
-                                                        Let over@129:21 :: struct(unit,unit)
+                                                        Let over@129:21 :: struct(unit,ref)
                                                           Let _oa37_0 :: i64
                                                             Lit 3 :: i64
                                                             Let _oa37_1 :: i64
@@ -1043,41 +1043,41 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                                   Global c27 :: ref
                                                                   Local _oa37_0 :: i64
                                                                 Local _oa37_1 :: i64
-                                                          Let _pv43 :: struct(unit,unit)
+                                                          Let _pv43 :: struct(unit,ref)
                                                             Call :: ref
                                                               Global c43 :: ref
-                                                            Let _pv40 :: struct(unit,unit)
+                                                            Let _pv40 :: struct(unit,ref)
                                                               Call :: ref
                                                                 Global c40 :: ref
-                                                              Let _pv59 :: struct(unit,unit)
+                                                              Let _pv59 :: struct(unit,ref)
                                                                 Call :: i64
                                                                   Global c59 :: ref
-                                                                Let recFloat@228:21 :: struct(unit,unit)
+                                                                Let recFloat@228:21 :: struct(unit,ref)
                                                                   Call :: f64
                                                                     Global c38 :: ref
                                                                     Global c39 :: ref
                                                                     Lit 0.0 :: f64
                                                                     Local _pv40 :: ref
-                                                                  Let folded@237:21 :: struct(unit,unit)
+                                                                  Let folded@237:21 :: struct(unit,ref)
                                                                     Call :: ref
                                                                       Global c41 :: ref
                                                                       Global c42 :: ref
                                                                       Lit "" :: ref
                                                                       Local _pv43 :: ref
-                                                                    Let _pv58 :: struct(unit,unit)
+                                                                    Let _pv58 :: struct(unit,ref)
                                                                       Call :: i64
                                                                         Global c58 :: ref
-                                                                      Let filtered@231:21 :: struct(unit,unit)
+                                                                      Let filtered@231:21 :: struct(unit,ref)
                                                                         Call :: i64
                                                                           Global c44 :: ref
                                                                           Call :: ref
                                                                             Global c45 :: ref
                                                                             Global c46 :: ref
                                                                             Local _pv43 :: ref
-                                                                        Let _pv60 :: struct(unit,unit)
+                                                                        Let _pv60 :: struct(unit,ref)
                                                                           Call :: i64
                                                                             Global c60 :: ref
-                                                                          Let mappedStrings@216:21 :: struct(unit,unit)
+                                                                          Let mappedStrings@216:21 :: struct(unit,ref)
                                                                             Call :: ref
                                                                               Global c17 :: ref
                                                                               Global c47 :: ref
@@ -1086,47 +1086,47 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                                                 Global c48 :: ref
                                                                                 Global c49 :: ref
                                                                                 Local _pv43 :: ref
-                                                                            Let _pv65 :: struct(unit,unit)
+                                                                            Let _pv65 :: struct(unit,ref)
                                                                               Call :: struct(i64,i64)
                                                                                 Global c65 :: ref
-                                                                              Let pre@139:21 :: struct(unit,unit)
+                                                                              Let pre@139:21 :: struct(unit,ref)
                                                                                 Lit "ab" :: ref
-                                                                                Let captureString@151:21 :: struct(unit,unit)
+                                                                                Let captureString@151:21 :: struct(unit,ref)
                                                                                   Call :: ref
                                                                                     Global c50 :: ref
                                                                                     Global c51 :: ref
                                                                                     Lit "cd" :: ref
-                                                                                  Seq :: struct(unit,unit)
+                                                                                  Seq :: struct(unit,ref)
                                                                                     Call :: i64
                                                                                       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                       Lit "twice int" :: ref
                                                                                       Local _pv52 :: i64
-                                                                                    Seq :: struct(unit,unit)
+                                                                                    Seq :: struct(unit,ref)
                                                                                       Call :: ref
                                                                                         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                                                                         Lit "twice string" :: ref
                                                                                         Local twiceString@105:21 :: ref
-                                                                                      Seq :: struct(unit,unit)
+                                                                                      Seq :: struct(unit,ref)
                                                                                         Call :: i64
                                                                                           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                           Lit "twice tuple" :: ref
                                                                                           Local twiceTuple@108:21 :: i64
-                                                                                        Seq :: struct(unit,unit)
+                                                                                        Seq :: struct(unit,ref)
                                                                                           Call :: i64
                                                                                             Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                             Lit "composed" :: ref
                                                                                             Local _pv53 :: i64
-                                                                                          Seq :: struct(unit,unit)
+                                                                                          Seq :: struct(unit,ref)
                                                                                             Call :: ref
                                                                                               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                                                                               Lit "composed string" :: ref
                                                                                               Local composedString@115:21 :: ref
-                                                                                            Seq :: struct(unit,unit)
+                                                                                            Seq :: struct(unit,ref)
                                                                                               Call :: i64
                                                                                                 Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                 Lit "partial" :: ref
                                                                                                 Local partialSum@125:21 :: i64
-                                                                                              Seq :: struct(unit,unit)
+                                                                                              Seq :: struct(unit,ref)
                                                                                                 Call :: i64
                                                                                                   Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                   Lit "over" :: ref
@@ -1134,157 +1134,165 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                                                                                     Kernel elm/core:Basics.add (v0=type elm/core:Basics.Int) :: ref
                                                                                                     Local over@129:21 :: i64
                                                                                                     Local overLocal@132:21 :: i64
-                                                                                                Seq :: struct(unit,unit)
+                                                                                                Seq :: struct(unit,ref)
                                                                                                   Call :: ref
                                                                                                     Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                                                                                     Lit "capture string" :: ref
                                                                                                     Local captureString@151:21 :: ref
-                                                                                                  Seq :: struct(unit,unit)
+                                                                                                  Seq :: struct(unit,ref)
                                                                                                     Call :: i64
                                                                                                       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                       Lit "local value" :: ref
                                                                                                       Local _pv54 :: i64
-                                                                                                    Seq :: struct(unit,unit)
+                                                                                                    Seq :: struct(unit,ref)
                                                                                                       Call :: i64
                                                                                                         Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                         Lit "box sum" :: ref
                                                                                                         Local _pv55 :: i64
-                                                                                                      Seq :: struct(unit,unit)
+                                                                                                      Seq :: struct(unit,ref)
                                                                                                         Call :: i64
                                                                                                           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                           Lit "arity 1" :: ref
                                                                                                           Local _pv56 :: i64
-                                                                                                        Seq :: struct(unit,unit)
+                                                                                                        Seq :: struct(unit,ref)
                                                                                                           Call :: i64
                                                                                                             Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                             Lit "arity 3" :: ref
                                                                                                             Local arity3@178:21 :: i64
-                                                                                                          Seq :: struct(unit,unit)
+                                                                                                          Seq :: struct(unit,ref)
                                                                                                             Call :: ref
                                                                                                               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                                                                                               Lit "arity mixed" :: ref
                                                                                                               Local arityMixed@181:21 :: ref
-                                                                                                            Seq :: struct(unit,unit)
+                                                                                                            Seq :: struct(unit,ref)
                                                                                                               Call :: i64
                                                                                                                 Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                 Lit "thunk" :: ref
                                                                                                                 Call :: i64
                                                                                                                   Local _pv57 :: ref
                                                                                                                   Lit () :: unit
-                                                                                                              Seq :: struct(unit,unit)
+                                                                                                              Seq :: struct(unit,ref)
                                                                                                                 Call :: i64
                                                                                                                   Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                   Lit "stream" :: ref
                                                                                                                   Local streamSum@188:21 :: i64
-                                                                                                                Seq :: struct(unit,unit)
+                                                                                                                Seq :: struct(unit,ref)
                                                                                                                   Call :: i64
                                                                                                                     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                     Lit "struct arg" :: ref
                                                                                                                     Local structArg@192:21 :: i64
-                                                                                                                  Seq :: struct(unit,unit)
+                                                                                                                  Seq :: struct(unit,ref)
                                                                                                                     Call :: i64
                                                                                                                       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                       Lit "struct result" :: ref
                                                                                                                       Local structResult@195:21 :: i64
-                                                                                                                    Seq :: struct(unit,unit)
+                                                                                                                    Seq :: struct(unit,ref)
                                                                                                                       Call :: f64
                                                                                                                         Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                                                                                                                         Lit "float closure" :: ref
                                                                                                                         Local floatClosure@199:21 :: f64
-                                                                                                                      Seq :: struct(unit,unit)
+                                                                                                                      Seq :: struct(unit,ref)
                                                                                                                         Call :: i64
                                                                                                                           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                           Lit "piped" :: ref
                                                                                                                           Local piped@203:21 :: i64
-                                                                                                                        Seq :: struct(unit,unit)
+                                                                                                                        Seq :: struct(unit,ref)
                                                                                                                           Call :: ref
                                                                                                                             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                                                                                                             Lit "back piped" :: ref
                                                                                                                             Local backPiped@206:21 :: ref
-                                                                                                                          Seq :: struct(unit,unit)
+                                                                                                                          Seq :: struct(unit,ref)
                                                                                                                             Call :: i64
                                                                                                                               Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                               Lit "map" :: ref
                                                                                                                               Local _pv58 :: i64
-                                                                                                                            Seq :: struct(unit,unit)
+                                                                                                                            Seq :: struct(unit,ref)
                                                                                                                               Call :: ref
                                                                                                                                 Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                                                                                                                 Lit "map strings" :: ref
                                                                                                                                 Local mappedStrings@216:21 :: ref
-                                                                                                                              Seq :: struct(unit,unit)
+                                                                                                                              Seq :: struct(unit,ref)
                                                                                                                                 Call :: ref
                                                                                                                                   Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                                                                                                                   Lit "map refs" :: ref
                                                                                                                                   Local mappedRefs@219:21 :: ref
-                                                                                                                                Seq :: struct(unit,unit)
+                                                                                                                                Seq :: struct(unit,ref)
                                                                                                                                   Call :: i64
                                                                                                                                     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                                     Lit "records" :: ref
                                                                                                                                     Local _pv59 :: i64
-                                                                                                                                  Seq :: struct(unit,unit)
+                                                                                                                                  Seq :: struct(unit,ref)
                                                                                                                                     Call :: f64
                                                                                                                                       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                                                                                                                                       Lit "records float" :: ref
                                                                                                                                       Local recFloat@228:21 :: f64
-                                                                                                                                    Seq :: struct(unit,unit)
+                                                                                                                                    Seq :: struct(unit,ref)
                                                                                                                                       Call :: i64
                                                                                                                                         Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                                         Lit "filter" :: ref
                                                                                                                                         Local filtered@231:21 :: i64
-                                                                                                                                      Seq :: struct(unit,unit)
+                                                                                                                                      Seq :: struct(unit,ref)
                                                                                                                                         Call :: i64
                                                                                                                                           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                                           Lit "reverse" :: ref
                                                                                                                                           Local _pv60 :: i64
-                                                                                                                                        Seq :: struct(unit,unit)
+                                                                                                                                        Seq :: struct(unit,ref)
                                                                                                                                           Call :: ref
                                                                                                                                             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                                                                                                                             Lit "foldr" :: ref
                                                                                                                                             Local folded@237:21 :: ref
-                                                                                                                                          Seq :: struct(unit,unit)
+                                                                                                                                          Seq :: struct(unit,ref)
                                                                                                                                             Call :: i64
                                                                                                                                               Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                                               Lit "unboxed" :: ref
                                                                                                                                               Local unboxed@250:21 :: i64
-                                                                                                                                            Seq :: struct(unit,unit)
+                                                                                                                                            Seq :: struct(unit,ref)
                                                                                                                                               Call :: i64
                                                                                                                                                 Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                                                 Lit "nine direct" :: ref
                                                                                                                                                 Local nineDirect@240:21 :: i64
-                                                                                                                                              Seq :: struct(unit,unit)
+                                                                                                                                              Seq :: struct(unit,ref)
                                                                                                                                                 Call :: i64
                                                                                                                                                   Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                                                   Lit "nine partial" :: ref
                                                                                                                                                   Local ninePartial@243:21 :: i64
-                                                                                                                                                Let fl@142:21 :: struct(unit,unit)
+                                                                                                                                                Let fl@142:21 :: struct(unit,ref)
                                                                                                                                                   Lit 0.5 :: f64
-                                                                                                                                                  Let captureFloat@154:21 :: struct(unit,unit)
+                                                                                                                                                  Let captureFloat@154:21 :: struct(unit,ref)
                                                                                                                                                     Call :: f64
                                                                                                                                                       Global c9 :: ref
                                                                                                                                                       Global c61 :: ref
                                                                                                                                                       Lit 5.0 :: f64
-                                                                                                                                                    Seq :: struct(unit,unit)
+                                                                                                                                                    Seq :: struct(unit,ref)
                                                                                                                                                       Call :: f64
                                                                                                                                                         Kernel elm/core:Debug.log (v0=type elm/core:Basics.Float) :: ref
                                                                                                                                                         Lit "capture float" :: ref
                                                                                                                                                         Local captureFloat@154:21 :: f64
-                                                                                                                                                      Let _pv64 :: struct(unit,unit)
+                                                                                                                                                      Let _pv64 :: struct(unit,ref)
                                                                                                                                                         Call :: i64
                                                                                                                                                           Global c64 :: ref
-                                                                                                                                                        Let capture@148:21 :: struct(unit,unit)
+                                                                                                                                                        Let capture@148:21 :: struct(unit,ref)
                                                                                                                                                           Call :: i64
                                                                                                                                                             Global c62 :: ref
                                                                                                                                                             Global c63 :: ref
                                                                                                                                                             Lit 100 :: i64
-                                                                                                                                                          Seq :: struct(unit,unit)
+                                                                                                                                                          Seq :: struct(unit,ref)
                                                                                                                                                             Call :: i64
                                                                                                                                                               Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
                                                                                                                                                               Lit "capture" :: ref
                                                                                                                                                               Local capture@148:21 :: i64
-                                                                                                                                                            Tuple :: struct(unit,unit)
+                                                                                                                                                            Tuple :: struct(unit,ref)
                                                                                                                                                               Lit () :: unit
-                                                                                                                                                              Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Clo.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+                                                                                                                                                              Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c102   def: update   key: ()   kind: function   params: _a0:unit _a1:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c103   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Clo.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c102 :: ref
+    Global c103 :: ref

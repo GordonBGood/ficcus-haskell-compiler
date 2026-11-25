@@ -10,7 +10,7 @@ clone c6   def: author/project:Initlazy.zb   key: ()   kind: value   init: 6   n
 clone c7   def: author/project:Initlazy.za   key: ()   kind: value   init: 7   needs: c6,c8
 clone c8   def: author/project:Initlazy.zc   key: ()   kind: value   init: 8   needs: c6,c7
 clone c9   def: author/project:Initlazy.main   key: ()   kind: value   init: 9   needs: c4,c5,c6,c7,c8
--- program: 27 clones, reachable from main, dependencies first
+-- program: 29 clones, reachable from main, dependencies first
 clone c23   def: elm/core:List.foldl   key: (v0=ref; v1=ref)   name: foldl__ref__ref   kind: function   params: func:ref acc:ref list:ref   result: ref
   Case :: ref
     Local list :: ref
@@ -229,8 +229,8 @@ clone c5   def: elm/core:List.length   key: (v0=ref)   name: length__ref   kind:
     Global c16 :: ref
     Lit 0 :: i64
     Local xs :: ref
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let l2@86:21 :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Let l2@86:21 :: struct(unit,ref)
     Call :: ref
       Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
       Lit "za" :: ref
@@ -250,7 +250,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Lit 0 :: i64
             Lit 1 :: i64
             Lit 1 :: i64
-    Let l1@83:21 :: struct(unit,unit)
+    Let l1@83:21 :: struct(unit,ref)
       Call :: ref
         Kernel elm/core:Debug.log (v0=type (elm/core:List.List elm/core:Basics.Int)) :: ref
         Lit "value" :: ref
@@ -271,7 +271,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             List :: ref
               Lit 1 :: i64
               Lit 0 :: i64
-      If :: struct(unit,unit)
+      If :: struct(unit,ref)
         Call :: enum
           Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
           Call :: i64
@@ -280,13 +280,21 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
               Local l1@83:21 :: ref
               Local l2@86:21 :: ref
           Lit 0 :: i64
-        Tuple :: struct(unit,unit)
+        Tuple :: struct(unit,ref)
           Lit () :: unit
-          Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-        Tuple :: struct(unit,unit)
+          Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+        Tuple :: struct(unit,ref)
           Lit () :: unit
-          Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Initlazy.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+          Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c27   def: update   key: ()   kind: function   params: _a0:unit m:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Local m :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c28   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Initlazy.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c27 :: ref
+    Global c28 :: ref

@@ -3,7 +3,7 @@
 clone c0   def: author/project:Str.showL   key: ()   kind: function   init: 0   needs: 
 clone c1   def: author/project:Str.q   key: ()   kind: function   init: 1   needs: 
 clone c2   def: author/project:Str.main   key: ()   kind: value   init: 2   needs: 
--- program: 44 clones, reachable from main, dependencies first
+-- program: 46 clones, reachable from main, dependencies first
 clone c2   def: author/project:Str.showL   key: ()   kind: function   params: xs:ref   result: ref
   Call :: ref
     Kernel elm/core:Basics.append (v0=app string) :: ref
@@ -532,10 +532,10 @@ clone c25   def: elm/core:List.length   key: (v0=ref)   name: length__ref   kind
     Global c35 :: ref
     Lit 0 :: i64
     Local xs :: ref
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let greek@29:21 :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Let greek@29:21 :: struct(unit,ref)
     Lit "\913\931 \927\916\933\931\931\917\933\931 \935\913\927\931" :: ref
-    Let l13@68:21 :: struct(unit,unit)
+    Let l13@68:21 :: struct(unit,ref)
       Call :: ref
         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
         Lit "order" :: ref
@@ -565,7 +565,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Kernel elm/core:Basics.ge (v0=type elm/core:String.String) :: ref
                 Lit "b" :: ref
                 Lit "a" :: ref
-      Let l12@65:21 :: struct(unit,unit)
+      Let l12@65:21 :: struct(unit,ref)
         Call :: ref
           Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
           Lit "toList" :: ref
@@ -584,7 +584,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Lit '120' :: u32
                 Lit '121' :: u32
                 Lit '233' :: u32
-        Let l11@62:21 :: struct(unit,unit)
+        Let l11@62:21 :: struct(unit,ref)
           Call :: ref
             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
             Lit "pad repeat" :: ref
@@ -619,7 +619,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                   Lit 7 :: i64
                   Lit '42' :: u32
                   Lit "mid" :: ref
-          Let l10@59:21 :: struct(unit,unit)
+          Let l10@59:21 :: struct(unit,ref)
             Call :: ref
               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
               Lit "folds" :: ref
@@ -650,9 +650,9 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                         Global c14 :: ref
                         Lit "" :: ref
                         Lit "abc" :: ref
-            Let s1@26:21 :: struct(unit,unit)
+            Let s1@26:21 :: struct(unit,ref)
               Lit "Hello, World" :: ref
-              Let l9@56:21 :: struct(unit,unit)
+              Let l9@56:21 :: struct(unit,ref)
                 Call :: ref
                   Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                   Lit "map" :: ref
@@ -671,7 +671,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                         Kernel elm/core:String.map () :: ref
                         Global c17 :: ref
                         Lit "" :: ref
-                Let l8@53:21 :: struct(unit,unit)
+                Let l8@53:21 :: struct(unit,ref)
                   Call :: ref
                     Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                     Lit "lower" :: ref
@@ -693,7 +693,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                         Call :: ref
                           Kernel elm/core:String.toLower () :: ref
                           Lit "\913\931.\913" :: ref
-                  Let l7@50:21 :: struct(unit,unit)
+                  Let l7@50:21 :: struct(unit,ref)
                     Call :: ref
                       Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                       Lit "upper" :: ref
@@ -709,7 +709,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                           Call :: ref
                             Kernel elm/core:String.toUpper () :: ref
                             Lit "" :: ref
-                    Let l6@47:21 :: struct(unit,unit)
+                    Let l6@47:21 :: struct(unit,ref)
                       Call :: ref
                         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                         Lit "words" :: ref
@@ -753,7 +753,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                     Call :: ref
                                       Kernel elm/core:String.words () :: ref
                                       Lit "a\160b\12288c\65279d" :: ref
-                      Let l5@44:21 :: struct(unit,unit)
+                      Let l5@44:21 :: struct(unit,ref)
                         Call :: ref
                           Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                           Lit "join" :: ref
@@ -788,7 +788,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                   Lit "ab" :: ref
                                   Lit "" :: ref
                                   Lit "cd" :: ref
-                        Let l4@41:21 :: struct(unit,unit)
+                        Let l4@41:21 :: struct(unit,ref)
                           Call :: ref
                             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                             Lit "cons" :: ref
@@ -810,7 +810,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                   Kernel elm/core:String.cons () :: ref
                                   Lit '8364' :: u32
                                   Lit "x" :: ref
-                          Let l3@38:21 :: struct(unit,unit)
+                          Let l3@38:21 :: struct(unit,ref)
                             Call :: ref
                               Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                               Lit "left right" :: ref
@@ -851,7 +851,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                     Global c23 :: ref
                                     Lit 100 :: i64
                                     Local s1@26:21 :: ref
-                            Let l2@35:21 :: struct(unit,unit)
+                            Let l2@35:21 :: struct(unit,ref)
                               Call :: ref
                                 Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                 Lit "slice" :: ref
@@ -901,7 +901,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                         Kernel elm/core:Basics.negate (v0=type elm/core:Basics.Int) :: ref
                                         Lit 1 :: i64
                                       Lit "h\233llo" :: ref
-                              Let l1@32:21 :: struct(unit,unit)
+                              Let l1@32:21 :: struct(unit,ref)
                                 Call :: ref
                                   Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
                                   Lit "length" :: ref
@@ -930,7 +930,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                             Call :: i64
                                               Kernel elm/core:String.length () :: ref
                                               Lit "h\233llo w\246rld \454 \223 \913\931" :: ref
-                                If :: struct(unit,unit)
+                                If :: struct(unit,ref)
                                   Call :: enum
                                     Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
                                     Call :: i64
@@ -950,13 +950,21 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                                         Local l12@65:21 :: ref
                                         Local l13@68:21 :: ref
                                     Lit 0 :: i64
-                                  Tuple :: struct(unit,unit)
+                                  Tuple :: struct(unit,ref)
                                     Lit () :: unit
-                                    Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-                                  Tuple :: struct(unit,unit)
+                                    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+                                  Tuple :: struct(unit,ref)
                                     Lit () :: unit
-                                    Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Str.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+                                    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c44   def: update   key: ()   kind: function   params: _a0:unit m:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Local m :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c45   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Str.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c44 :: ref
+    Global c45 :: ref

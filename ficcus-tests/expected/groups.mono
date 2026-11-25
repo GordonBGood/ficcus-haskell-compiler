@@ -1,7 +1,7 @@
 -- mono: stage (iii) slice 3b, modules=21
 -- module author/project:Groups (project)
 clone c0   def: author/project:Groups.main   key: ()   kind: value   init: 5   needs: 
--- program: 16 clones, reachable from main, dependencies first
+-- program: 18 clones, reachable from main, dependencies first
 clone c2   def: author/project:Groups.count   key: (v0=i64)   name: count__i64   kind: function   params: xs:ref   result: i64
   Case :: i64
     Local xs :: ref
@@ -165,8 +165,8 @@ clone c9   def: author/project:Groups.stop   key: (v0=i64)   name: stop__i64   k
       List :: ref
       Local z :: i64
     Local z :: i64
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Seq :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Seq :: struct(unit,ref)
     Call :: i64
       Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
       Lit "evens int" :: ref
@@ -180,7 +180,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
             Lit 3 :: i64
             Lit 4 :: i64
             Lit 5 :: i64
-    Seq :: struct(unit,unit)
+    Seq :: struct(unit,ref)
       Call :: i64
         Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
         Lit "odds string" :: ref
@@ -193,7 +193,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
               Lit "b" :: ref
               Lit "c" :: ref
               Lit "d" :: ref
-      Seq :: struct(unit,unit)
+      Seq :: struct(unit,ref)
         Call :: i64
           Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
           Lit "evens float" :: ref
@@ -204,7 +204,7 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
               List :: ref
                 Lit 0.5 :: f64
                 Lit 1.5 :: f64
-        Seq :: struct(unit,unit)
+        Seq :: struct(unit,ref)
           Call :: ref
             Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
             Lit "chase" :: ref
@@ -215,17 +215,25 @@ clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: str
                 Lit 2 :: i64
                 Lit 3 :: i64
               Lit "end" :: ref
-          Seq :: struct(unit,unit)
+          Seq :: struct(unit,ref)
             Call :: i64
               Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
               Lit "stop" :: ref
               Call :: i64
                 Global c9 :: ref
                 Lit 9 :: i64
-            Tuple :: struct(unit,unit)
+            Tuple :: struct(unit,ref)
               Lit () :: unit
-              Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Groups.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+              Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c16   def: update   key: ()   kind: function   params: _a0:unit _a1:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c17   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Groups.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c16 :: ref
+    Global c17 :: ref

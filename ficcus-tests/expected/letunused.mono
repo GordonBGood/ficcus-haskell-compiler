@@ -7,7 +7,7 @@ mark author/project:LetUnused.c@20:21   v0=any+printed
 mark author/project:LetUnused.b@17:21   v0=number+printed
 mark author/project:LetUnused.a@14:21   v0=number+printed
 clone c0   def: author/project:LetUnused.main   key: ()   kind: value   init: 0   needs: 
--- program: 8 clones, reachable from main, dependencies first
+-- program: 10 clones, reachable from main, dependencies first
 clone c2   def: author/project:LetUnused.f@29:21   key: (v0=type elm/core:Basics.Int)   name: f@29:21__i64   kind: function   params:    result: i64   lifted-from: c1
   Call :: i64
     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
@@ -44,46 +44,54 @@ clone c3   def: author/project:LetUnused.a@14:21   key: (v0=type elm/core:Basics
     Kernel elm/core:Debug.log (v0=type elm/core:Basics.Int) :: ref
     Lit "a" :: ref
     Lit 1 :: i64
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Let _pv2 :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Let _pv2 :: struct(unit,ref)
     Call :: i64
       Global c2 :: ref
-    Let g@32:21 :: struct(unit,unit)
+    Let g@32:21 :: struct(unit,ref)
       Call :: ref
         Kernel elm/core:Debug.log (v0=type elm/core:String.String) :: ref
         Lit "g" :: ref
         Call :: ref
           Kernel elm/core:String.fromInt () :: ref
           Local _pv2 :: i64
-      Let _pv7 :: struct(unit,unit)
+      Let _pv7 :: struct(unit,ref)
         Call :: i64
           Global c7 :: ref
-        Let _pv6 :: struct(unit,unit)
+        Let _pv6 :: struct(unit,ref)
           Call :: i64
             Global c6 :: ref
-          Let _pv5 :: struct(unit,unit)
+          Let _pv5 :: struct(unit,ref)
             Call :: ref
               Global c5 :: ref
-            Let _pv4 :: struct(unit,unit)
+            Let _pv4 :: struct(unit,ref)
               Call :: i64
                 Global c4 :: ref
-              Let _pv3 :: struct(unit,unit)
+              Let _pv3 :: struct(unit,ref)
                 Call :: i64
                   Global c3 :: ref
-                If :: struct(unit,unit)
+                If :: struct(unit,ref)
                   Call :: enum
                     Kernel elm/core:Basics.gt (v0=type elm/core:Basics.Int) :: ref
                     Call :: i64
                       Kernel elm/core:String.length () :: ref
                       Local g@32:21 :: ref
                     Lit 0 :: i64
-                  Tuple :: struct(unit,unit)
+                  Tuple :: struct(unit,ref)
                     Lit () :: unit
-                    Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-                  Tuple :: struct(unit,unit)
+                    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+                  Tuple :: struct(unit,ref)
                     Lit () :: unit
-                    Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:LetUnused.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+                    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c8   def: update   key: ()   kind: function   params: _a0:unit m:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Local m :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c9   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:LetUnused.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c8 :: ref
+    Global c9 :: ref

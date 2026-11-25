@@ -6,7 +6,7 @@ clone c2   def: author/project:Bits.tag   key: ()   kind: function   init: 2   n
 clone c3   def: author/project:Bits.pairOps   key: ()   kind: function   init: 3   needs: c0
 clone c4   def: author/project:Bits.shiftOps   key: ()   kind: function   init: 4   needs: c1
 clone c5   def: author/project:Bits.main   key: ()   kind: value   init: 5   needs: c0,c1
--- program: 11 clones, reachable from main, dependencies first
+-- program: 13 clones, reachable from main, dependencies first
 clone c2   def: elm/core:List.foldl   key: (v0=i64; v1=unit)   name: foldl__i64__unit   kind: function   params: func:ref acc:unit list:ref   result: unit
   Case :: unit
     Local list :: ref
@@ -196,15 +196,23 @@ clone c3   def: author/project:Bits.lambda@72:31   key: ()   kind: function   pa
           Global c5 :: ref
           Local a :: i64
           Lit () :: unit
-clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,unit)   lifted-from: c0
-  Tuple :: struct(unit,unit)
+clone c1   def: init   key: ()   kind: function   params: _a0:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
     Call :: unit
       Global c2 :: ref
       Global c3 :: ref
       Lit () :: unit
       Global c6 :: ref
-    Kernel elm/core:Platform.Cmd.none (v0=unit) :: unit
-clone c0   def: author/project:Bits.main   key: ()   kind: value   params:    result: unit
-  Call :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c11   def: update   key: ()   kind: function   params: _a0:unit _a1:unit   result: struct(unit,ref)   lifted-from: c0
+  Tuple :: struct(unit,ref)
+    Lit () :: unit
+    Kernel elm/core:Platform.Cmd.none (v0=unit) :: ref
+clone c12   def: subscriptions   key: ()   kind: function   params: _a0:unit   result: ref   lifted-from: c0
+  Kernel elm/core:Platform.Sub.none (v0=unit) :: ref
+clone c0   def: author/project:Bits.main   key: ()   kind: value   params:    result: ref
+  Call :: ref
     Kernel elm/core:Platform.worker (v0=unit; v1=unit; v2=unit) :: ref
     Global c1 :: ref
+    Global c11 :: ref
+    Global c12 :: ref
