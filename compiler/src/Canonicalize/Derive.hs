@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
+{-# LANGUAGE MagicHash, PatternGuards #-}
 -- Ficcus (A4a): the `derive` lines of a module (docs/A4-DERIVE-DESIGN.md; AST.Derive has the names).
 --
 -- Two steps around Canonicalize.Module.canonicalize:
@@ -24,6 +25,7 @@ module Canonicalize.Derive
 
 
 import qualified Data.List as List
+import GHC.Exts (Int(I#), int2Word#, plusWord64#, wordToWord64#)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (isNothing, mapMaybe, listToMaybe)
 
@@ -57,12 +59,13 @@ throw err =
   Result.throw (Error.Derive err)
 
 
--- | one derived member: the type, the member, the region of the member in the `derive` line
+-- | one derived member: the type, the member, the region of the member in the `derive` line, the region of the line
 data Entry =
   Entry
     { _type :: String
     , _member :: String
     , _region :: A.Region
+    , _line :: A.Region
     }
 
 
@@ -101,10 +104,10 @@ checkLines lines_ =
           case Map.lookup tipe seenLines of
             Just first -> throw (DE.TwoLines first region tipe)
             Nothing ->
-              do  es <- goMembers tipe [] members
+              do  es <- goMembers region tipe [] members
                   go (Map.insert tipe region seenLines) (reverse es ++ acc) rest
 
-    goMembers tipe acc members =
+    goMembers line tipe acc members =
       case members of
         [] ->
           Result.ok (reverse acc)
@@ -114,14 +117,14 @@ checkLines lines_ =
           if chars `notElem` Derive.known then
             throw (DE.Unknown region tipe chars)
           else
-            case [ r | Entry _ m r <- acc, m == chars ] of
+            case [ r | Entry _ m r _ <- acc, m == chars ] of
               first : _ -> throw (DE.Twice first region tipe chars)
-              [] -> goMembers tipe (Entry tipe chars region : acc) rest
+              [] -> goMembers line tipe (Entry tipe chars region line : acc) rest
 
 
 -- DERIVE AND DEFINE: the member is also written in the `where` block
 checkDefined :: [A.Located Src.Value] -> Entry -> Result i w ()
-checkDefined values (Entry tipe member region) =
+checkDefined values (Entry tipe member region _) =
   let mangled = Members.mangle (tname tipe) (fromChars member) in
   case [ r | A.At _ (Src.Value (A.At r n) _ _ _) <- values, n == mangled ] of
     written : _ -> throw (DE.AndDefine region written tipe member)
@@ -131,19 +134,19 @@ checkDefined values (Entry tipe member region) =
 -- DERIVE SHADOWED: the module defines a top level function of the member's name (A4a reading of section 4 of the note:
 -- any top level definition of that name, exposed or not; see the A4a report)
 checkShadowed :: String -> [A.Located Src.Value] -> Entry -> Result i w ()
-checkShadowed modul values (Entry tipe member region) =
+checkShadowed modul values (Entry tipe member region _) =
   case [ r | A.At _ (Src.Value (A.At r n) _ _ _) <- values, N.toChars n == member ] of
     defined : _ -> throw (DE.Shadowed region defined modul tipe member)
     [] -> Result.ok ()
 
 
 type UnionMap =
-  Map.Map String ([T.Var], [(A.Located N.Name, [Src.Type])])
+  Map.Map String ([TV.Var], [(A.Located N.Name, [Src.Type])])
 
 
 -- DERIVE ON NON-ENUMERATION; `map` needs a type parameter
 checkUnion :: UnionMap -> Entry -> Result i w ()
-checkUnion unionMap (Entry tipe member region) =
+checkUnion unionMap (Entry tipe member region _) =
   case Map.lookup tipe unionMap of
     Nothing ->
       Result.ok ()
@@ -166,8 +169,8 @@ checkUnion unionMap (Entry tipe member region) =
 
 -- | the member `T$$m` with its signature and a placeholder body (finish replaces it by the stub)
 stub :: UnionMap -> Entry -> A.Located Src.Value
-stub unionMap (Entry tipe member r) =
-  A.At r (Src.Value (A.At r (Members.mangle (tname tipe) (fromChars member))) (map hiddenPattern constrained) (A.At r Src.Unit) (Just signature))
+stub unionMap (Entry tipe member r _) =
+  A.At r (Src.Value (A.At r (Members.mangle (tname tipe) (fromChars member))) (zipWith hiddenPattern [1 ..] constrained) (A.At r Src.Unit) (Just signature))
   where
     (vars, variants) = Map.findWithDefault ([], []) tipe unionMap
     at = A.At r
@@ -198,7 +201,9 @@ stub unionMap (Entry tipe member r) =
       case (member, reverse vars) of
         ("map", lastVar : _) ->
           let
-            b = head [ v | v <- map (TV.varFromString . S.fromChars) ("b" : [ "b" ++ show i | i <- [(1 :: Int) ..] ]), v `notElem` vars ]
+            b = case [ v | v <- map (TV.varFromString . S.fromChars) ("b" : [ "b" ++ show i | i <- [(1 :: Int) ..] ]), v `notElem` vars ] of
+                  v : _ -> v
+                  [] -> lastVar     -- (not reached: the list is infinite)
             other = at (Src.TType r (tname tipe) [ at (Src.TVar (if v == lastVar then b else v)) | v <- vars ])
           in
           fn (fn (at (Src.TVar lastVar)) (at (Src.TVar b))) (fn self other)
@@ -208,11 +213,19 @@ stub unionMap (Entry tipe member r) =
     signature =
       foldr (\v acc -> fn (shape (at (Src.TVar v))) acc) real constrained
 
-    hiddenPattern v =
-      at (Src.PAlias (at (Src.PVar (Constraints.marker (TV.varToChars v) (fromChars member)))) (at (fromChars (member ++ "$" ++ TV.varToChars v))))
+    -- (the type recorder keys a pattern by its region: each hidden pattern gets its own, the region of the member
+    -- widened by its position)
+    hiddenPattern i v =
+      let at' = A.At (widen i r) in
+      at' (Src.PAlias (at' (Src.PVar (Constraints.marker (TV.varToChars v) (fromChars member)))) (at' (fromChars (member ++ "$" ++ TV.varToChars v))))
 
 
-srcVars :: Src.Type -> [T.Var]
+widen :: Int -> A.Region -> A.Region
+widen (I# k) (A.Region s e) =
+  A.Region s (plusWord64# e (wordToWord64# (int2Word# k)))
+
+
+srcVars :: Src.Type -> [TV.Var]
 srcVars (A.At _ t) =
   case t of
     Src.TLambda a b -> srcVars a ++ srcVars b
@@ -237,14 +250,15 @@ finish ifaces entries modul@(Can.Module home exports docs decls unions aliases b
     _ ->
       do  let table = TMembers.toTable ifaces modul
           mapM_ (checkParts home table unions) entries
-          let stubs = Map.fromList [ (Members.mangle (tname t) (fromChars m), Derive.stubName t m) | Entry t m _ <- entries ]
-          let markers = [ marker t (map _member es) | es@(Entry t _ _ : _) <- List.groupBy (\a b -> _type a == _type b) entries ]
+          let stubs = Map.fromList [ (Members.mangle (tname t) (fromChars m), Derive.stubName t m) | Entry t m _ _ <- entries ]
+          let markers = [ marker line t (map _member es) | es@(Entry t _ _ line : _) <- List.groupBy (\a b -> _type a == _type b) entries ]
           Result.ok (Can.Module home exports docs (foldr Can.Declare (stubBodies stubs decls) markers) unions aliases binops effects)
 
 
-marker :: String -> [String] -> Can.Def
-marker tipe members =
-  Can.Def (A.At A.zero (Derive.marker tipe members)) [] (A.At A.zero Can.Unit)
+-- (at the region of the `derive` line: the type recorder keys an expression by its region)
+marker :: A.Region -> String -> [String] -> Can.Def
+marker line tipe members =
+  Can.Def (A.At line (Derive.marker tipe members)) [] (A.At line Can.Unit)
 
 
 stubBodies :: Map.Map N.Name N.Name -> Can.Decls -> Can.Decls
@@ -271,7 +285,7 @@ stubBodies stubs decls =
 
 
 checkParts :: ModuleName.Canonical -> TMembers.Table -> Map.Map T.Name Can.Union -> Entry -> Result i w ()
-checkParts home table unions (Entry tipe member region) =
+checkParts home table unions (Entry tipe member region _) =
   case Map.lookup (tname tipe) unions of
     Nothing ->
       Result.ok ()
@@ -377,7 +391,7 @@ vectorId =
 
 
 -- | a use of the type inside itself at other arguments than its own parameters
-nonRegular :: ModuleName.Canonical -> T.Name -> [T.Var] -> Can.Type -> [String]
+nonRegular :: ModuleName.Canonical -> T.Name -> [TV.Var] -> Can.Type -> [String]
 nonRegular home tipe vars t =
   case t of
     Can.TType h n args

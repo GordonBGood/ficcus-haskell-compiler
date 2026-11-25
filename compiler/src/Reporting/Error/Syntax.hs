@@ -2251,18 +2251,18 @@ toCustomTypeReport source customType startCur =
       toSpaceReport source space cur
 
     CT_Derive cur ->
-      deriveReport source startCur cur
+      deriveReport source startCur cur $ D.reflow
         "I was expecting the name of a member next: after `derive` and after each comma comes a\
         \ member name in lower case, such as `compare` or `toString`."
 
     CT_DeriveComma cur ->
-      deriveReport source startCur cur
+      deriveReport source startCur cur $ D.reflow
         "I was expecting a comma here, or the end of the line: the members of a `derive` line are\
         \ separated by commas."
 
 
 -- Ficcus (A4a)
-deriveReport :: Code.Source -> Cursor -> Cursor -> String -> Report.Report
+deriveReport :: Code.Source -> Cursor -> Cursor -> D.Doc -> Report.Report
 deriveReport source startCur cur message =
   let
     surroundings = A.Region startCur cur
@@ -2275,7 +2275,7 @@ deriveReport source startCur cur message =
           "I am partway through parsing the `derive` line of a custom type, but I got stuck here:"
       ,
         D.stack
-          [ D.reflow message
+          [ message
           , D.indent 4 $ D.vcat
               [ D.fillSep [D.cyan "type","Color","=","Red","|","Green","|","Blue"]
               , D.indent 4 $ D.fillSep [D.cyan "where"]

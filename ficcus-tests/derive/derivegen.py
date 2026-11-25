@@ -144,12 +144,14 @@ enc = E.int
 dec : D.Decoder Int
 dec = D.int
 """, 'E.encode 0 (enc 3)', imports="import Json.Encode as E\nimport Json.Decode as D\n")}, C_JSON, 'r: "3"\n')
-case("ok-not-shadowed", "RUN", "c", "", {"Main.elm": worker("""
+# A4a reading of DERIVE SHADOWED: any top level function of the member's name in the module, exposed or not (stricter than
+# section 4 of the note; can be relaxed later without breaking a program)
+case("shadowed-helper", "REJECT", "DERIVE SHADOWED", "hash", {"Main.elm": worker("""
 type Color = Red | Blue where derive hash
 
 hash : Int -> Int
 hash n = n * 31
-""", "hash 2")}, C_ONLY, "r: 62\n")
+""", "hash 2")})
 case("ok-siblings", "RUN", "c", "", {"Main.elm": worker("""
 type Color
     = Red
@@ -178,15 +180,20 @@ type Maybe = Maybe where derive succ, enumerate
 
 # ---- the parameter constraint (`a has m`) bookkeeping, checked by the type checker ----
 
-case("ok-constraint-use", "RUN", "c", "", {"Main.elm": worker(TREE + """
+# (A4a: the built-in types have only their A3 members in the solver's table, `compare` at Int; `encode` etc. at
+# built-in types come with A4b to A4d, so the element type here is a custom type that derives them)
+case("ok-constraint-use", "RUN", "c", "", {"Main.elm": worker(TREE + EMAIL + """
 cmpInts : Tree Int -> Tree Int -> Order
 cmpInts = Tree.compare
 
-encInts : Tree String -> Json.Encode.Value
-encInts = Tree.encode
+encEmails : Tree Email -> Json.Encode.Value
+encEmails = Tree.encode
 
-decFloats : Json.Decode.Decoder (Tree Float)
-decFloats = Tree.decoder
+decEmails : Json.Decode.Decoder (Tree Email)
+decEmails = Tree.decoder
+
+hashEmails : Tree Email -> Int
+hashEmails = Tree.hash
 
 mapped : (Int -> String) -> Tree Int -> Tree String
 mapped = Tree.map
@@ -217,6 +224,20 @@ case("constraint-signature", "REJECT", "TYPE MISMATCH", "", {"Main.elm": worker(
 wrong : Tree Int -> Int
 wrong = Tree.compare
 """, "1")}, {"deps": [JSON]})
+
+case("ok-two-params", "RUN", "c", "", {"Main.elm": worker("""
+type Pair k v = Pair k v (List ( k, v )) where derive compare, hash, toString, encode, decoder, map
+
+cmp : Pair Int Int -> Pair Int Int -> Order
+cmp = Pair.compare
+""", "1")}, C_JSON, "r: 1\n")
+# A4a: an operator at a parametric type needs a constrained `compare` in A3's operator path (A3b, before A4b): Elm's report
+case("operator-param-not-yet", "REJECT", "TYPE MISMATCH", "Tree", {"Main.elm": worker(TREE, "Node Leaf 1 Leaf < Leaf")}, {"deps": [JSON]})
+# A4a: the built-in types do not have `encode` etc. in the solver's table yet (A4b to A4d)
+case("constraint-builtin-not-yet", "REJECT", "NO MEMBER", "", {"Main.elm": worker(TREE + """
+encStrings : Tree String -> Json.Encode.Value
+encStrings = Tree.encode
+""", "1", imports="import Json.Encode\n")}, {"deps": [JSON]})
 
 # ---- G70: the members of an opaque type follow its name ----
 
@@ -351,7 +372,7 @@ type Email = Email String
 type Contact = Contact (List ( Int, Maybe Email )) where derive hash
 """, "Email")
 bad("cannot-json-compare", "CANNOT DERIVE", "type Payload = Payload Json.Encode.Value where derive compare",
-    "Value", imports="import Json.Encode\n")
+    "Value", meta={"deps": [JSON]}, imports="import Json.Encode\n")
 bad("cannot-imported", "CANNOT DERIVE", "type Wallet = Wallet Money where derive encode", "Money", meta={"deps": [JSON]},
     files={"Money.elm": "module Money exposing (Money, make)\n\n\ntype Money = Money Int where derive compare\n\n\nmake : Int -> Money\nmake =\n    Money\n"},
     imports="import Money exposing (Money)\n")
@@ -365,7 +386,8 @@ bad("cannot-map-no-param", "CANNOT DERIVE", "type Color = Red | Blue where deriv
 bad("cannot-several", "CANNOT DERIVE", "type Handler = Handler (Int -> Int) where derive compare, hash")
 bad("non-enumeration", "DERIVE ON NON-ENUMERATION", "type Shape = Dot | Circle Float where derive minValue, succ", "Circle")
 bad("non-enumeration-record", "DERIVE ON NON-ENUMERATION", "type Shape = Shape { r : Float } where derive enumerate", "Shape")
-bad("json-not-direct", "MISSING DEPENDENCY", "type Color = Red | Blue where derive encode", "elm/json")
+# the implicit import of Json.Encode points at `encode` in the derive line; Elm's own report is clear enough (A4a)
+bad("json-not-direct", "MODULE NOT FOUND", "type Color = Red | Blue where derive encode", "elm install elm/json")
 
 
 def write():

@@ -46,6 +46,7 @@ import qualified Data.Map.Strict as Map
 
 import qualified AST.Canonical as Can
 import qualified AST.Constraints as Constraints
+import qualified AST.Derive as Derive
 import qualified AST.Members as Members
 import qualified AST.Prim.Module as Module
 import qualified AST.Prim.Name as N
@@ -210,12 +211,20 @@ shapeErrors (Can.Module home _ _ decls unions _ _ _) =
             Can.TypedDef (A.At region _) _ args _ result ->
               let written = foldr (\(_, t) acc -> Can.TLambda t acc) result (drop (Constraints.hiddenCount def) args)
               in
-              if Constraints.hiddenCount def == 0 && WK.fits home tname shape written
+              if (Constraints.hiddenCount def == 0 || derived def) && WK.fits home tname shape written
                 then []
                 else [Error.WellKnownShape region tipe member expected]
 
         _ ->
           []
+
+    -- Ficcus (A4a): a derived member (its body is the stub of Canonicalize.Derive) has a synthesized signature, with
+    -- `a has m` for the parameters of the type (docs/A4-DERIVE-DESIGN.md, section 1); the A3 rule that a well known
+    -- member has no constraints is for written members
+    derived def =
+      case def of
+        Can.TypedDef _ _ _ (A.At _ (Can.VarKernel kernel _)) _ -> S.toChars (Module.kernelToString kernel) == Derive.kernelHome
+        _ -> False
 
 
 

@@ -16,14 +16,19 @@ type Tree a
                 Leaf -> 0
                 Node l _ r -> size l + 1 + size r
 
+type Email = Email String where derive compare, hash, toString, encode, decoder
+
 cmpInts : Tree Int -> Tree Int -> Order
 cmpInts = Tree.compare
 
-encInts : Tree String -> Json.Encode.Value
-encInts = Tree.encode
+encEmails : Tree Email -> Json.Encode.Value
+encEmails = Tree.encode
 
-decFloats : Json.Decode.Decoder (Tree Float)
-decFloats = Tree.decoder
+decEmails : Json.Decode.Decoder (Tree Email)
+decEmails = Tree.decoder
+
+hashEmails : Tree Email -> Int
+hashEmails = Tree.hash
 
 mapped : (Int -> String) -> Tree Int -> Tree String
 mapped = Tree.map

@@ -8,7 +8,7 @@ ok-tree	RUN	c
 ok-builtins	RUN	c	
 ok-json-value	RUN	c	
 ok-own-json-imports	RUN	c	
-ok-not-shadowed	RUN	c	
+shadowed-helper	REJECT	DERIVE SHADOWED	hash
 ok-siblings	RUN	c	
 ok-written-inner	RUN	c	
 ok-order-type-shadow	RUN	c	
@@ -17,6 +17,9 @@ ok-phantom	RUN	c
 constraint-function	REJECT	NO MEMBER	
 constraint-missing	REJECT	MISSING CONSTRAINT	
 constraint-signature	REJECT	TYPE MISMATCH	
+ok-two-params	RUN	c	
+operator-param-not-yet	REJECT	TYPE MISMATCH	Tree
+constraint-builtin-not-yet	REJECT	NO MEMBER	
 ok-opaque	RUN	c	
 ok-cross-module	RUN	c	
 c-use-refused	REJECTC		`Color.compare` is not generated yet
@@ -52,4 +55,4 @@ cannot-map-no-param	REJECT	CANNOT DERIVE	parameter
 cannot-several	REJECT	CANNOT DERIVE	
 non-enumeration	REJECT	DERIVE ON NON-ENUMERATION	Circle
 non-enumeration-record	REJECT	DERIVE ON NON-ENUMERATION	Shape
-json-not-direct	REJECT	MISSING DEPENDENCY	elm/json
+json-not-direct	REJECT	MODULE NOT FOUND	elm install elm/json
