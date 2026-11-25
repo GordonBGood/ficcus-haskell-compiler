@@ -48,7 +48,7 @@ import Ficcus.Mono.Free
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel (kernelResultBorrowed, kernelSig, unsafeGetKernel, applyOwnKernel, takeFor, isTakeKernel)
 import Ficcus.Mono.Layout (leavesOf, nptrOf, objSizeClass)
-import Ficcus.Mono.LeafSplit (SplitFacts(..), Plan(..), planSplit, rewriteSplit, leafSplitOn)
+import Ficcus.Mono.LeafSplit (SplitFacts(..), Plan(..), planSplit, dealiasOnly, rewriteSplit, leafSplitOn)
 import Ficcus.Mono.Reuse
 import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
@@ -174,14 +174,21 @@ trySplit ctx env live e
   | otherwise =
       let free = fvOf ctx e
           roots = Set.fromList (Map.elems (cViews ctx))
-          candidates =
-            [ (m, fs, plan)
+          eligible =
+            [ (m, fs)
             | (m, sc@(CStruct fs)) <- Map.toList env, refClass sc, not (Set.member m live), Map.member m free
-            , not (Set.member m roots), not (Map.member m (cLate ctx)), not (Set.member m (cDeferred ctx)), not (Set.member m (cTwinCaps ctx))
-            , Just plan <- [planSplit (cFacts ctx) m fs e] ]
+            , not (Set.member m roots), not (Map.member m (cLate ctx)), not (Set.member m (cDeferred ctx)), not (Set.member m (cTwinCaps ctx)) ]
+          candidates = [ (m, fs, plan) | (m, fs) <- eligible, Just plan <- [planSplit (cFacts ctx) m fs e] ]
+          -- E1p review fix 3: where no split pays, the dealias of `let x = m` (x read only by field) is still applied
+          dealiased = [ e' | (m, _) <- eligible, Just e' <- [dealiasOnly (cFacts ctx) m e] ]
       in
       case candidates of
-        [] -> return Nothing
+        [] ->
+          case dealiased of
+            e' : _ ->
+              do  modify' (\s -> s { rsSplits = (rsClone s, rsWhere s) : rsSplits s })     -- counted with the splits (FICCUS_SPLIT_STATS, the counter reset)
+                  return (Just e')
+            [] -> return Nothing
         (m, fs, plan) : _ ->
           do  k <- gets rsSplitN
               modify' (\s -> s { rsSplitN = k + 1, rsSplits = (rsClone s, rsWhere s) : rsSplits s })

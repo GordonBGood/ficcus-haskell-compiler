@@ -4,6 +4,7 @@ module Ficcus.Mono.LeafSplit
   ( SplitFacts(..)
   , Plan(..)
   , planSplit
+  , dealiasOnly
   , rewriteSplit
   , leafSplitOn
   , splitStatsOn
@@ -227,6 +228,20 @@ dealias facts m = go
       case mNode x of
         MGlobal c -> t `elem` map fst (Map.findWithDefault [] c (sfCaps facts))
         _ -> any (captured t) (children x)
+
+
+-- | the dealias alone (E1p review fix 3), where no split pays: Just the expression when it removed at least one `let x = m`. It never
+-- adds a count: `m` lives as long as `x` did and its reads are the reads `x` had; it removes the `Dup m` of the `let` (cause C2 of the
+-- design note: `{ m | n = m.n + 1 }` on a struct whose only reference field is moved by its last read)
+dealiasOnly :: SplitFacts -> String -> MExpr -> Maybe MExpr
+dealiasOnly facts m e =
+  let e' = dealias facts m e
+  in if aliasLets e' < aliasLets e then Just e' else Nothing
+  where
+    aliasLets x =
+      case mNode x of
+        MLetVal _ (MExpr _ (MLocal n)) b | n == m -> 1 + aliasLets b
+        _ -> sum (map aliasLets (children x)) :: Int
 
 
 -- | every field read of `t` (outside binders that shadow it) replaced by `new` of the read
