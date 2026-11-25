@@ -50,8 +50,8 @@ TESTS = {
 }
 # rejects: (program, pattern the compile error must match, what it tests); "target" when Ficcus does not reject it today
 REJECTS = {
-    "X1Flags": ("target", r"flags", "Q6: a worker with Int flags (today: compiles, init gets 0)"),
-    "X1FlagsString": ("target", r"flags", "Q6: a worker with String flags (today: compiles, segfaults)"),
+    "X1Flags": ("gate", r"flags are not supported yet", "Q6: a worker with Int flags (fix 1; E2f compiled it and init got 0)"),
+    "X1FlagsString": ("gate", r"flags are not supported yet", "Q6: a worker with String flags (fix 1; E2f compiled it and it crashed)"),
     "X2ArrayPortOut": ("gate", r"port of type .*Array", "Q6: outgoing Array payload"),
     "X3ArrayPortIn": ("gate", r"port of type .*Array", "Q6: incoming record with an Array field"),
     "X4BrowserEvents": ("gate", r"FICCUS: the program cannot be compiled", "Q4: Browser.Events in a worker (message names kernels)"),

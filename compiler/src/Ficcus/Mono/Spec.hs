@@ -1704,6 +1704,12 @@ specWorker se region fregion f args =
               do  mc <- classOfTy se msgT
                   modify' (\st -> st { sAppMsg = Just (boxed mc) })
             _ -> return ()
+          -- E2 review fix 1: flags other than () would reach init as a 0 word (Int: silently 0, String: a crash); refused until E3
+          case fmap strip (nodeType se (Recorder.exprKey region call)) of
+            Just (TCon _ _ [flagsT, _, _]) | not (unitFlags flagsT) ->
+              report ("main is a Platform.worker with flags (`Program flags model msg` with flags other than `()`): flags are not supported yet"
+                      ++ " (they come with effects slice E3) at " ++ regionText region)
+            _ -> return ()
           key <- do ref <- resolve se fregion f
                     return (case ref of { RKernel _ k _ -> k; _ -> Key [] })
           -- E1 step 3: update and subscriptions are cloned after the rest of the program (`workerPhase`: the existing clones keep their ids)
@@ -1717,6 +1723,11 @@ specWorker se region fregion f args =
           modify' (\s -> s { sDone = Map.insert initId def (sDone s) })
           return (MExpr cls (MCall (MExpr CRef (MKernel "elm/core:Platform.worker" key)) [MExpr CRef (MGlobal initId)]))
     _ -> unsupported "Platform.worker without a literal record with an `init` lambda" region
+
+
+-- | flags the worker can run without: `()`, or a free variable (no value is ever decoded)
+unitFlags :: TType -> Bool
+unitFlags t = case t of { TUnit -> True; TVar _ _ _ -> True; _ -> False }
 
 
 -- Elm.String holds a string literal as JavaScript source text: `\u0022` for a quote, `\u005C` for a backslash,
