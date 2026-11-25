@@ -624,7 +624,7 @@ static int64_t fic_random_seed_time(fic_proc *p) {
   int i;
   if (v != NULL && *v != 0)
     for (i = 0; i < fic_nmgr; i++)
-      if (strcmp(fic_mgrs[i].name, "elm/random:Random") == 0 && fic_mgrs[i].router != FIC_NONE && ((fic_router *)fic_mgrs[i].router)->proc == &p->h)
+      if (fic_mgrs[i].name != NULL && strcmp(fic_mgrs[i].name, "elm/random:Random") == 0 && fic_mgrs[i].router != FIC_NONE && ((fic_router *)fic_mgrs[i].router)->proc == &p->h)
         return (int64_t)strtoll(v, NULL, 10);
   return fic_time_now_ms();
 }
