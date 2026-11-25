@@ -1,0 +1,3 @@
+{
+ "desc": "G70: Finance exports fromInt : Int -> Money but not the type Money: Finance.Money.add is unknown"
+}

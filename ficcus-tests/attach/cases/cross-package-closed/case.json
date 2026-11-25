@@ -1,5 +1,5 @@
 {
- "desc": "Vault is exported without (..): its function peek works (it uses the member inside the package), the member secret is not reachable",
+ "desc": "G70 (rev 176): Vault is exported without (..): the member secret is reachable like peek (members follow the type name); was REJECT under A2b",
  "deps": [
   "ficcus/vault@1.0.0"
  ]

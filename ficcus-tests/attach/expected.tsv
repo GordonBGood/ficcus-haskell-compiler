@@ -10,7 +10,7 @@ qualified-clash	RUN	js+c
 local-module-shadow	RUN	js+c	
 import-open	RUN	js+c	
 cross-package	RUN	js+c	
-cross-package-closed	REJECT	NAMING ERROR	Vault.secret
+cross-package-closed	RUN	js+c	
 cross-package-closed-ok	RUN	js+c	
 alias-where	REJECT	MEMBERS ON A TYPE ALIAS	wrap the type in a custom type
 dup-member	REJECT	NAME CLASH	The `T` type has multiple `f` members
@@ -20,7 +20,7 @@ missing-definition	REJECT	EXPECTING DEFINITION	foo
 name-mismatch-member	REJECT	NAME MISMATCH	foo
 member-type-error	REJECT	TYPE MISMATCH	`T.foo`
 empty-where	REJECT	UNFINISHED CUSTOM TYPE	where
-closed-export	REJECT	NAMING ERROR	Money.add
+closed-export	RUN	js+c	
 ambiguous-type	REJECT	AMBIGUOUS NAME	two types named `T` are in scope, from `A` and
 alias-where-in-module	ACCEPT		
 no-last-segment	REJECT	NAMING ERROR	Finance.Money
@@ -158,3 +158,41 @@ a3-sortwith-compare	RUN	c
 package-own-vector-sort	RUN	js+c	
 package-exposed-vector-sort	RUN	js+c	
 a3-sort-sized	RUN	c	
+# G70 (rev 176): member visibility follows the type name; (..) only the constructors (cases written by g70gen.py)
+g70-open-exp-type	RUN	js+c	
+g70-opaque-exp-type	RUN	js+c	
+g70-open-exp-open	RUN	js+c	
+g70-opaque-exp-open	RUN	js+c	
+g70-open-exp-all	RUN	js+c	
+g70-opaque-exp-all	RUN	js+c	
+g70-open-qual	RUN	js+c	
+g70-opaque-qual	RUN	js+c	
+g70-open-alias	RUN	js+c	
+g70-opaque-alias	RUN	js+c	
+g70-open-alias-exp-type	RUN	js+c	
+g70-opaque-alias-exp-type	RUN	js+c	
+g70-open-constraint	RUN	c	
+g70-opaque-constraint	RUN	c	
+g70-open-flow	RUN	c	
+g70-opaque-flow	RUN	c	
+g70-open-reexport-qual	RUN	js+c	
+g70-opaque-reexport-qual	RUN	js+c	
+g70-open-reexport-alias-name	REJECT	NAMING ERROR	Cash.add
+g70-opaque-reexport-alias-name	REJECT	NAMING ERROR	Cash.add
+g70-open-reexport-unimported	REJECT	NAMING ERROR	Finance.Money.add
+g70-opaque-reexport-unimported	REJECT	NAMING ERROR	Finance.Money.add
+g70-open-ctor-exp-open	RUN	js+c	
+g70-opaque-ctor-exp-open	REJECT	NAMING ERROR	Money
+g70-open-ctor-exp-all	RUN	js+c	
+g70-opaque-ctor-exp-all	REJECT	NAMING ERROR	Money
+g70-open-ctor-qual	RUN	js+c	
+g70-opaque-ctor-qual	REJECT	NAMING ERROR	Finance.Money
+g70-open-ctor-exp-type	REJECT	NAMING ERROR	Money
+g70-opaque-ctor-exp-type	REJECT	NAMING ERROR	Money
+g70-open-ctor-pattern	RUN	js+c	
+g70-opaque-ctor-pattern	REJECT	NAMING ERROR	Finance.Money
+g70-open-unexported-fn	REJECT	NAMING ERROR	Finance.raw
+g70-opaque-unexported-fn	REJECT	NAMING ERROR	Finance.raw
+g70-private-type-call	REJECT	NAMING ERROR	Finance.Money.toInt
+g70-private-type-flow	REJECT	NO MEMBER	has no members that I can see here
+g70-elm-opaque	RUN	js+c	

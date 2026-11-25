@@ -1,0 +1,3 @@
+{
+ "desc": "G70 (opaque: Finance exports Money): import Finance exposing (Money): Algebra.sum over Money (a has zero, a has add)"
+}

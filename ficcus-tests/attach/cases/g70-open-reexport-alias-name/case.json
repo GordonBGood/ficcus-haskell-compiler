@@ -1,0 +1,3 @@
+{
+ "desc": "G70 (open: Finance exports Money(..)): Bank's alias Cash does not carry the members of Money: Cash.add is unknown (members follow the type name, an alias is another name)"
+}

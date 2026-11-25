@@ -1,3 +1,3 @@
 {
- "desc": "Money without (..) exports the type only: its members are not reachable"
+ "desc": "G70 (rev 176): Money without (..) exports the type name, so its members are reachable (the constructor is not); was REJECT under A2b"
 }

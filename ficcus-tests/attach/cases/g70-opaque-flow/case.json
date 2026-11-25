@@ -1,0 +1,3 @@
+{
+ "desc": "G70 (opaque: Finance exports Money): Money flows in through Bank (an alias and functions); Main imports neither Finance nor names Money; Algebra.sum finds the members through Finance"
+}

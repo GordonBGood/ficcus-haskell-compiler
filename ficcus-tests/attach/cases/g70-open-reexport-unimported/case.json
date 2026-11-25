@@ -1,0 +1,3 @@
+{
+ "desc": "G70 (open: Finance exports Money(..)): Finance.Money.add without importing Finance (only Bank): unknown, as any qualified name of a module not imported"
+}
