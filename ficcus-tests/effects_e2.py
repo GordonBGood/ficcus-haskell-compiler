@@ -3,7 +3,7 @@
 
 Each program is its own Elm reference: --goldens copies it to a scratch Elm project as a .elm file, compiles it with the reference
 compiler and runs it under node with effects2/ref/run.js (Debug.log lines, and outgoing port messages as `<port>: <JSON>`); the output
-is expected/e2_<name>.out. A check compiles the program --rc (gcc -O2, and ASan + UBSan without the pool) and --no-rc (-O2), runs it
+is expected/e2_<name>.out. A check compiles the program --rc (gcc -O2, ASan + UBSan without the pool, and -DFIC_DROP_ALL) and --no-rc (-O2), runs it
 and compares stdout byte for byte; under --rc the FIC_STATS line must say live 0 (the effect state is released at the end, step 8).
 A table entry can add an environment (FIC_TIME, FIC_SEED, FIC_PORTS_IN), compare by a filter (lines whose values depend on the clock),
 and a model copy target (FIC_STATS model line, G17).
@@ -34,6 +34,7 @@ TESTS = {
     "E2Ports": (T, None, None, "step 7: design 1.8: outgoing ports asynchronous, interleaved with synchronous and sleeping tasks"),
     "E2PortsIn": (dict(T, FIC_PORTS_IN="{HERE}/effects2/ports/E2PortsIn.in"), None, None,
                   "step 7: incoming ports from a script, Sub.map over a port, records, lists, Maybe, tuples, Json.Value both ways"),
+    "E2Teardown": (dict(T, __drop_pids="1"), None, None, "step 8: the end with process ids in the model, a killed sleeper, a killed interval"),
 }
 
 
@@ -96,7 +97,8 @@ def check(a, names):
                 got = [x.split(":")[-1].split(".")[-1] if k == "EManager" else x for k, x in re.findall(r'(EManager|EPortOut|EPortIn) "([^"]*)"', m.group(1))] if m else []
                 want_o = open(of).read().split()
                 report(got == want_o, "%s: managers and ports in Elm's order (%s)" % (n, " ".join(want_o)), "got " + " ".join(got))
-            for tag, cf in ((("O2", ["-O2"]), ("san", SAN)) if flag == "--rc" else (("O2", ["-O2"]),)):
+            # step 8: FIC_DROP_ALL checks the layout of every object left at the end (the effect state is released first)
+            for tag, cf in ((("O2", ["-O2"]), ("san", SAN), ("dropall", ["-O1", "-DFIC_DROP_ALL"])) if flag == "--rc" else (("O2", ["-O2"]),)):
                 exe = os.path.join(tmp, n + flag + tag)
                 b = run(["gcc", "-std=c99", "-ffp-contract=off", "-w", *cf, "-DFIC_STATS", "-I", RT, c, "-o", exe, "-lm"])
                 if b.returncode != 0:
@@ -109,6 +111,7 @@ def check(a, names):
                 live = re.search(r"FIC_STATS: allocs \d+ live (\d+)", err)
                 ok = r.returncode == 0 and got == want
                 if flag == "--rc": ok = ok and live is not None and live.group(1) == "0"
+                if tag == "dropall": ok = ok and re.search(r"FIC_DROP_ALL: \d+ objects checked, 0 bad, 0 live after the free", err) is not None
                 if copies is not None and flag == "--rc": ok = ok and (mc > 0 if copies == ">0" else mc == copies)
                 report(ok, "%s %s %s: output = Elm%s%s" % (n, flag, tag, ", live 0" if flag == "--rc" else "",
                                                            (", model copies %d (want %s)" % (mc, copies)) if copies is not None and flag == "--rc" else ""),

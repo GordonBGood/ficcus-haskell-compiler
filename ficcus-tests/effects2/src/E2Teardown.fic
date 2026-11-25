@@ -1,0 +1,67 @@
+module E2Teardown exposing (main)
+
+-- Effects E2 step 8: the end of a program with effect state. The model keeps process ids (one finished, one killed while it slept
+-- inside an andThen chain, so its stack was not empty); an interval of Time.every was running and is killed when the subscription goes
+-- away; Random's manager keeps its seed; the Task manager has finished processes. Under --rc the program must end with nothing live
+-- (fic_platform_teardown, then the model), and under FIC_DROP_ALL every object left must have a valid layout.
+
+import Process
+import Random
+import Task
+import Time
+
+
+type alias Model =
+    { ids : List Process.Id, ticks : Int, rolls : List Int }
+
+
+type Msg
+    = Spawned Process.Id
+    | Killed
+    | Tick Time.Posix
+    | Roll Int
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg m =
+    case msg of
+        Spawned id ->
+            ( { m | ids = id :: m.ids }
+            , if List.length m.ids == 1 then
+                -- both ids: one process has finished, the other sleeps (50 ms) inside an andThen chain
+                Task.perform (\_ -> Killed) (Process.sleep 5 |> Task.andThen (\_ -> Task.sequence (List.map Process.kill (id :: m.ids))))
+
+              else
+                Cmd.none
+            )
+
+        Killed ->
+            ( Debug.log "killed" m, Random.generate Roll (Random.int 1 6) )
+
+        Tick _ ->
+            ( { m | ticks = m.ticks + 1 }, Cmd.none )
+
+        Roll r ->
+            ( { m | rolls = r :: m.rolls }, Cmd.none )
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( { ids = [], ticks = 0, rolls = [] }
+                , Cmd.batch
+                    [ Task.perform Spawned (Process.spawn (Task.succeed ()))
+                    , Task.perform Spawned (Process.spawn (Process.sleep 50 |> Task.andThen (\_ -> Task.succeed (Debug.log "never" 0))))
+                    ]
+                )
+        , update = update
+        , subscriptions =
+            \m ->
+                if m.ticks < 3 then
+                    Time.every 7 Tick
+
+                else
+                    Sub.none
+        }

@@ -34,7 +34,7 @@ import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 
 import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, platformRuntime, prelude, schedRuntime, regexRuntime, sizedRuntime, sortRuntime, stringRuntime, vectorRuntime)
-import Ficcus.Mono.Effects (leafHome, managerHome, noStepper, portOf)
+import Ficcus.Mono.Effects (kernelTypeIds, leafHome, managerHome, noStepper, portOf)
 import Ficcus.Mono.Program (Shape(..), programShape)
 import Ficcus.Mono.ManagerOrder (Entry)
 import Ficcus.Mono.ManagerTable (MgrEntry(..), Slot(..), MapPairs(..), managerSlots, mapPairs, mapCloneAt, pairIndex, mgrIndex)
@@ -2505,6 +2505,8 @@ showStmt _ t sb v =
     TyCon "elm/json:Json.Encode.Value" [] -> emit ("fic_sb_puts(" ++ sb ++ ", \"<internals>\");")
     TyCon "elm/json:Json.Decode.Decoder" [_] -> emit ("fic_sb_puts(" ++ sb ++ ", \"<internals>\");")
     TyCon "elm/regex:Regex.Regex" [] -> emit ("fic_sb_puts(" ++ sb ++ ", \"{}\");")      -- as Elm (decision L29)
+    -- E2: the platform's kernel types (a process id, a task, a command, a router) print as Elm's `<internals>`
+    TyCon n _ | n `elem` kernelTypeIds -> emit ("fic_sb_puts(" ++ sb ++ ", \"<internals>\");")
     TyCon "elm/bytes:Bytes.Bytes" [] ->
       do  emit ("fic_sb_puts(" ++ sb ++ ", \"<\");")
           emit ("fic_sb_int(" ++ sb ++ ", fic_bytes_width(" ++ v ++ "));")
