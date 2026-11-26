@@ -317,3 +317,5 @@ a5f-m1-builtin-written	REJECTC	WELL KNOWN MEMBER WITH THE WRONG TYPE	a has compa
 a5f-m1-float32	REJECTC	WELL KNOWN MEMBER WITH THE WRONG TYPE	a has fromInt : Int -> a
 a5f-m1-append-ok	RUN	c	
 a5f-m1-float32-ok	RUN	c	
+a5f-m2-recursive-ambiguous	REJECTC	MISSING CONSTRAINT	fa
+a5f-m2-recursive-todo	REJECTC	MISSING CONSTRAINT	fa

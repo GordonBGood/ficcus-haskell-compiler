@@ -196,12 +196,16 @@ settle tools table env kind outer young header pending =
             -- variables)
             outerRoots <- concat <$> traverse (Members.flexVariables . _type) [ o | (o, True) <- zip others olderFlags ]
             ownRoots <- concat <$> traverse (Members.flexVariables . _type) [ o | (o, False) <- zip others olderFlags ]
-            headerRoots <- concat <$> traverse (Members.flexVariables . A.toValue) (Map.elems header)
             byOuter <- closure outerRoots youngOnes
-            byType <- closure (headerRoots ++ ownRoots) youngOnes
+            -- (A5f, review M2) in a recursive group a requirement goes into the scheme only when the type of every name
+            -- determines it (the group shares one context): one that some name's type does not determine is ambiguous for
+            -- that name, so it is held in a `let`, defaulted or reported at the top level
+            byType <- forM (Map.elems header) $ \(A.At _ var) ->
+              do  roots <- Members.flexVariables var
+                  closure (roots ++ ownRoots) youngOnes
             classes <- forM youngOnes $ \o ->
               do  held <- memberOf (_subject o) byOuter
-                  typed <- memberOf (_subject o) byType
+                  typed <- and <$> traverse (memberOf (_subject o)) byType
                   return $
                     if held then Hold
                     else if kind == Function && typed then Scheme
