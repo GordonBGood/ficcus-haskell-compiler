@@ -58,7 +58,10 @@ computeWith exactRoots modules =
     byCallee = Map.fromListWith (++) [ (ufCallee u, [u]) | u <- uses ]
     known = Set.fromList [ dfId d | m <- modules, d <- mfDefs m ]
 
-    equatableRoots = [ ("elm/core:Basics.eq", 0), ("elm/core:Basics.neq", 0) ]
+    equatableRoots = [ ("elm/core:Basics.eq", 0), ("elm/core:Basics.neq", 0) ] ++ relaxedRoots
+    -- (A5a) a relaxed `/ // modBy remainderBy` at a variable of its owner (Type.Dump records it as the use of index 0): the
+    -- member of the exact type is called
+    relaxedRoots = [ ("elm/core:Basics." ++ n, 0) | n <- ["fdiv", "idiv", "modBy", "remainderBy"] ]
     printedRoots = [ ("elm/core:Debug.toString", 0), ("elm/core:Debug.log", 0) ]
     -- only for the overlay's module Vector (it has the marker definition), not for a module of that name of the project or of a package
     elementRoots = [ (vectorModuleId ++ n, 0) | Set.member (vectorModuleId ++ "ficVectorOverlay") known, (n, _, _) <- vectorKernels ]

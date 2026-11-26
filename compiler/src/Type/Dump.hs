@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE BangPatterns, MagicHash #-}
+{-# LANGUAGE BangPatterns, MagicHash, PatternGuards #-}
 module Type.Dump
   ( render
   , moduleLabel
@@ -721,8 +721,13 @@ instanceText ctx e raw =
     Just (scheme, inst) ->
       case matchT scheme inst of
         -- (ATTACH A3) `/`, `//`, `modBy`, `remainderBy` at a type with the member behind them are typed by that type, not by Float or Int
-        Left _ | fmap (`elem` ["elm/core:Basics.fdiv", "elm/core:Basics.idiv", "elm/core:Basics.modBy", "elm/core:Basics.remainderBy"]) (calleeId ctx e) == Just True ->
-          return "   (the member of its type)"
+        Left _ | Just callee <- calleeId ctx e, callee `elem` ["elm/core:Basics.fdiv", "elm/core:Basics.idiv", "elm/core:Basics.modBy", "elm/core:Basics.remainderBy"] ->
+          do  -- (A5a) at a variable of the owner (a function whose `a has div` was inferred): that variable is keyed by its exact
+              -- type, as the variable of a written constraint is (Ficcus.Mono.Marks, the roots of the relaxed operators)
+              let dead n = not (Set.member n (_scope ctx))
+              let owners = List.nub [ o | (n, _) <- tvars (applyDefault dead inst), Just tok <- [Map.lookup n (_owned ctx)], Just o <- [parseToken tok] ]
+              if null owners then return () else modify' (\w -> w { _fUses = Facts.UseFact callee [(0, owners)] : _fUses w })
+              return "   (the member of its type)"
         Left err ->
           do  modify' (\w -> w { _failed = _failed w + 1, _bad = _bad w + 1 })
               return ("   !! instance match failed: " ++ err)
