@@ -1,0 +1,23 @@
+diff --git a/src/utils/ThreadSafe/Fork.hs b/src/utils/ThreadSafe/Fork.hs
+index bfb6e137..1fe0f85e 100644
+--- a/src/utils/ThreadSafe/Fork.hs
++++ b/src/utils/ThreadSafe/Fork.hs
+@@ -12,7 +12,8 @@ module ThreadSafe.Fork
+   where
+ 
+ 
+-import Control.Concurrent (forkIO)
++import Control.Concurrent (forkIO, myThreadId)
++import GHC.Conc (labelThread)
+ import Control.Concurrent.MVar (MVar, newEmptyMVar, newMVar, putMVar, readMVar)
+ import Control.Exception (Exception(..), SomeException, throwIO)
+ import qualified Data.Map as Map
+@@ -55,7 +56,7 @@ fork_ work =
+ fork :: (Context k) => k -> IO a -> IO (SafeMVar a)
+ fork key work =
+   do  mvar <- newEmptyMVar
+-      _ <- forkIO $ putMVar mvar =<< (fmap Right work `Crash.recover` recrash)
++      _ <- forkIO $ (myThreadId >>= \t -> labelThread t (toContextChars key)) >> (putMVar mvar =<< (fmap Right work `Crash.recover` recrash))
+       return (SafeMVar mvar)
+   where
+     recrash x =
