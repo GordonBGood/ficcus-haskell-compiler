@@ -1,0 +1,1 @@
+{"desc": "members written point free (compare = byNegated), as a lambda (eq), with one parameter (compare (Half a) = \\(Half b) -> ...)"}

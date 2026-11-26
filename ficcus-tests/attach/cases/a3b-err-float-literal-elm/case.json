@@ -1,0 +1,1 @@
+{"desc": "no fromFloat in sight: a Float literal at a user type is Elm's TYPE MISMATCH, as before"}

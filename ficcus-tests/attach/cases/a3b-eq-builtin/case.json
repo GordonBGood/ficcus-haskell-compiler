@@ -1,0 +1,1 @@
+{"desc": "eq member inside lists, tuples, records, Maybe, Result, Dict values, Array (tail and tree), nested; List.member, /=, generic, filter"}

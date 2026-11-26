@@ -94,19 +94,19 @@ a3-err-no-signature	REJECT	WELL KNOWN MEMBER WITHOUT TYPE ANNOTATION	compare : M
 a3-err-not-comparable	REJECT	TYPE MISMATCH	I do not know how to compare `Version` values
 a3-js	REJECT	CONSTRAINED FUNCTIONS	operators on custom types
 a3-defaults	RUN	c	
-a3-c-holds-union	REJECTC		has its own
-a3-c-holds-recursive	REJECTC		has its own
-a3-c-holds-mutual	REJECTC		has its own
-a3-c-holds-alias	REJECTC		has its own
-a3-c-holds-generic	REJECTC		has its own
-a3-c-holds-member	REJECTC		has its own
-a3-c-holds-tuple	REJECTC		has its own
-a3-c-holds-record	REJECTC		has its own
-a3-c-holds-dictkey	REJECTC		`compare` member
-a3-c-holds-sortby	REJECTC		`compare` member
-a3-c-holds-set	REJECTC		`compare` member
-a3-c-holds-imported	REJECTC		has its own
-a3-c-holds-imported-both	REJECTC		has its own
+a3-c-holds-union	RUN	c	
+a3-c-holds-recursive	RUN	c	
+a3-c-holds-mutual	RUN	c	
+a3-c-holds-alias	RUN	c	
+a3-c-holds-generic	RUN	c	
+a3-c-holds-member	RUN	c	
+a3-c-holds-tuple	RUN	c	
+a3-c-holds-record	RUN	c	
+a3-c-holds-dictkey	RUN	c	
+a3-c-holds-sortby	RUN	c	
+a3-c-holds-set	RUN	c	
+a3-c-holds-imported	RUN	c	
+a3-c-holds-imported-both	RUN	c	
 a3-holds-ok	RUN	c	
 a3-err-lib-modby	REJECT	TYPE MISMATCH;TYPE MISMATCH	
 a3-err-lib-remainderby	REJECT	TYPE MISMATCH;TYPE MISMATCH	
@@ -144,8 +144,8 @@ sized-err-lit-arith	REJECTC	INTEGER OUT OF RANGE	does not fit
 sized-err-mix-int	REJECTC	TYPE MISMATCH	
 sized-err-mix-sizes	REJECTC	TYPE MISMATCH	
 sized-err-pattern	REJECTC	TYPE MISMATCH	can never match
-sized-err-word64-tuple	REJECTC		has its own
-sized-err-float-literal	REJECTC	TYPE MISMATCH	
+sized-err-word64-tuple	RUN	c	
+sized-err-float-literal	RUN	c	
 sized-err-float32-idiv	REJECTC	NO MEMBER	idiv
 sized-js-refused	REJECT	MODULE NOT FOUND	does not support the sized integers
 sized-local-type	RUN	c	
@@ -253,3 +253,18 @@ g71-b4-two-bindings	RUN	c
 g71-b4-nolet	RUN	c	
 g71-b3-module-use	RUN	c	
 g71-b3-module-nouse	RUN	c	
+a3b-eq-builtin	RUN	c	
+a3b-eq-unions	RUN	c	
+a3b-eq-vector	RUN	c	
+a3b-ci-keys	RUN	c	
+a3b-cmp	RUN	c	
+a3b-member-forms	RUN	c	
+a3b-imported	RUN	c	
+a3b-word64	RUN	c	
+a3b-fromfloat-user	RUN	c	
+a3b-fromfloat-defaults	RUN	js+c	
+a3b-fromfloat-float32	RUN	c	
+a3b-err-fromfloat-missing	REJECT	NO MEMBER	fromFloat
+a3b-err-fromfloat-shape	REJECT	WELL KNOWN MEMBER WITH THE WRONG TYPE	fromFloat : Float -> Meters
+a3b-err-float-literal-elm	REJECT	TYPE MISMATCH	
+a3b-js-fromfloat	REJECT	CONSTRAINED FUNCTIONS	operators on custom types
