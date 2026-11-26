@@ -99,12 +99,18 @@ checkNames (Env.Env _ vs _ _ _ _ _ _) hidden =
 
 
 -- every type variable of a constraint (the variable it is about and the variables of the type of the member)
--- must occur in the type of the function: the constraint is solved from the types at each use
+-- must be determined by the type of the function: the constraint is solved from the types at each use.
+-- (A5a, D2) A variable of a member type is determined when the subject of that constraint is: the subject's type
+-- decides which member it is, and so the member's type (docs/A5-INFERENCE-DESIGN.md section 1, rule 3).
 checkVars :: N.Name -> Can.Type -> [Hidden] -> Result i w ()
 checkVars name full hidden =
   let
     (memberTypes, real) = peel (length hidden) full
-    vars = typeVars real
+    vars = determined (typeVars real)
+    determined det =
+      let more = Set.unions [ typeVars t | (Hidden _ var _ _, t) <- zip hidden memberTypes, Set.member var det ]
+          det' = Set.union det more
+      in if Set.size det' == Set.size det then det else determined det'
     missing =
       [ (region, var, member, v)
       | (Hidden region var member _, memberType) <- zip hidden memberTypes

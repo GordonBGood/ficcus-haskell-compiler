@@ -149,6 +149,7 @@ executable elm
         Parse.Constraints
         Canonicalize.Constraints
         Type.Members
+        Type.Requirements
         Ficcus.Mono.Members
         Ficcus.Mono.ContainerMembers
         Nitpick.Constraints

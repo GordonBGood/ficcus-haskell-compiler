@@ -28,6 +28,7 @@ import qualified Type.Error as ET
 import qualified Elm.ModuleName as ModuleName
 import qualified Type.Members as Members
 import qualified Type.Occurs as Occurs
+import qualified Type.Requirements as Requirements
 import Type.Type as Type
 import qualified Type.Unify as Unify
 import qualified Type.UnionFind as UF
@@ -39,17 +40,18 @@ import qualified Type.UnionFind as UF
 
 run :: Constraint -> IO (Either (NE.List Error.Error) (Map.Map N.Name Can.Annotation))
 run =
-  runWith Members.emptyTable
+  runWith Members.emptyTable Map.empty
 
 
 -- Ficcus (ATTACH A2): with the table of the members that the module can see (Type.Members)
-runWith :: Members.Table -> Constraint -> IO (Either (NE.List Error.Error) (Map.Map N.Name Can.Annotation))
-runWith table constraint =
+-- (A5a: and what each definition is, for the monomorphism restriction, Type.Requirements)
+runWith :: Members.Table -> Requirements.Kinds -> Constraint -> IO (Either (NE.List Error.Error) (Map.Map N.Name Can.Annotation))
+runWith table kinds constraint =
   do  pools <- MVector.replicate 8 []
 
       flag <- newIORef False
-      (State env _ errors0 _ pending _) <-
-        solve Map.empty outermostRank pools (emptyState { _table = table, _flag = Just flag }) constraint
+      (State env _ errors0 _ pending _ _) <-
+        solve Map.empty outermostRank pools (emptyState { _table = table, _flag = Just flag, _kinds = kinds }) constraint
 
       errors <-
         case pending of
@@ -72,7 +74,7 @@ runWith table constraint =
 {-# NOINLINE emptyState #-}
 emptyState :: State
 emptyState =
-  State Map.empty (nextMark noMark) [] Members.emptyTable [] Nothing
+  State Map.empty (nextMark noMark) [] Members.emptyTable [] Nothing Map.empty
 
 
 
@@ -95,6 +97,7 @@ data State =
     , _table :: Members.Table             -- Ficcus (ATTACH A2): the members the module can see
     , _pending :: [Members.Obligation]    -- the member obligations not yet discharged
     , _flag :: Maybe (IORef Bool)         -- Ficcus (ATTACH A3): set when a custom type took the place of a `number`, `comparable`, ... variable
+    , _kinds :: Requirements.Kinds        -- Ficcus (A5a): functions, values and annotated definitions by the region of their name
     }
 
 
@@ -152,20 +155,30 @@ solve env rank pools state constraint =
                       Error.typeReplace expectation expectedType
 
     CLocal region name expectation ->
-      do  actual <- makeCopy rank pools $ $(Map.require 'solve) name env N.toChars
+      do  copy <- makeCopy rank pools $ $(Map.require 'solve) name env N.toChars
+          -- Ficcus (A5a): a definition with inferred requirements is bound to its carrier (Type.Requirements.carrier);
+          -- the copy gives the type of this use and its obligations, sharing their variables
+          (actual, state1) <-
+            do  (Descriptor content _ _ _) <- UF.get copy
+                case content of
+                  Structure (App1 _ wname _) | wname == Constraints.whereName ->
+                    do  (real, obligations) <- Members.use region name copy
+                        return (real, state { _pending = obligations ++ _pending state })
+                  _ ->
+                    return (copy, state)
           expected <- expectedToVariable rank pools expectation
-          answer <- Unify.unifyWith (Members.policyOf (_flag state) (_table state)) actual expected
+          answer <- Unify.unifyWith (Members.policyOf (_flag state1) (_table state1)) actual expected
           case answer of
             Unify.Ok vars ->
               do  introduce rank pools vars
-                  return state
+                  return state1
 
             Unify.Runaway isCycle ->
-              return $ addError state (Error.Runaway region isCycle)
+              return $ addError state1 (Error.Runaway region isCycle)
 
             Unify.Err vars actualType expectedType ->
               do  introduce rank pools vars
-                  return $ addError state $ noted state actualType expectedType $
+                  return $ addError state1 $ noted state1 actualType expectedType $
                     Error.BadExpr region (Error.Local name) actualType $
                       Error.typeReplace expectation expectedType
 
@@ -269,24 +282,36 @@ solve env rank pools state constraint =
 
           -- run solver in next pool
           locals <- traverse (A.traverse (typeToVariable nextRank nextPools)) header
-          (State savedEnv mark errors table pending00 flag) <-
+          (State savedEnv mark0 errors table pending00 flag kinds) <-
             discharge env nextRank nextPools =<< solve env nextRank nextPools state headerCon
 
-          -- (ATTACH A3) a relaxed use of `/` ... whose type is still open gets Elm's type
-          (pending0, defaultErrors) <-
+          -- (A5a) what the pending requirements become: held (determined from the context, or the monomorphism
+          -- restriction in a let), part of the scheme (a function whose type determines them), or defaulted or
+          -- reported (the top level); see Type.Requirements.  Never reached by an Elm program (nothing is pending).
+          (pendingHeld, scheme, settleErrors, mark) <-
             case pending00 of
-              [] -> return ([], [])
-              _  ->
-                Members.defaulting
-                  (Members.Tools
-                    (\(Can.Forall freeVars srcType) -> srcTypeToVariable nextRank nextPools freeVars srcType)
-                    (introduce nextRank nextPools)
-                    (Members.policyOf flag table)
-                    (maybe (return ()) (\ref -> writeIORef ref True) flag))
-                  table env rank nextRank pending00
+              [] -> return ([], [], [], mark0)
+              _ ->
+                do  -- the true ranks first: a variable made here may be part of an older one (Elm's generalize
+                    -- finds that out by the same walk)
+                    let m2 = nextMark mark0
+                    let m3 = nextMark m2
+                    adjustRanks mark0 m2 m3 nextRank nextPools
+                    let tools =
+                          Members.Tools
+                            (\(Can.Forall freeVars srcType) -> srcTypeToVariable nextRank nextPools freeVars srcType)
+                            (introduce nextRank nextPools)
+                            (Members.policyOf flag table)
+                            (maybe (return ()) (\ref -> writeIORef ref True) flag)
+                    let kind = Requirements.kindOfHeader kinds header
+                    (Requirements.Outcome kept sch errs) <- Requirements.settle tools table env kind rank nextRank locals pending00
+                    return (kept, sch, errs, nextMark m3)
 
-          -- (ATTACH A2c) before the generalization: what the pending member obligations are about is not generalized
-          (pendingHeld, holdErrors) <- Members.hold rank nextRank locals pending0
+          -- (A5a) the carrier of each name whose type determines requirements of the scheme
+          carriers <-
+            case scheme of
+              [] -> return Map.empty
+              _ -> Map.mapMaybe id <$> traverse (\(A.At _ var) -> Requirements.carrier (register nextRank nextPools) var scheme) locals
 
           let youngMark = mark
           let visitMark = nextMark youngMark
@@ -301,7 +326,7 @@ solve env rank pools state constraint =
           -- a variable of an outer definition is no longer generic (elm/compiler#1639)
           escapes <- fmap concat (traverse (rigidEscape header) rigids)
 
-          let newEnv = Map.union env (Map.map A.toValue locals)
+          let newEnv = Map.union env (Map.union carriers (Map.map A.toValue locals))
           -- a cycle among the variables of this definition that its type does not show (Ficcus D10, 1491);
           -- only reported when nothing else went wrong before (after an error such cycles are a consequence)
           let cycles =
@@ -311,9 +336,9 @@ solve env rank pools state constraint =
           -- (ATTACH A2) an obligation whose subject was generalized can never be discharged
           (pending, memberErrors) <-
             case pendingHeld of
-              [] -> return ([], holdErrors ++ defaultErrors)
-              _  -> (\(kept, errs) -> (kept, errs ++ holdErrors ++ defaultErrors)) <$> Members.sweep pendingHeld
-          let tempState = State savedEnv grayMark (memberErrors ++ cycles ++ escapes ++ errors) table pending flag
+              [] -> return ([], settleErrors)
+              _  -> (\(kept, errs) -> (kept, errs ++ settleErrors)) <$> Members.sweep pendingHeld
+          let tempState = State savedEnv grayMark (memberErrors ++ cycles ++ escapes ++ errors) table pending flag kinds
           newState <- discharge newEnv rank nextPools =<< solve newEnv rank nextPools tempState subCon
 
           foldM occurs newState (Map.toList locals)
@@ -431,8 +456,10 @@ discharge env rank pools state =
                   (introduce rank pools)
                   (Members.policyOf (_flag state) (_table state))
                   (maybe (return ()) (\ref -> writeIORef ref True) (_flag state))
-          (pending', errors) <- Members.discharge tools (_table state) env pending
-          return (state { _pending = pending', _errors = errors ++ _errors state })
+          (pending1, errors) <- Members.discharge tools (_table state) env pending
+          -- (A5a, D9) one type per member name per variable
+          (pending', errors') <- Requirements.improve tools pending1
+          return (state { _pending = pending', _errors = errors' ++ errors ++ _errors state })
 
 
 
@@ -497,6 +524,18 @@ generalize youngMark visitMark grayMark youngRank pools =
                       else UF.set var $ Descriptor content noRank mark copy
 
       readIORef cycleRef
+
+
+-- | (A5a) the rank adjustment of `generalize` alone: afterwards every variable of the young pool has its true rank
+-- (Type.Requirements decides by it); the pools are not changed, and `generalize` runs it again with new marks
+adjustRanks :: Mark -> Mark -> Mark -> Int -> Pools -> IO ()
+adjustRanks youngMark visitMark grayMark youngRank pools =
+  do  youngVars <- MVector.read pools youngRank
+      rankTable <- poolToRankTable youngMark youngRank youngVars
+      cycleRef <- newIORef False
+      Vector.imapM_
+        (\rank table -> mapM_ (adjustRank youngMark visitMark grayMark cycleRef rank) table)
+        rankTable
 
 
 poolToRankTable :: Mark -> Int -> [Variable] -> IO (Vector.Vector [Variable])

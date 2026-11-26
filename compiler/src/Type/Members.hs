@@ -19,7 +19,8 @@ module Type.Members
   , toTable
   , embedded
   , wrapAnnotations
-  , Obligation
+  , Obligation(..)
+  , flexVariables
   , Tools(..)
   , policyOf
   , shapeErrors

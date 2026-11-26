@@ -842,6 +842,8 @@ schemeOf ctx e raw =
     constrained ann@(Can.Forall _ tipe) =
       case Constraints.unwrap tipe of
         Nothing -> (annotation ann, raw)
+        -- (A5a) an inferred scheme: the definition has no hidden parameters
+        Just (real, _) | Constraints.isInferred tipe -> (canToTType real, raw)
         Just (real, required) ->
           let
             realScheme = canToTType real

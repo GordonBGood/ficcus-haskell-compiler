@@ -35,6 +35,11 @@ module AST.Constraints
   , whereName
   , hasMember
   , customOperators
+  , inferredName
+  , hasTypeName
+  , isInferred
+  , inferredMarker
+  , splitInferredMarker
   )
   where
 
@@ -126,6 +131,12 @@ hasPrefix :: String
 hasPrefix = "$has$"
 
 
+-- | `$has$add`: the type name of the entry `a has add : t` of a constrained scheme
+hasTypeName :: N.Name -> T.Name
+hasTypeName member =
+  T.nameFromString (S.fromChars (hasPrefix ++ N.toChars member))
+
+
 -- | from the type with the hidden parameters (`m1 -> ... -> mk -> real`) to the constrained scheme
 wrap :: [Hidden] -> Can.Annotation -> Can.Annotation
 wrap hidden annotation@(Can.Forall freeVars tipe) =
@@ -203,3 +214,44 @@ fromChars =
 customOperators :: N.Name
 customOperators =
   fromChars "$customOperators"
+
+
+
+-- INFERRED SCHEMES (A5a)
+
+
+-- | Ficcus (A5a, docs/A5-INFERENCE-DESIGN.md section 3): the scheme of a definition without a type annotation whose
+-- requirements the solver inferred.  It is a `$where` scheme like a written one, with the entry `$inferred` (no
+-- arguments) right after the real type, because the definition has no hidden parameters: a use calls it with its
+-- written arguments only (Type.Dump, Generate).
+--
+--     $where (a -> a) $inferred ($has$add a (a -> a -> a))
+inferredName :: T.Name
+inferredName =
+  T.nameFromString (S.fromChars "$inferred")
+
+
+isInferred :: Can.Type -> Bool
+isInferred tipe =
+  case tipe of
+    Can.TType _ name (_ : Can.TType _ mark [] : _) -> name == whereName && mark == inferredName
+    _ -> False
+
+
+-- | (A5a, D6) the name of the node that marks an inferred constrained top level definition in the object graph (the
+-- JavaScript output refuses it, Nitpick.Constraints)
+inferredMarker :: N.Name -> N.Name
+inferredMarker name =
+  fromChars (N.toChars name ++ inferredSuffix)
+
+
+splitInferredMarker :: N.Name -> Maybe N.Name
+splitInferredMarker name =
+  let chars = N.toChars name in
+  if inferredSuffix `List.isSuffixOf` chars && length chars > length inferredSuffix
+    then Just (fromChars (take (length chars - length inferredSuffix) chars))
+    else Nothing
+
+
+inferredSuffix :: String
+inferredSuffix = "$inferred"

@@ -215,6 +215,11 @@ checkForConstraints (Objects (Opt.GlobalGraph foreignNodes _) locals) =
   where
     toChars (Opt.Global (ModuleName.Canonical _ home) name)
       | name == Constraints.customOperators = Module.toChars home ++ ": operators on custom types (`+`, `<`, `==`, ...)"
+      -- Ficcus (A5a, D6): an inferred `where`
+      | Constraints.splitInferredMarker name /= Nothing =
+          let def = maybe name id (Constraints.splitInferredMarker name) in
+          Module.toChars home ++ "." ++ Members.displayName def ++ " (no type annotation: give it one with concrete types, such as `"
+            ++ Members.displayName def ++ " : Float -> Float`, to compile it to JavaScript)"
       | otherwise = Module.toChars home ++ "." ++ Members.displayName name
 
 

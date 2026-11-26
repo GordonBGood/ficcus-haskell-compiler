@@ -31,6 +31,8 @@ import qualified Reporting.Result as R
 import qualified Reporting.Render.Type.Localizer as Localizer
 import qualified Type.Constrain.Module as Type
 import qualified Type.Members as Members
+import qualified Type.Requirements as Requirements
+import qualified Nitpick.Constraints as NitpickConstraints
 import qualified Type.Readout as Readout
 import qualified Type.Recorder as Recorder
 import qualified Type.Solve as Type
@@ -91,7 +93,7 @@ canonicalize pkg ifaces modul =
 -- constrained definition becomes its constrained scheme (Type.Members, AST.Constraints)
 typeCheck :: Map.Map Module.Name I.Interface -> Src.Module -> Can.Module -> Either E.Error (Map.Map N.Name Can.Annotation)
 typeCheck ifaces modul canonical =
-  case unsafePerformIO (checkShapes canonical (Type.runWith (Members.toTable ifaces canonical) =<< Type.constrain Nothing canonical)) of
+  case unsafePerformIO (checkShapes canonical (Type.runWith (Members.toTable ifaces canonical) (Requirements.kindsOf canonical) =<< Type.constrain Nothing canonical)) of
     Right annotations ->
       Right (Map.union (Members.wrapAnnotations canonical annotations) (Members.embedded ifaces))
 
@@ -113,7 +115,7 @@ typeCheckTypedIO :: Map.Map Module.Name I.Interface -> Can.Module -> IO (Either 
 typeCheckTypedIO ifaces canonical =
   do  recorder <- Recorder.new
       constraint <- Type.constrain (Just recorder) canonical
-      result <- checkShapes canonical (Type.runWith (Members.toTable ifaces canonical) constraint)
+      result <- checkShapes canonical (Type.runWith (Members.toTable ifaces canonical) (Requirements.kindsOf canonical) constraint)
       case result of
         Left errors ->
           return (Left errors)
@@ -126,8 +128,9 @@ typeCheckTypedIO ifaces canonical =
 -- Ficcus (ATTACH A3): a module that uses operators at a custom type gets a marker node in its object graph (the
 -- JavaScript output refuses it, Nitpick.Constraints); the annotation the solver made for the marker is dropped
 markCustomOperators :: Can.Module -> Map.Map N.Name Can.Annotation -> Opt.LocalGraph -> (Map.Map N.Name Can.Annotation, Opt.LocalGraph)
-markCustomOperators canonical annotations1 objects =
-  markCustomOperators1 canonical (Map.filterWithKey (\name _ -> Derive.markerText name == Nothing) annotations1) objects
+markCustomOperators canonical@(Can.Module home _ _ _ _ _ _ _) annotations1 objects =
+  markCustomOperators1 canonical (Map.filterWithKey (\name _ -> Derive.markerText name == Nothing) annotations1)
+    (NitpickConstraints.markInferred home annotations1 objects)     -- Ficcus (A5a, D6)
   -- Ficcus (A4a): the markers of the `derive` lines (Canonicalize.Derive) stay in the object graph, not in the interface
 
 
