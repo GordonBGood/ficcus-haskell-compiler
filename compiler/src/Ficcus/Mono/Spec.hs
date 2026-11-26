@@ -1729,6 +1729,11 @@ selectorDetermined se p scheme s =
                 memberType = snd (Members.peel (Constraints.hiddenCount (srcDef msrc)) mscheme)
               in
               return (Map.union (Determined.fill isHole (Determined.substitute known scheme) memberType) s)
+            _ | any isHole (Determined.typeVarNames scheme) ->
+                  -- (A5f, review M1) never left at `ref`: see determinedByMembers
+                  do  report ("cannot decide the type of the attached function `" ++ N.toChars (Selectors._member p) ++ "` at the type "
+                              ++ mtypeText (TyCon tid []) ++ " in " ++ seDid se)
+                      return s
             _ -> return s
     _ -> return s
   where
@@ -1780,8 +1785,22 @@ determinedByMembers se def scheme s0 =
                     memberType = snd (Members.peel (Constraints.hiddenCount (srcDef msrc)) mscheme)
                   in
                   return (Map.union (Determined.fill (isHole s) constraint memberType) s)
-                _ -> return s
+                _ -> undecided s member subjectType tipe
+    step s (Constraints.Hidden _ member _, Just subject, tipe)
+      | not (isHole s subject)
+      , any (isHole s . fst) (tvarsOf tipe)
+      , Just subjectType <- Map.lookup subject s =
+          undecided s member subjectType tipe
     step s _ = return s
+
+    -- (A5f, review M1) a variable of the constraint that only the member of the subject could decide, but the subject has no
+    -- definition of the member to decide it from (a built-in type): never left at `ref` (a wrong program), an error.  Signature
+    -- `where` lines with a well known name have its shape (Canonicalize.Constraints), so this is a guard.
+    undecided s member subjectType tipe =
+      do  report ("cannot decide the type variables " ++ List.intercalate ", " [ "`" ++ n ++ "`" | (n, _) <- tvarsOf tipe, isHole s n ]
+                  ++ " of the constraint `has " ++ N.toChars member ++ "` of " ++ seDid se ++ ": the type "
+                  ++ either (const "?") mtypeText (mtypeOf (seEnv se) subjectType) ++ " has no definition of `" ++ N.toChars member ++ "`")
+          return s
 
     tvarsOf t =
       case t of

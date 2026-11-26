@@ -19,6 +19,7 @@
 -- without candidate types (every Elm module) gets the environment it had.
 module Canonicalize.Selectors
   ( register
+  , dealias
   )
   where
 

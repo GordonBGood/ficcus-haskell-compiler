@@ -12,6 +12,7 @@ module Ficcus.Mono.Determined
   ( fill
   , subExprs
   , substitute
+  , typeVarNames
   )
   where
 
@@ -100,3 +101,17 @@ subExprs expr@(A.At _ e) =
       case def of
         Can.Def _ _ body -> subExprs body
         Can.TypedDef _ _ _ body _ -> subExprs body
+
+
+-- | (A5f) the names of the type variables of a type
+typeVarNames :: TType -> [String]
+typeVarNames t =
+  case t of
+    TCon _ _ args -> concatMap typeVarNames args
+    TFun a b -> typeVarNames a ++ typeVarNames b
+    TRecord fields ext -> concatMap typeVarNames (Map.elems fields) ++ maybe [] typeVarNames ext
+    TPair a b -> typeVarNames a ++ typeVarNames b
+    TTriple a b c -> typeVarNames a ++ typeVarNames b ++ typeVarNames c
+    TVar n _ _ -> [n]
+    TAlias _ _ args real -> concatMap (typeVarNames . snd) args ++ typeVarNames real
+    _ -> []

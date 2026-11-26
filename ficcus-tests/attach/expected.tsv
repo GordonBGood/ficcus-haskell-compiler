@@ -44,7 +44,7 @@ constraint-record	REJECT	NO MEMBER	built-in types (`Int`
 constraint-wrong-type	REJECT	MEMBER TYPE MISMATCH	T.plus
 constraint-missing	REJECT	MISSING CONSTRAINT	a has add : a -> a -> a
 constraint-no-signature	RUN	c	
-constraint-given-mismatch	REJECT	MEMBER TYPE MISMATCH;MEMBER TYPE MISMATCH	the constraint `a has add`
+constraint-given-mismatch	REJECT	WELL KNOWN MEMBER WITH THE WRONG TYPE	a has add : a -> a -> a
 constraint-clash-top	REJECT	NAME CLASH	a has add as add_
 constraint-clash-two	REJECT	NAME CLASH	b has add as add_
 constraint-twice	REJECT	NAME CLASH	The constraint `a has add` is written twice
@@ -310,3 +310,10 @@ a5b-sized	RUN	c
 a5b-shadow-top	RUN	c	
 a5b-shadow-local	RUN	c	
 a5b-js-refused	REJECT	CONSTRAINED FUNCTIONS	the attached function `add` by its bare name
+# A5f (a5fgen.py): the fixes of the A5a review (M1, M2, B1, B2)
+a5f-m1-builtin-append	REJECTC	WELL KNOWN MEMBER WITH THE WRONG TYPE	a has append : a -> a -> a
+a5f-m1-builtin-inferred	REJECTC	WELL KNOWN MEMBER WITH THE WRONG TYPE	a has compare : a -> a -> Order
+a5f-m1-builtin-written	REJECTC	WELL KNOWN MEMBER WITH THE WRONG TYPE	a has compare : a -> a -> Order
+a5f-m1-float32	REJECTC	WELL KNOWN MEMBER WITH THE WRONG TYPE	a has fromInt : Int -> a
+a5f-m1-append-ok	RUN	c	
+a5f-m1-float32-ok	RUN	c	

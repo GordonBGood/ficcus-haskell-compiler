@@ -9,6 +9,7 @@ module AST.WellKnown
   , shapeOf
   , isWellKnown
   , fits
+  , fitsVar
   , shapeAnnotation
   , expectedText
   , numberBundle
@@ -97,6 +98,31 @@ spine t =
   case t of
     Can.TLambda a b -> a : spine b
     _ -> [t]
+
+
+-- | (A5f, review M1) does the member type of a `where` line of a signature (`var has member : written`, aliases expanded by
+-- the caller) have the shape, with the type variable `var` as `s`?  A built-in member has the well known shape, so with
+-- this check a member of a built-in type never decides a variable other than its subject.
+fitsVar :: String -> Shape -> Can.Type -> Bool
+fitsVar var shape written =
+  case (shape, spine written) of
+    (Binary, [a, b, c]) -> self a && self b && self c
+    (Compare, [a, b, c]) -> self a && self b && c == order
+    (Equal, [a, b, c]) -> self a && self b && c == bool
+    (Unary, [a, b]) -> self a && self b
+    (FromInt, [a, b]) -> a == int && self b
+    (FromFloat, [a, b]) -> a == float && self b
+    _ -> False
+  where
+    self t =
+      case t of
+        Can.TVar v -> TV.varToChars v == var
+        _ -> False
+
+    int = Can.TType ModuleName.basics T.int []
+    float = Can.TType ModuleName.basics T.float []
+    bool = Can.TType ModuleName.basics T.bool []
+    order = Can.TType ModuleName.basics (T.nameFromString (S.fromChars "Order")) []
 
 
 -- | what the shape says in words, for the error message: the member `m` of the type `Money`

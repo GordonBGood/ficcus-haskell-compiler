@@ -23,8 +23,10 @@ import qualified AST.Constraints as Constraints
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeVar as T
 import qualified AST.Source as Src
+import qualified AST.WellKnown as WK
 import qualified Canonicalize.Environment as Env
 import qualified Canonicalize.Members as Members
+import qualified Canonicalize.Selectors as Selectors
 import qualified Canonicalize.Type as Type
 import qualified Elm.ModuleName as ModuleName
 import qualified Reporting.Annotation as A
@@ -67,6 +69,7 @@ register env values =
               annotation@(Can.Forall _ full) <- Type.toAnnotation env srcType
               let Can.Forall freeVars wrapped = Constraints.wrap [ Constraints.Hidden v m l | Hidden _ v m (A.At _ l) <- hidden ] annotation
               checkVars name full hidden
+              checkShapes full hidden
               Result.ok (insert (Constraints.whereKey name) (Can.Forall freeVars wrapped) acc)
 
         _ ->
@@ -121,6 +124,28 @@ checkVars name full hidden =
   case missing of
     (region, var, member, v) : _ ->
       Result.throw (Error.AmbiguousConstraint region var member v name)
+
+    [] ->
+      Result.ok ()
+
+
+-- (A5f, review M1) a `where` line with a well known name (`add`, `compare`, `fromInt`, ...) has the well known shape at its
+-- variable (`a has compare : a -> a -> Order`), as the member of a type `where` block must (Type.Members.shapeErrors): the
+-- language calls it for its operators, and a built-in type's member has that shape
+checkShapes :: Can.Type -> [Hidden] -> Result i w ()
+checkShapes full hidden =
+  let
+    (memberTypes, _) = peel (length hidden) full
+    wrong =
+      [ (region, var, member, WK.expectedText shape var)
+      | (Hidden region var member _, memberType) <- zip hidden memberTypes
+      , Just shape <- [WK.shapeOf (N.toChars member)]
+      , not (WK.fitsVar var shape (Selectors.dealias memberType))
+      ]
+  in
+  case wrong of
+    (region, var, member, expected) : _ ->
+      Result.throw (Error.ConstraintShape region var member expected)
 
     [] ->
       Result.ok ()

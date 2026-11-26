@@ -82,6 +82,7 @@ data Error
   | ConstraintNameTwice N.Name String N.Name A.Region A.Region  -- local name, variable, member
   | ConstraintShadows N.Name String N.Name A.Region A.Region    -- local name, variable, member; the top level definition, the constraint
   | AmbiguousConstraint A.Region String N.Name String N.Name   -- the variable and the member of the constraint, the variable that the type lacks, the definition
+  | ConstraintShape A.Region String N.Name String   -- Ficcus (A5f): the variable and the well known member of a `where` line, the type it must have
   | AmbiguousMember A.Region String N.Name ModuleName.Canonical (OneOrMore.OneOrMore ModuleName.Canonical)   -- Ficcus (ATTACH A1b): type, member, the modules of the types
   | NotFoundType A.Region (Maybe Module.Prefix) T.Name (PossibleNames T.Name)
   | NotFoundVariant A.Region (Maybe Module.Prefix) N.Name (PossibleNames N.Name)
@@ -336,6 +337,20 @@ toReport source err =
                   <> Members.displayName name <> "` could say what `" <> missing <> "` is."
               , D.reflow $
                   "Use `" <> missing <> "` in the type of `" <> Members.displayName name <> "` (an argument or the result), or remove the constraint."
+              ]
+          )
+    ConstraintShape region var member expected ->
+      Report.Report "WELL KNOWN MEMBER WITH THE WRONG TYPE" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "`" <> N.toChars member <> "` is a well known member: the language uses it (for example `+` uses `add`, `<` uses\
+              \ `compare`), so the `where` line must give it exactly this type:"
+          ,
+            D.stack
+              [ D.indent 4 $ D.green $ D.fromChars (var <> " has " <> N.toChars member <> " : " <> expected)
+              , D.reflow $
+                  "If you mean another function, give it another name in the `where` blocks of your types."
               ]
           )
     NotFoundVariant r p n ns -> notFound source r p n "variant"  ns Members.displayName
