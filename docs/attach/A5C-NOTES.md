@@ -126,4 +126,12 @@ and the a3b-identity of the suite C text cover the rest (section Gates).
 
 ## Gates
 
-(filled in after the run)
+2026-11-26, once at the end of part 2, `BIN=elmficA5c KEEP=1 S=/home/gordon/claude-tmp/gates-a5c ficcus-tests/gates.sh` (log
+/home/gordon/claude-tmp/gates-a5c.log), all green: runtime 0; attach 340/0 (with `--rc`, ASan+UBSan, 0 live); sized-fuzz 40/0;
+stringdiff all agree; types 267 PASS + 1 XFAIL; JS identity 28/0; examples 298 x3; fbip 0; effects-e2, e1review, effects-e1, e1p
+all ok; e1pr all ok (2 target rows); e1p-identity all ok; **a3b-identity against elmficA5b: 100 compiles, 0 differ** (the C text of
+the 16 suite programs and the e1p/effects programs, `--rc` and `--no-rc`: programs without a `where` block are byte identical, no
+C text difference to explain); e2review gates all ok (3 info, the recorded notes); rcfaults 2403/0 missed, rcfaults-big 239/0;
+rcgate-san ok; suite 16/16; typed 568 SAME + 12 BOTH_REJECT_SAME + 1 VERDICT_DIFF (salix-aws-spec, known); lib 108 PASS + 59
+FIXED; elmdiff 1175 SAME, 0 DIFF. Part 1 alone (before the texts): attach 322/0 with `--rc`, and the a5ar suite as in the table
+of part 1.
