@@ -29,16 +29,15 @@ module File
   where
 
 
-import Control.Concurrent (forkIO)
+import Control.Concurrent (forkFinally)
 import Control.Concurrent.MVar (MVar, modifyMVar, newEmptyMVar, newMVar, putMVar, takeMVar)
-import Control.Exception (catch, finally)
+import Control.Exception (SomeException, catch, finally, throwIO)
 import qualified Data.Map.Strict as Map
 import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Internal as BS
 import qualified Data.ByteString.Builder as B
 import qualified Data.List as List
-import Data.Foldable (traverse_)
 import qualified Data.Time.Calendar as Time
 import qualified Data.Time.Clock as Time
 import qualified Foreign.ForeignPtr as FPtr
@@ -90,7 +89,7 @@ zeroTime =
 
 
 newtype Writer t =
-  Writer (MVar [MVar ()])
+  Writer (MVar [MVar (Maybe SomeException)])
 
 
 withWriter :: (Writer t -> IO a) -> IO a
@@ -98,8 +97,11 @@ withWriter callback =
   do  workList <- newMVar []
       result <- callback (Writer workList)
       mvars <- takeMVar workList
-      traverse_ takeMVar mvars
-      return result
+      failures <- traverse takeMVar mvars
+      -- Ficcus: a write that failed in its thread is raised here, after all the writes have ended
+      case [ e | Just e <- reverse failures ] of
+        e : _ -> throwIO e
+        []    -> return result
 
 
 
@@ -127,7 +129,9 @@ writeBuilder_ (Writer workList) path builder =
       -- the lock of the path is taken here, before the write is forked: a later write of the same path
       -- (the final `d.dat` of a build after the one `Details.generate` started) waits for this one
       lock <- lockPath path
-      _ <- forkIO ((writeBody path builder `finally` unlockPath lock) >> putMVar mvar ())
+      -- Ficcus: the MVar is filled whatever the write does (forkFinally), with the exception if it failed;
+      -- `withWriter` waits for it and raises the exception, instead of waiting for ever
+      _ <- forkFinally (writeBody path builder `finally` unlockPath lock) (putMVar mvar . either Just (const Nothing))
       oldWork <- takeMVar workList
       let !newWork = mvar:oldWork
       putMVar workList newWork
