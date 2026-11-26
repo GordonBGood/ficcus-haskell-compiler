@@ -153,6 +153,8 @@ data MProgram =
     { mpClones :: [MDef]                   -- in initialisation order, main last
     , mpMain :: Maybe CloneId
     , mpUnions :: Map.Map String UnionShape  -- every custom type of every module, by `Module.Type`
+    , mpMembers :: Map.Map (String, MType) CloneId  -- (A3b) the member clones the structural `==`/`compare` helpers call
+                                                    -- (Ficcus.Mono.ContainerMembers); roots of the program like main
     }
   deriving (Show)
 

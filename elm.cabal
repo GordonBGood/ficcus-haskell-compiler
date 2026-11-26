@@ -150,6 +150,7 @@ executable elm
         Canonicalize.Constraints
         Type.Members
         Ficcus.Mono.Members
+        Ficcus.Mono.ContainerMembers
         Nitpick.Constraints
         AST.Source
         AST.Prim.Module

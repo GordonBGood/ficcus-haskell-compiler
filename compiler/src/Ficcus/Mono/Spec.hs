@@ -59,6 +59,7 @@ import Ficcus.Mono.Overlay (overlayId, overlayModuleName, randomOverlayPrefix, v
 import Ficcus.Mono.Marks (Marks)
 import qualified Ficcus.Mono.Marks as Marks
 import qualified Ficcus.Mono.Members as Members
+import qualified Ficcus.Mono.ContainerMembers as ContainerMembers
 import Ficcus.Mono.Modules
 import qualified Reporting.Annotation as A
 import Type.Dump (Ctx(..), bindDefs, calleeId, canonVars, defIdOf, defKeyOf, kindList, moduleChars, regionText, schemeOf)
@@ -155,6 +156,7 @@ data S =
     , sAppMsg :: Maybe Class                      -- the class of the program's `msg` (set by `specWorker`)
     , sWorkerFields :: Maybe (SEnv, Can.Expr, Can.Expr)   -- (E1 step 3) `update` and `subscriptions` of the worker, cloned by `workerPhase`
     , sPorts :: Map.Map String Bool               -- (E2 step 7) the ports of the program (`Module.name`, outgoing?)
+    , sMemberTable :: Map.Map (String, MType) CloneId   -- (A3b) the member clones the structural ==/compare helpers call
     }
 
 
@@ -207,7 +209,7 @@ specialize modules marks =
         enums = Map.union (Sized.sizedEnums unions0) (builtin (Map.fromList (concatMap mmEnums modules)))
         managers = Map.fromList [ (mgHome mg, mg) | m' <- modules, Just mg <- [mmManager m'] ]
         ports = Map.fromList (concatMap mmPorts modules)
-        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions managers Set.empty Set.empty Nothing Nothing ports
+        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions managers Set.empty Set.empty Nothing Nothing ports Map.empty
         mainId = defIdOf (mmCtx m) (defKeyOf d)
         -- E1 step 2: the effect managers the program reaches are cloned after everything else (their clones get the last ids)
         -- E1 step 3: update and subscriptions likewise (workerPhase), before the managers their bodies can reach
@@ -225,7 +227,7 @@ specialize modules marks =
             in final0 { sErrors = reverse rangeErrs ++ sErrors final0 }
       in
       case (reverse (sErrors final), root) of
-        ([], Just r) -> Right (MProgram (ordered (sDone final) r) (Just r) unions)
+        ([], Just r) -> Right (MProgram (ordered (sDone final) (Map.elems (sMemberTable final)) r) (Just r) unions (sMemberTable final))
         ([], Nothing) -> Left [ "internal: main was not requested" ]
         (errs, _) -> Left errs
 
@@ -250,13 +252,14 @@ requestRoot mainId =
 -- cycle depends on, and inside the cycle in the order of the references that run when a value is initialised. A reference to a
 -- lifted function (a lambda or local function) that is not called at that place, only made into a closure, runs later, as in Elm's
 -- JS output (`cyclic$x()`), so it is not a dependency; a reference from the body of the lifted function is one when it is called.
-ordered :: Map.Map CloneId MDef -> CloneId -> [MDef]
-ordered done root =
-  reverse (snd (visit (Set.empty, []) root))
+ordered :: Map.Map CloneId MDef -> [CloneId] -> CloneId -> [MDef]
+ordered done extra root =
+  -- (A3b) the member clones of the structural helpers (`extra`) are roots too, visited before main (main stays last)
+  reverse (snd (foldl visit (Set.empty, []) (extra ++ [root])))
   where
     refsOf c = maybe [] (maybe [] exprRefs . mdBody) (Map.lookup c done)
     strongOf c = maybe [] (maybe [] (eagerRefs done) . mdBody) (Map.lookup c done)
-    reachable = Set.toList (go Set.empty [root])
+    reachable = Set.toList (go Set.empty (extra ++ [root]))
       where go seen [] = seen
             go seen (c : cs) | Set.member c seen = go seen cs
                              | otherwise = go (Set.insert c seen) (refsOf c ++ cs)
@@ -493,20 +496,69 @@ wellKnownRef se cid inst =
                     Left why -> report ("cannot specialize `" ++ cid ++ "` at " ++ mtypeText t ++ ": " ++ why) >> return (Just RNone)
                     Right ref -> return (Just ref)
             _ ->
-              do  nested tops unions member t
+              do  containerMembers cid member t
                   return Nothing
     _ -> return Nothing
   where
     isVar ty = case ty of { TVar {} -> True; TAlias _ _ _ real -> isVar real; _ -> False }
-    -- `==` and the comparisons of a type that holds a custom type with the member (a list, a tuple, a record) would use
-    -- the structural code of the C generator and so ignore the member: not supported yet (A3-NOTES section 6)
-    nested tops unions member t =
-      when (member `elem` ["eq", "compare"]) $
-        case holdsMember tops unions member t of
-          Just path -> report ("`" ++ cid ++ "` at " ++ mtypeText t ++ ": the type " ++ last path ++ " has its own `" ++ member ++ "` member"
-                               ++ (if length path > 1 then " and is found inside it (" ++ List.intercalate " > " path ++ ")" else "")
-                               ++ ", which the structural code for a list, tuple, record or other custom type does not call yet; compare the parts yourself")
-          Nothing -> return ()
+
+
+-- | (A3b) `==` and the comparisons at a type that holds custom types with the member (a list, tuple, record, `Maybe`, `Dict`, a
+-- custom type with one in a field): the structural helpers of the C generator call the member of each such type, so its clone
+-- is requested here and recorded in `sMemberTable` (docs/A3B-PLAN.md section 2).  A sized type inside is a scalar of the
+-- structural code (Word64 is compared unsigned there).
+containerMembers :: String -> String -> MType -> SM ()
+containerMembers cid member t =
+  when (member `elem` ["eq", "compare"]) $
+    do  tops <- gets sTops
+        unions <- gets sUnions
+        let has tid = Map.member (tid ++ "$$" ++ member) tops
+            skip tid = Sized.sizedEnabled unions tid /= Nothing
+        case ContainerMembers.membersInside has skip unions t of
+          Left why -> report ("`" ++ cid ++ "` at " ++ mtypeText t ++ ": " ++ why)
+          Right ts -> mapM_ (containerMember member) ts
+
+
+containerMember :: String -> MType -> SM ()
+containerMember member st =
+  case st of
+    TyCon tid _ ->
+      do  known <- gets (Map.member (member, st) . sMemberTable)
+          when (not known) $
+            do  let shape = maybe WK.Binary id (WK.shapeOf member)
+                r <- memberClone tid member (shapeType shape st)
+                case r of
+                  Right (RClone c 2 _) -> record c
+                  Right (RClone c arity isVal) -> etaMember tid member st c arity isVal >>= record
+                  Right _ -> report ("internal: the `" ++ member ++ "` member of " ++ mtypeText st ++ " is not a clone")
+                  Left why -> report ("cannot specialize the `" ++ member ++ "` member of " ++ mtypeText st ++ ", which `==` or `compare` of a type that holds it calls: " ++ why)
+    _ -> return ()
+  where
+    record :: CloneId -> SM ()
+    record c = modify' (\s -> s { sMemberTable = Map.insert (member, st) c (sMemberTable s) })
+
+
+-- | (A3b) a member not written with two parameters (`compare = byKey`, `compare (V a) = \(V b) -> ...`): a clone of two
+-- parameters that applies it, so that the C helpers always make a direct call of two arguments
+etaMember :: String -> String -> MType -> CloneId -> Int -> Bool -> SM CloneId
+etaMember tid member st c arity isVal =
+  do  enums <- gets sEnums
+      w <- freshId
+      let cls = classOfM enums st
+          res = classOfM enums (TyCon (if member == "eq" then "elm/core:Basics.Bool" else "elm/core:Basics.Order") [])
+          params = [ ("_ma", cls), ("_mb", cls) ]
+          locals = [ MExpr k (MLocal n) | (n, k) <- params ]
+          (first, rest) = splitAt arity locals
+          inner
+            | null first = if isVal then MGlobal c else MCall (MExpr CRef (MGlobal c)) []
+            | otherwise = MCall (MExpr CRef (MGlobal c)) first
+          body = if null rest then MExpr res inner else MExpr res (MCall (MExpr CRef inner) rest)
+      modify' (\s -> s { sDone = Map.insert w
+                         (MDef { mdClone = w, mdName = tid ++ "$$" ++ member ++ "$eta", mdKey = Key [], mdKind = Function
+                               , mdParams = params, mdResult = res, mdBody = Just body, mdInit = Nothing, mdNeeds = []
+                               , mdLifted = Nothing, mdVars = [], mdOwn = [], mdTwin = Nothing, mdCapsOwned = False })
+                         (sDone s) })
+      return w
 
 
 -- (SIZED) `author/project:Int8.toInt`: the name and the type, when the module is the overlay's

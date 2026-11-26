@@ -110,7 +110,7 @@ inlineStats program
           tab = table clones
           (clones', (_, a, b)) = runState (mapM (inlineDef tab (mpMain program)) clones) (0, 0, 0)
           -- the clones of `Vector.update` that rule (U) wrote out everywhere are dropped (nothing else refers to them)
-          referenced = Set.fromList (concat [ exprRefs bd | d <- clones', Just bd <- [mdBody d] ] ++ concatMap mdNeeds clones' ++ maybe [] pure (mpMain program))
+          referenced = Set.fromList (concat [ exprRefs bd | d <- clones', Just bd <- [mdBody d] ] ++ concatMap mdNeeds clones' ++ maybe [] pure (mpMain program) ++ Map.elems (mpMembers program))
           live d = mdName d /= updateName || Set.member (mdClone d) referenced
       in (program { mpClones = filter live clones' }, (a, b))
 

@@ -278,7 +278,7 @@ finalize _ prog =
                         || Map.member (mdClone d) (sAlias st)
                         || (mdKind d == Function && Set.member (mdClone d) inputRefs && Just (mdClone d) /= mpMain prog)
           byId = Map.fromList [ (mdClone d, d) | d <- allDefs ]
-          roots = maybe [] pure (mpMain prog) ++ [ mdClone d | d <- allDefs, not (candidate d) ]
+          roots = maybe [] pure (mpMain prog) ++ Map.elems (mpMembers prog) ++ [ mdClone d | d <- allDefs, not (candidate d) ]      -- (A3b) the helpers' member clones
           reach = walk Set.empty roots
           walk seen [] = seen
           walk seen (c : cs)

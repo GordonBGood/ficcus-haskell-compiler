@@ -91,6 +91,7 @@ data Info =
     , iStructs :: Set.Set [Class]
     , iMgrs :: [Slot]                -- E2: the effect managers and ports in Elm's order (Ficcus.Mono.ManagerTable)
     , iPairs :: MapPairs             -- E2: the class pairs of the managers' cmdMap/subMap clones
+    , iMembers :: Map.Map (String, MType) CloneId   -- A3b: the member clones `==`/`compare` call inside containers
     }
 
 
@@ -141,7 +142,7 @@ generateWith order rcMode program =
         byId0 = Map.fromList [ (mdClone d, d) | d <- clones ]
         mgrs = managerSlots order byId0 root
         info = Info byId0 (captures clones) (mpUnions program)
-                    (Set.fromList (allObjects clones)) (Set.fromList (structsOf clones)) mgrs (mapPairs clones)
+                    (Set.fromList (allObjects clones)) (Set.fromList (structsOf clones)) mgrs (mapPairs clones) (mpMembers program)
         g0 = G [] 0 0 [] Nothing [] False "" Map.empty [] [] Set.empty Set.empty Set.empty rcMode Map.empty Set.empty "" [] 0 ""
         final = execState (program' info root clones) g0
       in
@@ -2440,7 +2441,7 @@ kernelCall info cls name key args =
     -- the sign of the comparison of two values of the exact type of the key (Elm's `_Utils_cmp`)
     cmpOfKey a b =
       case key of
-        Key [ByType t] -> cmpExpr t a b
+        Key [ByType t] -> cmpExpr info t a b
         _ -> unsupported' "comparison at this key"
 
     equality neg a b =
@@ -2640,6 +2641,7 @@ isStringT t = case t of { TyCon "elm/core:String.String" [] -> True; _ -> False 
 -- an expression for `a == b` at an exact type (a and b are atoms)
 eqExpr :: Info -> MType -> String -> String -> CG String
 eqExpr info t a b
+  | Just c <- Map.lookup ("eq", t) (iMembers info) = memberCall info c t a b
   | isStringT t = return ("fic_str_eq(" ++ a ++ ", " ++ b ++ ")")
   | otherwise =
       case clsOf info t of
@@ -2653,15 +2655,37 @@ eqExpr info t a b
 
 -- an expression for the sign of the comparison of two values at an exact type: Int, Char, Float, String, and
 -- tuples and lists of these (a and b are atoms)
-cmpExpr :: MType -> String -> String -> CG String
-cmpExpr t a b =
+cmpExpr :: Info -> MType -> String -> String -> CG String
+cmpExpr info t a b =
   case t of
+    _ | Just c <- Map.lookup ("compare", t) (iMembers info) -> do { r <- memberCall info c t a b; return ("((int)" ++ r ++ " - 1)") }
     TyCon "elm/core:Basics.Int" [] -> return ("fic_i_cmp(" ++ a ++ ", " ++ b ++ ")")
     TyCon "elm/core:Char.Char" [] -> return ("fic_i_cmp((int64_t)" ++ a ++ ", (int64_t)" ++ b ++ ")")
     TyCon "elm/core:Basics.Float" [] -> return ("fic_f_cmp(" ++ a ++ ", " ++ b ++ ")")
     TyCon n [] | Just sz <- Sized.sizedOfTypeId n -> return (Sized.cmpC sz a b)
     _ | isStringT t -> return ("fic_str_cmp(" ++ a ++ ", " ++ b ++ ")")
     _ -> do { h <- helper (HCmp t); return (h ++ "(" ++ a ++ ", " ++ b ++ ")") }
+
+
+-- (A3b, docs/A3B-PLAN.md section 2) the member of a type inside a container (Ficcus.Mono.ContainerMembers): a direct call of its
+-- clone (the specializer made one of two parameters for every member).  The helpers borrow their arguments, so an owned parameter
+-- gets a count of its own first (--rc); the clone consumes it.  The result is the Bool (eq) or the Order (LT 0, EQ 1, GT 2).
+memberCall :: Info -> CloneId -> MType -> String -> String -> CG String
+memberCall info c t a b =
+  case Map.lookup c (iClones info) of
+    Just d | isFunction d, map snd (mdParams d) == [cls, cls], mdResult d == CEnum ->
+      do  rcMode <- gets gRc
+          args <- forM (zip [a, b] (paramOwns d)) $ \(x, own) ->
+            if rcMode && own == Owned
+              then do { v <- fresh "mv"; emit (classType cls ++ " " ++ v ++ " = " ++ x ++ ";"); dupVars' cls v; return v }
+              else return x
+          r <- fresh "mr"
+          emit (classType CEnum ++ " " ++ r ++ " = " ++ functionName d ++ "(" ++ List.intercalate ", " args ++ ");")
+          return r
+    Just d -> failWith ("internal: the member clone " ++ mdName d ++ " that == or compare at " ++ mtypeText t ++ " calls does not take two arguments of class " ++ show cls)
+    Nothing -> failWith ("internal: the member clone that == or compare at " ++ mtypeText t ++ " calls is not in the program")
+  where
+    cls = clsOf info t
 
 
 -- the fields of a struct class (tuple or record), the value of field i of `v` at its own class
@@ -2775,7 +2799,7 @@ genHelper info k name =
       do  let ty = classType (clsOf info t)
           needClass info (clsOf info t)
           emit (ty ++ " a = *(const " ++ ty ++ " *)pa, b = *(const " ++ ty ++ " *)pb;")
-          c <- cmpExpr t "a" "b"
+          c <- cmpExpr info t "a" "b"
           emit ("return " ++ c ++ ";")
 
     vecFromListBody c =
@@ -2924,7 +2948,7 @@ genHelper info k name =
           forM_ (zip [0 :: Int ..] ts) $ \(i, ty) ->
             do  x <- structField info sc ty i "a"
                 y <- structField info sc ty i "b"
-                c <- cmpExpr ty x y
+                c <- cmpExpr info ty x y
                 emit ("{ int c = " ++ c ++ "; if (c != 0) return c; }")
           emit "return 0;"
 
@@ -2940,7 +2964,7 @@ genHelper info k name =
                 emit (objType fcs ++ " *ca = (" ++ objType fcs ++ " *)a, *cb = (" ++ objType fcs ++ " *)b;")
                 x <- readF fcs 0 "ca" ec
                 y <- readF fcs 0 "cb" ec
-                c <- cmpExpr e x y
+                c <- cmpExpr info e x y
                 emit ("{ int c = " ++ c ++ "; if (c != 0) return c; }")
                 emit ("a = " ++ fl fcs 1 "ca" ++ "; b = " ++ fl fcs 1 "cb" ++ ";")
           emit "}"
