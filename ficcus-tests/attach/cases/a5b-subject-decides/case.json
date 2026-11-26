@@ -1,0 +1,1 @@
+{"desc": "anti-unification: T.f : T -> Int and W.f : W -> T give f : a -> b; get2 w = f (f w) (the member decides b)"}

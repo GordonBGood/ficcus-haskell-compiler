@@ -45,6 +45,7 @@ import qualified Generate.C as GC
 import qualified Generate.JavaScript as JS
 import qualified Generate.Mode as Mode
 import qualified AST.Constraints as Constraints
+import qualified AST.Selectors as Selectors
 import qualified Nitpick.Constraints as NitpickConstraints
 import qualified Nitpick.Debug as Nitpick
 import qualified Reporting.Exit as Exit
@@ -213,7 +214,10 @@ checkForConstraints (Objects (Opt.GlobalGraph foreignNodes _) locals) =
         [] -> Task.throw (Exit.GenerateConstrainedFunctions (List.sort (map toChars globals)))
         derived -> Task.throw (Exit.GenerateDerivedMembers (List.sort derived))
   where
-    toChars (Opt.Global (ModuleName.Canonical _ home) name)
+    globalHome (Opt.Global h _) = h
+    toChars global@(Opt.Global (ModuleName.Canonical _ home) name)
+      -- Ficcus (A5b): a selector
+      | Selectors.isAttachedHome (globalHome global) = "the attached function `" ++ N.toChars name ++ "` by its bare name"
       | name == Constraints.customOperators = Module.toChars home ++ ": operators on custom types (`+`, `<`, `==`, ...)"
       -- Ficcus (A5a, D6): an inferred `where`
       | Constraints.splitInferredMarker name /= Nothing =

@@ -27,9 +27,11 @@ module Ficcus.Mono.Marks
 -- instances; `ficcus-tests/marks_check.py` compares the two.
 
 
+import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
+import qualified AST.Selectors as Selectors
 import Ficcus.Mono.Facts
 import Ficcus.Mono.Kernel (vectorKernels)
 import Ficcus.Mono.Overlay (vectorModuleId)
@@ -58,7 +60,10 @@ computeWith exactRoots modules =
     byCallee = Map.fromListWith (++) [ (ufCallee u, [u]) | u <- uses ]
     known = Set.fromList [ dfId d | m <- modules, d <- mfDefs m ]
 
-    equatableRoots = [ ("elm/core:Basics.eq", 0), ("elm/core:Basics.neq", 0) ] ++ relaxedRoots
+    equatableRoots = [ ("elm/core:Basics.eq", 0), ("elm/core:Basics.neq", 0) ] ++ relaxedRoots ++ selectorRoots
+    -- (A5b) a selector (a bare attached function name, AST.Selectors) calls the member of its subject's exact type: every
+    -- variable of its type at a use is keyed by its exact type (the others are decided by the subject anyway)
+    selectorRoots = List.nub [ (ufCallee u, i) | u <- uses, Selectors.isSelectorId (ufCallee u), (i, _) <- ufBinds u ]
     -- (A5a) a relaxed `/ // modBy remainderBy` at a variable of its owner (Type.Dump records it as the use of index 0): the
     -- member of the exact type is called
     relaxedRoots = [ ("elm/core:Basics." ++ n, 0) | n <- ["fdiv", "idiv", "modBy", "remainderBy"] ]

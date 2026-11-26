@@ -47,6 +47,7 @@ import qualified AST.Prim.Module as Module
 import qualified String
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
+import qualified AST.Selectors as Selectors
 import qualified AST.WellKnown as WK
 import qualified Elm.Float as EF
 import qualified Elm.String as ES
@@ -1515,6 +1516,7 @@ resolve se region e =
           case Map.lookup (moduleChars h ++ "." ++ N.toChars n) ports of
             Just isOut -> portRef isOut (N.toChars n)
             Nothing -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
+    Can.VarForeign h n ann | Selectors.isAttachedHome h -> selectorRef (N.toChars n) ann     -- (A5b) a bare attached function name
     Can.VarForeign h n _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.VarOperator _ h n _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
     Can.Binop _ h n _ _ _ -> foreignOrTop (moduleChars h ++ "." ++ N.toChars n)
@@ -1575,6 +1577,23 @@ resolve se region e =
             Left why -> report ("internal: instance of " ++ cid ++ " does not match its scheme at " ++ regionText region ++ ": " ++ why) >> return Nothing
 
     schemeInst = raw >>= schemeOf ctx e
+
+    -- (A5b) a selector (AST.Selectors): the member of its subject's exact type at this use, as for the hidden parameter of a
+    -- constrained definition (hiddenMembers)
+    selectorRef member ann =
+      case (Selectors.parts ann, schemeInst) of
+        (Just p, Just (scheme, inst0)) ->
+          do  let inst = applyDefault (\n -> not (Map.member n (seEnv se))) inst0
+              case matchT scheme inst of
+                Right s | Just st <- Map.lookup (Selectors._subject p) s
+                        , Right sm <- mtypeOf (seEnv se) st
+                        , Right mt <- mtypeOf (seEnv se) inst ->
+                  do  r <- memberRef sm member mt
+                      case r of
+                        Right ref -> return ref
+                        Left why -> report ("cannot specialize the attached function `" ++ member ++ "` at " ++ mtypeText sm ++ " (at " ++ regionText region ++ "): " ++ why) >> return RNone
+                _ -> report ("internal: no exact type for the subject of the attached function `" ++ member ++ "` at " ++ regionText region) >> return RNone
+        _ -> report ("internal: no scheme for the attached function `" ++ member ++ "` at " ++ regionText region) >> return RNone
 
     -- (ATTACH A3) an operator at a custom type with the member behind it.  The instance type is defaulted as every node type is
     -- (`nodeType`): `compare (V [ 1 ]) (V [ 2 ])` has the instance `V number`, and the literals are Int (A3c, F7)
@@ -1670,25 +1689,54 @@ deadByMembers se0 body =
     collect se acc (A.At region e) =
       do  tops <- gets sTops
           let ctx = seCtx se
-          case calleeId ctx e >>= \cid -> Map.lookup cid tops of
-            Just src | Constraints.hiddenCount (srcDef src) > 0
-                     , Just raw <- Map.lookup (Recorder.exprKey region e) (_nodes (_typed ctx))
-                     , Just (scheme, inst) <- schemeOf ctx e raw
-                     , Right s0 <- matchT scheme inst ->
+          let instance_ = Map.lookup (Recorder.exprKey region e) (_nodes (_typed ctx)) >>= schemeOf ctx e >>= \(scheme, inst) -> either (const Nothing) (\s0 -> Just (scheme, s0)) (matchT scheme inst)
+          case (calleeId ctx e >>= \cid -> Map.lookup cid tops, e) of
+            (Just src, _) | Constraints.hiddenCount (srcDef src) > 0, Just (scheme, s0) <- instance_ ->
               do  s <- determinedByMembers se (srcDef src) scheme s0
-                  let dead n = not (Map.member n (seEnv se)) && not (Map.member n acc)
-                  return $ Map.union acc $ Map.fromList
-                    [ (n, ByType m)
-                    | (v, TVar n _ _) <- Map.toList s0
-                    , dead n
-                    , Just t <- [Map.lookup v s]
-                    , not (isVar t)
-                    , Right m <- [mtypeOf (seEnv se) t]
-                    , m /= TyCon "ref" []
-                    ]
+                  return (bindDead se acc s0 s)
+            -- (A5b) a selector: its member type is decided by the member of its subject's exact type
+            (_, Can.VarForeign h _ ann) | Selectors.isAttachedHome h, Just p <- Selectors.parts ann, Just (scheme, s0) <- instance_ ->
+              do  s <- selectorDetermined se p scheme s0
+                  return (bindDead se acc s0 s)
             _ -> return acc
 
+    bindDead se acc s0 s =
+      let dead n = not (Map.member n (seEnv se)) && not (Map.member n acc) in
+      Map.union acc $ Map.fromList
+        [ (n, ByType m)
+        | (v, TVar n _ _) <- Map.toList s0
+        , dead n
+        , Just t <- [Map.lookup v s]
+        , not (isVar t)
+        , Right m <- [mtypeOf (seEnv se) t]
+        , m /= TyCon "ref" []
+        ]
+
     isVar t = case t of { TVar {} -> True; _ -> False }
+
+
+-- | (A5b) the variables of a selector's type that the member of its subject's exact type decides (`b` in `f : a -> b` at
+-- `a := W`, with `W.f : W -> T`): Ficcus.Mono.Determined, as for one constraint of a constrained definition
+selectorDetermined :: SEnv -> Selectors.Parts -> TType -> Subst -> SM Subst
+selectorDetermined se p scheme s =
+  case Map.lookup (Selectors._subject p) s of
+    Just subjectType | not (isHole (Selectors._subject p)), Right (TyCon tid _) <- mtypeOf (seEnv se) subjectType ->
+      do  tops <- gets sTops
+          case Map.lookup (tid ++ "$$" ++ N.toChars (Selectors._member p)) tops of
+            Just msrc | Just mscheme <- Map.lookup (defKeyOf (srcDef msrc)) (_defs (_typed (srcCtx msrc))) ->
+              let
+                known = Map.filterWithKey (\n _ -> not (isHole n)) s
+                memberType = snd (Members.peel (Constraints.hiddenCount (srcDef msrc)) mscheme)
+              in
+              return (Map.union (Determined.fill isHole (Determined.substitute known scheme) memberType) s)
+            _ -> return s
+    _ -> return s
+  where
+    isHole n =
+      case Map.lookup n s of
+        Nothing -> True
+        Just (TVar m _ _) -> not (Map.member m (seEnv se))
+        Just _ -> False
 
 
 -- | (A5a, D2) the instance of a constrained definition at a use gives the types of the variables of its type; a variable

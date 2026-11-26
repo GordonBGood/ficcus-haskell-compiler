@@ -130,7 +130,7 @@ typeCheckTypedIO ifaces canonical =
 markCustomOperators :: Can.Module -> Map.Map N.Name Can.Annotation -> Opt.LocalGraph -> (Map.Map N.Name Can.Annotation, Opt.LocalGraph)
 markCustomOperators canonical@(Can.Module home _ _ _ _ _ _ _) annotations1 objects =
   markCustomOperators1 canonical (Map.filterWithKey (\name _ -> Derive.markerText name == Nothing) annotations1)
-    (NitpickConstraints.markInferred home annotations1 objects)     -- Ficcus (A5a, D6)
+    (NitpickConstraints.markSelectors (NitpickConstraints.markInferred home annotations1 objects))     -- Ficcus (A5a, D6; A5b)
   -- Ficcus (A4a): the markers of the `derive` lines (Canonicalize.Derive) stay in the object graph, not in the interface
 
 

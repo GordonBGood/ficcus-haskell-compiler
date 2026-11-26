@@ -3,6 +3,7 @@
 module Nitpick.Constraints
   ( constrainedNodes
   , markInferred
+  , markSelectors
   )
   where
 
@@ -14,6 +15,7 @@ import qualified AST.Constraints as Constraints
 import qualified AST.Derive as Derive
 import qualified AST.Optimized as Opt
 import qualified AST.Canonical as Can
+import qualified AST.Selectors as Selectors
 import qualified AST.Prim.Name as N
 import qualified Elm.ModuleName as ModuleName
 
@@ -45,8 +47,9 @@ constrainedNodes nodes =
         Opt.TailDef name _ body | hiddenFirst body -> [Opt.Global home name]
         _ -> []
 
-    isMarker (Opt.Global _ name) =
-      name == Constraints.customOperators || Derive.markerText name /= Nothing    -- Ficcus (A4a): a `derive` line
+    isMarker (Opt.Global h name) =
+      Selectors.isAttachedHome h                                                   -- Ficcus (A5b): a selector
+        || name == Constraints.customOperators || Derive.markerText name /= Nothing    -- Ficcus (A4a): a `derive` line
         || Constraints.splitInferredMarker name /= Nothing                         -- Ficcus (A5a, D6): an inferred `where`
 
     hiddenFirst body =
@@ -84,3 +87,25 @@ markInferred home annotations graph@(Opt.LocalGraph main nodes fields) =
         Opt.DefineTailFunc args e deps -> Opt.DefineTailFunc args e (Set.insert marker deps)
         Opt.Cycle names values defs deps -> Opt.Cycle names values defs (Set.insert marker deps)
         _ -> node
+
+
+
+-- | Ficcus (A5b): a selector (a bare attached function name, AST.Selectors) is a use of `elm/core:$attached.m`, which no
+-- module defines.  Each one a module uses gets a node of that name in the module's graph (no code, no dependencies), so
+-- the graph is complete, and the JavaScript output refuses it like a constrained function.  A module without selectors
+-- (every Elm module) keeps its graph.
+markSelectors :: Opt.LocalGraph -> Opt.LocalGraph
+markSelectors graph@(Opt.LocalGraph main nodes fields) =
+  case Set.toList (Set.unions (map selectorsOf (Map.elems nodes))) of
+    [] -> graph
+    used -> Opt.LocalGraph main (foldr (\g -> Map.insert g (Opt.Define Opt.Unit Set.empty)) nodes used) fields
+  where
+    selectorsOf node =
+      Set.filter (\(Opt.Global h _) -> Selectors.isAttachedHome h) $
+        case node of
+          Opt.Define _ deps -> deps
+          Opt.DefineTailFunc _ _ deps -> deps
+          Opt.Cycle _ _ _ deps -> deps
+          Opt.PortIncoming _ deps -> deps
+          Opt.PortOutgoing _ deps -> deps
+          _ -> Set.empty

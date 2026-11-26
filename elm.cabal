@@ -146,8 +146,10 @@ executable elm
         AST.WellKnown
         AST.Derive
         AST.Constraints
+        AST.Selectors
         Parse.Constraints
         Canonicalize.Constraints
+        Canonicalize.Selectors
         Type.Members
         Type.Requirements
         Ficcus.Mono.Members

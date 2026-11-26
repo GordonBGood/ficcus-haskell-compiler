@@ -26,6 +26,7 @@ import qualified Canonicalize.Constraints as Constraints
 import qualified Canonicalize.Derive as Derive
 import qualified Canonicalize.Members as Members
 import qualified Canonicalize.Pattern as Pattern
+import qualified Canonicalize.Selectors as Selectors
 import qualified Canonicalize.Type as Type
 import qualified Data.Index as Index
 import qualified Elm.Interface as I
@@ -92,7 +93,8 @@ canonicalizeBinop (A.At _ (Src.Infix op associativity precedence func)) =
 
 canonicalizeValues :: Env.Env -> [A.Located Src.Value] -> Result i [W.Warning] Can.Decls
 canonicalizeValues env0 values =
-  do  env <- Constraints.register env0 values     -- Ficcus (ATTACH A2): the constrained schemes of this module
+  do  env1 <- Constraints.register env0 values     -- Ficcus (ATTACH A2): the constrained schemes of this module
+      let env = Selectors.register env1 values      -- Ficcus (A5b): the bare names of attached functions
       nodes <- traverse (toNodeOne env) values
       detectCycles (Graph.toSCC nodes)
 

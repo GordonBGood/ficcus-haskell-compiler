@@ -1,0 +1,1 @@
+{"desc": "D5: total xs = List.foldl add zero xs without a signature: both bare names are selectors, total is inferred; at Money and Vec"}

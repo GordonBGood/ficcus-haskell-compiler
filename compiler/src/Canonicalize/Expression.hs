@@ -23,6 +23,7 @@ import qualified String as S
 
 import qualified AST.Canonical as Can
 import qualified AST.Constraints as Constraints_
+import qualified AST.Selectors as Selectors
 import qualified AST.Source as Src
 import qualified AST.Prim.Module as Module
 import qualified AST.Prim.Name as N
@@ -87,7 +88,7 @@ canonicalize env (A.At region expression) =
 
     Src.Var varType name ->
       case varType of
-        Src.LowVar -> findVar region env name
+        Src.LowVar -> findVarOrSelector region env name
         Src.CapVar -> toVarCtor name <$> Env.findCtor region env name
 
     Src.VarQual varType prefix name ->
@@ -755,6 +756,15 @@ findVar region (Env.Env localHome vs _ _ _ qvs _ _) name =
 
     Nothing ->
       Result.throw (Error.NotFoundVar region Nothing name (toPossibleNames vs qvs))
+
+
+-- | Ficcus (A5b, docs/A5-INFERENCE-DESIGN.md section 2): a name that Elm's lookup does not find (Elm reports NAMING
+-- ERROR) is the selector of that name when the module has one (Canonicalize.Selectors); any binding wins over it
+findVarOrSelector :: A.Region -> Env.Env -> N.Name -> Result FreeLocals w Can.Expr_
+findVarOrSelector region env@(Env.Env _ vs _ _ _ _ _ _) name =
+  case (Map.member name vs, Map.lookup (Selectors.selectorKey name) vs) of
+    (False, Just (Env.Foreign home annotation)) -> Result.ok (Can.VarForeign home name annotation)
+    _ -> findVar region env name
 
 
 findVarQual :: A.Region -> Env.Env -> Module.Prefix -> N.Name -> Result FreeLocals w Can.Expr_

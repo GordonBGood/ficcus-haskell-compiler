@@ -11,6 +11,7 @@
 module Ficcus.Mono.Determined
   ( fill
   , subExprs
+  , substitute
   )
   where
 
@@ -46,6 +47,12 @@ fill isHole constraint member =
 
     goAll pairs acc =
       foldl (\a (x, y) -> go x y a) acc pairs
+
+
+-- | (A5b) replace variables by types
+substitute :: Map.Map String TType -> TType -> TType
+substitute =
+  subst
 
 
 subst :: Map.Map String TType -> TType -> TType

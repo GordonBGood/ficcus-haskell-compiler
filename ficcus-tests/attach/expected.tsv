@@ -198,7 +198,7 @@ g70-private-type-flow	REJECT	NO MEMBER	has no members that I can see here
 g70-elm-opaque	RUN	js+c	
 # G71: inference of member constraints and local definitions, what the compiler does today (cases written by g71gen.py, results in g71expect.py; report docs/attach/G71-INFERENCE.md)
 g71-q1-nosig-qualified	RUN	c	
-g71-q1-nosig-bare-member	REJECTC	NAMING ERROR	I cannot find a `add` variable
+g71-q1-nosig-bare-member	RUN	c	
 g71-q1-nosig-call	RUN	c	
 g71-q1-nosig-call-one-use	RUN	c	
 g71-q1-nosig-lt	RUN	c	
@@ -206,9 +206,9 @@ g71-q1-nosig-compare	RUN	c
 g71-q1-nosig-eq	RUN	c	
 g71-q1-nosig-plus	RUN	c	
 g71-q1-nosig-plus-money	REJECTC	TYPE MISMATCH	It is missing: `sub`, `mul`, `pow`, `neg`, `abs`, `fromInt`.
-g71-q2-missing-all	REJECTC	NAMING ERROR	I cannot find a `add` variable
+g71-q2-missing-all	REJECTC	MISSING CONSTRAINT	a has add : a -> a -> a
 g71-q2-missing-all-call	REJECTC	MISSING CONSTRAINT	a has add : a -> a -> a
-g71-q2-missing-one	REJECTC	NAMING ERROR	I cannot find a `zero` variable
+g71-q2-missing-one	REJECTC	MISSING CONSTRAINT	a has zero : a
 g71-q2-missing-compare	REJECTC	MISSING CONSTRAINT	a has compare : a -> a -> Order
 g71-q2-lt-plain-var	REJECTC	TYPE MISMATCH	specifically wants a `comparable`
 g71-q3-let-once	RUN	c	
@@ -287,3 +287,26 @@ a5a-default-top-value	RUN	c
 a5a-undetermined-error	REJECTC	UNKNOWN MEMBER TYPE	zero
 a5a-float-literal	RUN	c	
 a5a-rule1-poly-member	REJECTC	MEMBER TYPE MISMATCH	pick
+# A5b (a5bgen.py): bare names of attached functions (selectors)
+a5b-bare-inferred	RUN	c	
+a5b-let-two-types	RUN	c	
+a5b-value-typed	RUN	c	
+a5b-default-literal	RUN	c	
+a5b-fromint	RUN	c	
+a5b-mr-let-value	REJECTC	TYPE MISMATCH	But `f` needs the 2nd argument to be:
+a5b-subject-decides	RUN	c	
+a5b-parameterized	RUN	c	
+a5b-shapes-differ	REJECT	NAMING ERROR	I cannot find a `scale` variable
+a5b-poly-member	REJECTC	MEMBER TYPE MISMATCH	pick
+a5b-typo	REJECT	NAMING ERROR	I cannot find a `ad` variable
+a5b-no-type-has-it	REJECT	NAMING ERROR	I cannot find a `mul` variable
+a5b-not-named	REJECT	NAMING ERROR	I cannot find a `add` variable
+a5b-elm-naming	REJECT	NAMING ERROR	I cannot find a `add` variable
+a5b-import-exposing	RUN	c	
+a5b-import-qualified	RUN	c	
+a5b-import-opaque	RUN	c	
+a5b-cross-module	RUN	c	
+a5b-sized	RUN	c	
+a5b-shadow-top	RUN	c	
+a5b-shadow-local	RUN	c	
+a5b-js-refused	REJECT	CONSTRAINED FUNCTIONS	the attached function `add` by its bare name

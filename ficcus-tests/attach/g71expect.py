@@ -74,3 +74,10 @@ EXPECT.update({
     'g71-q7-idiv-typed-int': ('RUN', 'r: (2,Cash 200)\n', 'c'),
     'g71-q7-modby-two': ('RUN', 'r: (1,Cash 100)\n', 'c'),
 })
+# A5b (docs/A5-INFERENCE-DESIGN.md section 2): bare names of attached functions are selectors; the output is that of the
+# twin in a5b-twins/ (a5bgen.py --expect); the annotated q2 cases now report the missing requirement (old title, A5c renames it)
+EXPECT.update({
+    'g71-q1-nosig-bare-member': ('RUN', 'r: Money 3\n', 'c'),
+    'g71-q2-missing-all': ('REJECTC', 'MISSING CONSTRAINT', 'a has add : a -> a -> a'),
+    'g71-q2-missing-one': ('REJECTC', 'MISSING CONSTRAINT', 'a has zero : a'),
+})
