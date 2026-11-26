@@ -60,6 +60,7 @@ import Ficcus.Mono.Marks (Marks)
 import qualified Ficcus.Mono.Marks as Marks
 import qualified Ficcus.Mono.Members as Members
 import qualified Ficcus.Mono.ContainerMembers as ContainerMembers
+import qualified Ficcus.Mono.Determined as Determined
 import Ficcus.Mono.Modules
 import qualified Reporting.Annotation as A
 import Type.Dump (Ctx(..), bindDefs, calleeId, canonVars, defIdOf, defKeyOf, kindList, moduleChars, regionText, schemeOf)
@@ -1635,12 +1636,81 @@ resolve se region e =
       do  ms <- subst did
           case ms of
             Nothing -> return RNone
-            Just (scheme, s) ->
-              do  key <- keyFor se did scheme s (\n -> Map.member n (srcOuter src))
+            Just (scheme, s0) ->
+              do  -- (A5a, D2) the variables of its constraints that only the members decide
+                  s <- if Constraints.hiddenCount (srcDef src) > 0 then determinedByMembers se (srcDef src) scheme s0 else return s0
+                  key <- keyFor se did scheme s (\n -> Map.member n (srcOuter src))
                   c <- requestClone (CKey did (srcOwner src) key) src
                   -- (ATTACH A2) the hidden parameters of a constrained definition are not arguments of its clones
                   let hiddenN = Constraints.hiddenCount (srcDef src)
                   return (RClone c (length (defArgs (srcDef src)) - hiddenN) (null (defArgs (srcDef src)) && srcOwner src == Nothing))
+
+
+-- | (A5a, D2) the instance of a constrained definition at a use gives the types of the variables of its type; a variable
+-- that only occurs in the member type of a constraint (`a has f : a -> z`) is decided by the member of the subject's
+-- exact type (Ficcus.Mono.Determined).  To a fixpoint, so that a member type decides the subject of the next constraint.
+determinedByMembers :: SEnv -> Can.Def -> TType -> Subst -> SM Subst
+determinedByMembers se def scheme s0 =
+  loop (8 :: Int) s0
+  where
+    hidden = Constraints.hiddenOfDef def
+    (types, _) = Members.peel (length hidden) scheme
+    subjects = Members.subjectNames def scheme
+
+    isHole s n =
+      case Map.lookup n s of
+        Nothing -> True
+        Just (TVar m _ _) -> not (Map.member m (seEnv se))
+        Just _ -> False
+
+    loop :: Int -> Subst -> SM Subst
+    loop fuel s
+      | fuel <= 0 = return s
+      | otherwise =
+          do  s' <- foldM step s (zip3 hidden subjects types)
+              if Map.keys (Map.filterWithKey (\n _ -> not (isHole s' n)) s') == Map.keys (Map.filterWithKey (\n _ -> not (isHole s n)) s)
+                then return s'
+                else loop (fuel - 1) s'
+
+    step :: Subst -> (Constraints.Hidden, Maybe String, TType) -> SM Subst
+    step s (Constraints.Hidden _ member _, Just subject, tipe)
+      | not (isHole s subject)
+      , any (isHole s . fst) (tvarsOf tipe)
+      , Just subjectType <- Map.lookup subject s
+      , Right (TyCon tid _) <- mtypeOf (seEnv se) subjectType =
+          do  tops <- gets sTops
+              case Map.lookup (tid ++ "$$" ++ N.toChars member) tops of
+                Just msrc | Just mscheme <- Map.lookup (defKeyOf (srcDef msrc)) (_defs (_typed (srcCtx msrc))) ->
+                  let
+                    known = Map.filterWithKey (\n _ -> not (isHole s n)) s
+                    constraint = substKnown known tipe
+                    memberType = snd (Members.peel (Constraints.hiddenCount (srcDef msrc)) mscheme)
+                  in
+                  return (Map.union (Determined.fill (isHole s) constraint memberType) s)
+                _ -> return s
+    step s _ = return s
+
+    tvarsOf t =
+      case t of
+        TCon _ _ args -> concatMap tvarsOf args
+        TFun a b -> tvarsOf a ++ tvarsOf b
+        TRecord fields ext -> concatMap tvarsOf (Map.elems fields) ++ maybe [] tvarsOf ext
+        TPair a b -> tvarsOf a ++ tvarsOf b
+        TTriple a b c -> tvarsOf a ++ tvarsOf b ++ tvarsOf c
+        TVar n k _ -> [(n, k)]
+        TAlias _ _ args real -> concatMap (tvarsOf . snd) args ++ tvarsOf real
+        _ -> []
+
+    substKnown known t =
+      case t of
+        TCon h n args -> TCon h n (map (substKnown known) args)
+        TFun a b -> TFun (substKnown known a) (substKnown known b)
+        TRecord fields ext -> TRecord (Map.map (substKnown known) fields) (fmap (substKnown known) ext)
+        TPair a b -> TPair (substKnown known a) (substKnown known b)
+        TTriple a b c -> TTriple (substKnown known a) (substKnown known b) (substKnown known c)
+        TVar n _ _ -> Map.findWithDefault t n known
+        TAlias h n args real -> TAlias h n [ (v, substKnown known x) | (v, x) <- args ] (substKnown known real)
+        _ -> t
 
 
 -- E1 STEP 3: THE PROGRAM'S UPDATE AND SUBSCRIPTIONS (docs/EFFECTS-DESIGN.md D-fx-3 amended)

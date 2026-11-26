@@ -186,11 +186,14 @@ settle tools table env kind outer young header pending =
   do  youngFlags <- traverse (isYoung young . _subject) pending
       let youngOnes = [ o | (o, True) <- zip pending youngFlags ]
       let others = [ o | (o, False) <- zip pending youngFlags ]
+      -- an obligation about an older subject: the context determines its member type, which keeps the context's rank
+      -- (B4: `y = get (get w)`)
+      olderFlags <- traverse (\o -> (< young) <$> rankOf (_subject o)) others
+      forM_ [ o | (o, True) <- zip others olderFlags ] $ \o -> raise outer (_type o)
       if null youngOnes then return (Outcome pending [] []) else
         do  -- the roots: what the context fixes (the member types of obligations about older subjects), and what the
             -- type of the definition fixes (its variables, and the member types of obligations about its own rigid
             -- variables)
-            olderFlags <- traverse (\o -> (< young) <$> rankOf (_subject o)) others
             outerRoots <- concat <$> traverse (Members.flexVariables . _type) [ o | (o, True) <- zip others olderFlags ]
             ownRoots <- concat <$> traverse (Members.flexVariables . _type) [ o | (o, False) <- zip others olderFlags ]
             headerRoots <- concat <$> traverse (Members.flexVariables . A.toValue) (Map.elems header)
