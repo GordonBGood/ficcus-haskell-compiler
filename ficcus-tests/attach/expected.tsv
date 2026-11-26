@@ -13,7 +13,7 @@ cross-package	RUN	js+c
 cross-package-closed	RUN	js+c	
 cross-package-closed-ok	RUN	js+c	
 alias-where	REJECT	MEMBERS ON A TYPE ALIAS	wrap the type in a custom type
-dup-member	REJECT	NAME CLASH	The `T` type has multiple `f` members
+dup-member	REJECT	NAME CLASH	The `T` type has multiple attached `f` functions
 unknown-member	REJECT	NAMING ERROR	T.bar
 unknown-no-members	REJECT	NAMING ERROR	I cannot find a `T` import
 missing-definition	REJECT	EXPECTING DEFINITION	foo
@@ -36,25 +36,25 @@ constraint-equality	RUN	c
 constraint-member-where	RUN	c	
 constraint-modules	RUN	c	
 constraint-package	RUN	c	
-constraint-js	REJECT	CONSTRAINED FUNCTIONS	Main.sum
-constraint-no-member	REJECT	NO MEMBER	add : T -> T -> T
-constraint-no-members-at-all	REJECT	UNKNOWN MEMBER TYPE	The type is a `number` variable, so it is not known which type is meant
-constraint-builtin	REJECT	NO MEMBER	built-in types (`Int`
-constraint-record	REJECT	NO MEMBER	built-in types (`Int`
-constraint-wrong-type	REJECT	MEMBER TYPE MISMATCH	T.plus
-constraint-missing	REJECT	MISSING CONSTRAINT	a has add : a -> a -> a
+constraint-js	REJECT	NOT AVAILABLE IN JAVASCRIPT YET	Main.sum
+constraint-no-member	REJECT	NO ATTACHED FUNCTION	add : T -> T -> T
+constraint-no-members-at-all	RUN	c	
+constraint-builtin	REJECT	NO ATTACHED FUNCTION	`String` does not have them
+constraint-record	REJECT	NO ATTACHED FUNCTION	does not have them
+constraint-wrong-type	REJECT	ATTACHED FUNCTION MISMATCH	T.plus
+constraint-missing	REJECT	INCOMPLETE TYPE ANNOTATION	a has add : a -> a -> a
 constraint-no-signature	RUN	c	
-constraint-given-mismatch	REJECT	WELL KNOWN MEMBER WITH THE WRONG TYPE	a has add : a -> a -> a
+constraint-given-mismatch	REJECT	OPERATOR FUNCTION WITH THE WRONG TYPE	a has add : a -> a -> a
 constraint-clash-top	REJECT	NAME CLASH	a has add as add_
 constraint-clash-two	REJECT	NAME CLASH	b has add as add_
-constraint-twice	REJECT	NAME CLASH	The constraint `a has add` is written twice
-constraint-unused-var	REJECT	AMBIGUOUS CONSTRAINT	mentions the type variable `b`
-constraint-syntax	REJECT	PROBLEM IN CONSTRAINT	a has add as plus
-constraint-empty	REJECT	UNFINISHED CONSTRAINTS	has
-constraint-member-unsigned	REJECT	MEMBER WITHOUT TYPE ANNOTATION	T.zero
-constraint-closed-type	REJECT	NO MEMBER	That type has these members
+constraint-twice	REJECT	NAME CLASH	is written twice in this `where` block
+constraint-unused-var	REJECT	UNUSED VARIABLE IN WHERE	mentions the type variable `b`
+constraint-syntax	REJECT	PROBLEM IN WHERE	a has add as plus
+constraint-empty	REJECT	UNFINISHED WHERE	has
+constraint-member-unsigned	REJECT	ATTACHED FUNCTION WITHOUT TYPE ANNOTATION	T.zero
+constraint-closed-type	REJECT	NO ATTACHED FUNCTION	has only `secret`
 constraint-body-error	REJECT	TYPE MISMATCH	add
-constraint-let	REJECT	CONSTRAINTS ON A LOCAL DEFINITION	top-level definition
+constraint-let	REJECT	WHERE ON A LOCAL DEFINITION	Remove it:
 constraint-let-mono	RUN	c	
 constraint-let-poly	REJECT	TYPE MISMATCH	
 constraint-flow	RUN	c	
@@ -63,7 +63,7 @@ constraint-arg-pattern	REJECT	TYPE MISMATCH	1st argument
 constraint-arg-count	REJECT	BAD TYPE ANNOTATION	can accept 1 argument
 package-imports-vector	RUN	c	
 constraint-ambiguous	RUN	c	
-constraint-ambiguous-subject	REJECT	AMBIGUOUS CONSTRAINT	mentions the type variable `b`
+constraint-ambiguous-subject	REJECT	UNUSED VARIABLE IN WHERE	mentions the type variable `b`
 constraint-var-in-type	RUN	c	
 constraint-let-generalize	RUN	c	
 constraint-let-generalize-later	RUN	c	
@@ -84,15 +84,15 @@ a3-keys	RUN	c
 a3-neq	RUN	c	
 a3-literals	RUN	c	
 a3-constraint-builtin	RUN	c	
-a3-err-missing-member	REJECT	TYPE MISMATCH	It is missing: `sub`, `mul`, `pow`, `neg`, `abs`, `fromInt`.
+a3-err-missing-member	REJECT	TYPE MISMATCH	It is missing: `sub`, `mul`
 a3-err-div	REJECT	TYPE MISMATCH;TYPE MISMATCH	The (/) operator is specifically for floating-point division
-a3-err-div-others	REJECT	NO MEMBER	`/` needs:
+a3-err-div-others	REJECT	NO ATTACHED FUNCTION	needs `Big` to have an attached `div` function
 a3-err-mix-int	REJECT	TYPE MISMATCH	do not mix: there is no automatic conversion
 a3-err-ambiguous-literal	RUN	c	
-a3-err-wrong-shape	REJECT	WELL KNOWN MEMBER WITH THE WRONG TYPE	add : Money -> Money -> Money
-a3-err-no-signature	REJECT	WELL KNOWN MEMBER WITHOUT TYPE ANNOTATION	compare : Money -> Money -> Order
+a3-err-wrong-shape	REJECT	OPERATOR FUNCTION WITH THE WRONG TYPE	add : Money -> Money -> Money
+a3-err-no-signature	REJECT	OPERATOR FUNCTION WITHOUT TYPE ANNOTATION	compare : Money -> Money -> Order
 a3-err-not-comparable	REJECT	TYPE MISMATCH	I do not know how to compare `Version` values
-a3-js	REJECT	CONSTRAINED FUNCTIONS	operators on custom types
+a3-js	REJECT	NOT AVAILABLE IN JAVASCRIPT YET	operators on custom types
 a3-defaults	RUN	c	
 a3-c-holds-union	RUN	c	
 a3-c-holds-recursive	RUN	c	
@@ -112,19 +112,19 @@ a3-err-lib-modby	REJECT	TYPE MISMATCH;TYPE MISMATCH
 a3-err-lib-remainderby	REJECT	TYPE MISMATCH;TYPE MISMATCH	
 a3-modby-user	RUN	c	
 a3-rigid-div	RUN	c	
-a3-err-rigid-div	REJECT	MISSING CONSTRAINT	number has div : number -> number -> number
-a3-js-eq-imported	REJECT	CONSTRAINED FUNCTIONS	N: operators on custom types
-a3-err-ambiguous-bundle	REJECT	AMBIGUOUS CONSTRAINT	mentions the type variable `z`
-a3-err-ambiguous-number	REJECT	AMBIGUOUS CONSTRAINT	mentions the type variable `b`
+a3-err-rigid-div	REJECT	INCOMPLETE TYPE ANNOTATION	number has div : number -> number -> number
+a3-js-eq-imported	REJECT	NOT AVAILABLE IN JAVASCRIPT YET	N: operators on custom types
+a3-err-ambiguous-bundle	REJECT	UNUSED VARIABLE IN WHERE	mentions the type variable `z`
+a3-err-ambiguous-number	REJECT	UNUSED VARIABLE IN WHERE	mentions the type variable `b`
 a3-err-constraint-plus	REJECT	TYPE MISMATCH	
 a3-values	RUN	c	
 a3-param	RUN	c	
-a3-err-param-shape	REJECT	WELL KNOWN MEMBER WITH THE WRONG TYPE	append : V a -> V a -> V a
+a3-err-param-shape	REJECT	OPERATOR FUNCTION WITH THE WRONG TYPE	append : V a -> V a -> V a
 a3-known-let-div	RUN	c	
 a3-f7-literal	RUN	c	
 a3-f7-err-literal-obligation	RUN	c	
 a3-f8-closed-annotation	RUN	js+c	
-a3-f8-err-let-div-two-types	REJECT	NO MEMBER	div : Int -> Int -> Int
+a3-f8-err-let-div-two-types	REJECT	NO ATTACHED FUNCTION	Use (//) for integers
 sized-bound-int8	RUN	c	
 sized-bound-int16	RUN	c	
 sized-bound-int32	RUN	c	
@@ -146,7 +146,7 @@ sized-err-mix-sizes	REJECTC	TYPE MISMATCH
 sized-err-pattern	REJECTC	TYPE MISMATCH	can never match
 sized-err-word64-tuple	RUN	c	
 sized-err-float-literal	RUN	c	
-sized-err-float32-idiv	REJECTC	NO MEMBER	idiv
+sized-err-float32-idiv	REJECTC	NO ATTACHED FUNCTION	idiv
 sized-js-refused	REJECT	MODULE NOT FOUND	does not support the sized integers
 sized-local-type	RUN	c	
 sized-local-module	RUN	js+c	
@@ -194,7 +194,7 @@ g70-opaque-ctor-pattern	REJECT	NAMING ERROR	Finance.Money
 g70-open-unexported-fn	REJECT	NAMING ERROR	Finance.raw
 g70-opaque-unexported-fn	REJECT	NAMING ERROR	Finance.raw
 g70-private-type-call	REJECT	NAMING ERROR	Finance.Money.toInt
-g70-private-type-flow	REJECT	NO MEMBER	has no members that I can see here
+g70-private-type-flow	REJECT	NO ATTACHED FUNCTION	has no attached functions that I can see here
 g70-elm-opaque	RUN	js+c	
 # G71: inference of member constraints and local definitions, what the compiler does today (cases written by g71gen.py, results in g71expect.py; report docs/attach/G71-INFERENCE.md)
 g71-q1-nosig-qualified	RUN	c	
@@ -205,11 +205,11 @@ g71-q1-nosig-lt	RUN	c
 g71-q1-nosig-compare	RUN	c	
 g71-q1-nosig-eq	RUN	c	
 g71-q1-nosig-plus	RUN	c	
-g71-q1-nosig-plus-money	REJECTC	TYPE MISMATCH	It is missing: `sub`, `mul`, `pow`, `neg`, `abs`, `fromInt`.
-g71-q2-missing-all	REJECTC	MISSING CONSTRAINT	a has add : a -> a -> a
-g71-q2-missing-all-call	REJECTC	MISSING CONSTRAINT	a has add : a -> a -> a
-g71-q2-missing-one	REJECTC	MISSING CONSTRAINT	a has zero : a
-g71-q2-missing-compare	REJECTC	MISSING CONSTRAINT	a has compare : a -> a -> Order
+g71-q1-nosig-plus-money	REJECTC	TYPE MISMATCH	It is missing: `sub`, `mul`
+g71-q2-missing-all	REJECTC	INCOMPLETE TYPE ANNOTATION	a has add : a -> a -> a
+g71-q2-missing-all-call	REJECTC	INCOMPLETE TYPE ANNOTATION	a has add : a -> a -> a
+g71-q2-missing-one	REJECTC	INCOMPLETE TYPE ANNOTATION	a has zero : a
+g71-q2-missing-compare	REJECTC	INCOMPLETE TYPE ANNOTATION	a has compare : a -> a -> Order
 g71-q2-lt-plain-var	REJECTC	TYPE MISMATCH	specifically wants a `comparable`
 g71-q3-let-once	RUN	c	
 g71-q3-let-twice-one-type	RUN	c	
@@ -264,15 +264,15 @@ a3b-word64	RUN	c
 a3b-fromfloat-user	RUN	c	
 a3b-fromfloat-defaults	RUN	js+c	
 a3b-fromfloat-float32	RUN	c	
-a3b-err-fromfloat-missing	REJECT	NO MEMBER	fromFloat
-a3b-err-fromfloat-shape	REJECT	WELL KNOWN MEMBER WITH THE WRONG TYPE	fromFloat : Float -> Meters
+a3b-err-fromfloat-missing	REJECT	NO ATTACHED FUNCTION	fromFloat
+a3b-err-fromfloat-shape	REJECT	OPERATOR FUNCTION WITH THE WRONG TYPE	fromFloat : Float -> Meters
 a3b-err-float-literal-elm	REJECT	TYPE MISMATCH	
-a3b-js-fromfloat	REJECT	CONSTRAINED FUNCTIONS	operators on custom types
+a3b-js-fromfloat	REJECT	NOT AVAILABLE IN JAVASCRIPT YET	operators on custom types
 # A5a (a5agen.py): inference of requirements, let generalization, defaulting, the monomorphism restriction
 a5a-top-infer-two-types	RUN	c	
 a5a-top-infer-recursive	RUN	c	
 a5a-cross-module	RUN	c	
-a5a-js-inferred	REJECT	CONSTRAINED FUNCTIONS	Main.half (no type annotation
+a5a-js-inferred	REJECT	NOT AVAILABLE IN JAVASCRIPT YET	Main.half (no type annotation
 a5a-subject-decides	RUN	c	
 a5a-b2-chain	RUN	c	
 a5a-b4-held-generic	RUN	c	
@@ -282,11 +282,11 @@ a5a-let-lambda	RUN	c
 a5a-let-rem-two	RUN	c	
 a5a-div-two-customs	RUN	c	
 a5a-mr-let-value	REJECTC	TYPE MISMATCH	But `f` needs the 2nd argument to be:
-a5a-mr-top-value	REJECTC	MISSING CONSTRAINT	pl : a -> a -> a
+a5a-mr-top-value	REJECTC	INCOMPLETE TYPE ANNOTATION	pl : a -> a -> a
 a5a-default-top-value	RUN	c	
-a5a-undetermined-error	REJECTC	UNKNOWN MEMBER TYPE	zero
+a5a-undetermined-error	REJECTC	AMBIGUOUS TYPE	zero
 a5a-float-literal	RUN	c	
-a5a-rule1-poly-member	REJECTC	MEMBER TYPE MISMATCH	pick
+a5a-rule1-poly-member	REJECTC	ATTACHED FUNCTION MISMATCH	pick
 # A5b (a5bgen.py): bare names of attached functions (selectors)
 a5b-bare-inferred	RUN	c	
 a5b-let-two-types	RUN	c	
@@ -297,7 +297,7 @@ a5b-mr-let-value	REJECTC	TYPE MISMATCH	But `f` needs the 2nd argument to be:
 a5b-subject-decides	RUN	c	
 a5b-parameterized	RUN	c	
 a5b-shapes-differ	REJECT	NAMING ERROR	I cannot find a `scale` variable
-a5b-poly-member	REJECTC	MEMBER TYPE MISMATCH	pick
+a5b-poly-member	REJECTC	ATTACHED FUNCTION MISMATCH	pick
 a5b-typo	REJECT	NAMING ERROR	I cannot find a `ad` variable
 a5b-no-type-has-it	REJECT	NAMING ERROR	I cannot find a `mul` variable
 a5b-not-named	REJECT	NAMING ERROR	I cannot find a `add` variable
@@ -309,16 +309,16 @@ a5b-cross-module	RUN	c
 a5b-sized	RUN	c	
 a5b-shadow-top	RUN	c	
 a5b-shadow-local	RUN	c	
-a5b-js-refused	REJECT	CONSTRAINED FUNCTIONS	the attached function `add` by its bare name
+a5b-js-refused	REJECT	NOT AVAILABLE IN JAVASCRIPT YET	the attached function `add` by its bare name
 # A5f (a5fgen.py): the fixes of the A5a review (M1, M2, B1, B2)
-a5f-m1-builtin-append	REJECTC	WELL KNOWN MEMBER WITH THE WRONG TYPE	a has append : a -> a -> a
-a5f-m1-builtin-inferred	REJECTC	WELL KNOWN MEMBER WITH THE WRONG TYPE	a has compare : a -> a -> Order
-a5f-m1-builtin-written	REJECTC	WELL KNOWN MEMBER WITH THE WRONG TYPE	a has compare : a -> a -> Order
-a5f-m1-float32	REJECTC	WELL KNOWN MEMBER WITH THE WRONG TYPE	a has fromInt : Int -> a
+a5f-m1-builtin-append	REJECTC	OPERATOR FUNCTION WITH THE WRONG TYPE	a has append : a -> a -> a
+a5f-m1-builtin-inferred	REJECTC	OPERATOR FUNCTION WITH THE WRONG TYPE	a has compare : a -> a -> Order
+a5f-m1-builtin-written	REJECTC	OPERATOR FUNCTION WITH THE WRONG TYPE	a has compare : a -> a -> Order
+a5f-m1-float32	REJECTC	OPERATOR FUNCTION WITH THE WRONG TYPE	a has fromInt : Int -> a
 a5f-m1-append-ok	RUN	c	
 a5f-m1-float32-ok	RUN	c	
-a5f-m2-recursive-ambiguous	REJECTC	MISSING CONSTRAINT	fa
-a5f-m2-recursive-todo	REJECTC	MISSING CONSTRAINT	fa
+a5f-m2-recursive-ambiguous	REJECTC	AMBIGUOUS TYPE	call each other
+a5f-m2-recursive-todo	REJECTC	AMBIGUOUS TYPE	call each other
 a5f-b1-let	RUN	c	
 a5f-b1-let-after	RUN	c	
 a5f-b1-let-swapped	RUN	c	
@@ -326,3 +326,22 @@ a5f-b1-let-renamed	RUN	c
 a5f-b2-deep-9	RUN	c	
 a5f-b2-deep-12	RUN	c	
 a5f-b2-deep-30	RUN	c	
+# A5c (a5cgen.py): the built-in zero, the texts of the messages
+a5c-zero-int	RUN	c	
+a5c-zero-float	RUN	c	
+a5c-zero-sized	RUN	c	
+a5c-zero-selector	RUN	c	
+a5c-zero-own-wins	RUN	c	
+a5c-zero-neither	REJECTC	NO ATTACHED FUNCTION	needs `T` to have an attached `zero` function
+a5c-js-idiv	REJECT	NOT AVAILABLE IN JAVASCRIPT YET	give it one such as `h : Int -> Int`
+a5c-js-let	REJECT	NOT AVAILABLE IN JAVASCRIPT YET	give it one such as `f : a -> ( Int, a )`
+a5c-js-neutral	REJECT	NOT AVAILABLE IN JAVASCRIPT YET	give it one that names the types it is used at
+a5c-mr-hint	REJECTC	TYPE MISMATCH	`g` in `f` is a value, not a function
+a5c-l6-hint	REJECTC	TYPE MISMATCH	Or keep `a` and say that it can be compared
+a5c-incomplete-one-type	REJECTC	INCOMPLETE TYPE ANNOTATION	If you mean the one of `Money`, write `Money.zero`.
+a5c-incomplete-show	REJECTC	INCOMPLETE TYPE ANNOTATION	            a has add : a -> a -> a
+a5c-incomplete-let	REJECTC	INCOMPLETE TYPE ANNOTATION	cannot have a `where` block. Remove the type annotation
+a5c-ambiguous-value	REJECTC	AMBIGUOUS TYPE	    empty : Money
+a5c-ambiguous-literal	REJECTC	AMBIGUOUS TYPE	Only a number literal gives the type
+a5c-naming-shapes	REJECT	NAMING ERROR	`scale` is an attached function of `Money` and of `Vec`
+a5c-naming-elm	REJECT	NAMING ERROR	I cannot find a `ad` variable

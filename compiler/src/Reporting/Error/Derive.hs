@@ -51,10 +51,10 @@ toReport source err =
       Report.Report "UNKNOWN DERIVED MEMBER" region [] $
         Code.toSnippet source region Nothing
           (
-            D.reflow $ "The type `" ++ tipe ++ "` cannot derive `" ++ member ++ "`: it is not a member the compiler can write."
+            D.reflow $ "The type `" ++ tipe ++ "` cannot derive `" ++ member ++ "`: it is not an attached function the compiler can write."
           ,
             D.stack
-              [ D.reflow $ "These are the members a `derive` line can list: " ++ commas Derive.known ++ "."
+              [ D.reflow $ "These are the functions a `derive` line can list: " ++ commas Derive.known ++ "."
               , hint member
               ]
           )
@@ -81,14 +81,14 @@ toReport source err =
           (
             D.reflow $ "The type `" ++ tipe ++ "` has two `derive` lines."
           ,
-            "A type has one `derive` line, which lists all its derived members. Join them."
+            "A type has one `derive` line, which lists all its derived functions. Join them."
           )
           (
             D.reflow $ "The type `" ++ tipe ++ "` has a `derive` line here:"
           ,
             "and another one here:"
           ,
-            "A type has one `derive` line, which lists all its derived members. Join them."
+            "A type has one `derive` line, which lists all its derived functions. Join them."
           )
 
     AndDefine derived written tipe member ->
@@ -172,7 +172,7 @@ reasonDoc tipe member reason =
       D.stack
         [ D.indent 4 $ D.dullyellow $ D.fromChars use
         , D.reflow $
-            "The type is used at another argument inside itself. A derived member is compiled once for each type it is\
+            "The type is used at another argument inside itself. A derived function is compiled once for each type it is\
             \ used at, and this type would need infinitely many of them."
         , D.toSimpleHint $ "Write `" ++ tipe ++ "." ++ member ++ "` yourself in the `where` block of `" ++ tipe ++ "`."
         ]
@@ -195,13 +195,13 @@ shadowHint modul tipe member =
   D.toSimpleHint $
     ( if lastPart modul == tipe
         then
-          "Here `" ++ tipe ++ "." ++ member ++ "` would mean the function of the module, and the derived member would be\
+          "Here `" ++ tipe ++ "." ++ member ++ "` would mean the function of the module, and the derived function would be\
           \ reachable only as `" ++ modul ++ "." ++ tipe ++ "." ++ member ++ "`."
         else
           "Two different functions named `" ++ member ++ "` in one module are a trap: `" ++ modul ++ "." ++ member
-          ++ "` would be the function and `" ++ tipe ++ "." ++ member ++ "` the derived member."
+          ++ "` would be the function and `" ++ tipe ++ "." ++ member ++ "` the derived one."
     )
-    ++ " Remove `" ++ member ++ "` from the module (or rename it): the derived member answers to `" ++ tipe ++ "." ++ member
+    ++ " Remove `" ++ member ++ "` from the module (or rename it): the derived function answers to `" ++ tipe ++ "." ++ member
     ++ "`, so calls written `" ++ tipe ++ "." ++ member ++ "` stay as they are."
 
 
@@ -213,12 +213,12 @@ lastPart chars =
 hint :: String -> D.Doc
 hint member =
   case member of
-    "decode" -> D.toSimpleHint "The decoder member is named `decoder`, as the decoders of Elm programs usually are (`User.decoder`)."
+    "decode" -> D.toSimpleHint "The derived decoder is named `decoder`, as the decoders of Elm programs usually are (`User.decoder`)."
     "eq" -> D.toSimpleHint "Equality (`==`) is structural for every type without a `derive` line; write `eq` yourself in the `where` block if the type needs another one."
     _ ->
       case Suggest.sort member id Derive.known of
         best : _ | Suggest.distance member best <= 3 -> D.toSimpleHint $ "Did you mean `" ++ best ++ "`?"
-        _ -> D.reflow "Write the member yourself in the `where` block if the type needs it."
+        _ -> D.reflow "Write the function yourself in the `where` block if the type needs it."
 
 
 commas :: [String] -> String

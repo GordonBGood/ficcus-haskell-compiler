@@ -399,9 +399,11 @@ memberRef st member mtype =
       case st of
         -- SIZED: the members of a sized type are kernels (the overlay's bodies only give the types)
         TyCon tid _ | Just s <- Sized.sizedEnabled unions tid ->
-          return (case Sized.memberOp member of
-                    Just op -> sizedKernelRef s op
-                    Nothing -> Left ("the type " ++ Sized.typeName s ++ " has no member `" ++ member ++ "`"))
+          case Sized.memberOp member of
+            Just op -> return (sizedKernelRef s op)
+            -- (A5c) `zero`: a real member of the overlay (the literal 0 at the type)
+            Nothing | Map.member (tid ++ "$$" ++ member) tops -> memberClone tid member mtype
+            Nothing -> return (Left ("the type " ++ Sized.typeName s ++ " has no member `" ++ member ++ "`"))
         TyCon tid _ | Map.member (tid ++ "$$" ++ member) tops -> memberClone tid member mtype
         _ -> builtinMember st member
 
@@ -466,6 +468,9 @@ builtinMember st member =
               case Map.lookup (basics "identity") tops of
                 Just src -> (\c -> Right (RClone c 1 False)) <$> requestClone (CKey (basics "identity") Nothing (Key [ByClass CI64])) src
                 Nothing -> return (Left "`Basics.identity` has no definition")
+        -- (A5c) the built-in `zero` of Int and Float
+        "zero" | st == TyCon "elm/core:Basics.Int" [] -> return (Right (RLit (LInt 0)))
+        "zero" | st == TyCon "elm/core:Basics.Float" [] -> return (Right (RLit (LFloat 0)))
         "append" ->
           case st of
             TyCon "elm/core:List.List" [e] -> kernel (basics "append") (Key [ByApp (AList (boxed (classOfM enums e)))])
@@ -660,6 +665,7 @@ shapeType shape t =
     WK.Unary -> TyFun t t
     WK.FromInt -> TyFun (TyCon "elm/core:Basics.Int" []) t
     WK.FromFloat -> TyFun (TyCon "elm/core:Basics.Float" []) t
+    WK.Value -> t
 
 
 -- a custom type with the member inside an exact type (its type arguments, tuple and record parts, and the constructor fields of
@@ -1337,6 +1343,7 @@ data Ref
   | RLocal String                      -- parameter or local value
   | RCtor String Int Int               -- constructor name, tag, number of arguments
   | RRec [String]                      -- the constructor function of a record alias: the field names in argument order
+  | RLit MLit                          -- (A5c) a member that is a literal (`zero` of Int and Float)
   | RNone
 
 
@@ -1426,6 +1433,7 @@ specRef se region e =
               return (MExpr cls (MLocal n))
         RCtor name tag 0 -> return (MExpr cls (MCtor name tag (Key [])))
         RCtor name tag arity -> partialApp se region e arity (\as -> MCall (MExpr CRef (MCtor name tag (Key [ ByClass (boxed (mRep a)) | a <- as ]))) as) []
+        RLit l -> return (MExpr cls (MLit l))
         RRec [] -> return (MExpr cls (MRecord []))
         RRec names -> partialApp se region e (length names) (\as -> MRecord (List.sortOn (\(n, _) -> (length n, n)) (zip names as))) []
         RNone -> return unitLit

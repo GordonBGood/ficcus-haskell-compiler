@@ -58,7 +58,7 @@ compile pkg ifaces modul =
       annotations0 <- typeCheck ifaces modul canonical
       ()          <- nitpick canonical
       objects0    <- optimize modul annotations0 canonical
-      let (annotations, objects) = markCustomOperators canonical annotations0 objects0
+      let (annotations, objects) = markCustomOperators (Localizer.fromModule modul) canonical annotations0 objects0
       return (Artifacts canonical annotations objects)
 
 
@@ -71,7 +71,7 @@ compileTyped pkg ifaces modul =
       (annotations0, typed) <- typeCheckTyped ifaces modul canonical
       ()          <- nitpick canonical
       objects0    <- optimize modul annotations0 canonical
-      let (annotations, objects) = markCustomOperators canonical annotations0 objects0
+      let (annotations, objects) = markCustomOperators (Localizer.fromModule modul) canonical annotations0 objects0
       return (Artifacts canonical annotations objects, typed)
 
 
@@ -127,10 +127,10 @@ typeCheckTypedIO ifaces canonical =
 
 -- Ficcus (ATTACH A3): a module that uses operators at a custom type gets a marker node in its object graph (the
 -- JavaScript output refuses it, Nitpick.Constraints); the annotation the solver made for the marker is dropped
-markCustomOperators :: Can.Module -> Map.Map N.Name Can.Annotation -> Opt.LocalGraph -> (Map.Map N.Name Can.Annotation, Opt.LocalGraph)
-markCustomOperators canonical@(Can.Module home _ _ _ _ _ _ _) annotations1 objects =
+markCustomOperators :: Localizer.Localizer -> Can.Module -> Map.Map N.Name Can.Annotation -> Opt.LocalGraph -> (Map.Map N.Name Can.Annotation, Opt.LocalGraph)
+markCustomOperators localizer canonical@(Can.Module home _ _ _ _ _ _ _) annotations1 objects =
   markCustomOperators1 canonical (Map.filterWithKey (\name _ -> Derive.markerText name == Nothing) annotations1)
-    (NitpickConstraints.markSelectors (NitpickConstraints.markInferred home annotations1 objects))     -- Ficcus (A5a, D6; A5b)
+    (NitpickConstraints.markSelectors (NitpickConstraints.markInferred localizer home annotations1 objects))     -- Ficcus (A5a, D6; A5b; A5c B3)
   -- Ficcus (A4a): the markers of the `derive` lines (Canonicalize.Derive) stay in the object graph, not in the interface
 
 

@@ -188,7 +188,7 @@ def main():
         fin = FINANCE.replace("exposing ({export}, fromInt)", "exposing (fromInt)")
         files = {"Finance.elm": fin, "Main.elm": MAIN.format(imports=imports, expr=expr)}
         if "Algebra" in imports: files["Algebra.elm"] = ALGEBRA
-        if want is None: want = ("REJECT", "NO MEMBER", "has no members that I can see here")
+        if want is None: want = ("REJECT", "NO ATTACHED FUNCTION", "has no attached functions that I can see here")
         if do: write(cid, "G70: " + desc, files, None)
         lines.append(line(cid, want))
     # pure Elm (no members): an opaque type and its import forms, the same as Elm 0.19.3 (also compared as JS text by hand)

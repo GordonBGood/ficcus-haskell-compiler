@@ -7,6 +7,7 @@
 module AST.WellKnown
   ( Shape(..)
   , shapeOf
+  , builtinShapeOf
   , isWellKnown
   , fits
   , fitsVar
@@ -46,6 +47,7 @@ data Shape
   | Unary       -- s -> s                      neg abs
   | FromInt     -- Int -> s                    fromInt
   | FromFloat   -- Float -> s                  fromFloat (A3b: a Float literal at s)
+  | Value       -- s                           zero (A5c: a member of the built-in number types, not a well known name)
   deriving (Eq)
 
 
@@ -57,6 +59,17 @@ shapeOf member =
     table =
       [ (m, Binary) | m <- ["add", "sub", "mul", "pow", "div", "idiv", "mod", "rem", "append"] ]
       ++ [ ("compare", Compare), ("eq", Equal), ("neg", Unary), ("abs", Unary), ("fromInt", FromInt), ("fromFloat", FromFloat) ]
+
+
+-- | (A5c) the shape of a member that a built-in type can have: the well known ones, and `zero` (Int, Float; the sized
+-- types define it in their `where` block).  `zero` is not a well known name: a custom type's `zero` can have any type,
+-- and it is not part of the `number` bundle.
+builtinShapeOf :: String -> Maybe Shape
+builtinShapeOf member =
+  case shapeOf member of
+    Just shape -> Just shape
+    Nothing | member == "zero" -> Just Value
+    Nothing -> Nothing
 
 
 isWellKnown :: String -> Bool
@@ -75,6 +88,7 @@ fits home tipe shape written =
     (Unary, [a, b]) -> self a && a == b
     (FromInt, [a, b]) -> a == int && self b
     (FromFloat, [a, b]) -> a == float && self b
+    (Value, [a]) -> self a
     _ -> False
   where
     self t =
@@ -112,6 +126,7 @@ fitsVar var shape written =
     (Unary, [a, b]) -> self a && self b
     (FromInt, [a, b]) -> a == int && self b
     (FromFloat, [a, b]) -> a == float && self b
+    (Value, [a]) -> self a
     _ -> False
   where
     self t =
@@ -135,6 +150,7 @@ expectedText shape tipe =
     Unary -> tipe ++ " -> " ++ tipe
     FromInt -> "Int -> " ++ tipe
     FromFloat -> "Float -> " ++ tipe
+    Value -> tipe
 
 
 -- | the shape as the scheme `(x, shape of x)` (a pair, so that one instantiation gives both the subject and the
@@ -157,6 +173,7 @@ shapeAnnotation shape =
         Unary -> Can.TLambda v v
         FromInt -> Can.TLambda int v
         FromFloat -> Can.TLambda float v
+        Value -> v
 
 
 
@@ -211,8 +228,8 @@ builtinOfApp home name arity
 builtinHas :: Builtin -> String -> Bool
 builtinHas kind member =
   case kind of
-    BInt -> member `elem` (numberBundle ++ ["eq", "idiv", "mod", "rem"])
-    BFloat -> member `elem` (numberBundle ++ ["eq", "div", "fromFloat"])
+    BInt -> member `elem` (numberBundle ++ ["eq", "idiv", "mod", "rem", "zero"])
+    BFloat -> member `elem` (numberBundle ++ ["eq", "div", "fromFloat", "zero"])
     BString -> member `elem` ["append", "compare", "eq"]
     BChar -> member `elem` ["compare", "eq"]
     BList -> member `elem` ["append", "compare", "eq"]

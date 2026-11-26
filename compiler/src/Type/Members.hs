@@ -38,11 +38,13 @@ module Type.Members
   , sweep
   , leftovers
   , merge
+  , ownersOf
   )
   where
 
 
-import Control.Monad (foldM, forM_)
+import Control.Monad (filterM, foldM, forM_)
+import qualified Data.List as List
 import Data.IORef (IORef, writeIORef)
 import qualified Data.Map.Strict as Map
 
@@ -283,8 +285,30 @@ relaxedUse =
 -- that has no well known member (an ordinary Elm mistake keeps Elm's message).
 notesFor :: Table -> ET.Type -> ET.Type -> [String]
 notesFor table actual expected =
-  notes actual expected ++ notes expected actual
+  notes actual expected ++ notes expected actual ++ comparableNotes
   where
+    -- (A5c, L6) an annotated variable where a `comparable` is needed, in a module that sees types with attached functions
+    -- (never in an Elm program, which keeps Elm's text): it can also say that it has `compare`
+    comparableNotes =
+      if Map.null table then [] else
+        take 1
+          [ "Or keep `" ++ v ++ "` and say that it can be compared: add `where " ++ v ++ " has compare : " ++ v ++ " -> " ++ v
+            ++ " -> Order` under the type annotation."
+          | (a, b) <- pairs actual expected ++ pairs expected actual
+          , ET.RigidVar var <- [strip a]
+          , ET.FlexSuper ET.Comparable _ <- [strip b]
+          , let v = TV.varToChars var
+          ]
+
+    pairs a b =
+      (a, b) :
+        case (strip a, strip b) of
+          (ET.Lambda a1 a2 as, ET.Lambda b1 b2 bs) | length as == length bs -> concat (zipWith pairs (a1 : a2 : as) (b1 : b2 : bs))
+          (ET.Type _ _ as, ET.Type _ _ bs) | length as == length bs -> concat (zipWith pairs as bs)
+          (ET.Pair a1 a2, ET.Pair b1 b2) -> pairs a1 b1 ++ pairs a2 b2
+          (ET.Triple a1 a2 a3, ET.Triple b1 b2 b3) -> pairs a1 b1 ++ pairs a2 b2 ++ pairs a3 b3
+          _ -> []
+
     notes a b =
       case (strip a, strip b) of
         (ET.Type home name _, ET.FlexSuper super _) | Just (shown, _, have) <- membersOf home name ->
@@ -295,7 +319,7 @@ notesFor table actual expected =
           if null missing || null have
             then []
             else
-              [ "`" ++ shown ++ "` can be used as a `" ++ what ++ "` when it defines all the members of `" ++ what ++ "` ("
+              [ "`" ++ shown ++ "` can be used as a `" ++ what ++ "` when it has all the attached functions of `" ++ what ++ "` ("
                 ++ commas required ++ ") with the types the language needs. It is missing: " ++ commas missing ++ "." ]
 
         (ET.Type home name _, ET.Type ohome oname _) | isIntOrFloat ohome oname, Just (shown, _, have) <- membersOf home name, all (`elem` have) WK.numberBundle ->
@@ -492,7 +516,7 @@ resolve tools table env obligation@(Obligation region function member subject ti
     -- (A3) a built-in type has the well known members its type allows; the parts of a list or a tuple must have
     -- `compare` too
     builtin kind tname parts =
-      case WK.shapeOf (N.toChars member) of
+      case WK.builtinShapeOf (N.toChars member) of
         Just shape | WK.builtinHas kind (N.toChars member) ->
           shaped shape tname (if WK.builtinChildren kind (N.toChars member) then parts else [])
 
@@ -565,8 +589,8 @@ resolve tools table env obligation@(Obligation region function member subject ti
 --   * a top level definition: a pending obligation about a variable that would be generalized is an error.
 --     When the variable occurs in the type of the definition it is MISSING CONSTRAINT, with the type
 --     annotation to write; otherwise UNKNOWN MEMBER TYPE.
-hold :: Int -> Int -> Map.Map N.Name (A.Located Variable) -> [Obligation] -> IO ([Obligation], [Error.Error])
-hold outer young header pending
+hold :: Table -> Bool -> Int -> Int -> Map.Map N.Name (A.Located Variable) -> [Obligation] -> IO ([Obligation], [Error.Error])
+hold table isValue outer young header pending
   | null pending = return ([], [])
   | outer > outermostRank =
       do  forM_ pending $ \(Obligation _ _ _ subject tipe _) ->
@@ -596,9 +620,59 @@ hold outer young header pending
       nameTogether (concat [ [subject, tipe] | Obligation _ _ _ subject tipe _ <- bad ] ++ map A.toValue (Map.elems header)) >>
       report' bad
 
-    report' bad =
+    -- (A5c) a function (or a recursive group of them) never reaches here with a requirement its type determines (it went
+    -- into the scheme): what is left is undetermined, AMBIGUOUS TYPE, with a note when some names of a group determine it
+    -- (review M2).  A value (the monomorphism restriction): a requirement on the value's whole type is AMBIGUOUS TYPE with
+    -- an example annotation; one the value's type shows otherwise is INCOMPLETE TYPE ANNOTATION with the annotation to write.
+    report' bad
+      | not isValue =
+          do  pairs <- traverse (unknown Nothing) bad
+              -- one error per use (merge), then the note of the group
+              traverse (\err -> maybe (return err) (\o -> groupNote (o, err)) (List.find (\o -> Just (_region o) == regionOf err) bad))
+                (merge (map snd pairs))
+      | otherwise =
+          case Map.toList header of
+            [] -> map snd <$> traverse (unknown Nothing) bad
+            (name, A.At _ defVar) : _ ->
+              do  whole <- filterM (\o -> UF.equivalent (_subject o) defVar) bad
+                  let others = [ o | o <- bad, not (any (sameObligation o) whole) ]
+                  wholeErrors <- traverse (unknown (Just name)) whole
+                  otherErrors <- report'' others
+                  return (map snd wholeErrors ++ otherErrors)
+
+    regionOf err =
+      case err of
+        Error.UnknownMemberType r _ _ _ _ _ -> Just r
+        _ -> Nothing
+
+    sameObligation a b =
+      _region a == _region b && _member a == _member b && _function a == _function b
+
+    groupNote (o, err) =
       case Map.toList header of
-        [] -> traverse unknown bad
+        _ : _ : _ ->
+          do  vars <- (++) <$> flexVariables (_subject o) <*> flexVariables (_type o)
+              byName <- traverse (\(n, A.At _ v) -> do { vs <- flexVariables v; m <- anyM (\x -> anyM (UF.equivalent x) vs) vars; return (n, m) }) (Map.toList header)
+              let yes = [ n | (n, True) <- byName ]
+              let no = [ n | (n, False) <- byName ]
+              return $
+                if null yes || null no then err else
+                  Error.WithNotes err
+                    [ names (map fst byName) ++ " call each other, so I check them as one group, and a call inside the group\
+                      \ has the type of the definition it calls (as in Elm). The type needed here is part of the type of "
+                      ++ names yes ++ ", but not of " ++ names no ++ ", so no use of " ++ names no ++ " could settle it."
+                    ]
+        _ ->
+          return err
+
+    names ns =
+      case map (\n -> "`" ++ Members.displayName n ++ "`") ns of
+        [one] -> one
+        quoted -> List.intercalate ", " (init quoted) ++ " and " ++ last quoted
+
+    report'' bad =
+      case Map.toList header of
+        [] -> map snd <$> traverse (unknown Nothing) bad
         (name, A.At region defVar) : _ ->
           do  defVars <- flexVariables defVar
               -- only an obligation whose variables are all variables of the type of the definition can be written as a constraint
@@ -613,8 +687,8 @@ hold outer young header pending
                     do  defType <- Type.toErrorType defVar      -- first: it names the variables that the constraints then use
                         groups <- traverse describe shown
                         return [Error.MissingSignature region function name defType (group groups)]
-              others <- traverse unknown hidden
-              return (missing ++ others)
+              others <- traverse (unknown Nothing) hidden
+              return (missing ++ map snd others)
 
     describe (Obligation _ _ member subject tipe _) =
       do  subjectType <- Type.toErrorType subject
@@ -630,10 +704,10 @@ hold outer young header pending
                 Just _ -> [ if v == var then (v, es ++ [entry]) else (v, es) | (v, es) <- acc ]
                 Nothing -> acc ++ [(var, [entry])]) [] items
 
-    unknown (Obligation region function member subject tipe _) =
+    unknown valueName o@(Obligation region function member subject tipe _) =
       do  (Descriptor content _ _ _) <- UF.get subject
           t <- Type.toErrorType tipe
-          return (Error.UnknownMemberType region function (kindOf content) [(member, t)])
+          return (o, Error.UnknownMemberType region function (kindOf content) [(member, t)] (ownersOf table [member]) valueName)
 
     allM p xs =
       case xs of
@@ -685,8 +759,10 @@ flexVariables start =
 
 -- | after a generalization: an obligation whose subject was generalized can never be discharged.  Only a
 -- rigid subject is left here (the signature does not give the constraint): `hold` reported the flexible ones.
-sweep :: [Obligation] -> IO ([Obligation], [Error.Error])
-sweep pending =
+-- (A5c) `typed`: the annotated definitions of the generalization (name, type, `where` lines, at the top level?), so that
+-- INCOMPLETE TYPE ANNOTATION can show the annotation with the line to add
+sweep :: Table -> [(N.Name, Variable, [(String, N.Name)], Bool)] -> [Obligation] -> IO ([Obligation], [Error.Error])
+sweep table typed pending =
   foldM check ([], []) (reverse pending)
   where
     check (kept, errors) obligation@(Obligation region function member subject tipe _) =
@@ -695,23 +771,75 @@ sweep pending =
             then return (obligation : kept, errors)
             else
               do  neededType <- Type.toErrorType tipe
-                  return $ (,) kept $
+                  let missing name =
+                        do  annotated <- annotationOf (TV.varToChars name)
+                            return (Error.MissingConstraint region function (TV.varToChars name) [(member, neededType)] annotated (ownersOf table [member]) : errors)
+                  (,) kept <$>
                     case content of
-                      RigidVar name -> Error.MissingConstraint region function (TV.varToChars name) [(member, neededType)] : errors
-                      RigidSuper _ name -> Error.MissingConstraint region function (TV.varToChars name) [(member, neededType)] : errors
-                      Error -> errors
-                      _ -> Error.UnknownMemberType region function (kindOf content) [(member, neededType)] : errors
+                      RigidVar name -> missing name
+                      RigidSuper _ name -> missing name
+                      Error -> return errors
+                      _ -> return (Error.UnknownMemberType region function (kindOf content) [(member, neededType)] (ownersOf table [member]) Nothing : errors)
+
+    annotationOf var =
+      firstJust typed $ \(name, defVar, wheres, topLevel) ->
+        do  full <- Type.toErrorType defVar
+            let (whereTypes, real) = splitArgs (length wheres) full
+            return $
+              if mentions var real
+                then Just (Error.Annotated name real [ (v, m, t) | ((v, m), t) <- zip wheres whereTypes ] topLevel)
+                else Nothing
+
+    firstJust xs f =
+      case xs of
+        [] -> return Nothing
+        x : rest -> f x >>= maybe (firstJust rest f) (return . Just)
+
+
+-- | (A5c) the first `n` arguments of a function type (the `where` lines of a constrained definition) and the rest
+splitArgs :: Int -> ET.Type -> ([ET.Type], ET.Type)
+splitArgs n tipe =
+  case tipe of
+    ET.Lambda a b rest | n > 0 ->
+      let (args, real) = splitArgs (n - 1) (case rest of { [] -> b; c : cs -> ET.Lambda b c cs }) in (a : args, real)
+    _ -> ([], tipe)
+
+
+-- | (A5c) does a type mention the type variable `var`?
+mentions :: String -> ET.Type -> Bool
+mentions var tipe =
+  case tipe of
+    ET.Lambda a b rest -> any (mentions var) (a : b : rest)
+    ET.FlexVar v -> TV.varToChars v == var
+    ET.FlexSuper _ v -> TV.varToChars v == var
+    ET.RigidVar v -> TV.varToChars v == var
+    ET.RigidSuper _ v -> TV.varToChars v == var
+    ET.Type _ _ args -> any (mentions var) args
+    ET.Record fields _ -> any (mentions var) (Map.elems fields)
+    ET.Pair a b -> mentions var a || mentions var b
+    ET.Triple a b c -> any (mentions var) [a, b, c]
+    ET.Alias _ _ args real -> any (mentions var . snd) args || mentions var real
+    _ -> False
+
+
+-- | (A5c) the custom types in sight that have all these members, by their names (for the messages)
+ownersOf :: Table -> [N.Name] -> [String]
+ownersOf table members =
+  List.sort [ shortName tid | (tid, ms) <- Map.toList table, ':' `elem` tid, all (`Map.member` ms) members ]
+  where
+    shortName tid = reverse (takeWhile (/= '.') (reverse tid))
+
 
 
 -- | at the end of the module
-leftovers :: [Obligation] -> IO [Error.Error]
-leftovers pending =
+leftovers :: Table -> [Obligation] -> IO [Error.Error]
+leftovers table pending =
   traverse leftover pending
   where
     leftover (Obligation region function member subject tipe _) =
       do  (Descriptor content _ _ _) <- UF.get subject
           t <- Type.toErrorType tipe
-          return (Error.UnknownMemberType region function (kindOf content) [(member, t)])
+          return (Error.UnknownMemberType region function (kindOf content) [(member, t)] (ownersOf table [member]) Nothing)
 
 
 -- the kind of a variable of Elm's own (`number`, `comparable`, ...)
@@ -745,10 +873,10 @@ merge errors =
       case err of
         Error.NoMember r f t ms b needed | Just rest <- pick (\e -> case e of { Error.NoMember r2 _ _ _ _ n | r2 == r -> Just n; _ -> Nothing }) acc ->
           place (Error.NoMember r f t ms b (fst rest ++ needed)) (snd rest)
-        Error.MissingConstraint r f v needed | Just rest <- pick (\e -> case e of { Error.MissingConstraint r2 _ v2 n | r2 == r && v2 == v -> Just n; _ -> Nothing }) acc ->
-          place (Error.MissingConstraint r f v (fst rest ++ needed)) (snd rest)
-        Error.UnknownMemberType r f k needed | Just rest <- pick (\e -> case e of { Error.UnknownMemberType r2 _ _ n | r2 == r -> Just n; _ -> Nothing }) acc ->
-          place (Error.UnknownMemberType r f k (fst rest ++ needed)) (snd rest)
+        Error.MissingConstraint r f v needed ann owners | Just rest <- pick (\e -> case e of { Error.MissingConstraint r2 _ v2 n _ o | r2 == r && v2 == v -> Just (n, o); _ -> Nothing }) acc ->
+          place (Error.MissingConstraint r f v (fst (fst rest) ++ needed) ann (List.intersect (snd (fst rest)) owners)) (snd rest)
+        Error.UnknownMemberType r f k needed owners vn | Just rest <- pick (\e -> case e of { Error.UnknownMemberType r2 _ _ n o _ | r2 == r -> Just (n, o); _ -> Nothing }) acc ->
+          place (Error.UnknownMemberType r f k (fst (fst rest) ++ needed) (List.intersect (snd (fst rest)) owners) vn) (snd rest)
         _ ->
           acc ++ [err]
 

@@ -82,7 +82,7 @@ CASES_NEW = [
      ("REJECT", "NAMING ERROR", "I cannot find a `scale` variable"), None),
     ("a5b-poly-member", "D9 (rule 1): the polymorphic member pick used bare at Int and String in one inferred function: one type per name",
      {"Main.elm": main_of(blocks(B3_TYPES, "both q =\n    ( pick q 1, pick q \"s\" )"), "both (Q 1)")},
-     ("REJECTC", "MEMBER TYPE MISMATCH", "pick"), None),
+     ("REJECTC", "ATTACHED FUNCTION MISMATCH", "pick"), None),
     # ---- names that are not selectors
     ("a5b-typo", "a misspelled name (ad for add) is still a NAMING ERROR",
      {"Main.elm": main_of(blocks(TYPES, "total xs =\n    List.foldl ad zero xs"), "total [ Money 1 ]")},
@@ -131,15 +131,15 @@ CASES_NEW = [
     # ---- JavaScript
     ("a5b-js-refused", "the JavaScript output refuses a selector like a constrained function",
      {"Main.elm": main_of(blocks(TYPES, "two : Money\ntwo =\n    add (Money 1) (Money 1)"), "two")},
-     ("REJECT", "CONSTRAINED FUNCTIONS", "the attached function `add` by its bare name"), None),
+     ("REJECT", "NOT AVAILABLE IN JAVASCRIPT YET", "the attached function `add` by its bare name"), None),
 ]
 
 
 # the G71 cases whose outcome changes in A5b: id -> (row, twin)
 CASES_CONVERTED = {
     "g71-q1-nosig-bare-member": (RUN, ("oldc", {"Main.elm": None, "edit": [("\ntotal xs =", "\n" + TOTAL_SIG.split("\ntotal xs =")[0] + "\ntotal xs =")]})),
-    "g71-q2-missing-all": (("REJECTC", "MISSING CONSTRAINT", "a has add : a -> a -> a"), None),
-    "g71-q2-missing-one": (("REJECTC", "MISSING CONSTRAINT", "a has zero : a"), None),
+    "g71-q2-missing-all": (("REJECTC", "INCOMPLETE TYPE ANNOTATION", "a has add : a -> a -> a"), None),
+    "g71-q2-missing-one": (("REJECTC", "INCOMPLETE TYPE ANNOTATION", "a has zero : a"), None),
 }
 
 

@@ -10,6 +10,7 @@ module Reporting.Annotation
   , at
   , toRowCol
   , toEditorRowCol
+  , startLine
   , toRow
   , toCol
   , toRegion
@@ -95,6 +96,12 @@ toEditorRowCol pos =
   ( fromIntegral (toRow pos) + 1
   , fromIntegral (toCol pos) + 1
   )
+
+
+-- | Ficcus (A5c): the line (from 1) where a region starts, for messages that point at another place in words
+startLine :: Region -> Int
+startLine (Region start _) =
+  fst (toEditorRowCol start)
 
 
 {-# INLINE toRow #-}

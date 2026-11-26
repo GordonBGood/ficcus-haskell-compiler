@@ -2005,8 +2005,8 @@ toTypeAliasReport source typeAlias startCur =
           ,
             D.stack
               [ D.reflow $
-                  "A type alias is only another name for an existing type, so it cannot carry\
-                  \ members of its own. Two names for one type would have to share one set of members."
+                  "A type alias is only another name for an existing type, so it cannot have attached\
+                  \ functions of its own. Two names for one type would have to share one set of them."
               , D.reflow $
                   "If you want a type with its own functions, wrap the type in a custom type:"
               , D.indent 4 $ D.vcat
@@ -2236,7 +2236,7 @@ toCustomTypeReport source customType startCur =
           ,
             D.stack
               [ D.reflow $
-                  "I just saw the word `where`, so I was expecting to see the members of the type\
+                  "I just saw the word `where`, so I was expecting to see the attached functions of the type\
                   \ next: functions and values, indented under the type and lined up with each other."
               , D.indent 4 $ D.vcat
                   [ D.fillSep [D.cyan "type","Money","=","Money","Int"]
@@ -2252,12 +2252,12 @@ toCustomTypeReport source customType startCur =
 
     CT_Derive cur ->
       deriveReport source startCur cur $ D.reflow
-        "I was expecting the name of a member next: after `derive` and after each comma comes a\
-        \ member name in lower case, such as `compare` or `toString`."
+        "I was expecting the name of a function next: after `derive` and after each comma comes the\
+        \ name of an attached function in lower case, such as `compare` or `toString`."
 
     CT_DeriveComma cur ->
       deriveReport source startCur cur $ D.reflow
-        "I was expecting a comma here, or the end of the line: the members of a `derive` line are\
+        "I was expecting a comma here, or the end of the line: the names of a `derive` line are\
         \ separated by commas."
 
 
@@ -2283,7 +2283,7 @@ deriveReport source startCur cur message =
               ]
           , D.reflow $
               "The word `derive` starts such a line only in the `where` block of a type; the line lists\
-              \ the members the compiler writes for the type."
+              \ the attached functions the compiler writes for the type."
           ]
       )
 
@@ -2327,7 +2327,7 @@ constraintReport source name startCur cur title =
       ,
         D.stack
           [ D.reflow $
-              "I was expecting a constraint: a type variable, the word `has`, the name of the member that the type must have (optionally `as` and another name to use for it here), a colon and the type of the member. The constraints are aligned, one per line, like this:"
+              "I was expecting a line that says what attached function a type variable has: the variable, the word `has`, the name of the function (optionally `as` and another name to use for it here), a colon and the type of the function. The lines are aligned, one per line, like this:"
           , D.indent 4 $ D.vcat
               [ "sum : List a -> a"
               , D.indent 4 $ D.cyan "where"
@@ -2506,10 +2506,10 @@ toDeclDefReport source name declDef startCur =
           )
 
     DeclDefConstraint cur ->
-      constraintReport source name startCur cur "PROBLEM IN CONSTRAINT"
+      constraintReport source name startCur cur "PROBLEM IN WHERE"
 
     DeclDefIndentConstraint cur ->
-      constraintReport source name startCur cur "UNFINISHED CONSTRAINTS"
+      constraintReport source name startCur cur "UNFINISHED WHERE"
 
     DeclDefIndentType cur ->
       let
@@ -3700,15 +3700,15 @@ toLetDefReport source name def startCur =
         surroundings = A.Region startCur cur
         region = toRegion cur
       in
-      Report.Report "CONSTRAINTS ON A LOCAL DEFINITION" region [] $
+      Report.Report "WHERE ON A LOCAL DEFINITION" region [] $
         Code.toSnippet source surroundings (Just region)
           (
             D.reflow $
               "The type annotation of `" ++ N.toChars name ++ "` is in a `let`, but I got stuck at this `where`:"
           ,
             D.reflow $
-              "Only a top-level definition (or a member in the `where` block of a type) can have\
-              \ constraints on its type variables. Move `" ++ N.toChars name ++ "` to the top level to give it a `where` block."
+              "Remove it: I work out the `where` lines of `let` definitions myself. (If `" ++ N.toChars name
+              ++ "` has a type annotation, remove the type variables that need attached functions from it too, or the whole annotation.)"
           )
 
     DefIndentType cur ->

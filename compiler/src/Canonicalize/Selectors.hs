@@ -20,6 +20,7 @@
 module Canonicalize.Selectors
   ( register
   , dealias
+  , notSelector
   )
   where
 
@@ -73,10 +74,35 @@ register env@(Env.Env home vs ts cs bs qvs qts qcs) values =
         byMember = Map.fromListWith (++) [ (N.toChars (_member c), [c]) | c <- candidates ]
         selectors = Map.mapMaybeWithKey selectorOf byMember
         vs2 = Map.foldrWithKey (\m annotation acc -> Map.insert (Selectors.selectorKey (name m)) (Env.Foreign Selectors.attachedHome annotation) acc) vs selectors
+        -- (A5c) the names whose shapes do not line up, with the types that have them, for the NAMING ERROR
+        failed = Map.difference byMember selectors
+        vs3 = Map.foldrWithKey (\m owners acc -> Map.insert (ownersKey (name m)) (Env.Foreign Selectors.attachedHome (ownersAnnotation owners)) acc) vs2 failed
       in
-      Env.Env home vs2 ts cs bs qvs qts qcs
+      Env.Env home vs3 ts cs bs qvs qts qcs
   where
     name = N.fromString . S.fromChars
+
+
+-- | (A5c) a name of an attached function of several candidate types whose types do not line up (so it is not a selector):
+-- the names of those types, for the NAMING ERROR.  Nothing for any other name (every name of an Elm program).
+notSelector :: Env.Env -> N.Name -> Maybe [String]
+notSelector (Env.Env _ vs _ _ _ _ _ _) member =
+  case Map.lookup (ownersKey member) vs of
+    Just (Env.Foreign _ (Can.Forall _ (Can.TType _ _ owners))) -> Just [ T.nameToChars n | Can.TType _ n _ <- owners ]
+    _ -> Nothing
+
+
+-- `scale$owners`, a key no program can write
+ownersKey :: N.Name -> N.Name
+ownersKey member =
+  N.fromString (S.fromChars (N.toChars member ++ "$owners"))
+
+
+ownersAnnotation :: [Candidate] -> Can.Annotation
+ownersAnnotation candidates =
+  Can.Forall Map.empty $
+    Can.TType Selectors.attachedHome (T.nameFromString (S.fromChars "$owners"))
+      [ Can.TType h (T.nameFromString (S.fromChars t)) [] | (h, t) <- List.nub (List.sort (map _owner candidates)) ]
 
 
 -- the members of the types of this module that have a type annotation (a member without one is an error of its own)

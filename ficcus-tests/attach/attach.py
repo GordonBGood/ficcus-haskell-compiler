@@ -131,6 +131,19 @@ def one(case, elm, home, want):
         else: print("KEEP=1: %s kept" % work)
 
 
+def first_paragraph(out):
+    """the title line and the first paragraph after it of the first report in a compiler output"""
+    lines = out.splitlines()
+    for k, line in enumerate(lines):
+        if TITLE_RE.match(line):
+            para, started = [line], False
+            for rest in lines[k + 1:]:
+                if rest.strip(): para.append(rest); started = True
+                elif started: break
+            return "\n".join(para)
+    return out.strip()[-300:]
+
+
 KEEP = bool(os.environ.get("KEEP"))       # KEEP=1: the private ELM_HOME and the work directories of the cases stay, for a look at a failure
 
 
@@ -139,6 +152,7 @@ def main():
     ap.add_argument("--elm", required=True); ap.add_argument("--only"); ap.add_argument("-j", type=int, default=2)
     ap.add_argument("--rc", action="store_true", help="also build every C RUN case counted (--rc) under ASan+UBSan with FIC_STATS: same output, 0 live")
     ap.add_argument("-v", action="store_true", help="show the compiler output of failing cases")
+    ap.add_argument("--print-reports", action="store_true", help="(A5c) print the title and the first paragraph of the report of every REJECT case")
     a = ap.parse_args()
     global RC_SAN
     RC_SAN = a.rc
@@ -166,6 +180,8 @@ def main():
                 if not ok:
                     bad += 1
                     if a.v: print("      " + out.strip().replace("\n", "\n      ")[:1500])
+                if a.print_reports and table[i][0].startswith("REJECT"):
+                    print("      " + first_paragraph(out).replace("\n", "\n      "))
     finally:
         if not KEEP: shutil.rmtree(home, ignore_errors=True)
         else: print("KEEP=1: %s kept" % home)

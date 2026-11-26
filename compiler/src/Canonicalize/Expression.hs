@@ -14,6 +14,7 @@ module Canonicalize.Expression
 import Control.Monad (foldM)
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import qualified Data.Maybe as Maybe
 import GHC.Prim
 import GHC.ST (ST(ST), runST)
@@ -34,6 +35,7 @@ import qualified Canonicalize.Environment.Dups as Dups
 import qualified Canonicalize.Constraints as Constraints
 import qualified Canonicalize.Members as Members
 import qualified Canonicalize.Pattern as Pattern
+import qualified Canonicalize.Selectors as CSelectors
 import qualified Canonicalize.Type as Type
 import qualified Data.Index as Index
 import qualified Elm.ModuleName as ModuleName
@@ -761,9 +763,14 @@ findVar region (Env.Env localHome vs _ _ _ qvs _ _) name =
 -- | Ficcus (A5b, docs/A5-INFERENCE-DESIGN.md section 2): a name that Elm's lookup does not find (Elm reports NAMING
 -- ERROR) is the selector of that name when the module has one (Canonicalize.Selectors); any binding wins over it
 findVarOrSelector :: A.Region -> Env.Env -> N.Name -> Result FreeLocals w Can.Expr_
-findVarOrSelector region env@(Env.Env _ vs _ _ _ _ _ _) name =
+findVarOrSelector region env@(Env.Env _ vs _ _ _ qvs _ _) name =
   case (Map.member name vs, Map.lookup (Selectors.selectorKey name) vs) of
     (False, Just (Env.Foreign home annotation)) -> Result.ok (Can.VarForeign home name annotation)
+    -- (A5c) an attached function of several types whose types do not line up
+    (False, _) ->
+      case CSelectors.notSelector env name of
+        Just owners -> Result.throw (Error.NotFoundAttached region name owners (toPossibleNames vs qvs))
+        Nothing -> findVar region env name
     _ -> findVar region env name
 
 
@@ -812,11 +819,19 @@ findVarQualModule region (Env.Env localHome vs _ _ _ qvs _ _) prefix name =
       else Result.throw $ Error.NotFoundVar region (Just prefix) name (toPossibleNames vs qvs)
 
 
+stripSuffix :: String -> String -> Maybe String
+stripSuffix suffix chars =
+  fmap reverse (List.stripPrefix (reverse suffix) (reverse chars))
+
+
 toPossibleNames :: Map.Map N.Name Env.Var -> Env.Qualified N.Name Can.Annotation -> Error.PossibleNames N.Name
 toPossibleNames exposed qualified =
   -- Ficcus (ATTACH A1): the mangled names of members and the keys of their types are not names a program can write
   Error.PossibleNames
-    (Map.keysSet (Map.filterWithKey (\n _ -> not ('$' `elem` N.toChars n)) exposed))
+    (Set.union
+      (Map.keysSet (Map.filterWithKey (\n _ -> not ('$' `elem` N.toChars n)) exposed))
+      -- (A5c) the selectors in scope (`add$selector`): bare attached function names
+      (Set.fromList [ N.fromString (S.fromChars m) | n <- Map.keys exposed, Just m <- [stripSuffix "$selector" (N.toChars n)] ]))
     (Map.map Map.keysSet (Map.filterWithKey (\p _ -> not ('$' `elem` Module.prefixToChars p)) qualified))
 
 

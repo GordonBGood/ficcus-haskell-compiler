@@ -222,8 +222,12 @@ checkForConstraints (Objects (Opt.GlobalGraph foreignNodes _) locals) =
       -- Ficcus (A5a, D6): an inferred `where`
       | Constraints.splitInferredMarker name /= Nothing =
           let def = maybe name id (Constraints.splitInferredMarker name) in
-          Module.toChars home ++ "." ++ Members.displayName def ++ " (no type annotation: give it one with concrete types, such as `"
-            ++ Members.displayName def ++ " : Float -> Float`, to compile it to JavaScript)"
+          Module.toChars home ++ "." ++ Members.displayName def ++ " (no type annotation: "
+            ++ (case Constraints.inferredSuggestion name of
+                  -- (A5c, review B3) the type the solver would default it to
+                  Just text -> "give it one such as `" ++ Members.displayName def ++ " : " ++ text ++ "`"
+                  Nothing -> "give it one that names the types it is used at")
+            ++ " to compile it to JavaScript)"
       | otherwise = Module.toChars home ++ "." ++ Members.displayName name
 
 

@@ -1981,17 +1981,17 @@ toGenerateReport problem =
       corruptCacheReport
 
     GenerateConstrainedFunctions names ->
-      Help.report "CONSTRAINED FUNCTIONS" Nothing
-        "This program has functions whose type annotation has a `where` block of constraints, or uses operators on its own types:"
+      Help.report "NOT AVAILABLE IN JAVASCRIPT YET" Nothing
+        "This program uses attached functions in ways that I cannot compile to JavaScript yet:"
         [ D.indent 4 $ D.red $ D.vcat $ map D.fromChars names
         , D.reflow
-            "They are not supported in the JavaScript output yet: the member functions that such a\
-            \ function (or an operator such as `+`, `<` or `==` on a custom type that defines `add`,\
-            \ `compare` or `eq`) needs would have to be passed to it when the program runs, and how the\
-            \ JavaScript output does that is not decided."
+            "A function with `where` lines (written in its type annotation, or worked out by me), a bare attached\
+            \ function name, and an operator such as `+`, `<` or `==` on a custom type that has `add`, `compare` or\
+            \ `eq` all need the attached functions of the types they are used at. The JavaScript output would have\
+            \ to pass those along when the program runs, and how it does that is not decided yet."
         , D.reflow
-            "The C output supports them (every use is compiled for its own types, so the members are\
-            \ called directly). Compile with an output file that ends in `.c`:"
+            "The C output compiles every use for its own types, so it calls the attached functions directly.\
+            \ Compile with an output file that ends in `.c`:"
         , D.indent 4 $ D.green "elm make src/Main.elm --output=main.c"
         ]
 
@@ -2000,7 +2000,7 @@ toGenerateReport problem =
         "This program has types with a `derive` line:"
         [ D.indent 4 $ D.red $ D.vcat $ map D.fromChars types
         , D.reflow
-            "The JavaScript output does not support derived members yet. Compile with an output file\
+            "The JavaScript output does not support derived attached functions yet. Compile with an output file\
             \ that ends in `.c`:"
         , D.indent 4 $ D.green "elm make src/Main.elm --output=main.c"
         ]

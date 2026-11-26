@@ -17,7 +17,13 @@ import qualified AST.Optimized as Opt
 import qualified AST.Canonical as Can
 import qualified AST.Selectors as Selectors
 import qualified AST.Prim.Name as N
+import qualified AST.Prim.TypeName as T
+import qualified AST.Prim.TypeVar as TV
+import qualified AST.WellKnown as WK
 import qualified Elm.ModuleName as ModuleName
+import qualified Reporting.Doc as D
+import qualified Reporting.Render.Type as RT
+import qualified Reporting.Render.Type.Localizer as L
 
 
 
@@ -67,8 +73,8 @@ constrainedNodes nodes =
 -- is `Constraints.isInferred`) gets a marker node `name$inferred`, a dependency of its own node so that it is in the
 -- graph of every program that uses it; the JavaScript output refuses the marker like a constrained function and
 -- suggests a type annotation
-markInferred :: ModuleName.Canonical -> Map.Map N.Name Can.Annotation -> Opt.LocalGraph -> Opt.LocalGraph
-markInferred home annotations graph@(Opt.LocalGraph main nodes fields) =
+markInferred :: L.Localizer -> ModuleName.Canonical -> Map.Map N.Name Can.Annotation -> Opt.LocalGraph -> Opt.LocalGraph
+markInferred localizer home annotations graph@(Opt.LocalGraph main nodes fields) =
   case [ name | (name, Can.Forall _ tipe) <- Map.toList annotations, Constraints.isInferred tipe ] of
     [] -> graph
     inferred ->
@@ -77,7 +83,7 @@ markInferred home annotations graph@(Opt.LocalGraph main nodes fields) =
     mark name acc =
       let
         global = Opt.Global home name
-        marker = Opt.Global home (Constraints.inferredMarker name)
+        marker = Opt.Global home (Constraints.inferredMarkerWith name (Map.lookup name annotations >>= suggestion localizer))
       in
       Map.insert marker (Opt.Define Opt.Unit Set.empty) (Map.adjust (addDep marker) global acc)
 
@@ -109,3 +115,39 @@ markSelectors graph@(Opt.LocalGraph main nodes fields) =
           Opt.PortIncoming _ deps -> deps
           Opt.PortOutgoing _ deps -> deps
           _ -> Set.empty
+
+
+
+-- | (A5c, review B3) the type annotation the JavaScript refusal suggests for an inferred constrained definition: its type
+-- with every requirement's subject defaulted as the solver defaults a top level value (D3: Float when `div` or `fromFloat`
+-- is required, else Int, if that type has every required member).  Nothing when a subject cannot be defaulted: the
+-- refusal then says it in words.
+suggestion :: L.Localizer -> Can.Annotation -> Maybe String
+suggestion localizer (Can.Forall _ tipe) =
+  do  (real, required) <- Constraints.unwrap tipe
+      subjects <- traverse subjectOf required
+      let groups = Map.fromListWith (++) [ (v, [N.toChars m]) | (v, Constraints.Required m _ _) <- zip subjects required ]
+      defaults <- traverse defaultOf groups
+      return (D.toLine (RT.canToDoc localizer RT.None (substitute defaults real)))
+  where
+    subjectOf (Constraints.Required _ subject _) =
+      case subject of
+        Can.TVar v -> Just (TV.varToChars v)
+        _ -> Nothing
+
+    defaultOf members =
+      let order = if any (`elem` ["div", "fromFloat"]) members then [(WK.BFloat, T.float), (WK.BInt, T.int)] else [(WK.BInt, T.int), (WK.BFloat, T.float)] in
+      case [ t | (k, t) <- order, all (WK.builtinHas k) members ] of
+        t : _ -> Just (Can.TType ModuleName.basics t [])
+        [] -> Nothing
+
+    substitute defaults t =
+      case t of
+        Can.TVar v -> Map.findWithDefault t (TV.varToChars v) defaults
+        Can.TLambda a b -> Can.TLambda (substitute defaults a) (substitute defaults b)
+        Can.TType h n args -> Can.TType h n (map (substitute defaults) args)
+        Can.TRecord fields ext -> Can.TRecord (Map.map (\(Can.FieldType i x) -> Can.FieldType i (substitute defaults x)) fields) ext
+        Can.TUnit -> t
+        Can.TPair a b -> Can.TPair (substitute defaults a) (substitute defaults b)
+        Can.TTriple a b c -> Can.TTriple (substitute defaults a) (substitute defaults b) (substitute defaults c)
+        Can.TAlias h n args real -> Can.TAlias h n [ (v, substitute defaults x) | (v, x) <- args ] real

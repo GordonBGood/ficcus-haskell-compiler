@@ -18,6 +18,9 @@ import qualified Crash
 
 import qualified AST.Canonical as Can
 import qualified AST.Constraints as Constraints
+import qualified AST.Members as AstMembers
+import qualified Data.List as List
+import qualified AST.Selectors as Selectors
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.Operator as Op
 import qualified String as S
@@ -50,13 +53,13 @@ runWith table kinds constraint =
   do  pools <- MVector.replicate 8 []
 
       flag <- newIORef False
-      (State env _ errors0 _ pending _ _) <-
+      (State env _ errors0 _ pending _ _ _) <-
         solve Map.empty outermostRank pools (emptyState { _table = table, _flag = Just flag, _kinds = kinds }) constraint
 
       errors <-
         case pending of
           [] -> return errors0
-          _  -> (++ errors0) <$> Members.leftovers pending
+          _  -> (++ errors0) <$> Members.leftovers table pending
 
       case Members.merge errors of
         [] ->
@@ -74,7 +77,7 @@ runWith table kinds constraint =
 {-# NOINLINE emptyState #-}
 emptyState :: State
 emptyState =
-  State Map.empty (nextMark noMark) [] Members.emptyTable [] Nothing Map.empty
+  State Map.empty (nextMark noMark) [] Members.emptyTable [] Nothing Map.empty Map.empty
 
 
 
@@ -98,6 +101,7 @@ data State =
     , _pending :: [Members.Obligation]    -- the member obligations not yet discharged
     , _flag :: Maybe (IORef Bool)         -- Ficcus (ATTACH A3): set when a custom type took the place of a `number`, `comparable`, ... variable
     , _kinds :: Requirements.Kinds        -- Ficcus (A5a): functions, values and annotated definitions by the region of their name
+    , _mrValues :: Map.Map N.Name (N.Name, [N.Name])   -- Ficcus (A5c): a `let` value whose requirements the monomorphism restriction held (by its name, and by the top level definitions that hold it): its name and the functions it uses
     }
 
 
@@ -188,7 +192,9 @@ solve env rank pools state constraint =
           (actual, state1) <-
             if Constraints.isWrapped srcType
               then
-                do  (real, obligations) <- Members.use region name actual0
+                do  -- (A5c) a selector's requirement is named `m$selector` in the messages ("`zero` here")
+                    let useName = if Selectors.isAttachedHome home then Selectors.selectorKey name else name
+                    (real, obligations) <- Members.use region useName actual0
                     return (real, state0 { _pending = obligations ++ _pending state0 })
               else
                 return (actual0, state0)
@@ -282,7 +288,7 @@ solve env rank pools state constraint =
 
           -- run solver in next pool
           locals <- traverse (A.traverse (typeToVariable nextRank nextPools)) header
-          (State savedEnv mark0 errors table pending00 flag kinds) <-
+          (State savedEnv mark0 errors table pending00 flag kinds mrValues0) <-
             discharge env nextRank nextPools =<< solve env nextRank nextPools state headerCon
 
           -- (A5a) what the pending requirements become: held (determined from the context, or the monomorphism
@@ -337,8 +343,22 @@ solve env rank pools state constraint =
           (pending, memberErrors) <-
             case pendingHeld of
               [] -> return ([], settleErrors)
-              _  -> (\(kept, errs) -> (kept, errs ++ settleErrors)) <$> Members.sweep pendingHeld
-          let tempState = State savedEnv grayMark (memberErrors ++ cycles ++ escapes ++ errors) table pending flag kinds
+              _  ->
+                do  -- (A5c) the annotated definitions, for the text of INCOMPLETE TYPE ANNOTATION
+                    let typed = [ (name, var, wheres, rank == outermostRank)
+                                | (name, A.At region var) <- Map.toList locals
+                                , Just (Requirements.Typed wheres) <- [Map.lookup region kinds]
+                                ]
+                    (\(kept, errs) -> (kept, errs ++ settleErrors)) <$> Members.sweep table typed pendingHeld
+          -- (A5c) a `let` value whose requirements the monomorphism restriction held: the hint of a mismatch at its uses
+          let mrValues
+                | rank > outermostRank && Requirements.kindOfHeader kinds header == Requirements.Value && not (null pending00) =
+                    Map.union (Map.fromList [ (name, (name, List.nub [ Members._function o | o <- pending00 ])) | name <- Map.keys header ]) mrValues0
+                -- a top level definition with such a value inside: its calls get the hint too (the mismatch shows there)
+                | rank == outermostRank, (_, inner) : _ <- Map.toList (Map.difference mrValues0 (_mrValues state)) =
+                    Map.union (Map.fromList [ (name, inner) | name <- Map.keys header ]) mrValues0
+                | otherwise = mrValues0
+          let tempState = State savedEnv grayMark (memberErrors ++ cycles ++ escapes ++ errors) table pending flag kinds mrValues
           newState <- discharge newEnv rank nextPools =<< solve newEnv rank nextPools tempState subCon
 
           foldM occurs newState (Map.toList locals)
@@ -418,7 +438,34 @@ noted state actualType expectedType err =
 
 addError :: State -> Error.Error -> State
 addError state err =
-  state { _errors = err : _errors state }
+  state { _errors = mrNote state err : _errors state }
+
+
+-- (A5c) a mismatch at a use of a `let` value that the monomorphism restriction kept at one type (L2): say so
+mrNote :: State -> Error.Error -> Error.Error
+mrNote state err =
+  case err of
+    Error.BadExpr _ category _ expected
+      | Just used <- valueOf category expected, Just (name, functions) <- Map.lookup used (_mrValues state) ->
+          Error.WithNotes err
+            [ "`" ++ N.toChars name ++ "`" ++ (if name == used then "" else " in `" ++ N.toChars used ++ "`")
+              ++ " is a value, not a function, so I give it one type, and "
+              ++ (case functions of { f : _ -> "its use of `" ++ useName f ++ "`"; [] -> "what it uses" })
+              ++ " is settled by that type. Write what `" ++ N.toChars name ++ "` stands for at each place, or make `"
+              ++ N.toChars name ++ "` a function by giving it arguments: I work out a separate type for each use of a function."
+            ]
+    _ -> err
+  where
+    useName f =
+      let chars = N.toChars f in
+      maybe (AstMembers.displayName f) reverse (List.stripPrefix (reverse "$selector") (reverse chars))
+
+    valueOf category expected =
+      case (category, expected) of
+        (Error.Local n, _) -> Just n
+        (_, Error.FromContext _ (Error.CallArg (Error.FuncName n) _) _) -> Just n
+        (_, Error.FromContext _ (Error.CallArity (Error.FuncName n) _) _) -> Just n
+        _ -> Nothing
 
 
 -- Ficcus (ATTACH A3): the type of a use of a name or operator; `/`, `//`, `modBy` and `remainderBy` are typed `a -> a -> a` with an

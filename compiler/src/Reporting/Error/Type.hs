@@ -1,7 +1,9 @@
+{-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Reporting.Error.Type
   ( Error(..)
   , MemberOwner(..)
+  , Annotated(..)
   -- expectations
   , Expected(..)
   , Context(..)
@@ -52,12 +54,14 @@ data Error
   | Runaway A.Region Bool               -- unification does not terminate; True: an infinite type
   | HiddenCycle A.Region N.Name         -- a cyclic type among the variables of a definition, not in its own type
   -- Ficcus (ATTACH A2): the constrained function that was used, the member it needs
+  -- (A5c: the texts speak of attached functions and `has`, docs/A5-INFERENCE-DESIGN.md section 4.)  The function is the name
+  -- of the use: a function, an operator (`/`), `<Float literal>`, or a selector (`zero$selector`, a bare attached name).
   | NoMember A.Region N.Name T.Type [N.Name] Bool [(N.Name, T.Type)]   -- the type, the members it has, is it a built-in type, the members needed
   | BadMember A.Region N.Name N.Name MemberOwner T.Type T.Type    -- the type the member has, the type needed
   | MemberNeedsSignature A.Region N.Name N.Name String            -- the type whose member has no signature
-  | MissingConstraint A.Region N.Name String [(N.Name, T.Type)]   -- the type variable, the members needed
-  | MissingSignature A.Region N.Name N.Name T.Type [(String, [(N.Name, T.Type)])]   -- the function used, the definition without annotation, its type, the constraints by variable
-  | UnknownMemberType A.Region N.Name (Maybe String) [(N.Name, T.Type)]   -- the kind of the variable (number, comparable, ...), the members needed
+  | MissingConstraint A.Region N.Name String [(N.Name, T.Type)] (Maybe Annotated) [String]   -- the type variable, the members needed, the annotated definition, the types in sight that have them
+  | MissingSignature A.Region N.Name N.Name T.Type [(String, [(N.Name, T.Type)])]   -- (a value, the monomorphism restriction) the function used, the definition, its type, the requirements by variable
+  | UnknownMemberType A.Region N.Name (Maybe String) [(N.Name, T.Type)] [String] (Maybe N.Name)   -- the kind of the variable (number, comparable, ...), the members needed, the types in sight that have them, the value whose type it is
   -- Ficcus (ATTACH A3): a well known member (`add`, `compare`, ...) that has not the type the language needs
   | WellKnownShape A.Region String N.Name String        -- the type, the member, the type the member must have
   | WellKnownNoSignature A.Region String N.Name String  -- the same, for a member without a type annotation
@@ -66,7 +70,14 @@ data Error
 
 data MemberOwner
   = MemberOfType String         -- the member of a custom type
-  | MemberOfVariable String     -- the constraint of the enclosing signature on this type variable
+  | MemberOfVariable String     -- the `where` line of the enclosing signature on this type variable
+  | MemberOfOtherUse String A.Region   -- (A5c) another use in the same definition needs the member of this variable at another type
+
+
+-- | (A5c) the annotated definition whose `where` block lacks a line: its name, its type (without the `where` lines),
+-- the `where` lines it has, and whether it is at the top level
+data Annotated =
+  Annotated N.Name T.Type [(String, N.Name, T.Type)] Bool   -- True: at the top level (a `let` definition cannot have `where`)
 
 
 
@@ -214,131 +225,161 @@ toReport source localizer err =
       toRunawayReport source region isCycle
 
     NoMember region function tipe members builtin needed ->
-      Report.Report "NO MEMBER" region [] $
-        Code.toSnippet source region Nothing
-          (
-            D.reflow $
-              (if N.toChars function == "<Float literal>" then "This Float literal needs a type that has " else
-              "This use of `" <> Members.displayName function <> "` needs a type that has ")
-              <> memberWords needed <> (if N.toChars function == "<Float literal>" then ", but it is used as:" else ", but it is used with:")
-          ,
-            D.stack $
-              [ D.indent 4 (D.dullyellow (T.toDoc localizer RT.None tipe))
-              , case members of
-                  [] | builtin ->
-                    D.reflow builtinNote
-
-                  [] ->
-                    D.reflow $
-                      "That type has no members that I can see here. Members are defined in a `where` block\
-                      \ under a custom type declaration, and a module that defines a type must export the\
-                      \ type to share its members."
-
-                  _ ->
-                    D.stack
-                      [ D.reflow "That type has these members:"
-                      , D.indent 4 $ D.vcat $ map (D.dullyellow . D.fromName) members
-                      ]
-              , D.reflow $ (if N.toChars function == "<Float literal>" then "A Float literal at a type other than `Float` is `fromFloat` of it, so the type needs:" else "`" <> Members.displayName function <> "` needs:")
+      let
+        use = useOf function
+        t = typeLine localizer tipe
+        hasPart
+          | builtin = "`" <> t <> "` does not have " <> oneOrThem needed <> "."
+          | null members = "`" <> t <> "` has no attached functions that I can see here."
+          | otherwise = "`" <> t <> "` has only " <> codeList (map N.toChars members) <> "."
+        first =
+          case use of
+            UseLiteral -> "This Float literal is used as a `" <> t <> "`, so `" <> t <> "` needs an attached `fromFloat` function, but " <> hasPart
+            UseOperator op | builtin -> "The (" <> op <> ") operator needs a type that has " <> functionsWords needed <> ", and `" <> t <> "` does not have " <> oneOrThem needed <> "."
+            _ -> useSubject use <> " needs `" <> t <> "` to have " <> functionsWords needed <> ", but " <> hasPart
+        names = map (N.toChars . fst) needed
+        advice
+          | builtin, t == "Int", names == ["div"] = [ D.reflow "Use (//) for integers, or `toFloat` first." ]
+          | builtin, t == "Float", names `elem` [["idiv"], ["mod"], ["rem"]] = [ D.reflow "Use (/) for Float, or `round` first." ]
+          | builtin = [ D.reflow builtinNote ]
+          | otherwise =
+              [ D.reflow $ "Add " <> itOrThem needed <> " to the `where` block of `" <> t <> "`"
+                  <> (if null members then " (a module that defines `" <> t <> "` must expose the type for its attached functions to be seen):" else ":")
               , memberLines localizer Nothing needed
               ]
-          )
+      in
+      Report.Report "NO ATTACHED FUNCTION" region [] $
+        Code.toSnippet source region Nothing (D.reflow first, D.stack advice)
 
     BadMember region function member owner actual needed ->
-      Report.Report "MEMBER TYPE MISMATCH" region [] $
+      Report.Report "ATTACHED FUNCTION MISMATCH" region [] $
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "This use of `" <> Members.displayName function <> "` needs the member `" <> N.toChars member
-              <> "` with this type:"
+              case (useOf function, owner) of
+                (UseSelector _, MemberOfOtherUse var _) -> "`" <> N.toChars member <> "` here needs `" <> var <> "` to have it with this type:"
+                (UseSelector _, _) -> "`" <> N.toChars member <> "` here is used with this type:"
+                (use, MemberOfOtherUse var _) -> useSubject use <> " needs `" <> var <> "` to have an attached `" <> N.toChars member <> "` function with this type:"
+                (use, _) -> useSubject use <> " needs the attached `" <> N.toChars member <> "` function with this type:"
           ,
-            D.stack
+            D.stack $
               [ D.indent 4 $ D.green $ T.toDoc localizer RT.None needed
               , D.reflow $
                   case owner of
                     MemberOfType tipe ->
-                      "But `" <> tipe <> "." <> N.toChars member <> "` is:"
+                      "But `" <> tipe <> "." <> N.toChars member <> "` has this type:"
                     MemberOfVariable var ->
-                      "But the constraint `" <> var <> " has " <> N.toChars member <> "` of this type annotation says:"
+                      "But the line `" <> var <> " has " <> N.toChars member <> "` in the `where` block of the type annotation says:"
+                    MemberOfOtherUse _ other ->
+                      "But another use, on line " <> show (lineOf other) <> ", needs it with this type:"
               , D.indent 4 $ D.dullyellow $ T.toDoc localizer RT.None actual
+              ] ++
+              [ D.reflow $
+                  "A type has one attached function of each name, so `" <> var <> "` cannot have both. Make the two uses agree,\
+                  \ or write the type's name in front of `" <> N.toChars member <> "` at one of them."
+              | MemberOfOtherUse var _ <- [owner]
               ]
           )
 
     WellKnownShape region tipe member expected ->
-      Report.Report "WELL KNOWN MEMBER WITH THE WRONG TYPE" region [] $
+      Report.Report "OPERATOR FUNCTION WITH THE WRONG TYPE" region [] $
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "`" <> tipe <> "." <> N.toChars member <> "` is a well known member: the language uses it (for example\
-              \ `+` uses `add`, `<` uses `compare`), so it must have exactly this type:"
+              "The operators use `" <> tipe <> "." <> N.toChars member <> "` (for example `+` uses `add`, `<` uses `compare`),\
+              \ so it must have exactly this type:"
           ,
             D.stack
               [ D.indent 4 $ D.green $ D.fromChars (N.toChars member <> " : " <> expected)
               , D.reflow $
-                  "If this function is not meant for the language, give it another name."
+                  "If this function is not meant for the operators, give it another name."
               ]
           )
 
     WellKnownNoSignature region tipe member expected ->
-      Report.Report "WELL KNOWN MEMBER WITHOUT TYPE ANNOTATION" region [] $
+      Report.Report "OPERATOR FUNCTION WITHOUT TYPE ANNOTATION" region [] $
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "`" <> tipe <> "." <> N.toChars member <> "` is a well known member: the language uses it (for example\
-              \ `+` uses `add`, `<` uses `compare`), so it needs a type annotation. It must have this type:"
+              "The operators use `" <> tipe <> "." <> N.toChars member <> "` (for example `+` uses `add`, `<` uses `compare`),\
+              \ so it needs a type annotation, and it must be exactly this one:"
           ,
             D.stack
               [ D.indent 4 $ D.green $ D.fromChars (N.toChars member <> " : " <> expected)
               , D.reflow $
-                  "If this function is not meant for the language, give it another name."
+                  "If this function is not meant for the operators, give it another name."
               ]
           )
 
     MemberNeedsSignature region function member tipe ->
-      Report.Report "MEMBER WITHOUT TYPE ANNOTATION" region [] $
+      Report.Report "ATTACHED FUNCTION WITHOUT TYPE ANNOTATION" region [] $
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "This use of `" <> Members.displayName function <> "` needs `" <> tipe <> "." <> N.toChars member
+              useSubject (useOf function) <> " needs `" <> tipe <> "." <> N.toChars member
               <> "`, which is defined in this module without a type annotation."
           ,
             D.reflow $
-              "I look up a member that satisfies a constraint by its type annotation. Add one to `"
-              <> tipe <> "." <> N.toChars member <> "` in the `where` block of `" <> tipe <> "`."
+              "I check the uses of an attached function by its type annotation. Add one to `" <> N.toChars member
+              <> "` in the `where` block of `" <> tipe <> "`."
           )
 
-    MissingConstraint region function var needed ->
-      Report.Report "MISSING CONSTRAINT" region [] $
-        Code.toSnippet source region Nothing
-          (
-            D.reflow $
-              "This use of `" <> Members.displayName function <> "` needs the type `" <> var <> "` to have "
-              <> memberWords needed <> ", but the type annotation of this definition does not say so."
-          ,
-            D.stack
-              [ D.reflow $
-                  "`" <> var <> "` can be any type here. If every such type must have "
-                  <> (case needed of { [_] -> "the member"; _ -> "these members" })
-                  <> ", say it in a `where` block after the type annotation:"
-              , D.indent 4 $ D.vcat
-                  [ D.cyan "where"
-                  , memberLines localizer (Just var) needed
-                  ]
+    MissingConstraint region function var needed annotated owners ->
+      let
+        use = useOf function
+        first =
+          case use of
+            UseSelector m -> "`" <> m <> "` here is an attached function of `" <> var <> "`:"
+            _ -> useSubject use <> " needs `" <> var <> "` to have " <> functionsWords needed <> ":"
+        newLines = [ D.green (D.fromChars var <> " has " <> D.fromName member <> " : " <> T.toDoc localizer RT.None tipe) | (member, tipe) <- needed ]
+        lineWord = case needed of { [_] -> "this line"; _ -> "these lines" }
+        suggestion =
+          case annotated of
+            Just (Annotated name defType wheres True) ->
+              [ D.reflow $ "But the type annotation of `" <> Members.displayName name <> "` does not say that `" <> var <> "` has "
+                  <> oneOrThem needed <> ". Add " <> lineWord <> " under it:"
+              , D.indent 4 $ D.vcat $
+                  [ D.dullyellow (D.fromName name <> " : " <> T.toDoc localizer RT.None defType)
+                  , D.indent 4 $ D.cyan "where"
+                  ] ++
+                  [ D.indent 8 (D.fromChars v <> " has " <> D.fromName m <> " : " <> T.toDoc localizer RT.None t) | (v, m, t) <- wheres ] ++
+                  map (D.indent 8) newLines
+              , D.reflow "Or remove the type annotation: I can work out the `where` lines myself."
               ]
-          )
+            Just (Annotated name _ _ False) ->
+              [ D.reflow $ "But the type annotation of `" <> Members.displayName name <> "` does not say that `" <> var <> "` has "
+                  <> oneOrThem needed <> ", and a `let` definition cannot have a `where` block. Remove the type annotation:\
+                  \ I work out the `where` lines of `let` definitions myself."
+              ]
+            Nothing ->
+              [ D.reflow $ "But the type annotation does not say that `" <> var <> "` has " <> oneOrThem needed <> ". Add " <> lineWord
+                  <> " to its `where` block:"
+              , D.indent 4 (D.vcat newLines)
+              ]
+        hint =
+          case (use, owners) of
+            (UseSelector m, [one]) -> [ D.reflow $ "If you mean the one of `" <> one <> "`, write `" <> one <> "." <> m <> "`." ]
+            _ -> []
+      in
+      Report.Report "INCOMPLETE TYPE ANNOTATION" region [] $
+        Code.toSnippet source region Nothing (D.reflow first, D.stack (suggestion ++ hint))
 
     MissingSignature region function name defType constraints ->
-      Report.Report "MISSING CONSTRAINT" region [] $
+      Report.Report "INCOMPLETE TYPE ANNOTATION" region [] $
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "The type of `" <> Members.displayName name <> "` would need constraints, because it uses `"
-              <> Members.displayName function <> "`, but it has no type annotation:"
+              "`" <> Members.displayName name <> "` is a value, not a function, so I give it one type. "
+              <> (case useOf function of
+                    UseSelector m -> "The attached `" <> m <> "` function in it"
+                    UseOperator op -> "The (" <> op <> ") operator in it"
+                    UseLiteral -> "A Float literal in it"
+                    UseCall f -> "Its `" <> f <> "` call")
+              <> " needs that type to have " <> functionsWords [ e | (_, entries) <- constraints, e <- entries ]
+              <> ", and nothing here says which type it is:"
           ,
             D.stack
-              [ D.reflow $
-                  "I never infer constraints. A definition that needs a type to have members needs a type\
-                  \ annotation with a `where` block that says so. This one:"
+              [ D.reflow "Add a type annotation that says it:"
               , D.indent 4 $ D.vcat $
                   [ D.dullyellow (D.fromName name <> " : " <> T.toDoc localizer RT.None defType)
                   , D.indent 4 $ D.cyan "where"
@@ -346,31 +387,47 @@ toReport source localizer err =
                   [ D.indent 8 $ D.green (D.fromChars var <> " has " <> D.fromName member <> " : " <> T.toDoc localizer RT.None tipe)
                   | (var, entries) <- constraints, (member, tipe) <- entries
                   ]
+              , D.reflow $
+                  "Or make `" <> Members.displayName name <> "` a function by giving it its arguments: I work out the `where`\
+                  \ lines of functions myself."
               ]
           )
 
-    UnknownMemberType region function kind needed ->
-      Report.Report "UNKNOWN MEMBER TYPE" region [] $
-        Code.toSnippet source region Nothing
-          (
-            D.reflow $
-              "This use of `" <> Members.displayName function <> "` needs a type that has "
-              <> memberWords needed <> ", but I cannot tell which type that is:"
-          ,
-            D.stack $
-              [ memberLines localizer Nothing needed
-              , D.reflow $
-                  "The type is not determined here. If this definition is meant to work for every type\
-                  \ that has " <> (case needed of { [_] -> "the member"; _ -> "these members" })
-                  <> ", it needs a type annotation with a `where` block (a constraint is never inferred):"
-              , D.indent 4 $ D.vcat
-                  [ D.cyan "where"
-                  , D.indent 4 $ D.vcat [ "a has " <> D.fromName member <> " : ..." | (member, _) <- needed ]
-                  ]
-              , D.reflow "Otherwise a type annotation on the value that is used here will settle it."
-              ] ++
-              [ D.reflow ("The type is a `" <> k <> "` variable, so it is not known which type is meant. " <> builtinNote) | Just k <- [kind] ]
-          )
+    UnknownMemberType region function kind needed owners valueName ->
+      let
+        use = useOf function
+        first =
+          case use of
+            UseSelector m -> "I cannot tell which type's `" <> m <> "` to use here:"
+            UseLiteral -> "I cannot tell which type this Float literal is. It needs a type with an attached `fromFloat` function:"
+            _ -> useSubject use <> " needs a type with " <> functionsWords needed <> ", but I cannot tell which type:"
+        ownersSentence =
+          case owners of
+            [] -> []
+            _ -> [ D.reflow $ codeList owners <> " " <> (case owners of { [_] -> "has "; _ -> "have " })
+                     <> (case needed of { [_] -> functionsWords needed; _ -> "them" }) <> "." ]
+        settle =
+          case kind of
+            Just "number" ->
+              [ D.reflow $
+                  "Only a number literal gives the type, and `Int` and `Float` do not have " <> oneOrThem needed
+                  <> ". Write a value of the type you mean instead of the literal"
+                  <> (case owners of { one : _ -> ", for example a `" <> one <> "` value."; [] -> "." })
+              ]
+            Just k ->
+              D.reflow ("The type is only known to be `" <> k <> "`, which does not say which type it is. Add a type annotation that names it.")
+                : ownersSentence
+            Nothing ->
+              case (valueName, owners) of
+                (Just name, one : _) ->
+                  [ D.reflow "Nothing around it settles the type. Add a type annotation that names it, for example:"
+                  , D.indent 4 $ D.dullyellow $ D.fromName name <> " : " <> D.fromChars one
+                  ] ++ ownersSentence
+                _ ->
+                  D.reflow "Nothing around it settles the type. Add a type annotation that names it." : ownersSentence
+      in
+      Report.Report "AMBIGUOUS TYPE" region [] $
+        Code.toSnippet source region Nothing (D.reflow first, D.stack settle)
 
     HiddenCycle region name ->
       Report.Report "INFINITE TYPE" region [] $
@@ -390,20 +447,81 @@ toReport source localizer err =
 
 
 
--- Ficcus (ATTACH A2)
+-- Ficcus (ATTACH A2; A5c texts)
 builtinNote :: String
 builtinNote =
-  "The built-in types (`Int`, `Float`, `String`, `Char`, `List`, tuples, ...) have only the well known members, as far as\
-  \ their type allows (`add`, `sub`, `mul`, `pow`, `neg`, `abs`, `fromInt`, `div`, `idiv`, `mod`, `rem`, `compare`, `eq`, `append`). Any other\
-  \ member can only be met by a custom type that defines it in its `where` block."
+  "`Int`, `Float`, `String`, `Char`, `List` and tuples have only the attached functions that the language gives them, as far\
+  \ as their type allows (`add`, `sub`, `mul`, `pow`, `neg`, `abs`, `fromInt`, `fromFloat`, `zero`, `div`, `idiv`, `mod`, `rem`,\
+  \ `compare`, `eq`, `append`). Any other attached function can only come from a custom type that defines it in its `where` block."
 
 
--- Ficcus (ATTACH A2): "the member `zero`", "the members `zero` and `add`"
-memberWords :: [(N.Name, T.Type)] -> String
-memberWords needed =
-  case map (\(member, _) -> "`" <> N.toChars member <> "`") needed of
-    [one] -> "the member " <> one
-    names -> "the members " <> List.intercalate ", " (init names) <> " and " <> last names
+-- | (A5c) how a use is named in a message: a call of a function, an operator, a Float literal, or a bare attached name
+data Use
+  = UseCall String
+  | UseOperator String
+  | UseLiteral
+  | UseSelector String
+
+
+useOf :: N.Name -> Use
+useOf function =
+  case N.toChars function of
+    "<Float literal>" -> UseLiteral
+    chars
+      | Just m <- List.stripPrefix (reverse "$selector") (reverse chars) -> UseSelector (reverse m)
+      | all (`elem` ("+-*/<>=|&^%!.:" :: String)) chars -> UseOperator chars
+      | otherwise -> UseCall (Members.displayName function)
+
+
+-- "This `sum` call", "The (/) operator", "This Float literal", "`zero` here"
+useSubject :: Use -> String
+useSubject use =
+  case use of
+    UseCall f -> "This `" <> f <> "` call"
+    UseOperator op -> "The (" <> op <> ") operator"
+    UseLiteral -> "This Float literal"
+    UseSelector m -> "`" <> m <> "` here"
+
+
+-- "an attached `add` function", "attached `add` and `zero` functions"
+functionsWords :: [(N.Name, a)] -> String
+functionsWords needed =
+  case map (\(member, _) -> N.toChars member) needed of
+    [one] -> "an attached `" <> one <> "` function"
+    names -> "attached " <> codeList names <> " functions"
+
+
+oneOrThem :: [a] -> String
+oneOrThem needed =
+  case needed of
+    [_] -> "one"
+    _ -> "them"
+
+
+itOrThem :: [a] -> String
+itOrThem needed =
+  case needed of
+    [_] -> "it"
+    _ -> "them"
+
+
+-- "`a`", "`a` and `b`", "`a`, `b` and `c`"
+codeList :: [String] -> String
+codeList names =
+  case map (\n -> "`" <> n <> "`") names of
+    [] -> ""
+    [one] -> one
+    quoted -> List.intercalate ", " (init quoted) <> " and " <> last quoted
+
+
+typeLine :: L.Localizer -> T.Type -> String
+typeLine localizer tipe =
+  D.toLine (T.toDoc localizer RT.None tipe)
+
+
+lineOf :: A.Region -> Int
+lineOf =
+  A.startLine
 
 
 -- the lines `zero : T` or, with a variable, `a has zero : T`

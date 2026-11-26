@@ -36,10 +36,12 @@ import qualified AST.Canonical as Can
 import qualified AST.Constraints as Constraints
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
+import qualified AST.Prim.TypeVar as TV
 import qualified AST.WellKnown as WK
 import qualified Elm.ModuleName as ModuleName
 import qualified Reporting.Annotation as A
 import qualified Reporting.Error.Type as Error
+import qualified Type.Error as ET
 import Type.Members (Obligation(..))
 import qualified Type.Members as Members
 import Type.Type as Type
@@ -56,7 +58,7 @@ import qualified Type.UnionFind as UF
 data Kind
   = Function
   | Value
-  | Typed
+  | Typed [(String, N.Name)]   -- (A5c) the `where` lines of the annotation (variable, member), for INCOMPLETE TYPE ANNOTATION
   deriving (Eq)
 
 
@@ -76,7 +78,7 @@ defKinds def =
       (region, if null args && not (isLambda body) then Value else Function) : exprKinds body
 
     Can.TypedDef (A.At region _) _ _ body _ ->
-      (region, Typed) : exprKinds body
+      (region, Typed [ (v, m) | Constraints.Hidden v m _ <- Constraints.hiddenOfDef def ]) : exprKinds body
   where
     isLambda (A.At _ e) =
       case e of
@@ -112,7 +114,7 @@ kindOfHeader :: Kinds -> Map.Map N.Name (A.Located a) -> Kind
 kindOfHeader kinds header =
   case [ Map.lookup region kinds | A.At region _ <- Map.elems header ] of
     [] -> Value
-    ks | any (== Just Typed) ks -> Typed
+    ks | t : _ <- [ k | Just k@(Typed _) <- ks ] -> t
        | all (== Just Function) ks -> Function
        | otherwise -> Value
 
@@ -150,7 +152,10 @@ improve tools pending =
 
                           Unify.Err vars actual needed ->
                             do  Members._introduce tools vars
-                                return (kept', Error.BadMember (_region o) (_function o) (_member o) (Error.MemberOfVariable "a") actual needed : errors)
+                                -- (A5c) the variable by its name in the message (the types are named with it)
+                                subject <- Type.toErrorType (_subject o)
+                                let var = case subject of { ET.FlexVar n -> TV.varToChars n; ET.FlexSuper _ n -> TV.varToChars n; _ -> "a" }
+                                return (kept', Error.BadMember (_region o) (_function o) (_member o) (Error.MemberOfOtherUse var (_region k)) actual needed : errors)
 
                           Unify.Runaway isCycle ->
                             return (kept', Error.Runaway (_region o) isCycle : errors)
@@ -226,7 +231,7 @@ settle tools table env kind outer young header pending =
                 [] -> return ([], [])
                 candidates0 ->
                   do  (candidates, candidateErrors) <- improve tools candidates0
-                      (settled0, errors0) <- defaultAndReport tools table env young header candidates
+                      (settled0, errors0) <- defaultAndReport tools table env (kind == Value) young header candidates
                       return (settled0, candidateErrors ++ errors0)
             return (Outcome (others ++ holds ++ demoted ++ settled) scheme (improveErrors ++ errors))
 
@@ -325,8 +330,8 @@ raise outer var =
 -- of a Float literal, becomes Int or Float (Float first when `div` or `fromFloat` is required), if that type has
 -- every member required of it.  What is left is reported as Members.hold reports it (MISSING CONSTRAINT when the
 -- variables are those of the definition's type, UNKNOWN MEMBER TYPE otherwise).
-defaultAndReport :: Members.Tools -> Members.Table -> Map.Map N.Name Variable -> Int -> Map.Map N.Name (A.Located Variable) -> [Obligation] -> IO ([Obligation], [Error.Error])
-defaultAndReport tools table env young header candidates =
+defaultAndReport :: Members.Tools -> Members.Table -> Map.Map N.Name Variable -> Bool -> Int -> Map.Map N.Name (A.Located Variable) -> [Obligation] -> IO ([Obligation], [Error.Error])
+defaultAndReport tools table env isValue young header candidates =
   do  groups <- groupBySubject candidates
       forM_ groups $ \(first, rest) ->
         do  choice <- defaultFor first (first : rest)
@@ -335,7 +340,7 @@ defaultAndReport tools table env young header candidates =
               Just tipe -> settleTo (_subject first) tipe
       (left, errors) <- Members.discharge tools table env candidates
       stillYoung <- filterM (\o -> (>= young) <$> rankOf (_subject o)) left
-      (kept, holdErrors) <- Members.hold outermostRank young header stillYoung
+      (kept, holdErrors) <- Members.hold table isValue outermostRank young header stillYoung
       let others = [ o | o <- left, not (any (same o) stillYoung) ]
       return (others ++ kept, errors ++ holdErrors)
   where

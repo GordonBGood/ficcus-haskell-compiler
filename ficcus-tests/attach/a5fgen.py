@@ -27,7 +27,7 @@ sys.argv = _argv
 main_of, blocks = a5agen.main_of, a5agen.blocks
 
 RUN = ("RUN", "c", "")
-SHAPE = "WELL KNOWN MEMBER WITH THE WRONG TYPE"
+SHAPE = "OPERATOR FUNCTION WITH THE WRONG TYPE"
 
 
 def review(cid):
@@ -90,9 +90,9 @@ CASES_NEW = [
      ("oldc", {"Main.elm": main_of(F32_OK, "show (conv (Float32.fromFloat 1))", imports=F32_IMPORT)})),
     # ---- M2: in a recursive group a requirement goes into the scheme only when every name's type determines it
     ("a5f-m2-recursive-ambiguous", "review M2 (share-recursive-ambiguous): gb's call of fa (sum []) leaves `a has add, zero` undetermined for gb",
-     review("share-recursive-ambiguous"), ("REJECTC", "MISSING CONSTRAINT", "fa"), None),
+     review("share-recursive-ambiguous"), ("REJECTC", "AMBIGUOUS TYPE", "call each other"), None),
     ("a5f-m2-recursive-todo", "review M2 (share-recursive-top): the same with Debug.todo for the argument",
-     review("share-recursive-top"), ("REJECTC", "MISSING CONSTRAINT", "fa"), None),
+     review("share-recursive-top"), ("REJECTC", "AMBIGUOUS TYPE", "call each other"), None),
     # ---- B1: rule 1 only when a requirement goes into a scheme (A3b ran these)
     ("a5f-b1-let", "review B1 (order-rule1-let): a polymorphic member at two instances inside a let value",
      review("order-rule1-let"), RUN, ("oldc", review("order-rule1-let"))),

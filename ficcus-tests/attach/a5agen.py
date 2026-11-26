@@ -64,7 +64,7 @@ CASES_NEW = [
       "Main.elm": main_of("", "( twice (Money 2), twice (Vec 1 2) )", imports="import Lib exposing (Money(..), Vec(..), twice)")})),
     ("a5a-js-inferred", "D6: the JavaScript output refuses an inferred constrained function (half x = x / 2 with Cash in sight) and suggests a type annotation",
      {"Main.elm": main_of(blocks(CASH, "half x =\n    x / 2"), "half 3")},
-     ("REJECT", "CONSTRAINED FUNCTIONS", "Main.half (no type annotation"), None),
+     ("REJECT", "NOT AVAILABLE IN JAVASCRIPT YET", "Main.half (no type annotation"), None),
     # ---- the subject decides (rules 2 and 3), D2, B4
     ("a5a-subject-decides", "rules 2 and 3: unannotated get1 t = get t and get2 w = get (get w): the member of the subject's type decides the result type",
      {"Main.elm": main_of(blocks(B4_TYPES, "get1 t =\n    get t", "get2 w =\n    get (get w)"),
@@ -123,7 +123,7 @@ CASES_NEW = [
      ("REJECTC", "TYPE MISMATCH", "But `f` needs the 2nd argument to be:"), None),
     ("a5a-mr-top-value", "D4 (MR): a top level value pl = plus keeps its requirement on a type variable: reported, not inferred",
      {"Main.elm": main_of(blocks(TYPES, HELPERS, "pl =\n    plus"), "pl (Money 1) (Money 2)")},
-     ("REJECTC", "MISSING CONSTRAINT", "pl : a -> a -> a"), None),
+     ("REJECTC", "INCOMPLETE TYPE ANNOTATION", "pl : a -> a -> a"), None),
     # ---- defaulting (D3)
     ("a5a-default-top-value", "D3: top level values with literals at constrained functions: Int for add, Float for div",
      {"Main.elm": main_of(blocks(CASH, HELPERS, "halve : a -> a -> a\n    where\n        a has div : a -> a -> a\nhalve x y =\n    x / y",
@@ -134,7 +134,7 @@ CASES_NEW = [
     ("a5a-undetermined-error", "D3: an undetermined subject that is not a number (zeroOf u : a with a has zero) is an error",
      {"Main.elm": main_of(blocks(TYPES, "zeroOf : () -> a\n    where\n        a has zero : a\nzeroOf _ =\n    zero",
                                  "f u =\n    Debug.toString (zeroOf u)"), "f ()")},
-     ("REJECTC", "UNKNOWN MEMBER TYPE", "zero"), None),
+     ("REJECTC", "AMBIGUOUS TYPE", "zero"), None),
     ("a5a-float-literal", "D3 and the A3b literal: unannotated scale x = x * 0.5 with Float32 in sight infers `has fromFloat`; at Float32 and Float",
      {"Main.elm": main_of(blocks("scale x =\n    x * 0.5"), "( Float32.toString (scale (Float32.fromFloat 3)), scale 3 )",
                           imports="import Float32 exposing (Float32)")},
@@ -145,7 +145,7 @@ CASES_NEW = [
     # ---- rule 1 (D9)
     ("a5a-rule1-poly-member", "D9 (rule 1): a polymorphic member used at Int and String through one inferred requirement is one type per name: rejected",
      {"Main.elm": main_of(blocks(B3_TYPES, "both q =\n    ( choose q 1, choose q \"s\" )"), "both (Q 1)")},
-     ("REJECTC", "MEMBER TYPE MISMATCH", "pick"), None),
+     ("REJECTC", "ATTACHED FUNCTION MISMATCH", "pick"), None),
 ]
 
 
@@ -159,7 +159,7 @@ CASES_CONVERTED = {
                                                                            ("\nmain :", "\nints : List Int\nints =\n    [ 1, 2, 3 ]\n\n\nmain :")]})),
     "a3-f7-err-literal-obligation": (RUN, ("oldc", {"Main.elm": None, "edit": [("smallest 3 2", "smallest three 2"),
                                                                                ("\nmain :", "\nthree : Int\nthree =\n    3\n\n\nmain :")]})),
-    "a3-f8-err-let-div-two-types": (("REJECT", "NO MEMBER", "div : Int -> Int -> Int"), None),
+    "a3-f8-err-let-div-two-types": (("REJECT", "NO ATTACHED FUNCTION", "Use (//) for integers"), None),
     "constraint-ambiguous": (RUN, ("elm", {"Main.elm": main_of("", "Debug.toString 1")})),
     "constraint-let-fun-mono": (RUN, ("elm", {"Main.elm": main_of("type T\n    = T Int", "( 1, T 2 )")})),
     "constraint-no-signature": (RUN, ("oldc", {"Main.elm": None, "edit": [("\ntotal xs =", "\ntotal : List a -> a\n    where\n        a has zero : a\n        a has add : a -> a -> a\ntotal xs =")]})),

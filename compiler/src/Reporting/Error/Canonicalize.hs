@@ -78,6 +78,7 @@ data Error
   | ImportExposedBinopNotFound A.Region ModuleName.Canonical Op.Name [Op.Name]
   | NotFoundVar A.Region (Maybe Module.Prefix) N.Name (PossibleNames N.Name)
   | NotFoundMember A.Region String N.Name [N.Name]    -- Ficcus (ATTACH A1): type, member, the members the type has
+  | NotFoundAttached A.Region N.Name [String] (PossibleNames N.Name)   -- Ficcus (A5c): an attached function of these types, whose types do not line up
   | ConstraintTwice String N.Name A.Region A.Region            -- Ficcus (ATTACH A2): variable, member
   | ConstraintNameTwice N.Name String N.Name A.Region A.Region  -- local name, variable, member
   | ConstraintShadows N.Name String N.Name A.Region A.Region    -- local name, variable, member; the top level definition, the constraint
@@ -182,7 +183,7 @@ toReport source err =
     DuplicateDecl name r1 r2 ->
       nameClash source r1 r2 $
         case Members.split name of
-          Just (tipe, member) -> "The `" <> tipe <> "` type has multiple `" <> Members.displayName member <> "` members."
+          Just (tipe, member) -> "The `" <> tipe <> "` type has multiple attached `" <> Members.displayName member <> "` functions."
           Nothing             -> "This file has multiple `" <> Members.displayName name <> "` declarations."
 
     DuplicateType name r1 r2 ->
@@ -307,45 +308,56 @@ toReport source err =
     NotFoundVar     r p n ns -> notFound source r p n "variable" ns Members.displayName
     NotFoundType    r p n ns -> notFound source r p n "type"     ns T.nameToChars
     NotFoundMember  r t n ms -> notFoundMember source r t n ms
+    NotFoundAttached r n owners ns ->
+      case notFound source r Nothing n "variable" ns Members.displayName of
+        Report.Report title region suggestions message ->
+          Report.Report title region suggestions $ D.stack
+            [ message
+            , D.reflow $
+                "`" <> N.toChars n <> "` is an attached function of " <> List.intercalate ", " (map (\t -> "`" <> t <> "`") (init owners))
+                <> " and of `" <> last owners <> "`, but with types that do not line up, so I cannot tell which one you mean. Write "
+                <> List.intercalate ", " (map (\t -> "`" <> t <> "." <> N.toChars n <> "`") (init owners))
+                <> " or `" <> last owners <> "." <> N.toChars n <> "`."
+            ]
     Derive e -> Derive.toReport source e
     AmbiguousMember r t n h hs -> ambiguousMember source r t n h hs
 
     ConstraintTwice var member r1 r2 ->
       nameClash source r1 r2 $
-        "The constraint `" <> var <> " has " <> N.toChars member <> "` is written twice."
+        "The line `" <> var <> " has " <> N.toChars member <> "` is written twice in this `where` block."
 
     ConstraintNameTwice local var member r1 r2 ->
       constraintClash source r1 r2 local var member $
-        "Two constraints of this type annotation give the name `" <> N.toChars local <> "`."
+        "Two lines of this `where` block give the name `" <> N.toChars local <> "`."
 
     ConstraintShadows local var member r1 r2 ->
       constraintClash source r1 r2 local var member $
-        "The constraint gives the name `" <> N.toChars local <> "`, but that is already the name of a definition."
+        "The line `" <> var <> " has " <> N.toChars member <> "` gives the name `" <> N.toChars local <> "`, but that is already the name of a definition."
 
     AmbiguousConstraint region var member missing name ->
-      Report.Report "AMBIGUOUS CONSTRAINT" region [] $
+      Report.Report "UNUSED VARIABLE IN WHERE" region [] $
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "The constraint `" <> var <> " has " <> N.toChars member <> "` mentions the type variable `" <> missing
-              <> "`, but `" <> missing <> "` does not occur in the type of `" <> Members.displayName name <> "`:"
+              "The line `" <> var <> " has " <> N.toChars member <> "` mentions the type variable `" <> missing
+              <> "`, but nothing in the type of `" <> Members.displayName name <> "` settles `" <> missing <> "`:"
           ,
             D.stack
               [ D.reflow $
-                  "A constraint is solved from the types at each use of `" <> Members.displayName name
-                  <> "`, so every type variable in it has to be part of the type of the function. Here no use of `"
+                  "Each use of `" <> Members.displayName name <> "` settles its `where` lines by the types of its arguments and\
+                  \ its result (and a variable that has an attached function settles the types of that function). Here no use of `"
                   <> Members.displayName name <> "` could say what `" <> missing <> "` is."
               , D.reflow $
-                  "Use `" <> missing <> "` in the type of `" <> Members.displayName name <> "` (an argument or the result), or remove the constraint."
+                  "Use `" <> missing <> "` in the type of `" <> Members.displayName name <> "` (an argument or the result), or remove the line."
               ]
           )
     ConstraintShape region var member expected ->
-      Report.Report "WELL KNOWN MEMBER WITH THE WRONG TYPE" region [] $
+      Report.Report "OPERATOR FUNCTION WITH THE WRONG TYPE" region [] $
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "`" <> N.toChars member <> "` is a well known member: the language uses it (for example `+` uses `add`, `<` uses\
-              \ `compare`), so the `where` line must give it exactly this type:"
+              "The operators use the attached `" <> N.toChars member <> "` function (for example `+` uses `add`, `<` uses\
+              \ `compare`), so this line must give it exactly this type:"
           ,
             D.stack
               [ D.indent 4 $ D.green $ D.fromChars (var <> " has " <> N.toChars member <> " : " <> expected)
@@ -1045,7 +1057,7 @@ constraintClash source r1 r2 local var member message =
     advice =
       D.stack
         [ D.reflow $
-            "Inside the definition the name could mean either one, so give the member another name here with `as`:"
+            "Inside the definition the name could mean either one, so give the attached function another name here with `as`:"
         , D.indent 4 $ D.fillSep
             [ D.fromChars var, D.cyan "has", D.fromName member, D.cyan "as"
             , D.green (D.fromChars (N.toChars local ++ "_")), ":", "..."
@@ -1056,7 +1068,7 @@ constraintClash source r1 r2 local var member message =
     Code.toPair source r1 r2
       ( D.reflow message, advice )
       ( D.reflow (message <> " The name is first defined here:")
-      , "And the constraint is here:"
+      , "And the `where` line is here:"
       , advice
       )
 
@@ -1077,7 +1089,7 @@ ambiguousMember source region tipe member h hs =
       (
         D.reflow $
           "This usage of `" ++ full ++ "` is ambiguous: two types named `" ++ tipe ++ "` are in scope, " ++ fromList
-          ++ ", and each has a `" ++ Members.displayName member ++ "` member."
+          ++ ", and each has an attached `" ++ Members.displayName member ++ "` function."
       ,
         D.stack
           [ D.reflow $
@@ -1097,19 +1109,18 @@ notFoundMember source region tipe member members =
     Code.toSnippet source region Nothing
       (
         D.reflow $
-          "I cannot find a `" ++ tipe ++ "." ++ Members.displayName member ++ "` member:"
+          "I cannot find an attached function `" ++ tipe ++ "." ++ Members.displayName member ++ "`:"
       ,
         case members of
           [] ->
             D.reflow $
-              "The `" ++ tipe ++ "` type has no members that I can see here. Members are defined in a `where` block\
-              \ under the type declaration, and an imported type shows them only if its module exports it as `"
-              ++ tipe ++ "(..)`."
+              "The `" ++ tipe ++ "` type has no attached functions that I can see here. They are defined in a `where` block\
+              \ under the type declaration."
 
           _ ->
             D.stack
               [ D.reflow $
-                  "The `" ++ tipe ++ "` type has these members:"
+                  "The `" ++ tipe ++ "` type has these attached functions:"
               , D.indent 4 $ D.vcat $ map (D.dullyellow . D.fromChars . (\m -> tipe ++ "." ++ Members.displayName m)) members
               ]
       )

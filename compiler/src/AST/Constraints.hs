@@ -39,7 +39,9 @@ module AST.Constraints
   , hasTypeName
   , isInferred
   , inferredMarker
+  , inferredMarkerWith
   , splitInferredMarker
+  , inferredSuggestion
   )
   where
 
@@ -245,12 +247,48 @@ inferredMarker name =
   fromChars (N.toChars name ++ inferredSuffix)
 
 
+-- | (A5c, review B3) the marker with the type annotation the JavaScript refusal suggests, when one is known:
+-- `h$type:Int -> Int$inferred` (the C output never reads the markers)
+inferredMarkerWith :: N.Name -> Maybe String -> N.Name
+inferredMarkerWith name suggestion =
+  case suggestion of
+    Nothing -> inferredMarker name
+    Just text -> fromChars (N.toChars name ++ typeInfix ++ text ++ inferredSuffix)
+
+
+-- | the name of the definition a marker is about
 splitInferredMarker :: N.Name -> Maybe N.Name
 splitInferredMarker name =
+  fmap (fromChars . fst) (splitInferred name)
+
+
+-- | the suggested type annotation of a marker (A5c)
+inferredSuggestion :: N.Name -> Maybe String
+inferredSuggestion name =
+  splitInferred name >>= snd
+
+
+splitInferred :: N.Name -> Maybe (String, Maybe String)
+splitInferred name =
   let chars = N.toChars name in
   if inferredSuffix `List.isSuffixOf` chars && length chars > length inferredSuffix
-    then Just (fromChars (take (length chars - length inferredSuffix) chars))
+    then
+      let body = take (length chars - length inferredSuffix) chars in
+      case breakOn typeInfix body of
+        Just (def, text) -> Just (def, Just text)
+        Nothing -> Just (body, Nothing)
     else Nothing
+  where
+    breakOn sep str =
+      case str of
+        [] -> Nothing
+        c : rest
+          | sep `List.isPrefixOf` str -> Just ([], drop (length sep) str)
+          | otherwise -> fmap (\(a, b) -> (c : a, b)) (breakOn sep rest)
+
+
+typeInfix :: String
+typeInfix = "$type:"
 
 
 inferredSuffix :: String

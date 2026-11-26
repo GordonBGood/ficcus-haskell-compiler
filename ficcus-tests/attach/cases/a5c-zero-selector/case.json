@@ -1,0 +1,1 @@
+{"desc": "a list sum through the bare names (total xs = List.foldl add zero xs, inferred) at Int, Float and Money"}

@@ -887,13 +887,13 @@ CASES_NEW = [
          {"Main.elm": prog([], F32_FIC, "")},
          ("oldc", {"Main.elm": prog([], F32_OLD, "")}), ("RUN", "c", ""), c_only=True),
     case("a3b-err-fromfloat-missing", "a Float literal at a type without fromFloat while another type has it: NO MEMBER",
-         {"Main.elm": "module Main exposing (main)\n\n" + ERR_MISSING}, None, ("REJECT", "NO MEMBER", "fromFloat")),
+         {"Main.elm": "module Main exposing (main)\n\n" + ERR_MISSING}, None, ("REJECT", "NO ATTACHED FUNCTION", "fromFloat")),
     case("a3b-err-fromfloat-shape", "fromFloat with the wrong type",
-         {"Main.elm": "module Main exposing (main)\n\n" + ERR_SHAPE}, None, ("REJECT", "WELL KNOWN MEMBER WITH THE WRONG TYPE", "fromFloat : Float -> Meters")),
+         {"Main.elm": "module Main exposing (main)\n\n" + ERR_SHAPE}, None, ("REJECT", "OPERATOR FUNCTION WITH THE WRONG TYPE", "fromFloat : Float -> Meters")),
     case("a3b-err-float-literal-elm", "no fromFloat in sight: a Float literal at a user type is Elm's TYPE MISMATCH, as before",
          {"Main.elm": "module Main exposing (main)\n\n" + ERR_ELM_LITERAL}, None, ("REJECT", "TYPE MISMATCH", "")),
     case("a3b-js-fromfloat", "--output=out.js of a program with a Float literal at a type with fromFloat: refused",
-         {"Main.elm": prog([], JS_FROMFLOAT, "")}, None, ("REJECT", "CONSTRAINED FUNCTIONS", "operators on custom types")),
+         {"Main.elm": prog([], JS_FROMFLOAT, "")}, None, ("REJECT", "NOT AVAILABLE IN JAVASCRIPT YET", "operators on custom types")),
 ]
 
 
