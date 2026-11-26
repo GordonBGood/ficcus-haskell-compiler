@@ -946,8 +946,7 @@ def write():
     rows = {}
     for c in CASES_NEW:
         d = os.path.join(CASES, c["id"])
-        if os.path.isdir(d): shutil.rmtree(d)
-        os.makedirs(d)
+        os.makedirs(d, exist_ok=True)          # expected.out (written by --expect) stays
         for fn, src in c["files"].items():
             open(os.path.join(d, fn), "w", encoding="utf-8").write(src)
         meta = {"desc": c["desc"]}
