@@ -26,6 +26,8 @@ module Type.Members
   , notesFor
   , relax
   , relaxedUse
+  , floatLiterals
+  , floatLiteralName
   , relaxedObligation
   , defaulting
   , defsOf
@@ -245,6 +247,24 @@ relax table home name written =
     floatT = Can.TType ModuleName.basics T.float []
     intT = Can.TType ModuleName.basics T.int []
     uses = [ ("/", ("div", floatT)), ("//", ("idiv", intT)), ("modBy", ("mod", intT)), ("remainderBy", ("rem", intT)) ]
+
+
+-- | (A3b) a Float literal is typed `a` with the obligation `a has fromFloat` (Elm's `Float` the default, as for `/`) when a type
+-- in sight has the member `fromFloat`: the member name, the scheme `(a, Float -> a)` and the default.  Without such a type
+-- Nothing: the literal is a `Float`, as in Elm.
+floatLiterals :: Table -> Maybe (N.Name, Can.Annotation, Can.Type)
+floatLiterals table =
+  if any (Map.member member) (Map.elems table)
+    then Just (member, WK.shapeAnnotation WK.FromFloat, Can.TType ModuleName.basics T.float [])
+    else Nothing
+  where
+    member = memberName "fromFloat"
+
+
+-- | the name of the "function" of the obligation of a Float literal (it is not a name a program can write)
+floatLiteralName :: N.Name
+floatLiteralName =
+  memberName "<Float literal>"
 
 
 relaxedObligation :: A.Region -> N.Name -> N.Name -> Variable -> Variable -> Can.Type -> Obligation

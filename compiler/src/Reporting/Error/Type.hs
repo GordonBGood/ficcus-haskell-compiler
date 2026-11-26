@@ -218,8 +218,9 @@ toReport source localizer err =
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "This use of `" <> Members.displayName function <> "` needs a type that has "
-              <> memberWords needed <> ", but it is used with:"
+              (if N.toChars function == "<Float literal>" then "This Float literal needs a type that has " else
+              "This use of `" <> Members.displayName function <> "` needs a type that has ")
+              <> memberWords needed <> (if N.toChars function == "<Float literal>" then ", but it is used as:" else ", but it is used with:")
           ,
             D.stack $
               [ D.indent 4 (D.dullyellow (T.toDoc localizer RT.None tipe))
@@ -238,7 +239,7 @@ toReport source localizer err =
                       [ D.reflow "That type has these members:"
                       , D.indent 4 $ D.vcat $ map (D.dullyellow . D.fromName) members
                       ]
-              , D.reflow $ "`" <> Members.displayName function <> "` needs:"
+              , D.reflow $ (if N.toChars function == "<Float literal>" then "A Float literal at a type other than `Float` is `fromFloat` of it, so the type needs:" else "`" <> Members.displayName function <> "` needs:")
               , memberLines localizer Nothing needed
               ]
           )

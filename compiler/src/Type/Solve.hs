@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings, TemplateHaskell, PatternGuards #-}
 module Type.Solve
   ( run
   , runWith
@@ -106,6 +106,32 @@ solve env rank pools state constraint =
 
     CSaveTheEnvironment ->
       return (state { _env = env })
+
+    -- Ficcus (A3b): a Float literal in a module that sees a type with `fromFloat` (Members.floatLiterals)
+    CEqual region Error.Float _ expectation | Just (member, Can.Forall vars shape, defaultType) <- Members.floatLiterals (_table state) ->
+      do  pair <- srcTypeToVariable rank pools vars shape
+          (Descriptor content _ _ _) <- UF.get pair
+          (actual, state1) <-
+            case content of
+              Structure (Pair1 subject fn) ->
+                return (subject, state { _pending = Members.relaxedObligation region Members.floatLiteralName member subject fn defaultType : _pending state })
+              _ ->
+                return (pair, state)
+          expected <- expectedToVariable rank pools expectation
+          answer <- Unify.unifyWith (Members.policyOf (_flag state1) (_table state1)) actual expected
+          case answer of
+            Unify.Ok vars' ->
+              do  introduce rank pools vars'
+                  return state1
+
+            Unify.Runaway isCycle ->
+              return $ addError state1 (Error.Runaway region isCycle)
+
+            Unify.Err vars' actualType expectedType ->
+              do  introduce rank pools vars'
+                  return $ addError state1 $ noted state1 actualType expectedType $
+                    Error.BadExpr region Error.Float actualType $
+                      Error.typeReplace expectation expectedType
 
     CEqual region category tipe expectation ->
       do  actual <- typeToVariable rank pools tipe

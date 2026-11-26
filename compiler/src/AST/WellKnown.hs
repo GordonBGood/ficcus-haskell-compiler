@@ -44,6 +44,7 @@ data Shape
   | Equal       -- s -> s -> Bool              eq
   | Unary       -- s -> s                      neg abs
   | FromInt     -- Int -> s                    fromInt
+  | FromFloat   -- Float -> s                  fromFloat (A3b: a Float literal at s)
   deriving (Eq)
 
 
@@ -54,7 +55,7 @@ shapeOf member =
   where
     table =
       [ (m, Binary) | m <- ["add", "sub", "mul", "pow", "div", "idiv", "mod", "rem", "append"] ]
-      ++ [ ("compare", Compare), ("eq", Equal), ("neg", Unary), ("abs", Unary), ("fromInt", FromInt) ]
+      ++ [ ("compare", Compare), ("eq", Equal), ("neg", Unary), ("abs", Unary), ("fromInt", FromInt), ("fromFloat", FromFloat) ]
 
 
 isWellKnown :: String -> Bool
@@ -72,6 +73,7 @@ fits home tipe shape written =
     (Equal, [a, b, c]) -> self a && a == b && c == bool
     (Unary, [a, b]) -> self a && a == b
     (FromInt, [a, b]) -> a == int && self b
+    (FromFloat, [a, b]) -> a == float && self b
     _ -> False
   where
     self t =
@@ -85,6 +87,7 @@ fits home tipe shape written =
         _ -> False
 
     int = Can.TType ModuleName.basics T.int []
+    float = Can.TType ModuleName.basics T.float []
     bool = Can.TType ModuleName.basics T.bool []
     order = Can.TType ModuleName.basics (T.nameFromString (S.fromChars "Order")) []
 
@@ -105,6 +108,7 @@ expectedText shape tipe =
     Equal -> tipe ++ " -> " ++ tipe ++ " -> Bool"
     Unary -> tipe ++ " -> " ++ tipe
     FromInt -> "Int -> " ++ tipe
+    FromFloat -> "Float -> " ++ tipe
 
 
 -- | the shape as the scheme `(x, shape of x)` (a pair, so that one instantiation gives both the subject and the
@@ -116,6 +120,7 @@ shapeAnnotation shape =
     x = TV.varFromString (S.fromChars "x")
     v = Can.TVar x
     int = Can.TType ModuleName.basics T.int []
+    float = Can.TType ModuleName.basics T.float []
     bool = Can.TType ModuleName.basics T.bool []
     order = Can.TType ModuleName.basics (T.nameFromString (S.fromChars "Order")) []
     body =
@@ -125,6 +130,7 @@ shapeAnnotation shape =
         Equal -> Can.TLambda v (Can.TLambda v bool)
         Unary -> Can.TLambda v v
         FromInt -> Can.TLambda int v
+        FromFloat -> Can.TLambda float v
 
 
 
@@ -180,7 +186,7 @@ builtinHas :: Builtin -> String -> Bool
 builtinHas kind member =
   case kind of
     BInt -> member `elem` (numberBundle ++ ["eq", "idiv", "mod", "rem"])
-    BFloat -> member `elem` (numberBundle ++ ["eq", "div"])
+    BFloat -> member `elem` (numberBundle ++ ["eq", "div", "fromFloat"])
     BString -> member `elem` ["append", "compare", "eq"]
     BChar -> member `elem` ["compare", "eq"]
     BList -> member `elem` ["append", "compare", "eq"]

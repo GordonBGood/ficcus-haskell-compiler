@@ -177,7 +177,7 @@ operatorOp cid =
 -- | the operation of a well known member (`add`, ..., `fromInt`; `eq` is the structural one)
 memberOp :: String -> Maybe String
 memberOp member =
-  if member `elem` ["add", "sub", "mul", "pow", "neg", "abs", "fromInt", "compare", "eq", "div", "idiv", "mod", "rem"] then Just member else Nothing
+  if member `elem` ["add", "sub", "mul", "pow", "neg", "abs", "fromInt", "fromFloat", "compare", "eq", "div", "idiv", "mod", "rem"] then Just member else Nothing
 
 
 -- | the C text of the call of a kernel (the arguments are atoms); Nothing: not a sized kernel.  Order is LT 0, EQ 1, GT 2.

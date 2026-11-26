@@ -451,6 +451,10 @@ builtinMember st member =
         "idiv" -> kernel (basics "idiv") (Key [])
         "mod" -> kernel (basics "modBy") (Key [])
         "rem" -> kernel (basics "remainderBy") (Key [])
+        "fromFloat" | st == TyCon "elm/core:Basics.Float" [] ->
+          case Map.lookup (basics "identity") tops of
+            Just src -> (\c -> Right (RClone c 1 False)) <$> requestClone (CKey (basics "identity") Nothing (Key [ByClass CF64])) src
+            Nothing -> return (Left "`Basics.identity` has no definition")
         "fromInt"
           | st == TyCon "elm/core:Basics.Float" [] -> kernel (basics "toFloat") (Key [])
           | otherwise ->
@@ -650,6 +654,7 @@ shapeType shape t =
     WK.Equal -> TyFun t (TyFun t (TyCon "elm/core:Basics.Bool" []))
     WK.Unary -> TyFun t t
     WK.FromInt -> TyFun (TyCon "elm/core:Basics.Int" []) t
+    WK.FromFloat -> TyFun (TyCon "elm/core:Basics.Float" []) t
 
 
 -- a custom type with the member inside an exact type (its type arguments, tuple and record parts, and the constructor fields of
@@ -964,6 +969,20 @@ customTypeOf se key =
     _ -> return Nothing
 
 
+-- (A3b) the type of a Float literal when it is not Float: Float32 (Left) or a custom type with `fromFloat` (Right)
+floatLiteralAt :: SEnv -> Recorder.Key -> SM (Maybe (Either Sized.Sized MType))
+floatLiteralAt se key =
+  case nodeType se key of
+    Just t | Right m@(TyCon tid _) <- mtypeOf (seEnv se) t ->
+      do  tops <- gets sTops
+          unions <- gets sUnions
+          return $ case Sized.sizedEnabled unions tid of
+            Just s | Sized.isFloat s -> Just (Left s)
+            _ | Map.member (tid ++ "$$fromFloat") tops -> Just (Right m)
+            _ -> Nothing
+    _ -> return Nothing
+
+
 -- the class of a node of the Canonical tree, from its recorded type
 exprClass :: SEnv -> A.Region -> Can.Expr_ -> SM Class
 exprClass se region e =
@@ -992,7 +1011,23 @@ specExpr se (A.At region e) =
                     Left why -> report ("cannot specialize the literal " ++ show n ++ " at " ++ tid ++ ": " ++ why ++ " (a literal at a custom type is its `fromInt`)") >> return (MExpr cls (MLit (LInt 0)))
             _ -> return (MExpr cls (MLit (if cls == CF64 then LFloat (fromIntegral n) else LInt (fromIntegral n))))
     Can.Float f ->
-      return (MExpr CF64 (MLit (LFloat (readDouble (BLC.unpack (BB.toLazyByteString (EF.toBuilder f)))))))
+      do  let lit = MExpr CF64 (MLit (LFloat (readDouble (BLC.unpack (BB.toLazyByteString (EF.toBuilder f))))))
+          at <- floatLiteralAt se (Recorder.exprKey region e)
+          case at of
+            Nothing -> return lit
+            -- (A3b) a Float literal at Float32 is the kernel of Float32.fromFloat (rounded to a float), at a custom type its `fromFloat`
+            Just (Left s) ->
+              do  cls <- exprClass se region e
+                  return (MExpr cls (MCall (MExpr CRef (MKernel (Sized.kernelId s "fromFloat") (Key []))) [lit]))
+            Just (Right t@(TyCon tid _)) ->
+              do  cls <- exprClass se region e
+                  r <- memberClone tid "fromFloat" (shapeType WK.FromFloat t)
+                  case r of
+                    Right (RClone c 1 _) -> return (MExpr cls (MCall (MExpr CRef (MGlobal c)) [lit]))
+                    Right (RClone c 0 isVal) -> return (MExpr cls (MCall (MExpr CRef (if isVal then MGlobal c else MCall (MExpr CRef (MGlobal c)) [])) [lit]))
+                    Right _ -> report ("internal: fromFloat of " ++ tid ++ " is not a function of one parameter") >> return lit
+                    Left why -> report ("cannot specialize a Float literal at " ++ tid ++ ": " ++ why ++ " (a Float literal at a custom type is its `fromFloat`)") >> return lit
+            Just (Right _) -> return lit
     Can.Unit -> return unitLit
     Can.Negate (A.At ir (Can.Int n)) ->
       do  sz <- sizedOfNode se (Recorder.exprKey region e)

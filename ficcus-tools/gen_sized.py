@@ -191,7 +191,7 @@ def f32_module():
           ("mul", "Float32 -> Float32 -> Float32", "a _", "a"), ("pow", "Float32 -> Float32 -> Float32", "a _", "a"),
           ("neg", "Float32 -> Float32", "a", "a"), ("abs", "Float32 -> Float32", "a", "a"),
           ("fromInt", "Int -> Float32", "_", "FicFloat32Builtin"), ("compare", "Float32 -> Float32 -> Order", "_ _", "EQ"),
-          ("div", "Float32 -> Float32 -> Float32", "a _", "a")]
+          ("div", "Float32 -> Float32 -> Float32", "a _", "a"), ("fromFloat", "Float -> Float32", "_", "FicFloat32Builtin")]
     body = "module Float32 exposing\n    ( Float32(..)\n    , fromInt, fromFloat, toFloat, toString, fromString\n    )\n\n"
     body += HEADER.replace('@DOC@', doc).replace('@T@', T)
     body += """

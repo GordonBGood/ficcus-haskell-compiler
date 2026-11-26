@@ -57,6 +57,10 @@ type Float32
         div a _ =
             a
 
+        fromFloat : Float -> Float32
+        fromFloat _ =
+            FicFloat32Builtin
+
 
 -- KERNEL FUNCTIONS (types only)
 
