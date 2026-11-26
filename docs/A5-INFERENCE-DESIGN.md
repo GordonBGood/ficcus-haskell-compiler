@@ -167,7 +167,7 @@ No hidden parameters are needed for inferred definitions.
 | L2 (a let function needing a member is not generalized) | gone |
 | L3 (`/`, `//`, `modBy`, `remainderBy` in a let) | gone |
 | L4 (a literal takes the member type of another use) | gone: every use instantiates its own variable, and `h 9` defaults to `Int` |
-| L5 (a literal at a variable with a requirement) | gone through the MR and defaulting; only a literal that neither Int nor Float can satisfy (`total [ 1, 2 ]` with `has zero`) remains, as AMBIGUOUS TYPE with a better text |
+| L5 (a literal at a variable with a requirement) | gone through the MR and defaulting; only a literal that neither Int nor Float can satisfy (`quad 1` with `has double`) remains, as AMBIGUOUS TYPE with a better text (`total [ 1, 2 ]` with `has zero` runs: `zero` is a built-in member of Int and Float, see the A5c note below) |
 | L1 (bare member name is a NAMING ERROR) | mostly gone (section 2) |
 | L6 (`<` on an annotated `a`) | wording only (section 4) |
 
@@ -182,7 +182,7 @@ No hidden parameters are needed for inferred definitions.
 | g71-q3-let-two-types, constraint-let-fun-mono | TYPE MISMATCH | RUN `(Money 4,Vec 2 4)` / `(1,T 2)` |
 | g71-q7-div-two, -idiv-typed-int, -idiv-lifted-nosig, -idiv-lifted-sig | TYPE MISMATCH / MISSING CONSTRAINT | RUN: the Float/Int use as in Elm, the Cash use through its member |
 | g71-q7-idiv-two, g71-q7-modby-two | RUN `(Cash 200,Cash 200)` / `(Cash 100,Cash 100)` | RUN `(2,Cash 200)` / `(1,Cash 100)` |
-| a3-err-ambiguous-literal, a3-f7-err-literal-obligation, constraint-no-members-at-all (D3) | UNKNOWN MEMBER TYPE | RUN `6`, `2`, `3` |
+| a3-err-ambiguous-literal, a3-f7-err-literal-obligation, constraint-no-members-at-all (D3; the last with the built-in `zero` of A5c) | UNKNOWN MEMBER TYPE | RUN `6`, `2`, `3` |
 | constraint-ambiguous (D2) | AMBIGUOUS CONSTRAINT | RUN `"1"` |
 | a3-f8-err-let-div-two-types | TYPE MISMATCH | still rejected, as NO ATTACHED FUNCTION (`Int` has no `div`; Elm rejects `/` on Int too) |
 
@@ -199,6 +199,13 @@ Unchanged: `constraint-let-poly` and `constraint-order-bad-*` (still rejected, b
 generalization: no carrier is built, and the MR, the defaulting and the hold do nothing. The solver runs step for step as it
 does today, which is Elm's solver plus the A3c rank change that the gates already accept. Every case in the table above has a
 `where` block. The gates check this claim (section 5).
+
+**A5c note (2026-11-26, the user's decision).** `zero` is a built-in member of `Int`, `Float` and the sized integer and float
+types (beside `add` in their tables), not part of the `number` bundle, and there is no `one`. So `sum [ 1, 2 ]` with
+`has zero` defaults to `Int` like any other requirement Int meets (D3), and constraint-no-members-at-all prints `3`. A custom
+type's own `zero` is unchanged, and `zero` stays a name that is not well known (section 2): a custom type's `zero` can have
+any type. A5a had kept the case an error, following the L5 row as it was written then; this note and the two rows above
+are now consistent.
 
 ## 4. The voice of the errors
 
@@ -245,8 +252,8 @@ Nothing around it settles the type. Add a type annotation that names it, for exa
     empty : Money
 ```
 
-For a literal that no default fits (L5): "I cannot tell what type this `1` is. It must have an attached `zero` function, and
-`Int` and `Float` do not have one. Write a value of the type you mean, for example `Money 1`." The old advice, "write
+For a literal that no default fits (L5): "I cannot tell what type this `1` is. It must have an attached `double` function,
+and `Int` and `Float` do not have one. Write a value of the type you mean, for example `Money 1`." The old advice, "write
 `(9 : Int)`", is not Elm syntax.
 
 **NO ATTACHED FUNCTION** (was NO MEMBER):
