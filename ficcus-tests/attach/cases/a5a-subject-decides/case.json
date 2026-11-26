@@ -1,0 +1,1 @@
+{"desc": "rules 2 and 3: unannotated get1 t = get t and get2 w = get (get w): the member of the subject's type decides the result type"}

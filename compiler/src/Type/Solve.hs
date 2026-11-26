@@ -248,10 +248,10 @@ solve env rank pools state constraint =
       foldM (solve env rank pools) state constraints
 
     -- (A3c, F8) a definition at the outermost rank (a top level one) always takes the general case below, so that it has a
-    -- rank of its own: Members.defaulting and Members.hold tell a top level definition from a let by its rank, and a
-    -- definition without variables (`poly : ( Money, Money )`) took these two cases, so its own relaxed uses were never
-    -- defaulted and its let definitions counted as top level ones.  The typed mode (Type.Constrain.Expression.defHeader)
-    -- always gave it a variable, so the two output modes checked such a program differently
+    -- rank of its own: Type.Requirements tells a top level definition from a let by its rank (A5a; it was Members.defaulting
+    -- and Members.hold), and a definition without variables (`poly : ( Money, Money )`) took these two cases, so its own
+    -- relaxed uses were never defaulted and its let definitions counted as top level ones.  The typed mode
+    -- (Type.Constrain.Expression.defHeader) always gave it a variable, so the two output modes checked such a program differently
     CLet [] flexs header headerCon CTrue | not (topLevel rank header) ->
       do  introduce rank pools flexs
           solve env rank pools state headerCon

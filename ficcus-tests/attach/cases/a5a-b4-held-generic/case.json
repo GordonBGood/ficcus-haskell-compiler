@@ -1,0 +1,1 @@
+{"desc": "B4 inside an inferred function: pair w = let y = get w in ( y, y ) (y is held: the outer w decides it), at T and W"}

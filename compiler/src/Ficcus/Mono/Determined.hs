@@ -10,12 +10,15 @@
 -- so the clone's hidden member and the nodes of type `z` in its body get the exact type.
 module Ficcus.Mono.Determined
   ( fill
+  , subExprs
   )
   where
 
 
 import qualified Data.Map.Strict as Map
 
+import qualified AST.Canonical as Can
+import qualified Reporting.Annotation as A
 import Type.Readout (TType(..))
 
 
@@ -60,3 +63,33 @@ subst s t =
     TError -> t
   where
     go = subst s
+
+
+
+-- | every node of an expression (the expression itself first), into `let` definitions and lambdas; the specializer's
+-- walk over a clone's body for the variables its constrained calls decide (Spec.deadByMembers)
+subExprs :: Can.Expr -> [Can.Expr]
+subExprs expr@(A.At _ e) =
+  expr :
+    case e of
+      Can.List xs -> concatMap subExprs xs
+      Can.Negate x -> subExprs x
+      Can.Binop _ _ _ _ l r -> subExprs l ++ subExprs r
+      Can.Lambda _ x -> subExprs x
+      Can.Call f xs -> concatMap subExprs (f : xs)
+      Can.If branches final -> concat [ subExprs c ++ subExprs b | (c, b) <- branches ] ++ subExprs final
+      Can.Let def body -> defBody def ++ subExprs body
+      Can.LetRec defs body -> concatMap defBody defs ++ subExprs body
+      Can.LetDestruct _ x body -> subExprs x ++ subExprs body
+      Can.Case x branches -> subExprs x ++ concat [ subExprs b | Can.CaseBranch _ b <- branches ]
+      Can.Access x _ -> subExprs x
+      Can.Update _ x fields -> subExprs x ++ concat [ subExprs b | Can.FieldUpdate _ b <- Map.elems fields ]
+      Can.Record fields -> concatMap subExprs (Map.elems fields)
+      Can.Pair a b -> subExprs a ++ subExprs b
+      Can.Triple a b c -> subExprs a ++ subExprs b ++ subExprs c
+      _ -> []
+  where
+    defBody def =
+      case def of
+        Can.Def _ _ body -> subExprs body
+        Can.TypedDef _ _ _ body _ -> subExprs body

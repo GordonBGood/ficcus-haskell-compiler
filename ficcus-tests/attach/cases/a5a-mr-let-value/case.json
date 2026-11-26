@@ -1,0 +1,1 @@
+{"desc": "D4 (MR): a let value g = plus is not a function: not generalized, so its use at Money and Vec is a type mismatch"}

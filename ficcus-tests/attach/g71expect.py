@@ -59,3 +59,18 @@ EXPECT.update({
     'g71-q7-idiv-lifted-sig-typed': ('RUN', 'r: (2,Cash 200)\n', 'c'),
     'g71-q7-idiv-lifted-nosig': ('REJECTC', 'TYPE MISMATCH', '`Cash` and `Int` do not mix'),
 })
+# A5a (docs/A5-INFERENCE-DESIGN.md section 3): requirements are inferred, let functions generalized over them, literals
+# defaulted; the outputs are those of the twins in a5a-twins/ (a5agen.py --expect)
+EXPECT.update({
+    'g71-q1-nosig-call': ('RUN', 'r: (Money 4,Vec 2 4)\n', 'c'),
+    'g71-q1-nosig-call-one-use': ('RUN', 'r: Money 4\n', 'c'),
+    'g71-q3-let-two-types': ('RUN', 'r: (Money 4,Vec 2 4)\n', 'c'),
+    'g71-q3-lifted-nosig': ('RUN', 'r: (Money 4,Vec 2 4)\n', 'c'),
+    'g71-q4-two-locals-nosig': ('RUN', 'r: (Money 3,GT)\n', 'c'),
+    'g71-q7-div-two': ('RUN', 'r: (0.875,Cash 200)\n', 'c'),
+    'g71-q7-idiv-lifted-nosig': ('RUN', 'r: (2,Cash 200)\n', 'c'),
+    'g71-q7-idiv-lifted-sig': ('RUN', 'r: (2,Cash 200)\n', 'c'),
+    'g71-q7-idiv-two': ('RUN', 'r: (2,Cash 200)\n', 'c'),
+    'g71-q7-idiv-typed-int': ('RUN', 'r: (2,Cash 200)\n', 'c'),
+    'g71-q7-modby-two': ('RUN', 'r: (1,Cash 100)\n', 'c'),
+})

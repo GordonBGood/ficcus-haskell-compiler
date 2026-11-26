@@ -357,7 +357,10 @@ genClone cid (CKey did _ key@(Key parts)) src =
           then return (srcMembers src)
           else Map.union <$> hiddenMembers did def scheme env hidden <*> pure (srcMembers src)
       let args' = drop (length hidden) args
-      let se = SEnv ctx env (srcLocals src) cid did members
+      -- (A5a, D2) the variables of the body that only the members of its constrained calls decide (`b` in an inferred
+      -- `get2 w = get (get w)`): bound before the body is specialized
+      decided <- deadByMembers (SEnv ctx env (srcLocals src) cid did members) body
+      let se = SEnv ctx (Map.union env decided) (srcLocals src) cid did members
       params <- forM (zip [0 :: Int ..] args') (param se)
       body0 <- specExpr se body
       body' <- wrapParams se (zip args' params) body0
@@ -1644,6 +1647,48 @@ resolve se region e =
                   -- (ATTACH A2) the hidden parameters of a constrained definition are not arguments of its clones
                   let hiddenN = Constraints.hiddenCount (srcDef src)
                   return (RClone c (length (defArgs (srcDef src)) - hiddenN) (null (defArgs (srcDef src)) && srcOwner src == Nothing))
+
+
+-- | (A5a, D2) a variable of a clone's body that is not in its key (dead: Elm would default it) but is the type a member
+-- decides at one of the body's constrained calls: `b` in the inferred `get2 w = get (get w)`, where the inner call's
+-- member `W.f : W -> T` says `b := T`, which the outer call needs for its subject.  To a fixpoint over the body.
+deadByMembers :: SEnv -> Can.Expr -> SM Env
+deadByMembers se0 body =
+  loop (8 :: Int) se0 Map.empty
+  where
+    nodes = Determined.subExprs body
+
+    loop :: Int -> SEnv -> Env -> SM Env
+    loop fuel se acc =
+      do  found <- foldM (collect se) Map.empty nodes
+          let new = Map.difference found acc
+          if Map.null new || fuel <= 0
+            then return acc
+            else loop (fuel - 1) (se { seEnv = Map.union new (seEnv se) }) (Map.union acc new)
+
+    collect :: SEnv -> Env -> Can.Expr -> SM Env
+    collect se acc (A.At region e) =
+      do  tops <- gets sTops
+          let ctx = seCtx se
+          case calleeId ctx e >>= \cid -> Map.lookup cid tops of
+            Just src | Constraints.hiddenCount (srcDef src) > 0
+                     , Just raw <- Map.lookup (Recorder.exprKey region e) (_nodes (_typed ctx))
+                     , Just (scheme, inst) <- schemeOf ctx e raw
+                     , Right s0 <- matchT scheme inst ->
+              do  s <- determinedByMembers se (srcDef src) scheme s0
+                  let dead n = not (Map.member n (seEnv se)) && not (Map.member n acc)
+                  return $ Map.union acc $ Map.fromList
+                    [ (n, ByType m)
+                    | (v, TVar n _ _) <- Map.toList s0
+                    , dead n
+                    , Just t <- [Map.lookup v s]
+                    , not (isVar t)
+                    , Right m <- [mtypeOf (seEnv se) t]
+                    , m /= TyCon "ref" []
+                    ]
+            _ -> return acc
+
+    isVar t = case t of { TVar {} -> True; _ -> False }
 
 
 -- | (A5a, D2) the instance of a constrained definition at a use gives the types of the variables of its type; a variable

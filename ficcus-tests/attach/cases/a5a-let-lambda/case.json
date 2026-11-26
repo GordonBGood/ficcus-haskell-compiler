@@ -1,0 +1,1 @@
+{"desc": "D4: a let definition whose body is a lambda (g = \\x -> plus x x) is a function: generalized, used at Money and Vec"}

@@ -1,0 +1,1 @@
+{"desc": "D9 (rule 1): a polymorphic member used at Int and String through one inferred requirement is one type per name: rejected"}

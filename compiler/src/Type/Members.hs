@@ -30,7 +30,6 @@ module Type.Members
   , floatLiterals
   , floatLiteralName
   , relaxedObligation
-  , defaulting
   , defsOf
   , nameOf
   , use
@@ -233,7 +232,7 @@ shapeErrors (Can.Module home _ _ decls unions _ _ _) =
 
 -- (A3) `/`, `//`, `modBy` and `remainderBy` are typed by Float and Int in Elm, so a type with the member behind them
 -- (`div`, `idiv`, `mod`, `rem`) could not be used.  When a type that this module can see has the member, the use is
--- typed `a -> a -> a` with the obligation `a has <member>`, and Elm's type is the default of `a` (`defaulting`), so
+-- typed `a -> a -> a` with the obligation `a has <member>`, and Elm's type is the default of `a` (A5a: Type.Requirements), so
 -- every program that uses them on Float and Int means what it meant.  Without such a type nothing changes.
 relax :: Table -> ModuleName.Canonical -> String -> Can.Type -> Maybe (N.Name, Can.Type)
 relax table home name written =
@@ -277,33 +276,6 @@ relaxedObligation region function member subject tipe defaultType =
 relaxedUse :: Can.Annotation
 relaxedUse =
   WK.shapeAnnotation WK.Binary
-
-
--- | before the generalization of a top level definition: a subject of a relaxed use that is still a variable gets
--- Elm's type (Float for `/`, Int for the others), and what that settles is discharged
-defaulting :: Tools -> Table -> Map.Map N.Name Variable -> Int -> Int -> [Obligation] -> IO ([Obligation], [Error.Error])
-defaulting tools table env outer young pending
-  | outer > outermostRank || all (\o -> _default o == Nothing) pending = return (pending, [])
-  | otherwise =
-      do  forM_ pending $ \(Obligation _ _ _ subject _ relaxed) ->
-            case relaxed of
-              Nothing -> return ()
-              Just tipe ->
-                do  (Descriptor content rank _ _) <- UF.get subject
-                    case content of
-                      FlexVar _ | rank >= young -> settle subject tipe
-                      FlexSuper _ _ | rank >= young -> settle subject tipe
-                      _ -> return ()
-          discharge tools table env pending
-  where
-    settle subject tipe =
-      do  var <- _instantiate tools (Can.Forall Map.empty tipe)
-          answer <- Unify.unifyWith (_policy tools) subject var
-          case answer of
-            Unify.Ok vars -> _introduce tools vars
-            Unify.Err vars _ _ -> _introduce tools vars
-            Unify.Runaway _ -> return ()
-
 
 
 -- | (A3) what to add to a type mismatch that involves a custom type with well known members: a `number`, `comparable` or

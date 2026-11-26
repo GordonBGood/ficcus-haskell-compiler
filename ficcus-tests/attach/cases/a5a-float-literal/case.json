@@ -1,0 +1,1 @@
+{"desc": "D3 and the A3b literal: unannotated scale x = x * 0.5 with Float32 in sight infers `has fromFloat`; at Float32 and Float", "c_only": true}

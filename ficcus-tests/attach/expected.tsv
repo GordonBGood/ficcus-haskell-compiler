@@ -43,7 +43,7 @@ constraint-builtin	REJECT	NO MEMBER	built-in types (`Int`
 constraint-record	REJECT	NO MEMBER	built-in types (`Int`
 constraint-wrong-type	REJECT	MEMBER TYPE MISMATCH	T.plus
 constraint-missing	REJECT	MISSING CONSTRAINT	a has add : a -> a -> a
-constraint-no-signature	REJECT	MISSING CONSTRAINT	a has add : a -> a -> a
+constraint-no-signature	RUN	c	
 constraint-given-mismatch	REJECT	MEMBER TYPE MISMATCH;MEMBER TYPE MISMATCH	the constraint `a has add`
 constraint-clash-top	REJECT	NAME CLASH	a has add as add_
 constraint-clash-two	REJECT	NAME CLASH	b has add as add_
@@ -62,19 +62,19 @@ constraint-flow-package	RUN	c
 constraint-arg-pattern	REJECT	TYPE MISMATCH	1st argument
 constraint-arg-count	REJECT	BAD TYPE ANNOTATION	can accept 1 argument
 package-imports-vector	RUN	c	
-constraint-ambiguous	REJECT	AMBIGUOUS CONSTRAINT	mentions the type variable `z`
+constraint-ambiguous	RUN	c	
 constraint-ambiguous-subject	REJECT	AMBIGUOUS CONSTRAINT	mentions the type variable `b`
 constraint-var-in-type	RUN	c	
 constraint-let-generalize	RUN	c	
 constraint-let-generalize-later	RUN	c	
-constraint-let-fun-mono	REJECT	TYPE MISMATCH	
+constraint-let-fun-mono	RUN	c	
 constraint-let-fun-one	RUN	c	
-constraint-top-nosig-type	REJECT	MISSING CONSTRAINT	a has f : a -> b
+constraint-top-nosig-type	RUN	c	
 constraint-order	RUN	c	
 constraint-order-bad-nested	REJECT	TYPE MISMATCH	
 constraint-order-bad-pipe	REJECT	TYPE MISMATCH	
 constraint-order-bad-two	REJECT	TYPE MISMATCH	
-constraint-top-nosig-hidden	REJECT	UNKNOWN MEMBER TYPE;UNKNOWN MEMBER TYPE	I cannot tell
+constraint-top-nosig-hidden	RUN	c	
 package-own-vector	RUN	c+js	
 package-own-vector-mixed	RUN	c	
 package-vector-only	RUN	c	
@@ -88,7 +88,7 @@ a3-err-missing-member	REJECT	TYPE MISMATCH	It is missing: `sub`, `mul`, `pow`, `
 a3-err-div	REJECT	TYPE MISMATCH;TYPE MISMATCH	The (/) operator is specifically for floating-point division
 a3-err-div-others	REJECT	NO MEMBER	`/` needs:
 a3-err-mix-int	REJECT	TYPE MISMATCH	do not mix: there is no automatic conversion
-a3-err-ambiguous-literal	REJECT	UNKNOWN MEMBER TYPE	cannot tell which type that is
+a3-err-ambiguous-literal	RUN	c	
 a3-err-wrong-shape	REJECT	WELL KNOWN MEMBER WITH THE WRONG TYPE	add : Money -> Money -> Money
 a3-err-no-signature	REJECT	WELL KNOWN MEMBER WITHOUT TYPE ANNOTATION	compare : Money -> Money -> Order
 a3-err-not-comparable	REJECT	TYPE MISMATCH	I do not know how to compare `Version` values
@@ -122,9 +122,9 @@ a3-param	RUN	c
 a3-err-param-shape	REJECT	WELL KNOWN MEMBER WITH THE WRONG TYPE	append : V a -> V a -> V a
 a3-known-let-div	RUN	c	
 a3-f7-literal	RUN	c	
-a3-f7-err-literal-obligation	REJECT	UNKNOWN MEMBER TYPE	compare : number -> number -> Order
+a3-f7-err-literal-obligation	RUN	c	
 a3-f8-closed-annotation	RUN	js+c	
-a3-f8-err-let-div-two-types	REJECT	TYPE MISMATCH	
+a3-f8-err-let-div-two-types	REJECT	NO MEMBER	div : Int -> Int -> Int
 sized-bound-int8	RUN	c	
 sized-bound-int16	RUN	c	
 sized-bound-int32	RUN	c	
@@ -199,8 +199,8 @@ g70-elm-opaque	RUN	js+c
 # G71: inference of member constraints and local definitions, what the compiler does today (cases written by g71gen.py, results in g71expect.py; report docs/attach/G71-INFERENCE.md)
 g71-q1-nosig-qualified	RUN	c	
 g71-q1-nosig-bare-member	REJECTC	NAMING ERROR	I cannot find a `add` variable
-g71-q1-nosig-call	REJECTC	MISSING CONSTRAINT	I never infer constraints
-g71-q1-nosig-call-one-use	REJECTC	MISSING CONSTRAINT	I never infer constraints
+g71-q1-nosig-call	RUN	c	
+g71-q1-nosig-call-one-use	RUN	c	
 g71-q1-nosig-lt	RUN	c	
 g71-q1-nosig-compare	RUN	c	
 g71-q1-nosig-eq	RUN	c	
@@ -213,14 +213,14 @@ g71-q2-missing-compare	REJECTC	MISSING CONSTRAINT	a has compare : a -> a -> Orde
 g71-q2-lt-plain-var	REJECTC	TYPE MISMATCH	specifically wants a `comparable`
 g71-q3-let-once	RUN	c	
 g71-q3-let-twice-one-type	RUN	c	
-g71-q3-let-two-types	REJECTC	TYPE MISMATCH	But `g` needs the 1st argument to be:
+g71-q3-let-two-types	RUN	c	
 g71-q3-let-two-types-elm	RUN	js+c	
 g71-q3-lifted-two-types	RUN	c	
-g71-q3-lifted-nosig	REJECTC	MISSING CONSTRAINT	I never infer constraints
+g71-q3-lifted-nosig	RUN	c	
 g71-q4-two-locals-bare	RUN	c	
 g71-q4-two-locals-call	RUN	c	
 g71-q4-two-locals-concrete	RUN	c	
-g71-q4-two-locals-nosig	REJECTC	MISSING CONSTRAINT	a has compare : a -> a -> Order
+g71-q4-two-locals-nosig	RUN	c	
 g71-q4-two-locals-nosig-pinned	RUN	c	
 g71-q4-lifted-one	RUN	c	
 g71-q5-capture	RUN	c	
@@ -228,18 +228,18 @@ g71-q5-capture-call	RUN	c
 g71-q5-capture-concrete	RUN	c	
 g71-q5-lifted	RUN	c	
 g71-q7-div-float	RUN	c	
-g71-q7-div-two	REJECTC	TYPE MISMATCH	`Cash` and `Float` do not mix
+g71-q7-div-two	RUN	c	
 g71-q7-idiv-two	RUN	c	
 g71-q7-modby-two	RUN	c	
 g71-q7-plus-two	RUN	c	
 g71-q7-compare-two	RUN	c	
 g71-q7-lt-two	RUN	c	
 g71-q7-idiv-int	RUN	c	
-g71-q7-idiv-typed-int	REJECTC	TYPE MISMATCH	`Cash` and `Int` do not mix
+g71-q7-idiv-typed-int	RUN	c	
 g71-q7-modby-int	RUN	c	
-g71-q7-idiv-lifted-sig	REJECTC	MISSING CONSTRAINT	out : ( number, Cash )
+g71-q7-idiv-lifted-sig	RUN	c	
 g71-q7-idiv-lifted-sig-typed	RUN	c	
-g71-q7-idiv-lifted-nosig	REJECTC	TYPE MISMATCH	`Cash` and `Int` do not mix
+g71-q7-idiv-lifted-nosig	RUN	c	
 g71-q7-div-cash-only	RUN	c	
 g71-elm-nosig-bundles	RUN	js+c	
 g71-elm-let-ops	RUN	js+c	
@@ -268,3 +268,22 @@ a3b-err-fromfloat-missing	REJECT	NO MEMBER	fromFloat
 a3b-err-fromfloat-shape	REJECT	WELL KNOWN MEMBER WITH THE WRONG TYPE	fromFloat : Float -> Meters
 a3b-err-float-literal-elm	REJECT	TYPE MISMATCH	
 a3b-js-fromfloat	REJECT	CONSTRAINED FUNCTIONS	operators on custom types
+# A5a (a5agen.py): inference of requirements, let generalization, defaulting, the monomorphism restriction
+a5a-top-infer-two-types	RUN	c	
+a5a-top-infer-recursive	RUN	c	
+a5a-cross-module	RUN	c	
+a5a-js-inferred	REJECT	CONSTRAINED FUNCTIONS	Main.half (no type annotation
+a5a-subject-decides	RUN	c	
+a5a-b2-chain	RUN	c	
+a5a-b4-held-generic	RUN	c	
+a5a-let-two-types	RUN	c	
+a5a-let-outer-determined	RUN	c	
+a5a-let-lambda	RUN	c	
+a5a-let-rem-two	RUN	c	
+a5a-div-two-customs	RUN	c	
+a5a-mr-let-value	REJECTC	TYPE MISMATCH	But `f` needs the 2nd argument to be:
+a5a-mr-top-value	REJECTC	MISSING CONSTRAINT	pl : a -> a -> a
+a5a-default-top-value	RUN	c	
+a5a-undetermined-error	REJECTC	UNKNOWN MEMBER TYPE	zero
+a5a-float-literal	RUN	c	
+a5a-rule1-poly-member	REJECTC	MEMBER TYPE MISMATCH	pick
