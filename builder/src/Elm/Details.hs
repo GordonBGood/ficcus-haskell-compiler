@@ -37,6 +37,9 @@ import System.IO (hPutStrLn, stderr)
 import qualified Bytes.Decode as D
 import qualified Bytes.Encode as E
 import qualified Crash
+import qualified Control.Exception as Exception
+import qualified Data.ByteString.Builder as BB
+import qualified Data.ByteString.Lazy as BL
 import qualified ThreadSafe.Fork as Fork
 
 import qualified AST.Canonical as Can
@@ -742,7 +745,7 @@ compile typed pkg mvar name status =
                       return Nothing
 
                     Right (Compile.Artifacts canonical annotations objects) ->
-                      do  let ifaces = I.fromModule pkg canonical annotations
+                      do  ifaces <- forceInterface (I.fromModule pkg canonical annotations)
                           docs <- makeDocs docsStatus canonical
                           return $ Just $ RLocal ifaces objects docs
 
@@ -753,7 +756,7 @@ compile typed pkg mvar name status =
 
                     Right (Compile.Artifacts canonical annotations objects, types) ->
                       do  TypesFile.write False writer (R.packageTypesFile stuff pkg name) name canonical types
-                          let ifaces = I.fromModule pkg canonical annotations
+                          ifaces <- forceInterface (I.fromModule pkg canonical annotations)
                           docs <- makeDocs docsStatus canonical
                           return $ Just $ RLocal ifaces objects docs
 
@@ -765,6 +768,15 @@ compile typed pkg mvar name status =
 
     SKernelForeign ->
       return (Just RKernelForeign)
+
+
+-- Ficcus: the interface of a module is evaluated in full by the thread that compiled the module, before the threads
+-- of the modules that import it read it; several threads forcing one lazily built interface at once can deadlock
+-- ("thread blocked indefinitely in an MVar operation": two of them block on thunks the other one has claimed)
+forceInterface :: I.Interface -> IO I.Interface
+forceInterface iface =
+  do  _ <- Exception.evaluate (BL.length (BB.toLazyByteString (I.eInterface iface)))
+      return iface
 
 
 getInterface :: Result -> Maybe I.Interface
