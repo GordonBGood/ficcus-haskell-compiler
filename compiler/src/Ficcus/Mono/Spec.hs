@@ -1673,17 +1673,22 @@ resolve se region e =
 -- member `W.f : W -> T` says `b := T`, which the outer call needs for its subject.  To a fixpoint over the body.
 deadByMembers :: SEnv -> Can.Expr -> SM Env
 deadByMembers se0 body =
-  loop (8 :: Int) se0 Map.empty
+  loop (0 :: Int) se0 Map.empty
   where
     nodes = Determined.subExprs body
 
+    -- (A5f, review B2) to a fixpoint: each round binds at least one more variable, so the variables of the body bound it; the
+    -- cap is a guard against a bug, and says so
     loop :: Int -> SEnv -> Env -> SM Env
-    loop fuel se acc =
+    loop rounds se acc =
       do  found <- foldM (collect se) Map.empty nodes
           let new = Map.difference found acc
-          if Map.null new || fuel <= 0
+          if Map.null new
             then return acc
-            else loop (fuel - 1) (se { seEnv = Map.union new (seEnv se) }) (Map.union acc new)
+            else if rounds >= specFixpointCap
+              then report ("the types decided by attached functions in " ++ seDid se0 ++ " did not settle after "
+                           ++ show specFixpointCap ++ " rounds") >> return (Map.union acc new)
+              else loop (rounds + 1) (se { seEnv = Map.union new (seEnv se) }) (Map.union acc new)
 
     collect :: SEnv -> Env -> Can.Expr -> SM Env
     collect se acc (A.At region e) =
@@ -1713,6 +1718,12 @@ deadByMembers se0 body =
         ]
 
     isVar t = case t of { TVar {} -> True; _ -> False }
+
+
+-- | (A5f) the guard of the fixpoints of deadByMembers and determinedByMembers (they end long before: one round per nesting level)
+specFixpointCap :: Int
+specFixpointCap =
+  10000
 
 
 -- | (A5b) the variables of a selector's type that the member of its subject's exact type decides (`b` in `f : a -> b` at
@@ -1749,7 +1760,7 @@ selectorDetermined se p scheme s =
 -- exact type (Ficcus.Mono.Determined).  To a fixpoint, so that a member type decides the subject of the next constraint.
 determinedByMembers :: SEnv -> Can.Def -> TType -> Subst -> SM Subst
 determinedByMembers se def scheme s0 =
-  loop (8 :: Int) s0
+  loop (0 :: Int) s0
   where
     hidden = Constraints.hiddenOfDef def
     (types, _) = Members.peel (length hidden) scheme
@@ -1761,14 +1772,16 @@ determinedByMembers se def scheme s0 =
         Just (TVar m _ _) -> not (Map.member m (seEnv se))
         Just _ -> False
 
+    -- (A5f, review B2) to a fixpoint (each round decides at least one more variable), with a guard
     loop :: Int -> Subst -> SM Subst
-    loop fuel s
-      | fuel <= 0 = return s
-      | otherwise =
-          do  s' <- foldM step s (zip3 hidden subjects types)
-              if Map.keys (Map.filterWithKey (\n _ -> not (isHole s' n)) s') == Map.keys (Map.filterWithKey (\n _ -> not (isHole s n)) s)
-                then return s'
-                else loop (fuel - 1) s'
+    loop rounds s =
+      do  s' <- foldM step s (zip3 hidden subjects types)
+          if Map.keys (Map.filterWithKey (\n _ -> not (isHole s' n)) s') == Map.keys (Map.filterWithKey (\n _ -> not (isHole s n)) s)
+            then return s'
+            else if rounds >= specFixpointCap
+              then report ("the types decided by attached functions at a call in " ++ seDid se ++ " did not settle after "
+                           ++ show specFixpointCap ++ " rounds") >> return s'
+              else loop (rounds + 1) s'
 
     step :: Subst -> (Constraints.Hidden, Maybe String, TType) -> SM Subst
     step s (Constraints.Hidden _ member _, Just subject, tipe)

@@ -323,3 +323,6 @@ a5f-b1-let	RUN	c
 a5f-b1-let-after	RUN	c	
 a5f-b1-let-swapped	RUN	c	
 a5f-b1-let-renamed	RUN	c	
+a5f-b2-deep-9	RUN	c	
+a5f-b2-deep-12	RUN	c	
+a5f-b2-deep-30	RUN	c	
