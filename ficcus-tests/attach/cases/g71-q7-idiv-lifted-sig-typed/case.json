@@ -1,0 +1,3 @@
+{
+ "desc": "G71 question 7: as q7-idiv-lifted-sig, the Int use is a typed value (nine : Int), not a literal"
+}

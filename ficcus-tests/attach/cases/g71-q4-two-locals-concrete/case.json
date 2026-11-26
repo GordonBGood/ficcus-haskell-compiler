@@ -1,0 +1,3 @@
+{
+ "desc": "G71 question 4: outer annotated at Money; locals call `sum` and `cmp` (the outer type settles both)"
+}

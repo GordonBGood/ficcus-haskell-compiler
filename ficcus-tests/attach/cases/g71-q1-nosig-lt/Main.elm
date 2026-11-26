@@ -1,0 +1,54 @@
+module Main exposing (main)
+
+
+
+type Money = Money Int
+    where
+        zero : Money
+        zero = Money 0
+
+        add : Money -> Money -> Money
+        add (Money a) (Money b) = Money (a + b)
+
+        compare : Money -> Money -> Order
+        compare (Money a) (Money b) = Basics.compare a b
+
+
+type Vec = Vec Int Int
+    where
+        zero : Vec
+        zero = Vec 0 0
+
+        add : Vec -> Vec -> Vec
+        add (Vec a b) (Vec c d) = Vec (a + c) (b + d)
+
+        compare : Vec -> Vec -> Order
+        compare (Vec a b) (Vec c d) = Basics.compare ( a, b ) ( c, d )
+
+
+smaller a b =
+    if a < b then
+        a
+
+    else
+        b
+
+
+out =
+    ( ( smaller (Money 3) (Money 2), smaller (Vec 1 2) (Vec 1 1) ), ( smaller 3 2, smaller "b" "a" ) )
+
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ =
+                        Debug.log "r" out
+                in
+                ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

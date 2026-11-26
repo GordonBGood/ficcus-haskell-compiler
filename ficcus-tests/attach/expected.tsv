@@ -196,3 +196,60 @@ g70-opaque-unexported-fn	REJECT	NAMING ERROR	Finance.raw
 g70-private-type-call	REJECT	NAMING ERROR	Finance.Money.toInt
 g70-private-type-flow	REJECT	NO MEMBER	has no members that I can see here
 g70-elm-opaque	RUN	js+c	
+# G71: inference of member constraints and local definitions, what the compiler does today (cases written by g71gen.py, results in g71expect.py; report docs/attach/G71-INFERENCE.md)
+g71-q1-nosig-qualified	RUN	c	
+g71-q1-nosig-bare-member	REJECTC	NAMING ERROR	I cannot find a `add` variable
+g71-q1-nosig-call	REJECTC	MISSING CONSTRAINT	I never infer constraints
+g71-q1-nosig-call-one-use	REJECTC	MISSING CONSTRAINT	I never infer constraints
+g71-q1-nosig-lt	RUN	c	
+g71-q1-nosig-compare	RUN	c	
+g71-q1-nosig-eq	RUN	c	
+g71-q1-nosig-plus	RUN	c	
+g71-q1-nosig-plus-money	REJECTC	TYPE MISMATCH	It is missing: `sub`, `mul`, `pow`, `neg`, `abs`, `fromInt`.
+g71-q2-missing-all	REJECTC	NAMING ERROR	I cannot find a `add` variable
+g71-q2-missing-all-call	REJECTC	MISSING CONSTRAINT	a has add : a -> a -> a
+g71-q2-missing-one	REJECTC	NAMING ERROR	I cannot find a `zero` variable
+g71-q2-missing-compare	REJECTC	MISSING CONSTRAINT	a has compare : a -> a -> Order
+g71-q2-lt-plain-var	REJECTC	TYPE MISMATCH	specifically wants a `comparable`
+g71-q3-let-once	RUN	c	
+g71-q3-let-twice-one-type	RUN	c	
+g71-q3-let-two-types	REJECTC	TYPE MISMATCH	But `g` needs the 1st argument to be:
+g71-q3-let-two-types-elm	RUN	js+c	
+g71-q3-lifted-two-types	RUN	c	
+g71-q3-lifted-nosig	REJECTC	MISSING CONSTRAINT	I never infer constraints
+g71-q4-two-locals-bare	RUN	c	
+g71-q4-two-locals-call	RUN	c	
+g71-q4-two-locals-concrete	RUN	c	
+g71-q4-two-locals-nosig	REJECTC	MISSING CONSTRAINT	a has compare : a -> a -> Order
+g71-q4-two-locals-nosig-pinned	RUN	c	
+g71-q4-lifted-one	RUN	c	
+g71-q5-capture	RUN	c	
+g71-q5-capture-call	RUN	c	
+g71-q5-capture-concrete	RUN	c	
+g71-q5-lifted	RUN	c	
+g71-q7-div-float	RUN	c	
+g71-q7-div-two	REJECTC	TYPE MISMATCH	`Cash` and `Float` do not mix
+g71-q7-idiv-two	RUN	c	
+g71-q7-modby-two	RUN	c	
+g71-q7-plus-two	RUN	c	
+g71-q7-compare-two	RUN	c	
+g71-q7-lt-two	RUN	c	
+g71-q7-idiv-int	RUN	c	
+g71-q7-idiv-typed-int	REJECTC	TYPE MISMATCH	`Cash` and `Int` do not mix
+g71-q7-modby-int	RUN	c	
+g71-q7-idiv-lifted-sig	REJECTC	MISSING CONSTRAINT	out : ( number, Cash )
+g71-q7-idiv-lifted-sig-typed	RUN	c	
+g71-q7-idiv-lifted-nosig	REJECTC	TYPE MISMATCH	`Cash` and `Int` do not mix
+g71-q7-div-cash-only	RUN	c	
+g71-elm-nosig-bundles	RUN	js+c	
+g71-elm-let-ops	RUN	js+c	
+g71-elm-lt-plain-var	REJECTC	TYPE MISMATCH	specifically wants a `comparable`
+g71-b3-repro	RUN	c	
+g71-b3-nolet	RUN	c	
+g71-b3-same-type	RUN	c	
+g71-b4-let	RUN	c	
+g71-b4-pipe	RUN	c	
+g71-b4-two-bindings	RUN	c	
+g71-b4-nolet	RUN	c	
+g71-b3-module-use	RUN	c	
+g71-b3-module-nouse	RUN	c	

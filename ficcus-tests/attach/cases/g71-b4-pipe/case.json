@@ -1,0 +1,3 @@
+{
+ "desc": "G71 question 6: B4 as a pipeline: let y = w |> get |> get"
+}

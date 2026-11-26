@@ -1,0 +1,3 @@
+{
+ "desc": "G71 question 4: outer unannotated; locals call `sum` and `cmp`; the body also calls Money.compare, which pins the outer variable to Money"
+}
