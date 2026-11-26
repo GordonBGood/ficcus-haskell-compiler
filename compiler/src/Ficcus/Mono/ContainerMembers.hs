@@ -19,7 +19,7 @@ module Ficcus.Mono.ContainerMembers
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
-import Ficcus.Mono.Class (MType(..))
+import Ficcus.Mono.Class (MType(..), mtypeText)
 import Ficcus.Mono.Ir (CloneId, UnionShape(..))
 
 
@@ -43,7 +43,7 @@ membersInside has skip unions t0 =
     go acc [] = Right acc
     go (seen, found) (t : rest)
       | Set.member t seen = go (seen, found) rest
-      | Set.size seen > limit = Left ("the type " ++ show t0 ++ " holds more than " ++ show limit ++ " different types (a type used at another argument inside itself)")
+      | Set.size seen > limit = Left ("the type " ++ mtypeText t0 ++ " holds more than " ++ show limit ++ " different types (a type used at another argument inside itself)")
       | otherwise =
           let seen' = Set.insert t seen in
           case t of
