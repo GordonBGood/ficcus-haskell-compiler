@@ -319,3 +319,7 @@ a5f-m1-append-ok	RUN	c
 a5f-m1-float32-ok	RUN	c	
 a5f-m2-recursive-ambiguous	REJECTC	MISSING CONSTRAINT	fa
 a5f-m2-recursive-todo	REJECTC	MISSING CONSTRAINT	fa
+a5f-b1-let	RUN	c	
+a5f-b1-let-after	RUN	c	
+a5f-b1-let-swapped	RUN	c	
+a5f-b1-let-renamed	RUN	c	

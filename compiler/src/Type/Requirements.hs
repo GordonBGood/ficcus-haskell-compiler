@@ -214,18 +214,32 @@ settle tools table env kind outer young header pending =
             let holds = [ o | (o, Hold) <- zip youngOnes classes ]
             forM_ holds $ \o -> raise outer (_subject o) >> raise outer (_type o)
             -- no requirement is quantified while its subject is held: a scheme obligation whose subject a hold reached
-            -- is held too (its variables then keep the context's rank)
-            schemeFlags <- forM [ o | (o, Scheme) <- zip youngOnes classes ] $ \o ->
-              do  r <- rankOf (_subject o)
-                  return (o, r >= young)
-            let scheme = [ o | (o, True) <- schemeFlags ]
-            let demoted = [ o | (o, False) <- schemeFlags ]
-            forM_ demoted $ \o -> raise outer (_subject o) >> raise outer (_type o)
+            -- is held too (its variables then keep the context's rank); to a fixpoint, since a demoted obligation's member
+            -- type can reach the subject of another (A5f, review B4)
+            (scheme0, demoted) <- demote outer young [ o | (o, Scheme) <- zip youngOnes classes ] []
+            -- (A5f, review B1) rule 1 when a requirement goes into a scheme (or is settled at the top level), not at every
+            -- discharge: held and pending obligations are left to their discharge, so acceptance does not depend on the
+            -- order of independent `let` definitions
+            (scheme, improveErrors) <- improve tools scheme0
             (settled, errors) <-
               case [ o | (o, Settle) <- zip youngOnes classes ] of
                 [] -> return ([], [])
-                candidates -> defaultAndReport tools table env young header candidates
-            return (Outcome (others ++ holds ++ demoted ++ settled) scheme errors)
+                candidates0 ->
+                  do  (candidates, candidateErrors) <- improve tools candidates0
+                      (settled0, errors0) <- defaultAndReport tools table env young header candidates
+                      return (settled0, candidateErrors ++ errors0)
+            return (Outcome (others ++ holds ++ demoted ++ settled) scheme (improveErrors ++ errors))
+
+
+-- | the scheme obligations whose subject is still young; the others are held (raised to `outer`), to a fixpoint
+demote :: Int -> Int -> [Obligation] -> [Obligation] -> IO ([Obligation], [Obligation])
+demote outer young candidates demoted =
+  do  flags <- forM candidates $ \o -> (\r -> (o, r >= young)) <$> rankOf (_subject o)
+      case [ o | (o, False) <- flags ] of
+        [] -> return (candidates, demoted)
+        new ->
+          do  forM_ new $ \o -> raise outer (_subject o) >> raise outer (_type o)
+              demote outer young [ o | (o, True) <- flags ] (demoted ++ new)
 
 
 data Class = Hold | Scheme | Settle

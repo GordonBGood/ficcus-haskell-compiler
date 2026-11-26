@@ -456,10 +456,9 @@ discharge env rank pools state =
                   (introduce rank pools)
                   (Members.policyOf (_flag state) (_table state))
                   (maybe (return ()) (\ref -> writeIORef ref True) (_flag state))
-          (pending1, errors) <- Members.discharge tools (_table state) env pending
-          -- (A5a, D9) one type per member name per variable
-          (pending', errors') <- Requirements.improve tools pending1
-          return (state { _pending = pending', _errors = errors' ++ errors ++ _errors state })
+          (pending', errors) <- Members.discharge tools (_table state) env pending
+          -- (A5a, D9) one type per member name per variable: at the generalization (Type.Requirements.settle, A5f B1)
+          return (state { _pending = pending', _errors = errors ++ _errors state })
 
 
 
