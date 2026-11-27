@@ -88,8 +88,7 @@ sanitizers; identity of the C text of effects3 and e2review (33 programs, both m
 
 ## 5. Left for T1a-2
 
-`channel`, `toAddress`, `listen`, `sendCmd` (the Concurrent effect module, T1-D6); `receiveWithin`; the JS kernel and differential tests
-against node (T1-D14 (2)); `.fic`-only gating.
+Done in T1a-2 (section 8).
 
 ## 6. Gate results
 
@@ -112,3 +111,71 @@ texts 0 differ); a3b-identity --more vs elmficP1b 100 compiles 0 differ; rcgate-
   specified (the marker types are custom types whose objects carry another tag).
 - **O8** A leaked `Mailbox` (sent to another process) lets two processes receive from one mailbox: handled (receivers queue, R4),
   but T1-D2 meant the mailbox to be private.
+
+---
+
+# T1a-2: the effect manager, the rest of the API, the JavaScript reference
+
+27 Nov 2026, same branch, from 2d4f8148. Binary `bin/elmficT1b`. Decisions applied (planning chat, as recommended): O1 kept, O2 kept,
+O6, O7, O8 as below.
+
+## 8. What was built
+
+- **API complete** (T1-D2): `channel`, `toAddress`, `listen`, `sendCmd`, `receiveWithin`. `overlay/Concurrent.elm` is now an `effect
+  module` (command `SendCmd`, subscription `Listen`). Elm allows effect modules only in `elm/*` packages; Build parses the overlay's
+  `Concurrent` (that file of the overlay directory only) as a module of a kernel package (`Pkg.kernel`), nothing else changes.
+- **The manager** keeps no message type: `Listen id deliver`, where `deliver : (msg -> Task) -> Task` reads the channel's current
+  message and sends the tagged message to the app (the existential type of the channel stays inside the closure, so `subMap` composes).
+  A send to a channel queues the message in the channel record and sends the record to the manager as a self message (router given by
+  the kernel `attach` in the manager's first onEffects; before that the message is dropped). `onSelfMsg` runs the matching listens in
+  the order of the subscription list, then `advance` drops the message (counted when nobody listened). `sendCmd` runs `send` in
+  onEffects. So channel messages enter `update` only through the manager, on the loop: one writer of the model.
+- **receiveWithin**: a message first gives `Just` (no timer); otherwise an E2 interval timer for the waiting process whose task wakes it
+  with `Nothing`; a message first cancels the timer; an epoch makes a stale timeout a no-op; kill cancels it (E2's kill).
+- **O6**: a `.elm` module of the project that imports the overlay's `Concurrent` gets `FICCUS ONLY MODULE` (new `Syntax.FicOnlyImport`,
+  checked in `Build.crawlFile`), in C and JavaScript builds. JavaScript builds now get the overlay `Concurrent.elm` alone
+  (`elm-stuff/ficcus-overlay-js`, not a root): other programs are generated as before (JS identity gate).
+- **O7**: `Debug.toString` of a handle is `<internals>`; `==` compares records (one per process or channel, so ids) in C
+  (`isConcType` in CGen) and JavaScript (an object with a numeric `$` and a distinct `id`).
+- **O8**: `receive`/`receiveWithin` by any process but the mailbox's owner ends the program: `Concurrent.receive: the mailbox belongs to
+  another process (only the body given to spawnWith may receive from it)`, exit 1 (C: stdout flushed, `exit(1)`; JS: an Error). With
+  one receiver per mailbox, the receiver list became a flag.
+- **JavaScript reference** (T1-D14 (2)): `runtime/fic_conc.js` (same rules), emitted once by `Generate.JavaScript` after elm/core's
+  Scheduler and Platform kernels; each kernel definition of the overlay becomes `var $author$project$Concurrent$<k> = _FicConc_<k>;`.
+  It wraps `_Scheduler_step` to know the current process (the C patch's twin) and uses Scheduler.js's field names (checked at load).
+
+## 9. Rules added (for the user guide)
+
+- **R1 (O1, kept)**: `spawn`, `send` and `kill` never yield: a spawned process starts when the current one waits or ends.
+- **R9** A channel message is delivered to the listens the manager has when it handles the message, in the order of the subscription
+  list as the manager receives it (Elm's gather order: `Sub.batch [a, b]` reaches the manager as `[b, a]`). A message sent in the same
+  turn as the `update` that subscribes can reach the manager before the new subscription (E2's dispatch sends to the Task manager first,
+  and a performed task runs at once): it is dropped. One `Process.sleep 0` waits for the dispatch (O9).
+- **R10** `receiveWithin t`: `Just` at once when a message is there; else the first of a message (`Just`) and `t` ms (`Nothing`,
+  `fic_timer_delay` rules as `Process.sleep`).
+- **R11** only the owner receives (O8).
+
+## 10. Cases (hand reasoned; C = JS = expected)
+
+- **T1aWithin**: W waits 50 ms, K waits 30 ms, P sleeps 10. At 10 P sends 1 (W: `Just 1`, its timer gone), kills K (its timer gone:
+  "never" never prints), sleeps 100. W waits 50 again: `Nothing` at 60, then waits 1000. At 110 P sends 2 (W wakes: `Just 2`) and 3,
+  then awaits W; W's `receiveWithin 5` finds 3 queued: `Just 3` at once. `Got (Done [Just 1,Nothing,Just 2,Just 3],Killed)`.
+- **T1aChannel**: init performs channel, channel, spawnWith worker: `Got (<internals>,<internals>,<internals>)`, `equal:
+  (True,False,False)` (O7). The update starts the producer; its first send (0) reaches the manager before the subscription (R9):
+  dropped. After `sleep 0`: 1, 99 to the quiet channel (no listen: dropped), 2, 3; each reaches both listens, `Doubled` first (R9).
+  `FromChan 3` sends 42 by `sendCmd` and performs `await`: `worker got: 42`, `WorkerDone (Done 42)`. Stats: sent 6, dropped 2.
+- **T1aOwner**: the leaker sends 5 to itself and ends with its mailbox; P receives from it: the two lines, then the O8 message, exit 1.
+- The six T1a-1 cases give the same output on JavaScript.
+
+Where C and JavaScript cannot agree by design: the `FIC_STATS` lines (C only), `FIC_SCHED_SEED` (C only; the reference is the
+deterministic order), live counts. A crash differs on stderr (C prints the message; node prints the Error with its stack): compared by
+exit code and message. Timers: C runs `FIC_TIME` (virtual), node real time; the cases use distinct deadlines.
+
+## 11. Open points for the Opus review (T1a-2)
+
+- **O9** The start-up race of R9: the alternative (b) of T1-D6 (buffer a channel's messages until its first listen) would remove it,
+  but differs from ports.
+- **O10** The overlay parsed as a kernel-package module (only for `effect module`); no kernel JS import is used, the JavaScript is
+  substituted by the generator instead.
+- **O11** fic_conc.js depends on Scheduler.js's generated field names (`f`, `b`, `c`, `h`), checked at load for two of them only.
+- **O12** A channel never ends: its record is swept when nothing holds it; messages queued for a manager that stops are dropped.
