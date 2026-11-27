@@ -101,3 +101,7 @@ elmdiff 1175 SAME. The P1 cases are not in `gates.sh` / attach yet (run `ficcus-
   checks `expected.err` (each line in the compiler output) and ends with `p1: N cases, M failed` (exit 1 on a failure).
 * `gates.sh`: a `p1` step after `derive`, and a lock (`flock` on `$CLAUDE_CODE_TMPDIR/ficcus-gates.lock`, else `/tmp`):
   a second gate run prints `=== waiting for the gate lock ...` and starts when the first ends.
+* Targeted gates 2026-11-27 (log `/home/gordon/claude-tmp/gates-p1b.log`), all green: runtime 0, attach 378/0 `--rc`,
+  derive 56/0, p1 13/0, types 267 PASS + 1 XFAIL, JS identity 28, effects e1/e2/e3 all ok, e1p ok, a3b-identity
+  against elmficE3b 100/0, rcgate-san ok, suite 16/16. Not run: sized, stringdiff, examples, fbip, e1review, e1pr,
+  e1p-identity, e2review, rcfaults, typed, lib, elmdiff (all green on elmficP1).
