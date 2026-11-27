@@ -14,16 +14,14 @@ ok-written-inner	RUN	c
 ok-order-type-shadow	RUN	c	
 ok-constraint-use	RUN	c	
 ok-phantom	RUN	c	
-constraint-function	REJECT	NO MEMBER	
-constraint-missing	REJECT	MISSING CONSTRAINT	
+constraint-function	REJECT	NO ATTACHED FUNCTION	
+constraint-missing	REJECT	INCOMPLETE TYPE ANNOTATION	
 constraint-signature	REJECT	TYPE MISMATCH	
 ok-two-params	RUN	c	
-operator-param-not-yet	REJECT	TYPE MISMATCH	Tree
-constraint-builtin-not-yet	REJECT	NO MEMBER	
+constraint-builtin-not-yet	REJECT	NO ATTACHED FUNCTION	
 ok-opaque	RUN	c	
 ok-cross-module	RUN	c	
-c-use-refused	REJECTC		the derived member `Color.compare` (derive line at
-c-operator-refused	REJECTC		the derived member `Color.compare` (derive line at
+c-use-refused	REJECTC		the derived member `Color.toString` (derive line at
 c-enum-refused	REJECTC		the derived member `Color.enumerate` (derive line at
 js-refused	REJECT	DERIVED MEMBERS	Main.Color derives compare, hash
 js-refused-module	REJECT	DERIVED MEMBERS	Email.Email derives compare
@@ -48,6 +46,7 @@ cannot-function-toString	REJECT	CANNOT DERIVE	Int -> Int
 cannot-record-field	REJECT	CANNOT DERIVE	email
 cannot-deep	REJECT	CANNOT DERIVE	Email
 cannot-json-compare	REJECT	CANNOT DERIVE	Value
+cannot-json-hash	REJECT	CANNOT DERIVE	body
 cannot-imported	REJECT	CANNOT DERIVE	Money
 cannot-alias	REJECT	CANNOT DERIVE	onClick
 cannot-nonregular	REJECT	CANNOT DERIVE	another argument

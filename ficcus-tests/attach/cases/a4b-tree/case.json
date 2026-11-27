@@ -1,0 +1,1 @@
+{"desc": "derived compare of a recursive parametric type at Tree Int and Tree String: the group report (compare, <, >=, sortBy, Dict and Set keys, maximum), Tree.compare, maximum and minimum, sort, max, Maybe and list and tuple of trees, `<` (the A4a case operator-param-not-yet)", "c_only": true}

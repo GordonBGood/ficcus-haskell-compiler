@@ -340,10 +340,7 @@ lacks table member path tipe =
           | member `elem` members -> Nothing
           | otherwise -> Just (DE.Lacks path (render tipe) Nothing)
 
-        Just (Container labels)
-          | tid == vectorId && member == "compare" ->
-              Just (DE.NotYet path (render tipe) "the order of a `Vector` comes with the Vector parity work")
-          | otherwise ->
+        Just (Container labels) ->
               firstOf [ (path ++ " > " ++ T.nameToChars name ++ " " ++ label, t) | (label, t) <- zip labels args ]
 
         Nothing ->

@@ -1,7 +1,7 @@
 #!/bin/bash
 # The serial regression gates of the compiler session (STAGE4-FIX1.md section 7). BIN=elmficNN [S=scratch dir] ficcus-tests/gates.sh; takes about one hour (FIX2: step list unchanged, plus stringdiff).
-# Expected: runtime 0 non-ok lines; attach 340 cases 0 differ (159 + 37 G70 + 56 G71 + 15 A3b + 18 A5a + 22 A5b + 15 A5f + 18 A5c); types 267 PASS 1 XFAIL (one case may flake under load: rerun); JS identity 28; examples 298 ok x3 (296 + runtime test_sched gcc and clang); e2review gates all ok (the three modes must agree: a lower ex-rcsan count means FAIL lines);
-# fbip 0 failures; effects-e2 all ok; e1review all ok; effects-e1 all ok; e1p all ok (E1p); e1pr all ok (2 target rows: E1pR14LambdaSet); e1p-identity all ok; a3b-identity 100 compiles 0 differ; faults 0 missed; suite PASS; typed 568/12/1; library no REGRESSION; elmdiff 1160 SAME + 15 apps.
+# Expected: runtime 0 non-ok lines; attach 362 cases 0 differ (159 + 37 G70 + 56 G71 + 15 A3b + 18 A5a + 22 A5b + 15 A5f + 18 A5c + 22 A4b); derive 56 cases 0 differ; types 267 PASS 1 XFAIL (one case may flake under load: rerun); JS identity 28; examples 298 ok x3 (296 + runtime test_sched gcc and clang); e2review gates all ok (the three modes must agree: a lower ex-rcsan count means FAIL lines);
+# fbip 0 failures; effects-e2 all ok; e1review all ok; effects-e1 all ok; e1p all ok (E1p); e1pr all ok (2 target rows: E1pR14LambdaSet); e1p-identity all ok; a3b-identity 100 compiles 0 differ (against elmficA5c since A4b); faults 0 missed; suite PASS; typed 568/12/1; library no REGRESSION; elmdiff 1160 SAME + 15 apps.
 W=$(cd "$(dirname "$0")/../.." && pwd); R=${R:-$(cd "$(dirname "$0")/.." && pwd)}      # A3: the worktree this script is in (it was the main checkout)
 # Disk: every private ELM_HOME is a reflink copy where the file system has them (btrfs: no space used until a file is rewritten; a
 # hard link would be unsafe, elm rewrites artifacts.dat in place), and everything the run made under $S is removed when it ends, also
@@ -22,6 +22,7 @@ fresh() { rm -rf $S/h_$1; mkdir -p $S/h_$1; cp -r --reflink=auto $W/elm-home-dif
 step() { echo "=== $1 $(date +%T)"; }
 step runtime;  mkdir -p $S/rt_tmp; (cd $R && TMPDIR=$S/rt_tmp sh runtime/test.sh 2>&1 | grep -vc "^ok" ; ) > $G/runtime.txt 2>&1; cat $G/runtime.txt
 step attach;   python3 $R/ficcus-tests/attach/attach.py --elm $B --rc > $G/attach.txt 2>&1; tail -1 $G/attach.txt
+step derive;   python3 $R/ficcus-tests/derive/derive.py --elm $B -j 2 > $G/derive.txt 2>&1; tail -1 $G/derive.txt     # A4b: the derive matrix of A4a, with the rows A4b changed (expected: 56 cases, 0 differ)
 step sized-fuzz; python3 $R/ficcus-tests/sized/fuzz.py --elm $B --seeds 40 --first 1000 -j 2 > $G/sizedfuzz.txt 2>&1; tail -1 $G/sizedfuzz.txt     # SIZED: 40 seeds of the 200 (expected: 40 seeds, 0 differ)
 step stringdiff; TMPDIR=$S python3 $R/ficcus-tests/stringdiff.py --elm $B --safe $W/tools/safe --elm-home $(fresh sd) --seeds 6 --cases 300 --san > $G/stringdiff.txt 2>&1; tail -1 $G/stringdiff.txt
 step types;    (cd tests/types && python3 typetests.py --elm $B --compare results/baseline.json > $G/types.txt 2>&1); tail -4 $G/types.txt
@@ -37,7 +38,7 @@ step effects-e1; python3 $R/ficcus-tests/effects_e1.py --elm $B --elm-home $H > 
 step e1p;      python3 $R/ficcus-tests/e1p_measure.py --elm $B --elm-home $H --targets > $G/e1p.txt 2>&1; tail -1 $G/e1p.txt     # E1p (docs/E1P-DESIGN.md): the leaf split, H1..H7 and X programs at their targets (expected: e1p_measure: all ok)
 step e1pr;     python3 $R/ficcus-tests/e1p_review.py --elm $B --elm-home $H > $G/e1pr.txt 2>&1; tail -1 $G/e1pr.txt     # E1p review (docs/E1P-REVIEW.md): E1pR1, R10, R11, R13 gates; E1pR14LambdaSet a listed target (expected: e1p_review: all ok, 2 target rows)
 step e1p-identity; python3 $R/ficcus-tests/e1p_identity.py --elm $B --ref $W/bin/elmficG70a --elm-home $H --more > $G/e1pid.txt 2>&1; tail -1 $G/e1pid.txt     # E1p: C text changes only in split or dealiased functions, the 16 suite programs plus e1p, effects, effects2 (expected: e1p_identity: all ok)
-step a3b-identity; python3 $R/ficcus-tests/a3b_identity.py --elm $B --ref ${A3B_REF:-$W/bin/elmficA5b} --elm-home $H --more > $G/a3bid.txt 2>&1; tail -1 $G/a3bid.txt     # A3b: C text of the suite and the e1p/effects programs byte identical to the reference (A5c: elmficA5b; A3B_REF to change it), --rc and --no-rc (expected: 100 compiles compared, 0 differ)
+step a3b-identity; python3 $R/ficcus-tests/a3b_identity.py --elm $B --ref ${A3B_REF:-$W/bin/elmficA5c} --elm-home $H --more > $G/a3bid.txt 2>&1; tail -1 $G/a3bid.txt     # A3b: C text of the suite and the e1p/effects programs byte identical to the reference (A4b: elmficA5c; A3B_REF to change it), --rc and --no-rc (expected: 100 compiles compared, 0 differ)
 step e2review; python3 $R/ficcus-tests/e2_review.py --elm $B --elm-home $H > $G/e2review.txt 2>&1; tail -1 $G/e2review.txt     # E2 review (docs/E2-REVIEW.md): every program is a gate (the targets became gates with the fixes)
 step rcfaults; python3 $R/ficcus-tests/rccheck_faults.py --elm $B --elm-home $H > $G/faults.txt 2>&1; tail -2 $G/faults.txt
 step rcfaults-big; python3 $R/ficcus-tests/rccheck_faults.py --elm $B --elm-home $H --only vec,fbip,reuse,evo,parse --sample 0.02 --seed 1 > $G/faults2.txt 2>&1; tail -2 $G/faults2.txt

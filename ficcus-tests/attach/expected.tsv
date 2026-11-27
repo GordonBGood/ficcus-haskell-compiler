@@ -345,3 +345,25 @@ a5c-ambiguous-value	REJECTC	AMBIGUOUS TYPE	    empty : Money
 a5c-ambiguous-literal	REJECTC	AMBIGUOUS TYPE	Only a number literal gives the type
 a5c-naming-shapes	REJECT	NAMING ERROR	`scale` is an attached function of `Money` and of `Vec`
 a5c-naming-elm	REJECT	NAMING ERROR	I cannot find a `ad` variable
+a4b-enum	RUN	c	
+a4b-tree	RUN	c	
+a4b-containers	RUN	c	
+a4b-word64	RUN	c	
+a4b-nested	RUN	c	
+a4b-sort	RUN	c	
+a4b-cross-module	RUN	c	
+a4b-hash	RUN	c	
+a4b-hash-values	RUN	c	
+a4b-err-gate-maybe	REJECT	TYPE MISMATCH	comparable
+a4b-err-gate-record-key	REJECT	TYPE MISMATCH	comparable
+a4b-js-container	REJECT	NOT AVAILABLE IN JAVASCRIPT YET	
+a4b-err-fun-in-tree	REJECTC	TYPE MISMATCH	comparable
+a4b-err-fun-in-record	REJECTC	TYPE MISMATCH	comparable
+a4b-err-cannot-hash-function	REJECT	CANNOT DERIVE	Handler > argument 2
+a4b-err-cannot-compare-inner	REJECT	CANNOT DERIVE	Inner
+a4b-err-define-hash	REJECT	DERIVE AND DEFINE	
+a4b-err-nonregular-hash	REJECT	CANNOT DERIVE	inside itself
+a4b-nonregular-eq-elm	REJECTC		`==` on the type `Nest Int`, which is used at another argument inside itself (non-regular recursion), is not supported by the C generator
+a4b-nonregular-member	REJECTC		`==` on the type `Nest Ci`, which is used at another argument inside itself (non-regular recursion), is not supported by the C generator
+a4b-has-compare	RUN	c	
+a4b-hash-written	RUN	c	

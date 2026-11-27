@@ -1,0 +1,1 @@
+{"desc": "a derived compare over a record with a written compare (Ci, case insensitive), a derived enumeration, a list and a Maybe of them (record fields in alphabetical order: age, color, name, tags); Maybe and tuples of it; Dict keys", "c_only": true}

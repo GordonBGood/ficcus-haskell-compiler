@@ -212,11 +212,11 @@ cmpFns = Id.compare
 anyId : Id a -> Id a -> Order
 anyId = Id.compare
 """, "1")}, C_JSON, "r: 1\n")
-case("constraint-function", "REJECT", "NO MEMBER", "", {"Main.elm": worker(TREE + """
+case("constraint-function", "REJECT", "NO ATTACHED FUNCTION", "", {"Main.elm": worker(TREE + """
 bad : Tree (Int -> Int) -> Tree (Int -> Int) -> Order
 bad = Tree.compare
 """, "1")}, {"deps": [JSON]})
-case("constraint-missing", "REJECT", "MISSING CONSTRAINT", "", {"Main.elm": worker(TREE + """
+case("constraint-missing", "REJECT", "INCOMPLETE TYPE ANNOTATION", "", {"Main.elm": worker(TREE + """
 generic : Tree a -> Tree a -> Order
 generic = Tree.compare
 """, "1")}, {"deps": [JSON]})
@@ -231,10 +231,9 @@ type Pair k v = Pair k v (List ( k, v )) where derive compare, hash, toString, e
 cmp : Pair Int Int -> Pair Int Int -> Order
 cmp = Pair.compare
 """, "1")}, C_JSON, "r: 1\n")
-# A4a: an operator at a parametric type needs a constrained `compare` in A3's operator path (A3b, before A4b): Elm's report
-case("operator-param-not-yet", "REJECT", "TYPE MISMATCH", "Tree", {"Main.elm": worker(TREE, "Node Leaf 1 Leaf < Leaf")}, {"deps": [JSON]})
+# (A4b: `<` at a parametric type with a derived `compare` runs; the case moved to ficcus-tests/attach/a4b-tree, with a twin)
 # A4a: the built-in types do not have `encode` etc. in the solver's table yet (A4b to A4d)
-case("constraint-builtin-not-yet", "REJECT", "NO MEMBER", "", {"Main.elm": worker(TREE + """
+case("constraint-builtin-not-yet", "REJECT", "NO ATTACHED FUNCTION", "", {"Main.elm": worker(TREE + """
 encStrings : Tree String -> Json.Encode.Value
 encStrings = Tree.encode
 """, "1", imports="import Json.Encode\n")}, {"deps": [JSON]})
@@ -256,10 +255,11 @@ case("ok-cross-module", "RUN", "c", "", {
 type Contact = Contact { email : Email, tags : List String } where derive compare, hash, encode, decoder
 """, "1", imports="import Email exposing (Email)\n")}, C_JSON, "r: 1\n")
 
-# ---- uses: the C generator refuses a derived member (bodies come with A4b to A4f) ----
+# ---- uses: the C generator refuses a derived member whose body is not generated yet (A4c to A4f) ----
 
-case("c-use-refused", "REJECTC", "", "the derived member `Color.compare` (derive line at", {"Main.elm": worker(COLOR, "Color.compare Red Blue")}, C_JSON)
-case("c-operator-refused", "REJECTC", "", "the derived member `Color.compare` (derive line at", {"Main.elm": worker(COLOR, "Red < Blue")}, C_JSON)
+# (A4b: `compare` and `hash` are generated; their uses are the attach cases a4b-*, with twins.  The uses of the other members
+# are still refused until A4c to A4f.)
+case("c-use-refused", "REJECTC", "", "the derived member `Color.toString` (derive line at", {"Main.elm": worker(COLOR, "Color.toString Red")}, C_JSON)
 case("c-enum-refused", "REJECTC", "", "the derived member `Color.enumerate` (derive line at", {"Main.elm": worker(COLOR, "List.length Color.enumerate")}, C_JSON)
 
 # ---- the JavaScript output refuses any program with a derive line ----
@@ -373,6 +373,8 @@ type Contact = Contact (List ( Int, Maybe Email )) where derive hash
 """, "Email")
 bad("cannot-json-compare", "CANNOT DERIVE", "type Payload = Payload Json.Encode.Value where derive compare",
     "Value", meta={"deps": [JSON]}, imports="import Json.Encode\n")
+bad("cannot-json-hash", "CANNOT DERIVE", "type Doc = Doc { body : Json.Encode.Value, id : Int } where derive hash",
+    "body", meta={"deps": [JSON]}, imports="import Json.Encode\n")
 bad("cannot-imported", "CANNOT DERIVE", "type Wallet = Wallet Money where derive encode", "Money", meta={"deps": [JSON]},
     files={"Money.elm": "module Money exposing (Money, make)\n\n\ntype Money = Money Int where derive compare\n\n\nmake : Int -> Money\nmake =\n    Money\n"},
     imports="import Money exposing (Money)\n")

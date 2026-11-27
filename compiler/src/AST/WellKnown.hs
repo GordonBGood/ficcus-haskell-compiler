@@ -48,6 +48,7 @@ data Shape
   | FromInt     -- Int -> s                    fromInt
   | FromFloat   -- Float -> s                  fromFloat (A3b: a Float literal at s)
   | Value       -- s                           zero (A5c: a member of the built-in number types, not a well known name)
+  | Hash        -- s -> Int                    hash (A4b: a member of the built-in types, not a well known name)
   deriving (Eq)
 
 
@@ -69,6 +70,7 @@ builtinShapeOf member =
   case shapeOf member of
     Just shape -> Just shape
     Nothing | member == "zero" -> Just Value
+    Nothing | member == "hash" -> Just Hash
     Nothing -> Nothing
 
 
@@ -89,6 +91,7 @@ fits home tipe shape written =
     (FromInt, [a, b]) -> a == int && self b
     (FromFloat, [a, b]) -> a == float && self b
     (Value, [a]) -> self a
+    (Hash, [a, b]) -> self a && b == int
     _ -> False
   where
     self t =
@@ -127,6 +130,7 @@ fitsVar var shape written =
     (FromInt, [a, b]) -> a == int && self b
     (FromFloat, [a, b]) -> a == float && self b
     (Value, [a]) -> self a
+    (Hash, [a, b]) -> self a && b == int
     _ -> False
   where
     self t =
@@ -151,6 +155,7 @@ expectedText shape tipe =
     FromInt -> "Int -> " ++ tipe
     FromFloat -> "Float -> " ++ tipe
     Value -> tipe
+    Hash -> tipe ++ " -> Int"
 
 
 -- | the shape as the scheme `(x, shape of x)` (a pair, so that one instantiation gives both the subject and the
@@ -174,6 +179,7 @@ shapeAnnotation shape =
         FromInt -> Can.TLambda int v
         FromFloat -> Can.TLambda float v
         Value -> v
+        Hash -> Can.TLambda v int
 
 
 
@@ -207,7 +213,9 @@ data Builtin
   | BChar
   | BList
   | BTuple
-  | BOther      -- the other types that can be compared with `==` (Bool, Maybe, records, ...)
+  | BEnum       -- (A4b) Bool, Order and (): `compare` (False < True) and `hash`
+  | BContainer  -- (A4b) records, Maybe, Result, Array, Vector, Dict, Set: `compare` and `hash` when their parts have it
+  | BOther      -- the other types that can be compared with `==` (Json.Value, Bytes, ...)
   | BFunction   -- no members
 
 
@@ -228,12 +236,14 @@ builtinOfApp home name arity
 builtinHas :: Builtin -> String -> Bool
 builtinHas kind member =
   case kind of
-    BInt -> member `elem` (numberBundle ++ ["eq", "idiv", "mod", "rem", "zero"])
-    BFloat -> member `elem` (numberBundle ++ ["eq", "div", "fromFloat", "zero"])
-    BString -> member `elem` ["append", "compare", "eq"]
-    BChar -> member `elem` ["compare", "eq"]
-    BList -> member `elem` ["append", "compare", "eq"]
-    BTuple -> member `elem` ["compare", "eq"]
+    BInt -> member `elem` (numberBundle ++ ["eq", "idiv", "mod", "rem", "zero", "hash"])
+    BFloat -> member `elem` (numberBundle ++ ["eq", "div", "fromFloat", "zero", "hash"])
+    BString -> member `elem` ["append", "compare", "eq", "hash"]
+    BChar -> member `elem` ["compare", "eq", "hash"]
+    BList -> member `elem` ["append", "compare", "eq", "hash"]
+    BTuple -> member `elem` ["compare", "eq", "hash"]
+    BEnum -> member `elem` ["compare", "eq", "hash"]
+    BContainer -> member `elem` ["compare", "eq", "hash"]
     BOther -> member == "eq"
     BFunction -> False
 
@@ -242,8 +252,9 @@ builtinHas kind member =
 builtinChildren :: Builtin -> String -> Bool
 builtinChildren kind member =
   case kind of
-    BList -> member == "compare"
-    BTuple -> member == "compare"
+    BList -> member `elem` ["compare", "hash"]
+    BTuple -> member `elem` ["compare", "hash"]
+    BContainer -> member `elem` ["compare", "hash"]
     _ -> False
 
 

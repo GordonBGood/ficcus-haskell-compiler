@@ -47,6 +47,7 @@ import Ficcus.Mono.Print (keyTextIx)
 import Ficcus.Mono.Spec (classOfM)
 import Ficcus.Mono.Unbox (workerSuffix)
 import qualified Ficcus.Mono.Sized as Sized
+import qualified Ficcus.Mono.Derived as Derived
 
 
 
@@ -92,6 +93,8 @@ data Info =
     , iMgrs :: [Slot]                -- E2: the effect managers and ports in Elm's order (Ficcus.Mono.ManagerTable)
     , iPairs :: MapPairs             -- E2: the class pairs of the managers' cmdMap/subMap clones
     , iMembers :: Map.Map (String, MType) CloneId   -- A3b: the member clones `==`/`compare` call inside containers
+    , iDerived :: Set.Set (String, MType)            -- A4b: the exact types whose `compare`/`hash` is derived (mpDerived)
+    , iOwn :: Set.Set (String, String)               -- A4b: (member, type id) of the written `eq`/`compare`/`hash` (mpOwnMembers)
     }
 
 
@@ -143,6 +146,7 @@ generateWith order rcMode program =
         mgrs = managerSlots order byId0 root
         info = Info byId0 (captures clones) (mpUnions program)
                     (Set.fromList (allObjects clones)) (Set.fromList (structsOf clones)) mgrs (mapPairs clones) (mpMembers program)
+                    (mpDerived program) (mpOwnMembers program)
         g0 = G [] 0 0 [] Nothing [] False "" Map.empty [] [] Set.empty Set.empty Set.empty rcMode Map.empty Set.empty "" [] 0 ""
         final = execState (program' info root clones) g0
       in
@@ -158,6 +162,7 @@ generateWith order rcMode program =
               usesSched = any (`List.isInfixOf` body) ["fic_task_", "fic_bag_leaf", "fic_bag_batch", "fic_bag_map", "fic_mgr_def"]
           in Right ((if usesSched then "#define _POSIX_C_SOURCE 200809L      /* E2: the clock and the timers of runtime/fic_sched.h */\n" else "")
                     ++ (if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n"
+                    ++ (if "fic_hash_" `List.isInfixOf` body then Derived.hashRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_vector_", "FIC_VECTOR_"] then vectorRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_word", "fic_task_", "fic_bag_leaf", "fic_bag_batch", "fic_bag_map", "fic_mgr_def", "fic_port_", "fic_ja_", "fic_us_", "fic_pk_", "fic_json_", "fic_jd_", "fic_bytes_", "fic_re_", "fic_vsort"] then closureRuntime ++ "\n" else "")
                     ++ (if "fic_vsort" `List.isInfixOf` body then sortRuntime ++ "\n" else "")
@@ -2392,6 +2397,10 @@ kernelCall info cls name key args =
                 Key [ByApp AStr] -> return ("fic_str_append(" ++ a ++ ", " ++ b ++ ")")
                 Key [ByApp (AList c)] -> do { h <- helper (HApp (boxedClass c)); needObj [boxedClass c, CRef]; return (h ++ "(" ++ a ++ ", " ++ b ++ ")") }
                 _ -> unsupported "++ at this key"
+            -- (A4b) the structural hash at the key's exact type (Ficcus.Mono.Derived)
+            (k, [a]) | k == Derived.hashKernelId, Key [ByType t] <- key ->
+              do  h <- hashExpr info t a
+                  return ("(int64_t)" ++ h)
             ("elm/core:String.fromInt", [a]) -> return ("fic_str_from_int(" ++ a ++ ")")
             ("elm/core:String.fromFloat", [a]) -> return ("fic_str_from_float(" ++ a ++ ")")
             ("elm/core:Debug.log", [tag, v]) -> debugLog tag v
@@ -2549,6 +2558,8 @@ data HKey
   | HPortEnc MType             -- E2 step 7: a value of an outgoing port to JSON (borrowed; an owned Json value)
   | HPortDec MType             -- E2 step 7: JSON of an incoming port to a value (1, or 0 when the JSON does not fit the type)
   | HPortDecW MType            -- the same as a closure word (the run time's fic_port_decode)
+  | HHash MType                -- A4b: the structural hash of a value of the exact type (fic_hash_N, uint64_t)
+  | HArrAt                     -- A4b: the element word at an index of an elm/core Array (Elm's Array.get without the check)
   deriving (Eq, Ord)
 
 
@@ -2586,6 +2597,8 @@ helper k =
         HPortEnc _ -> "fic_penc_"
         HPortDec _ -> "fic_pdec_"
         HPortDecW _ -> "fic_pdecw_"
+        HHash _ -> "fic_hashh_"
+        HArrAt -> "fic_arrat_"
 
 
 -- the object layout / struct type a helper needs: defined at HELPER_MARK unless a clone defines it already
@@ -2641,7 +2654,8 @@ isStringT t = case t of { TyCon "elm/core:String.String" [] -> True; _ -> False 
 -- an expression for `a == b` at an exact type (a and b are atoms)
 eqExpr :: Info -> MType -> String -> String -> CG String
 eqExpr info t a b
-  | Just c <- Map.lookup ("eq", t) (iMembers info) = memberCall info c t a b
+  | Just c <- Map.lookup ("eq", t) (iMembers info) = memberCall info c t [a, b] CEnum
+  | Just why <- missingMember info "eq" t = failWith why
   | isStringT t = return ("fic_str_eq(" ++ a ++ ", " ++ b ++ ")")
   | otherwise =
       case clsOf info t of
@@ -2653,37 +2667,70 @@ eqExpr info t a b
     call = do { h <- helper (HEq t); return (h ++ "(" ++ a ++ ", " ++ b ++ ")") }
 
 
+-- | (A4b, A3b review A1) a type with a written member reached by the structural code without the member's clone in the
+-- table: the specializer missed a use, and the structural code would silently ignore the member
+missingMember :: Info -> String -> MType -> Maybe String
+missingMember info member t =
+  case t of
+    TyCon tid _ | Set.member (member, tid) (iOwn info) ->
+      Just ("internal: the type " ++ Derived.mtypeSource t ++ " has its own `" ++ member ++ "`, but the specializer did not request its clone for the structural code that reaches it")
+    _ -> Nothing
+
+
 -- an expression for the sign of the comparison of two values at an exact type: Int, Char, Float, String, and
 -- tuples and lists of these (a and b are atoms)
 cmpExpr :: Info -> MType -> String -> String -> CG String
 cmpExpr info t a b =
   case t of
-    _ | Just c <- Map.lookup ("compare", t) (iMembers info) -> do { r <- memberCall info c t a b; return ("((int)" ++ r ++ " - 1)") }
+    _ | Just c <- Map.lookup ("compare", t) (iMembers info) -> do { r <- memberCall info c t [a, b] CEnum; return ("((int)" ++ r ++ " - 1)") }
+    _ | Just why <- missingMember info "compare" t -> failWith why
     TyCon "elm/core:Basics.Int" [] -> return ("fic_i_cmp(" ++ a ++ ", " ++ b ++ ")")
     TyCon "elm/core:Char.Char" [] -> return ("fic_i_cmp((int64_t)" ++ a ++ ", (int64_t)" ++ b ++ ")")
     TyCon "elm/core:Basics.Float" [] -> return ("fic_f_cmp(" ++ a ++ ", " ++ b ++ ")")
+    -- (A4b) False < True; () has one value
+    TyCon "elm/core:Basics.Bool" [] -> return ("fic_i_cmp((int64_t)(" ++ a ++ " != 0), (int64_t)(" ++ b ++ " != 0))")
+    TyUnit -> return ("((void)" ++ a ++ ", (void)" ++ b ++ ", 0)")
     TyCon n [] | Just sz <- Sized.sizedOfTypeId n -> return (Sized.cmpC sz a b)
     _ | isStringT t -> return ("fic_str_cmp(" ++ a ++ ", " ++ b ++ ")")
     _ -> do { h <- helper (HCmp t); return (h ++ "(" ++ a ++ ", " ++ b ++ ")") }
 
 
+-- | (A4b) an expression for the structural hash (uint64_t) of a value of an exact type (an atom): a written `hash` member is
+-- called; the scalars inline; everything else a helper per type (Ficcus.Mono.Derived)
+hashExpr :: Info -> MType -> String -> CG String
+hashExpr info t a =
+  case t of
+    _ | Just c <- Map.lookup ("hash", t) (iMembers info) -> do { r <- memberCall info c t [a] CI64; return ("(uint64_t)" ++ r) }
+    _ | Just why <- missingMember info "hash" t -> failWith why
+    TyCon "elm/core:Basics.Int" [] -> return ("fic_hash_mix((uint64_t)" ++ a ++ ")")
+    TyCon "elm/core:Char.Char" [] -> return ("fic_hash_mix((uint64_t)" ++ a ++ ")")
+    TyCon "elm/core:Basics.Float" [] -> return ("fic_hash_f64(" ++ a ++ ")")
+    TyCon "elm/core:Basics.Bool" [] -> return ("fic_hash_mix((uint64_t)(" ++ a ++ " != 0))")
+    TyUnit -> return ("((void)" ++ a ++ ", fic_hash_mix(0u))")
+    TyCon n [] | Just sz <- Sized.sizedOfTypeId n ->
+      return (if Sized.isFloat sz then "fic_hash_f64((double)" ++ a ++ ")" else "fic_hash_mix((uint64_t)(int64_t)" ++ a ++ ")")
+    _ | isStringT t -> return ("fic_hash_bytes((const uint8_t *)FIC_STR(" ++ a ++ ")->data, FIC_STR(" ++ a ++ ")->len)")
+    _ -> do { h <- helper (HHash t); return (h ++ "(" ++ a ++ ")") }
+
+
 -- (A3b, docs/A3B-PLAN.md section 2) the member of a type inside a container (Ficcus.Mono.ContainerMembers): a direct call of its
--- clone (the specializer made one of two parameters for every member).  The helpers borrow their arguments, so an owned parameter
--- gets a count of its own first (--rc); the clone consumes it.  The result is the Bool (eq) or the Order (LT 0, EQ 1, GT 2).
-memberCall :: Info -> CloneId -> MType -> String -> String -> CG String
-memberCall info c t a b =
+-- clone (the specializer made one of two parameters for every member, one for `hash`).  The helpers borrow their arguments, so
+-- an owned parameter gets a count of its own first (--rc); the clone consumes it.  The result is the Bool (eq), the Order (LT 0,
+-- EQ 1, GT 2) or the Int (hash).
+memberCall :: Info -> CloneId -> MType -> [String] -> Class -> CG String
+memberCall info c t xs res =
   case Map.lookup c (iClones info) of
-    Just d | isFunction d, map snd (mdParams d) == [cls, cls], mdResult d == CEnum ->
+    Just d | isFunction d, map snd (mdParams d) == map (const cls) xs, mdResult d == res ->
       do  rcMode <- gets gRc
-          args <- forM (zip [a, b] (paramOwns d)) $ \(x, own) ->
+          args <- forM (zip xs (paramOwns d)) $ \(x, own) ->
             if rcMode && own == Owned
               then do { v <- fresh "mv"; emit (classType cls ++ " " ++ v ++ " = " ++ x ++ ";"); dupVars' cls v; return v }
               else return x
           r <- fresh "mr"
-          emit (classType CEnum ++ " " ++ r ++ " = " ++ functionName d ++ "(" ++ List.intercalate ", " args ++ ");")
+          emit (classType res ++ " " ++ r ++ " = " ++ functionName d ++ "(" ++ List.intercalate ", " args ++ ");")
           return r
-    Just d -> failWith ("internal: the member clone " ++ mdName d ++ " that == or compare at " ++ mtypeText t ++ " calls does not take two arguments of class " ++ show cls)
-    Nothing -> failWith ("internal: the member clone that == or compare at " ++ mtypeText t ++ " calls is not in the program")
+    Just d -> failWith ("internal: the member clone " ++ mdName d ++ " that the structural code at " ++ mtypeText t ++ " calls does not take " ++ show (length xs) ++ " arguments of class " ++ show cls)
+    Nothing -> failWith ("internal: the member clone that the structural code at " ++ mtypeText t ++ " calls is not in the program")
   where
     cls = clsOf info t
 
@@ -2725,6 +2772,8 @@ genHelper info k name =
     HVecToList c -> withProto ("static fic_ref " ++ name ++ "(fic_ref v)") (vecToListBody c)
     HVecSortCmp c -> withProto ("static int " ++ name ++ "(void *f, const void *pa, const void *pb)") (vecSortCmpBody c)
     HVecCmp t -> withProto ("static int " ++ name ++ "(const void *pa, const void *pb)") (vecCmpBody t)
+    HHash t -> withProto ("static uint64_t " ++ name ++ "(" ++ classType (clsOf info t) ++ " a)") (needClass info (clsOf info t) >> hashBody t)
+    HArrAt -> withProto ("static fic_word " ++ name ++ "(fic_ref arr, int64_t i)") arrAtBody
   where
     withProto sig body =
       do  modify' (\g -> g { gProtos = (sig ++ ";") : gProtos g })
@@ -2939,13 +2988,251 @@ genHelper info k name =
     cmpBody t =
       case t of
         TyTuple ts -> structCmp t ts
+        -- (A4b) records: the fields in alphabetical order (the exact type keeps Elm's order of names, which is not)
+        TyRecord fs -> structCmpAt t (alphabetical fs)
         TyCon "ref" [] -> emit "(void)a; (void)b;" >> emit "return 0;"
         TyCon "elm/core:List.List" [e] -> listCmp e
-        _ -> failUnit ("comparison at " ++ mtypeText t ++ " is not supported by the C generator yet") >> emit "return 0;"
+        TyCon "elm/core:Array.Array" [e] -> arrayCmp e
+        TyCon n [e] | isVectorType info n -> vectorCmp e
+        TyCon "elm/core:Dict.Dict" [kt, vt] -> dictCmp kt vt
+        TyCon n args | structural "compare" t, Just ctors <- ctorsOf info n args -> customCmp n ctors
+        _ -> failUnit ("comparison at " ++ Derived.mtypeSource t ++ " is not supported by the C generator") >> emit "return 0;"
 
-    structCmp t ts =
+    -- (A4b) the fields of a record type with their positions in the struct, by name (code point order)
+    alphabetical fs =
+      [ (i, ty) | (_, i, ty) <- List.sortOn (\(n, _, _) -> n) [ (n, i, ty) | (i, (n, ty)) <- zip [0 :: Int ..] fs ] ]
+
+    -- (A4b) a custom type whose `compare`/`hash` the structural code generates: a derived one, or one of elm/core's
+    -- (`Maybe`, `Result`, `Set` behind its constructor, `Order`)
+    structural member t =
+      case t of
+        TyCon n _ -> Set.member (member, t) (iDerived info) || n `elem` structuralCore
+        _ -> False
+
+    structuralCore = [ "elm/core:Maybe.Maybe", "elm/core:Result.Result", "elm/core:Set.Set", "elm/core:Basics.Order" ]
+
+    -- constructors by `Derived.ctorRank` (Nothing first), then the fields left to right
+    customCmp n ctors
+      | maybe False usEnum (Map.lookup n (iUnions info)) = emit "return fic_i_cmp((int64_t)a, (int64_t)b);"
+      | otherwise =
+          do  let rank x = case Derived.ctorRank n 0 of { 0 -> tagOf x; _ -> "(1 - (int)" ++ tagOf x ++ ")" }
+              emit ("if (" ++ tagOf "a" ++ " != " ++ tagOf "b" ++ ") return " ++ rank "a" ++ " < " ++ rank "b" ++ " ? -1 : 1;")
+              emit ("switch (" ++ tagOf "a" ++ ") {")
+              forM_ ctors $ \(_, tag, fs) ->
+                when (not (null fs)) $
+                  do  let fcs = map (boxedClass . clsOf info) fs
+                      needObj fcs
+                      emit ("case " ++ show tag ++ "u: {")
+                      indented $
+                        do  emit (objType fcs ++ " *ca = (" ++ objType fcs ++ " *)a, *cb = (" ++ objType fcs ++ " *)b;")
+                            forM_ (zip [0 :: Int ..] fs) $ \(i, ty) ->
+                              do  needClass info (clsOf info ty)
+                                  x <- readF fcs i "ca" (clsOf info ty)
+                                  y <- readF fcs i "cb" (clsOf info ty)
+                                  c <- cmpExpr info ty x y
+                                  emit ("{ int c = " ++ c ++ "; if (c != 0) return c; }")
+                            emit "return 0;"
+                      emit "}"
+              emit "default: return 0;"
+              emit "}"
+
+    -- (A4b) an Array as its `toList`: element by element (Elm's `Array.get`), then the shorter first
+    arrayCmp e =
+      do  let ec = clsOf info e
+              afcs = [CI64, CI64, CRef, CRef]
+          needObj afcs
+          needClass info ec
+          at <- helper HArrAt
+          emit ("int64_t i, la = " ++ fl afcs 0 ("((" ++ objType afcs ++ " *)a)") ++ ", lb = " ++ fl afcs 0 ("((" ++ objType afcs ++ " *)b)") ++ ";")
+          emit "int64_t n = la < lb ? la : lb;"
+          emit "for (i = 0; i < n; i++) {"
+          indented $
+            do  x <- adapt (boxedClass ec) ec (at ++ "(a, i)" ++ wordSel ec)
+                emit (classType ec ++ " xe = " ++ x ++ ";")
+                y <- adapt (boxedClass ec) ec (at ++ "(b, i)" ++ wordSel ec)
+                emit (classType ec ++ " ye = " ++ y ++ ";")
+                c <- cmpExpr info e "xe" "ye"
+                emit ("{ int c = " ++ c ++ "; if (c != 0) return c; }")
+          emit "}"
+          emit "return la < lb ? -1 : la > lb ? 1 : 0;"
+
+    -- (A4b) a Vector: element by element, then the shorter first
+    vectorCmp e =
+      do  let ec = clsOf info e
+          needClass info ec
+          emit "int64_t i, la = FIC_VECTOR_LEN(a), lb = FIC_VECTOR_LEN(b);"
+          emit "int64_t n = la < lb ? la : lb;"
+          emit "for (i = 0; i < n; i++) {"
+          indented $
+            do  emit (classType ec ++ " xe = FIC_VECTOR_AT(a, " ++ classType ec ++ ", i);")
+                emit (classType ec ++ " ye = FIC_VECTOR_AT(b, " ++ classType ec ++ ", i);")
+                c <- cmpExpr info e "xe" "ye"
+                emit ("{ int c = " ++ c ++ "; if (c != 0) return c; }")
+          emit "}"
+          emit "return la < lb ? -1 : la > lb ? 1 : 0;"
+
+    -- (A4b) a Dict as its ascending `toList`: the two trees walked in order together (as dictEq), key then value
+    dictCmp kt vt =
+      do  let kc = clsOf info kt
+          let vc = clsOf info vt
+          let fcs = [CEnum, boxedClass kc, boxedClass vc, CRef, CRef]
+          needObj fcs
+          needClass info kc
+          needClass info vc
+          let cell = "(" ++ objType fcs ++ " *)"
+          emit "fic_ref sa[128], sb[128];"
+          emit "int na = 0, nb = 0;"
+          emit "for (;;) {"
+          indented $
+            do  emit ("while (" ++ tagOf "a" ++ " == 0u) { sa[na++] = a; a = " ++ fl fcs 3 ("(" ++ cell ++ "a)") ++ "; }")
+                emit ("while (" ++ tagOf "b" ++ " == 0u) { sb[nb++] = b; b = " ++ fl fcs 3 ("(" ++ cell ++ "b)") ++ "; }")
+                emit "if (na == 0 || nb == 0) return na == nb ? 0 : na == 0 ? -1 : 1;"
+                emit "a = sa[--na]; b = sb[--nb];"
+                ka <- readF fcs 1 ("(" ++ cell ++ "a)") kc
+                kb <- readF fcs 1 ("(" ++ cell ++ "b)") kc
+                ck <- cmpExpr info kt ka kb
+                emit ("{ int c = " ++ ck ++ "; if (c != 0) return c; }")
+                va <- readF fcs 2 ("(" ++ cell ++ "a)") vc
+                vb <- readF fcs 2 ("(" ++ cell ++ "b)") vc
+                cv <- cmpExpr info vt va vb
+                emit ("{ int c = " ++ cv ++ "; if (c != 0) return c; }")
+                emit ("a = " ++ fl fcs 4 ("(" ++ cell ++ "a)") ++ "; b = " ++ fl fcs 4 ("(" ++ cell ++ "b)") ++ ";")
+          emit "}"
+
+    -- (A4b) Elm's `Array.get` without the bounds check (elm/core Array: length, startShift, tree, tail; a node is SubTree 0 or Leaf 1)
+    arrAtBody =
+      do  let afcs = [CI64, CI64, CRef, CRef]
+              cell = "((" ++ objType afcs ++ " *)arr)"
+              node x = fl [CRef] 0 ("((" ++ objType [CRef] ++ " *)" ++ x ++ ")")
+          needObj afcs
+          needObj [CRef]
+          emit ("int64_t len = " ++ fl afcs 0 cell ++ ", s = " ++ fl afcs 1 cell ++ ";")
+          emit "fic_ref t;"
+          emit ("if (i >= (int64_t)(((uint64_t)len >> 5) << 5)) return fic_ja_data(" ++ fl afcs 3 cell ++ ")[i & 31];")
+          emit ("t = " ++ fl afcs 2 cell ++ ";")
+          emit "for (;;) {"
+          emit "  fic_ref nd = fic_ja_data(t)[(i >> s) & 31].p;"
+          emit ("  if (" ++ tagOf "nd" ++ " == 1u) return fic_ja_data(" ++ node "nd" ++ ")[i & 31];")
+          emit ("  t = " ++ node "nd" ++ ";")
+          emit "  s -= 5;"
+          emit "}"
+
+    -- (A4b) the structural hash: `fic_hash_combine` over the parts in the order of `compare` (constructors by their rank first)
+    hashBody t =
+      case t of
+        TyTuple ts -> structHash t ts
+        TyRecord fs -> structHashAt t (alphabetical fs)
+        TyCon "ref" [] -> emit "(void)a;" >> emit "return 0u;"
+        TyCon "elm/core:List.List" [e] ->
+          do  let ec = clsOf info e
+              let fcs = [boxedClass ec, CRef]
+              needObj fcs
+              needClass info ec
+              emit "uint64_t h = 0x4C6973744C697374ULL;"
+              emit ("while (" ++ tagOf "a" ++ " != 0u) {")
+              indented $
+                do  emit (objType fcs ++ " *ca = (" ++ objType fcs ++ " *)a;")
+                    x <- readF fcs 0 "ca" ec
+                    hx <- hashExpr info e x
+                    emit ("h = fic_hash_combine(h, " ++ hx ++ ");")
+                    emit ("a = " ++ fl fcs 1 "ca" ++ ";")
+              emit "}"
+              emit "return h;"
+        TyCon "elm/core:Array.Array" [e] ->
+          do  let ec = clsOf info e
+              let afcs = [CI64, CI64, CRef, CRef]
+              needObj afcs
+              needClass info ec
+              at <- helper HArrAt
+              emit ("int64_t i, n = " ++ fl afcs 0 ("((" ++ objType afcs ++ " *)a)") ++ ";")
+              emit "uint64_t h = 0x4C6973744C697374ULL;"
+              emit "for (i = 0; i < n; i++) {"
+              indented $
+                do  x <- adapt (boxedClass ec) ec (at ++ "(a, i)" ++ wordSel ec)
+                    emit (classType ec ++ " xe = " ++ x ++ ";")
+                    hx <- hashExpr info e "xe"
+                    emit ("h = fic_hash_combine(h, " ++ hx ++ ");")
+              emit "}"
+              emit "return h;"
+        TyCon n [e] | isVectorType info n ->
+          do  let ec = clsOf info e
+              needClass info ec
+              emit "int64_t i, n = FIC_VECTOR_LEN(a);"
+              emit "uint64_t h = 0x4C6973744C697374ULL;"
+              emit "for (i = 0; i < n; i++) {"
+              indented $
+                do  emit (classType ec ++ " xe = FIC_VECTOR_AT(a, " ++ classType ec ++ ", i);")
+                    hx <- hashExpr info e "xe"
+                    emit ("h = fic_hash_combine(h, " ++ hx ++ ");")
+              emit "}"
+              emit "return h;"
+        TyCon "elm/core:Dict.Dict" [kt, vt] ->
+          do  let kc = clsOf info kt
+              let vc = clsOf info vt
+              let fcs = [CEnum, boxedClass kc, boxedClass vc, CRef, CRef]
+              needObj fcs
+              needClass info kc
+              needClass info vc
+              let cell = "(" ++ objType fcs ++ " *)"
+              emit "uint64_t h = 0x44696374ULL;"
+              emit "fic_ref st[128];"
+              emit "int n = 0;"
+              emit "for (;;) {"
+              indented $
+                do  emit ("while (" ++ tagOf "a" ++ " == 0u) { st[n++] = a; a = " ++ fl fcs 3 ("(" ++ cell ++ "a)") ++ "; }")
+                    emit "if (n == 0) return h;"
+                    emit "a = st[--n];"
+                    kx <- readF fcs 1 ("(" ++ cell ++ "a)") kc
+                    hk <- hashExpr info kt kx
+                    emit ("h = fic_hash_combine(h, " ++ hk ++ ");")
+                    v <- readF fcs 2 ("(" ++ cell ++ "a)") vc
+                    hv <- hashExpr info vt v
+                    emit ("h = fic_hash_combine(h, " ++ hv ++ ");")
+                    emit ("a = " ++ fl fcs 4 ("(" ++ cell ++ "a)") ++ ";")
+              emit "}"
+        TyCon n args | structural "hash" t, Just ctors <- ctorsOf info n args -> customHash n ctors
+        _ -> failUnit ("hash at " ++ Derived.mtypeSource t ++ " is not supported by the C generator") >> emit "return 0u;"
+
+    structHash t ts = structHashAt t (zip [0 :: Int ..] ts)
+
+    structHashAt t its =
       do  let sc = clsOf info t
-          forM_ (zip [0 :: Int ..] ts) $ \(i, ty) ->
+          emit ("uint64_t h = " ++ show (length its) ++ "u;")
+          forM_ its $ \(i, ty) ->
+            do  x <- structField info sc ty i "a"
+                hx <- hashExpr info ty x
+                emit ("h = fic_hash_combine(h, " ++ hx ++ ");")
+          emit "return h;"
+
+    customHash n ctors
+      | maybe False usEnum (Map.lookup n (iUnions info)) = emit "return fic_hash_mix((uint64_t)a);"
+      | otherwise =
+          do  let rank = case Derived.ctorRank n 0 of { 0 -> tagOf "a"; _ -> "(1 - (int)" ++ tagOf "a" ++ ")" }
+              emit ("uint64_t h = fic_hash_mix((uint64_t)" ++ rank ++ ");")
+              emit ("switch (" ++ tagOf "a" ++ ") {")
+              forM_ ctors $ \(_, tag, fs) ->
+                when (not (null fs)) $
+                  do  let fcs = map (boxedClass . clsOf info) fs
+                      needObj fcs
+                      emit ("case " ++ show tag ++ "u: {")
+                      indented $
+                        do  emit (objType fcs ++ " *ca = (" ++ objType fcs ++ " *)a;")
+                            forM_ (zip [0 :: Int ..] fs) $ \(i, ty) ->
+                              do  needClass info (clsOf info ty)
+                                  x <- readF fcs i "ca" (clsOf info ty)
+                                  hx <- hashExpr info ty x
+                                  emit ("h = fic_hash_combine(h, " ++ hx ++ ");")
+                            emit "return h;"
+                      emit "}"
+              emit "default: return h;"
+              emit "}"
+
+    structCmp t ts = structCmpAt t (zip [0 :: Int ..] ts)
+
+    -- the fields by their position in the struct, in the order of the comparison
+    structCmpAt t its =
+      do  let sc = clsOf info t
+          forM_ its $ \(i, ty) ->
             do  x <- structField info sc ty i "a"
                 y <- structField info sc ty i "b"
                 c <- cmpExpr info ty x y

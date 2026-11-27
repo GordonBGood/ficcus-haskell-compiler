@@ -1,0 +1,1 @@
+{"desc": "a constrained function (`a has compare`) at Maybe, a record, a derived enumeration and recursive type, a list of the enumeration and Result (the obligation path of the solver and the specializer's built-in members)", "c_only": true}

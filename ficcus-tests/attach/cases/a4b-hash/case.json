@@ -1,0 +1,1 @@
+{"desc": "the law of hash: equal values (==) have equal hashes, here also -0.0 and 0, a Dict and a Set built in other orders, a record written in another field order; the distinct values of the cases have distinct hashes.  Through a constrained function `hashOf` at the built-in types, records, the containers, Word64, Float32 and derived types", "c_only": true}

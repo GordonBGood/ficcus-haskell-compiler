@@ -13,6 +13,7 @@ module Ficcus.Mono.Kernel
 
 
 import Ficcus.Mono.Class (AppClass(..), Key(..), KeyPart(..))
+import Ficcus.Mono.Derived (hashKernelId)
 import Ficcus.Mono.Effects (effectKernels, leafHome, portOf)
 import qualified Ficcus.Mono.Sized as Sized
 
@@ -47,6 +48,7 @@ kernelArityTable cid =
     , ("elm/core:Basics.eq", 2), ("elm/core:Basics.neq", 2)
     , ("elm/core:Basics.and", 2), ("elm/core:Basics.or", 2), ("elm/core:Basics.not", 1)
     , ("elm/core:Basics.compare", 2)
+    , (hashKernelId, 1)                  -- A4b: the structural hash at the key's exact type (Ficcus.Mono.Derived)
     , ("elm/core:Basics.toFloat", 1), ("elm/core:Basics.round", 1), ("elm/core:Basics.floor", 1), ("elm/core:Basics.ceiling", 1)
     , ("elm/core:Basics.truncate", 1), ("elm/core:Basics.sqrt", 1), ("elm/core:Basics.log", 1), ("elm/core:Basics.logBase", 2), ("elm/core:Basics.xor", 2)
     , ("elm/core:Basics.sin", 1), ("elm/core:Basics.cos", 1), ("elm/core:Basics.tan", 1), ("elm/core:Basics.asin", 1)
@@ -214,6 +216,7 @@ kernelSig cid key =
       -- Basics: comparisons and equality read two values of the key's type
       , ("elm/core:Basics.eq", "bb"), ("elm/core:Basics.neq", "bb"), ("elm/core:Basics.gt", "bb"), ("elm/core:Basics.ge", "bb")
       , ("elm/core:Basics.lt", "bb"), ("elm/core:Basics.le", "bb"), ("elm/core:Basics.compare", "bb")
+      , (hashKernelId, "b")
       ]
       ++ [ (n, replicate k 's') | (n, k) <- scalarKernels ]
       ++ [ (vectorKernelId n, sig) | (n, _, sig) <- vectorKernels ]

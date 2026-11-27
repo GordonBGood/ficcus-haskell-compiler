@@ -1,0 +1,1 @@
+{"desc": "sorts of derived elements by the kernel comparator (List.sort, sortBy, sortWith, Vector.sort; stable ties, 100 elements) and of an element that also holds a written compare (the overlay's sortMember)", "c_only": true}

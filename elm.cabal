@@ -155,6 +155,7 @@ executable elm
         Ficcus.Mono.Members
         Ficcus.Mono.Determined
         Ficcus.Mono.ContainerMembers
+        Ficcus.Mono.Derived
         Nitpick.Constraints
         AST.Source
         AST.Prim.Module

@@ -1,0 +1,1 @@
+{"desc": "a derived hash over a type with a written eq and a point-free written hash (an eta clone of one parameter), in a list and in a Maybe inside a tuple: the law holds through the written members", "c_only": true}
