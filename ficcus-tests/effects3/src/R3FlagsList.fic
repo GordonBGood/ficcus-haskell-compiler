@@ -1,0 +1,15 @@
+port module R3FlagsList exposing (main)
+
+-- E3b review: the smallest program whose flags decoder did not compile (fic_o_pp undeclared): List String flags
+
+
+port out : String -> Cmd msg
+
+
+main : Program (List String) () ()
+main =
+    Platform.worker
+        { init = \f -> ( (), out (String.concat f) )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

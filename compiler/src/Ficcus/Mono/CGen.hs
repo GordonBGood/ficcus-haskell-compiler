@@ -2118,6 +2118,7 @@ portDecBody info t =
     TyCon "elm/core:List.List" [e] ->
       do  let ec = clsOf info e
           needClass info ec
+          needObj [boxedClass ec, CRef]          -- E3a review F1: the cons cell, which the program may not build anywhere else
           d <- helper (HPortDec e)
           emit "int64_t i;"
           emit "fic_ref acc;"
@@ -2165,6 +2166,7 @@ portDecBody info t =
                                      , [nt] <- [ tg | (_, tg, []) <- ctors ] ->
       do  let fc = clsOf info fe
           needClass info fc
+          needObj [boxedClass fc]                -- E3a review F1: the Just cell (as the cons cell of the List branch)
           d <- helper (HPortDec fe)
           emit "if (j->tag == FIC_TAG_JNULL) {"
           indented $

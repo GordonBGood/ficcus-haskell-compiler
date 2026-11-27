@@ -1,0 +1,16 @@
+port module E3FlagsListMaybeStr exposing (main)
+
+-- E3a review F1: List (Maybe String) flags; the decoder builds the Just cell of Maybe String (fic_o_p). The program only counts the elements:
+-- code that reads an element (or Debug.toString) would declare that cell itself and hide the fault.
+
+
+port out : Int -> Cmd msg
+
+
+main : Program (List (Maybe String)) () ()
+main =
+    Platform.worker
+        { init = \f -> ( (), out (List.length f) )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

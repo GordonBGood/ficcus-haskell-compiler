@@ -14,6 +14,11 @@
  * fic_hv_finish consumes its argument and returns the sealed value. An outgoing callback BORROWS its value for the duration of the
  * call: to keep it, fic_hv_retain it, and fic_hv_release it later (on the loop thread). While a host holds a count, the program cannot
  * write that object in place: the host's view never changes.
+ * Two host errors that nothing here can detect (E3a review N2):
+ *   - do not write through the pointer of fic_hv_string_alloc after fic_hv_string_seal: the sealed string moves into the program
+ *     when it is sent, and a late write changes a value of the program;
+ *   - a callback must fic_hv_retain its borrowed value before it passes that value to fic_port_send (which consumes it): without
+ *     the retain it gives away a count it does not own, and the value is freed twice later.
  *
  * Errors (D7). Each int result is FIC_OK or a negative code; nothing here exits the program. After a failure fic_port_error() gives
  * the text: for FIC_E_DECODE it is Elm's Json.Decode.errorToString of the error Elm's decoder would give (for flags, after Elm's

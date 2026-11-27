@@ -1,0 +1,4 @@
+inn ["x","y\u00e9"]
+inn []
+inn ["a",2]
+inn ["never"]

@@ -1,0 +1,16 @@
+port module E3FlagsListMaybeInt exposing (main)
+
+-- E3a review F1: List (Maybe Int) flags; the decoder builds the Just cell of Maybe Int (fic_o_i). The program only counts the elements:
+-- code that reads an element (or Debug.toString) would declare that cell itself and hide the fault.
+
+
+port out : Int -> Cmd msg
+
+
+main : Program (List (Maybe Int)) () ()
+main =
+    Platform.worker
+        { init = \f -> ( (), out (List.length f) )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

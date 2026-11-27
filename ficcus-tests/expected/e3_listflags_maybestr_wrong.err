@@ -1,0 +1,19 @@
+Problem with the flags given to your Elm program on initialization.
+
+The Json.Decode.oneOf at json[1] failed in the following 2 ways:
+
+
+
+(1) Problem with the given value:
+    
+    5
+    
+    Expecting null
+
+
+
+(2) Problem with the given value:
+    
+    5
+    
+    Expecting a STRING

@@ -58,8 +58,16 @@ Program with ports `inn` (record), `mb` (Maybe Int), `tup` (tuple), `out`, and t
    `succeed ()`; and those programs keep their C).
 7. **Json.Value and undefined:** absent flags of type `Json.Value` refuse to start (as D11 says) with the text
    `Expecting a value: no flags were given, and Ficcus does not pass JavaScript's undefined into a Json.Value` inside crash 2's text;
-   the same holds inside `Maybe Json.Value` (Elm would give `Just undefined`).
+   the same holds inside `Maybe Json.Value`: absent flags of type `Maybe Json.Value` refuse to start too, where Elm gives
+   `Just undefined` (oneOf's `Json.Decode.value` takes undefined first; checked against Elm in the E3a review, N5).
 8. **`fic_port_error()` stays valid until the next failure** (D2 said "until the next call"); successful calls do not clear it.
+9. **A record field is an own key of a JSON object** (E3a review F4, with the `length` corner of section 6 point 2). Elm's
+   `Json.Decode.field` tests with JavaScript's `in`, which also finds keys that every object or array inherits: `length` on arrays,
+   and `constructor`, `toString`, `valueOf`, `hasOwnProperty`, `__proto__` and the like on `{}` and `[]`. Elm: `{ constructor : Int }`
+   given `{}` fails at `json.constructor` with "Expecting an INT" (value `undefined`), and `{ constructor : Json.Value }` given `{}`
+   is **accepted** (a JavaScript function enters the program and encodes as `undefined`). Ficcus refuses both with "Expecting an
+   OBJECT with a field named `constructor`" (fast decoder and error walker agree; no `internal:` text). Reproducer: the `pCtor` and
+   `pCtorV` lines of `ficcus-tests/e3ar/mklines.py`.
 
 ## 4. Tests
 
@@ -126,6 +134,25 @@ rebuilt on the API prints the same lines.
    unsubscribe replaced the array first (test `reentry`, both orders); a test of nested deliveries across two ports is in the same case.
 6. **Flags typed by a free variable** (`unitFlags`) are treated as `()` (never decoded), as before.
 7. **`fic_app_start` runs once** (a second call is `FIC_E_INVALID`); there is no stop or restart before E3e.
+
+## 6a. After the E3a review (`docs/E3A-REVIEW.md`; branch `feat/e3af`, binary `bin/elmficE3b`)
+
+- **F1 fixed:** `portDecBody` declared neither the cons cell of its List branch nor the Just cell of its Maybe branch (`needObj`), so
+  an incoming port or flags of `List String`, `List (Maybe Int)`, `List (Maybe String)` or `List (List Int)` did not compile
+  (`fic_o_pp`, `fic_o_i`, `fic_o_p`, `fic_o_ip` undeclared) unless other code of the program built the same cell. Pre-existing since
+  E2. Cases `listflags_*` and `listport` in `effects_e3.py`. Probed without failure (each in a program of its own, both modes):
+  List of Int, Float, Bool, (), String, Json.Value, tuples, records, Arrays, `List (List String)`; Maybe of String, Float, records,
+  tuples, Lists; Array String; a List inside a tuple or a record.
+- **N2 header text:** `runtime/fic_ports_api.h` now warns about writes through the `fic_hv_string_alloc` pointer after sealing and
+  about callbacks that send their borrowed value without `fic_hv_retain`.
+- **Open, not fixed here:**
+  - **F2 (to E3c/E3d): very deep values.** `fic_hv_to_json` and the error walker reach `fic_json_put`'s `exit(1)` beyond
+    `FIC_JSON_MAX_DEPTH` (a value built through the API has no depth limit), against D7's "nothing here exits"; and the text of a
+    refused value grows with the square of its depth (10,000 levels: a 400 MB `fic_port_error()` text). Suggested: `fic_hv_to_json`
+    returns NULL when too deep; the error text stops at a byte budget with `...` (a deviation to record).
+  - **F3 (to E3e): a failed `fic_app_start` cannot be retried.** `fic_app_started` is set before the flags are decoded, so after
+    `FIC_E_DECODE` (or `FIC_E_INVALID` for an unsealed builder) every later start is "started already". Also, before a start,
+    `fic_port_subscribe`/`send` answer `FIC_E_NO_PORT`, where "the program has not started" would be clearer.
 
 ## 7. Proposed entries for the shared files (not applied)
 
