@@ -76,3 +76,11 @@ source reverted, not committed) on the review cases `ficcus-tests/a4br`:
 So with P1 fixed the derive over an extensible-record field appears to work, and the refusal could be lifted (a 2-line
 change in `Canonicalize/Derive.hs`, plus the derive matrix rows that expect the refusal). Kept as is here: a decision
 for the user.
+
+## Gates (2026-11-27, once, `KEEP=1 S=/home/gordon/claude-tmp/gates-p1 BIN=elmficP1 A3B_REF=bin/elmficA4bf`, log `/home/gordon/claude-tmp/gates-p1.log`)
+
+All green: runtime 0; attach 378/0 `--rc`; derive 56/0; sized fuzz 40/0; stringdiff all agree; types 267 PASS + 1 XFAIL;
+JS identity 28/0; examples 298 x3; fbip 0; effects e1/e2 ok; e1review, e1p, e1pr (2 target rows), e1p-identity ok;
+a3b-identity against elmficA4bf 100 compiles, 0 differ (byte identical C); e2review gates ok (info 3, as before);
+rcfaults 2403/0, rcfaults-big 239/0; rcgate-san ok; suite 16/16; typed 568/12/1; lib 108 PASS + 59 FIXED;
+elmdiff 1175 SAME. The P1 cases are not in `gates.sh` / attach yet (run `ficcus-tests/p1/run.py`).
