@@ -1,0 +1,1 @@
+{"desc": "M1: a regular group of types that refer to each other (Expr/Stmt; A a = A a (B a), B a = B (A a)) still derives compare and hash: the group report, Dict and Set keys, the hash law over all pairs", "c_only": true}

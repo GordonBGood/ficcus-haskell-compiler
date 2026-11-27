@@ -1,0 +1,1 @@
+{"desc": "plain Elm: == on a non-regular type is refused by the C generator, once, with the type in source form (A3b review A3)"}

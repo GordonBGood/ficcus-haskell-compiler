@@ -30,6 +30,7 @@ data Error
   | Shadowed A.Region A.Region String String String -- the member in the derive line, the top level definition; the module, the type, the member
   | Cannot A.Region String String Reason            -- the member in the derive line; the type, the member
   | NonEnumeration A.Region String String String    -- the type, the member, a constructor with fields
+  | BesideEq A.Region A.Region String String        -- (A4bf) the member in the derive line, the written `eq`; the type, the member
 
 
 -- | why a member cannot be derived
@@ -37,6 +38,8 @@ data Reason
   = Lacks String String (Maybe String)   -- the path to the part (`Contact > email`), the type of the part, the custom type to give the member
   | NotYet String String String          -- the path, the type of the part, what is missing
   | NonRegular String                    -- the use of the type inside itself at other arguments
+  | NonRegularGroup String String String -- (A4bf) the use of a type of its group at other arguments, that type, the type whose field has it
+  | WrongShape String String String String String   -- (A4bf) the path, the type of the part, its member, the member's type, the type needed
   | NoParameter
 
 
@@ -133,6 +136,22 @@ toReport source err =
             reasonDoc tipe member reason
           )
 
+    BesideEq derived written tipe member ->
+      Report.Report "CANNOT DERIVE" derived [] $
+        Code.toPair source derived written
+          (
+            D.reflow $ "The type `" ++ tipe ++ "` cannot derive `" ++ member ++ "`: it has its own `eq`."
+          ,
+            besideEqHint tipe member
+          )
+          (
+            D.reflow $ "The type `" ++ tipe ++ "` derives `" ++ member ++ "` here:"
+          ,
+            D.reflow $ "but its `where` block defines its own `eq` here:"
+          ,
+            besideEqHint tipe member
+          )
+
     NonEnumeration region tipe member ctor ->
       Report.Report "DERIVE ON NON-ENUMERATION" region [] $
         Code.toSnippet source region Nothing
@@ -177,10 +196,42 @@ reasonDoc tipe member reason =
         , D.toSimpleHint $ "Write `" ++ tipe ++ "." ++ member ++ "` yourself in the `where` block of `" ++ tipe ++ "`."
         ]
 
+    NonRegularGroup use used inside ->
+      D.stack
+        [ D.indent 4 $ D.dullyellow $ D.fromChars use
+        , D.reflow $
+            "`" ++ tipe ++ "` and `" ++ inside ++ "` refer to each other, and this use of `" ++ used ++ "` in a field of `" ++ inside
+            ++ "` has other arguments than " ++ (if used == tipe then "the parameters of `" ++ tipe ++ "`" else "another use of `" ++ used ++ "` in them")
+            ++ ", so the arguments keep growing. A derived function is compiled once for each type it is used at, and these\
+            \ types would need infinitely many of them (the C generator does not support this)."
+        , D.toSimpleHint $ "Write `" ++ tipe ++ "." ++ member ++ "` yourself in the `where` block of `" ++ tipe ++ "`."
+        ]
+
+    WrongShape path partType partMember written expected ->
+      D.stack
+        [ D.indent 4 $ D.dullyellow $ D.fromChars (path ++ " : " ++ partType)
+        , D.reflow $ "A derived `" ++ member ++ "` calls `" ++ partMember ++ "` for this part, and it has this type:"
+        , D.indent 4 $ D.dullyellow $ D.fromChars written
+        , D.reflow $ "But a derived `" ++ member ++ "` needs it to have this type:"
+        , D.indent 4 $ D.green $ D.fromChars expected
+        , D.toSimpleHint $
+            "Give `" ++ partMember ++ "` that type, or write `" ++ tipe ++ "." ++ member ++ "` yourself in the `where` block of `"
+            ++ tipe ++ "`."
+        ]
+
     NoParameter ->
       D.reflow $
         "`map` changes the last type parameter of a type (`map : (a -> b) -> Tree a -> Tree b`), and `" ++ tipe
         ++ "` has no type parameter."
+
+
+besideEqHint :: String -> String -> D.Doc
+besideEqHint tipe member =
+  D.reflow $
+    "A derived `" ++ member ++ "` looks at every part of the value and ignores `" ++ tipe ++ ".eq`, so two values that are equal\
+    \ by your `eq` could " ++ (if member == "hash" then "get different hashes" else "compare as unequal")
+    ++ ", and a `Dict`, a `Set` or a sort would go wrong. Write `" ++ tipe ++ "." ++ member
+    ++ "` yourself in the `where` block, so that it agrees with `eq`."
 
 
 pickOne :: String -> String -> D.Doc

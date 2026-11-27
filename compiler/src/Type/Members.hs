@@ -57,6 +57,7 @@ import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
 import qualified AST.Prim.TypeVar as TV
 import qualified AST.WellKnown as WK
+import qualified Type.OpenRecord as OpenRecord
 import qualified Elm.Interface as I
 import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Package as Pkg
@@ -164,22 +165,33 @@ memberName =
 
 
 -- | when may a custom type take the place of one of Elm's `number`, `comparable`, `appendable` variables: when
--- it has every member of the bundle, each with the type the language needs
+-- it has every member of the bundle, each with the type the language needs.  (A4b) A derived `compare` has the
+-- constraints `a has compare` of its type's parameters: the answer is then the positions of those parameters, whose
+-- arguments must be comparable too.  The built-in containers are comparable when `comparableContainers` allows it.
 policyOf :: Maybe (IORef Bool) -> Table -> Unify.Policy
 policyOf flag table =
-  Unify.Policy $ \super home name ->
-    let
-      allowed =
-        case Map.lookup (Members.typeId home name) table of
-          Nothing ->
-            False
-
-          Just members ->
-            all (has members home name) (bundle super)
-    in
-    do  if allowed then maybe (return ()) (\ref -> writeIORef ref True) flag else return ()
-        return allowed
+  Unify.Policy customOk containerOk
   where
+    note = maybe (return ()) (\ref -> writeIORef ref True) flag
+
+    customOk super home name =
+      let
+        answer =
+          case Map.lookup (Members.typeId home name) table of
+            Nothing ->
+              Nothing
+
+            Just members ->
+              fmap concat (traverse (has members home name) (bundle super))
+      in
+      do  maybe (return ()) (const note) answer
+          return answer
+
+    containerOk super =
+      if super == Comparable && comparableContainers table
+        then note >> return True
+        else return False
+
     bundle super =
       case super of
         Number -> WK.numberBundle
@@ -189,8 +201,33 @@ policyOf flag table =
 
     has members home name member =
       case (Map.lookup (memberName member) members, WK.shapeOf member) of
-        (Just (Just (Can.Forall _ written)), Just shape) -> WK.fits home name shape written
-        _ -> False
+        (Just (Just (Can.Forall _ written)), Just shape)
+          | WK.fits home name shape written -> Just []
+          | Just (real, required) <- Constraints.unwrap written, WK.fits home name shape real ->
+              Just (constrainedPositions member real required)
+        _ -> Nothing
+
+
+-- | (A4b) the positions of the type's parameters that a constrained member (a derived one: `Tree.compare` with
+-- `where a has compare`) requires to have the same member
+constrainedPositions :: String -> Can.Type -> [Constraints.Required] -> [Int]
+constrainedPositions member real required =
+  case real of
+    Can.TLambda (Can.TType _ _ args) _ ->
+      [ i | (i, Can.TVar v) <- zip [0 ..] args, any (about v) required ]
+    _ -> []
+  where
+    about v (Constraints.Required m subject _) =
+      N.toChars m == member && subject == Can.TVar v
+
+
+-- | (A4b) THE GATE of the comparable built-in containers: records, `Maybe`, `Result`, `Array`, `Vector`, `Dict` and
+-- `Set` take the place of `comparable` (`compare`, `<`, `List.sort`, `Dict` and `Set` keys) and have the member `compare`
+-- only in a module that sees a type with attached functions, the rule of `/` and of the Float literal (A3, A3b), so that
+-- every Elm program keeps Elm's TYPE MISMATCH.  To make them comparable always, return True here.
+comparableContainers :: Table -> Bool
+comparableContainers table =
+  not (Map.null table)
 
 
 -- | the well known members of this module's own types that do not have the type the language needs, or no
@@ -443,6 +480,12 @@ resolve tools table env obligation@(Obligation region function member subject ti
   where
     policy = _policy tools
 
+    -- (A4b) the built-in containers, Bool, Order and () have `compare` and `hash` behind the gate of the comparable containers
+    open = comparableContainers table
+    containerIds = Unify.comparableContainerIds
+    enumIds = [ "elm/core:Basics.Bool", "elm/core:Basics.Order" ]
+    sizedIds = [ "author/project:" ++ t ++ "." ++ t | t <- ["Int8", "Int16", "Int32", "Word8", "Word16", "Word32", "Word64", "Float32"] ]
+
     go var =
       do  (Descriptor content _ _ _) <- UF.get var
           case content of
@@ -464,6 +507,13 @@ resolve tools table env obligation@(Obligation region function member subject ti
                 maybeMembers
                   | Just kind <- WK.builtinOfApp home name (length args) ->
                       builtin kind (T.nameToChars name) args
+                  -- (A4b) the sized integers and Float32 of the overlay have `hash` (their other members are written)
+                  | N.toChars member == "hash", Members.typeId home name `elem` sizedIds, Just _ <- maybeMembers ->
+                      shaped WK.Hash (T.nameToChars name) []
+                  | open, Members.typeId home name `elem` containerIds ->
+                      builtin WK.BContainer (T.nameToChars name) args
+                  | open, Members.typeId home name `elem` enumIds, null args ->
+                      builtin WK.BEnum (T.nameToChars name) []
                   | isBuiltin home ->
                       builtin WK.BOther (T.nameToChars name) []
                   | N.toChars member == "eq" ->
@@ -479,7 +529,15 @@ resolve tools table env obligation@(Obligation region function member subject ti
               builtin WK.BTuple "tuple" [a, b, c]
 
             Structure Unit1 ->
-              builtin WK.BOther "()" []
+              builtin (if open then WK.BEnum else WK.BOther) "()" []
+
+            -- (A4bf, review F1) only a closed record: an extensible one may hold more fields (a function) through its row
+            Structure (Record1 fields ext) | open ->
+              do  rest <- OpenRecord.recordRest ext
+                  case rest of
+                    OpenRecord.Closed others -> builtin WK.BContainer "record" (Map.elems fields ++ others)
+                    OpenRecord.Waits -> return Keep
+                    OpenRecord.Open -> openRecord
 
             Structure (Record1 _ _) ->
               builtin WK.BOther "record" []
@@ -507,6 +565,10 @@ resolve tools table env obligation@(Obligation region function member subject ti
 
             Error ->
               return (Done [] [])
+
+    openRecord =
+      do  err <- OpenRecord.errorFor region function member subject tipe
+          return (Done [] (maybe [] (: []) err))
 
     given var =
       case Map.lookup (Constraints.marker var member) env of
@@ -707,7 +769,9 @@ hold table isValue outer young header pending
     unknown valueName o@(Obligation region function member subject tipe _) =
       do  (Descriptor content _ _ _) <- UF.get subject
           t <- Type.toErrorType tipe
-          return (o, Error.UnknownMemberType region function (kindOf content) [(member, t)] (ownersOf table [member]) valueName)
+          -- (A4bf, review F1) an extensible record is not ambiguous: it has no `compare`/`hash`
+          openErr <- OpenRecord.errorFor region function member subject tipe
+          return (o, maybe (Error.UnknownMemberType region function (kindOf content) [(member, t)] (ownersOf table [member]) valueName) id openErr)
 
     allM p xs =
       case xs of
@@ -779,7 +843,9 @@ sweep table typed pending =
                       RigidVar name -> missing name
                       RigidSuper _ name -> missing name
                       Error -> return errors
-                      _ -> return (Error.UnknownMemberType region function (kindOf content) [(member, neededType)] (ownersOf table [member]) Nothing : errors)
+                      _ ->
+                        do  openErr <- OpenRecord.errorFor region function member subject tipe
+                            return (maybe (Error.UnknownMemberType region function (kindOf content) [(member, neededType)] (ownersOf table [member]) Nothing) id openErr : errors)
 
     annotationOf var =
       firstJust typed $ \(name, defVar, wheres, topLevel) ->
@@ -839,7 +905,8 @@ leftovers table pending =
     leftover (Obligation region function member subject tipe _) =
       do  (Descriptor content _ _ _) <- UF.get subject
           t <- Type.toErrorType tipe
-          return (Error.UnknownMemberType region function (kindOf content) [(member, t)] (ownersOf table [member]) Nothing)
+          openErr <- OpenRecord.errorFor region function member subject tipe
+          return (maybe (Error.UnknownMemberType region function (kindOf content) [(member, t)] (ownersOf table [member]) Nothing) id openErr)
 
 
 -- the kind of a variable of Elm's own (`number`, `comparable`, ...)

@@ -345,3 +345,41 @@ a5c-ambiguous-value	REJECTC	AMBIGUOUS TYPE	    empty : Money
 a5c-ambiguous-literal	REJECTC	AMBIGUOUS TYPE	Only a number literal gives the type
 a5c-naming-shapes	REJECT	NAMING ERROR	`scale` is an attached function of `Money` and of `Vec`
 a5c-naming-elm	REJECT	NAMING ERROR	I cannot find a `ad` variable
+a4b-enum	RUN	c	
+a4b-tree	RUN	c	
+a4b-containers	RUN	c	
+a4b-word64	RUN	c	
+a4b-nested	RUN	c	
+a4b-sort	RUN	c	
+a4b-cross-module	RUN	c	
+a4b-hash	RUN	c	
+a4b-hash-values	RUN	c	
+a4b-err-gate-maybe	REJECT	TYPE MISMATCH	comparable
+a4b-err-gate-record-key	REJECT	TYPE MISMATCH	comparable
+a4b-js-container	REJECT	NOT AVAILABLE IN JAVASCRIPT YET	
+a4b-err-fun-in-tree	REJECTC	TYPE MISMATCH	comparable
+a4b-err-fun-in-record	REJECTC	TYPE MISMATCH	comparable
+a4b-err-cannot-hash-function	REJECT	CANNOT DERIVE	Handler > argument 2
+a4b-err-cannot-compare-inner	REJECT	CANNOT DERIVE	Inner
+a4b-err-define-hash	REJECT	DERIVE AND DEFINE	
+a4b-err-nonregular-hash	REJECT	CANNOT DERIVE	inside itself
+a4b-nonregular-eq-elm	REJECTC		`==` on the type `Nest Int`, which is used at another argument inside itself (non-regular recursion), is not supported by the C generator
+a4b-nonregular-member	REJECTC		`==` on the type `Nest Ci`, which is used at another argument inside itself (non-regular recursion), is not supported by the C generator
+a4b-has-compare	RUN	c	
+a4b-hash-written	RUN	c	
+a4b-err-open-record	REJECTC	TYPE MISMATCH	comparable
+a4bf-err-nonregular-mutual	REJECT	CANNOT DERIVE	refer to each other
+a4bf-err-nonregular-mutual-hash	REJECT	CANNOT DERIVE	keep growing
+a4bf-err-nonregular-three	REJECT	CANNOT DERIVE	A (Maybe a)
+a4bf-mutual-regular	RUN	c	
+a4bf-err-row-field	REJECT	CANNOT DERIVE	T : { r | x : Int }
+a4bf-err-row-field-hash	REJECT	CANNOT DERIVE	T > argument 2 > List element
+a4bf-err-open-record-compare	REJECT	NO ATTACHED FUNCTION	Only a closed record
+a4bf-err-open-record-hash	REJECT	NO ATTACHED FUNCTION	has `hash`
+a4bf-err-open-record-inferred	REJECT	NO ATTACHED FUNCTION	Only a closed record
+a4bf-err-open-record-let	REJECT	NO ATTACHED FUNCTION	Only a closed record
+a4bf-closed-record-later	RUN	c	
+a4bf-err-hash-shape	REJECT	CANNOT DERIVE	    T -> String
+a4bf-err-hash-shape-arity2	REJECT	CANNOT DERIVE	T -> Int -> Int
+a4bf-err-beside-eq	REJECT	CANNOT DERIVE	its own `eq`
+a4bf-err-beside-eq-hash	REJECT	CANNOT DERIVE	get different hashes

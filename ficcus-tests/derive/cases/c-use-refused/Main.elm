@@ -24,7 +24,7 @@ main =
             \_ ->
                 let
                     _ =
-                        Debug.log "r" (Color.compare Red Blue)
+                        Debug.log "r" (Color.toString Red)
                 in
                 ( (), Cmd.none )
         , update = \_ m -> ( m, Cmd.none )

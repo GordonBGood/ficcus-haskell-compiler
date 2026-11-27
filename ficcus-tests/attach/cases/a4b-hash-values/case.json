@@ -1,0 +1,1 @@
+{"desc": "the hash is stable: fixed values for Int, Char, Bool, (), String (FNV-1a 64), tuples, a list, a record, derived enumeration and union, Maybe (Nothing has rank 0), Result; the twin computes the documented algorithm with Word64 on elmficA5c", "c_only": true}

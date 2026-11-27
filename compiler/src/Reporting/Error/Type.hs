@@ -241,6 +241,8 @@ toReport source localizer err =
         advice
           | builtin, t == "Int", names == ["div"] = [ D.reflow "Use (//) for integers, or `toFloat` first." ]
           | builtin, t == "Float", names `elem` [["idiv"], ["mod"], ["rem"]] = [ D.reflow "Use (/) for Float, or `round` first." ]
+          -- (A4bf, review F1) an extensible record (Type.OpenRecord): the built-in note would say that records have `compare`
+          | builtin, T.Record _ ext <- tipe, isOpenExt ext = [ D.reflow (openRecordNote needed) ]
           | builtin = [ D.reflow builtinNote ]
           | otherwise =
               [ D.reflow $ "Add " <> itOrThem needed <> " to the `where` block of `" <> t <> "`"
@@ -447,12 +449,29 @@ toReport source localizer err =
 
 
 
--- Ficcus (ATTACH A2; A5c texts)
+-- Ficcus (ATTACH A2; A5c texts; A4b: `hash`, the containers)
+openRecordNote :: [(N.Name, T.Type)] -> String
+openRecordNote needed =
+  "Only a closed record (such as `{ x : Int, y : Int }`) has " <> them <> ". This type is an extensible record (`{ r | ... }`),\
+  \ which may hold more fields that do not have " <> them <> ", such as functions. The type must be a closed record: write all\
+  \ its fields in the type annotation."
+  where
+    them = List.intercalate " and " [ "`" <> N.toChars m <> "`" | (m, _) <- needed ]
+
+
+isOpenExt :: T.Extension -> Bool
+isOpenExt ext =
+  case ext of
+    T.Closed -> False
+    _ -> True
+
+
 builtinNote :: String
 builtinNote =
   "`Int`, `Float`, `String`, `Char`, `List` and tuples have only the attached functions that the language gives them, as far\
   \ as their type allows (`add`, `sub`, `mul`, `pow`, `neg`, `abs`, `fromInt`, `fromFloat`, `zero`, `div`, `idiv`, `mod`, `rem`,\
-  \ `compare`, `eq`, `append`). Any other attached function can only come from a custom type that defines it in its `where` block."
+  \ `compare`, `eq`, `hash`, `append`); records, `Maybe`, `Result`, `Array`, `Vector`, `Dict` and `Set` have `compare` and `hash`\
+  \ when their parts do, in a module that sees a type with attached functions. Any other attached function can only come from a custom type that defines or derives it in its `where` block."
 
 
 -- | (A5c) how a use is named in a message: a call of a function, an operator, a Float literal, or a bare attached name

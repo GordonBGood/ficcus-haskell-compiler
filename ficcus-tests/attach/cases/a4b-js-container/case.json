@@ -1,0 +1,1 @@
+{"desc": "compare on Maybe in a module that sees a type with attached functions: accepted, so the JavaScript output refuses it"}

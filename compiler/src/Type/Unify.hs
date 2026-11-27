@@ -1,10 +1,11 @@
-{-# LANGUAGE OverloadedStrings, Rank2Types #-}
+{-# LANGUAGE OverloadedStrings, PatternGuards, Rank2Types #-}
 module Type.Unify
   ( Answer(..)
   , unify
   , Policy(..)
   , noPolicy
   , unifyWith
+  , comparableContainerIds
   )
   where
 
@@ -12,6 +13,7 @@ module Type.Unify
 import Control.Exception (Exception, throwIO, try)
 import qualified Data.Map.Strict as Map
 
+import qualified AST.Members as Members
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
 import qualified AST.Prim.TypeVar as T
@@ -51,13 +53,21 @@ instance Exception RunawayException
 -- Ficcus (ATTACH A3): a custom type may take the place of one of Elm's `number`, `comparable` and `appendable`
 -- variables when it has the members that the variable stands for (Type.Members builds the policy from the member
 -- table).  `noPolicy` is Elm's rule: no custom type does.
-newtype Policy =
-  Policy { _customOk :: SuperType -> ModuleName.Canonical -> T.Name -> IO Bool }
+--
+-- (A4b) `_customOk` answers with the positions of the type's arguments that must be comparable too (a derived `compare` of
+-- `Tree a` needs `a` to have `compare`), Nothing when the type may not.  `_containerOk` says whether the built-in
+-- containers (records, `Maybe`, `Result`, `Array`, `Vector`, `Dict`, `Set`) may take the place of `comparable` (when
+-- their parts can): docs/attach/A4B-NOTES.md.
+data Policy =
+  Policy
+    { _customOk :: SuperType -> ModuleName.Canonical -> T.Name -> IO (Maybe [Int])
+    , _containerOk :: SuperType -> IO Bool
+    }
 
 
 noPolicy :: Policy
 noPolicy =
-  Policy (\_ _ _ -> return False)
+  Policy (\_ _ _ -> return Nothing) (\_ -> return False)
 
 
 unify :: Variable -> Variable -> IO Answer
@@ -168,10 +178,16 @@ register mkVar =
         ok (case vars of Vars n vs p -> Vars n (var:vs) p) var
 
 
-customOk :: SuperType -> ModuleName.Canonical -> T.Name -> Unify Bool
+customOk :: SuperType -> ModuleName.Canonical -> T.Name -> Unify (Maybe [Int])
 customOk super home name =
-  Unify $ \vars@(Vars _ _ (Policy ok')) ok _ ->
+  Unify $ \vars@(Vars _ _ (Policy ok' _)) ok _ ->
     ok vars =<< ok' super home name
+
+
+containerOk :: SuperType -> Unify Bool
+containerOk super =
+  Unify $ \vars@(Vars _ _ (Policy _ ok')) ok _ ->
+    ok vars =<< ok' super
 
 
 mismatch :: Unify a
@@ -437,7 +453,7 @@ unifyFlexSuperStructure context super flatType =
       if atomMatchesSuper super home name then
         merge context (Structure flatType)
       else
-        custom home name
+        custom home name []
 
     App1 home name [variable] | home == ModuleName.list && name == T.list ->
       case super of
@@ -457,8 +473,17 @@ unifyFlexSuperStructure context super flatType =
                 unifyComparableRecursive variable
                 merge context (Structure flatType)
 
-    App1 home name _ ->
-      custom home name
+    App1 home name args | super == Comparable, Just parts <- comparableContainer home name args ->
+      container parts
+
+    App1 home name args ->
+      custom home name args
+
+    Record1 fields ext | super == Comparable ->
+      do  more <- closedFields ext
+          case more of
+            Just others -> container (Map.elems fields ++ others)
+            Nothing -> mismatch
 
     Pair1 a b ->
       case super of
@@ -486,10 +511,58 @@ unifyFlexSuperStructure context super flatType =
     _ ->
       mismatch
   where
-    -- (ATTACH A3) a custom type that has the members of the variable's kind
-    custom home name =
+    -- (ATTACH A3) a custom type that has the members of the variable's kind (A4b: and the arguments a derived
+    -- `compare` needs comparable)
+    custom home name args =
       do  allowed <- customOk super home name
-          if allowed then merge context (Structure flatType) else mismatch
+          case allowed of
+            Nothing -> mismatch
+            Just [] -> merge context (Structure flatType)
+            Just positions ->
+              do  comparableOccursCheck context
+                  mapM_ unifyComparableRecursive [ a | (i, a) <- zip [0 ..] args, i `elem` positions ]
+                  merge context (Structure flatType)
+
+    -- (A4b) a built-in container whose parts are comparable
+    container parts =
+      do  allowed <- containerOk super
+          if allowed
+            then
+              do  comparableOccursCheck context
+                  mapM_ unifyComparableRecursive parts
+                  merge context (Structure flatType)
+            else mismatch
+
+
+-- | (A4b) a record is comparable only when it is closed (its extension is the empty record, or a record that is): the
+-- fields of the extension, Nothing for an open record (a row variable could add a field that is not comparable)
+closedFields :: Variable -> Unify (Maybe [Variable])
+closedFields ext =
+  Unify $ \vars ok _ ->
+    do  let go var =
+              do  (Descriptor content _ _ _) <- UF.get var
+                  case content of
+                    Structure EmptyRecord1 -> return (Just [])
+                    Structure (Record1 fs e) -> fmap (fmap (Map.elems fs ++)) (go e)
+                    Alias _ _ _ real -> go real
+                    _ -> return Nothing
+        ok vars =<< go ext
+
+
+-- | (A4b) the built-in containers that are comparable when their parts are (records are matched apart): the parts.
+-- The `Vector` is the overlay's (`author/project:Vector.Vector`, as Canonicalize.Derive recognizes it).
+comparableContainer :: ModuleName.Canonical -> T.Name -> [Variable] -> Maybe [Variable]
+comparableContainer home name args =
+  if not (null args) && Members.typeId home name `elem` comparableContainerIds
+    then Just args
+    else Nothing
+
+
+comparableContainerIds :: [String]
+comparableContainerIds =
+  [ "elm/core:Maybe.Maybe", "elm/core:Result.Result", "elm/core:Array.Array", "elm/core:Dict.Dict", "elm/core:Set.Set"
+  , "author/project:Vector.Vector"
+  ]
 
 
 -- TODO: is there some way to avoid doing this?

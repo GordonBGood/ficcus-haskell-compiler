@@ -151,10 +151,12 @@ executable elm
         Canonicalize.Constraints
         Canonicalize.Selectors
         Type.Members
+        Type.OpenRecord
         Type.Requirements
         Ficcus.Mono.Members
         Ficcus.Mono.Determined
         Ficcus.Mono.ContainerMembers
+        Ficcus.Mono.Derived
         Nitpick.Constraints
         AST.Source
         AST.Prim.Module
@@ -176,6 +178,7 @@ executable elm
         Canonicalize.Kind
         Canonicalize.Members
         Canonicalize.Derive
+        Canonicalize.DeriveChecks
         Canonicalize.Module
         Canonicalize.Pattern
         Canonicalize.Type

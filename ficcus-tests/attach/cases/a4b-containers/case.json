@@ -1,0 +1,1 @@
+{"desc": "compare on records (alphabetical fields), Maybe (Nothing first), Result (Ok first), Array (lengths around 32 and 1100: the tree), Vector, Dict (as toList), Set, nested ones, NaN and -0.0 inside: the group report, direct uses, Dict keys of Maybe; the module sees a type with attached functions (the gate)", "c_only": true}

@@ -1,0 +1,1 @@
+{"desc": "derived compare and hash of types of another module (an exposed union, an opaque type): Set and Dict keys, Shape.compare and Shapes.Shape.compare; Circle -0.0 and Circle 0 are equal, Dict keeps the later key (Elm's Dict.insert)", "c_only": true}

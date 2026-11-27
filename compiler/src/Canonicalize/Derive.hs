@@ -30,6 +30,7 @@ import qualified Data.Map.Strict as Map
 import Data.Maybe (isNothing, mapMaybe, listToMaybe)
 
 import qualified AST.Canonical as Can
+import qualified Canonicalize.DeriveChecks as Checks
 import qualified AST.Constraints as Constraints
 import qualified AST.Derive as Derive
 import qualified AST.Members as Members
@@ -85,6 +86,7 @@ prepare modul@(Src.Module name exports docs imports values unions aliases binops
           entries <- checkLines lines_
           mapM_ (checkDefined others) entries
           mapM_ (checkShadowed (Module.toChars (Src.getName modul)) others) entries
+          mapM_ (checkBesideEq others) entries
           mapM_ (checkUnion unionMap) entries
           let stubs = map (stub unionMap) entries
           Result.ok (Src.Module name exports docs imports (others ++ stubs) unions aliases binops effects, entries)
@@ -129,6 +131,14 @@ checkDefined values (Entry tipe member region _) =
   case [ r | A.At _ (Src.Value (A.At r n) _ _ _) <- values, n == mangled ] of
     written : _ -> throw (DE.AndDefine region written tipe member)
     [] -> Result.ok ()
+
+
+-- (A4bf, review F3) `derive compare`/`derive hash` beside a written `eq`
+checkBesideEq :: [A.Located Src.Value] -> Entry -> Result i w ()
+checkBesideEq values (Entry tipe member region _) =
+  case Checks.besideEq values (tname tipe) member of
+    Just written -> throw (DE.BesideEq region written tipe member)
+    Nothing -> Result.ok ()
 
 
 -- DERIVE SHADOWED: the module defines a top level function of the member's name (A4a reading of section 4 of the note:
@@ -293,14 +303,25 @@ checkParts home table unions (Entry tipe member region _) =
     Just (Can.Union vars ctors _ _) ->
       let
         parts = [ (ctorPath name (length args) i, arg) | Can.Ctor name _ _ args <- ctors, (i, arg) <- zip [1 :: Int ..] args ]
-        regular = listToMaybe (concatMap (nonRegular home (tname tipe) vars . snd) parts)
+        regular =
+          case listToMaybe (concatMap (nonRegular home (tname tipe) vars . snd) parts) of
+            Just use -> Just (DE.NonRegular use)
+            -- (A4bf, review M1) through the other types of the module that refer to it
+            Nothing -> fmap (\(use, inside) -> DE.NonRegularGroup (render use) (usedName use) (T.nameToChars inside)) (Checks.nonRegularGroup home unions (tname tipe))
         needs = member `elem` ["compare", "hash", "toString", "fromString", "encode", "decoder"]
         missing = if needs then listToMaybe (mapMaybe (\(path, t) -> lacks table member path t) parts) else Nothing
       in
       case (regular, missing) of
-        (Just use, _) -> throw (DE.Cannot region tipe member (DE.NonRegular use))
+        (Just reason, _) -> throw (DE.Cannot region tipe member reason)
         (_, Just reason) -> throw (DE.Cannot region tipe member reason)
         _ -> Result.ok ()
+
+
+usedName :: Can.Type -> String
+usedName t =
+  case t of
+    Can.TType _ n _ -> T.nameToChars n
+    _ -> render t
 
 
 ctorPath :: N.Name -> Int -> Int -> String
@@ -327,7 +348,12 @@ lacks table member path tipe =
     Can.TTriple a b c ->
       firstOf [ (path ++ " > tuple element 1", a), (path ++ " > tuple element 2", b), (path ++ " > tuple element 3", c) ]
 
-    Can.TRecord fields _ ->
+    -- (A4bf, review M2) the union shape keeps such a field as the record without its row (P1): the helpers would read the
+    -- wrong slots
+    Can.TRecord _ (Just _) ->
+      Just (DE.NotYet path (render tipe) "derived functions do not support an extensible record (`{ r | ... }`), only a closed one")
+
+    Can.TRecord fields Nothing ->
       firstOf [ (path ++ " > " ++ N.toChars f, t) | (f, Can.FieldType _ t) <- Map.toAscList fields ]
 
     Can.TAlias _ _ args aliasType ->
@@ -340,16 +366,18 @@ lacks table member path tipe =
           | member `elem` members -> Nothing
           | otherwise -> Just (DE.Lacks path (render tipe) Nothing)
 
-        Just (Container labels)
-          | tid == vectorId && member == "compare" ->
-              Just (DE.NotYet path (render tipe) "the order of a `Vector` comes with the Vector parity work")
-          | otherwise ->
+        Just (Container labels) ->
               firstOf [ (path ++ " > " ++ T.nameToChars name ++ " " ++ label, t) | (label, t) <- zip labels args ]
 
         Nothing ->
           case Map.lookup tid table >>= Map.lookup (fromChars member) of
             Nothing ->
               Just (DE.Lacks path (render tipe) (Just (T.nameToChars name)))
+
+            Just (Just annotation)
+              | Just (written, expected) <- Checks.writtenShape member home name annotation ->
+                  -- (A4bf, review F2) a written member of another type than the derived member calls
+                  Just (DE.WrongShape path (render tipe) (T.nameToChars name ++ "." ++ member) (render written) expected)
 
             Just maybeAnnotation ->
               -- a member with constraints needs the member at the arguments too (all of them: A4a does not tell

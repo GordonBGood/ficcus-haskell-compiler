@@ -26,6 +26,7 @@ module Ficcus.Mono.Ir
 
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 
 import Ficcus.Mono.Class
 
@@ -155,6 +156,10 @@ data MProgram =
     , mpUnions :: Map.Map String UnionShape  -- every custom type of every module, by `Module.Type`
     , mpMembers :: Map.Map (String, MType) CloneId  -- (A3b) the member clones the structural `==`/`compare` helpers call
                                                     -- (Ficcus.Mono.ContainerMembers); roots of the program like main
+    , mpDerived :: Set.Set (String, MType)          -- (A4b) the exact types whose `compare` or `hash` is derived: the C
+                                                    -- helpers compare and hash them structurally
+    , mpOwnMembers :: Set.Set (String, String)      -- (A4b) the (member, type id) of the types with a written `eq`, `compare`
+                                                    -- or `hash`: the C generator refuses to reach one without its clone
     }
   deriving (Show)
 

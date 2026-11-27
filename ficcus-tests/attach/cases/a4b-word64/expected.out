@@ -1,0 +1,6 @@
+r: "big (([[EQ,GT,GT,GT,GT],[LT,EQ,LT,LT,GT],[LT,GT,EQ,LT,GT],[LT,GT,GT,EQ,GT],[LT,LT,LT,LT,EQ]],[[(False,True),(False,True),(False,True),(False,True),(False,True)],[(True,False),(False,True),(True,False),(True,False),(False,True)],[(True,False),(False,True),(False,True),(True,False),(False,True)],[(True,False),(False,True),(False,True),(False,True),(False,True)],[(True,False),(True,False),(True,False),(True,False),(False,True)]]),([4,1,2,3,0],[4,1,2,3,0],5),Just [0])"
+r: "maybe (([[EQ,GT,GT,GT],[LT,EQ,LT,LT],[LT,GT,EQ,LT],[LT,GT,GT,EQ]],[[(False,True),(False,True),(False,True),(False,True)],[(True,False),(False,True),(True,False),(True,False)],[(True,False),(False,True),(False,True),(True,False)],[(True,False),(False,True),(False,True),(False,True)]]),([1,2,3,0],[1,2,3,0],4),Just [0])"
+r: "record (([[EQ,LT,GT,GT],[GT,EQ,GT,GT],[LT,LT,EQ,LT],[LT,LT,GT,EQ]],[[(False,True),(True,False),(False,True),(False,True)],[(False,True),(False,True),(False,True),(False,True)],[(True,False),(True,False),(False,True),(True,False)],[(True,False),(True,False),(False,True),(False,True)]]),([2,3,0,1],[2,3,0,1],4),Just [1])"
+r: "array (([[EQ,GT,GT],[LT,EQ,LT],[LT,GT,EQ]],[[(False,True),(False,True),(False,True)],[(True,False),(False,True),(True,False)],[(True,False),(False,True),(False,True)]]),([1,2,0],[1,2,0],3),Just [0])"
+r: "(False,LT,LT)"
+r: "(True,False)"

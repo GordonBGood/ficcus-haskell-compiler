@@ -1,0 +1,4 @@
+r: "[{ x = 0, y = \"q\" },{ x = 1, y = \"z\" },{ x = 2, y = \"a\" },{ x = 2, y = \"b\" }]"
+r: "[False,False,True,False]"
+r: "[EQ,LT,LT,LT]"
+r: "[GT,EQ,GT,LT]"
