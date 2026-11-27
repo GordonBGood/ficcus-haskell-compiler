@@ -1,6 +1,6 @@
 #!/bin/bash
 # The serial regression gates of the compiler session (STAGE4-FIX1.md section 7). BIN=elmficNN [S=scratch dir] ficcus-tests/gates.sh; takes about one hour (FIX2: step list unchanged, plus stringdiff).
-# Expected: runtime 0 non-ok lines; attach 378 cases 0 differ (159 + 37 G70 + 56 G71 + 15 A3b + 18 A5a + 22 A5b + 15 A5f + 18 A5c + 23 A4b + 15 A4bf); derive 56 cases 0 differ; types 267 PASS 1 XFAIL (one case may flake under load: rerun); JS identity 28; examples 298 ok x3 (296 + runtime test_sched gcc and clang); e2review gates all ok (the three modes must agree: a lower ex-rcsan count means FAIL lines);
+# Expected: runtime 0 non-ok lines; attach 378 cases 0 differ (159 + 37 G70 + 56 G71 + 15 A3b + 18 A5a + 22 A5b + 15 A5f + 18 A5c + 23 A4b + 15 A4bf); derive 56 cases 0 differ; p1 13 cases 0 failed; types 267 PASS 1 XFAIL (one case may flake under load: rerun); JS identity 28; examples 298 ok x3 (296 + runtime test_sched gcc and clang); e2review gates all ok (the three modes must agree: a lower ex-rcsan count means FAIL lines);
 # fbip 0 failures; effects-e2 all ok; effects-e3 all ok (E3a: 124 checks; E3af: 168, 42 cases); e1review all ok; effects-e1 all ok; e1p all ok (E1p); e1pr all ok (2 target rows: E1pR14LambdaSet); e1p-identity all ok; a3b-identity 100 compiles 0 differ (against elmficA5c since A4b; E3a: 4 differ, E2Ports and E2PortsIn in both modes: programs with ports get runtime/fic_ports.h; e1p-identity reports the same two); faults 0 missed; suite PASS; typed 568/12/1; library no REGRESSION; elmdiff 1160 SAME + 15 apps.
 W=$(cd "$(dirname "$0")/../.." && pwd); R=${R:-$(cd "$(dirname "$0")/.." && pwd)}      # A3: the worktree this script is in (it was the main checkout)
 # Disk: every private ELM_HOME is a reflink copy where the file system has them (btrfs: no space used until a file is rewritten; a
@@ -8,6 +8,9 @@ W=$(cd "$(dirname "$0")/../.." && pwd); R=${R:-$(cd "$(dirname "$0")/.." && pwd)
 # on an interrupt or a failure (trap). KEEP=1 keeps it (for a look at a failing step). A scratch directory given in S is emptied of
 # what the run made, not removed.
 KEEP=${KEEP:-}
+# (P1b) one gate run at a time across sessions: the second run waits for the first (the lock is released when this shell exits)
+LOCK=${CLAUDE_CODE_TMPDIR:-/tmp}/ficcus-gates.lock; exec 9>"$LOCK"
+if ! flock -n 9; then echo "=== waiting for the gate lock $LOCK (another gate run) $(date +%T)"; flock 9; echo "=== gate lock taken $(date +%T)"; fi
 if [ -z "$S" ]; then S=$(mktemp -d "${CLAUDE_CODE_TMPDIR:-${TMPDIR:-/tmp}}/gates.XXXXXX"); OWN=1; fi
 B=$W/bin/${BIN:-elmficN1}; G=$S/gates; mkdir -p $G; cd $W
 cleanup() {
@@ -23,6 +26,7 @@ step() { echo "=== $1 $(date +%T)"; }
 step runtime;  mkdir -p $S/rt_tmp; (cd $R && TMPDIR=$S/rt_tmp sh runtime/test.sh 2>&1 | grep -vc "^ok" ; ) > $G/runtime.txt 2>&1; cat $G/runtime.txt
 step attach;   python3 $R/ficcus-tests/attach/attach.py --elm $B --rc > $G/attach.txt 2>&1; tail -1 $G/attach.txt
 step derive;   python3 $R/ficcus-tests/derive/derive.py --elm $B -j 2 > $G/derive.txt 2>&1; tail -1 $G/derive.txt     # A4b: the derive matrix of A4a, with the rows A4b changed (expected: 56 cases, 0 differ)
+step p1;       python3 $R/ficcus-tests/p1/run.py --elm $B > $G/p1.txt 2>&1; tail -1 $G/p1.txt     # P1: extensible-record fields of custom types and derive over them (M2 lifted), Elm twins, --no-rc and --rc ASan+UBSan live 0 (expected: p1: 13 cases, 0 failed)
 step sized-fuzz; python3 $R/ficcus-tests/sized/fuzz.py --elm $B --seeds 40 --first 1000 -j 2 > $G/sizedfuzz.txt 2>&1; tail -1 $G/sizedfuzz.txt     # SIZED: 40 seeds of the 200 (expected: 40 seeds, 0 differ)
 step stringdiff; TMPDIR=$S python3 $R/ficcus-tests/stringdiff.py --elm $B --safe $W/tools/safe --elm-home $(fresh sd) --seeds 6 --cases 300 --san > $G/stringdiff.txt 2>&1; tail -1 $G/stringdiff.txt
 step types;    (cd tests/types && python3 typetests.py --elm $B --compare results/baseline.json > $G/types.txt 2>&1); tail -4 $G/types.txt

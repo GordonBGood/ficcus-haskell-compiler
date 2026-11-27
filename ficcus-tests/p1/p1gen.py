@@ -241,11 +241,109 @@ lines =
 }
 
 
+# M2 lifted (P1): derive over an extensible-record field. Ficcus programs (a `where` block) with a plain Elm twin that
+# compares the same fields as tuples, in Elm's Name order of the fields (shorter names first): the derived order.
+TWINNED = {
+"p1-derive-compare": ('''
+type T r
+    = T { r | x : Int }
+    where
+        derive compare, hash
+
+
+lines : List String
+lines =
+    [ Debug.toString ( T { x = 1, y = 2 } < T { x = 1, y = 3 }, compare (T { x = 2, a = 9 }) (T { x = 1, a = 10 }) )
+    , Debug.toString (List.sort [ T { x = 2, a = 1 }, T { x = 1, a = 2 }, T { x = 0, a = 2 } ])
+    ]
+''', '''
+type T r
+    = T { r | x : Int }
+
+
+lines : List String
+lines =
+    [ Debug.toString ( ( 1, 2 ) < ( 1, 3 ), compare ( 9, 2 ) ( 10, 1 ) )
+    , Debug.toString (List.map (\\( a, x ) -> T { x = x, a = a }) (List.sort [ ( 1, 2 ), ( 2, 1 ), ( 2, 0 ) ]))
+    ]
+'''),
+"p1-derive-string": ('''
+type T r
+    = T { r | name : String }
+    where
+        derive compare, hash
+
+
+lines : List String
+lines =
+    [ Debug.toString ( compare (T { name = "a", age = 5 }) (T { name = "a", age = 7 }), T.hash (T { name = "a", age = 5 }) == T.hash (T { name = "a", age = 7 }) ) ]
+''', '''
+lines : List String
+lines =
+    [ Debug.toString ( compare ( 5, "a" ) ( 7, "a" ), ( 5, "a" ) == ( 7, "a" ) ) ]
+'''),
+"p1-derive-string-rev": ('''
+type T r
+    = T { r | age : Int }
+    where
+        derive compare, hash
+
+
+lines : List String
+lines =
+    [ Debug.toString ( compare (T { age = 5, name = "zz" }) (T { age = 5, name = "a" }), T.hash (T { age = 5, name = "zz" }) == T.hash (T { age = 5, name = "a" }) ) ]
+''', '''
+lines : List String
+lines =
+    [ Debug.toString ( compare ( 5, "zz" ) ( 5, "a" ), ( 5, "zz" ) == ( 5, "a" ) ) ]
+'''),
+}
+
+
+# still refused: a function in the row has no compare / hash (expected.err: texts the compiler output must contain)
+REJECTS = {
+"p1-derive-fn-reject": ('''
+type T r
+    = T { r | x : Int }
+    where
+        derive compare, hash
+
+
+lines : List String
+lines =
+    [ Debug.toString (T { x = 1, f = \\n -> n } < T { x = 1, f = \\n -> n + 1 }) ]
+''', ["TYPE MISMATCH", "I cannot do a comparison with this value"]),
+"p1-derive-hash-fn-reject": ('''
+type T r
+    = T { r | x : Int }
+    where
+        derive hash
+
+
+lines : List String
+lines =
+    [ Debug.toString (T.hash (T { x = 1, f = \\n -> n }) == T.hash (T { x = 1, f = \\n -> n + 1 })) ]
+''', ["NO ATTACHED FUNCTION", "to have an attached `hash` function"]),
+}
+
+
+def write(d, body):
+    os.makedirs(d, exist_ok=True)
+    open(os.path.join(d, "Main.elm"), "w").write("module Main exposing (main)\n\n" + body.strip("\n") + "\n" + TAIL)
+
+
 def main():
     for cid, body in CASES.items():
-        d = os.path.join(HERE, "cases", cid)
-        os.makedirs(d, exist_ok=True)
-        open(os.path.join(d, "Main.elm"), "w").write("module Main exposing (main)\n\n" + body.strip("\n") + "\n" + TAIL)
+        write(os.path.join(HERE, "cases", cid), body)
+    for cid, (body, twin) in TWINNED.items():
+        write(os.path.join(HERE, "cases", cid), body)
+        write(os.path.join(HERE, "cases", cid, "twin"), twin)
+    for cid, (body, texts) in REJECTS.items():
+        write(os.path.join(HERE, "cases", cid), body)
+        open(os.path.join(HERE, "cases", cid, "expected.err"), "w").write("\n".join(texts) + "\n")
+    # a pre-existing limit, not P1 (row polymorphism: slice 5)
+    open(os.path.join(HERE, "cases", "p1-poly-row-limit", "expected.err"), "w").write(
+        "a field access on an extensible record (row polymorphism: slice 5)\na record update on an extensible record (row polymorphism: slice 5)\n")
 
 
 if __name__ == "__main__":

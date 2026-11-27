@@ -1,1 +1,1 @@
-{"desc": "M2: derive compare, hash over a field { r | x : Int }: CANNOT DERIVE (the helpers would read the row-less record from the wrong slots)"}
+{"desc": "M2 lifted (P1): derive compare, hash over a field { r | x : Int }; the row's fields take part", "c_only": true}

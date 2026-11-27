@@ -84,3 +84,20 @@ JS identity 28/0; examples 298 x3; fbip 0; effects e1/e2 ok; e1review, e1p, e1pr
 a3b-identity against elmficA4bf 100 compiles, 0 differ (byte identical C); e2review gates ok (info 3, as before);
 rcfaults 2403/0, rcfaults-big 239/0; rcgate-san ok; suite 16/16; typed 568/12/1; lib 108 PASS + 59 FIXED;
 elmdiff 1175 SAME. The P1 cases are not in `gates.sh` / attach yet (run `ficcus-tests/p1/run.py`).
+
+## P1b: M2 lifted (binary `bin/elmficP1b`)
+
+* fix/p1 merged with ficcus d62aa4f1 (E3b head), no conflicts.
+* `Canonicalize/Derive.hs`: an extensible-record field is checked by its own fields, like a closed one; the row is
+  filled at the exact type (above), and a row field without the member is refused where the type is used (the
+  obligation reaches the row): `p1-derive-fn-reject` (TYPE MISMATCH on `<`), `p1-derive-hash-fn-reject` (NO ATTACHED
+  FUNCTION for `hash`).
+* The derived order over such a record is Elm's `Name` order of all its fields (shorter names first), the same order as
+  for a closed record.
+* Attach: `a4bf-err-row-field` and `a4bf-err-row-field-hash` (ids kept) are now RUN rows with Elm twins
+  (`a4bf-twins/`, tuples of the same fields); hashes are tested only by equality. The derive matrix had no M2 row.
+* `ficcus-tests/p1`: 13 cases. New: `p1-derive-compare` (also `List.sort`), `p1-derive-string` (now with an Elm twin, no
+  hand check), `p1-derive-string-rev`, the two `-reject` cases, and `expected.err` for `p1-poly-row-limit`. `run.py`
+  checks `expected.err` (each line in the compiler output) and ends with `p1: N cases, M failed` (exit 1 on a failure).
+* `gates.sh`: a `p1` step after `derive`, and a lock (`flock` on `$CLAUDE_CODE_TMPDIR/ficcus-gates.lock`, else `/tmp`):
+  a second gate run prints `=== waiting for the gate lock ...` and starts when the first ends.

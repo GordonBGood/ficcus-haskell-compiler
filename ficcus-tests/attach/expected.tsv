@@ -372,8 +372,8 @@ a4bf-err-nonregular-mutual	REJECT	CANNOT DERIVE	refer to each other
 a4bf-err-nonregular-mutual-hash	REJECT	CANNOT DERIVE	keep growing
 a4bf-err-nonregular-three	REJECT	CANNOT DERIVE	A (Maybe a)
 a4bf-mutual-regular	RUN	c	
-a4bf-err-row-field	REJECT	CANNOT DERIVE	T : { r | x : Int }
-a4bf-err-row-field-hash	REJECT	CANNOT DERIVE	T > argument 2 > List element
+a4bf-err-row-field	RUN	c	
+a4bf-err-row-field-hash	RUN	c	
 a4bf-err-open-record-compare	REJECT	NO ATTACHED FUNCTION	Only a closed record
 a4bf-err-open-record-hash	REJECT	NO ATTACHED FUNCTION	has `hash`
 a4bf-err-open-record-inferred	REJECT	NO ATTACHED FUNCTION	Only a closed record

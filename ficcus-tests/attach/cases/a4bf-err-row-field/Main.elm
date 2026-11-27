@@ -10,7 +10,9 @@ type T r
 
 lines : List String
 lines =
-    [ Debug.toString (T { x = 1, y = 2 } < T { x = 1, y = 3 }) ]
+    [ Debug.toString ( T { x = 1, y = 2 } < T { x = 1, y = 3 }, compare (T { x = 2, a = 9 }) (T { x = 1, a = 10 }) )
+    , Debug.toString ( T.hash (T { x = 1, y = 2 }) == T.hash (T { x = 1, y = 3 }), T.hash (T { x = 1, y = 2 }) == T.hash (T { x = 1, y = 2 }) )
+    ]
 
 
 logAll : List String -> ()

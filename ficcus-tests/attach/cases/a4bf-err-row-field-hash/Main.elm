@@ -14,7 +14,7 @@ type T r
 
 lines : List String
 lines =
-    [ Debug.toString (T.hash (T 1 [ { name = "a", age = 3 } ])) ]
+    [ Debug.toString ( T.hash (T 1 [ { name = "a", age = 3 } ]) == T.hash (T 1 [ { name = "a", age = 4 } ]), T.hash (T 1 [ { name = "a", age = 3 } ]) == T.hash (T 1 [ { name = "a", age = 3 } ]) ) ]
 
 
 logAll : List String -> ()

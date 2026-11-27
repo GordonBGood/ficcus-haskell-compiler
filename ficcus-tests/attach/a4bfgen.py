@@ -420,8 +420,10 @@ lines =
 
 # ---------------------------------------------------------------------------------------------------------------- M2: an extensible-record field
 
-bad("a4bf-err-row-field", "M2: derive compare, hash over a field { r | x : Int }: CANNOT DERIVE (the helpers would read the row-less "
-    "record from the wrong slots)", {"Main.elm": mod([], """
+# (P1) lifted: the row is filled at the exact type (fix/p1). The ids keep their old names; both now RUN against Elm twins
+# (the derived order is Elm's Name order of the fields, the twins compare the same fields as tuples).
+case("a4bf-err-row-field", "M2 lifted (P1): derive compare, hash over a field { r | x : Int }; the row's fields take part",
+     {"Main.elm": mod([], """
 
 type T r
     = T { r | x : Int }
@@ -431,10 +433,20 @@ type T r
 
 lines : List String
 lines =
-    [ Debug.toString (T { x = 1, y = 2 } < T { x = 1, y = 3 }) ]
-""")}, "CANNOT DERIVE", "T : { r | x : Int }")
-bad("a4bf-err-row-field-hash", "M2: derive hash alone, the extensible record behind an alias inside a list",
-    {"Main.elm": mod([], """
+    [ Debug.toString ( T { x = 1, y = 2 } < T { x = 1, y = 3 }, compare (T { x = 2, a = 9 }) (T { x = 1, a = 10 }) )
+    , Debug.toString ( T.hash (T { x = 1, y = 2 }) == T.hash (T { x = 1, y = 3 }), T.hash (T { x = 1, y = 2 }) == T.hash (T { x = 1, y = 2 }) )
+    ]
+""")},
+     ("elm", {"Main.elm": mod([], """
+
+lines : List String
+lines =
+    [ Debug.toString ( ( 1, 2 ) < ( 1, 3 ), compare ( 9, 2 ) ( 10, 1 ) )
+    , Debug.toString ( ( 1, 2 ) == ( 1, 3 ), ( 1, 2 ) == ( 1, 2 ) )
+    ]
+""")}))
+case("a4bf-err-row-field-hash", "M2 lifted (P1): derive hash alone, the extensible record behind an alias inside a list",
+     {"Main.elm": mod([], """
 
 type alias Named r =
     { r | name : String }
@@ -448,8 +460,14 @@ type T r
 
 lines : List String
 lines =
-    [ Debug.toString (T.hash (T 1 [ { name = "a", age = 3 } ])) ]
-""")}, "CANNOT DERIVE", "T > argument 2 > List element")
+    [ Debug.toString ( T.hash (T 1 [ { name = "a", age = 3 } ]) == T.hash (T 1 [ { name = "a", age = 4 } ]), T.hash (T 1 [ { name = "a", age = 3 } ]) == T.hash (T 1 [ { name = "a", age = 3 } ]) ) ]
+""")},
+     ("elm", {"Main.elm": mod([], """
+
+lines : List String
+lines =
+    [ Debug.toString ( ( 1, [ ( 3, "a" ) ] ) == ( 1, [ ( 4, "a" ) ] ), ( 1, [ ( 3, "a" ) ] ) == ( 1, [ ( 3, "a" ) ] ) ) ]
+""")}))
 
 
 # ---------------------------------------------------------------------------------------------------------------- F1: an open record at `a has compare/hash`

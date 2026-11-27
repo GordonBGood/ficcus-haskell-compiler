@@ -4,7 +4,8 @@
   python3 ficcus-tests/p1/run.py [--elm bin/elmficP1] [--only a,b] [--js] [-v]
 
 Each case is cases/<id>/ with Main.elm (and other modules), which is also its own twin unless there is twin/ (a plain Elm program whose output is the
-expected one: compiled by bin/elm0193, run by node) or expected.out (the expected stdout, for cases with no Elm twin).
+expected one: compiled by bin/elm0193, run by node) or expected.out (the expected stdout, for cases with no Elm twin), or expected.err (an expected refusal: each
+line must appear in the compiler's output).
 For each case the Ficcus program is compiled to C with --no-rc (gcc -O2) and with --rc (gcc -O1, ASan+UBSan, FIC_STATS,
 FIC_NO_POOL); both outputs must equal the twin's, and the counted run must end with 0 live objects.  A compile failure
 prints the report (several cases are expected rejections: see the README).  --js also compiles to JavaScript and prints
@@ -21,7 +22,7 @@ RT = os.path.join(ROOT, "targets", "c")
 
 def setup(src, dst):
     os.makedirs(dst)
-    shutil.copytree(src, os.path.join(dst, "src"), ignore=shutil.ignore_patterns("twin", "case.json", "*.md", "expected.out"))
+    shutil.copytree(src, os.path.join(dst, "src"), ignore=shutil.ignore_patterns("twin", "case.json", "*.md", "expected.out", "expected.err"))
     import json
     json.dump(attach.elm_json([]), open(os.path.join(dst, "elm.json"), "w"))
 
@@ -33,6 +34,13 @@ def one(cid, elm, home, verbose, js):
     res = []
     try:
         exp = None
+        err = os.path.join(src, "expected.err")
+        if os.path.exists(err):
+            d = os.path.join(work, "p"); setup(src, d)
+            rc, out = attach.run([elm, "make", "src/Main.elm", "--output=x.c", "--no-rc"], d, env, limit=300)
+            missing = [t for t in open(err).read().splitlines() if t and t not in out]
+            if rc != 0 and not missing: return ["reject ok"]
+            return ["REJECT EXPECTED (rc %d, missing %s):\n%s" % (rc, missing, out.strip()[-1200:])]
         if not os.path.exists(os.path.join(src, "expected.out")):
             tsrc = os.path.join(src, "twin") if os.path.isdir(os.path.join(src, "twin")) else src
             t = os.path.join(work, "twin"); setup(tsrc, t)
@@ -84,12 +92,17 @@ def main():
     a = ap.parse_args()
     ids = a.only.split(",") if a.only else sorted(os.listdir(os.path.join(HERE, "cases")))
     home = tempfile.mkdtemp(prefix="p1-home-"); mkhome.make(home)
+    bad = []
     try:
         for cid in ids:
             print("==", cid, flush=True)
-            for line in one(cid, os.path.abspath(a.elm), home, a.v, a.js): print("  " + line.replace("\n", "\n  "), flush=True)
+            res = one(cid, os.path.abspath(a.elm), home, a.v, a.js)
+            for line in res: print("  " + line.replace("\n", "\n  "), flush=True)
+            if not res or not all(l.endswith(" ok") or l.endswith("reject ok") for l in res): bad.append(cid)
     finally:
         shutil.rmtree(home, ignore_errors=True)
+    print("p1: %d cases, %d failed%s" % (len(ids), len(bad), (": " + ", ".join(bad)) if bad else ""))
+    sys.exit(1 if bad else 0)
 
 
 if __name__ == "__main__":
