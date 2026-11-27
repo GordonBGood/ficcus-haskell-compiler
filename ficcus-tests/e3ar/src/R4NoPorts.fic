@@ -1,0 +1,28 @@
+module R4NoPorts exposing (main)
+
+-- E3a review: a program with no ports and no flags whose C contains the text fic_app_start (a string literal), with the scheduler
+-- (Time.every) and Json: does CGen's text test (usesPorts) wrongly add the ports runtime and the #undef FIC_TAG_JNULL wrapper?
+
+import Json.Decode as D
+import Time
+
+
+main : Program () Int Time.Posix
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ =
+                        Debug.log "x" (D.decodeString (D.null "fic_app_start") "null")
+                in
+                ( 0, Cmd.none )
+        , update =
+            \_ n ->
+                let
+                    _ =
+                        Debug.log "tick" n
+                in
+                ( n + 1, Cmd.none )
+        , subscriptions = \n -> if n < 2 then Time.every 1 identity else Sub.none
+        }

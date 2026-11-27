@@ -1,0 +1,18 @@
+port module R3PortList exposing (main)
+
+-- E3a review: the same List String decoder on an incoming port (does it compile?)
+
+
+port inn : (List String -> msg) -> Sub msg
+
+
+port out : String -> Cmd msg
+
+
+main : Program () () (List String)
+main =
+    Platform.worker
+        { init = \_ -> ( (), Cmd.none )
+        , update = \f m -> ( m, out (String.concat f) )
+        , subscriptions = \_ -> inn identity
+        }
