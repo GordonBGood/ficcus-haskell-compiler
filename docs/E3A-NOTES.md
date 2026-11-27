@@ -85,7 +85,30 @@ rebuilt on the API prints the same lines.
 
 ## 5. Gates (bin/elmficE3a, once, at the end)
 
-(filled in below when the run has ended)
+27 Nov 2026, 06:41 to 08:16 (queued behind another session's gate run), `BIN=elmficE3a A3B_REF=bin/elmficA5c KEEP=1`, log
+`/home/gordon/claude-tmp/gates-e3a.log`, files `/home/gordon/claude-tmp/gates-e3a/gates/`.
+
+| Step | Result |
+|---|---|
+| runtime | 0 non-ok |
+| attach | 340 cases, 0 differ |
+| sized-fuzz | 40 seeds, 0 differ |
+| stringdiff | all agree |
+| types | 267 PASS, 1 XFAIL |
+| jsid | 28 identical, 0 different |
+| examples, ex-dropall, ex-rcsan | 298, 298, 298 ok |
+| fbip | 0 failures |
+| effects-e2, effects-e3 (new step) | all ok, all ok (124 checks) |
+| e1review, effects-e1, e1p, e1pr | all ok; e1pr 2 target rows as before |
+| e1p-identity vs elmficG70a | the gate run crashed in the tool on E2Ports (a sort of `None` with ints when the runtime prelude differs, which no slice before had); fixed (`ficcus-tests/e1p_identity.py`) and the step rerun alone: 51 ok, the 2 port programs FAIL as expected (E2Ports, E2PortsIn: the prelude and the last section, which holds the port decoders and the main; the generated code before the main differs only by the intended decoder changes: Json.Value refuses undefined, Int as `Json.Decode.int`) |
+| a3b-identity vs elmficA5c | 100 compiles, 4 differ: E2Ports and E2PortsIn, --rc and --no-rc (the only port programs); every program without ports identical, also the scheduler programs |
+| e2review | gates all ok (X1 to X3 moved to effects_e3), info 3 differ as before |
+| rcfaults, rcfaults-big | 2403 mutations 0 missed; 239 mutations 0 missed |
+| rcgate-san | ok |
+| suite | 16 PASS of 16 |
+| typed | 568 SAME, 12 BOTH_REJECT_SAME, 1 VERDICT_DIFF (as before) |
+| lib-rcsan | 108 PASS, 59 FIXED, no regression |
+| elmdiff | 1175 SAME, 0 DIFF |
 
 ## 6. Open points for the Opus review
 
