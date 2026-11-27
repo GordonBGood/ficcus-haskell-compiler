@@ -1,0 +1,7 @@
+update: Got (<internals>,<internals>,<internals>)
+update: Spawned ()
+update: FromChan 1
+update: Spawned ()
+update: Ctl ()
+update: Spawned ()
+update: FromChan 3

@@ -29,6 +29,7 @@
  * queued Concurrent process and the first queued other process (the app's domain keeps E2's FIFO order); xorshift64* from n. */
 #ifndef FIC_CONC_H
 #define FIC_CONC_H
+#include <stddef.h>
 
 #define FIC_TAG_CPROC       0xFFB0u   /* { proc, qhead, awaiters, exitv, killedv, wjust, wnothing } scalars */
 #define FIC_TAG_CONC_ROUTER 0xFFB1u   /* { cproc } mgr kind: the router of a blocked receive or await (prefix = fic_router) */
@@ -56,6 +57,10 @@ typedef struct {
 } fic_cproc;
 
 typedef struct { fic_hdr h; fic_ref cproc; uint32_t mgr; uint32_t kind; } fic_conc_router;
+/* F3: fic_sched_receive reads ((fic_router *)r)->mgr of a fic_conc_router: the two must start alike (a compile time check, C99) */
+typedef char fic_conc_router_layout[(offsetof(fic_router, proc) == offsetof(fic_conc_router, cproc)
+                                     && offsetof(fic_router, mgr) == offsetof(fic_conc_router, mgr)
+                                     && sizeof(((fic_router *)0)->mgr) == sizeof(((fic_conc_router *)0)->mgr)) ? 1 : -1];
 
 /* the operation closures: { code, a, b, w } with nptr = 2 + (w is a reference) */
 typedef struct { fic_hdr h; const fic_code *code; fic_ref a; fic_ref b; fic_word w; } fic_conc_op;
@@ -66,6 +71,7 @@ static int64_t fic_conc_ids;
 static int fic_conc_slot_ready;
 static int fic_conc_ending;          /* in fic_conc_teardown: nothing is woken (a wake outside a drain would run the process now) */
 static fic_ref fic_conc_router_ref;  /* the router of the Concurrent manager (attach), or NULL */
+static fic_ref *fic_conc_held; static size_t fic_conc_nheld, fic_conc_capheld;   /* O9: channels whose oldest message waits (owned) */
 static uint64_t fic_conc_rng; static int fic_conc_shuffle = -1;
 
 /* ---- the run queue's pick (patched into fic_sched_enqueue) ---- */
@@ -463,17 +469,54 @@ static fic_word fic_conc_current_entry(fic_ref self, fic_word u) {
 static const fic_code fic_conc_current_code = { (void (*)(void))fic_conc_current_entry, 1u FIC_CODE_OWN0 };
 static FIC_UNUSED fic_ref fic_conc_current(fic_ref ch) { return fic_conc_op_task(&fic_conc_current_code, ch, fic_none(), FIC_W_UNIT, 0); }
 
-/* advance ref listeners: the delivered (or, with no listener, dropped) message goes */
+/* O9: an effects dispatch for the Concurrent manager is under way: fic_platform_dispatch has gathered but not yet sent its FX mail (it
+ * sets every manager's cmds to a list and back to none when it sends), or the FX mail waits in the manager's mailbox. A message that
+ * finds no listen then is kept until that onEffects (the start-up race of R9: a message sent in the turn that subscribes). */
+static int fic_conc_fx_pending(void) {
+  fic_router *r = (fic_router *)fic_conc_router_ref;
+  fic_ref q;
+  if (fic_mgrs[r->mgr].cmds != FIC_NONE) return 1;
+  for (q = ((fic_proc *)r->proc)->mbox; q != FIC_NONE; q = ((fic_mail *)q)->next)
+    if (((fic_mail *)q)->kind == FIC_MAIL_FX) return 1;
+  return 0;
+}
+
+/* advance ref listeners: the delivered (or, with no listener, dropped) message goes. listeners 0 (onSelfMsg): kept instead while a
+ * dispatch is under way (O9); -1 (onEffects, a kept message that still has no listen): dropped. */
 static fic_word fic_conc_advance_entry(fic_ref self, fic_word u) {
   fic_conc_op *o = FIC_CONC_OP(self);
   fic_cproc *c = (fic_cproc *)o->a;
   (void)u;
+  if (o->w.i == 0 && fic_conc_fx_pending()) {                        /* O9: kept for the listens of the dispatch under way */
+    if (fic_conc_nheld == fic_conc_capheld) {
+      size_t cap = fic_conc_capheld == 0 ? 8 : fic_conc_capheld * 2;
+      fic_ref *q = (fic_ref *)realloc(fic_conc_held, cap * sizeof(fic_ref));
+      if (q == NULL) abort();
+      fic_conc_held = q; fic_conc_capheld = cap;
+    }
+    FIC_RC_DUP(&c->h); fic_conc_held[fic_conc_nheld++] = &c->h;
+    return FIC_CONC_UNIT_TASK;
+  }
   if (c->qhead != FIC_NONE) { fic_mail *m = fic_conc_pop(c); FIC_RC_DROP(&m->h); }
-  if (o->w.i == 0) fic_conc_n_dropped++;
+  if (o->w.i <= 0) fic_conc_n_dropped++;
   return FIC_CONC_UNIT_TASK;
 }
 static const fic_code fic_conc_advance_code = { (void (*)(void))fic_conc_advance_entry, 1u FIC_CODE_OWN0 };
 static FIC_UNUSED fic_ref fic_conc_advance(fic_ref ref, int64_t n) { return fic_conc_op_task(&fic_conc_advance_code, ref, fic_none(), fic_w_i(n), 0); }
+
+/* held (): the kept channels, oldest first (O9; onEffects delivers them with the new subscriptions) */
+typedef struct { fic_hdr h; fic_ref f0; fic_ref f1; } fic_conc_cell;
+static fic_word fic_conc_held_entry(fic_ref self, fic_word u) {
+  fic_ref list = fic_nil();
+  (void)self; (void)u;
+  while (fic_conc_nheld > 0) {
+    fic_conc_cell *c = (fic_conc_cell *)fic_alloc(sizeof(fic_conc_cell), 1u, 2);
+    c->f0 = fic_conc_held[--fic_conc_nheld]; c->f1 = list; list = &c->h;
+  }
+  return fic_w_p(fic_task_succeed(fic_w_p(list), 1));
+}
+static const fic_code fic_conc_held_code = { (void (*)(void))fic_conc_held_entry, 1u FIC_CODE_OWN0 };
+static FIC_UNUSED fic_ref fic_conc_held_task(void) { return fic_conc_op_task(&fic_conc_held_code, fic_none(), fic_none(), FIC_W_UNIT, 0); }
 
 /* attach router: the manager's router, kept from its first onEffects to the end */
 static fic_word fic_conc_attach_entry(fic_ref self, fic_word u) {
@@ -529,6 +572,8 @@ static void fic_conc_teardown(void) {
 #else
   (void)blocked;
 #endif
+  while (fic_conc_nheld > 0) FIC_RC_DROP(fic_conc_held[--fic_conc_nheld]);   /* O9: kept past the last dispatch: freed */
+  free(fic_conc_held); fic_conc_held = NULL; fic_conc_capheld = 0;
   for (i = 0; i < fic_conc_nreg; i++) FIC_RC_DROP(fic_conc_reg[i]);
   free(fic_conc_reg); fic_conc_reg = NULL; fic_conc_nreg = fic_conc_capreg = 0;
   if (fic_conc_router_ref != NULL) { FIC_RC_DROP(fic_conc_router_ref); fic_conc_router_ref = NULL; }

@@ -4,5 +4,6 @@ T1aKill spawned 4 sent 2 dropped 1 blocked_at_end 0
 T1aFailed spawned 2 sent 0 dropped 0 blocked_at_end 0
 T1aDeadlock spawned 3 sent 3 dropped 0 blocked_at_end 2
 T1aMany spawned 10001 sent 10000 dropped 0 blocked_at_end 0
-T1aChannel spawned 2 sent 6 dropped 2 blocked_at_end 0
+T1aChannel spawned 2 sent 6 dropped 1 blocked_at_end 0
+T1aChanDrop spawned 3 sent 6 dropped 3 blocked_at_end 0
 T1aWithin spawned 2 sent 3 dropped 0 blocked_at_end 0

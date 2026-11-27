@@ -1,6 +1,8 @@
 update: Got (<internals>,<internals>,<internals>)
 equal: (True,False,False)
 update: Started ()
+update: Doubled 0
+update: FromChan 0
 update: Doubled 2
 update: FromChan 1
 update: Doubled 4

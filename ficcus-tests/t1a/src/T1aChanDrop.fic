@@ -1,0 +1,89 @@
+module T1aChanDrop exposing (main)
+
+-- O9 (narrow form): a channel message that finds no listen is kept only while an effects dispatch of the manager is under way, and
+-- dropped otherwise (as ports do).
+-- A sends 1 to `c` and 7 to `q` in the turn that subscribes to `c`: both are kept until that onEffects; 1 reaches the listen, 7 is
+-- dropped there (`q` never has a listen). FromChan 1 unsubscribes `c`; B, 10 ms later (no dispatch under way), sends 2 to `c` and 8 to
+-- `q`: both dropped at once. B then sends to `ctl`, whose update subscribes `c` again; C, 10 ms later, sends 3: the new listen gets 3,
+-- never the dropped 2. Stats: sent 6, dropped 3.
+
+import Concurrent exposing (Address, Channel)
+import Process
+import Task exposing (Task)
+
+
+type alias Model =
+    { chans : Maybe ( Channel Int, Channel Int, Channel () ), on : Bool }
+
+
+type Msg
+    = Got ( Channel Int, Channel Int, Channel () )
+    | Spawned ()
+    | FromChan Int
+    | Ctl ()
+
+
+after : Float -> Task Never () -> Cmd Msg
+after ms t =
+    Task.perform Spawned (Concurrent.spawn (Process.sleep ms |> Task.andThen (\_ -> t)) |> Task.map (\_ -> ()))
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case ( Debug.log "update" msg, model.chans ) of
+        ( Got cs, _ ) ->
+            let
+                ( c, q, _ ) =
+                    cs
+            in
+            ( { model | chans = Just cs, on = True }
+            , Task.perform Spawned
+                (Concurrent.spawn (Concurrent.send (Concurrent.toAddress c) 1 |> Task.andThen (\_ -> Concurrent.send (Concurrent.toAddress q) 7))
+                    |> Task.map (\_ -> ())
+                )
+            )
+
+        ( FromChan 1, Just ( c, q, ctl ) ) ->
+            ( { model | on = False }
+            , after 10
+                (Concurrent.send (Concurrent.toAddress c) 2
+                    |> Task.andThen (\_ -> Concurrent.send (Concurrent.toAddress q) 8)
+                    |> Task.andThen (\_ -> Concurrent.send (Concurrent.toAddress ctl) ())
+                )
+            )
+
+        ( Ctl (), Just ( c, _, _ ) ) ->
+            ( { model | on = True }, after 10 (Concurrent.send (Concurrent.toAddress c) 3) )
+
+        _ ->
+            ( model, Cmd.none )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case model.chans of
+        Just ( c, _, ctl ) ->
+            Sub.batch
+                [ Concurrent.listen ctl Ctl
+                , if model.on then
+                    Concurrent.listen c FromChan
+
+                  else
+                    Sub.none
+                ]
+
+        Nothing ->
+            Sub.none
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( { chans = Nothing, on = False }
+                , Task.perform Got (Task.map3 (\c q k -> ( c, q, k )) Concurrent.channel Concurrent.channel Concurrent.channel)
+                )
+        , update = update
+        , subscriptions = subscriptions
+        }

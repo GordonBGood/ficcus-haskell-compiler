@@ -115,6 +115,9 @@ sendCmd to v =
 -- the tagged message to the app. A message sent to a channel is queued in the channel and the manager gets the channel as a self message
 -- (only after its first onEffects, which gives the run time the router; before that a channel message is dropped); onSelfMsg runs every
 -- current listen of that channel in the order of the subscriptions, then drops the message (counted as dropped when nobody listens).
+-- O9: a message that finds no listen while an effects dispatch of this manager is under way (the turn that subscribes) is kept by
+-- `advance ref 0`; the next onEffects takes the kept channels (`held`) and delivers them with the new subscriptions (`-1`: dropped
+-- when there is still no listen), before its commands.
 
 
 type MyCmd msg
@@ -143,12 +146,22 @@ init =
 onEffects : Platform.Router msg ChanRef -> List (MyCmd msg) -> List (MySub msg) -> List (MySub msg) -> Task Never (List (MySub msg))
 onEffects router cmds subs _ =
     attach router
+        |> Task.andThen (\_ -> held ())
+        |> Task.andThen (\refs -> Task.sequence (List.map (deliverChan router subs (-1)) refs))
         |> Task.andThen (\_ -> Task.sequence (List.map (\(SendCmd t) -> t) cmds))
         |> Task.map (\_ -> subs)
 
 
 onSelfMsg : Platform.Router msg ChanRef -> ChanRef -> List (MySub msg) -> Task Never (List (MySub msg))
 onSelfMsg router ref subs =
+    deliverChan router subs 0 ref
+        |> Task.map (\_ -> subs)
+
+
+{-| the oldest message of the channel to every listen of it; `none` is what `advance` gets when there is no listen (0 or -1)
+-}
+deliverChan : Platform.Router msg ChanRef -> List (MySub msg) -> Int -> ChanRef -> Task Never ()
+deliverChan router subs none ref =
     let
         id =
             chanRefId ref
@@ -156,9 +169,8 @@ onSelfMsg router ref subs =
         hits =
             List.filter (\(Listen i _) -> i == id) subs
     in
-    Task.sequence (List.map (\(Listen _ deliver) -> deliver (Platform.sendToApp router)) hits)
-        |> Task.andThen (\_ -> advance ref (List.length hits))
-        |> Task.map (\_ -> subs)
+    Task.sequence (List.map (\(Listen _ toApp) -> toApp (Platform.sendToApp router)) hits)
+        |> Task.andThen (\_ -> advance ref (if List.isEmpty hits then none else List.length hits))
 
 
 
@@ -256,11 +268,19 @@ current ch =
     Task.andThen (\_ -> current ch) (Task.succeed ())
 
 
-{-| kernel: drop the oldest message of the channel; `listeners` 0 counts it as dropped
+{-| kernel: drop the oldest message of the channel; `listeners` 0 counts it as dropped, or keeps it while an effects dispatch of this
+manager is under way (O9); -1 counts it as dropped
 -}
 advance : ChanRef -> Int -> Task x ()
 advance ref listeners =
     Task.andThen (\_ -> advance ref listeners) (Task.succeed ())
+
+
+{-| kernel: the channels whose oldest message was kept by `advance ref 0` (O9), oldest first; the run time forgets them
+-}
+held : () -> Task x (List ChanRef)
+held u =
+    Task.andThen (\_ -> held u) (Task.succeed ())
 
 
 {-| kernel: give the run time the router of this manager (the first time)

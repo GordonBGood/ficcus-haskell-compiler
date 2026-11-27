@@ -2,11 +2,11 @@ module T1aChannel exposing (main)
 
 -- T1a-2 (T1-D6): channels reach `update` through the effect manager: two listens of one channel get every message in the order of the
 -- subscriptions; a channel nobody listens to drops its message (counted); sendCmd sends from update; handles print as <internals> and
--- == compares them (O7). The first message (0) is sent before the manager has the new subscription (E2's dispatch: the Task manager's
--- command runs first), so it is dropped; the producer then waits one turn of the loop (sleep 0).
+-- == compares them (O7). The producer sends in the turn that subscribes (E2's dispatch: the Task manager's command runs first, so the
+-- messages reach the manager before the new subscription): O9 keeps them until that onEffects, so 0 is delivered and the quiet
+-- channel's 99 is dropped there (still no listen). No `Process.sleep 0` is needed.
 
 import Concurrent exposing (Address, Channel, Exit(..), Mailbox, Pid)
-import Process
 import Task exposing (Task)
 
 
@@ -30,7 +30,6 @@ say label v =
 producer : Address Int -> Address Int -> Task Never ()
 producer to quiet =
     Concurrent.send to 0
-        |> Task.andThen (\_ -> Process.sleep 0)
         |> Task.andThen (\_ -> Concurrent.send to 1)
         |> Task.andThen (\_ -> Concurrent.send quiet 99)
         |> Task.andThen (\_ -> Concurrent.send to 2)

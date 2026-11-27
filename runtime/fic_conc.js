@@ -4,7 +4,8 @@
 // after the kernels of elm/core's Scheduler and Platform, in a program that reaches a kernel of the overlay; each kernel definition of
 // the overlay becomes `var $author$project$Concurrent$<name> = _FicConc_<name>;`.
 // It uses elm/core 1.0.5's Scheduler.js as generated: a task's tag `$` (0 succeed, 2 binding), a binding's callback `b` and kill `c`, a
-// process's root `f`; a router's self process `h` (Platform.js). The check below fails at load time if they ever change.
+// process's root `f`; a router's self process `h` (Platform.js); a self message `{$: 0, a: msg}`. The checks below fail at load time if
+// they ever change (F4). O9 also counts the dispatches of Platform.js (`_Platform_dispatchEffects`, one `fx` mail per manager).
 // Rules as in C: the operations that complete at once are `andThen op (succeed ())` (no yield); a block is a binding whose callback the
 // waker calls (the woken process is queued); only the owner may receive (O8); a handle is an object with a numeric `$` (Debug.toString
 // prints <internals>) and a distinct `id` (== compares ids).
@@ -12,9 +13,23 @@
 var _FicConc_ids = 0;
 var _FicConc_cur = null;
 var _FicConc_router = null;
+var _FicConc_fxPending = 0; // O9: dispatches begun whose `fx` mail this manager's onEffects has not yet taken (the C twin reads the state)
+var _FicConc_kept = [];     // O9: channels whose oldest message waits for that onEffects
 
 (function() {
-	if (_Scheduler_binding(0).$ !== 2 || _Scheduler_succeed(0).$ !== 0) throw new Error('internal: Concurrent: the scheduler of elm/core changed');
+	var bad = function(what) { throw new Error('internal: Concurrent: the scheduler of elm/core changed (' + what + ')'); };
+	if (_Scheduler_binding(0).$ !== 2 || _Scheduler_succeed(0).$ !== 0) bad('task tags');
+	var bnd = _Scheduler_binding(0);
+	if (bnd.b !== 0 || !('c' in bnd)) bad('binding fields b, c');
+	if (!/\bproc\.f\b/.test(_Scheduler_step.toString())) bad('process root f');
+	var self = (_Platform_sendToSelf.f || _Platform_sendToSelf).toString();
+	if (!/\brouter\.h\b/.test(self) || !/\$:\s*0\s*,/.test(self)) bad('router process h, self message tag 0');
+	if (!/\$:\s*'fx'/.test(_Platform_dispatchEffects.toString())) bad('dispatch fx mail');
+	var dispatch = _Platform_dispatchEffects;
+	_Platform_dispatchEffects = function(managers, cmdBag, subBag) {
+		_FicConc_fxPending++;
+		return dispatch(managers, cmdBag, subBag);
+	};
 	var step = _Scheduler_step;
 	_Scheduler_step = function(proc) {
 		var prev = _FicConc_cur;
@@ -164,15 +179,33 @@ function _FicConc_current(c)
 	return _FicConc_op(function() { return _Scheduler_succeed(c.queue[0]); });
 }
 
+// listeners 0 (onSelfMsg): kept while a dispatch is under way (O9); -1 (onEffects, still no listen): dropped
 var _FicConc_advance = F2(function(c, listeners)
 {
-	return _FicConc_op(function() { c.queue.shift(); return _FicConc_unit(); });
+	return _FicConc_op(function() {
+		if (listeners === 0 && _FicConc_fxPending > 0) { _FicConc_kept.push(c); return _FicConc_unit(); }
+		c.queue.shift();
+		return _FicConc_unit();
+	});
 });
 
+// the kept channels, oldest first; forgotten here
+function _FicConc_held(u)
+{
+	return _FicConc_op(function() {
+		var l = _List_Nil;
+		for (var i = _FicConc_kept.length - 1; i >= 0; i--) l = _List_Cons(_FicConc_kept[i], l);
+		_FicConc_kept = [];
+		return _Scheduler_succeed(l);
+	});
+}
+
+// the start of every onEffects of the manager: one dispatch taken
 function _FicConc_attach(router)
 {
 	return _FicConc_op(function() {
 		if (_FicConc_router === null) _FicConc_router = router;
+		if (_FicConc_fxPending > 0) _FicConc_fxPending--;
 		return _FicConc_unit();
 	});
 }

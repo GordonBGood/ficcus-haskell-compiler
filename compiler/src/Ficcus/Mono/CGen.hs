@@ -1977,6 +1977,7 @@ effectCall info name key args =
     ("elm/core:Concurrent.current", [_]) -> call "fic_conc_current"
     ("elm/core:Concurrent.advance", [_, _]) -> call "fic_conc_advance"
     ("elm/core:Concurrent.attach", [_]) -> call "fic_conc_attach"
+    ("elm/core:Concurrent.held", [_]) -> Just (do { _ <- atoms info args; return "fic_conc_held_task()" })
     ("elm/core:Platform.Cmd.batch", [_]) -> call "fic_bag_batch"
     ("elm/core:Platform.Sub.batch", [_]) -> call "fic_bag_batch"
     ("elm/core:Platform.Cmd.map", [_, _]) -> Just (mapped True)

@@ -20,13 +20,13 @@ TESTS_DIR = os.path.dirname(HERE)
 RT = os.path.join(TESTS_DIR, "..", "..", "targets", "c")
 SAN = ["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL"]
 ENV = {"FIC_TIME": "1700000000000", "TZ": "UTC"}
-NAMES = ["T1aOrder", "T1aMailbox", "T1aKill", "T1aFailed", "T1aDeadlock", "T1aMany", "T1aChannel", "T1aWithin", "T1aOwner"]
+NAMES = ["T1aOrder", "T1aMailbox", "T1aKill", "T1aFailed", "T1aDeadlock", "T1aMany", "T1aChannel", "T1aChanDrop", "T1aWithin", "T1aOwner"]
 # a case that ends as a crash: (exit code, the message on stderr); no live or stats check
 CRASH = {"T1aOwner": (1, "Concurrent.receive: the mailbox belongs to another process")}
 RUNJS = os.path.join(TESTS_DIR, "effects2", "ref", "run.js")
 # name: (must see at least two orders over the seeds, the last line is the same in every order)
 SHUFFLE = {"T1aOrder": (True, True), "T1aMailbox": (True, True), "T1aKill": (True, True), "T1aFailed": (False, True), "T1aDeadlock": (False, False),
-           "T1aChannel": (False, True), "T1aWithin": (False, True)}
+           "T1aChannel": (False, True), "T1aChanDrop": (False, True), "T1aWithin": (False, True)}
 FILTERS = {"T1aMailbox": [r"^got: Num ", r"^got: Word "]}
 IDENTITY_DIRS = ["effects3", "e2review"]
 
@@ -121,7 +121,8 @@ def main():
             out, err = r.stdout.decode(), r.stderr.decode()
             if n in CRASH: ok = r.returncode != 0 and out == want and CRASH[n][1] in err
             else: ok = r.returncode == 0 and out == want
-            report(ok, "%s JavaScript (node): output = expected = C" % n, "exit %d\n--- got\n%s\n--- stderr\n%s" % (r.returncode, out[-600:], err[-600:]))
+            ok = ok and "FIC_JS_TIE" not in err   # F2: two timers due at the same virtual time: node may order them unlike C
+            report(ok, "%s JavaScript (node): output = expected = C, no timer tie" % n, "exit %d\n--- got\n%s\n--- stderr\n%s" % (r.returncode, out[-600:], err[-600:]))
 
     # O6: Concurrent from .fic modules only
     od = os.path.join(tmp, "o6"); shutil.copytree(os.path.join(HERE, "o6"), od, ignore=shutil.ignore_patterns("elm-stuff"))

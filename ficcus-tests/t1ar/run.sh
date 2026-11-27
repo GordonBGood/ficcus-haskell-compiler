@@ -7,6 +7,7 @@ ELM=$(realpath "$1"); H=$(realpath "$2"); shift 2
 HERE=$(cd "$(dirname "$0")" && pwd); RT=$HERE/../../../targets/c; RUNJS=$HERE/../effects2/ref/run.js
 T=$(mktemp -d "${CLAUDE_CODE_TMPDIR:-/tmp}/t1ar.XXXX"); cp -r "$HERE/elm.json" "$HERE/src" "$T/"
 export FIC_TIME=1700000000000 TZ=UTC
+TIE_EXPECTED="R3TieBreak"   # F2: equal virtual deadlines, so C = JS is not expected there
 cases=("$@"); [ ${#cases[@]} -eq 0 ] && cases=($(cd "$HERE/src" && ls *.fic | sed 's/\.fic$//'))
 for n in "${cases[@]}"; do
   echo "=== $n"
@@ -22,6 +23,9 @@ for n in "${cases[@]}"; do
     && echo "san: same output, live 0, clean (exit $e)" || { echo "san: DIFFERS (exit $e)"; grep -m3 "Sanitizer\|runtime error\|live" "$T/$n.s.err"; }
   if (cd "$T" && ELM_HOME=$H "$ELM" make "src/$n.fic" --output="$T/$n.js" >/dev/null 2>"$T/$n.jerr"); then
     timeout 120 node "$RUNJS" "$T/$n.js" "$n" >"$T/$n.js.out" 2>"$T/$n.js.err"; echo "JS exit $?"
+    if grep -q FIC_JS_TIE "$T/$n.js.err"; then              # F2: run.js flags timers due at the same virtual time
+      case " $TIE_EXPECTED " in *" $n "*) echo "JS timer tie flagged (expected)";; *) echo "JS timer tie flagged (UNEXPECTED)";; esac
+    else case " $TIE_EXPECTED " in *" $n "*) echo "JS timer tie NOT flagged (expected one)";; esac; fi
     cmp -s "$T/$n.c.out" "$T/$n.js.out" && echo "C = JS" || { echo "C != JS; JS output:"; cat "$T/$n.js.out"; head -3 "$T/$n.js.err"; }
   else echo "JS compile failed"; tail -3 "$T/$n.jerr"; fi
 done

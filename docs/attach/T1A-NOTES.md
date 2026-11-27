@@ -150,7 +150,9 @@ O6, O7, O8 as below.
 - **R9** A channel message is delivered to the listens the manager has when it handles the message, in the order of the subscription
   list as the manager receives it (Elm's gather order: `Sub.batch [a, b]` reaches the manager as `[b, a]`). A message sent in the same
   turn as the `update` that subscribes can reach the manager before the new subscription (E2's dispatch sends to the Task manager first,
-  and a performed task runs at once): it is dropped. One `Process.sleep 0` waits for the dispatch (O9).
+  and a performed task runs at once). Since T1c (O9, narrow form) such a message is kept until the onEffects of that dispatch and then
+  delivered to the new listens; a message that finds no listen while no dispatch of the manager is under way is dropped (as ports do),
+  and a kept message that still has no listen after that onEffects is dropped there.
 - **R10** `receiveWithin t`: `Just` at once when a message is there; else the first of a message (`Just`) and `t` ms (`Nothing`,
   `fic_timer_delay` rules as `Process.sleep`).
 - **R11** only the owner receives (O8).
@@ -161,9 +163,10 @@ O6, O7, O8 as below.
   "never" never prints), sleeps 100. W waits 50 again: `Nothing` at 60, then waits 1000. At 110 P sends 2 (W wakes: `Just 2`) and 3,
   then awaits W; W's `receiveWithin 5` finds 3 queued: `Just 3` at once. `Got (Done [Just 1,Nothing,Just 2,Just 3],Killed)`.
 - **T1aChannel**: init performs channel, channel, spawnWith worker: `Got (<internals>,<internals>,<internals>)`, `equal:
-  (True,False,False)` (O7). The update starts the producer; its first send (0) reaches the manager before the subscription (R9):
-  dropped. After `sleep 0`: 1, 99 to the quiet channel (no listen: dropped), 2, 3; each reaches both listens, `Doubled` first (R9).
-  `FromChan 3` sends 42 by `sendCmd` and performs `await`: `worker got: 42`, `WorkerDone (Done 42)`. Stats: sent 6, dropped 2.
+  (True,False,False)` (O7). The update starts the producer, which sends 0, 1, 99 (quiet channel), 2, 3 in the turn that subscribes:
+  all reach the manager before the subscription and are kept (O9); its onEffects delivers each of 0..3 to both listens, `Doubled`
+  first (R9), and drops 99 (no listen). (T1a-2 dropped 0 and needed a `Process.sleep 0`; stats then: dropped 2.)
+  `FromChan 3` sends 42 by `sendCmd` and performs `await`: `worker got: 42`, `WorkerDone (Done 42)`. Stats: sent 6, dropped 1.
 - **T1aOwner**: the leaker sends 5 to itself and ends with its mailbox; P receives from it: the two lines, then the O8 message, exit 1.
 - The six T1a-1 cases give the same output on JavaScript.
 
@@ -185,3 +188,31 @@ a3b-identity --more vs elmficP1b 100/0; rcgate-san 16 ok; suite 16/16 PASS.
   substituted by the generator instead.
 - **O11** fic_conc.js depends on Scheduler.js's generated field names (`f`, `b`, `c`, `h`), checked at load for two of them only.
 - **O12** A channel never ends: its record is swept when nothing holds it; messages queued for a manager that stops are dropped.
+
+## 12. T1c: the review fixes (docs/T1A-REVIEW.md)
+
+27 Nov 2026, feat/t1a with review/t1a merged, binary `bin/elmficT1c`.
+- **F3** fic_conc.h: a C99 compile-time check (`fic_conc_router_layout`, a negative array size) that fic_conc_router starts like
+  fic_router (`proc`/`cproc` and `mgr` at the same offsets, `mgr` of the same size).
+- **F4** fic_conc.js checks at load, besides the tags: a binding's `b` and `c`, `proc.f` in `_Scheduler_step`, `router.h` and the self
+  tag `$: 0` in `_Platform_sendToSelf`, and the `fx` mail in `_Platform_dispatchEffects`; each failure names what changed.
+- **O9 (narrow form)** `advance ref 0` (onSelfMsg, no listen) keeps the channel (C: `fic_conc_held`, owned) while an effects dispatch of
+  the manager is under way; onEffects takes the kept channels (`held`, a new kernel) right after `attach` and delivers each with the new
+  subscriptions, before its commands; still no listen: `advance ref (-1)`, dropped and counted. "Under way" in C reads the scheduler's
+  state: the manager's `cmds` is a list (fic_platform_dispatch has gathered but not yet sent the FX mail) or an FX mail waits in the
+  manager's mailbox; in JS a counter: `_Platform_dispatchEffects` (wrapped) adds one, each onEffects (`attach`) takes one. Bounded by
+  one dispatch: a kept message is never kept again. Kept channels left at the end are freed by fic_conc_teardown (not counted).
+  T1aChannel: 0 now delivered without `sleep 0` (dropped 1); new case **T1aChanDrop** (kept and delivered; kept then dropped; dropped at
+  once with no dispatch under way, after an unsubscribe; a later listen never sees a dropped message): sent 6, dropped 3.
+- **F2** effects2/ref/run.js tracks each timer's virtual deadline (setTimeout/setInterval wrapped; the virtual now is the deadline of
+  the timer that fires) and prints `FIC_JS_TIE: ...` on stderr when a timer is armed for the deadline of a pending one. Flag only, no
+  virtual clock. t1a/run.py fails a JavaScript check that is flagged; t1ar/run.sh reports it, R3TieBreak is expected-flagged.
+- **F1 (O5), documented, not fixed**: an ended process whose exit value holds its own handle (`spawnWith (\box -> Task.succeed
+  (Concurrent.self box, x))`), or two whose exit values hold each other's, is a cycle; the sweep frees an ended record only at `rc == 1`,
+  so it stays until fic_conc_teardown (live 0 at the end, but a long-running program that does this grows: R7CycleExit 111 MB against
+  R7PlainExit 2.3 MB). Planned fix with the next Concurrent slice: weak handles (an id and a registry lookup).
+- **F5, documented**: a comment at patchSched's anchors (Ficcus.Mono.Concurrent): the drain of fic_sched_enqueue is the only place
+  fic_sched.h steps a process; a second stepping place added later would bypass the shuffle silently (fic_conc_cur would abort there)
+  and must be patched too. fic_sched.h itself is not touched (other programs' C stays byte identical).
+- Build: elm.cabal `extra-source-files` now lists `runtime/*.js` and `overlay/*.elm`; they are embedded (Template Haskell) but cabal
+  did not see a change of them alone ("Up to date" with a stale overlay).

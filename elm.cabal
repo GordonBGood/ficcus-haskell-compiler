@@ -4,6 +4,8 @@ extra-source-files:
     runtime/*.h
     runtime/*.c
     runtime/*.py
+    runtime/*.js
+    overlay/*.elm
     core-packages/*/*/*.fic
 
 name: elm

@@ -79,7 +79,9 @@ concKernels =
   , ("receive", 1, "o"), ("receiveWithinRaw", 4, "sooo"), ("await", 1, "o"), ("kill", 1, "o")
     -- T1a-2: channels and the effect manager
   , ("newChannel", 1, "s"), ("toAddress", 1, "o"), ("channelId", 1, "b"), ("chanRefId", 1, "b")
-  , ("current", 1, "o"), ("advance", 2, "os"), ("attach", 1, "o") ]
+  , ("current", 1, "o"), ("advance", 2, "os"), ("attach", 1, "o")
+    -- O9: the kept channel messages
+  , ("held", 1, "s") ]
 
 
 concRuntime :: String
@@ -105,6 +107,9 @@ concUsed body = "fic_conc_" `List.isInfixOf` body
 
 -- | fic_sched.h for a program that uses Concurrent: the run queue's pick and the current process (fic_sched_enqueue), and the
 -- registry's teardown first in fic_platform_teardown. Each anchor must occur exactly once.
+-- F5 (docs/T1A-REVIEW.md): the first anchor is the only place where fic_sched.h steps a process today (the drain of fic_sched_enqueue).
+-- A second stepping place added to fic_sched.h later (say, the E3e post queue drained elsewhere) would bypass this patch with no error:
+-- the shuffle would skip it and fic_conc_cur would abort there ("a Concurrent operation outside a process"). Patch it here as well.
 patchSched :: String -> Either String String
 patchSched text =
   do  t1 <- replaceOnce
