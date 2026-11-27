@@ -25,6 +25,7 @@ import qualified Data.Map.Strict as Map
 import Ficcus.Mono.Class (MType(..))
 import Ficcus.Mono.Effects (Manager, managerOf)
 import Ficcus.Mono.Ir (UnionShape(..))
+import Ficcus.Mono.RowShape (rowSlot)
 import qualified AST.Prim.TypeVar as TV
 import qualified Data.Index as Index
 import Type.Dump (Ctx, mkCtx, declsToDefs, moduleLabel, moduleChars)
@@ -96,7 +97,9 @@ canToM env t =
     Can.TLambda a b -> TyFun (go a) (go b)
     Can.TVar v -> Map.findWithDefault (TyCon "ref" []) (TV.varToChars v) env
     Can.TType home name args -> TyCon (moduleChars home ++ "." ++ N.toChars (T.nameToName name)) (map go args)
-    Can.TRecord fields _ -> TyRecord [ (N.toChars n, go ft) | (n, Can.FieldType _ ft) <- Map.toList fields ]
+    Can.TRecord fields ext ->
+      -- (P1) the row of an extensible record field is kept as a slot, filled at the exact type (Ficcus.Mono.RowShape)
+      TyRecord ([ (rowSlot, go (Can.TVar v)) | Just v <- [ext] ] ++ [ (N.toChars n, go ft) | (n, Can.FieldType _ ft) <- Map.toList fields ])
     Can.TUnit -> TyUnit
     Can.TPair a b -> TyTuple [go a, go b]
     Can.TTriple a b c -> TyTuple [go a, go b, go c]

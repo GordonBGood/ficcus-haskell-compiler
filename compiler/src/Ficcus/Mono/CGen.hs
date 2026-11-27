@@ -40,6 +40,7 @@ import Ficcus.Mono.ManagerOrder (Entry)
 import Ficcus.Mono.ManagerTable (MgrEntry(..), Slot(..), MapPairs(..), managerSlots, mapPairs, mapCloneAt, pairIndex, mgrIndex)
 import Ficcus.Mono.Overlay (vectorMarker, vectorTypeName)
 import Ficcus.Mono.Class
+import Ficcus.Mono.RowShape (substShape)
 import Ficcus.Mono.Free (captures, refClass)
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Layout
@@ -2635,16 +2636,7 @@ clsOf info = classOfM (Map.union (Sized.sizedEnums (iUnions info)) (Map.map usEn
 ctorsOf :: Info -> String -> [MType] -> Maybe [(String, Int, [MType])]
 ctorsOf info n args =
   do  u <- Map.lookup n (iUnions info)
-      return [ (c, t, map substArgs fs) | (c, t, fs) <- usCtors u ]
-  where
-    substArgs ty =
-      case ty of
-        TyCon ('#' : ds) [] | [(i, "")] <- reads ds, i < length args -> args !! i
-        TyCon c xs -> TyCon c (map substArgs xs)
-        TyFun a b -> TyFun (substArgs a) (substArgs b)
-        TyRecord fs -> TyRecord [ (f, substArgs x) | (f, x) <- fs ]
-        TyTuple xs -> TyTuple (map substArgs xs)
-        TyUnit -> TyUnit
+      return [ (c, t, map (substShape args) fs) | (c, t, fs) <- usCtors u ]
 
 
 isStringT :: MType -> Bool

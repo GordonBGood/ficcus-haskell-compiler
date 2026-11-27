@@ -38,6 +38,7 @@ import qualified String
 
 import Ficcus.Mono.Class (MType(..))
 import Ficcus.Mono.Ir (UnionShape(..))
+import Ficcus.Mono.RowShape (substShape)
 
 
 -- | the definition of a derived member: its body is the stub `Elm.Kernel.FicDerive.T.m`
@@ -84,14 +85,7 @@ fieldTypes unions t =
     TyUnit -> []
   where
     -- the parameters of a union are `TyCon "#i" []`
-    subst args ty =
-      case ty of
-        TyCon ('#' : ds) [] | [(i, "")] <- reads ds, i < length args -> args !! i
-        TyCon c xs -> TyCon c (map (subst args) xs)
-        TyFun a b -> TyFun (subst args a) (subst args b)
-        TyRecord fs -> TyRecord [ (f, subst args x) | (f, x) <- fs ]
-        TyTuple xs -> TyTuple (map (subst args) xs)
-        TyUnit -> TyUnit
+    subst = substShape
 
 
 -- | an exact type as it is written in a program (`Nest (List Int)`), for messages (A3b review A3)

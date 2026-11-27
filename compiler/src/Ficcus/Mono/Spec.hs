@@ -52,6 +52,7 @@ import qualified AST.WellKnown as WK
 import qualified Elm.Float as EF
 import qualified Elm.String as ES
 import Ficcus.Mono.Class
+import Ficcus.Mono.RowShape (substShape)
 import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel
 import Ficcus.Mono.Effects (Manager(..), effectClassOf, leafKernelId, managerKernelId, mapKernelKind, noStepper, portKernelId)
@@ -822,14 +823,7 @@ holdsMember tops unions member t0 = fst (go Set.empty [] t0)
         (Just r, seen') -> (Just r, seen')
         (Nothing, seen') -> goAll seen' path xs
     -- the parameters of a union are `TyCon "#i" []`
-    subst args ty =
-      case ty of
-        TyCon ('#' : ds) [] | [(i, "")] <- reads ds, i < length args -> args !! i
-        TyCon c xs -> TyCon c (map (subst args) xs)
-        TyFun a b -> TyFun (subst args a) (subst args b)
-        TyRecord fs -> TyRecord [ (f, subst args x) | (f, x) <- fs ]
-        TyTuple xs -> TyTuple (map (subst args) xs)
-        TyUnit -> TyUnit
+    subst = substShape
 
 
 -- the key of a definition for the exact types of its variables (`keyFor` for types without variables)

@@ -21,6 +21,7 @@ import qualified Data.Set as Set
 
 import Ficcus.Mono.Class (MType(..), mtypeText)
 import Ficcus.Mono.Ir (CloneId, UnionShape(..))
+import Ficcus.Mono.RowShape (substShape)
 
 
 -- | the clones of the members called by the structural helpers, by member name and exact type of the subject
@@ -59,11 +60,4 @@ membersInside has skip unions t0 =
             TyUnit -> go (seen', found) rest
 
     -- the parameters of a union are `TyCon "#i" []`
-    subst args ty =
-      case ty of
-        TyCon ('#' : ds) [] | [(i, "")] <- reads ds, i < length args -> args !! i
-        TyCon c xs -> TyCon c (map (subst args) xs)
-        TyFun a b -> TyFun (subst args a) (subst args b)
-        TyRecord fs -> TyRecord [ (f, subst args x) | (f, x) <- fs ]
-        TyTuple xs -> TyTuple (map (subst args) xs)
-        TyUnit -> TyUnit
+    subst = substShape
