@@ -1,0 +1,5 @@
+w: Just 1
+w: Nothing
+w: Just 2
+w: Just 3
+update: Got (Done [Just 1,Nothing,Just 2,Just 3],Killed)

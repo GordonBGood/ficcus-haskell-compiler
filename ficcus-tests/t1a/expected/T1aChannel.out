@@ -1,0 +1,11 @@
+update: Got (<internals>,<internals>,<internals>)
+equal: (True,False,False)
+update: Started ()
+update: Doubled 2
+update: FromChan 1
+update: Doubled 4
+update: FromChan 2
+update: Doubled 6
+update: FromChan 3
+worker got: 42
+update: WorkerDone (Done 42)

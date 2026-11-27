@@ -1,0 +1,89 @@
+module T1aChannel exposing (main)
+
+-- T1a-2 (T1-D6): channels reach `update` through the effect manager: two listens of one channel get every message in the order of the
+-- subscriptions; a channel nobody listens to drops its message (counted); sendCmd sends from update; handles print as <internals> and
+-- == compares them (O7). The first message (0) is sent before the manager has the new subscription (E2's dispatch: the Task manager's
+-- command runs first), so it is dropped; the producer then waits one turn of the loop (sleep 0).
+
+import Concurrent exposing (Address, Channel, Exit(..), Mailbox, Pid)
+import Process
+import Task exposing (Task)
+
+
+type alias Model =
+    { chan : Maybe (Channel Int), worker : Maybe (Pid (Exit Never Int) Int) }
+
+
+type Msg
+    = Got ( Channel Int, Channel Int, Pid (Exit Never Int) Int )
+    | Started ()
+    | FromChan Int
+    | Doubled Int
+    | WorkerDone (Exit Never Int)
+
+
+say : String -> a -> Task x a
+say label v =
+    Task.succeed () |> Task.map (\_ -> Debug.log label v)
+
+
+producer : Address Int -> Address Int -> Task Never ()
+producer to quiet =
+    Concurrent.send to 0
+        |> Task.andThen (\_ -> Process.sleep 0)
+        |> Task.andThen (\_ -> Concurrent.send to 1)
+        |> Task.andThen (\_ -> Concurrent.send quiet 99)
+        |> Task.andThen (\_ -> Concurrent.send to 2)
+        |> Task.andThen (\_ -> Concurrent.send to 3)
+
+
+worker : Mailbox Int -> Task Never Int
+worker box =
+    Concurrent.receive box |> Task.andThen (say "worker got")
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case Debug.log "update" msg of
+        Got ( c, q, w ) ->
+            let
+                _ =
+                    Debug.log "equal" ( c == c, c == q, Concurrent.toAddress c == Concurrent.toAddress q )
+            in
+            ( { model | chan = Just c, worker = Just w }
+            , Task.perform Started (Concurrent.spawn (producer (Concurrent.toAddress c) (Concurrent.toAddress q)) |> Task.map (\_ -> ()))
+            )
+
+        FromChan 3 ->
+            case model.worker of
+                Just w ->
+                    ( model, Cmd.batch [ Concurrent.sendCmd (Concurrent.address w) 42, Task.perform WorkerDone (Concurrent.await w) ] )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        _ ->
+            ( model, Cmd.none )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case model.chan of
+        Just c ->
+            Sub.batch [ Concurrent.listen c FromChan, Concurrent.listen c (\n -> Doubled (2 * n)) ]
+
+        Nothing ->
+            Sub.none
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                ( { chan = Nothing, worker = Nothing }
+                , Task.perform Got (Task.map3 (\c q w -> ( c, q, w )) Concurrent.channel Concurrent.channel (Concurrent.spawnWith worker))
+                )
+        , update = update
+        , subscriptions = subscriptions
+        }

@@ -1,0 +1,52 @@
+module T1aOwner exposing (main)
+
+-- T1a-2 (O8): a mailbox is private: the app's process gets a process's mailbox through its exit value and receives from it: the program
+-- ends with the message of Concurrent.receive (exit 1, as a crash).
+
+import Concurrent exposing (Exit(..), Mailbox)
+import Task exposing (Task)
+
+
+say : String -> a -> Task x a
+say label v =
+    Task.succeed () |> Task.map (\_ -> Debug.log label v)
+
+
+leaker : Mailbox Int -> Task Never (Mailbox Int)
+leaker box =
+    Concurrent.send (Concurrent.self box) 5 |> Task.andThen (\_ -> say "leaker returns its mailbox" box)
+
+
+parent : Task Never Int
+parent =
+    Concurrent.spawnWith leaker
+        |> Task.andThen Concurrent.await
+        |> Task.andThen
+            (\e ->
+                case e of
+                    Done box ->
+                        say "parent receives from it" () |> Task.andThen (\_ -> Concurrent.receive box)
+
+                    _ ->
+                        Task.succeed 0
+            )
+
+
+type Msg
+    = Got Int
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update (never)" msg of
+        Got _ ->
+            ( n + 1, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Task.perform Got parent )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

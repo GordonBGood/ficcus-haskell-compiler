@@ -7,6 +7,9 @@ expected file; under --rc FIC_STATS must say live 0 and the `FIC_STATS concurren
 Seeded shuffle (FIC_SCHED_SEED, T1-D14): for the programs in SHUFFLE, seeds 1..30 on the -O2 build: the same multiset of lines and the
 same last line as the deterministic run, each sender's order kept (FILTERS), the same seed twice gives the same output, and at least two
 different orders are seen (programs marked so); seeds 1..4 also on the sanitizer build with live 0.
+JavaScript reference (T1a-2): each case is also compiled to JavaScript (runtime/fic_conc.js) and run under node with
+effects2/ref/run.js; its stdout must equal the same expected file (C = JS = expected); a crash case must fail on both with the message.
+O6: a .elm module that imports Concurrent is refused (C and JavaScript builds) with "FICCUS ONLY MODULE"; the same file as .fic compiles.
 Identity (T1-D12): the C text of programs that do not use Concurrent (effects3/src, e2review/src; a3b_identity.py --more covers the
 suite, effects, effects2 and e1p) equals the reference binary's, --rc and --no-rc.
 
@@ -17,9 +20,13 @@ TESTS_DIR = os.path.dirname(HERE)
 RT = os.path.join(TESTS_DIR, "..", "..", "targets", "c")
 SAN = ["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL"]
 ENV = {"FIC_TIME": "1700000000000", "TZ": "UTC"}
-NAMES = ["T1aOrder", "T1aMailbox", "T1aKill", "T1aFailed", "T1aDeadlock", "T1aMany"]
+NAMES = ["T1aOrder", "T1aMailbox", "T1aKill", "T1aFailed", "T1aDeadlock", "T1aMany", "T1aChannel", "T1aWithin", "T1aOwner"]
+# a case that ends as a crash: (exit code, the message on stderr); no live or stats check
+CRASH = {"T1aOwner": (1, "Concurrent.receive: the mailbox belongs to another process")}
+RUNJS = os.path.join(TESTS_DIR, "effects2", "ref", "run.js")
 # name: (must see at least two orders over the seeds, the last line is the same in every order)
-SHUFFLE = {"T1aOrder": (True, True), "T1aMailbox": (True, True), "T1aKill": (True, True), "T1aFailed": (False, True), "T1aDeadlock": (False, False)}
+SHUFFLE = {"T1aOrder": (True, True), "T1aMailbox": (True, True), "T1aKill": (True, True), "T1aFailed": (False, True), "T1aDeadlock": (False, False),
+           "T1aChannel": (False, True), "T1aWithin": (False, True)}
 FILTERS = {"T1aMailbox": [r"^got: Num ", r"^got: Word "]}
 IDENTITY_DIRS = ["effects3", "e2review"]
 
@@ -66,6 +73,11 @@ def main():
                 if not ok:
                     report(False, "%s %s %s builds" % (n, flag, tag), err); continue
                 code, out, err = execute(exe)
+                if n in CRASH:
+                    ok = code == CRASH[n][0] and out == want and CRASH[n][1] in err
+                    report(ok, "%s %s %s: output = expected, then the crash (exit %d)" % (n, flag, tag, CRASH[n][0]),
+                           "exit %d\n--- got\n%s\n--- stderr\n%s" % (code, out[-600:], err[-600:]))
+                    continue
                 ok = code == 0 and out == want
                 if flag == "--rc":
                     live = re.search(r"FIC_STATS: allocs \d+ live (\d+)", err)
@@ -98,6 +110,29 @@ def main():
                             ok = len(set(outs.values())) >= 2; why = "one order only over 30 seeds"
                     report(ok, "%s --rc %s: shuffle seeds %d..%d (multiset, last line, sender order%s)" % (
                         n, tag, seeds[0], seeds[-1], ", reproducible, %d orders" % len(set(outs.values())) if tag == "O2" else ", live 0"), why)
+
+        # the JavaScript reference
+        js = os.path.join(tmp, n + ".js")
+        p = run([os.path.abspath(a.elm), "make", "src/%s.fic" % n, "--output=" + js], cwd=proj, env=dict(os.environ, ELM_HOME=a.elm_home))
+        if p.returncode != 0:
+            report(False, "%s JavaScript compiles" % n, (p.stdout + p.stderr).decode()[-400:])
+        else:
+            r = run(["node", RUNJS, js, n], env=dict(os.environ, **ENV), timeout=600)
+            out, err = r.stdout.decode(), r.stderr.decode()
+            if n in CRASH: ok = r.returncode != 0 and out == want and CRASH[n][1] in err
+            else: ok = r.returncode == 0 and out == want
+            report(ok, "%s JavaScript (node): output = expected = C" % n, "exit %d\n--- got\n%s\n--- stderr\n%s" % (r.returncode, out[-600:], err[-600:]))
+
+    # O6: Concurrent from .fic modules only
+    od = os.path.join(tmp, "o6"); shutil.copytree(os.path.join(HERE, "o6"), od, ignore=shutil.ignore_patterns("elm-stuff"))
+    for out_name in ("o6.c", "o6.js"):
+        p = run([os.path.abspath(a.elm), "make", "src/Main.elm", "--output=" + os.path.join(tmp, out_name)], cwd=od, env=dict(os.environ, ELM_HOME=a.elm_home))
+        report(p.returncode != 0 and "FICCUS ONLY MODULE" in (p.stdout + p.stderr).decode(), "O6: a .elm importer of Concurrent is refused (%s)" % out_name,
+               (p.stdout + p.stderr).decode()[-400:])
+    os.rename(os.path.join(od, "src", "Main.elm"), os.path.join(od, "src", "Main.fic"))
+    for out_name in ("o6.c", "o6.js"):
+        p = run([os.path.abspath(a.elm), "make", "src/Main.fic", "--output=" + os.path.join(tmp, out_name)], cwd=od, env=dict(os.environ, ELM_HOME=a.elm_home))
+        report(p.returncode == 0, "O6: the same module as .fic compiles (%s)" % out_name, (p.stdout + p.stderr).decode()[-400:])
 
     if not a.no_identity and a.ref:
         same = diff = 0
