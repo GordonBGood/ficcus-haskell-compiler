@@ -1,0 +1,60 @@
+module T1aMany exposing (main)
+
+-- T1a-1: 10000 short processes, each sends one record (a struct boxed through the task ABI) to a collector; their records are swept
+-- from the registry while the program runs (nothing holds them); the collector's sum.
+
+import Concurrent exposing (Address, Exit(..), Mailbox)
+import Task exposing (Task)
+
+
+type alias Rec =
+    { k : Int, s : String }
+
+
+count : Int
+count =
+    10000
+
+
+collector : Int -> ( Int, Int ) -> Mailbox Rec -> Task Never ( Int, Int )
+collector n ( a, b ) box =
+    if n == 0 then
+        Task.succeed ( a, b )
+
+    else
+        Concurrent.receive box |> Task.andThen (\r -> collector (n - 1) ( a + r.k, b + String.length r.s ) box)
+
+
+spawnAll : Int -> Address Rec -> Task Never ()
+spawnAll k to =
+    if k > count then
+        Task.succeed ()
+
+    else
+        Concurrent.spawn (Concurrent.send to { k = k, s = String.fromInt k }) |> Task.andThen (\_ -> spawnAll (k + 1) to)
+
+
+parent : Task Never (Exit Never ( Int, Int ))
+parent =
+    Concurrent.spawnWith (collector count ( 0, 0 ))
+        |> Task.andThen (\c -> spawnAll 1 (Concurrent.address c) |> Task.andThen (\_ -> Concurrent.await c))
+
+
+type Msg
+    = Got (Exit Never ( Int, Int ))
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        Got _ ->
+            ( n + 1, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Task.perform Got parent )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

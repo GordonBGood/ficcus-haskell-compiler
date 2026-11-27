@@ -1,0 +1,9 @@
+S1 done: ()
+S2 done: ()
+got: Num 1
+got: Num 2
+got: Num 3
+got: Word "a"
+got: Word "b"
+got: Word "c"
+update: Got (Done ([1,2,3],["a","b","c"]))

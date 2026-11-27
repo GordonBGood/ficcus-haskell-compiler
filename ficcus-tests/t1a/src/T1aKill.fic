@@ -1,0 +1,90 @@
+module T1aKill exposing (main)
+
+-- T1a-1 (T1-D5, R6): kill of a process that sleeps (its timer is cancelled: it never wakes), of one blocked in receive, of an ended one
+-- (no-op: await still gives Done), a self kill (the process stops after it), a send to a killed process (dropped, counted), await after
+-- kill gives Killed. Needs FIC_TIME (virtual clock).
+
+import Concurrent exposing (Exit(..), Mailbox, Pid)
+import Process
+import Task exposing (Task)
+
+
+type KCmd
+    = Die (Pid (Exit Never Int) KCmd)
+
+
+say : String -> a -> Task x a
+say label v =
+    Task.succeed () |> Task.map (\_ -> Debug.log label v)
+
+
+sleeper : Task Never Int
+sleeper =
+    say "sleeper start" () |> Task.andThen (\_ -> Process.sleep 100) |> Task.andThen (\_ -> say "sleeper woke (never)" 1)
+
+
+blocked : Mailbox Int -> Task Never Int
+blocked box =
+    say "receiver start" () |> Task.andThen (\_ -> Concurrent.receive box) |> Task.andThen (say "receiver got (never)")
+
+
+selfKiller : Mailbox KCmd -> Task Never Int
+selfKiller box =
+    say "selfkiller start" ()
+        |> Task.andThen (\_ -> Concurrent.receive box)
+        |> Task.andThen (\(Die me) -> say "self kill" () |> Task.andThen (\_ -> Concurrent.kill me))
+        |> Task.andThen (\_ -> say "after self kill (never)" 0)
+
+
+parent : Task Never (List (Exit Never Int))
+parent =
+    Concurrent.spawn sleeper
+        |> Task.andThen
+            (\s ->
+                Concurrent.spawnWith blocked
+                    |> Task.andThen
+                        (\r ->
+                            Concurrent.spawnWith selfKiller
+                                |> Task.andThen
+                                    (\k ->
+                                        Concurrent.spawn (say "quick" 5)
+                                            |> Task.andThen (\q -> say "parent spawned" () |> Task.andThen (\_ -> Process.sleep 10) |> Task.andThen (\_ -> killAll s r k q))
+                                    )
+                        )
+            )
+
+
+killAll : Pid (Exit Never Int) Never -> Pid (Exit Never Int) Int -> Pid (Exit Never Int) KCmd -> Pid (Exit Never Int) Never -> Task Never (List (Exit Never Int))
+killAll s r k q =
+    Concurrent.kill s
+        |> Task.andThen (\_ -> Concurrent.kill r)
+        |> Task.andThen (\_ -> Concurrent.send (Concurrent.address k) (Die k))
+        |> Task.andThen (\_ -> Concurrent.await s)
+        |> Task.andThen
+            (\es ->
+                Concurrent.await r
+                    |> Task.andThen (\er -> Concurrent.kill q |> Task.andThen (\_ -> Concurrent.await q) |> Task.map (\eq -> [ es, er, eq ]))
+            )
+        |> Task.andThen (\l -> Concurrent.send (Concurrent.address r) 7 |> Task.map (\_ -> l))
+        |> Task.andThen (\l -> Concurrent.await k |> Task.map (\ek -> l ++ [ ek ]))
+        |> Task.andThen (\l -> Process.sleep 200 |> Task.map (\_ -> l))
+
+
+type Msg
+    = Got (List (Exit Never Int))
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        Got _ ->
+            ( n + 1, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Task.perform Got parent )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

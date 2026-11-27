@@ -1,0 +1,7 @@
+parent spawned: ()
+sleeper start: ()
+receiver start: ()
+selfkiller start: ()
+quick: 5
+self kill: ()
+update: Got [Killed,Killed,Done 5,Killed]

@@ -1,0 +1,54 @@
+module T1aOrder exposing (main)
+
+-- T1a-1 (T1A-NOTES section 3): spawn queues the child and the parent goes on (R2); await of a running process blocks (R5), of an ended
+-- one returns at once, any number of times; a process runs until it waits or ends (R1).
+
+import Concurrent exposing (Exit(..))
+import Task exposing (Task)
+
+
+say : String -> a -> Task x a
+say label v =
+    Task.succeed () |> Task.map (\_ -> Debug.log label v)
+
+
+child : String -> Int -> Task Never Int
+child name n =
+    say (name ++ " start") n |> Task.andThen (\_ -> say (name ++ " end") (n * 10))
+
+
+parent : Task Never (List (Exit Never Int))
+parent =
+    Concurrent.spawn (child "A" 1)
+        |> Task.andThen
+            (\a ->
+                Concurrent.spawn (child "B" 2)
+                    |> Task.andThen (\b -> say "parent after spawns" () |> Task.map (\_ -> ( a, b )))
+            )
+        |> Task.andThen
+            (\( a, b ) ->
+                Concurrent.await a
+                    |> Task.andThen (say "parent got A")
+                    |> Task.andThen (\ea -> Concurrent.await b |> Task.andThen (say "parent got B") |> Task.map (\eb -> ( ea, eb )))
+                    |> Task.andThen (\( ea, eb ) -> Concurrent.await a |> Task.map (\ea2 -> [ ea, eb, ea2 ]))
+            )
+
+
+type Msg
+    = Got (List (Exit Never Int))
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        Got _ ->
+            ( n + 1, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Task.perform Got parent )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

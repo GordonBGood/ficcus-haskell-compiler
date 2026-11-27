@@ -53,6 +53,7 @@ typedef struct { fic_hdr h; const fic_code *code; fic_ref a; fic_ref b; fic_word
 static fic_ref *fic_conc_reg; static size_t fic_conc_nreg, fic_conc_capreg, fic_conc_sweep_at = 64;
 static size_t fic_conc_n_spawned, fic_conc_n_sent, fic_conc_n_dropped;
 static int fic_conc_slot_ready;
+static int fic_conc_ending;          /* in fic_conc_teardown: nothing is woken (a wake outside a drain would run the process now) */
 static uint64_t fic_conc_rng; static int fic_conc_shuffle = -1;
 
 /* ---- the run queue's pick (patched into fic_sched_enqueue) ---- */
@@ -152,8 +153,7 @@ static void fic_conc_end(fic_cproc *c, uint32_t state, fic_ref exitv) {
   ex = c->exitv; c->exitv = exitv; FIC_RC_DROP(ex);
   fic_conc_drop_mail(c);
   while ((w = fic_conc_list_pop(&c->awaiters)) != NULL) {
-    FIC_RC_DUP(c->exitv);
-    fic_conc_wake(w, fic_w_p(c->exitv), 1);
+    if (!fic_conc_ending) { FIC_RC_DUP(c->exitv); fic_conc_wake(w, fic_w_p(c->exitv), 1); }
     FIC_RC_DROP(w);
   }
   { fic_ref r = c->rwait; c->rwait = fic_none(); FIC_RC_DROP(r); }   /* its own receivers (only a leaked mailbox has others) */
@@ -357,6 +357,7 @@ static fic_clo fic_conc_on_self_clo = { { FIC_IMMORTAL, FIC_TAG_CLOSURE, 0, 0 },
 
 static void fic_conc_teardown(void) {
   size_t i, blocked = 0;
+  fic_conc_ending = 1;
   for (i = 0; i < fic_conc_nreg; i++) {
     fic_cproc *c = (fic_cproc *)fic_conc_reg[i];
     if (c->state == FIC_CONC_RUNNING) { blocked++; fic_conc_stop(c); FIC_RC_DUP(c->killedv); fic_conc_end(c, FIC_CONC_KILLED, c->killedv); }
@@ -375,6 +376,7 @@ static void fic_conc_teardown(void) {
 #endif
   for (i = 0; i < fic_conc_nreg; i++) FIC_RC_DROP(fic_conc_reg[i]);
   free(fic_conc_reg); fic_conc_reg = NULL; fic_conc_nreg = fic_conc_capreg = 0;
+  fic_conc_ending = 0;
   if (fic_conc_slot_ready) { memset(&fic_mgrs[FIC_CONC_MGR], 0, sizeof fic_mgrs[FIC_CONC_MGR]); fic_conc_slot_ready = 0; }
 }
 

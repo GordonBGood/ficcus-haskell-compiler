@@ -1,0 +1,78 @@
+module T1aDeadlock exposing (main)
+
+-- T1a-1 (T1-D13): processes blocked forever do not keep the program alive; the end releases cycles: A keeps messages holding its own
+-- address in its mailbox and waits for B; B waits in receive holding A's handle; C ends with its own address as its exit value; the
+-- app's process waits for B forever. Under --rc: live 0, and the stats line counts 2 processes blocked at the end.
+
+import Concurrent exposing (Address, Exit(..), Mailbox, Pid)
+import Task exposing (Task)
+
+
+type Ping
+    = Ping (Address Ping)
+
+
+say : String -> a -> Task x a
+say label v =
+    Task.succeed () |> Task.map (\_ -> Debug.log label v)
+
+
+procA : Mailbox Ping -> Task Never Int
+procA box =
+    let
+        me =
+            Concurrent.self box
+    in
+    Concurrent.send me (Ping me)
+        |> Task.andThen (\_ -> Concurrent.send me (Ping me))
+        |> Task.andThen (\_ -> Concurrent.send me (Ping me))
+        |> Task.andThen (\_ -> Concurrent.receive box)
+        |> Task.andThen (\_ -> say "A got one" ())
+        |> Task.andThen (\_ -> Concurrent.receive box)
+        |> Task.andThen (\_ -> Concurrent.receive box)
+        |> Task.andThen (\_ -> Concurrent.receive box)
+        |> Task.map (\_ -> 1)
+
+
+procB : Pid (Exit Never Int) Ping -> Mailbox Int -> Task Never Int
+procB a box =
+    say "B blocks" () |> Task.andThen (\_ -> Concurrent.receive box) |> Task.andThen (\_ -> Concurrent.await a) |> Task.map (\_ -> 2)
+
+
+procC : Mailbox Int -> Task Never (Address Int)
+procC box =
+    Task.succeed (Concurrent.self box)
+
+
+parent : Task Never Int
+parent =
+    Concurrent.spawnWith procA
+        |> Task.andThen (\a -> Concurrent.spawnWith (procB a))
+        |> Task.andThen
+            (\b ->
+                Concurrent.spawnWith procC
+                    |> Task.andThen (\c -> say "parent waits" () |> Task.andThen (\_ -> Concurrent.await c))
+                    |> Task.andThen (\_ -> say "parent got C" ())
+                    |> Task.andThen (\_ -> Concurrent.await b)
+            )
+        |> Task.map (\_ -> 0)
+
+
+type Msg
+    = Got Int
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update (never)" msg of
+        Got _ ->
+            ( n + 1, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Task.perform Got parent )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

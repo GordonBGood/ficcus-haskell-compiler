@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, PatternGuards #-}
 module Ficcus.Mono.Concurrent
   ( concSource, concFileName
   , concTypeNames, concOn

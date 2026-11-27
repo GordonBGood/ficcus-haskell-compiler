@@ -1,0 +1,6 @@
+T1aOrder spawned 2 sent 0 dropped 0 blocked_at_end 0
+T1aMailbox spawned 3 sent 6 dropped 0 blocked_at_end 0
+T1aKill spawned 4 sent 2 dropped 1 blocked_at_end 0
+T1aFailed spawned 2 sent 0 dropped 0 blocked_at_end 0
+T1aDeadlock spawned 3 sent 3 dropped 0 blocked_at_end 2
+T1aMany spawned 10001 sent 10000 dropped 0 blocked_at_end 0

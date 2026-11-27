@@ -1,0 +1,62 @@
+module T1aFailed exposing (main)
+
+-- T1a-1 (T1-D4, T1-D5): a failing body ends as `Failed err`; the Process.spawn child of a killed Concurrent process goes on (as Elm's
+-- kill); Process.spawn inside a process is an E2 binding (the process yields). Needs FIC_TIME.
+
+import Concurrent exposing (Exit(..))
+import Process
+import Task exposing (Task)
+
+
+say : String -> a -> Task x a
+say label v =
+    Task.succeed () |> Task.map (\_ -> Debug.log label v)
+
+
+failing : Task String Int
+failing =
+    say "failing runs" () |> Task.andThen (\_ -> Task.fail "boom")
+
+
+orphanParent : Task Never Int
+orphanParent =
+    Process.spawn (Process.sleep 50 |> Task.andThen (\_ -> say "orphan still runs" 3))
+        |> Task.andThen (\_ -> Process.sleep 1000)
+        |> Task.andThen (\_ -> say "orphan parent woke (never)" 0)
+
+
+parent : Task Never ( Exit String Int, Exit Never Int )
+parent =
+    Concurrent.spawn failing
+        |> Task.andThen
+            (\f ->
+                Concurrent.spawn orphanParent
+                    |> Task.andThen
+                        (\o ->
+                            Concurrent.await f
+                                |> Task.andThen (say "failed")
+                                |> Task.andThen (\ef -> Process.sleep 10 |> Task.map (\_ -> ef))
+                                |> Task.andThen (\ef -> Concurrent.kill o |> Task.andThen (\_ -> Concurrent.await o) |> Task.map (\eo -> ( ef, eo )))
+                                |> Task.andThen (\r -> Process.sleep 100 |> Task.map (\_ -> r))
+                        )
+            )
+
+
+type Msg
+    = Got ( Exit String Int, Exit Never Int )
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        Got _ ->
+            ( n + 1, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Task.perform Got parent )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

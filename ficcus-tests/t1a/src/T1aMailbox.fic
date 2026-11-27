@@ -1,0 +1,78 @@
+module T1aMailbox exposing (main)
+
+-- T1a-1: two senders, one receiver; messages from one sender arrive in send order (T1-D3), the first send wakes the blocked receiver
+-- (R3), the receiver then takes the rest without waiting (R4). Reference (Word) and scalar (Num) payloads. Under FIC_SCHED_SEED the
+-- interleaving changes but each sender's order and the final value do not.
+
+import Concurrent exposing (Address, Exit(..), Mailbox)
+import Task exposing (Task)
+
+
+type Item
+    = Num Int
+    | Word String
+
+
+say : String -> a -> Task x a
+say label v =
+    Task.succeed () |> Task.map (\_ -> Debug.log label v)
+
+
+receiver : Int -> ( List Int, List String ) -> Mailbox Item -> Task Never ( List Int, List String )
+receiver n ( nums, words ) box =
+    if n == 0 then
+        Task.succeed ( List.reverse nums, List.reverse words )
+
+    else
+        Concurrent.receive box
+            |> Task.andThen (say "got")
+            |> Task.andThen
+                (\item ->
+                    case item of
+                        Num k ->
+                            receiver (n - 1) ( k :: nums, words ) box
+
+                        Word w ->
+                            receiver (n - 1) ( nums, w :: words ) box
+                )
+
+
+sender : String -> Address Item -> List Item -> Task Never ()
+sender name to items =
+    case items of
+        [] ->
+            say (name ++ " done") ()
+
+        item :: rest ->
+            Concurrent.send to item |> Task.andThen (\_ -> sender name to rest)
+
+
+parent : Task Never (Exit Never ( List Int, List String ))
+parent =
+    Concurrent.spawnWith (receiver 6 ( [], [] ))
+        |> Task.andThen
+            (\r ->
+                Concurrent.spawn (sender "S1" (Concurrent.address r) [ Num 1, Num 2, Num 3 ])
+                    |> Task.andThen (\_ -> Concurrent.spawn (sender "S2" (Concurrent.address r) [ Word "a", Word "b", Word "c" ]))
+                    |> Task.andThen (\_ -> Concurrent.await r)
+            )
+
+
+type Msg
+    = Got (Exit Never ( List Int, List String ))
+
+
+update : Msg -> Int -> ( Int, Cmd Msg )
+update msg n =
+    case Debug.log "update" msg of
+        Got _ ->
+            ( n + 1, Cmd.none )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Task.perform Got parent )
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }

@@ -1,0 +1,4 @@
+parent waits: ()
+A got one: ()
+B blocks: ()
+parent got C: ()

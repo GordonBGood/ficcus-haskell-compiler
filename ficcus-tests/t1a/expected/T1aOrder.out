@@ -1,0 +1,8 @@
+parent after spawns: ()
+A start: 1
+A end: 10
+B start: 2
+B end: 20
+parent got A: Done 10
+parent got B: Done 20
+update: Got [Done 10,Done 20,Done 10]
