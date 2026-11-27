@@ -1,0 +1,1 @@
+{"desc": "M1: derived compare over two types that refer to each other at a growing argument (A a = A a (B (List a)), B a = B (A a)): CANNOT DERIVE at once (elmficA4bb did not stop)"}

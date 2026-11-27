@@ -368,3 +368,18 @@ a4b-nonregular-member	REJECTC		`==` on the type `Nest Ci`, which is used at anot
 a4b-has-compare	RUN	c	
 a4b-hash-written	RUN	c	
 a4b-err-open-record	REJECTC	TYPE MISMATCH	comparable
+a4bf-err-nonregular-mutual	REJECT	CANNOT DERIVE	refer to each other
+a4bf-err-nonregular-mutual-hash	REJECT	CANNOT DERIVE	keep growing
+a4bf-err-nonregular-three	REJECT	CANNOT DERIVE	A (Maybe a)
+a4bf-mutual-regular	RUN	c	
+a4bf-err-row-field	REJECT	CANNOT DERIVE	T : { r | x : Int }
+a4bf-err-row-field-hash	REJECT	CANNOT DERIVE	T > argument 2 > List element
+a4bf-err-open-record-compare	REJECT	NO ATTACHED FUNCTION	Only a closed record
+a4bf-err-open-record-hash	REJECT	NO ATTACHED FUNCTION	has `hash`
+a4bf-err-open-record-inferred	REJECT	NO ATTACHED FUNCTION	Only a closed record
+a4bf-err-open-record-let	REJECT	NO ATTACHED FUNCTION	Only a closed record
+a4bf-closed-record-later	RUN	c	
+a4bf-err-hash-shape	REJECT	CANNOT DERIVE	    T -> String
+a4bf-err-hash-shape-arity2	REJECT	CANNOT DERIVE	T -> Int -> Int
+a4bf-err-beside-eq	REJECT	CANNOT DERIVE	its own `eq`
+a4bf-err-beside-eq-hash	REJECT	CANNOT DERIVE	get different hashes

@@ -57,6 +57,7 @@ import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
 import qualified AST.Prim.TypeVar as TV
 import qualified AST.WellKnown as WK
+import qualified Type.OpenRecord as OpenRecord
 import qualified Elm.Interface as I
 import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Package as Pkg
@@ -530,8 +531,13 @@ resolve tools table env obligation@(Obligation region function member subject ti
             Structure Unit1 ->
               builtin (if open then WK.BEnum else WK.BOther) "()" []
 
-            Structure (Record1 fields _) | open ->
-              builtin WK.BContainer "record" (Map.elems fields)
+            -- (A4bf, review F1) only a closed record: an extensible one may hold more fields (a function) through its row
+            Structure (Record1 fields ext) | open ->
+              do  rest <- OpenRecord.recordRest ext
+                  case rest of
+                    OpenRecord.Closed others -> builtin WK.BContainer "record" (Map.elems fields ++ others)
+                    OpenRecord.Waits -> return Keep
+                    OpenRecord.Open -> openRecord
 
             Structure (Record1 _ _) ->
               builtin WK.BOther "record" []
@@ -559,6 +565,10 @@ resolve tools table env obligation@(Obligation region function member subject ti
 
             Error ->
               return (Done [] [])
+
+    openRecord =
+      do  err <- OpenRecord.errorFor region function member subject tipe
+          return (Done [] (maybe [] (: []) err))
 
     given var =
       case Map.lookup (Constraints.marker var member) env of
@@ -759,7 +769,9 @@ hold table isValue outer young header pending
     unknown valueName o@(Obligation region function member subject tipe _) =
       do  (Descriptor content _ _ _) <- UF.get subject
           t <- Type.toErrorType tipe
-          return (o, Error.UnknownMemberType region function (kindOf content) [(member, t)] (ownersOf table [member]) valueName)
+          -- (A4bf, review F1) an extensible record is not ambiguous: it has no `compare`/`hash`
+          openErr <- OpenRecord.errorFor region function member subject tipe
+          return (o, maybe (Error.UnknownMemberType region function (kindOf content) [(member, t)] (ownersOf table [member]) valueName) id openErr)
 
     allM p xs =
       case xs of
@@ -831,7 +843,9 @@ sweep table typed pending =
                       RigidVar name -> missing name
                       RigidSuper _ name -> missing name
                       Error -> return errors
-                      _ -> return (Error.UnknownMemberType region function (kindOf content) [(member, neededType)] (ownersOf table [member]) Nothing : errors)
+                      _ ->
+                        do  openErr <- OpenRecord.errorFor region function member subject tipe
+                            return (maybe (Error.UnknownMemberType region function (kindOf content) [(member, neededType)] (ownersOf table [member]) Nothing) id openErr : errors)
 
     annotationOf var =
       firstJust typed $ \(name, defVar, wheres, topLevel) ->
@@ -891,7 +905,8 @@ leftovers table pending =
     leftover (Obligation region function member subject tipe _) =
       do  (Descriptor content _ _ _) <- UF.get subject
           t <- Type.toErrorType tipe
-          return (Error.UnknownMemberType region function (kindOf content) [(member, t)] (ownersOf table [member]) Nothing)
+          openErr <- OpenRecord.errorFor region function member subject tipe
+          return (maybe (Error.UnknownMemberType region function (kindOf content) [(member, t)] (ownersOf table [member]) Nothing) id openErr)
 
 
 -- the kind of a variable of Elm's own (`number`, `comparable`, ...)

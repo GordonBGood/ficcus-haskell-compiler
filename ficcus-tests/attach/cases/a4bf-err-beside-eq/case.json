@@ -1,0 +1,1 @@
+{"desc": "F3: derive compare, hash beside a written eq: CANNOT DERIVE (Ci 'A' == Ci 'a' but compare LT and the hashes differ)"}

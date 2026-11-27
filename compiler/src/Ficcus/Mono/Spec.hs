@@ -162,6 +162,7 @@ data S =
     , sMemberTable :: Map.Map (String, MType) CloneId   -- (A3b) the member clones the structural ==/compare helpers call
     , sDerived :: Set.Set (String, MType)         -- (A4b) the exact types whose derived `compare`/`hash` the C helpers generate
     , sWalked :: Set.Set (String, MType)          -- (A4b, A3b review A3) the (member, type) whose parts were walked once
+    , sDerivedPath :: [MType]                     -- (A4bf, review M1) the nested `derivedAt` calls, innermost first (the bound)
     }
 
 
@@ -214,7 +215,7 @@ specialize modules marks =
         enums = Map.union (Sized.sizedEnums unions0) (builtin (Map.fromList (concatMap mmEnums modules)))
         managers = Map.fromList [ (mgHome mg, mg) | m' <- modules, Just mg <- [mmManager m'] ]
         ports = Map.fromList (concatMap mmPorts modules)
-        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions managers Set.empty Set.empty Nothing Nothing ports Map.empty Set.empty Set.empty
+        start = S 0 Map.empty Map.empty Seq.empty Map.empty [] marks tops enums Set.empty Map.empty Map.empty vecOn unions managers Set.empty Set.empty Nothing Nothing ports Map.empty Set.empty Set.empty []
         mainId = defIdOf (mmCtx m) (defKeyOf d)
         -- E1 step 2: the effect managers the program reaches are cloned after everything else (their clones get the last ids)
         -- E1 step 3: update and subscriptions likewise (workerPhase), before the managers their bodies can reach
@@ -591,13 +592,23 @@ operatorText cid member =
 -- | (A4b) a derived `compare` or `hash` at an exact type: recorded for the C generator, and the parts of the type are walked
 -- for their own members (a part with a written member gets its clone in the table, a part with a derived one is recorded
 -- in turn)
+--
+-- (A4bf, review M1) A type used at growing arguments through other types (`type A a = A a (B (List a))`, `type B a = B (A a)`)
+-- reaches a new exact type at every step.  The deriver refuses such a group (Canonicalize.DeriveChecks); this bound is the
+-- backstop, like A3's bound in `ContainerMembers.membersInside`: more than `Derived.derivedDepthLimit` nested exact types
+-- stops the walk with a report on the outermost type.
 derivedAt :: String -> MType -> SM ()
 derivedAt member t =
   do  known <- gets (Set.member (member, t) . sDerived)
+      path <- gets sDerivedPath
       when (not known) $
-        do  modify' (\s -> s { sDerived = Set.insert (member, t) (sDerived s) })
-            unions <- gets sUnions
-            mapM_ (containerMembers (memberCid member) member) (Derived.fieldTypes unions t)
+        if length path >= Derived.derivedDepthLimit then
+          report (Derived.nonRegularText member (last path) t)
+        else
+          do  modify' (\s -> s { sDerived = Set.insert (member, t) (sDerived s), sDerivedPath = t : path })
+              unions <- gets sUnions
+              mapM_ (containerMembers (memberCid member) member) (Derived.fieldTypes unions t)
+              modify' (\s -> s { sDerivedPath = path })
   where
     memberCid m = if m == "hash" then Derived.hashKernelId else "elm/core:Basics." ++ m
 

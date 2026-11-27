@@ -1,0 +1,1 @@
+{"desc": "F1: a record whose row is still open when the obligation is met (a lambda reads a.x first) and closed later by the list; a let function; an annotated closed record: all still have compare and hash", "c_only": true}

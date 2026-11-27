@@ -19,6 +19,8 @@ module Ficcus.Mono.Derived
   , structuralMembers
   , fieldTypes
   , mtypeSource
+  , derivedDepthLimit
+  , nonRegularText
   , ctorRank
   , hashRuntime
   )
@@ -114,6 +116,25 @@ mtypeSource t =
       case x of
         TyFun _ _ -> "(" ++ mtypeSource x ++ ")"
         _ -> mtypeSource x
+
+
+-- | (A4bf, review M1) the most derived exact types nested in one another (a derived type in a field of a derived type, and so
+-- on) that a derived `compare`/`hash` may reach: beyond it a type of the program keeps growing.  Smaller than A3's 2,000
+-- distinct types of `membersInside`: each nested type is a new A3 walk over a type that grows by one level, so the work is
+-- cubic in this depth (2,000 took 145 s; 200 takes well under a second), and no regular type nests derived types that deep.
+derivedDepthLimit :: Int
+derivedDepthLimit =
+  200
+
+
+-- | (A4bf, review M1) the report when the bound is reached: the outermost type as written, the type reached at the bound
+nonRegularText :: String -> MType -> MType -> String
+nonRegularText member outer reached =
+  "the derived `" ++ member ++ "` of the type `" ++ mtypeSource outer ++ "` reaches more than " ++ show derivedDepthLimit
+    ++ " nested types (" ++ shortened (mtypeSource reached) ++ "): a type in it is used at another argument inside itself"
+    ++ " (non-regular recursion), which the C generator does not support"
+  where
+    shortened s = if length s > 60 then take 60 s ++ " ..." else s
 
 
 -- | the place of a constructor (by its tag) in the order of `compare`: the declaration order, but for `Maybe` (Nothing first).
