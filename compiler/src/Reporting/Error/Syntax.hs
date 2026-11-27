@@ -74,6 +74,7 @@ data Error
   | NoPortsInPackage (A.Located N.Name)
   | NoPortModulesInPackage A.Region
   | NoEffectsOutsideKernel A.Region
+  | FicOnlyImport A.Region            -- Ficcus T1a-2 (O6): `import Concurrent` in a .elm module
   | ParseError Module
 
 
@@ -620,6 +621,20 @@ toReport source err =
                   ,"should","be","able","to","continue."
                   ]
               , noteForPortsInPackage
+              ]
+          )
+
+    FicOnlyImport region ->
+      Report.Report "FICCUS ONLY MODULE" region [] $
+        Code.toSnippet source region Nothing
+          (
+            D.reflow $
+              "The module `Concurrent` is part of Ficcus, so only a Ficcus module (a file with a .fic extension) can import it:"
+          ,
+            D.stack
+              [ D.reflow $
+                  "Rename this file from .elm to .fic, or remove the import. An Elm module stays\
+                  \ compatible with Elm 0.19, which has no `Concurrent`."
               ]
           )
 

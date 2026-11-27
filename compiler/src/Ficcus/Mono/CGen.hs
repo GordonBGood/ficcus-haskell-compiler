@@ -39,7 +39,7 @@ import Ficcus.Mono.Program (Shape(..), programShape)
 import Ficcus.Mono.ManagerOrder (Entry)
 import Ficcus.Mono.ManagerTable (MgrEntry(..), Slot(..), MapPairs(..), managerSlots, mapPairs, mapCloneAt, pairIndex, mgrIndex)
 import Ficcus.Mono.Overlay (vectorMarker, vectorTypeName)
-import Ficcus.Mono.Concurrent (concRuntime, concUsed, patchSched)
+import Ficcus.Mono.Concurrent (concOn, concRuntime, concTypeNames, concUsed, patchSched)
 import Ficcus.Mono.Class
 import Ficcus.Mono.RowShape (substShape)
 import Ficcus.Mono.Free (captures, refClass)
@@ -1706,6 +1706,12 @@ siteName d =
   in maybe n id (List.stripPrefix "author/project:" n)
 
 
+-- | T1a-2: a handle type of the Concurrent overlay (its markers are there; a module `Concurrent` of the project is ordinary code)
+isConcType :: Info -> String -> Bool
+isConcType info n =
+  n `elem` concTypeNames && concOn (\u -> [ c | (c, _, _) <- usCtors u ]) (iUnions info)
+
+
 isVectorType :: Info -> String -> Bool
 isVectorType info n =
   n == vectorTypeName && maybe False (\u -> [ c | (c, _, _) <- usCtors u ] == [vectorMarker]) (Map.lookup n (iUnions info))
@@ -1960,6 +1966,17 @@ effectCall info name key args =
     ("elm/core:Concurrent.receive", [_]) -> call "fic_conc_receive"
     ("elm/core:Concurrent.await", [_]) -> call "fic_conc_await"
     ("elm/core:Concurrent.kill", [_]) -> call "fic_conc_kill"
+    -- T1a-2: receiveWithin (its result, a Maybe, is a reference), channels and the effect manager
+    ("elm/core:Concurrent.receiveWithinRaw", [_, _, _, n])
+      | abiClass (mRep n) /= CRef -> Just (failWith "internal: Concurrent: the result of receiveWithin is not a reference")
+      | otherwise -> call "fic_conc_receive_within"
+    ("elm/core:Concurrent.newChannel", [_]) -> Just (do { _ <- atoms info args; return "fic_conc_new_channel()" })
+    ("elm/core:Concurrent.toAddress", [_]) -> call "fic_conc_same"
+    ("elm/core:Concurrent.channelId", [_]) -> call "fic_conc_id"
+    ("elm/core:Concurrent.chanRefId", [_]) -> call "fic_conc_id"
+    ("elm/core:Concurrent.current", [_]) -> call "fic_conc_current"
+    ("elm/core:Concurrent.advance", [_, _]) -> call "fic_conc_advance"
+    ("elm/core:Concurrent.attach", [_]) -> call "fic_conc_attach"
     ("elm/core:Platform.Cmd.batch", [_]) -> call "fic_bag_batch"
     ("elm/core:Platform.Sub.batch", [_]) -> call "fic_bag_batch"
     ("elm/core:Platform.Cmd.map", [_, _]) -> Just (mapped True)
@@ -2669,7 +2686,7 @@ kernelCall info cls name key args =
 
 -- statements that print a value of an exact type into the buffer `sb` (a pointer) in Elm's Debug.toString format
 showStmt :: Info -> MType -> String -> String -> CG ()
-showStmt _ t sb v =
+showStmt info t sb v =
   case t of
     TyCon "elm/core:Basics.Int" [] -> emit ("fic_sb_int(" ++ sb ++ ", " ++ v ++ ");")
     TyCon "elm/core:Basics.Float" [] -> emit ("fic_sb_float(" ++ sb ++ ", " ++ v ++ ");")
@@ -2685,6 +2702,8 @@ showStmt _ t sb v =
     TyCon "elm/regex:Regex.Regex" [] -> emit ("fic_sb_puts(" ++ sb ++ ", \"{}\");")      -- as Elm (decision L29)
     -- E2: the platform's kernel types (a process id, a task, a command, a router) print as Elm's `<internals>`
     TyCon n _ | n `elem` kernelTypeIds -> emit ("fic_sb_puts(" ++ sb ++ ", \"<internals>\");")
+    -- T1a-2 (O7): the handles of Concurrent likewise
+    TyCon n _ | isConcType info n -> emit ("fic_sb_puts(" ++ sb ++ ", \"<internals>\");")
     TyCon "elm/bytes:Bytes.Bytes" [] ->
       do  emit ("fic_sb_puts(" ++ sb ++ ", \"<\");")
           emit ("fic_sb_int(" ++ sb ++ ", fic_bytes_width(" ++ v ++ "));")
@@ -2954,6 +2973,8 @@ genHelper info k name =
         TyCon "elm/core:List.List" [e] -> listEq e
         TyCon "elm/core:Elm.JsArray.JsArray" [e] -> jsArrayEq e
         TyCon n [e] | isVectorType info n -> vectorEq e
+        -- T1a-2 (O7): a handle of Concurrent is one record per process or channel: equal records, equal ids
+        TyCon n _ | isConcType info n -> emit "return a == b;"
         TyCon "elm/core:Dict.Dict" [kt, vt] -> dictEq kt vt
         -- the built-in types of elm/json and elm/bytes: structural equality in the runtime
         TyCon "elm/json:Json.Encode.Value" [] -> emit "return fic_json_eq(a, b);"

@@ -30,6 +30,7 @@ import qualified Generate.JavaScript.Expression as Expr
 import qualified Generate.JavaScript.Functions as Functions
 import qualified Generate.JavaScript.Name as JsName
 import qualified Generate.Mode as Mode
+import qualified Ficcus.Mono.Concurrent as Conc
 import qualified Reporting.Doc as D
 import qualified Reporting.Render.Type as RT
 import qualified Reporting.Render.Type.Localizer as L
@@ -188,6 +189,46 @@ addGlobal mode graph state@(State revKernels builders seen) global =
 
 addGlobalHelp :: Mode.Mode -> Graph -> Opt.Global -> State -> State
 addGlobalHelp mode graph global state =
+  case concKernelOf graph global of
+    Just k -> addConcKernel mode graph global k state
+    Nothing -> addGlobalHelp0 mode graph global state
+
+
+-- Ficcus T1a-2: a kernel definition of the Concurrent overlay (Ficcus.Mono.Concurrent; its marker type is in the program) is the
+-- JavaScript kernel `_FicConc_<name>` of runtime/fic_conc.js, which is emitted once, after the kernels of elm/core's Scheduler and
+-- Platform (reached through Task.succeed and Platform.sendToSelf)
+concKernelOf :: Graph -> Opt.Global -> Maybe String
+concKernelOf graph (Opt.Global (ModuleName.Canonical p h) n) =
+  if Module.toChars h == "Concurrent" && Pkg.toChars p == "author/project" && N.toChars n `elem` Conc.concJsKernelNames
+     && any isMarker (Map.keys graph)
+  then Just (N.toChars n) else Nothing
+  where
+    isMarker (Opt.Global (ModuleName.Canonical p' h') n') = p' == p && h' == h && N.toChars n' == "FicConcPidBuiltin"
+
+
+addConcKernel :: Mode.Mode -> Graph -> Opt.Global -> String -> State -> State
+addConcKernel mode graph global k state0 =
+  let
+    named pkg m v = [ g | g@(Opt.Global (ModuleName.Canonical p h) n) <- Map.keys graph, Pkg.toChars p == pkg, Module.toChars h == m, N.toChars n == v ]
+    -- the marker constructor is never built, so it is never added as a global: its key in `seen` says the kernel is emitted
+    marker = named "author/project" "Concurrent" "FicConcPidBuiltin"
+    seenNow (State _ _ seen) = any (`Set.member` seen) marker
+    withKernel st =
+      if seenNow st then st else
+        let
+          State ks bs seen = List.foldl' (addGlobal mode graph) st (named "elm/core" "Task" "succeed" ++ named "elm/core" "Platform" "sendToSelf")
+          seen' = foldr Set.insert seen marker
+        in
+        addKernel (State ks bs seen') (B.stringUtf8 Conc.concJsKernel)
+    Opt.Global home name = global
+  in
+  addBuilder (withKernel state0) (
+    "var " <> JsName.toBuilder (JsName.fromGlobal home name) <> " = _FicConc_" <> B.stringUtf8 k <> ";\n"
+  )
+
+
+addGlobalHelp0 :: Mode.Mode -> Graph -> Opt.Global -> State -> State
+addGlobalHelp0 mode graph global state =
   let
     addDeps deps someState =
       Set.foldl' (addGlobal mode graph) someState deps

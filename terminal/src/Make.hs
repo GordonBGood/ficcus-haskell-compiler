@@ -151,6 +151,8 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
         case (paths, maybeOutput) of
           (_ : _, Just (Mono _)) -> Task.io (writeOverlay root)
           (_ : _, Just (FicC _)) -> Task.io (writeOverlay root)
+          -- T1a-2: a build to JavaScript gets the Concurrent overlay alone (the JavaScript reference of the C run time)
+          (_ : _, _) -> Task.io (writeConcOverlay root)
           _ -> return []
       details <- Task.eio Exit.MakeBadDetails (Details.load writer style root stuff)
       case paths of
@@ -364,6 +366,20 @@ writeOverlay root =
       writeFile sortFile (if own then Overlay.sortListSource else Overlay.sortSource)
       writeFile (dir FP.</> "FicOverlaySort.list.txt") Overlay.sortListSource      -- read instead by Build.sortOverlaySource when a package exposes a `Vector`
       return (file : sortFile : parserFiles ++ randomFiles ++ timeFiles ++ jsonFiles ++ bytesFiles ++ regexFiles)
+
+
+-- | T1a-2: for a build to JavaScript, `elm-stuff/ficcus-overlay-js/Concurrent.elm` is the only overlay module (Ficcus.Mono.Concurrent); it
+-- is not a root, so a program that does not import it is generated exactly as before
+writeConcOverlay :: R.Root -> IO [FilePath]
+writeConcOverlay root =
+  do  let dir = R.toAbsolutePath root (R.Relative "elm-stuff/ficcus-overlay-js")
+      Dir.createDirectoryIfMissing True dir
+      let file = dir FP.</> Conc.concFileName
+      old <- Dir.doesFileExist file
+      same <- if old then (== Conc.concSource) <$> readFileStrict file else return False
+      if same then return () else writeFile file Conc.concSource
+      Flags.setExtraSrcDir (Just dir)
+      return []
 
 
 -- | does a source directory of elm.json hold a module named `Vector` (`Vector.elm` or `Vector.fic`)?

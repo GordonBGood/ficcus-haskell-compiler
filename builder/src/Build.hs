@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns, GADTs, QuasiQuotes, TemplateHaskell, OverloadedStrings #-}
+{-# LANGUAGE BangPatterns, GADTs, PatternGuards, QuasiQuotes, TemplateHaskell, OverloadedStrings #-}
 module Build
   ( fromExposed
   , fromPaths
@@ -321,14 +321,46 @@ sortOverlaySource foreigns path name source =
         else return source
 
 
+-- Ficcus T1a-2: the overlay's Concurrent module (Ficcus.Mono.Concurrent)
+isConcOverlay :: FilePath -> Module.Name -> IO Bool
+isConcOverlay path name =
+  do  extra <- Flags.getExtraSrcDir
+      let inOverlay = maybe False (\d -> FP.addTrailingPathSeparator d `List.isPrefixOf` path) extra
+      return (inOverlay && Module.toChars name == "Concurrent")
+
+
+-- | Ficcus T1a-2 (O6): a .elm module of the project that imports the overlay's `Concurrent` (no module of that name in the project's
+-- source directories or its packages): the region of the import
+ficOnlyImport :: Env -> FilePath -> Src.Module -> IO (Maybe A.Region)
+ficOnlyImport (Env _ root _ _ srcDirs _ _ foreigns) path (Src.Module _ _ _ imports _ _ _ _ _) =
+  case [ region | Src.Import (A.At region n) _ _ <- imports, Module.toChars n == "Concurrent" ] of
+    region : _ | FP.takeExtension path == ".elm" ->
+      do  extra <- Flags.getExtraSrcDir
+          let inOverlay = maybe False (\d -> FP.addTrailingPathSeparator d `List.isPrefixOf` path) extra
+          own <- concat <$> traverse (\d -> File.existingModuleFiles (coerce (toAbsoluteElm d "Concurrent"))) srcDirs
+          let ownProject = [ p | p <- own, maybe True (\d -> not (FP.addTrailingPathSeparator d `List.isPrefixOf` p)) extra ]
+          return $
+            if inOverlay || not (null ownProject) || any ((== "Concurrent") . Module.toChars) (Map.keys foreigns) || null own
+            then Nothing else Just region
+    _ -> return Nothing
+  where
+    _unused = root
+
+
 crawlFile :: Env -> MVar StatusDict -> DocsNeed -> Module.Name -> AbsoluteElm -> File.Time -> Details.BuildID -> IO Status
 crawlFile env@(Env _ _ _ projectType _ buildID _ foreigns) mvar docsNeed expectedName (AbsoluteElm path) time lastChange =
   do  source0 <- File.readUtf8 path
       source <- sortOverlaySource foreigns path expectedName source0
-      result <- Parse.fromByteString projectType source
+      -- Ficcus T1a-2: the overlay's `Concurrent` is an effect module of the core library: parsed as a module of a kernel package
+      concOverlay <- isConcOverlay path expectedName
+      result <- Parse.fromByteString (if concOverlay then Parse.Package Pkg.kernel else projectType) source
+      ficOnly <- either (const (return Nothing)) (ficOnlyImport env path) result
       case result of
         Left err ->
           return $ SBadSyntax path time source err
+
+        Right _ | Just region <- ficOnly ->
+          return $ SBadSyntax path time source (Syntax.FicOnlyImport region)
 
         Right modul@(Src.Module maybeActualName _ _ imports values _ _ _ _) ->
           case maybeActualName of

@@ -6,6 +6,7 @@ module Ficcus.Mono.Concurrent
   , concRedirect
   , concKernels, concKernelId
   , concRuntime, concUsed, patchSched
+  , concJsKernel, concJsKernelNames
   )
   where
 
@@ -44,7 +45,9 @@ concTypes :: [(String, String)]
 concTypes =
   [ (concModuleId ++ "Pid", "FicConcPidBuiltin")
   , (concModuleId ++ "Address", "FicConcAddressBuiltin")
-  , (concModuleId ++ "Mailbox", "FicConcMailboxBuiltin") ]
+  , (concModuleId ++ "Mailbox", "FicConcMailboxBuiltin")
+  , (concModuleId ++ "Channel", "FicConcChannelBuiltin")
+  , (concModuleId ++ "ChanRef", "FicConcChanRefBuiltin") ]
 
 
 concTypeNames :: [String]
@@ -73,12 +76,26 @@ concKernelId n = "elm/core:Concurrent." ++ n
 concKernels :: [(String, Int, String)]
 concKernels =
   [ ("spawnRaw", 2, "oo"), ("address", 1, "o"), ("self", 1, "o"), ("send", 2, "oo")
-  , ("receive", 1, "o"), ("await", 1, "o"), ("kill", 1, "o") ]
+  , ("receive", 1, "o"), ("receiveWithinRaw", 4, "sooo"), ("await", 1, "o"), ("kill", 1, "o")
+    -- T1a-2: channels and the effect manager
+  , ("newChannel", 1, "s"), ("toAddress", 1, "o"), ("channelId", 1, "b"), ("chanRefId", 1, "b")
+  , ("current", 1, "o"), ("advance", 2, "os"), ("attach", 1, "o") ]
 
 
 concRuntime :: String
 concRuntime =
   $(embedFiles [ "runtime/fic_conc.h" ])
+
+
+-- | T1a-2: the JavaScript kernels (runtime/fic_conc.js), emitted once by Generate.JavaScript after elm/core's Scheduler and Platform; a
+-- kernel definition of the overlay `author/project:Concurrent.<name>` is `_FicConc_<name>`
+concJsKernel :: String
+concJsKernel =
+  $(embedFiles [ "runtime/fic_conc.js" ])
+
+
+concJsKernelNames :: [String]
+concJsKernelNames = [ k | (k, _, _) <- concKernels ]
 
 
 -- | does the generated body call a kernel of Concurrent?
