@@ -93,7 +93,9 @@ against node (T1-D14 (2)); `.fic`-only gating.
 
 ## 6. Gate results
 
-(filled in after the run)
+Targeted, serial, 27 Nov 12:44-13:06, `bin/elmficT1a`, log `/home/gordon/claude-tmp/gates-t1a.log`: runtime 0 non-ok; attach --rc
+378 cases 0 differ; types 267 PASS 1 XFAIL; JS identity 28 identical; effects e1, e2, e3 all ok; e1p all ok; t1a all ok (identity 66
+texts 0 differ); a3b-identity --more vs elmficP1b 100 compiles 0 differ; rcgate-san 16 ok; suite 16/16 PASS.
 
 ## 7. Open points for the Opus review
 
