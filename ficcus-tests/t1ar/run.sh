@@ -7,7 +7,7 @@ ELM=$(realpath "$1"); H=$(realpath "$2"); shift 2
 HERE=$(cd "$(dirname "$0")" && pwd); RT=$HERE/../../../targets/c; RUNJS=$HERE/../effects2/ref/run.js
 T=$(mktemp -d "${CLAUDE_CODE_TMPDIR:-/tmp}/t1ar.XXXX"); cp -r "$HERE/elm.json" "$HERE/src" "$T/"
 export FIC_TIME=1700000000000 TZ=UTC
-TIE_EXPECTED="R3TieBreak"   # F2: equal virtual deadlines, so C = JS is not expected there
+TIE_EXPECTED="R3TieBreak R2Within0"   # F2: equal virtual deadlines (R3: C != JS in some runs; R2: a send at the time of a receiveWithin 0)
 cases=("$@"); [ ${#cases[@]} -eq 0 ] && cases=($(cd "$HERE/src" && ls *.fic | sed 's/\.fic$//'))
 for n in "${cases[@]}"; do
   echo "=== $n"

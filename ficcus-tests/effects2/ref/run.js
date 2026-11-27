@@ -16,6 +16,9 @@ if (process.env.FIC_TIME) { const t = Number(process.env.FIC_TIME); Date.now = (
 // time may fire in either order there. Each timer's virtual deadline is tracked (the virtual now is the deadline of the timer that is
 // firing, 0 before the first; a delay as node takes it: below 1 or not a number is 1) and a timer armed for the deadline of a pending
 // one is flagged on stderr (`FIC_JS_TIE: ...`): its output may differ from C's. A flag only; node still runs the timers in real time.
+// Elm's outgoing port manager waits `Process.sleep 0` after each dispatch (Platform.js); the C runtime has no such timer, so the
+// compiled text is loaded with that one call marked (`untracked`) and its timers are not tracked.
+const untracked = { valueOf: () => 0 };
 {
   const vt = { now: 0, pending: new Map() };
   const vdelay = (d) => { const a = Number(d); return a >= 1 && a <= 2147483647 ? a : 1; };
@@ -26,6 +29,7 @@ if (process.env.FIC_TIME) { const t = Number(process.env.FIC_TIME); Date.now = (
   };
   const st = setTimeout, ct = clearTimeout, si = setInterval, ci = clearInterval;
   global.setTimeout = (f, d, ...args) => {
+    if (d === untracked) return st(f, 0, ...args);
     const at = vt.now + vdelay(d);
     const h = st(() => { vt.pending.delete(h); vt.now = at; f(...args); }, d);
     arm(h, at);
@@ -41,8 +45,14 @@ if (process.env.FIC_TIME) { const t = Number(process.env.FIC_TIME); Date.now = (
   };
   global.clearInterval = (h) => { vt.pending.delete(h); ci(h); };
 }
-const mod = require(path.resolve(process.argv[2]));
-const Elm = mod.Elm || global.Elm;
+const file = path.resolve(process.argv[2]);
+const Module = require("module");
+const mod = new Module(file, module);
+mod.filename = file; mod.paths = Module._nodeModulePaths(path.dirname(file));
+global.__ficUntracked = untracked;
+mod._compile(fs.readFileSync(file, "utf8").replace(
+  /(function _Platform_setupOutgoingPort\(name\)\s*\{[\s\S]*?var init = _Process_sleep\()0(\);)/, "$1global.__ficUntracked$2"), file);
+const Elm = mod.exports.Elm || global.Elm;
 const app = Elm[process.argv[3]].init({});
 if (app.ports) {
   for (const name of Object.keys(app.ports).sort()) {

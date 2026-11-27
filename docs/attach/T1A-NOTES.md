@@ -206,7 +206,9 @@ a3b-identity --more vs elmficP1b 100/0; rcgate-san 16 ok; suite 16/16 PASS.
   once with no dispatch under way, after an unsubscribe; a later listen never sees a dropped message): sent 6, dropped 3.
 - **F2** effects2/ref/run.js tracks each timer's virtual deadline (setTimeout/setInterval wrapped; the virtual now is the deadline of
   the timer that fires) and prints `FIC_JS_TIE: ...` on stderr when a timer is armed for the deadline of a pending one. Flag only, no
-  virtual clock. t1a/run.py fails a JavaScript check that is flagged; t1ar/run.sh reports it, R3TieBreak is expected-flagged.
+  virtual clock. Elm's own `Process.sleep 0` of the outgoing port manager (Platform.js, after every dispatch; C has no such timer) is
+  not tracked: run.js loads the compiled text with that call marked. t1a/run.py fails a JavaScript check that is flagged; t1ar/run.sh
+  reports it, R3TieBreak and R2Within0 (a send and a `receiveWithin 0` both due at 1 ms) are expected-flagged.
 - **F1 (O5), documented, not fixed**: an ended process whose exit value holds its own handle (`spawnWith (\box -> Task.succeed
   (Concurrent.self box, x))`), or two whose exit values hold each other's, is a cycle; the sweep frees an ended record only at `rc == 1`,
   so it stays until fic_conc_teardown (live 0 at the end, but a long-running program that does this grows: R7CycleExit 111 MB against
