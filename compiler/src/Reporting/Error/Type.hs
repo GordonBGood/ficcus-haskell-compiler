@@ -447,12 +447,13 @@ toReport source localizer err =
 
 
 
--- Ficcus (ATTACH A2; A5c texts)
+-- Ficcus (ATTACH A2; A5c texts; A4b: `hash`, the containers)
 builtinNote :: String
 builtinNote =
   "`Int`, `Float`, `String`, `Char`, `List` and tuples have only the attached functions that the language gives them, as far\
   \ as their type allows (`add`, `sub`, `mul`, `pow`, `neg`, `abs`, `fromInt`, `fromFloat`, `zero`, `div`, `idiv`, `mod`, `rem`,\
-  \ `compare`, `eq`, `append`). Any other attached function can only come from a custom type that defines it in its `where` block."
+  \ `compare`, `eq`, `hash`, `append`); records, `Maybe`, `Result`, `Array`, `Vector`, `Dict` and `Set` have `compare` and `hash`\
+  \ when their parts do, in a module that sees a type with attached functions. Any other attached function can only come from a custom type that defines or derives it in its `where` block."
 
 
 -- | (A5c) how a use is named in a message: a call of a function, an operator, a Float literal, or a bare attached name

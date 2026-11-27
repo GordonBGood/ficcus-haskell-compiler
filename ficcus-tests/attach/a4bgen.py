@@ -1373,6 +1373,18 @@ lines : List String
 lines =
     [ Debug.toString (compare { f = identity, n = 1 } { f = identity, n = 2 }) ]
 """)}, "TYPE MISMATCH", "comparable", outcome="REJECTC", c_only=True)
+bad("a4b-err-open-record", "compare on an extensible record (gate open): TYPE MISMATCH, only a closed record is comparable",
+    {"Main.elm": mod([], MONEY + """
+
+cmpA : { r | a : Int } -> { r | a : Int } -> Order
+cmpA x y =
+    compare x y
+
+
+lines : List String
+lines =
+    [ Debug.toString (cmpA { a = 1 } { a = 2 }) ]
+""")}, "TYPE MISMATCH", "comparable", outcome="REJECTC", c_only=True)
 bad("a4b-err-cannot-hash-function", "derive hash with a function field: CANNOT DERIVE with the path", {"Main.elm": mod([], """
 
 type Handler

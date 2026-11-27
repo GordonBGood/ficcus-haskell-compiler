@@ -479,8 +479,11 @@ unifyFlexSuperStructure context super flatType =
     App1 home name args ->
       custom home name args
 
-    Record1 fields _ | super == Comparable ->
-      container (Map.elems fields)
+    Record1 fields ext | super == Comparable ->
+      do  more <- closedFields ext
+          case more of
+            Just others -> container (Map.elems fields ++ others)
+            Nothing -> mismatch
 
     Pair1 a b ->
       case super of
@@ -529,6 +532,21 @@ unifyFlexSuperStructure context super flatType =
                   mapM_ unifyComparableRecursive parts
                   merge context (Structure flatType)
             else mismatch
+
+
+-- | (A4b) a record is comparable only when it is closed (its extension is the empty record, or a record that is): the
+-- fields of the extension, Nothing for an open record (a row variable could add a field that is not comparable)
+closedFields :: Variable -> Unify (Maybe [Variable])
+closedFields ext =
+  Unify $ \vars ok _ ->
+    do  let go var =
+              do  (Descriptor content _ _ _) <- UF.get var
+                  case content of
+                    Structure EmptyRecord1 -> return (Just [])
+                    Structure (Record1 fs e) -> fmap (fmap (Map.elems fs ++)) (go e)
+                    Alias _ _ _ real -> go real
+                    _ -> return Nothing
+        ok vars =<< go ext
 
 
 -- | (A4b) the built-in containers that are comparable when their parts are (records are matched apart): the parts.
