@@ -1,0 +1,6 @@
+w 0: Just 9
+w -5: Nothing
+w NaN: Nothing
+w 1e12: Nothing
+w 0 again: Nothing
+update: Got (Done 1)

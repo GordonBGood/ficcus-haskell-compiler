@@ -1,0 +1,47 @@
+module R2Within0 exposing (main)
+
+-- T1a review: receiveWithin with 0, a negative, NaN and a huge delay (fic_timer_delay: 1 ms, as setTimeout), and a send at the same
+-- virtual time as a receiveWithin 0. Needs FIC_TIME.
+
+import Concurrent exposing (Exit(..), Mailbox)
+import Process
+import Task exposing (Task)
+
+
+say : String -> a -> Task x a
+say label v =
+    Task.succeed () |> Task.map (\_ -> Debug.log label v)
+
+
+w : Mailbox Int -> Task Never Int
+w box =
+    Concurrent.receiveWithin 0 box
+        |> Task.andThen (say "w 0")
+        |> Task.andThen (\_ -> Concurrent.receiveWithin -5 box)
+        |> Task.andThen (say "w -5")
+        |> Task.andThen (\_ -> Concurrent.receiveWithin (0 / 0) box)
+        |> Task.andThen (say "w NaN")
+        |> Task.andThen (\_ -> Concurrent.receiveWithin 1.0e12 box)
+        |> Task.andThen (say "w 1e12")
+        |> Task.andThen (\_ -> Concurrent.receiveWithin 0 box)
+        |> Task.andThen (say "w 0 again")
+        |> Task.map (\_ -> 1)
+
+
+parent : Task Never (Exit Never Int)
+parent =
+    Concurrent.spawnWith w
+        |> Task.andThen (\p -> Process.sleep 0 |> Task.andThen (\_ -> Concurrent.send (Concurrent.address p) 9) |> Task.andThen (\_ -> Concurrent.await p))
+
+
+type Msg
+    = Got (Exit Never Int)
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Task.perform Got parent )
+        , update = \msg n -> ( Debug.log "update" msg |> (\_ -> n + 1), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

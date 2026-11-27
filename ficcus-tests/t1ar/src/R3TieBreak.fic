@@ -1,0 +1,49 @@
+module R3TieBreak exposing (main)
+
+-- T1a review: two timers with the same virtual deadline (31 ms) but different durations: R's receiveWithin 30 armed at 1 ms, W's sleep
+-- 20 armed at 11 ms. C fires by creation (R first: Nothing); node orders timer lists by list id, renewed when a list is rescheduled
+-- (the 20 ms list at 20 ms, the 30 ms list at 30 ms), so W's list can fire first (R: Just 1). Needs FIC_TIME.
+
+import Concurrent exposing (Exit(..), Mailbox)
+import Process
+import Task exposing (Task)
+
+
+say : String -> a -> Task x a
+say label v =
+    Task.succeed () |> Task.map (\_ -> Debug.log label v)
+
+
+r : Mailbox Int -> Task Never (Maybe Int)
+r box =
+    Process.sleep 1 |> Task.andThen (\_ -> Concurrent.receiveWithin 30 box) |> Task.andThen (say "r")
+
+
+parent : Task Never (Exit Never (Maybe Int))
+parent =
+    Concurrent.spawn (Process.sleep 30 |> Task.andThen (\_ -> say "x" 30))
+        |> Task.andThen (\_ -> Concurrent.spawn (Process.sleep 20 |> Task.andThen (\_ -> say "y" 20)))
+        |> Task.andThen (\_ -> Concurrent.spawnWith r)
+        |> Task.andThen
+            (\rp ->
+                Concurrent.spawn
+                    (Process.sleep 11
+                        |> Task.andThen (\_ -> Process.sleep 20)
+                        |> Task.andThen (\_ -> say "w sends" 1)
+                        |> Task.andThen (Concurrent.send (Concurrent.address rp))
+                    )
+                    |> Task.andThen (\_ -> Concurrent.await rp)
+            )
+
+
+type Msg
+    = Got (Exit Never (Maybe Int))
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Task.perform Got parent )
+        , update = \msg n -> ( Debug.log "update" msg |> (\_ -> n + 1), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

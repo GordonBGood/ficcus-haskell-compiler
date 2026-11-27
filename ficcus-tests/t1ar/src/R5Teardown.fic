@@ -1,0 +1,68 @@
+module R5Teardown exposing (main)
+
+-- T1a review: the end with cycles everywhere: A blocked in await of B holds its own address and B's pid in its mailbox; B blocked in
+-- receive holds A's pid in its stack; C ended with its own address in its exit value; a channel holds itself in an undelivered message
+-- (nobody listens). live 0 expected, blocked_at_end 2.
+
+import Concurrent exposing (Address, Exit(..), Mailbox, Pid)
+import Task exposing (Task)
+
+
+type AMsg
+    = SelfA (Address AMsg)
+    | PidB (Pid (Exit Never Int) Int)
+
+
+type alias PidA =
+    Pid (Exit Never Int) AMsg
+
+
+b : Mailbox Int -> Task Never Int
+b box =
+    Concurrent.receive box
+
+
+a : Pid (Exit Never Int) Int -> Mailbox AMsg -> Task Never Int
+a pb box =
+    Concurrent.await pb |> Task.map (\_ -> 0)
+
+
+c : Mailbox Int -> Task Never (Address Int)
+c box =
+    Task.succeed (Concurrent.self box)
+
+
+type Loop
+    = Loop (Concurrent.Channel Loop)
+
+
+parent : Task Never Int
+parent =
+    Concurrent.spawnWith b
+        |> Task.andThen
+            (\pb ->
+                Concurrent.spawnWith (a pb)
+                    |> Task.andThen
+                        (\pa ->
+                            Concurrent.send (Concurrent.address pa) (SelfA (Concurrent.address pa))
+                                |> Task.andThen (\_ -> Concurrent.send (Concurrent.address pa) (PidB pb))
+                                |> Task.andThen (\_ -> Concurrent.spawnWith c)
+                                |> Task.andThen (\pc -> Concurrent.await pc)
+                                |> Task.andThen (\_ -> Concurrent.channel)
+                                |> Task.andThen (\ch -> Concurrent.send (Concurrent.toAddress ch) (Loop ch))
+                                |> Task.map (\_ -> 1)
+                        )
+            )
+
+
+type Msg
+    = Got Int
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Task.perform Got parent )
+        , update = \msg n -> ( Debug.log "update" msg |> (\_ -> n + 1), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

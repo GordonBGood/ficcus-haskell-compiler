@@ -1,0 +1,44 @@
+module R7CycleExit exposing (main)
+
+-- T1a review (O5): 100000 processes run one after the other; each ends with a 40-element list and its own address (a cycle through
+-- the exit value: never swept before the end). Compare the peak memory of R7CycleExit and R7PlainExit.
+
+import Concurrent exposing (Exit(..), Mailbox)
+import Task exposing (Task)
+
+
+body : Mailbox Int -> Task Never ( Concurrent.Address Int, List Int )
+body box =
+    Task.succeed ( Concurrent.self box, List.range 1 40 )
+
+
+loop : Int -> Int -> Task Never Int
+loop k acc =
+    if k == 0 then
+        Task.succeed acc
+
+    else
+        Concurrent.spawnWith body
+            |> Task.andThen Concurrent.await
+            |> Task.andThen
+                (\e ->
+                    case e of
+                        Done ( _, l ) ->
+                            loop (k - 1) (acc + List.length l)
+
+                        _ ->
+                            loop (k - 1) acc
+                )
+
+
+type Msg
+    = Got Int
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Task.perform Got (loop 100000 0) )
+        , update = \msg n -> ( Debug.log "update" msg |> (\_ -> n + 1), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

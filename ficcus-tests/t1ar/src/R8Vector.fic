@@ -1,0 +1,59 @@
+module R8Vector exposing (main)
+
+-- T1a review: ownership of a sent value: the sender sends a Vector to two processes and then sets it in place; each receiver sets
+-- its copy too. Every process must see its own value.
+
+import Concurrent exposing (Exit(..), Mailbox)
+import Task exposing (Task)
+import Vector exposing (Vector)
+
+
+recv : Int -> Mailbox (Vector Int) -> Task Never (List Int)
+recv k box =
+    Concurrent.receive box |> Task.map (\v -> Vector.toList (Vector.set 0 k v))
+
+
+parent : Task Never ( List Int, List Int, List Int )
+parent =
+    Concurrent.spawnWith (recv 100)
+        |> Task.andThen
+            (\p1 ->
+                Concurrent.spawnWith (recv 200)
+                    |> Task.andThen
+                        (\p2 ->
+                            let
+                                v =
+                                    Vector.fromList [ 1, 2, 3 ]
+                            in
+                            Concurrent.send (Concurrent.address p1) v
+                                |> Task.andThen (\_ -> Concurrent.send (Concurrent.address p2) v)
+                                |> Task.andThen (\_ -> Task.succeed (Vector.toList (Vector.set 1 9 v)))
+                                |> Task.andThen
+                                    (\mine ->
+                                        Task.map2
+                                            (\e1 e2 ->
+                                                case ( e1, e2 ) of
+                                                    ( Done l1, Done l2 ) ->
+                                                        ( mine, l1, l2 )
+
+                                                    _ ->
+                                                        ( [], [], [] )
+                                            )
+                                            (Concurrent.await p1)
+                                            (Concurrent.await p2)
+                                    )
+                        )
+            )
+
+
+type Msg
+    = Got ( List Int, List Int, List Int )
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Task.perform Got parent )
+        , update = \msg n -> ( Debug.log "update" msg |> (\_ -> n + 1), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

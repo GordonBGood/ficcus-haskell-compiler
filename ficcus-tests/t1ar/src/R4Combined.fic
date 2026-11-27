@@ -1,0 +1,106 @@
+module R4Combined exposing (main)
+
+-- T1a review: Concurrent with Time.every, Random.generate, Process.sleep and a channel in one program (the patched scheduler with E2's
+-- other managers): each tick rolls a die, the roll goes by sendCmd to a worker, which answers on a channel. Needs FIC_TIME.
+
+import Concurrent exposing (Address, Channel, Exit(..), Mailbox)
+import Random
+import Task exposing (Task)
+import Time
+
+
+type alias Model =
+    { ticks : Int, ch : Maybe (Channel Int), worker : Maybe (Address Int), got : List Int }
+
+
+type Msg
+    = Started ( Channel Int, Address Int )
+    | Tick Time.Posix
+    | Roll Int
+    | FromChan Int
+    | WorkerEnded (Exit Never ())
+
+
+worker : Address Int -> Mailbox Int -> Task Never ()
+worker out box =
+    let
+        loop k =
+            if k == 0 then
+                Task.succeed ()
+
+            else
+                Concurrent.receive box
+                    |> Task.andThen (\v -> Concurrent.send out (v * 10))
+                    |> Task.andThen (\_ -> loop (k - 1))
+    in
+    loop 3
+
+
+start : Task Never ( Channel Int, Address Int )
+start =
+    Concurrent.channel
+        |> Task.andThen (\ch -> Concurrent.spawnWith (worker (Concurrent.toAddress ch)) |> Task.map (\p -> ( ch, Concurrent.address p )))
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg m =
+    case msg of
+        Started ( ch, w ) ->
+            ( { m | ch = Just ch, worker = Just w }, Cmd.none )
+
+        Tick _ ->
+            ( { m | ticks = m.ticks + 1 }, Random.generate Roll (Random.int 1 6) )
+
+        Roll v ->
+            ( m, Maybe.map (\w -> Concurrent.sendCmd w v) m.worker |> Maybe.withDefault Cmd.none )
+
+        FromChan v ->
+            let
+                _ =
+                    Debug.log "from channel, in 10..60" (v >= 10 && v <= 60 && modBy 10 v == 0)
+            in
+            ( { m | got = v :: m.got }, Cmd.none )
+
+        WorkerEnded e ->
+            ( m, Cmd.none )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions m =
+    Sub.batch
+        [ if m.ticks < 3 then Time.every 7 Tick else Sub.none
+        , case m.ch of
+            Just ch ->
+                if List.length m.got < 3 then Concurrent.listen ch FromChan else Sub.none
+
+            Nothing ->
+                Sub.none
+        ]
+
+
+label : Msg -> String
+label msg =
+    case msg of
+        Started _ ->
+            "Started"
+
+        Tick _ ->
+            "Tick"
+
+        Roll _ ->
+            "Roll"
+
+        FromChan _ ->
+            "FromChan"
+
+        WorkerEnded _ ->
+            "WorkerEnded"
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init = \_ -> ( { ticks = 0, ch = Nothing, worker = Nothing, got = [] }, Task.perform Started start )
+        , update = \msg m -> update msg (Debug.log "msg" (label msg) |> (\_ -> m))
+        , subscriptions = subscriptions
+        }

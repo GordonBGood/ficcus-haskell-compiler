@@ -1,0 +1,13 @@
+msg: "Started"
+msg: "Tick"
+msg: "Roll"
+msg: "FromChan"
+from channel, in 10..60: True
+msg: "Tick"
+msg: "Roll"
+msg: "FromChan"
+from channel, in 10..60: True
+msg: "Tick"
+msg: "Roll"
+msg: "FromChan"
+from channel, in 10..60: True

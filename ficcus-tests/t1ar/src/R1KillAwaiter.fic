@@ -1,0 +1,83 @@
+module R1KillAwaiter exposing (main)
+
+-- T1a review: kill of a process blocked in await (it stays in the awaited one's list; the later wake must be dropped), a process that
+-- awaits itself (killed), a receiver woken by a send and killed before it runs. Needs FIC_TIME.
+
+import Concurrent exposing (Exit(..), Mailbox, Pid)
+import Process
+import Task exposing (Task)
+
+
+say : String -> a -> Task x a
+say label v =
+    Task.succeed () |> Task.map (\_ -> Debug.log label v)
+
+
+echo : String -> Mailbox Int -> Task Never Int
+echo name box =
+    Concurrent.receive box |> Task.andThen (say (name ++ " got"))
+
+
+type SelfMsg
+    = Me (Pid (Exit Never Int) SelfMsg)
+
+
+selfAwaiter : Mailbox SelfMsg -> Task Never Int
+selfAwaiter box =
+    Concurrent.receive box
+        |> Task.andThen (\(Me p) -> say "c awaits itself" () |> Task.andThen (\_ -> Concurrent.await p))
+        |> Task.andThen (\_ -> say "c woke (never)" 1)
+
+
+awaiter : Pid (Exit Never Int) Int -> Task Never Int
+awaiter b =
+    say "a awaits b" () |> Task.andThen (\_ -> Concurrent.await b) |> Task.andThen (say "a got (never)") |> Task.map (\_ -> 0)
+
+
+parent : Task Never (List (Exit Never Int))
+parent =
+    Concurrent.spawnWith (echo "b")
+        |> Task.andThen
+            (\b ->
+                Concurrent.spawn (awaiter b)
+                    |> Task.andThen
+                        (\a ->
+                            Concurrent.spawnWith selfAwaiter
+                                |> Task.andThen
+                                    (\c ->
+                                        Concurrent.spawnWith (echo "d (never)")
+                                            |> Task.andThen
+                                                (\d ->
+                                                    Process.sleep 5
+                                                        |> Task.andThen (\_ -> Concurrent.kill a)
+                                                        |> Task.andThen (\_ -> Concurrent.send (Concurrent.address b) 7)
+                                                        |> Task.andThen (\_ -> Concurrent.send (Concurrent.address c) (Me c))
+                                                        |> Task.andThen (\_ -> Process.sleep 5)
+                                                        |> Task.andThen (\_ -> Concurrent.kill c)
+                                                        |> Task.andThen (\_ -> Concurrent.send (Concurrent.address d) 5)
+                                                        |> Task.andThen (\_ -> Concurrent.kill d)
+                                                        |> Task.andThen
+                                                            (\_ ->
+                                                                Task.map4 (\w x y z -> [ w, x, y, z ])
+                                                                    (Concurrent.await a)
+                                                                    (Concurrent.await b)
+                                                                    (Concurrent.await c)
+                                                                    (Concurrent.await d)
+                                                            )
+                                                )
+                                    )
+                        )
+            )
+
+
+type Msg
+    = Got (List (Exit Never Int))
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Task.perform Got parent )
+        , update = \msg n -> ( Debug.log "update" msg |> (\_ -> n + 1), Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

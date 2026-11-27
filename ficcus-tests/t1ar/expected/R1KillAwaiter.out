@@ -1,0 +1,4 @@
+a awaits b: ()
+b got: 7
+c awaits itself: ()
+update: Got [Killed,Done 7,Killed,Killed]

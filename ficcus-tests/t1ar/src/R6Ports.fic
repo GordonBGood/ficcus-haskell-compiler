@@ -1,0 +1,49 @@
+port module R6Ports exposing (main)
+
+-- T1a review: Concurrent in a ports program (E3): each incoming value goes by sendCmd to a worker process, which answers on a channel;
+-- the answer leaves by an outgoing port. Run with FIC_PORTS_IN=R6Ports.in.
+
+import Concurrent exposing (Address, Channel, Mailbox)
+import Task exposing (Task)
+
+
+port inn : (Int -> msg) -> Sub msg
+
+
+port out : Int -> Cmd msg
+
+
+type Msg
+    = Started ( Channel Int, Address Int )
+    | In Int
+    | FromChan Int
+
+
+worker : Address Int -> Mailbox Int -> Task Never ()
+worker to box =
+    Concurrent.receive box |> Task.andThen (\v -> Concurrent.send to (v * 10)) |> Task.andThen (\_ -> worker to box)
+
+
+start : Task Never ( Channel Int, Address Int )
+start =
+    Concurrent.channel
+        |> Task.andThen (\ch -> Concurrent.spawnWith (worker (Concurrent.toAddress ch)) |> Task.map (\p -> ( ch, Concurrent.address p )))
+
+
+main : Program () (Maybe ( Channel Int, Address Int )) Msg
+main =
+    Platform.worker
+        { init = \_ -> ( Nothing, Task.perform Started start )
+        , update =
+            \msg m ->
+                case msg of
+                    Started s ->
+                        ( Just s, Cmd.none )
+
+                    In v ->
+                        ( m, Maybe.map (\( _, w ) -> Concurrent.sendCmd w v) m |> Maybe.withDefault Cmd.none )
+
+                    FromChan v ->
+                        ( m, out v )
+        , subscriptions = \m -> Sub.batch [ inn In, Maybe.map (\( ch, _ ) -> Concurrent.listen ch FromChan) m |> Maybe.withDefault Sub.none ]
+        }
