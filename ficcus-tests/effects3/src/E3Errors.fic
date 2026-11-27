@@ -1,0 +1,93 @@
+port module E3Errors exposing (main)
+
+-- E3a (D7): values that do not fit, sent from a host that catches the failure: Elm's errorToString text for every decoder of
+-- Optimize.Port (Maybe as oneOf, tuples as index, records field by field in Elm's order, Array, nested), and values that fit
+
+import Array exposing (Array)
+import Json.Encode as E
+
+
+port pInt : (Int -> msg) -> Sub msg
+
+
+port pFloat : (Float -> msg) -> Sub msg
+
+
+port pBool : (Bool -> msg) -> Sub msg
+
+
+port pStr : (String -> msg) -> Sub msg
+
+
+port pUnit : (() -> msg) -> Sub msg
+
+
+port pVal : (E.Value -> msg) -> Sub msg
+
+
+port pRec : ({ name : String, age : Int, xs : List Int } -> msg) -> Sub msg
+
+
+port pMaybe : (Maybe Int -> msg) -> Sub msg
+
+
+port pMM : (Maybe (Maybe Int) -> msg) -> Sub msg
+
+
+port pTup : (( Int, String ) -> msg) -> Sub msg
+
+
+port pTup3 : (( Int, Bool, Float ) -> msg) -> Sub msg
+
+
+port pArr : (Array (Maybe Bool) -> msg) -> Sub msg
+
+
+port pList : (List { a : Int } -> msg) -> Sub msg
+
+
+port pNest : ({ inner : { deep : Maybe (List Int) }, tag : String } -> msg) -> Sub msg
+
+
+port pOdd : ({ my_field : Int, b2 : Bool } -> msg) -> Sub msg
+
+
+port pBig : (List (List (Maybe { v : Float })) -> msg) -> Sub msg
+
+
+type Msg
+    = Got String String
+
+
+main : Program () () Msg
+main =
+    Platform.worker
+        { init = \_ -> ( (), Cmd.none )
+        , update =
+            \(Got p s) m ->
+                let
+                    _ =
+                        Debug.log p s
+                in
+                ( m, Cmd.none )
+        , subscriptions =
+            \_ ->
+                Sub.batch
+                    [ pInt (Got "pInt" << Debug.toString)
+                    , pFloat (Got "pFloat" << Debug.toString)
+                    , pBool (Got "pBool" << Debug.toString)
+                    , pStr (Got "pStr" << Debug.toString)
+                    , pUnit (Got "pUnit" << Debug.toString)
+                    , pVal (Got "pVal" << E.encode 0)
+                    , pRec (Got "pRec" << Debug.toString)
+                    , pMaybe (Got "pMaybe" << Debug.toString)
+                    , pMM (Got "pMM" << Debug.toString)
+                    , pTup (Got "pTup" << Debug.toString)
+                    , pTup3 (Got "pTup3" << Debug.toString)
+                    , pArr (Got "pArr" << Debug.toString)
+                    , pList (Got "pList" << Debug.toString)
+                    , pNest (Got "pNest" << Debug.toString)
+                    , pOdd (Got "pOdd" << Debug.toString)
+                    , pBig (Got "pBig" << Debug.toString)
+                    ]
+        }

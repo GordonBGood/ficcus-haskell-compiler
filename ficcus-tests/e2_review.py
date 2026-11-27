@@ -49,11 +49,9 @@ TESTS = {
                     "Q6: an integer beyond 2^53 through Json.Value keeps its digits (decision L21), JavaScript rounds it"),
 }
 # rejects: (program, pattern the compile error must match, what it tests); "target" when Ficcus does not reject it today
+# E3a/E3b: X1Flags, X1FlagsString, X2ArrayPortOut and X3ArrayPortIn (flags and Array payloads, compile errors until E3) run since E3 and
+# are compared with Elm by ficcus-tests/effects_e3.py (their sources moved to effects3/src)
 REJECTS = {
-    "X1Flags": ("gate", r"flags are not supported yet", "Q6: a worker with Int flags (fix 1; E2f compiled it and init got 0)"),
-    "X1FlagsString": ("gate", r"flags are not supported yet", "Q6: a worker with String flags (fix 1; E2f compiled it and it crashed)"),
-    "X2ArrayPortOut": ("gate", r"port of type .*Array", "Q6: outgoing Array payload"),
-    "X3ArrayPortIn": ("gate", r"port of type .*Array", "Q6: incoming record with an Array field"),
     "X4BrowserEvents": ("gate", r"FICCUS: the program cannot be compiled", "Q4: Browser.Events in a worker (message names kernels)"),
     "X5Http": ("gate", r"FICCUS: the program cannot be compiled", "Q4: Http in a worker (message names kernels)"),
     "X6Element": ("gate", r"FICCUS: the program cannot be compiled", "Q4: Browser.element"),

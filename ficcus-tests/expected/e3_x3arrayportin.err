@@ -1,0 +1,6 @@
+Trying to send an unexpected type of value through port `inArr`:
+Problem with the value at json.xs[1]:
+
+    "a"
+
+Expecting an INT

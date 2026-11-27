@@ -1,0 +1,363 @@
+pInt: "42"
+pInt: "1000"
+pInt: "0"
+send pInt failed:
+Problem with the given value:
+
+1.5
+
+Expecting an INT
+send pInt failed:
+Problem with the given value:
+
+"7"
+
+Expecting an INT
+send pInt failed:
+Problem with the given value:
+
+null
+
+Expecting an INT
+pInt: "-9007199254740991"
+pFloat: "3"
+pFloat: "0.1"
+send pFloat failed:
+Problem with the given value:
+
+"x"
+
+Expecting a FLOAT
+pBool: "False"
+send pBool failed:
+Problem with the given value:
+
+0
+
+Expecting a BOOL
+send pStr failed:
+Problem with the given value:
+
+5
+
+Expecting a STRING
+pStr: "\"hé 😀\""
+pUnit: "()"
+send pUnit failed:
+Problem with the given value:
+
+0
+
+Expecting null
+pVal: "{\"1\":null,\"2\":true,\"b\":1,\"a\":[1,2.5]}"
+pRec: "{ xs = [1,2], age = 3, name = \"a\" }"
+send pRec failed:
+Problem with the given value:
+
+"x"
+
+Expecting an OBJECT with a field named `name`
+send pRec failed:
+Problem with the given value:
+
+{
+        "zzz": 1
+    }
+
+Expecting an OBJECT with a field named `name`
+send pRec failed:
+Problem with the value at json.age:
+
+    "z"
+
+Expecting an INT
+send pRec failed:
+Problem with the value at json.xs[1]:
+
+    "b"
+
+Expecting an INT
+send pRec failed:
+Problem with the value at json.name:
+
+    5
+
+Expecting a STRING
+send pRec failed:
+Problem with the given value:
+
+[
+        1,
+        2
+    ]
+
+Expecting an OBJECT with a field named `name`
+send pRec failed:
+Problem with the given value:
+
+{
+        "age": 1,
+        "xs": []
+    }
+
+Expecting an OBJECT with a field named `name`
+pMaybe: "Nothing"
+pMaybe: "Just 4"
+send pMaybe failed:
+Json.Decode.oneOf failed in the following 2 ways:
+
+
+
+(1) Problem with the given value:
+    
+    "q"
+    
+    Expecting null
+
+
+
+(2) Problem with the given value:
+    
+    "q"
+    
+    Expecting an INT
+pMM: "Nothing"
+pMM: "Just (Just 3)"
+send pMM failed:
+Json.Decode.oneOf failed in the following 2 ways:
+
+
+
+(1) Problem with the given value:
+    
+    "q"
+    
+    Expecting null
+
+
+
+(2) Json.Decode.oneOf failed in the following 2 ways:
+    
+    
+    
+    (1) Problem with the given value:
+        
+        "q"
+        
+        Expecting null
+    
+    
+    
+    (2) Problem with the given value:
+        
+        "q"
+        
+        Expecting an INT
+pTup: "(1,\"a\")"
+send pTup failed:
+Problem with the given value:
+
+[
+        1
+    ]
+
+Expecting a LONGER array. Need index 1 but only see 1 entries
+send pTup failed:
+Problem with the value at json[1]:
+
+    2
+
+Expecting a STRING
+send pTup failed:
+Problem with the given value:
+
+{}
+
+Expecting an ARRAY
+send pTup failed:
+Problem with the value at json[0]:
+
+    1.5
+
+Expecting an INT
+pTup: "(1,\"a\")"
+send pTup failed:
+Problem with the given value:
+
+[]
+
+Expecting a LONGER array. Need index 0 but only see 0 entries
+pTup3: "(1,True,2.5)"
+send pTup3 failed:
+Problem with the given value:
+
+[
+        1,
+        true
+    ]
+
+Expecting a LONGER array. Need index 2 but only see 2 entries
+send pTup3 failed:
+Problem with the value at json[1]:
+
+    "t"
+
+Expecting a BOOL
+pArr: "Array.fromList [Just True,Nothing,Just False]"
+send pArr failed:
+The Json.Decode.oneOf at json[1] failed in the following 2 ways:
+
+
+
+(1) Problem with the given value:
+    
+    1
+    
+    Expecting null
+
+
+
+(2) Problem with the given value:
+    
+    1
+    
+    Expecting a BOOL
+send pArr failed:
+Problem with the given value:
+
+{
+        "0": true
+    }
+
+Expecting an ARRAY
+pArr: "Array.fromList []"
+pList: "[{ a = 1 },{ a = 2 }]"
+send pList failed:
+Problem with the value at json[1]:
+
+    {
+        "b": 2
+    }
+
+Expecting an OBJECT with a field named `a`
+send pList failed:
+Problem with the given value:
+
+{
+        "a": 1
+    }
+
+Expecting a LIST
+pNest: "{ tag = \"t\", inner = { deep = Just [1,2] } }"
+pNest: "{ tag = \"t\", inner = { deep = Nothing } }"
+send pNest failed:
+The Json.Decode.oneOf at json.inner.deep failed in the following 2 ways:
+
+
+
+(1) Problem with the given value:
+    
+    [
+            1,
+            "x"
+        ]
+    
+    Expecting null
+
+
+
+(2) Problem with the value at json[1]:
+    
+        "x"
+    
+    Expecting an INT
+send pNest failed:
+Problem with the value at json.inner:
+
+    {}
+
+Expecting an OBJECT with a field named `deep`
+send pNest failed:
+Problem with the given value:
+
+{
+        "inner": {
+            "deep": [
+                1
+            ]
+        }
+    }
+
+Expecting an OBJECT with a field named `tag`
+send pNest failed:
+Problem with the given value:
+
+{
+        "tag": 7
+    }
+
+Expecting an OBJECT with a field named `inner`
+pOdd: "{ b2 = True, my_field = 1 }"
+send pOdd failed:
+Problem with the given value:
+
+{
+        "b2": true
+    }
+
+Expecting an OBJECT with a field named `my_field`
+send pOdd failed:
+Problem with the value at json.b2:
+
+    "no"
+
+Expecting a BOOL
+send pBig failed:
+The Json.Decode.oneOf at json[1][0] failed in the following 2 ways:
+
+
+
+(1) Problem with the given value:
+    
+    {
+            "v": "x"
+        }
+    
+    Expecting null
+
+
+
+(2) Problem with the value at json.v:
+    
+        "x"
+    
+    Expecting a FLOAT
+send pBig failed:
+The Json.Decode.oneOf at json[0][0] failed in the following 2 ways:
+
+
+
+(1) Problem with the given value:
+    
+    {
+            "w": 1
+        }
+    
+    Expecting null
+
+
+
+(2) Problem with the given value:
+    
+    {
+            "w": 1
+        }
+    
+    Expecting an OBJECT with a field named `v`
+send pBig failed:
+Problem with the value at json[1]:
+
+    7
+
+Expecting a LIST
+send nope: no such port

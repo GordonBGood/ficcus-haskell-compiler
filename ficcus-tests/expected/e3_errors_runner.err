@@ -1,0 +1,21 @@
+Trying to send an unexpected type of value through port `pNest`:
+The Json.Decode.oneOf at json.inner.deep failed in the following 2 ways:
+
+
+
+(1) Problem with the given value:
+    
+    [
+            1,
+            "x"
+        ]
+    
+    Expecting null
+
+
+
+(2) Problem with the value at json[1]:
+    
+        "x"
+    
+    Expecting an INT

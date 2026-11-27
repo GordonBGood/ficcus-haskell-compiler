@@ -695,16 +695,13 @@ static FIC_UNUSED void fic_sched_run(void) {
  * A port is a manager of the run time, in the table in Elm's order (`_Platform_effectManagers`).
  * Outgoing (`port out : T -> Cmd msg`): Elm's manager exactly: init is `Process.sleep 0`, onEffects delivers every value of the list (in
  * list order: the reverse of the batch) to the subscribers and returns init again, so delivery is asynchronous (after the current turn).
- * The subscribers are the host's (fic_port_subscribe, E3a); the test runner subscribes one per port that prints `<port>: <JSON>` on
- * stdout (JSON.stringify; the same stream as Debug.log), except a String on a port named `output`, printed as its text (workertests'
- * harness). The leaf already holds the JSON (the generated encoder ran when the command was made: Elm encodes at delivery, the value
- * is the same).
- * Incoming (`port inn : (T -> msg) -> Sub msg`): onEffects keeps the subscription list; `fic_port_send` decodes the value with the
- * generated decoder (a value that does not fit: FIC_E_DECODE and Elm's errorToString text; only the runner exits, with Elm's crash 4)
- * and calls sendToApp with each tagger's message, at once. The runner sends the lines of the file in FIC_PORTS_IN (`<port> <JSON>`)
- * after init, before the loop starts, as workertests' runner sends its inputs after `init` returns. A Sub.map over an incoming port
- * composes the taggers (Elm's incomingPortMap). E3a (runtime/fic_ports.h): the host API (fic_port_subscribe, fic_port_send, the fic_hv
- * values); the runner is one subscriber like any other. */
+ * The C program has one subscriber, the runner: it prints `<port>: <JSON>` on stdout (the JSON of JSON.stringify; the same stream as
+ * Debug.log), except a String on a port named `output`, which is printed as its text (workertests' harness: runner.js prints the
+ * strings of `output`). The leaf already holds the JSON (the generated encoder ran when the command was made: the value is the same).
+ * Incoming (`port inn : (T -> msg) -> Sub msg`): onEffects keeps the subscription list; `fic_port_send` decodes the JSON with the generated
+ * decoder (a value that does not fit is Elm's crash 4: the message and exit 1) and calls sendToApp with each tagger's message, at once.
+ * The runner sends the lines of the file in FIC_PORTS_IN (`<port> <JSON>`) after init, before the loop starts, as workertests' runner
+ * sends its inputs after `init` returns. A Sub.map over an incoming port composes the taggers (Elm's incomingPortMap). */
 
 static const unsigned char *fic_subpair_ref;     /* (generated) per Sub.map pair: is the inner message a reference */
 
@@ -741,8 +738,112 @@ static fic_mgr *fic_port_def(const char *name, int kind) {
   return m;
 }
 
-/* The rest of the ports (the outgoing and incoming managers, fic_port_send, the subscribers, the runner) is in runtime/fic_ports.h
-   (E3a), which comes after this file in a program that has ports. */
+#ifdef FIC_TAG_JNULL
+/* outgoing: onEffects router cmds state = deliver each value, then init (sleep 0) again */
+static fic_word fic_port_out_effects(fic_ref self, fic_word router, fic_word cmds, fic_word state) {
+  fic_mgr *g = &fic_mgrs[((fic_router *)router.p)->mgr];
+  fic_ref l;
+  (void)self; (void)state;
+  for (l = cmds.p; l->tag == 1u; l = ((fic_sched_cell *)l)->tail) {
+    fic_ref v = ((fic_sched_cell *)l)->head;
+    if (v->tag == FIC_TAG_STRING && strcmp(g->name, "output") == 0) {          /* workertests' runner: the text of `output` */
+      fwrite(FIC_STR(v)->data, 1, (size_t)FIC_STR(v)->len, stdout); fputc('\n', stdout);
+    } else {
+      fic_ref text = fic_json_encode(0, v);
+      fputs(g->name, stdout); fputs(": ", stdout);
+      fwrite(FIC_STR(text)->data, 1, (size_t)FIC_STR(text)->len, stdout); fputc('\n', stdout);
+      FIC_RC_DROP(text);
+    }
+  }
+  FIC_RC_DROP(router.p); FIC_RC_DROP(cmds.p);
+  FIC_RC_DUP(g->init);
+  return fic_w_p(g->init);
+}
+static const fic_code fic_port_out_code = { (void (*)(void))fic_port_out_effects, 3u FIC_CODE_OWN0 };
+static fic_clo fic_port_out_clo = { { FIC_IMMORTAL, FIC_TAG_CLOSURE, 0, 0 }, &fic_port_out_code };
+
+static FIC_UNUSED void fic_port_out_def(const char *name) {
+  fic_mgr *m = fic_port_def(name, FIC_MGR_PORT_OUT);
+  m->init = fic_task_sleep(0); m->on_effects = &fic_port_out_clo.h; m->has_cmd = 1; m->has_sub = 0; m->state_ref = 0;
+}
+
+/* incoming: onEffects router subs state = keep the subscriptions */
+static fic_word fic_port_in_effects(fic_ref self, fic_word router, fic_word subs, fic_word state) {
+  fic_mgr *g = &fic_mgrs[((fic_router *)router.p)->mgr];
+  fic_ref old = g->port_subs;
+  (void)self; (void)state;
+  g->port_subs = subs.p;
+  FIC_RC_DROP(old); FIC_RC_DROP(router.p);
+  return fic_w_p(fic_task_succeed(FIC_W_UNIT, 0));
+}
+static const fic_code fic_port_in_code = { (void (*)(void))fic_port_in_effects, 3u FIC_CODE_OWN0 };
+static fic_clo fic_port_in_clo = { { FIC_IMMORTAL, FIC_TAG_CLOSURE, 0, 0 }, &fic_port_in_code };
+
+typedef int (*fic_port_decode)(fic_ref json, fic_word *out);
+static fic_port_decode fic_port_decoders[FIC_MAX_MGR];
+
+static FIC_UNUSED void fic_port_in_def(const char *name, fic_port_decode dec, int payload_ref) {
+  fic_mgr *m = fic_port_def(name, FIC_MGR_PORT_IN);
+  m->init = fic_task_succeed(FIC_W_UNIT, 0); m->on_effects = &fic_port_in_clo.h; m->has_cmd = 0; m->has_sub = 1; m->state_ref = 0;
+  m->port_ref = payload_ref;
+  fic_port_decoders[fic_nmgr - 1] = dec;
+}
+
+/* app.ports.<name>.send(value): json borrowed */
+static void fic_port_send(const char *name, fic_ref json) {
+  int i;
+  for (i = 0; i < fic_nmgr; i++) {
+    fic_mgr *g = &fic_mgrs[i];
+    if (g->kind == FIC_MGR_PORT_IN && strcmp(g->name, name) == 0) {
+      fic_word v;
+      fic_ref subs, l;
+      if (!fic_port_decoders[i](json, &v)) {
+        fflush(stdout);
+        fprintf(stderr, "Trying to send an unexpected type of value through port `%s`\n", name);
+        exit(1);
+      }
+      subs = g->port_subs;
+      FIC_RC_DUP(subs);                                    /* the list of this moment, as Elm's loop over `subs` */
+      for (l = subs; l->tag == 1u; l = ((fic_sched_cell *)l)->tail) {
+        if (g->port_ref) FIC_RC_DUP(v.p);
+        fic_app_send_fn(fic_ap1(((fic_sched_cell *)l)->head, g->port_ref ? 1u : 0u, v));
+      }
+      FIC_RC_DROP(subs);
+      if (g->port_ref) FIC_RC_DROP(v.p);
+      return;
+    }
+  }
+  fflush(stdout);
+  fprintf(stderr, "there is no incoming port `%s`\n", name);
+  exit(1);
+}
+
+/* the runner's script: FIC_PORTS_IN names a file of lines `<port> <JSON>` */
+static FIC_UNUSED void fic_ports_script(void) {
+  const char *path = getenv("FIC_PORTS_IN");
+  FILE *f;
+  char line[65536];
+  if (path == NULL || *path == 0) return;
+  f = fopen(path, "r");
+  if (f == NULL) { fprintf(stderr, "FIC_PORTS_IN: cannot open %s\n", path); exit(1); }
+  while (fgets(line, sizeof line, f) != NULL) {
+    char *sp = strchr(line, ' ');
+    size_t n = strlen(line);
+    fic_ref text, json;
+    while (n > 0 && (line[n - 1] == '\n' || line[n - 1] == '\r')) line[--n] = 0;
+    if (n == 0) continue;
+    if (sp == NULL) { fprintf(stderr, "FIC_PORTS_IN: no JSON on the line: %s\n", line); exit(1); }
+    *sp = 0;
+    text = fic_str_new(sp + 1, (int64_t)strlen(sp + 1));
+    json = fic_json_parse(text);
+    FIC_RC_DROP(text);
+    if (json == NULL) { fprintf(stderr, "FIC_PORTS_IN: not JSON: %s\n", sp + 1); exit(1); }
+    fic_port_send(line, json);
+    FIC_RC_DROP(json);
+  }
+  fclose(f);
+}
+#endif
 
 /* ---- the end of the program (step 8): the effect state is released, so a counted program ends with nothing live ---- */
 

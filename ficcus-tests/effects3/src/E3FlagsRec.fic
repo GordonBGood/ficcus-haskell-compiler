@@ -1,0 +1,38 @@
+port module E3FlagsRec exposing (main)
+
+-- E3b (D11): record flags of every payload kind, with a port that sends part of them back
+
+import Array exposing (Array)
+import Json.Encode as E
+
+
+port back : { name : String, ids : List Int } -> Cmd msg
+
+
+type alias Flags =
+    { name : String
+    , ids : List Int
+    , opt : Maybe Float
+    , pair : ( Int, String )
+    , arr : Array Bool
+    , raw : E.Value
+    , sub : { on : Bool }
+    }
+
+
+main : Program Flags () ()
+main =
+    Platform.worker
+        { init =
+            \f ->
+                let
+                    _ =
+                        Debug.log "flags" ( ( f.name, f.ids, f.opt ), ( f.pair, f.arr, f.sub ) )
+
+                    _ =
+                        Debug.log "raw" (E.encode 0 f.raw)
+                in
+                ( (), back { name = f.name, ids = List.reverse f.ids } )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

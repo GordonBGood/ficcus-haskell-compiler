@@ -376,7 +376,7 @@ static void fic_ets_help(fic_sb *out, fic_ref err, fic_sb *ctx) {
     case 2u: {                                                            /* OneOf errors */
       fic_ref l = ((fic_jd_e1 *)err)->r0, p;
       int64_t n = 0, i = 0;
-      char buf[48];
+      char buf[80];
       for (p = l; p->tag != 0u; p = ((fic_us_cell *)p)->f1) n++;
       if (n == 0) {
         fic_sb_puts(out, "Ran into a Json.Decode.oneOf with no possibilities");
@@ -859,5 +859,12 @@ static FIC_UNUSED void fic_runner_start(void) {
   free(line);
   fclose(f);
 }
+
+#else /* a program without ports (flags only): the same interface, every port is absent */
+
+int fic_port_subscribe(const char *port, fic_port_fn fn, void *env) { (void)fn; (void)env; return fic_port_fail(FIC_E_NO_PORT, "there is no outgoing port `%s`", port); }
+int fic_port_unsubscribe(const char *port, fic_port_fn fn, void *env) { (void)fn; (void)env; return fic_port_fail(FIC_E_NO_PORT, "there is no outgoing port `%s`", port); }
+int fic_port_send(const char *port, fic_hv v) { if (v != NULL) FIC_RC_DROP(v); return fic_port_fail(FIC_E_NO_PORT, "there is no incoming port `%s`", port); }
+int fic_port_send_json(const char *port, const char *text, size_t n) { (void)text; (void)n; return fic_port_fail(FIC_E_NO_PORT, "there is no incoming port `%s`", port); }
 
 #endif /* FIC_SCHED_H */

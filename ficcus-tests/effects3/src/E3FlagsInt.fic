@@ -1,0 +1,12 @@
+module E3FlagsInt exposing (main)
+
+-- E3b (D11): Int flags in a program without ports or effect managers
+
+
+main : Program Int Int ()
+main =
+    Platform.worker
+        { init = \f -> ( Debug.log "flags" f, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

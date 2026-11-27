@@ -1,0 +1,39 @@
+port module E3Reentry exposing (main)
+
+-- E3a (D12): host callbacks that send at once (a nested update, its effects behind the dispatch in progress), unsubscribe themselves
+-- (the delivery goes on with the list of its moment) and subscribe during a delivery (Elm's subscribe pushes onto the array being
+-- read: called for the same value, unless an unsubscribe replaced the array first)
+
+
+port out : Int -> Cmd msg
+
+
+port other : String -> Cmd msg
+
+
+port inn : (Int -> msg) -> Sub msg
+
+
+type Msg
+    = In Int
+
+
+main : Program () Int Msg
+main =
+    Platform.worker
+        { init = \_ -> ( 0, Cmd.batch [ out 1, other "start" ] )
+        , update =
+            \(In n) count ->
+                let
+                    _ =
+                        Debug.log "in" ( n, count )
+                in
+                ( count + 1
+                , if n < 103 then
+                    Cmd.batch [ out (n + 1), other ("after " ++ String.fromInt n) ]
+
+                  else
+                    Cmd.none
+                )
+        , subscriptions = \_ -> inn In
+        }

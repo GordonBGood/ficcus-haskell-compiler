@@ -1,0 +1,9 @@
+adder other
+sub other
+echo out inn 3
+once out
+adder out
+sub out
+sub nope
+send inn 50
+send inn 60

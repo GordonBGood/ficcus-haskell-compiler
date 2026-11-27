@@ -1,5 +1,5 @@
 port module X3ArrayPortIn exposing (main)
--- E2 review Q6: an incoming port of a payload with an Array inside a record: a clear compile error that names the type.
+-- E2 review Q6: an incoming port of a record with an Array field (a compile error until E3a; since E3a it runs, compared with Elm by effects_e3.py).
 
 import Array exposing (Array)
 

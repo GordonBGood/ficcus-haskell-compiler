@@ -1,0 +1,115 @@
+port module E3Array exposing (main)
+
+-- E3a (D6): Array payloads in and out (Json.Encode.array / Json.Decode.array); trees of every depth up to shift 15, built by the C
+-- decoder as Elm's Array.fromList (Elm: Array.initialize, the same shape), compared with Elm's own arrays by ==
+
+import Array exposing (Array)
+
+
+port arrOut : Array Int -> Cmd msg
+
+
+port recsOut : Array { id : Int, name : String } -> Cmd msg
+
+
+port nestOut : Array (Array (Maybe String)) -> Cmd msg
+
+
+port arrIn : (Array Int -> msg) -> Sub msg
+
+
+port recsIn : (Array { id : Int, name : String } -> msg) -> Sub msg
+
+
+port nestIn : (Array (Array (Maybe String)) -> msg) -> Sub msg
+
+
+port floatsIn : (Array Float -> msg) -> Sub msg
+
+
+type Msg
+    = Ints (Array Int)
+    | Recs (Array { id : Int, name : String })
+    | Nest (Array (Array (Maybe String)))
+    | Floats (Array Float)
+
+
+summary : Array Int -> String
+summary a =
+    let
+        n =
+            Array.length a
+    in
+    String.join " "
+        [ String.fromInt n
+        , String.fromInt (Array.foldl (+) 0 a)
+        , Debug.toString (Array.get 0 a)
+        , Debug.toString (Array.get (n - 1) a)
+        , Debug.toString (Array.get 1040 a)
+        , Debug.toString (Array.get 32800 a)
+        , Debug.toString (a == Array.fromList (Array.toList a))
+        , Debug.toString (a == Array.initialize n (\i -> Maybe.withDefault 0 (Array.get i a)))
+        , String.fromInt (Array.length (Array.push 7 a))
+        , Debug.toString (Array.get (n - 1) (Array.set (n - 1) -5 a))
+        , Debug.toString (Array.toList (Array.slice -3 n a))
+        , Debug.toString (Array.toList (Array.slice 1020 1030 (Array.append a a)))
+        ]
+
+
+initCmd : Cmd Msg
+initCmd =
+        Cmd.batch
+        (List.map (\n -> arrOut (Array.initialize n (\i -> i * 3 - n))) [ 0, 1, 32, 33 ]
+            ++ [ recsOut (Array.fromList [ { id = 1, name = "a" }, { id = 2, name = "\u{1F600} \"q\"" } ])
+               , nestOut (Array.fromList [ Array.empty, Array.fromList [ Just "x", Nothing ] ])
+               , arrOut (Array.fromList (List.range 1 1057) |> Array.slice 1000 1057)
+               , arrOut (Array.push 5 (Array.fromList (List.range 1 1056)) |> Array.slice 1050 1057)
+               ]
+        )
+
+
+update : Msg -> () -> ( (), Cmd Msg )
+update msg m =
+    case msg of
+        Ints a ->
+            let
+                _ =
+                    Debug.log "ints" (summary a)
+            in
+            ( m
+            , if Array.length a < 40 then
+                arrOut (Array.push -1 a)
+
+              else
+                Cmd.none
+            )
+
+        Recs a ->
+            let
+                _ =
+                    Debug.log "recs" a
+            in
+            ( m, recsOut (Array.map (\r -> { r | id = r.id * 10 }) a) )
+
+        Nest a ->
+            let
+                _ =
+                    Debug.log "nest" a
+            in
+            ( m, nestOut (Array.push (Array.fromList [ Nothing ]) a) )
+
+        Floats a ->
+            let
+                _ =
+                    Debug.log "floats" (Array.toList a)
+            in
+            ( m, Cmd.none )
+
+
+main : Program () () Msg
+main =
+    Platform.worker
+        { init = \_ -> ( (), initCmd )
+        , update = update
+        , subscriptions = \_ -> Sub.batch [ arrIn Ints, recsIn Recs, nestIn Nest, floatsIn Floats ]
+        }

@@ -1,0 +1,12 @@
+module E3FlagsMaybe exposing (main)
+
+-- E3b (D11): Maybe flags (null is Nothing; absent flags are undefined, which Maybe's oneOf refuses in both ways)
+
+
+main : Program (Maybe Int) () ()
+main =
+    Platform.worker
+        { init = \f -> ( Debug.log "flags" f |> always (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

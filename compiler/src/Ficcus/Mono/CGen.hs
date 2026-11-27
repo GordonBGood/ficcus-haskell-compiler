@@ -157,6 +157,7 @@ generateWith order rcMode program =
               pkUsed = any (\l -> any (`List.isInfixOf` l) ["fic_pk_", "fic_us_slice("]) (gOut final)     -- the position cache of the string kernels (fic_us_off)
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
               usesSched = any (`List.isInfixOf` body) ["fic_task_", "fic_bag_leaf", "fic_bag_batch", "fic_bag_map", "fic_mgr_def"]
+              usesPorts = any (`List.isInfixOf` body) ["fic_app_start", "fic_port_in_def", "fic_port_out_def"]
           in Right ((if usesSched then "#define _POSIX_C_SOURCE 200809L      /* E2: the clock and the timers of runtime/fic_sched.h */\n" else "")
                     ++ (if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n"
                     ++ (if any (`List.isInfixOf` body) ["fic_vector_", "FIC_VECTOR_"] then vectorRuntime ++ "\n" else "")
@@ -172,9 +173,13 @@ generateWith order rcMode program =
                     ++ (if "fic_re_" `List.isInfixOf` body then regexRuntime ++ "\n" else "")
                     ++ (if any (`List.isInfixOf` body) ["fic_bag_", "fic_app_model"] then platformRuntime ++ "\n" else "")
                     -- E2: the scheduler and the dispatch, only for programs that use a task, a bag or a manager
-                    ++ (if usesSched then schedRuntime ++ "\n" else "")
+                    -- E3a: in a program with ports or flags, fic_sched.h's E2 section of the ports (under FIC_TAG_JNULL) is replaced by
+                    -- runtime/fic_ports.h, so it is skipped; fic_sched.h itself is unchanged, and so is the C of every other program
+                    ++ (if usesSched then (if usesPorts then "#undef FIC_TAG_JNULL          /* E3a: the ports are in fic_ports.h */\n" else "")
+                                          ++ schedRuntime ++ "\n"
+                                          ++ (if usesPorts then "#define FIC_TAG_JNULL  0xFFE0u\n" else "") else "")
                     -- E3a, E3b: the host interface of ports and flags (its port part needs the scheduler, above)
-                    ++ (if any (`List.isInfixOf` body) ["fic_app_start", "fic_port_in_def", "fic_port_out_def"] then portsRuntime ++ "\n" else "")
+                    ++ (if usesPorts then portsRuntime ++ "\n" else "")
                     ++ "\n" ++ body)
         errs -> Left errs
 
@@ -199,6 +204,8 @@ program' info root clones =
       forM_ values (genValue info)
       -- E2 step 7: the decoders of the incoming ports, which fic_main names (helpers are generated here, before it)
       forM_ [ t | SPort False _ t <- iMgrs info ] (\t -> helper (HPortDecW t))
+      -- E3b: and the decoder of the flags, which fic_app_start names
+      forM_ (workerFlags info root) (\t -> helper (HPortDecW t))
       genHelpers info
       emit "static void fic_init(void) {"
       indented (forM_ values (\d -> emit (globalName d ++ " = " ++ valueName d ++ "();")))

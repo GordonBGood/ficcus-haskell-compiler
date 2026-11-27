@@ -1,5 +1,5 @@
 module X1FlagsString exposing (main)
--- E2 review Q6: a worker with flags (String; today init gets a NULL string): Ficcus must stop with a clear compile error (not done in E2).
+-- E2 review Q6: a worker with String flags (a compile error from the E2 review until E3b; since E3b it runs, compared with Elm by effects_e3.py).
 
 
 

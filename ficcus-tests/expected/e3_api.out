@@ -1,0 +1,34 @@
+int: -9007199254740993
+nan: null
+string: "hé 😀"
+sealed: "hello wörld"
+object: {"1":null,"2":true,"b":"last","a":2}
+error: fic_hv_array_set: the value is an unsealed array, object or string
+array: [2.5,{"1":null,"2":true,"b":"last","a":2},"y"]
+error: fic_hv_finish: a slot of the array was not set
+empty: {}
+parsed: [1,2.5,"xé",null,true,{"2":null,"k":0}]
+error: fic_app_start: the program has started already
+error: there is no outgoing port `strIn`
+error: there is no incoming port `valOut`
+error: Problem with the given value:
+
+3
+
+Expecting a STRING
+error: Problem with the given value:
+
+"{bad"
+
+This is not valid JSON! Syntax error
+str: ("hé😀",3)
+val: "{\"z\":1,\"a\":[1,{\"q\":null}]}"
+still held: {"z":1,"a":[1,{"q":null}]}
+val: "[3]"
+checks failed: 0
+strOut (first): ready (5 bytes)
+strOut (first): HÉ😀 (7 bytes)
+valOut: {"z":1,"a":[1,{"q":null}]}
+valOut: [3]
+kept: {"z":1,"a":[1,{"q":null}]}
+after the end: subscribe -4, send -4

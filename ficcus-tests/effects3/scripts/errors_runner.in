@@ -1,0 +1,4 @@
+pInt 5
+pRec {"name":"a","age":3,"xs":[1,2]}
+pNest {"inner":{"deep":[1,"x"]},"tag":"t"}
+pInt 6

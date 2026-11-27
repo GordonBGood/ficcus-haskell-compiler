@@ -1,0 +1,38 @@
+port module E3Api exposing (main)
+
+-- E3a: the program of the host API test (ficcus-tests/effects3/host/host_api.c): strings and Json values both ways
+
+import Json.Encode as E
+
+
+port strIn : (String -> msg) -> Sub msg
+
+
+port valIn : (E.Value -> msg) -> Sub msg
+
+
+port valOut : E.Value -> Cmd msg
+
+
+port strOut : String -> Cmd msg
+
+
+type Msg
+    = S String
+    | V E.Value
+
+
+main : Program () () Msg
+main =
+    Platform.worker
+        { init = \_ -> ( (), strOut "ready" )
+        , update =
+            \msg m ->
+                case msg of
+                    S s ->
+                        ( Debug.log "str" ( s, String.length s ) |> always m, strOut (String.toUpper s) )
+
+                    V v ->
+                        ( Debug.log "val" (E.encode 0 v) |> always m, valOut v )
+        , subscriptions = \_ -> Sub.batch [ strIn S, valIn V ]
+        }
