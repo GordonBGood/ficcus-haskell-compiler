@@ -14,6 +14,8 @@ module Ficcus.Mono.CRuntime
   , sortRuntime
   , platformRuntime
   , schedRuntime
+  , portsRuntime
+  , portsApi
   )
   where
 
@@ -113,3 +115,16 @@ platformRuntime =
 schedRuntime :: String
 schedRuntime =
   $(embedFiles [ "runtime/fic_sched.h" ])
+
+
+-- E3a, E3b (docs/E3-PORTS-DESIGN.md): the host interface of ports and flags (the declarations, then the definitions; needs the JSON
+-- runtime, and the scheduler for its port part); emitted only by programs that have ports or flags other than ()
+portsRuntime :: String
+portsRuntime =
+  $(embedFiles [ "runtime/fic_ports_api.h", "runtime/fic_ports.h" ])
+
+
+-- E3a (D2): the declarations alone, the top of the generated `<Module>_ports.h` that a host includes
+portsApi :: String
+portsApi =
+  $(embedFiles [ "runtime/fic_ports_api.h" ])

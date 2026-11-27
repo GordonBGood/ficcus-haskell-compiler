@@ -38,6 +38,7 @@ import qualified Ficcus.Mono.Marks as Marks
 import qualified Ficcus.Mono.Modules as Modules
 import qualified Ficcus.Mono.Overlay as Overlay
 import qualified Ficcus.Mono.Print as Print
+import qualified Ficcus.Mono.PortsHeader as PortsHeader
 import qualified Ficcus.Mono.Rc as Rc
 import qualified Ficcus.Mono.Inline as Inline
 import qualified Ficcus.Mono.Known as Known
@@ -290,7 +291,13 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                                     _ -> return ()
                                   case CGen.generateWith order rcMode program' of
                                     Left errs -> failWith errs
-                                    Right text -> generate writer style target (B.stringUtf8 text) (Build.getRootNames artifacts)
+                                    Right text ->
+                                      do  generate writer style target (B.stringUtf8 text) (Build.getRootNames artifacts)
+                                          -- E3a (D2): the host's header `<Module>_ports.h` beside the C, for a program with ports or flags
+                                          let mainName = case Build.getRootNames artifacts of { NE.List m _ -> Module.toChars m }
+                                          case PortsHeader.portsHeader order mainName program' of
+                                            Just h -> Task.io (writeFile (PortsHeader.portsHeaderPath target mainName) h)
+                                            Nothing -> return ()
 
                 Just (C target) ->
                   case getNoMains artifacts of

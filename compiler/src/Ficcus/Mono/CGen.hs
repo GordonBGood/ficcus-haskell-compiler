@@ -33,7 +33,7 @@ import qualified Data.Set as Set
 import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 
-import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, platformRuntime, prelude, schedRuntime, regexRuntime, sizedRuntime, sortRuntime, stringRuntime, vectorRuntime)
+import Ficcus.Mono.CRuntime (bytesRuntime, closureRuntime, fdlibmRuntime, jsArrayRuntime, jsonRuntime, platformRuntime, portsRuntime, prelude, schedRuntime, regexRuntime, sizedRuntime, sortRuntime, stringRuntime, vectorRuntime)
 import Ficcus.Mono.Effects (kernelTypeIds, leafHome, managerHome, noStepper, portOf)
 import Ficcus.Mono.Program (Shape(..), programShape)
 import Ficcus.Mono.ManagerOrder (Entry)
@@ -47,6 +47,7 @@ import Ficcus.Mono.Print (keyTextIx)
 import Ficcus.Mono.Spec (classOfM)
 import Ficcus.Mono.Unbox (workerSuffix)
 import qualified Ficcus.Mono.Sized as Sized
+import qualified Ficcus.Mono.PortDesc as PortDesc
 
 
 
@@ -172,6 +173,8 @@ generateWith order rcMode program =
                     ++ (if any (`List.isInfixOf` body) ["fic_bag_", "fic_app_model"] then platformRuntime ++ "\n" else "")
                     -- E2: the scheduler and the dispatch, only for programs that use a task, a bag or a manager
                     ++ (if usesSched then schedRuntime ++ "\n" else "")
+                    -- E3a, E3b: the host interface of ports and flags (its port part needs the scheduler, above)
+                    ++ (if any (`List.isInfixOf` body) ["fic_app_start", "fic_port_in_def", "fic_port_out_def"] then portsRuntime ++ "\n" else "")
                     ++ "\n" ++ body)
         errs -> Left errs
 
@@ -206,12 +209,21 @@ program' info root clones =
       -- E1 step 3: the typed stepper (D-fx-3 amended), after everything else so no temporary of the clones is renumbered
       let step = programShape (Just root) (iClones info) >>= shStep
       forM_ step (stepperSection info)
+      -- E3a, E3b: a program with ports or flags gets the host's entry `fic_app_start` (D11), and its main reads the flags and starts
+      -- the runner (or the host's FIC_HOST_MAIN); every other program keeps the text it had
+      let flagsT = workerFlags info root
+          host = hasPorts info || flagsT /= Nothing
+      case (initFn, step) of
+        (Just d, Just (ud, _)) | host -> appStart info d ud flagsT
+        (_, Nothing) | flagsT /= Nothing -> () <$ failWith "internal: a worker with flags needs the typed stepper"
+        _ -> return ()
       emit "static int fic_main(void) {"
       indented $
         do  rcMode <- gets gRc
             emit "fic_init();"
             case initFn of
               Just d
+                | Just (ud, _) <- step, host -> hostMain info ud flagsT
                 | Just (ud, _) <- step -> stepperMain info d ud
                 | rcMode && refClass (mdResult d) ->
                     do  emit (classType (mdResult d) ++ " fic_res = " ++ functionName d ++ "(0);")
@@ -394,11 +406,18 @@ stepperSection info (ud, sd) =
 -- the part of `fic_main` from init to the end of the program's model
 stepperMain :: Info -> MDef -> MDef -> CG ()
 stepperMain info initD ud =
+  do  ok <- stepperStart info initD ud "0"
+      when ok (stepperRest info ud False)
+
+
+-- init (with the flags expression given), the model slot, and with effect managers the table and the first dispatch
+stepperStart :: Info -> MDef -> MDef -> String -> CG Bool
+stepperStart info initD ud flagsArg =
   do  rcMode <- gets gRc
       let fx = not (null (iMgrs info))
       case (mdResult initD, mdParams ud) of
-        (CStruct [resModelC, cmdC], [(_, msgC), (_, modelC)]) ->
-          do  emit (classType (mdResult initD) ++ " fic_res = " ++ functionName initD ++ "(0);")
+        (CStruct [resModelC, cmdC], [(_, _), (_, modelC)]) ->
+          do  emit (classType (mdResult initD) ++ " fic_res = " ++ functionName initD ++ "(" ++ flagsArg ++ ");")
               m <- adaptOwn resModelC modelC "fic_res.f0"
               emit ("fic_app_model = " ++ m ++ ";")
               if fx
@@ -407,13 +426,22 @@ stepperMain info initD ud =
                       emit "fic_app_send_fn = fic_app_send;"
                       emit "fic_platform_setup();                    /* E2: _Platform_setupEffects */"
                       emit "fic_platform_enqueue(fic_res.f1, fic_app_subs());"
-                      -- E2 step 7: the runner sends the incoming port messages of FIC_PORTS_IN after init, before the loop
-                      when (not (null [ () | SPort False _ _ <- iMgrs info ])) (emit "fic_ports_script();")
                 else
                   do  when rcMode (mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths cmdC "fic_res.f1"))
                       emit "/* E2: the commands of init are dispatched */"
                       emit "fic_app_subscriptions();"
-              emit "#ifdef FIC_STEP_TEST"
+              return True
+        _ -> False <$ failWith "internal: the init of the program does not return a pair"
+
+
+-- from the test steps to the end of the program's model (host: a program with ports or flags, E3a)
+stepperRest :: Info -> MDef -> Bool -> CG ()
+stepperRest info ud host =
+  do  rcMode <- gets gRc
+      let fx = not (null (iMgrs info))
+      case mdParams ud of
+        [(_, msgC), (_, modelC)] ->
+          do  emit "#ifdef FIC_STEP_TEST"
               if msgC `elem` [CI64, CF64, CU32, CEnum, CUnit]
                 then
                   do  emit "#ifndef FIC_STEP_TEST_MSG"
@@ -427,8 +455,71 @@ stepperMain info initD ud =
               emit "fic_model_report();"
               emit "#endif"
               when fx (emit "fic_platform_teardown();                 /* E2: the effect state, so a counted program ends with nothing live */")
+              when (host && hasPorts info) (emit "fic_ports_stop();                        /* E3a: the subscribers; later calls are FIC_E_STOPPED */")
               when rcMode (mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths modelC "fic_app_model"))
-        _ -> () <$ failWith "internal: the init of the program does not return a pair"
+        _ -> () <$ failWith "internal: the update of the program does not take two arguments"
+
+
+-- E3a, E3b (docs/E3-PORTS-DESIGN.md D11): the host's entry. The flags (consumed; NULL is none given, JavaScript's undefined) are decoded
+-- by the port decoder of their type (refused: Elm's crash 2 text and FIC_E_DECODE, init does not run), moved into init, then the
+-- model slot, the manager table and the first dispatch, as `_Platform_initialize`. () flags are never read (Elm: `succeed ()`).
+appStart :: Info -> MDef -> MDef -> Maybe MType -> CG ()
+appStart info initD ud flagsT =
+  do  rcMode <- gets gRc
+      emit "/* E3a, E3b: the host's entry (docs/E3-PORTS-DESIGN.md D11, runtime/fic_ports_api.h) */"
+      emit "int fic_app_start(fic_hv fic_flags) {"
+      indented $
+        do  emit "if (fic_app_started) { if (fic_flags != NULL) fic_hv_release(fic_flags); return fic_port_fail(FIC_E_INVALID, \"fic_app_start: the program has started already%s\", NULL); }"
+            emit "fic_app_started = 1;"
+            arg <-
+              case flagsT of
+                Nothing ->
+                  do  emit "if (fic_flags != NULL) fic_hv_release(fic_flags);      /* () flags: Elm's decoder is `succeed ()` */"
+                      return Nothing
+                Just t ->
+                  do  let c = clsOf info t
+                          pc = case mdParams initD of { [(_, k)] -> k; _ -> c }
+                      dec <- helper (HPortDecW t)
+                      emit "fic_word fic_fw;"
+                      emit ("int fic_rc = fic_flags_take(fic_flags, " ++ dec ++ ", " ++ PortDesc.cString (maybe "v" id (PortDesc.portDesc t)) ++ ", &fic_fw);")
+                      emit "if (fic_rc != FIC_OK) return fic_rc;"
+                      v <- adaptOwn (abiClass c) pc ("fic_fw" ++ wordSel c)
+                      fv <- fresh "flags"
+                      emit (classType pc ++ " " ++ fv ++ " = " ++ v ++ ";")
+                      return (Just (fv, pc))
+            ok <- stepperStart info initD ud (maybe "0" fst arg)
+            -- the flags parameter of init when the inference borrows it: the decoded value is dropped here
+            case (arg, paramOwns initD) of
+              (Just (fv, pc), [Borrowed]) | ok && rcMode -> mapM_ (\p -> emit ("fic_drop(" ++ p ++ ");")) (refPaths pc fv)
+              _ -> return ()
+            emit "return FIC_OK;"
+      emit "}"
+      emit ""
+
+
+-- E3a: `fic_main` of a program with ports or flags: the flags of FIC_FLAGS / FIC_FLAGS_FILE (none read for () flags), fic_app_start
+-- (a failure prints its text, Elm's crash 2 for flags, and ends with 1), the test runner; or a host's FIC_HOST_MAIN (tests)
+hostMain :: Info -> MDef -> Maybe MType -> CG ()
+hostMain info ud flagsT =
+  do  emit "#ifdef FIC_HOST_MAIN"
+      emit "{ extern int FIC_HOST_MAIN(void); int fic_hrc = FIC_HOST_MAIN(); if (fic_hrc != 0) return fic_hrc; }    /* a host program (tests): it calls fic_app_start */"
+      emit "#else"
+      emit ("if (fic_app_start(" ++ (if flagsT == Nothing then "NULL" else "fic_flags_env()") ++ ") != FIC_OK) { fflush(stdout); fprintf(stderr, \"%s\\n\", fic_port_error()); return 1; }")
+      when (hasPorts info) (emit "fic_runner_start();                      /* E3a: the test runner: a printer on each outgoing port, then FIC_PORTS_IN */")
+      emit "#endif"
+      stepperRest info ud True
+
+
+hasPorts :: Info -> Bool
+hasPorts info = not (null [ () | SPort _ _ _ <- iMgrs info ])
+
+
+-- the flags type of `main`'s worker (Spec.specWorker puts it in the kernel's key when it is not ())
+workerFlags :: Info -> CloneId -> Maybe MType
+workerFlags info root =
+  case Map.lookup root (iClones info) >>= mdBody of
+    Just (MExpr _ (MCall (MExpr _ (MKernel "elm/core:Platform.worker" key)) _)) -> PortDesc.flagsOfKey key
+    _ -> Nothing
 
 
 -- E2: the manager table (runtime/fic_sched.h `fic_mgr_def`), in Elm's order (Ficcus.Mono.ManagerTable): init (a task, one count for the
@@ -445,7 +536,9 @@ managerTable info =
           SPort True name _ -> emit ("fic_port_out_def(" ++ show name ++ ");")
           SPort False name t ->
             do  dec <- helper (HPortDecW t)
-                emit ("fic_port_in_def(" ++ show name ++ ", " ++ dec ++ ", " ++ (if abiClass (clsOf info t) == CRef then "1" else "0") ++ ");")
+                -- E3a: the description of the payload type, for Elm's error text of a refused value (runtime/fic_ports.h fic_pd_explain)
+                emit ("fic_port_in_def(" ++ show name ++ ", " ++ dec ++ ", " ++ (if abiClass (clsOf info t) == CRef then "1" else "0") ++ ", "
+                      ++ PortDesc.cString (maybe "v" id (PortDesc.portDesc t)) ++ ");")
   where
     elmManager i me =
       do  let n = show i
@@ -1935,6 +2028,28 @@ portEncBody info t =
                 emit ("return " ++ j ++ ";")
           emit "}"
           emit "return fic_json_null();"
+    -- E3a (D6): an Array is a JSON array, as Elm's Json.Encode.array (its elements in order: the tree, then the tail)
+    TyCon "elm/core:Array.Array" [e] | clsOf info t == CRef ->
+      do  let ec = clsOf info e
+              afcs = [CI64, CI64, CRef, CRef]
+          needObj afcs
+          needClass info ec
+          emit "int64_t i, n;"
+          emit "fic_word *ws;"
+          emit "fic_ref r;"
+          emit (objType afcs ++ " *a = (" ++ objType afcs ++ " *)x;")
+          emit ("n = " ++ fl afcs 0 "a" ++ ";")
+          emit ("ws = fic_port_array_words(" ++ fl afcs 2 "a" ++ ", " ++ fl afcs 3 "a" ++ ", n);")
+          emit "r = fic_ja_new(n, FIC_TAG_VEC_REF);"
+          emit "for (i = 0; i < n; i++) {"
+          indented $
+            do  ev <- adapt (boxedClass ec) ec ("ws[i]" ++ wordSel ec)
+                ev' <- variable ec ev
+                j <- portEncode e ev'
+                emit ("fic_ja_data(r)[i].p = " ++ j ++ ";")
+          emit "}"
+          emit "free(ws);"
+          emit "return r;"
     TyTuple ts ->
       do  emit ("fic_ref r = fic_ja_new(" ++ show (length ts) ++ ", FIC_TAG_VEC_REF);")
           forM_ (zip [0 :: Int ..] ts) $ \(i, ty) ->
@@ -1959,7 +2074,7 @@ portEncBody info t =
                 emit ("fic_ja_data(v)[" ++ show slot ++ "].p = " ++ j ++ ";")
           emit "return fic_json_obj_new(k, v);"
     _ ->
-      do  failUnit ("a port of type " ++ mtypeText t ++ " (the C generator converts Int, Float, Bool, String, Json.Value, (), Maybe, List, tuples and records; not Array yet)")
+      do  failUnit ("a port of type " ++ mtypeText t ++ " (the C generator converts Int, Float, Bool, String, Json.Value, (), Maybe, List, Array, tuples and records)")
           emit "return fic_json_null();"
 
 
@@ -1976,7 +2091,8 @@ portDecBody info t =
   case t of
     TyCon "elm/core:Basics.Int" [] ->
       do  emit "if (j->tag == FIC_TAG_JINT) { *out = ((fic_jint *)j)->i; return 1; }"
-          emit "if (j->tag == FIC_TAG_JFLOAT) { double d = ((fic_jfloat *)j)->d; if (d == floor(d) && d > -9.2e18 && d < 9.2e18) { *out = (int64_t)d; return 1; } }"
+          -- L21, as Json.Decode.int (fic_jd_run) and the slow path: a whole number below 2^63 in size
+          emit "if (j->tag == FIC_TAG_JFLOAT) { double d = ((fic_jfloat *)j)->d; if (d >= -9223372036854775808.0 && d < 9223372036854775808.0 && d == (double)(int64_t)d) { *out = (int64_t)d; return 1; } }"
           emit "return 0;"
     TyCon "elm/core:Basics.Float" [] ->
       do  emit "if (j->tag == FIC_TAG_JINT) { *out = (double)((fic_jint *)j)->i; return 1; }"
@@ -1984,7 +2100,8 @@ portDecBody info t =
           emit "return 0;"
     TyCon "elm/core:Basics.Bool" [] -> emit "if (j->tag != FIC_TAG_JBOOL) return 0;" >> emit "*out = ((fic_jbool *)j)->b;" >> emit "return 1;"
     TyCon "elm/core:String.String" [] -> emit "if (j->tag != FIC_TAG_STRING) return 0;" >> emit "FIC_RC_DUP(j);" >> emit "*out = j;" >> emit "return 1;"
-    TyCon "elm/json:Json.Encode.Value" [] -> emit "FIC_RC_DUP(j);" >> emit "*out = j;" >> emit "return 1;"
+    -- E3b (D11): JavaScript's undefined (flags not given) never enters a Json.Value
+    TyCon "elm/json:Json.Encode.Value" [] -> emit "if (j->tag == FIC_TAG_JUNDEF) return 0;" >> emit "FIC_RC_DUP(j);" >> emit "*out = j;" >> emit "return 1;"
     TyUnit -> emit "if (j->tag != FIC_TAG_JNULL) return 0;" >> emit "*out = 0;" >> emit "return 1;"
     TyCon "elm/core:List.List" [e] ->
       do  let ec = clsOf info e
@@ -2004,6 +2121,33 @@ portDecBody info t =
                 emit ("acc = " ++ c ++ ";")
           emit "}"
           emit "*out = acc;"
+          emit "return 1;"
+    -- E3a (D6): Json.Decode.array: the elements decoded in order, then Elm's Array.fromList (runtime/fic_ports.h)
+    TyCon "elm/core:Array.Array" [e] | clsOf info t == CRef ->
+      do  let ec = clsOf info e
+              bc = boxedClass ec
+              afcs = [CI64, CI64, CRef, CRef]
+          needObj afcs
+          needClass info ec
+          d <- helper (HPortDec e)
+          emit "int64_t i, n, alen, ashift;"
+          emit "fic_ref atree, atail;"
+          emit "fic_word *xs;"
+          emit "if (j->tag != FIC_TAG_VEC_REF) return 0;"
+          emit "n = fic_json_len(j);"
+          emit "xs = (fic_word *)malloc((size_t)(n + 1) * sizeof(fic_word));"
+          emit "if (xs == NULL) abort();"
+          emit "for (i = 0; i < n; i++) {"
+          indented $
+            do  emit (classType ec ++ " ev;")
+                emit ("if (!" ++ d ++ "(fic_json_at(j, i), &ev)) { " ++ (if bc == CRef then "int64_t k; for (k = 0; k < i; k++) FIC_RC_DROP(xs[k].p); " else "") ++ "free(xs); return 0; }")
+                ev' <- adaptOwn ec bc "ev"
+                emit ("xs[i] = " ++ wordMk bc ev' ++ ";")
+          emit "}"
+          emit ("fic_port_array_build(xs, n, " ++ vecTag ec ++ ", &alen, &ashift, &atree, &atail);")
+          emit "free(xs);"
+          o <- allocObj afcs 0 ["alen", "ashift", "atree", "atail"]
+          emit ("*out = " ++ o ++ ";")
           emit "return 1;"
     TyCon "elm/core:Maybe.Maybe" [e] | Just (jt, fe) <- justOf info e, Just ctors <- ctorsOf info "elm/core:Maybe.Maybe" [e]
                                      , [nt] <- [ tg | (_, tg, []) <- ctors ] ->
@@ -2043,7 +2187,7 @@ portDecBody info t =
           emit ("*out = (" ++ classType (clsOf info t) ++ "){ " ++ List.intercalate ", " vs ++ " };")
           emit "return 1;"
     _ ->
-      do  failUnit ("a port of type " ++ mtypeText t ++ " (the C generator converts Int, Float, Bool, String, Json.Value, (), Maybe, List, tuples and records; not Array yet)")
+      do  failUnit ("a port of type " ++ mtypeText t ++ " (the C generator converts Int, Float, Bool, String, Json.Value, (), Maybe, List, Array, tuples and records)")
           emit "return 0;"
   where
     -- the parts of a struct (field i of the struct class: a nested struct is held boxed), decoded in order; a failure releases the
