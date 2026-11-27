@@ -37,6 +37,7 @@ import qualified Ficcus.Mono.ManagerTable as ManagerTable
 import qualified Ficcus.Mono.Marks as Marks
 import qualified Ficcus.Mono.Modules as Modules
 import qualified Ficcus.Mono.Overlay as Overlay
+import qualified Ficcus.Mono.Concurrent as Conc
 import qualified Ficcus.Mono.Print as Print
 import qualified Ficcus.Mono.PortsHeader as PortsHeader
 import qualified Ficcus.Mono.Rc as Rc
@@ -327,6 +328,7 @@ writeOverlay root =
       if same then return () else writeFile file Overlay.overlaySource
       writeFile (dir FP.</> Overlay.bitwise64FileName) Overlay.bitwise64Source
       writeFile (dir FP.</> Overlay.vectorFileName) Overlay.vectorSource
+      writeFile (dir FP.</> Conc.concFileName) Conc.concSource     -- T1a: the Concurrent module (Ficcus.Mono.Concurrent)
       mapM_ (\(n, src) -> writeFile (dir FP.</> n) src) Overlay.sizedSources
       Flags.setExtraSrcDir (Just dir)
       -- the elm/parser overlay is a root module of the projects that depend on elm/parser

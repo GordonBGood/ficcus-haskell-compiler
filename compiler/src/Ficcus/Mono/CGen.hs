@@ -39,6 +39,7 @@ import Ficcus.Mono.Program (Shape(..), programShape)
 import Ficcus.Mono.ManagerOrder (Entry)
 import Ficcus.Mono.ManagerTable (MgrEntry(..), Slot(..), MapPairs(..), managerSlots, mapPairs, mapCloneAt, pairIndex, mgrIndex)
 import Ficcus.Mono.Overlay (vectorMarker, vectorTypeName)
+import Ficcus.Mono.Concurrent (concRuntime, concUsed, patchSched)
 import Ficcus.Mono.Class
 import Ficcus.Mono.RowShape (substShape)
 import Ficcus.Mono.Free (captures, refClass)
@@ -162,6 +163,9 @@ generateWith order rcMode program =
               pkUsed = any (\l -> any (`List.isInfixOf` l) ["fic_pk_", "fic_us_slice("]) (gOut final)     -- the position cache of the string kernels (fic_us_off)
               -- the closure runtime (words, apply functions) only for programs that use closures, the sort runtime for sorts
               usesSched = any (`List.isInfixOf` body) ["fic_task_", "fic_bag_leaf", "fic_bag_batch", "fic_bag_map", "fic_mgr_def"]
+              -- T1a: a program that calls a kernel of Concurrent gets the patched scheduler and runtime/fic_conc.h after it
+              usesConc = usesSched && concUsed body
+              schedText = if usesConc then either (\e -> "#error \"" ++ e ++ "\"\n") id (patchSched schedRuntime) ++ "\n" ++ concRuntime else schedRuntime
               usesPorts = any (`List.isInfixOf` body) ["fic_app_start", "fic_port_in_def", "fic_port_out_def"]
           in Right ((if usesSched then "#define _POSIX_C_SOURCE 200809L      /* E2: the clock and the timers of runtime/fic_sched.h */\n" else "")
                     ++ (if rcMode then "#define FIC_RC 1\n" else "") ++ prelude ++ "\n"
@@ -182,7 +186,7 @@ generateWith order rcMode program =
                     -- E3a: in a program with ports or flags, fic_sched.h's E2 section of the ports (under FIC_TAG_JNULL) is replaced by
                     -- runtime/fic_ports.h, so it is skipped; fic_sched.h itself is unchanged, and so is the C of every other program
                     ++ (if usesSched then (if usesPorts then "#undef FIC_TAG_JNULL          /* E3a: the ports are in fic_ports.h */\n" else "")
-                                          ++ schedRuntime ++ "\n"
+                                          ++ schedText ++ "\n"
                                           ++ (if usesPorts then "#define FIC_TAG_JNULL  0xFFE0u\n" else "") else "")
                     -- E3a, E3b: the host interface of ports and flags (its port part needs the scheduler, above)
                     ++ (if usesPorts then portsRuntime ++ "\n" else "")
@@ -1946,6 +1950,16 @@ effectCall info name key args =
     ("elm/time:Time.setInterval", [_, _]) -> call "fic_task_interval"
     ("author/project:FicOverlayTime.hereOffset", [_]) -> Just (do { _ <- atoms info args; return "fic_task_here()" })
     ("author/project:FicOverlayTime.zoneName", [_]) -> Just (do { _ <- atoms info args; return "fic_task_zone()" })
+    -- T1a: Concurrent (runtime/fic_conc.h; Ficcus.Mono.Concurrent): the exit value is a reference (an `Exit err a`)
+    ("elm/core:Concurrent.spawnRaw", [k, _])
+      | abiClass (mRep k) /= CRef -> Just (failWith "internal: Concurrent: the exit value of a process is not a reference")
+      | otherwise -> call "fic_conc_spawn"
+    ("elm/core:Concurrent.address", [_]) -> call "fic_conc_same"
+    ("elm/core:Concurrent.self", [_]) -> call "fic_conc_same"
+    ("elm/core:Concurrent.send", [a, v]) -> Just (routed "fic_conc_send" a v)
+    ("elm/core:Concurrent.receive", [_]) -> call "fic_conc_receive"
+    ("elm/core:Concurrent.await", [_]) -> call "fic_conc_await"
+    ("elm/core:Concurrent.kill", [_]) -> call "fic_conc_kill"
     ("elm/core:Platform.Cmd.batch", [_]) -> call "fic_bag_batch"
     ("elm/core:Platform.Sub.batch", [_]) -> call "fic_bag_batch"
     ("elm/core:Platform.Cmd.map", [_, _]) -> Just (mapped True)

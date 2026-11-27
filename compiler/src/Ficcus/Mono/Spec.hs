@@ -59,6 +59,7 @@ import Ficcus.Mono.Kernel
 import Ficcus.Mono.Effects (Manager(..), effectClassOf, leafKernelId, managerKernelId, mapKernelKind, noStepper, portKernelId)
 import qualified Ficcus.Mono.Sized as Sized
 import Ficcus.Mono.Overlay (overlayId, overlayModuleName, randomOverlayPrefix, vectorMarker, vectorModuleId, vectorTypeName)
+import Ficcus.Mono.Concurrent (concOn, concRedirect, concTypeNames)
 import Ficcus.Mono.Marks (Marks)
 import qualified Ficcus.Mono.Marks as Marks
 import qualified Ficcus.Mono.Members as Members
@@ -210,8 +211,11 @@ specialize modules marks =
         -- V1: the module `Vector` of the overlay declares the built-in vector as a type with one constructor (`vectorMarker`) that is
         -- never built: a reference class, not an enumeration. A module `Vector` of the project does not have it and is ordinary code
         vecOn = or [ n == vectorTypeName && [ c | (c, _, _) <- usCtors u ] == [vectorMarker] | m' <- modules, (n, u) <- mmUnions m' ]
-        builtin = if vecOn then Map.insert vectorTypeName False else id
-        unions0 = (if vecOn then Map.adjust (\u -> u { usEnum = False }) vectorTypeName else id) (Map.fromList (concatMap mmUnions modules))
+        -- T1a: the handle types of the Concurrent overlay likewise (Ficcus.Mono.Concurrent)
+        allUnions = Map.fromList (concatMap mmUnions modules)
+        concTys = if concOn (\u -> [ c | (c, _, _) <- usCtors u ]) allUnions then concTypeNames else []
+        builtin = (if vecOn then Map.insert vectorTypeName False else id) . (\e -> foldr (\t -> Map.insert t False) e concTys)
+        unions0 = foldr (Map.adjust (\u -> u { usEnum = False })) ((if vecOn then Map.adjust (\u -> u { usEnum = False }) vectorTypeName else id) allUnions) concTys
         -- SIZED: the sized integers and Float32 of the overlay are scalars (their union is not an enumeration)
         unions = foldr (Map.adjust (\u -> u { usEnum = False })) unions0 [ Sized.typeId sz | sz <- Sized.allSized, Map.member ("sized:" ++ Sized.typeId sz) (Sized.sizedEnums unions0) ]
         enums = Map.union (Sized.sizedEnums unions0) (builtin (Map.fromList (concatMap mmEnums modules)))
@@ -1753,6 +1757,8 @@ resolve se region e =
               | Just (n, sz) <- sizedModuleFunction unionsNow cid0, Just op <- Sized.moduleFunctionOp sz n -> foreignOrTop' (Sized.kernelId sz op)
               -- the Vector module of the overlay (V1): the functions of its first section are the intrinsics of the same name
               | vecOn, Just n <- List.stripPrefix vectorModuleId cid0, n `elem` [ k | (k, _, _) <- vectorKernels ] -> foreignOrTop' (vectorKernelId n)
+              -- T1a: the kernel section of the Concurrent overlay
+              | Just k <- concRedirect (\u -> [ c | (c, _, _) <- usCtors u ]) unionsNow cid0 -> foreignOrTop' k
               | otherwise -> foreignOrTop' cid0
 
     foreignOrTop' cid =
