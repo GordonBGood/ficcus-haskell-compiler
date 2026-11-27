@@ -51,6 +51,7 @@ import qualified AST.Selectors as Selectors
 import qualified AST.WellKnown as WK
 import qualified Elm.Float as EF
 import qualified Elm.String as ES
+import qualified Ficcus.Mono.PortDesc as PortDesc
 import Ficcus.Mono.Class
 import Ficcus.Mono.RowShape (substShape)
 import Ficcus.Mono.Ir
@@ -2119,14 +2120,18 @@ specWorker se region fregion f args =
               do  mc <- classOfTy se msgT
                   modify' (\st -> st { sAppMsg = Just (boxed mc) })
             _ -> return ()
-          -- E2 review fix 1: flags other than () would reach init as a 0 word (Int: silently 0, String: a crash); refused until E3
-          case fmap strip (nodeType se (Recorder.exprKey region call)) of
-            Just (TCon _ _ [flagsT, _, _]) | not (unitFlags flagsT) ->
-              report ("main is a Platform.worker with flags (`Program flags model msg` with flags other than `()`): flags are not supported yet"
-                      ++ " (they come with effects slice E3) at " ++ regionText region)
-            _ -> return ()
+          -- E3b (docs/E3-PORTS-DESIGN.md D11): flags other than () travel as the exact type in one more part of the worker's key
+          -- (Ficcus.Mono.PortDesc), which the C generator decodes with the port decoder of that type; () flags keep the key unchanged
+          flagsPart <-
+            case fmap strip (nodeType se (Recorder.exprKey region call)) of
+              Just (TCon _ _ [flagsT, _, _]) | not (unitFlags flagsT) ->
+                case mtypeOf (seEnv se) flagsT of
+                  Right t | Just _ <- PortDesc.portDesc t -> return [PortDesc.flagsKeyPart t]
+                  _ -> do report ("main is a Platform.worker whose flags type is not one the C generator can decode at " ++ regionText region)
+                          return []
+              _ -> return []
           key <- do ref <- resolve se fregion f
-                    return (case ref of { RKernel _ k _ -> k; _ -> Key [] })
+                    return (case ref of { RKernel _ (Key ps) _ -> Key (ps ++ flagsPart); _ -> Key flagsPart })
           -- E1 step 3: update and subscriptions are cloned after the rest of the program (`workerPhase`: the existing clones keep their ids)
           case ([ x | (k, x) <- Map.toList fields, N.toChars k == "update" ], [ x | (k, x) <- Map.toList fields, N.toChars k == "subscriptions" ]) of
             ([u], [sb]) | not noStepper -> modify' (\st -> st { sWorkerFields = Just (se, u, sb) })

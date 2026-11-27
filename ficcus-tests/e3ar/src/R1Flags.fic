@@ -1,0 +1,24 @@
+port module R1Flags exposing (main)
+
+-- E3b review: flags decoded after partial work (a record whose later field fails), checked for leaks
+-- (the `"<" ::` makes the program declare fic_o_pp, which the List String decoder needs: finding F1)
+
+import Json.Encode as E
+
+
+port out : String -> Cmd msg
+
+
+type alias Flags =
+    { a : String, b : List String, c : Int, d : Maybe E.Value }
+
+
+main : Program Flags () ()
+main =
+    Platform.worker
+        { init = \f -> ( (), out (f.a ++ String.concat ("<" :: f.b) ++ String.fromInt f.c ++ (case f.d of
+                                                                                        Just v -> E.encode 0 v
+                                                                                        Nothing -> "-")) )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

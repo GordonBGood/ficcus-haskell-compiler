@@ -1,0 +1,115 @@
+port module R2Text exposing (main)
+
+-- E3a review: the fast decoder and the error text walker against Elm (driven by host/drive.c and ref/drive.js with the same lines)
+
+import Array exposing (Array)
+import Json.Encode as E
+
+
+port pInt : (Int -> msg) -> Sub msg
+
+
+port pFloat : (Float -> msg) -> Sub msg
+
+
+port pRec3 : ({ ab : Int, b : Int, abc : Int, a : Int } -> msg) -> Sub msg
+
+
+port pLen : ({ length : Int } -> msg) -> Sub msg
+
+
+port pCtor : ({ constructor : Int } -> msg) -> Sub msg
+
+
+port pCtorV : ({ constructor : E.Value } -> msg) -> Sub msg
+
+
+port pUni : ({ café : Int, ü : Int } -> msg) -> Sub msg
+
+
+port pStr : (String -> msg) -> Sub msg
+
+
+port pMM : (Maybe (Maybe Int) -> msg) -> Sub msg
+
+
+port pNest : (Array (Array Int) -> msg) -> Sub msg
+
+
+port pTup : (( Int, String ) -> msg) -> Sub msg
+
+
+port pArr : (Array Int -> msg) -> Sub msg
+
+
+port pVal : (E.Value -> msg) -> Sub msg
+
+
+port out : String -> Cmd msg
+
+
+type Msg
+    = Say String
+    | Arr (Array Int)
+
+
+arrText : Array Int -> String
+arrText a =
+    let
+        n =
+            Array.length a
+
+        p =
+            Array.push n a
+
+        idx =
+            [ 0, n - 1, n, 31, 32, 63, 64, 1023, 1024, 1055, 1056, 32767, 32768, 32799, 32800 ]
+
+        gets =
+            List.map (\i -> Array.get i p |> Maybe.withDefault -1 |> String.fromInt) idx
+
+        set =
+            Array.set (n - 1) -7 p |> Array.toList |> List.reverse |> List.take 3 |> List.map String.fromInt
+    in
+    String.join " "
+        ([ "n=" ++ String.fromInt n
+         , "eq=" ++ Debug.toString (a == Array.fromList (List.range 0 (n - 1)))
+         , "eqp=" ++ Debug.toString (p == Array.fromList (List.range 0 n))
+         , "sum=" ++ String.fromInt (Array.foldl (+) 0 p)
+         , "slice=" ++ String.fromInt (Array.length (Array.slice 5 -3 p))
+         ]
+            ++ gets
+            ++ set
+        )
+
+
+main : Program () () Msg
+main =
+    Platform.worker
+        { init = \_ -> ( (), Cmd.none )
+        , update =
+            \msg m ->
+                case msg of
+                    Say s ->
+                        ( m, out s )
+
+                    Arr a ->
+                        ( m, out (arrText a) )
+        , subscriptions =
+            \_ ->
+                Sub.batch
+                    [ pInt (Say << Debug.toString)
+                    , pFloat (Say << Debug.toString)
+                    , pRec3 (Say << Debug.toString)
+                    , pLen (Say << Debug.toString)
+                    , pCtor (Say << Debug.toString)
+                    , pCtorV (\r -> Say (E.encode 0 r.constructor))
+                    , pUni (Say << Debug.toString)
+                    , pStr (\s -> Say (s ++ " " ++ String.fromInt (String.length s)))
+                    , pMM (Say << Debug.toString)
+                    , pNest (Say << Debug.toString)
+                    , pTup (Say << Debug.toString)
+                    , pArr Arr
+                    , pVal (Say << E.encode 0)
+                    ]
+        }

@@ -1,0 +1,4 @@
+inArr {"xs":[1,2,3]}
+inArr {"xs":[]}
+inArr {"xs":[1,"a"]}
+inArr {"xs":[4]}

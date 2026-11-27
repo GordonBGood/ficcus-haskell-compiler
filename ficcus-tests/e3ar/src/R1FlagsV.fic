@@ -1,0 +1,19 @@
+port module R1FlagsV exposing (main)
+
+-- E3b review: Maybe Json.Value flags, absent (Elm: Just undefined; Ficcus refuses)
+
+import Json.Encode as E
+
+
+port out : String -> Cmd msg
+
+
+main : Program (Maybe E.Value) () ()
+main =
+    Platform.worker
+        { init = \f -> ( (), out (case f of
+                                    Just v -> "just " ++ E.encode 0 v
+                                    Nothing -> "nothing") )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

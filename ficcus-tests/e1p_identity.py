@@ -98,7 +98,8 @@ def main():
         for m in re.finditer(r"FICCUS_SPLIT_STATS: c(\d+) (\S+) (\d+)", err):
             split[int(m.group(1))] = int(m.group(3))
         sn, so = sections(new), sections(old)
-        diff = sorted(k for k in set(sn) | set(so) if normal(sn.get(k, ("", ""))[1]) != normal(so.get(k, ("", ""))[1]))
+        diff = sorted((k for k in set(sn) | set(so) if normal(sn.get(k, ("", ""))[1]) != normal(so.get(k, ("", ""))[1])),
+                      key=lambda k: -1 if k is None else k)          # None: the prelude (the runtime), which E3a changes in port programs
         unexplained = [k for k in diff if k not in split]
         grown = [k for k in diff if k in sn and k in so and counts(sn[k][1]) > counts(so[k][1])]
         nosplitdiff = [k for k in split if k not in diff]

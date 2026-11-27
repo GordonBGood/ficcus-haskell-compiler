@@ -1,0 +1,32 @@
+sub nope: no such port
+in: (50,0)
+in: (60,1)
+echo out: 1
+in: (101,2)
+once out: 1
+adder out: 1
+out: 1
+adder other: "start"
+other: "start"
+other#2: "start"
+echo out: 51
+adder out: 51
+out: 51
+out#2: 51
+adder other: "after 50"
+other: "after 50"
+other#2: "after 50"
+echo out: 61
+adder out: 61
+out: 61
+out#2: 61
+adder other: "after 60"
+other: "after 60"
+other#2: "after 60"
+echo out: 102
+adder out: 102
+out: 102
+out#2: 102
+adder other: "after 101"
+other: "after 101"
+other#2: "after 101"

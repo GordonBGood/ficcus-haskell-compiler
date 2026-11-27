@@ -1,5 +1,5 @@
 module X1Flags exposing (main)
--- E2 review Q6: a worker with flags (Int): Ficcus must stop with a clear compile error (not done in E2).
+-- E2 review Q6: a worker with Int flags (a compile error from the E2 review until E3b; since E3b it runs, compared with Elm by effects_e3.py).
 
 
 

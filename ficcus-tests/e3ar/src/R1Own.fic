@@ -1,0 +1,80 @@
+port module R1Own exposing (main)
+
+-- E3a review: ownership and re-entrancy at the boundary (driven by e3ar/host/*.c)
+
+import Array exposing (Array)
+import Json.Encode as E
+
+
+port pRec : ({ name : String, xs : List String } -> msg) -> Sub msg
+
+
+port pArr : (Array String -> msg) -> Sub msg
+
+
+port pVal : (E.Value -> msg) -> Sub msg
+
+
+port pStr : (String -> msg) -> Sub msg
+
+
+port pTup : (( String, List String ) -> msg) -> Sub msg
+
+
+port pMV : (Maybe E.Value -> msg) -> Sub msg
+
+
+port outV : E.Value -> Cmd msg
+
+
+port outS : String -> Cmd msg
+
+
+type Msg
+    = Rec { name : String, xs : List String }
+    | Arr (Array String)
+    | Val E.Value
+    | Str String
+    | Tup ( String, List String )
+    | MV (Maybe E.Value)
+
+
+type alias Model =
+    { last : String, keep : List E.Value }
+
+
+main : Program () Model Msg
+main =
+    Platform.worker
+        { init = \_ -> ( { last = "", keep = [] }, outS "init" )
+        , update = update
+        , subscriptions =
+            \_ ->
+                Sub.batch [ pRec Rec, pArr Arr, pVal Val, pStr Str, pTup Tup, pMV MV ]
+        }
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg m =
+    case msg of
+        Rec r ->
+            ( { m | last = r.name ++ String.concat r.xs }, outS (r.name ++ "|" ++ String.join "," r.xs) )
+
+        Arr a ->
+            ( { m | last = String.concat (Array.toList a) }, outS ("arr " ++ String.fromInt (Array.length a) ++ " " ++ Maybe.withDefault "-" (Array.get (Array.length a - 1) a)) )
+
+        Val v ->
+            ( { m | keep = v :: m.keep }, outV v )
+
+        Str s ->
+            let
+                t =
+                    String.append s "!"
+            in
+            ( { m | last = t }, Cmd.batch [ outS t, outV (E.string s) ] )
+
+        Tup ( a, b ) ->
+            ( { m | last = a }, outS (a ++ String.concat b) )
+
+        MV mv ->
+            ( m, outV (Maybe.withDefault (E.string "nothing") mv) )

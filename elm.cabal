@@ -208,6 +208,8 @@ executable elm
         Ficcus.Mono.Program
         Ficcus.Mono.ManagerOrder
         Ficcus.Mono.ManagerTable
+        Ficcus.Mono.PortsHeader
+        Ficcus.Mono.PortDesc
         Ficcus.Mono.LeafSplit
         Ficcus.Mono.ModelUnpack
         Ficcus.Mono.Spec

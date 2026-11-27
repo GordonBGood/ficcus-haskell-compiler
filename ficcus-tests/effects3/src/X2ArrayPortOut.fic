@@ -1,5 +1,5 @@
 port module X2ArrayPortOut exposing (main)
--- E2 review Q6: an outgoing port of an Array payload: a clear compile error that names the type (not done in E2).
+-- E2 review Q6: an outgoing port of an Array payload (a compile error until E3a; since E3a it runs, compared with Elm by effects_e3.py).
 
 import Array exposing (Array)
 

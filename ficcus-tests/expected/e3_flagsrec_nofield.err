@@ -1,0 +1,32 @@
+Problem with the flags given to your Elm program on initialization.
+
+Problem with the given value:
+
+{
+        "name": "né",
+        "opt": 2.5,
+        "pair": [
+            7,
+            "seven"
+        ],
+        "arr": [
+            true,
+            false
+        ],
+        "raw": {
+            "1": "one",
+            "b": [
+                1,
+                {
+                    "c": null
+                }
+            ],
+            "a": 1.5
+        },
+        "sub": {
+            "on": true
+        },
+        "extra": 0
+    }
+
+Expecting an OBJECT with a field named `ids`
