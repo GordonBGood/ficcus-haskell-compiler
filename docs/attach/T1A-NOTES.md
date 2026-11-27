@@ -171,6 +171,12 @@ Where C and JavaScript cannot agree by design: the `FIC_STATS` lines (C only), `
 deterministic order), live counts. A crash differs on stderr (C prints the message; node prints the Error with its stack): compared by
 exit code and message. Timers: C runs `FIC_TIME` (virtual), node real time; the cases use distinct deadlines.
 
+## 11a. Gate results (T1a-2)
+
+Targeted, serial, 27 Nov 13:38-14:00, `bin/elmficT1b`, log `/home/gordon/claude-tmp/gates-t1b.log`: runtime 0 non-ok; attach --rc 378/0;
+types 267 PASS 1 XFAIL; JS identity 28 identical; effects e1, e2, e3 all ok; e1p all ok; t1a all ok (82 checks; identity 66/0);
+a3b-identity --more vs elmficP1b 100/0; rcgate-san 16 ok; suite 16/16 PASS.
+
 ## 11. Open points for the Opus review (T1a-2)
 
 - **O9** The start-up race of R9: the alternative (b) of T1-D6 (buffer a channel's messages until its first listen) would remove it,
