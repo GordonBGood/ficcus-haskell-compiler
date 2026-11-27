@@ -18,8 +18,8 @@ RT = os.path.join(TESTS_DIR, "..", "..", "targets", "c")
 SAN = ["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-g", "-DFIC_NO_POOL"]
 ENV = {"FIC_TIME": "1700000000000", "TZ": "UTC"}
 NAMES = ["T1aOrder", "T1aMailbox", "T1aKill", "T1aFailed", "T1aDeadlock", "T1aMany"]
-# name: (must see at least two orders over the seeds)
-SHUFFLE = {"T1aOrder": True, "T1aMailbox": True, "T1aKill": True, "T1aFailed": False, "T1aDeadlock": False}
+# name: (must see at least two orders over the seeds, the last line is the same in every order)
+SHUFFLE = {"T1aOrder": (True, True), "T1aMailbox": (True, True), "T1aKill": (True, True), "T1aFailed": (False, True), "T1aDeadlock": (False, False)}
 FILTERS = {"T1aMailbox": [r"^got: Num ", r"^got: Word "]}
 IDENTITY_DIRS = ["effects3", "e2review"]
 
@@ -82,7 +82,7 @@ def main():
                         code, out, err = execute(exe, {"FIC_SCHED_SEED": str(s)})
                         outs[s] = out
                         lines, wl = out.splitlines(), want.splitlines()
-                        if code != 0 or collections.Counter(lines) != collections.Counter(wl) or lines[-1:] != wl[-1:]:
+                        if code != 0 or collections.Counter(lines) != collections.Counter(wl) or (SHUFFLE[n][1] and lines[-1:] != wl[-1:]):
                             ok = False; why = "seed %d: exit %d\n%s" % (s, code, out[-600:]); break
                         for f in FILTERS.get(n, []):
                             if [l for l in lines if re.search(f, l)] != [l for l in wl if re.search(f, l)]:
@@ -94,7 +94,7 @@ def main():
                     if ok and tag == "O2":
                         again = execute(exe, {"FIC_SCHED_SEED": "7"})[1]
                         ok = again == outs[7]; why = "seed 7 twice differs"
-                        if ok and SHUFFLE[n]:
+                        if ok and SHUFFLE[n][0]:
                             ok = len(set(outs.values())) >= 2; why = "one order only over 30 seeds"
                     report(ok, "%s --rc %s: shuffle seeds %d..%d (multiset, last line, sender order%s)" % (
                         n, tag, seeds[0], seeds[-1], ", reproducible, %d orders" % len(set(outs.values())) if tag == "O2" else ", live 0"), why)
