@@ -58,6 +58,7 @@ import Ficcus.Mono.Ir
 import Ficcus.Mono.Kernel
 import Ficcus.Mono.Effects (Manager(..), effectClassOf, leafKernelId, managerKernelId, mapKernelKind, noStepper, portKernelId)
 import qualified Ficcus.Mono.Sized as Sized
+import qualified Ficcus.Mono.BuiltinMembers as BuiltinMembers
 import Ficcus.Mono.Overlay (overlayId, overlayModuleName, randomOverlayPrefix, vectorMarker, vectorModuleId, vectorTypeName)
 import Ficcus.Mono.Concurrent (concOn, concRedirect, concTypeNames)
 import Ficcus.Mono.Marks (Marks)
@@ -438,8 +439,8 @@ memberRef st member mtype =
             Just op -> return (sizedKernelRef s op)
             -- (A5c) `zero`: a real member of the overlay (the literal 0 at the type)
             Nothing | Map.member (tid ++ "$$" ++ member) tops -> memberClone tid member mtype
-            -- (A4b) `hash`: the structural hash of the scalar
-            Nothing | member == "hash" -> builtinMember st member
+            -- (A4b) `hash`: the structural hash of the scalar; (A4c) `toString`, `minValue`, `maxValue`
+            Nothing | member `elem` ["hash", "toString", "minValue", "maxValue"] -> builtinMember st member
             Nothing -> return (Left ("the type " ++ Sized.typeName s ++ " has no member `" ++ member ++ "`"))
         TyCon tid _ | Map.member (tid ++ "$$" ++ member) tops -> memberClone tid member mtype
         _ -> builtinMember st member
@@ -457,7 +458,7 @@ memberClone tid member mtype =
           | Derived.isDerivedStub (srcDef msrc)
           , Just (kernel, arity) <- Derived.derivedKernel member
           , TyFun subject _ <- mtype ->
-              do  derivedAt member subject
+              do  when (member `elem` Derived.structuralMembers) (derivedAt member subject)
                   return (Right (RKernel kernel (Key [ByType subject]) arity))
         Just msrc ->
           do  let mdef = srcDef msrc
@@ -500,6 +501,16 @@ builtinMember st member =
         "compare" -> containerMembers (basics "compare") "compare" st >> kernel (basics "compare") numKey
         "eq" -> containerMembers (basics "eq") "eq" st >> kernel (basics "eq") numKey
         "hash" -> containerMembers Derived.hashKernelId "hash" st >> kernel Derived.hashKernelId numKey
+        -- (A4c) `toString`: Debug.toString at the exact type (structural all the way down: no member of a part is called)
+        "toString" -> kernel BuiltinMembers.toStringKernelId numKey
+        -- (A4c) the enumeration members of Bool, Order, Int and the sized integers: definitions of the overlay
+        _ | Just did <- BuiltinMembers.enumMemberDef st member ->
+              case Map.lookup did tops of
+                Just src ->
+                  do  let arity = length (defArgs (srcDef src))
+                      c <- requestClone (CKey did Nothing (Key [])) src
+                      return (Right (RClone c arity (arity == 0)))
+                Nothing -> return (Left ("`" ++ did ++ "` has no definition"))
         "div" -> kernel (basics "fdiv") (Key [])
         "idiv" -> kernel (basics "idiv") (Key [])
         "mod" -> kernel (basics "modBy") (Key [])
@@ -729,7 +740,7 @@ derivedRef se cid inst =
           -- (the hidden parameters of the constraints `a has m` come first in the instance)
           , Just (ps@(_ : _), _) <- inst >>= peelFun (Constraints.hiddenCount (srcDef src) + 1)
           , Right t <- mtypeOf (seEnv se) (last ps) ->
-              do  derivedAt member t
+              do  when (member `elem` Derived.structuralMembers) (derivedAt member t)
                   return (Just (RKernel kernel (Key [ByType t]) arity))
           | Derived.isDerivedStub (srcDef src), Just _ <- Derived.derivedKernel member ->
               do  report ("internal: no exact type for the derived member " ++ tid ++ "." ++ member)
@@ -795,6 +806,9 @@ shapeType shape t =
     WK.FromFloat -> TyFun (TyCon "elm/core:Basics.Float" []) t
     WK.Value -> t
     WK.Hash -> TyFun t (TyCon "elm/core:Basics.Int" [])
+    WK.ToString -> TyFun t (TyCon "elm/core:String.String" [])
+    WK.Step -> TyFun t (TyCon "elm/core:Maybe.Maybe" [t])
+    WK.Enumerate -> TyCon "elm/core:List.List" [t]
 
 
 -- a custom type with the member inside an exact type (its type arguments, tuple and record parts, and the constructor fields of

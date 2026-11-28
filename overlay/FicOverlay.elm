@@ -153,3 +153,92 @@ ficGe a b =
 ficNeq : a -> a -> Bool
 ficNeq a b =
     not (a == b)
+
+
+
+-- A4c: the enumeration members of the built-in types Bool, Order (all five, declaration order: False < True as A4b's
+-- `compare`, LT < EQ < GT) and Int (`minValue`, `maxValue`); Ficcus.Mono.BuiltinMembers maps a member to these.
+
+
+ficBoolMinValue : Bool
+ficBoolMinValue =
+    False
+
+
+ficBoolMaxValue : Bool
+ficBoolMaxValue =
+    True
+
+
+ficBoolSucc : Bool -> Maybe Bool
+ficBoolSucc b =
+    if b then
+        Nothing
+
+    else
+        Just True
+
+
+ficBoolPred : Bool -> Maybe Bool
+ficBoolPred b =
+    if b then
+        Just False
+
+    else
+        Nothing
+
+
+ficBoolEnumerate : List Bool
+ficBoolEnumerate =
+    [ False, True ]
+
+
+ficOrderMinValue : Order
+ficOrderMinValue =
+    LT
+
+
+ficOrderMaxValue : Order
+ficOrderMaxValue =
+    GT
+
+
+ficOrderSucc : Order -> Maybe Order
+ficOrderSucc o =
+    case o of
+        LT ->
+            Just EQ
+
+        EQ ->
+            Just GT
+
+        GT ->
+            Nothing
+
+
+ficOrderPred : Order -> Maybe Order
+ficOrderPred o =
+    case o of
+        LT ->
+            Nothing
+
+        EQ ->
+            Just LT
+
+        GT ->
+            Just EQ
+
+
+ficOrderEnumerate : List Order
+ficOrderEnumerate =
+    [ LT, EQ, GT ]
+
+
+ficIntMinValue : Int
+ficIntMinValue =
+    -9223372036854775807 - 1
+
+
+ficIntMaxValue : Int
+ficIntMaxValue =
+    9223372036854775807

@@ -49,6 +49,9 @@ data Shape
   | FromFloat   -- Float -> s                  fromFloat (A3b: a Float literal at s)
   | Value       -- s                           zero (A5c: a member of the built-in number types, not a well known name)
   | Hash        -- s -> Int                    hash (A4b: a member of the built-in types, not a well known name)
+  | ToString    -- s -> String                 toString (A4c: a member of the built-in types, not a well known name)
+  | Step        -- s -> Maybe s                succ pred (A4c: of Bool and Order)
+  | Enumerate   -- List s                      enumerate (A4c: of Bool and Order)
   deriving (Eq)
 
 
@@ -71,6 +74,12 @@ builtinShapeOf member =
     Just shape -> Just shape
     Nothing | member == "zero" -> Just Value
     Nothing | member == "hash" -> Just Hash
+    -- (A4c) `toString` of every type Debug.toString can show; the enumeration members of Bool and Order (all five), Int and
+    -- the sized integers (`minValue`, `maxValue` only)
+    Nothing | member == "toString" -> Just ToString
+    Nothing | member `elem` ["minValue", "maxValue"] -> Just Value
+    Nothing | member `elem` ["succ", "pred"] -> Just Step
+    Nothing | member == "enumerate" -> Just Enumerate
     Nothing -> Nothing
 
 
@@ -92,6 +101,9 @@ fits home tipe shape written =
     (FromFloat, [a, b]) -> a == float && self b
     (Value, [a]) -> self a
     (Hash, [a, b]) -> self a && b == int
+    (ToString, [a, b]) -> self a && b == stringType
+    (Step, [a, b]) -> self a && b == maybeOf a
+    (Enumerate, [a]) -> maybe False self (listElement a)
     _ -> False
   where
     self t =
@@ -108,6 +120,24 @@ fits home tipe shape written =
     float = Can.TType ModuleName.basics T.float []
     bool = Can.TType ModuleName.basics T.bool []
     order = Can.TType ModuleName.basics (T.nameFromString (S.fromChars "Order")) []
+
+
+-- (A4c) the types of the shapes ToString, Step, Enumerate
+stringType :: Can.Type
+stringType =
+  Can.TType ModuleName.string T.string []
+
+
+maybeOf :: Can.Type -> Can.Type
+maybeOf t =
+  Can.TType ModuleName.maybe T.maybe [t]
+
+
+listElement :: Can.Type -> Maybe Can.Type
+listElement t =
+  case t of
+    Can.TType h n [e] | h == ModuleName.list && n == T.list -> Just e
+    _ -> Nothing
 
 
 spine :: Can.Type -> [Can.Type]
@@ -131,6 +161,9 @@ fitsVar var shape written =
     (FromFloat, [a, b]) -> a == float && self b
     (Value, [a]) -> self a
     (Hash, [a, b]) -> self a && b == int
+    (ToString, [a, b]) -> self a && b == stringType
+    (Step, [a, b]) -> self a && b == maybeOf a
+    (Enumerate, [a]) -> maybe False self (listElement a)
     _ -> False
   where
     self t =
@@ -156,6 +189,9 @@ expectedText shape tipe =
     FromFloat -> "Float -> " ++ tipe
     Value -> tipe
     Hash -> tipe ++ " -> Int"
+    ToString -> tipe ++ " -> String"
+    Step -> tipe ++ " -> Maybe " ++ tipe
+    Enumerate -> "List " ++ tipe
 
 
 -- | the shape as the scheme `(x, shape of x)` (a pair, so that one instantiation gives both the subject and the
@@ -180,6 +216,9 @@ shapeAnnotation shape =
         FromFloat -> Can.TLambda float v
         Value -> v
         Hash -> Can.TLambda v int
+        ToString -> Can.TLambda v stringType
+        Step -> Can.TLambda v (maybeOf v)
+        Enumerate -> Can.TType ModuleName.list T.list [v]
 
 
 
@@ -213,7 +252,8 @@ data Builtin
   | BChar
   | BList
   | BTuple
-  | BEnum       -- (A4b) Bool, Order and (): `compare` (False < True) and `hash`
+  | BEnum       -- (A4b) (): `compare` and `hash` (A4c: and `toString`)
+  | BBounded    -- (A4c) Bool and Order: BEnum's members and the enumeration members (A4b's BEnum, False < True)
   | BContainer  -- (A4b) records, Maybe, Result, Array, Vector, Dict, Set: `compare` and `hash` when their parts have it
   | BOther      -- the other types that can be compared with `==` (Json.Value, Bytes, ...)
   | BFunction   -- no members
@@ -236,14 +276,15 @@ builtinOfApp home name arity
 builtinHas :: Builtin -> String -> Bool
 builtinHas kind member =
   case kind of
-    BInt -> member `elem` (numberBundle ++ ["eq", "idiv", "mod", "rem", "zero", "hash"])
-    BFloat -> member `elem` (numberBundle ++ ["eq", "div", "fromFloat", "zero", "hash"])
-    BString -> member `elem` ["append", "compare", "eq", "hash"]
-    BChar -> member `elem` ["compare", "eq", "hash"]
-    BList -> member `elem` ["append", "compare", "eq", "hash"]
-    BTuple -> member `elem` ["compare", "eq", "hash"]
-    BEnum -> member `elem` ["compare", "eq", "hash"]
-    BContainer -> member `elem` ["compare", "eq", "hash"]
+    BInt -> member `elem` (numberBundle ++ ["eq", "idiv", "mod", "rem", "zero", "hash", "toString", "minValue", "maxValue"])
+    BFloat -> member `elem` (numberBundle ++ ["eq", "div", "fromFloat", "zero", "hash", "toString"])
+    BString -> member `elem` ["append", "compare", "eq", "hash", "toString"]
+    BChar -> member `elem` ["compare", "eq", "hash", "toString"]
+    BList -> member `elem` ["append", "compare", "eq", "hash", "toString"]
+    BTuple -> member `elem` ["compare", "eq", "hash", "toString"]
+    BEnum -> member `elem` ["compare", "eq", "hash", "toString"]
+    BBounded -> member `elem` ["compare", "eq", "hash", "toString", "minValue", "maxValue", "succ", "pred", "enumerate"]
+    BContainer -> member `elem` ["compare", "eq", "hash", "toString"]
     BOther -> member == "eq"
     BFunction -> False
 
@@ -252,9 +293,9 @@ builtinHas kind member =
 builtinChildren :: Builtin -> String -> Bool
 builtinChildren kind member =
   case kind of
-    BList -> member `elem` ["compare", "hash"]
-    BTuple -> member `elem` ["compare", "hash"]
-    BContainer -> member `elem` ["compare", "hash"]
+    BList -> member `elem` ["compare", "hash", "toString"]
+    BTuple -> member `elem` ["compare", "hash", "toString"]
+    BContainer -> member `elem` ["compare", "hash", "toString"]
     _ -> False
 
 

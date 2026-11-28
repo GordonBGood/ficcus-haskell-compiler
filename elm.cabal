@@ -157,6 +157,7 @@ executable elm
         Type.Requirements
         Ficcus.Mono.Members
         Ficcus.Mono.Determined
+        Ficcus.Mono.BuiltinMembers
         Ficcus.Mono.ContainerMembers
         Ficcus.Mono.Derived
         Nitpick.Constraints
@@ -181,6 +182,7 @@ executable elm
         Canonicalize.Members
         Canonicalize.Derive
         Canonicalize.DeriveChecks
+        Canonicalize.DeriveEnum
         Canonicalize.Module
         Canonicalize.Pattern
         Canonicalize.Type

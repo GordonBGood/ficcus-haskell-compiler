@@ -485,6 +485,12 @@ resolve tools table env obligation@(Obligation region function member subject ti
     containerIds = Unify.comparableContainerIds
     enumIds = [ "elm/core:Basics.Bool", "elm/core:Basics.Order" ]
     sizedIds = [ "author/project:" ++ t ++ "." ++ t | t <- ["Int8", "Int16", "Int32", "Word8", "Word16", "Word32", "Word64", "Float32"] ]
+    sizedBuiltin m tid
+      | tid `notElem` sizedIds = Nothing
+      | m == "hash" = Just WK.Hash
+      | m == "toString" = Just WK.ToString
+      | m `elem` ["minValue", "maxValue"], tid /= "author/project:Float32.Float32" = Just WK.Value
+      | otherwise = Nothing
 
     go var =
       do  (Descriptor content _ _ _) <- UF.get var
@@ -507,13 +513,14 @@ resolve tools table env obligation@(Obligation region function member subject ti
                 maybeMembers
                   | Just kind <- WK.builtinOfApp home name (length args) ->
                       builtin kind (T.nameToChars name) args
-                  -- (A4b) the sized integers and Float32 of the overlay have `hash` (their other members are written)
-                  | N.toChars member == "hash", Members.typeId home name `elem` sizedIds, Just _ <- maybeMembers ->
-                      shaped WK.Hash (T.nameToChars name) []
+                  -- (A4b) the sized integers and Float32 of the overlay have `hash` (their other members are written);
+                  -- (A4c) and `toString`, and the integers `minValue` and `maxValue`
+                  | Just shape <- sizedBuiltin (N.toChars member) (Members.typeId home name), Just _ <- maybeMembers ->
+                      shaped shape (T.nameToChars name) []
                   | open, Members.typeId home name `elem` containerIds ->
                       builtin WK.BContainer (T.nameToChars name) args
                   | open, Members.typeId home name `elem` enumIds, null args ->
-                      builtin WK.BEnum (T.nameToChars name) []
+                      builtin WK.BBounded (T.nameToChars name) []
                   | isBuiltin home ->
                       builtin WK.BOther (T.nameToChars name) []
                   | N.toChars member == "eq" ->

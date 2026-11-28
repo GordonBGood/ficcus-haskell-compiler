@@ -50,7 +50,8 @@ isDerivedStub def =
     _ -> False
 
 
--- | the members whose derived form A4b generates
+-- | the members whose derived form gets a C helper of its own (recorded in mpDerived; A4c's `toString` is the kernel
+-- Debug.toString at the type)
 structuralMembers :: [String]
 structuralMembers =
   ["compare", "hash"]
@@ -62,6 +63,8 @@ derivedKernel member =
   case member of
     "compare" -> Just ("elm/core:Basics.compare", 2)
     "hash" -> Just (hashKernelId, 1)
+    -- (A4c) Debug.toString at the exact type (no helper of its own: `showStmt`; not recorded in mpDerived)
+    "toString" -> Just ("elm/core:Debug.toString", 1)
     _ -> Nothing
 
 

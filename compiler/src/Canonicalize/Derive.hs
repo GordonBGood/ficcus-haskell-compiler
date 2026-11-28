@@ -31,6 +31,7 @@ import Data.Maybe (isNothing, mapMaybe, listToMaybe)
 
 import qualified AST.Canonical as Can
 import qualified Canonicalize.DeriveChecks as Checks
+import qualified Canonicalize.DeriveEnum as DeriveEnum
 import qualified AST.Constraints as Constraints
 import qualified AST.Derive as Derive
 import qualified AST.Members as Members
@@ -180,8 +181,13 @@ checkUnion unionMap (Entry tipe member region _) =
 -- | the member `T$$m` with its signature and a placeholder body (finish replaces it by the stub)
 stub :: UnionMap -> Entry -> A.Located Src.Value
 stub unionMap (Entry tipe member r _) =
-  A.At r (Src.Value (A.At r (Members.mangle (tname tipe) (fromChars member))) (zipWith hiddenPattern [1 ..] constrained) (A.At r Src.Unit) (Just signature))
+  A.At r (Src.Value (A.At r (Members.mangle (tname tipe) (fromChars member))) (zipWith hiddenPattern [1 ..] constrained ++ params) body (Just signature))
   where
+    -- (A4c) the enumeration members get their real bodies here (group E); the others a placeholder that finish replaces
+    (params, body)
+      | Derive.isEnumMember member = DeriveEnum.body r member [ n | (A.At _ n, _) <- variants ]
+      | otherwise = ([], A.At r Src.Unit)
+
     (vars, variants) = Map.findWithDefault ([], []) tipe unionMap
     at = A.At r
     self = at (Src.TType r (tname tipe) [ at (Src.TVar v) | v <- vars ])
@@ -260,7 +266,7 @@ finish ifaces entries modul@(Can.Module home exports docs decls unions aliases b
     _ ->
       do  let table = TMembers.toTable ifaces modul
           mapM_ (checkParts home table unions) entries
-          let stubs = Map.fromList [ (Members.mangle (tname t) (fromChars m), Derive.stubName t m) | Entry t m _ _ <- entries ]
+          let stubs = Map.fromList [ (Members.mangle (tname t) (fromChars m), Derive.stubName t m) | Entry t m _ _ <- entries, not (Derive.isEnumMember m) ]
           let markers = [ marker line t (map _member es) | es@(Entry t _ _ line : _) <- List.groupBy (\a b -> _type a == _type b) entries ]
           Result.ok (Can.Module home exports docs (foldr Can.Declare (stubBodies stubs decls) markers) unions aliases binops effects)
 
