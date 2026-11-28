@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE QuasiQuotes, TemplateHaskell #-}
 module Optimize.Port
   ( toEncoder
@@ -14,6 +15,7 @@ import qualified Data.Map as Map
 import qualified Crash
 
 import qualified AST.Canonical as Can
+import qualified Canonicalize.FicPayload as FicPayload
 import qualified AST.Optimized as Opt
 import qualified AST.Prim.Name as N
 import qualified AST.Prim.TypeName as T
@@ -48,6 +50,10 @@ toEncoder tipe =
 
     Can.TTriple a b c ->
       encodeTriple a b c
+
+    Can.TType home name args
+      | Just t <- FicPayload.elmLike home name args ->      -- Ficcus (E3c): never run (a build to C), only kept total
+          toEncoder t
 
     Can.TType _ name args ->
       case args of
@@ -194,6 +200,10 @@ toDecoder tipe =
 
     Can.TTriple a b c ->
       decodeTriple a b c
+
+    Can.TType home name args
+      | Just t <- FicPayload.elmLike home name args ->      -- Ficcus (E3c): never run (a build to C), only kept total
+          toDecoder t
 
     Can.TType _ name args ->
       case args of

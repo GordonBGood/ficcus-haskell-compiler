@@ -1,0 +1,162 @@
+> sub output
+subscribe: ok
+> sub viOut
+subscribe: ok
+> sub vfOut
+subscribe: ok
+> sub vbOut
+subscribe: ok
+> sub vhOut
+subscribe: ok
+> sub vgOut
+subscribe: ok
+> sub vwOut
+subscribe: ok
+> sub vsOut
+subscribe: ok
+> api
+uint max: kind 2, get_uint 0 18446744073709551615, get_int -3, get_float 0 1.8446744073709552e+19
+uint 5: kind 2, get_int 0 5
+float -1: get_uint -3; float 2^64: get_uint -3; int -1: get_uint -3
+vector u16: kind 7 len 4 at0 NULL get_int -3 data ok
+  to_json [65533,65534,65535,0]
+  array_set raw 0, array_set juint 0, to_json [[65533,65534,65535,0],9223372036854775808]
+bad kind: NULL; n too large: NULL; copy NULL data: NULL
+empty f32 vector: kind 7 len 0 json []
+parsed: [18446744073709551615,18446744073709552000,9223372036854775807,9223372036854775808,-9223372036854776000,10000000000000000000,0.5]
+  kinds: 2 3 2 2 3 3 3
+> vec viIn i64 5 -2 3
+send: ok
+> vec vfIn f64 3 0.5 0.25
+send: ok
+> vec vwIn u64 3 18446744073709549568 -2048
+send: ok
+> vec vbIn u8 6 250 1
+send: ok
+> vec vhIn i16 3 -32768 32767
+send: ok
+> vec vgIn f32 3 0.1 1
+send: ok
+> veccopy vbIn u8 4 1 1
+send: ok
+> veccopy viIn i64 2 7 1
+send: ok
+> vec viIn i64 0 0 0
+send: ok
+> vec vbIn u8 0 0 0
+send: ok
+> vec vbIn i8 3 1 1
+send: rc -2
+error: Problem with the given value:
+
+[
+        1,
+        2,
+        3
+    ]
+
+Expecting a raw vector of WORD8 elements or an ARRAY
+> vec viIn f64 2 1 1
+send: rc -2
+error: Problem with the given value:
+
+[
+        1,
+        2
+    ]
+
+Expecting a raw vector of INT elements or an ARRAY
+> vec vhIn i32 2 1 1
+send: rc -2
+error: Problem with the given value:
+
+[
+        1,
+        2
+    ]
+
+Expecting a raw vector of INT16 elements or an ARRAY
+> vec vsIn u8 2 1 1
+send: rc -2
+error: Problem with the given value:
+
+[
+        1,
+        2
+    ]
+
+Expecting an ARRAY
+> vec vmIn u8 2 1 1
+send: rc -2
+error: Problem with the given value:
+
+[
+        1,
+        2
+    ]
+
+Expecting an ARRAY
+> json vmIn [null, [1, 2], []]
+send_json: ok
+> json vbIn [1, 2, 256]
+send_json: rc -2
+error: Problem with the value at json[2]:
+
+    256
+
+Expecting a WORD8 (a whole number from 0 to 255)
+> json vhIn [1, 40000]
+send_json: rc -2
+error: Problem with the value at json[1]:
+
+    40000
+
+Expecting an INT16 (a whole number from -32768 to 32767)
+> json vgIn [1e39, "x"]
+send_json: rc -2
+error: Problem with the value at json[1]:
+
+    "x"
+
+Expecting a FLOAT
+> json vwIn [0, -1]
+send_json: rc -2
+error: Problem with the value at json[1]:
+
+    -1
+
+Expecting a WORD64 (a whole number from 0 to 18446744073709551615)
+> bytes vbIn 1048576
+send: ok
+vbOut: raw WORD8 n=3 [0,7,255]
+vfOut: raw FLOAT64 n=3 [0.1,0,1e+300]
+vgOut: raw FLOAT32 n=3 [0.5,-2.25,16777216]
+vhOut: raw INT16 n=3 [-32768,0,32767]
+viOut: raw INT64 n=0 []
+viOut: raw INT64 n=3 [1,-2,9007199254740991]
+vsOut: ["a","é",""]
+vwOut: raw WORD64 n=2 [0,9007199254740991]
+viOut: raw INT64 n=5 same [-2,1,4,7,10]
+output: "vi 5 20"
+vfOut: raw FLOAT64 n=3 same [0.5,0.75,1]
+output: "vf 3 2.25"
+vwOut: raw WORD64 n=3 same [18446744073709549568,18446744073709547520,18446744073709545472]
+output: "vw 3 18446744073709549568,18446744073709547520,18446744073709545472"
+vbOut: raw WORD8 n=6 [250,251,252,253,254,255]
+output: "vb 6 1515"
+vhOut: raw INT16 n=3 [-32768,-1,32766]
+output: "vh 3 -3"
+vgOut: raw FLOAT32 n=3 [0.10000000149011612,1.100000023841858,2.0999999046325684]
+output: "vg 3 3.2999999299645424"
+vbOut: raw WORD8 n=4 [1,2,3,4]
+output: "vb 4 10"
+viOut: raw INT64 n=2 [7,8]
+output: "vi 2 15"
+viOut: raw INT64 n=0 []
+output: "vi 0 0"
+vbOut: raw WORD8 n=0 []
+output: "vb 0 0"
+output: "vm 3 "
+vbOut: raw WORD8 n=1048576 <3743745 bytes> [3,10,17,24,31,38,45,52,59,66,73,80,87,94,101,108,115,122,12 ... 224,231,238,245,252]
+bytes 1048576: echo checked
+output: "vb 1048576 133693440"

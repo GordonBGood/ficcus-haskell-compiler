@@ -1,0 +1,26 @@
+port module Main exposing (main)
+
+import Int8 exposing (Int8(..))
+
+
+port output : String -> Cmd msg
+
+
+port i8Out : Int8 -> Cmd msg
+
+
+port i8In : (Int8 -> msg) -> Sub msg
+
+
+update : Int8 -> () -> ( (), Cmd Int8 )
+update x m =
+    ( m, Cmd.batch [ output ("got " ++ Int8.toString x), i8Out x ] )
+
+
+main : Program () () Int8
+main =
+    Platform.worker
+        { init = \_ -> ( (), i8Out (Int8 "hello") )
+        , update = update
+        , subscriptions = \_ -> i8In identity
+        }

@@ -1,0 +1,74 @@
+> sub jsonOut
+subscribe: ok
+> sub output
+subscribe: ok
+> deepjson 10000
+to_json: <20001 bytes> [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[ ... ]]]]]]]]]]]]]]]]]]]]
+from_json: ok, again equal: yes
+> deepjson 1000000
+to_json: <2000001 bytes> [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[ ... ]]]]]]]]]]]]]]]]]]]]
+from_json: ok, again equal: yes
+> deep jsonIn 10000 1
+send: ok
+> deep jsonIn 1000000 1
+send: ok
+> deeptext jsonIn 10000
+send_json: ok
+> deeptext jsonIn 1000000
+send_json: ok
+> deep listIn 10000 1
+send: rc -2
+error: <1054206 bytes> Problem with the value at json[0]:
+
+    [
+        [
+         ... ..
+
+Expecting an INT
+> deep listIn 1000000 1
+send: rc -2
+error: <1054206 bytes> Problem with the value at json[0]:
+
+    [
+        [
+         ... ..
+
+Expecting an INT
+> deeptext listIn 1000000
+send_json: rc -2
+error: <1054206 bytes> Problem with the value at json[0]:
+
+    [
+        [
+         ... ..
+
+Expecting an INT
+> deep jsonIn 1000000 u
+send: ok
+> deep jsonIn 10000 v
+send: ok
+> deep w64In 3 u
+send: rc -2
+error: Problem with the given value:
+
+[
+        [
+            [
+                18446744073709551615
+            ]
+        ]
+    ]
+
+Expecting a WORD64 (a whole number from 0 to 18446744073709551615)
+> json w64In 18446744073709551615
+send_json: ok
+> vec viIn i64 2 1 1
+send: ok
+jsonOut: <20001 bytes> [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[ ... ]]]]]]]]]]]]]]]]]]]]
+jsonOut: <2000001 bytes> [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[ ... ]]]]]]]]]]]]]]]]]]]]
+jsonOut: <20001 bytes> [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[ ... ]]]]]]]]]]]]]]]]]]]]
+jsonOut: <2000001 bytes> [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[ ... ]]]]]]]]]]]]]]]]]]]]
+jsonOut: <2000020 bytes> [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[ ... ]]]]]]]]]]]]]]]]]]]]
+jsonOut: <20007 bytes> [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[ ... ]]]]]]]]]]]]]]]]]]]]
+output: "w64 18446744073709551615"
+output: "vi 2"

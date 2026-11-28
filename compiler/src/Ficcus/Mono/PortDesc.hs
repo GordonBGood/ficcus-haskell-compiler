@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternGuards #-}
 {-# OPTIONS_GHC -Wall #-}
 module Ficcus.Mono.PortDesc
   ( portDesc
@@ -16,7 +17,8 @@ module Ficcus.Mono.PortDesc
 --
 -- * `portDesc`: the description of the type that runtime/fic_ports.h `fic_pd_explain` walks when a value is refused, to build the
 --   Error that Elm's decoder (Optimize.Port.toDecoder) gives: i Int, f Float, b Bool, s String, v Json.Value, u (), m Maybe, l List,
---   a Array, t<n> a tuple, r<n>:<name>=<type>.. a record. The fields of a record are in the order Elm's decoder tries them: the reverse
+--   a Array, t<n> a tuple, r<n>:<name>=<type>.. a record; E3c: c h n C H N W g the sized types and Float32, V<type> a Vector
+--   (Ficcus.Mono.PortFic). The fields of a record are in the order Elm's decoder tries them: the reverse
 --   of Map.toList over the field names (AST Name order: length, then bytes), since `decodeRecord` folds `fieldAndThen` over that list
 --   and the last field becomes the outermost decoder (checked on elm0193: `{name, age, xs}` reports `name` first).
 -- * `elmTypeText`, `jsonShape`: the comment lines of the generated `<Module>_ports.h`.
@@ -29,6 +31,7 @@ import qualified Data.Char as Char
 import qualified Data.List as List
 
 import Ficcus.Mono.Class (Key(..), KeyPart(..), MType(..))
+import qualified Ficcus.Mono.PortFic as PortFic
 
 
 -- | the description of a port payload or flags type, or Nothing when it is not one Elm allows (Array included)
@@ -45,6 +48,8 @@ portDesc t =
     TyCon "elm/core:Maybe.Maybe" [e] -> ('m' :) <$> portDesc e
     TyCon "elm/core:List.List" [e] -> ('l' :) <$> portDesc e
     TyCon "elm/core:Array.Array" [e] -> ('a' :) <$> portDesc e
+    _ | Just s <- PortFic.sizedOf t -> Just [PortFic.sizedDescChar s]              -- E3c
+    _ | Just e <- PortFic.vectorElem t -> ('V' :) <$> portDesc e
     TyTuple ts | length ts `elem` [2, 3] -> (\ds -> 't' : show (length ts) ++ concat ds) <$> mapM portDesc ts
     TyRecord fs ->
       do  ds <- mapM (\(n, ft) -> (\d -> n ++ "=" ++ d) <$> portDesc ft) (decodeOrder fs)
@@ -84,6 +89,9 @@ jsonShape t =
     TyCon "elm/core:Maybe.Maybe" [e] -> jsonShape e ++ "|null"
     TyCon "elm/core:List.List" [e] -> "[" ++ jsonShape e ++ ", ...]"
     TyCon "elm/core:Array.Array" [e] -> "[" ++ jsonShape e ++ ", ...]"
+    _ | Just s <- PortFic.sizedOf t -> PortFic.sizedShape s                       -- E3c, E3d
+    _ | Just e <- PortFic.vectorElem t ->
+          "[" ++ jsonShape e ++ ", ...]" ++ maybe "" (\k -> " or a raw vector (" ++ k ++ ")") (PortFic.rawElem e)
     TyTuple xs -> "[" ++ List.intercalate ", " (map jsonShape xs) ++ "]"
     TyRecord fs -> "{" ++ List.intercalate ", " [ show' f ++ ": " ++ jsonShape x | (f, x) <- List.sortOn (\(n, _) -> (length (utf8 n), utf8 n)) fs ] ++ "}"
     _ -> "?"

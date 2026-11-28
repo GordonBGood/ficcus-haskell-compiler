@@ -1,0 +1,26 @@
+port module Main exposing (main)
+
+import Vector exposing (Vector)
+
+
+port output : String -> Cmd msg
+
+
+port vOut : Vector Int -> Cmd msg
+
+
+port vIn : (Vector Int -> msg) -> Sub msg
+
+
+update : Vector Int -> () -> ( (), Cmd (Vector Int) )
+update v m =
+    ( m, Cmd.batch [ output ("got " ++ String.fromInt (Vector.length v)), vOut v ] )
+
+
+main : Program () () (Vector Int)
+main =
+    Platform.worker
+        { init = \_ -> ( (), vOut (Vector.fromList [ 1, 2, 3 ]) )
+        , update = update
+        , subscriptions = \_ -> vIn identity
+        }

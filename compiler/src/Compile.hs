@@ -3,6 +3,8 @@ module Compile
   ( Artifacts(..)
   , compile
   , compileTyped
+  , compileWith
+  , compileTypedWith
   )
   where
 
@@ -53,8 +55,15 @@ data Artifacts =
 
 
 compile :: Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Either E.Error Artifacts
-compile pkg ifaces modul =
-  do  canonical   <- canonicalize pkg ifaces modul
+compile =
+  compileWith False
+
+
+-- | Ficcus (E3c): True lets the ports of the module carry the Ficcus payload types (Canonicalize.FicPayload; Build.compile passes
+-- it for a `.fic` module of a build to C)
+compileWith :: Bool -> Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Either E.Error Artifacts
+compileWith ficPayloads pkg ifaces modul =
+  do  canonical   <- canonicalize ficPayloads pkg ifaces modul
       annotations0 <- typeCheck ifaces modul canonical
       ()          <- nitpick canonical
       objects0    <- optimize modul annotations0 canonical
@@ -66,8 +75,13 @@ compile pkg ifaces modul =
 -- Ficcus: the same phases with the type recorder switched on. The extra
 -- result holds the type of every expression and pattern node.
 compileTyped :: Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Either E.Error (Artifacts, Readout.Typed)
-compileTyped pkg ifaces modul =
-  do  canonical   <- canonicalize pkg ifaces modul
+compileTyped =
+  compileTypedWith False
+
+
+compileTypedWith :: Bool -> Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Either E.Error (Artifacts, Readout.Typed)
+compileTypedWith ficPayloads pkg ifaces modul =
+  do  canonical   <- canonicalize ficPayloads pkg ifaces modul
       (annotations0, typed) <- typeCheckTyped ifaces modul canonical
       ()          <- nitpick canonical
       objects0    <- optimize modul annotations0 canonical
@@ -79,9 +93,9 @@ compileTyped pkg ifaces modul =
 -- PHASES
 
 
-canonicalize :: Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Either E.Error Can.Module
-canonicalize pkg ifaces modul =
-  case snd $ R.run $ Canonicalize.canonicalize pkg ifaces modul of
+canonicalize :: Bool -> Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Either E.Error Can.Module
+canonicalize ficPayloads pkg ifaces modul =
+  case snd $ R.run $ Canonicalize.canonicalizeWith ficPayloads pkg ifaces modul of
     Right canonical ->
       Right canonical
 

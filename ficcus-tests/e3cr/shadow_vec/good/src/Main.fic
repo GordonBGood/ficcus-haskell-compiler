@@ -1,0 +1,23 @@
+port module Main exposing (main)
+
+import Vector exposing (Vector)
+
+
+port output : String -> Cmd msg
+
+
+port numsIn : (List Int -> msg) -> Sub msg
+
+
+update : List Int -> () -> ( (), Cmd (List Int) )
+update x m =
+    ( m, output (let v = Vector.map (\i -> i * 3) (Vector.fromList x) in String.fromInt (Vector.length v) ++ " " ++ String.fromInt (Vector.sum v) ++ " " ++ Debug.toString v) )
+
+
+main : Program () () (List Int)
+main =
+    Platform.worker
+        { init = \_ -> ( (), output (Debug.toString (Vector.fromList [ 1, 2, 3 ])) )
+        , update = update
+        , subscriptions = \_ -> numsIn identity
+        }

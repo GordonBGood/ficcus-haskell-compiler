@@ -1,0 +1,24 @@
+port module Main exposing (main)
+
+import Int8 exposing (Int8)
+import Vector exposing (Vector)
+
+
+port output : String -> Cmd msg
+
+
+port numsIn : (List Int -> msg) -> Sub msg
+
+
+update : List Int -> () -> ( (), Cmd (List Int) )
+update x m =
+    ( m, output (let v = Vector.map Int8.fromInt (Vector.fromList x) in String.join "," (List.map Int8.toString (Vector.toList v)) ++ " n=" ++ String.fromInt (Vector.length v) ++ " " ++ Debug.toString v) )
+
+
+main : Program () () (List Int)
+main =
+    Platform.worker
+        { init = \_ -> ( (), output (Debug.toString (Vector.map Int8.fromInt (Vector.fromList [ 127, 128, -129 ]))) )
+        , update = update
+        , subscriptions = \_ -> numsIn identity
+        }

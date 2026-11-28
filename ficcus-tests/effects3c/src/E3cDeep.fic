@@ -1,0 +1,59 @@
+port module E3cDeep exposing (main)
+
+-- E3A-REVIEW F2: very deep values at the host interface. A Json.Value goes out again as it came in; a List Int port refuses a nested
+-- array (its error text prints the value); a Word64 port and a Vector port sit beside them (a JUINT or a raw vector inside a
+-- Json.Value payload becomes what Json.Decode sees).
+
+import Json.Encode as E
+import Vector exposing (Vector)
+import Word64 exposing (Word64)
+
+
+port output : String -> Cmd msg
+
+
+port jsonOut : E.Value -> Cmd msg
+
+
+port jsonIn : (E.Value -> msg) -> Sub msg
+
+
+port listIn : (List Int -> msg) -> Sub msg
+
+
+port w64In : (Word64 -> msg) -> Sub msg
+
+
+port viIn : (Vector Int -> msg) -> Sub msg
+
+
+type Msg
+    = J E.Value
+    | L (List Int)
+    | W Word64
+    | V (Vector Int)
+
+
+update : Msg -> () -> ( (), Cmd Msg )
+update msg m =
+    case msg of
+        J v ->
+            ( m, jsonOut v )
+
+        L xs ->
+            ( m, output ("list " ++ String.fromInt (List.length xs)) )
+
+        W w ->
+            ( m, output ("w64 " ++ Word64.toString w) )
+
+        V v ->
+            ( m, output ("vi " ++ String.fromInt (Vector.length v)) )
+
+
+main : Program () () Msg
+main =
+    Platform.worker
+        { init = \_ -> ( (), Cmd.none )
+        , update = update
+        , subscriptions = \_ -> Sub.batch [ jsonIn J, listIn L, w64In W, viIn V ]
+        }

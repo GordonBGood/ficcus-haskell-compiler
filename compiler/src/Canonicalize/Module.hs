@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Canonicalize.Module
   ( canonicalize
+  , canonicalizeWith
   )
   where
 
@@ -18,6 +19,7 @@ import qualified AST.Prim.Name as N
 import qualified AST.Prim.Operator as Op
 import qualified AST.Prim.TypeName as T
 import qualified Canonicalize.Effects as Effects
+import qualified Canonicalize.FicPayload as FicPayload
 import qualified Canonicalize.Environment as Env
 import qualified Canonicalize.Environment.Foreign as Foreign
 import qualified Canonicalize.Environment.Local as Local
@@ -51,13 +53,20 @@ type Result i w a =
 
 
 canonicalize :: Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Result i [W.Warning] Can.Module
-canonicalize pkg ifaces modul0 =
+canonicalize =
+  canonicalizeWith False
+
+
+-- | Ficcus (E3c): with True, the ports of the module may carry the Ficcus payload types (a `.fic` module of a build to C;
+-- Canonicalize.FicPayload)
+canonicalizeWith :: Bool -> Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Result i [W.Warning] Can.Module
+canonicalizeWith ficPayloads pkg ifaces modul0 =
   do  (modul, derived) <- Derive.prepare modul0     -- Ficcus (A4a): the `derive` lines become members
-      canonicalizeModule pkg ifaces modul >>= Derive.finish ifaces derived
+      canonicalizeModule ficPayloads pkg ifaces modul >>= Derive.finish ifaces derived
 
 
-canonicalizeModule :: Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Result i [W.Warning] Can.Module
-canonicalizeModule pkg ifaces modul@(Src.Module _ exports docs imports values _ _ binops effects) =
+canonicalizeModule :: Bool -> Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Result i [W.Warning] Can.Module
+canonicalizeModule ficPayloads pkg ifaces modul@(Src.Module _ exports docs imports values _ _ binops effects) =
   do  let home = ModuleName.Canonical pkg (Src.getName modul)
       let cbinops = Map.fromList (map canonicalizeBinop binops)
 
@@ -66,7 +75,7 @@ canonicalizeModule pkg ifaces modul@(Src.Module _ exports docs imports values _ 
           Foreign.createInitialEnv home ifaces imports
 
       cvalues <- canonicalizeValues env values
-      ceffects <- Effects.canonicalize env values cunions effects
+      ceffects <- Effects.canonicalize (FicPayload.checkPayload ficPayloads ifaces) env values cunions effects
       cexports <- canonicalizeExports values cunions caliases cbinops ceffects exports
 
       return $ Can.Module home cexports docs cvalues cunions caliases cbinops ceffects

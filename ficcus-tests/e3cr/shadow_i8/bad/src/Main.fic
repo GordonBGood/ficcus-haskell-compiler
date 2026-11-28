@@ -1,0 +1,17 @@
+port module Main exposing (main)
+
+-- refused: a port of the project's own type (no overlay marker) gets Elm's payload error, as any custom type
+
+import Int8 exposing (Int8)
+
+
+port i8Out : Int8 -> Cmd msg
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( (), i8Out (Int8.fromInt 5) )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
