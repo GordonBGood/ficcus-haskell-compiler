@@ -1,6 +1,6 @@
 # T5: rule based translation of the compiler to Ficus
 
-Design note, read only. Branch `design/t5` from `ficcus` `af71a00e`, 27 Nov 2026.
+Design note, read only. Branch `design/t5` from `ficcus` `af71a00e`, 27 Nov 2026. Addendum (section 9, branch `design/t5-addendum`): the user's Elm in Elm port; decisions 1 and 2 revised.
 Inputs: decisions rev 179 (T5), 180/181 (25 Nov parser order, P2, P3), the 25 Nov tail call note (T2 to T4), G21, G30, G67, rev 700 (FFI slices), rev 702/707 (plan, estimate). The counts below come from grep over the sources at `af71a00e`; they are approximate (regex counts, not parses) and the translator's survey mode (section 4) replaces them with exact figures.
 
 ## 1. Survey of the Haskell sources
@@ -115,7 +115,7 @@ Each rule is a function in the rule engine with this number. An UNMAPPED case is
 
 **Survey mode** prints section 1's table per module, the SCCs of the call graph and of the tail call graph (input for T2), and the UNMAPPED nodes: the progress metric.
 
-**Golden references.** The Elm in Elm ports (Fir, 20,741 lines; `pithub/elm-compiler-in-elm`) are not in this workspace; the user places them under `reference/`. For modules unchanged since 0.19.1, output is compared with them up to naming (a reading aid, not a gate).
+**Golden references** (superseded by section 9.4). The Elm in Elm ports (Fir, 20,741 lines; `pithub/elm-compiler-in-elm`) are not in this workspace; the user places them under `reference/`. For modules unchanged since 0.19.1, output is compared with them up to naming (a reading aid, not a gate).
 
 ## 5. Per module differential harness
 
@@ -170,8 +170,8 @@ About 2,900 lines in all. **Order of the rest:** leaves up the import graph: `Da
 
 ## Decisions to approve (recommendation order)
 
-1. **Stage A on `ficcus`**, gated by the full gates, starting with A1 on `Reporting.Result`, then `Parse.Primitives`.
-2. **A1 compile time limit:** at most 10 percent slower on the typed corpus per de-CPS step; otherwise the step stays on its branch for a rethink.
+1. **Stage A on `ficcus`** (revised, section 9), gated by the full gates: A1 on `Reporting.Result` with the user's port's type and API and Haskell's error accumulation; then A4, the union find on the port's `STRef` design; then A1 on `Parse.Primitives` (`Cok/Eok/Cerr/Eerr`), `Tracker`, `Task`, the two `Decoder`s.
+2. **Compile time limit:** at most 10 percent slower on the typed corpus per A1 or A4 step; otherwise the step stays on its branch for a rethink. If A4 exceeds it, Haskell keeps `IORef` and the Ficus union find becomes a kernel module over a mutable vector.
 3. **Front end:** the `ghc` 9.10.3 package parser plus HIE types; the translator in `ficcus-tools/t5/` as its own cabal project.
 4. **No hand edits of generated files;** per function overrides with source hashes; UNMAPPED fails the build.
 5. **Kernel list, hand written in Ficus:** `AST.Prim.Name`, `Data.Utf8`, `String`, `Bytes.*`, `Buffer`, `Literals` (`fsm`, `table`), `Parse.Primitives` core, `Map`/`Set` shim, `Crash`, `Flags`, `File` and the IO table, `ThreadSafe.Fork` (sequential).
@@ -194,3 +194,62 @@ About 2,900 lines in all. **Order of the rest:** leaves up the import graph: `Da
 - Implement `t5 survey` (exact section 1 table per module, call graph and tail call SCCs, UNMAPPED preview) and check that HIE gives the type of every `do` node in `Parse.Number` and `Canonicalize.Pattern`.
 - Implement R1 to R8, R17, R19 to R21 and the printer; translate `Data.Index`, `Data.NonEmptyList`, `Data.OneOrMore`, `Data.Bag`; compile them with the current `elmfic` binary.
 - Implement the harness for those four modules (section 5, steps 1 to 4, 6) and report cases, differences, the UNMAPPED list and the time per module.
+
+## 9. Addendum: the user's Elm in Elm port (27 Nov 2026)
+
+Source: `reference/elm-in-elm/elm-compiler.zip` (commit `afba103`, 9 Sep 2024, Elm 0.19.1), unzipped outside the repo. Earlier ports under `reference/`: pithub's `elm-compiler-in-elm` (154 modules, 48,250 lines, whole compiler, type classes emulated) and `elm-compiler-in-elm-cli` (2 modules), both BSD 3 clause (attribution if code is taken; none is). Used only as a cross check.
+
+### 9.1 Inventory
+
+74 modules, 20,789 lines; module names are the Haskell paths under a `Compiler.` prefix. 73 compile with `bin/elm0191`; `Type.Solve` stops mid edit (line 158). **No tests:** `Main.elm` times parsing of six inline sources (Tailwind utilities, about 50,000 lines, in 4.35 s on Chrome).
+
+| Group | Elm / Haskell lines (`ficcus`) | Notes |
+|---|---|---|
+| 42 close translations: `AST.*`, all 9 `Canonicalize.*`, 10 `Type.*`, `Reporting.Doc`, `Render.*`, `Result`, `Error.Type`, `Error.Canonicalize`, `Optimize.DecisionTree`, `Elm.Interface`, `Kernel`, `ModuleName`, `Version`, `Data.Index`, `Bag`, `OneOrMore`, `NonEmptyList` | 14,833 / 15,397 | 0.19.1 semantics |
+| 13 `Parse.*` | 3,592 / 4,205 | redesigned on elm/parser's `Parser.Advanced` (copied, fixed): `String` plus offset, `Good Bool`/`Bad Bool` with a problem bag; language extensions (`_` in numbers, `NaN`, negative case patterns, `[a]` types) |
+| 9 stubs: `Error.Syntax` (495 / 6,198), `Error.Docs`, `Warning`, `Elm.String`, `Elm.Package`, `AST.Optimized`, ... | 1,057 / 7,927 | partial |
+| Libraries: `Data.Map` (39 functions, Haskell argument order, over `Dict`, `comparable` keys), `Data.Name` (`Name = String`), `Data.STRef` (`s -> (s, a)`, refs index a `Dict Int`), `Data.Graph` (SCC), `Data.Pretty` | 1,259 | reusable |
+
+Not started: the rest of `Optimize`, `Nitpick`, `Generate`, `Json`, binary encoders, `builder/`, `terminal/`, `Ficcus.*`: about 60,000 of the 79,490 lines.
+
+**Drift:** 56 of the 64 Haskell counterparts changed by 20 lines or more since `0.19.1` (mostly upstream 0.19.2/0.19.3; Ficcus adds e.g. 329 lines to `Type.Solve`). The port cannot be the self hosted source without redoing those diffs by hand at every merge: it is a second reference and a library source; the translator stays.
+
+### 9.2 The six rank 2 monads
+
+| Monad | In the port | Stage A becomes |
+|---|---|---|
+| `Reporting.Result` | **done**, as A1's step type: `Result (RState i w -> RType i w e a)`, `Good a st \| Bad i w errs`; adds `map2`, `andMap`, `discard`, `chain`, `traverse*`. **Differs:** `map2`/`andMap` stop at the first `Bad`, Haskell's `<*>` runs the second action and joins the errors (`OneOrMore.more`; pithub keeps this); `traverseList` runs actions in reverse and returns the list reversed | A1: adopt the type and API names, keep Haskell's accumulation; harness: CPS original against the A1 Haskell version and the Ficus library |
+| `Parse.Primitives.Parser` | **partly**: works, but a different design | A1 as planned (`Cok/Eok/Cerr/Eerr`, rev 181; pithub has this exact type). The user's parser is not adopted: its dead ends cannot give `Error.Syntax`'s text, and its extensions change accepted programs. Its idioms are kept (`chain`, `loop`/`Step`, bounded chains) |
+| `Reporting.Task`, Json and Bytes `Decoder`, `Optimize.Names.Tracker` | **open** | unchanged |
+| (not rank 2) `IORef` union find, A4 | **done**: `Type.UnionFind` over `Data.STRef` (`STUF`), threaded through `Solve`: G21's design | A4: adopt the design (`IntMap` in Haskell), moved before the Parser |
+
+### 9.3 Rules against the user's conventions
+
+Read: `Reporting.Result`, `Parse.Primitives`, `Parse.Number`, `Canonicalize.Pattern`, `Data.STRef`, `Type.UnionFind`.
+**Confirmed:** R2 (`type ZeroBased = ZeroBased Int`), R3 (record alias), R12 (the shim exists; about 47 of the 86 functions to add), R21, R22 (`STRef`, `State` as `s -> (s, a)`), R25 (members per monad, no emulation), decision 7 (`Name = String`).
+**Changed to the user's form:**
+- **R1:** modules get the `Compiler.` prefix (`builder/` → `Builder.`, `terminal/` → `Terminal.`), so `Json.Decode`, `Parser`, `Task` cannot clash with packages; an import alias that shadows a default import is renamed by table (`Reporting.Result as MResult`).
+- **R3:** field `_name` → `name_`, not `name` (`_type` cannot become a keyword; no clash with locals).
+- **R9:** each bind is `M.chain m <| \x ->` on its own line, the rest of the block below at the same indent; `m >> k` → `M.chain m <| \_ ->`. Same meaning, keeps the `do` layout, diffs line by line.
+- **R10:** `f <$> a <*> b <*> c` → `M.ok f |> M.andMap a |> M.andMap b |> M.andMap c` for any length; `M.map` for one argument.
+- **R12:** keys stay derived `compare` types (A4b); the user's tuple encodings (`ModuleName.Comparable`) are an Elm workaround, not repeated.
+**Contradicted:** `Maybe.withDefault (Debug.todo "...") m` (`Canonicalize/Environment/Foreign.elm:116`, `Canonicalize/Expression.elm:578,580`) crashes whenever evaluated, because Elm is strict. R7 gains: `fromMaybe (error s) m` → `case m of Just v -> v; Nothing -> Crash.crash s`; a crash is never an argument.
+**R27 (new):** stack saving loops (the user's `Canonicalize.Pattern.sequenceA` opens `Result`'s constructors) live once in the monad library, never in a consumer module.
+
+### 9.4 Pilot order, sessions and rate
+
+1. **Pure:** as section 6; the translator's output is diffed against the user's modules (names normalized). A difference is 0.19.1 to 0.19.3 drift or a rule defect: this replaces section 4's golden reference paragraph.
+2. **Result:** library from the user's `Result`, accumulation restored; `Canonicalize.Pattern` and `Canonicalize.Type` diffed against the user's.
+3. **Union find (new):** `Data.STRef` and `Type.UnionFind` as library, `Type.Occurs`, `Type.Instantiate`; gate the types matrix.
+4. **Parser**, 5. **IO**: unchanged.
+
+**Rate:** the port gives no session rate (hand work over 2024). It saves about 1,500 library lines (`Map`, `STRef`, `UnionFind`, `Result`, `Name`, `Graph`, `Pretty`) and gives a second reference for about 15,000 lines, shortening harness debugging there. Revised: **28 to 45 translation sessions plus 4 to 6 for kernels and shims** (was 30 to 50 plus 5 to 8); the pilot still decides.
+
+### 9.5 For the user to decide
+
+1. `Result` accumulates errors as in Haskell (needed for equal multi error reports): confirm, and whether to fix the port too.
+2. R1 `Compiler.` prefix and R3 `name_` fields.
+3. The user's parser: reference only (recommended), or base of a later Ficus parser (changes error text; a separate project).
+4. Its extensions (number `_`, `[a]` types, negative patterns): record as Ficus decisions or drop; outside T5.
+5. Port code copied into the repo as library sources (the zip has no licence file): yes or no, and the licence.
+6. Finish the port's `Type.Solve`, or freeze it (T5 does not need it).
