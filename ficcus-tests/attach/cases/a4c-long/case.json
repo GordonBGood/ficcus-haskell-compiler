@@ -1,0 +1,1 @@
+{"desc": "derived toString of a long list (10001 Ints), a long string with escapes and Unicode (700 repeats), 1000 strings, a long list of chars; the length of the text in code points (`String.length` counts UTF-16 units in Elm, L11)", "c_only": true}

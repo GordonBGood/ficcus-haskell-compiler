@@ -1,0 +1,1 @@
+{"desc": "A4b review F6: `List.sortWith Tree.compare` at `Tree comparable` needs no `where` line: the super type `comparable` gives `compare` (oldc twin: the same with the line, on elmficT1c)", "c_only": true}

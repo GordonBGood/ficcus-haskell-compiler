@@ -1,4 +1,5 @@
 module Main exposing (main)
+import Json.Encode
 
 
 
@@ -24,7 +25,7 @@ main =
             \_ ->
                 let
                     _ =
-                        Debug.log "r" (Color.toString Red)
+                        Debug.log "r" (Json.Encode.encode 0 (Color.encode Red))
                 in
                 ( (), Cmd.none )
         , update = \_ m -> ( m, Cmd.none )

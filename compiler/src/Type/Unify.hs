@@ -474,7 +474,11 @@ unifyFlexSuperStructure context super flatType =
                 merge context (Structure flatType)
 
     App1 home name args | super == Comparable, Just parts <- comparableContainer home name args ->
-      container parts
+      -- (A4c, A4b review F4) a `compare` of the type itself wins: a project's own module `Vector` has the id of the core one
+      do  own <- customOk super home name
+          case own of
+            Just _ -> custom home name args
+            Nothing -> container parts
 
     App1 home name args ->
       custom home name args

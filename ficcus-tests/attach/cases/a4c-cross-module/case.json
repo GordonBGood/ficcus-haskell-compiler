@@ -1,0 +1,1 @@
+{"desc": "derived toString of an exposed union and an opaque type of another module (G70: members follow the type name), inside a derived type of Main", "c_only": true}

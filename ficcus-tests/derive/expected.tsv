@@ -21,8 +21,9 @@ ok-two-params	RUN	c
 constraint-builtin-not-yet	REJECT	NO ATTACHED FUNCTION	
 ok-opaque	RUN	c	
 ok-cross-module	RUN	c	
-c-use-refused	REJECTC		the derived member `Color.toString` (derive line at
-c-enum-refused	REJECTC		the derived member `Color.enumerate` (derive line at
+c-use-refused	REJECTC		the derived member `Color.encode` (derive line at
+c-enum-use	RUN	c	
+c-tostring-use	RUN	c	
 js-refused	REJECT	DERIVED MEMBERS	Main.Color derives compare, hash
 js-refused-module	REJECT	DERIVED MEMBERS	Email.Email derives compare
 js-plain	RUN	js+c	

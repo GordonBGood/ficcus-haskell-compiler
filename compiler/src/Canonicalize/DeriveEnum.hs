@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE MagicHash, PatternGuards #-}
 -- Ficcus (A4c, docs/A4-DERIVE-DESIGN.md section 2): the bodies of the derived enumeration members (group E), written as
 -- source so that canonicalization, the type checker and the specializer treat them like the program's own code.  Only an
 -- enumeration (every constructor without fields; Canonicalize.Derive refuses the others) gets them:
@@ -30,8 +30,8 @@ import qualified String as S
 body :: A.Region -> String -> [N.Name] -> ([Src.Pattern], Src.Expr)
 body r member ctors =
   case member of
-    "minValue" -> ([], ctor 1 (head ctors))
-    "maxValue" -> ([], ctor 2 (last ctors))
+    "minValue" | c : _ <- ctors -> ([], ctor 1 c)
+    "maxValue" | c : _ <- reverse ctors -> ([], ctor 2 c)
     "enumerate" -> ([], at 3 (Src.List [ ctor (10 + i) c | (i, c) <- zip [0 ..] ctors ]))
     "succ" -> step (zip ctors (map Just (drop 1 ctors) ++ [Nothing]))
     "pred" -> step (zip ctors (Nothing : map Just ctors))

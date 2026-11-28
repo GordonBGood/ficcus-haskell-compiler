@@ -257,10 +257,11 @@ type Contact = Contact { email : Email, tags : List String } where derive compar
 
 # ---- uses: the C generator refuses a derived member whose body is not generated yet (A4c to A4f) ----
 
-# (A4b: `compare` and `hash` are generated; their uses are the attach cases a4b-*, with twins.  The uses of the other members
-# are still refused until A4c to A4f.)
-case("c-use-refused", "REJECTC", "", "the derived member `Color.toString` (derive line at", {"Main.elm": worker(COLOR, "Color.toString Red")}, C_JSON)
-case("c-enum-refused", "REJECTC", "", "the derived member `Color.enumerate` (derive line at", {"Main.elm": worker(COLOR, "List.length Color.enumerate")}, C_JSON)
+# (A4b: `compare` and `hash` are generated; A4c: `toString` and the enumeration members; their uses are the attach cases a4b-*,
+# a4c-*, with twins.  The uses of the other members are still refused until A4d to A4f.)
+case("c-use-refused", "REJECTC", "", "the derived member `Color.encode` (derive line at", {"Main.elm": worker(COLOR, "Json.Encode.encode 0 (Color.encode Red)", imports="import Json.Encode\n")}, C_JSON)
+case("c-enum-use", "RUN", "c", "", {"Main.elm": worker(COLOR, "List.length Color.enumerate")}, C_JSON, "r: 3\n")
+case("c-tostring-use", "RUN", "c", "", {"Main.elm": worker(COLOR, "Color.toString Red")}, C_JSON, 'r: "Red"\n')
 
 # ---- the JavaScript output refuses any program with a derive line ----
 

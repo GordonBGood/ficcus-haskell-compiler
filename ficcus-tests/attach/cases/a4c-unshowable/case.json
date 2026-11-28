@@ -1,0 +1,1 @@
+{"desc": "derived and built-in toString of the types Elm cannot show (Vector, the sized integers, Float32): the format of Debug.toString in C (oldc twin: the same program with Debug.toString on elmficT1c)", "c_only": true}

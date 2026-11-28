@@ -1,0 +1,1 @@
+{"desc": "A4b review F4: a project's own module `Vector` with a written `compare` (no constraint) is compared by it at `Vector (a -> a)` (was TYPE MISMATCH: the core container rule came first)", "c_only": true}

@@ -1,0 +1,1 @@
+{"desc": "derived toString over types that refer to each other (Expr/Stmt, a cycle A -> B -> C -> A), deep nesting (400 Neg, a chain of 900 constructors), a left-nested sum of 300", "c_only": true}

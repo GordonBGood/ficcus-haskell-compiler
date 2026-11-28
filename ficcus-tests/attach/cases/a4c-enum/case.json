@@ -1,0 +1,1 @@
+{"desc": "derived minValue, maxValue, succ, pred, enumerate (declaration order, total succ/pred, phantom parameter, one constructor, 40 constructors, enumerate == iterate succ minValue, consistent with compare); the built-in members of Bool and Order (all five) and the bounds of Int and the sized integers through `a has`", "c_only": true}

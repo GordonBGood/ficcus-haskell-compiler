@@ -549,8 +549,9 @@ resolve tools table env obligation@(Obligation region function member subject ti
             Structure (Record1 _ _) ->
               builtin WK.BOther "record" []
 
+            -- (A4c) the empty record (also the row of `T { x = 1 }` for `type T r = T { r | x : Int }`): a closed record
             Structure EmptyRecord1 ->
-              builtin WK.BOther "record" []
+              builtin (if open then WK.BContainer else WK.BOther) "record" []
 
             Structure (Fun1 _ _) ->
               noMember True []
@@ -561,8 +562,12 @@ resolve tools table env obligation@(Obligation region function member subject ti
             RigidVar name ->
               given (TV.varToChars name)
 
-            RigidSuper _ name ->
-              given (TV.varToChars name)
+            -- (A4c, A4b review F6) every type that meets `comparable` has `compare`: the super type discharges it
+            RigidSuper super name
+              | N.toChars member == "compare", super == Comparable || super == CompAppend ->
+                  shaped WK.Compare (TV.varToChars name) []
+              | otherwise ->
+                  given (TV.varToChars name)
 
             FlexVar _ ->
               return Keep
@@ -608,9 +613,16 @@ resolve tools table env obligation@(Obligation region function member subject ti
             Unify.Runaway isCycle ->
               return (Done [] [Error.Runaway region isCycle])
 
+    -- (A4c) the subject of the shape is the part itself: without it, a part whose member has `where` lines (a derived
+    -- `Tree a`) got them at a fresh type (AMBIGUOUS TYPE for `Maybe (Tree Int)`)
     child shape part =
       do  inst <- _instantiate tools (WK.shapeAnnotation shape)
-          (_, body) <- splitPair inst
+          (x, body) <- splitPair inst
+          linked <- Unify.unifyWith policy x part
+          case linked of
+            Unify.Ok vars -> _introduce tools vars
+            Unify.Err vars _ _ -> _introduce tools vars
+            Unify.Runaway _ -> return ()
           return [Obligation region function member part body Nothing]
 
     splitPair var =

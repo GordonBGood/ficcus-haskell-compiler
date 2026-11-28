@@ -3575,6 +3575,8 @@ genHelper info k name =
                             do  let fcs = map (boxedClass . clsOf info) fs
                                 needObj fcs
                                 emit (objType fcs ++ " *o = (" ++ objType fcs ++ " *)x;")
+                                -- (A4c) a constructor whose fields all print without being read (`Ok ()`): no unused `o`
+                                when (all (\ty -> case ty of { TyUnit -> True; TyFun _ _ -> True; _ -> False }) fs) (emit "(void)o;")
                                 forM_ (zip3 [0 :: Int ..] fs fcs) $ \(i, ty, _) ->
                                   do  needClass info (clsOf info ty)
                                       emit "{ int64_t s0;"

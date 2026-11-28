@@ -1,0 +1,1 @@
+{"desc": "`a has toString` at the built-in types (Int, Float, String quoted, Char, List, Maybe, records, tuples, Bool, Order, (), Result, Dict, Set, Array) and derived ones inside them; structural all the way down: a written `Name.toString` inside a derived type is not called, but `a has toString` at `Name` itself calls it", "c_only": true}

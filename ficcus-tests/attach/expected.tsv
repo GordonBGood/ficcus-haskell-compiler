@@ -383,3 +383,20 @@ a4bf-err-hash-shape	REJECT	CANNOT DERIVE	    T -> String
 a4bf-err-hash-shape-arity2	REJECT	CANNOT DERIVE	T -> Int -> Int
 a4bf-err-beside-eq	REJECT	CANNOT DERIVE	its own `eq`
 a4bf-err-beside-eq-hash	REJECT	CANNOT DERIVE	get different hashes
+a4c-format	RUN	c	
+a4c-cycles	RUN	c	
+a4c-long	RUN	c	
+a4c-has-tostring	RUN	c	
+a4c-unshowable	RUN	c	
+a4c-cross-module	RUN	c	
+a4c-enum	RUN	c	
+a4c-f4-own-vector-fn	RUN	c	
+a4c-f6-value-at-comparable	RUN	c	
+a4c-err-tostring-function-arg	REJECT	NO ATTACHED FUNCTION	toString
+a4c-err-has-tostring-function	REJECT	NO ATTACHED FUNCTION	toString
+a4c-err-has-tostring-open-record	REJECT	NO ATTACHED FUNCTION	closed record
+a4c-err-succ-int	REJECT	NO ATTACHED FUNCTION	succ
+a4c-err-min-float	REJECT	NO ATTACHED FUNCTION	minValue
+a4c-err-define-tostring	REJECT	DERIVE AND DEFINE	toString
+a4c-err-enum-fields	REJECT	DERIVE ON NON-ENUMERATION	Mix
+a4c-js-tostring	REJECT	DERIVED MEMBERS	derives toString
