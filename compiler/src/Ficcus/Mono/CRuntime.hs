@@ -121,7 +121,7 @@ schedRuntime =
 -- runtime, and the scheduler for its port part); emitted only by programs that have ports or flags other than ()
 portsRuntime :: String
 portsRuntime =
-  $(embedFiles [ "runtime/fic_ports_api.h", "runtime/fic_ports.h" ])
+  $(embedFiles [ "runtime/fic_ports_api.h", "runtime/fic_ports_fic.h", "runtime/fic_ports.h" ])
 
 
 -- E3a (D2): the declarations alone, the top of the generated `<Module>_ports.h` that a host includes

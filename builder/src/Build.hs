@@ -782,9 +782,11 @@ compile writer (Env key _ stuff projectType _ buildID _ _) docsNeed (Details.Loc
     pkg = projectTypeToPkg projectType
   in
   do  typedOutput <- Flags.getTypedOutput
+      -- Ficcus (E3c): a `.fic` module of a build to C (typed output) may have ports of the Ficcus payload types
+      let ficPayloads = typedOutput && FP.takeExtension path == ".fic"
       let compiled =
             if typedOutput
-              then fmap (\(a, t) -> (a, Just t)) (Compile.compileTyped pkg ifaces modul)
+              then fmap (\(a, t) -> (a, Just t)) (Compile.compileTypedWith ficPayloads pkg ifaces modul)
               else fmap (\a -> (a, Nothing)) (Compile.compile pkg ifaces modul)
       compileHelp writer key stuff pkg path time deps main lastChange buildID docsNeed source modul compiled
 

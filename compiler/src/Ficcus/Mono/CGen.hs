@@ -50,6 +50,7 @@ import Ficcus.Mono.Spec (classOfM)
 import Ficcus.Mono.Unbox (workerSuffix)
 import qualified Ficcus.Mono.Sized as Sized
 import qualified Ficcus.Mono.PortDesc as PortDesc
+import qualified Ficcus.Mono.PortFic as PortFic
 import qualified Ficcus.Mono.Derived as Derived
 
 
@@ -2036,6 +2037,7 @@ portEncode t v =
     TyUnit -> return "fic_json_null()"
     TyCon "elm/core:String.String" [] -> return ("fic_dup(" ++ v ++ ")")              -- a String is a Json string
     TyCon "elm/json:Json.Encode.Value" [] -> return ("fic_dup(" ++ v ++ ")")
+    _ | Just s <- PortFic.sizedOf t -> return (PortFic.sizedEncode s v)             -- E3c (D5)
     _ -> do { h <- helper (HPortEnc t); return (h ++ "(" ++ v ++ ")") }
 
 
@@ -2095,6 +2097,22 @@ portEncBody info t =
           emit "}"
           emit "free(ws);"
           emit "return r;"
+    -- E3d (D9): a Vector of fixed width numbers is the vector object itself (a raw node, zero copy for 8 byte kinds)
+    _ | Just e <- PortFic.vectorElem t, Just k <- PortFic.rawElem e ->
+          emit ("return fic_pv_vec_out(x, " ++ k ++ ");")
+    -- E3c (D6): any other Vector is a JSON array of its elements, as an Array
+    _ | Just e <- PortFic.vectorElem t ->
+      do  let ec = clsOf info e
+              ty = classType ec
+          needClass info ec
+          emit "int64_t i, n = FIC_VECTOR_LEN(x);"
+          emit "fic_ref r = fic_ja_new(n, FIC_TAG_VEC_REF);"
+          emit "for (i = 0; i < n; i++) {"
+          indented $
+            do  j <- portEncode e ("FIC_VECTOR_AT(x, " ++ ty ++ ", i)")
+                emit ("fic_ja_data(r)[i].p = " ++ j ++ ";")
+          emit "}"
+          emit "return r;"
     TyTuple ts ->
       do  emit ("fic_ref r = fic_ja_new(" ++ show (length ts) ++ ", FIC_TAG_VEC_REF);")
           forM_ (zip [0 :: Int ..] ts) $ \(i, ty) ->
@@ -2119,7 +2137,7 @@ portEncBody info t =
                 emit ("fic_ja_data(v)[" ++ show slot ++ "].p = " ++ j ++ ";")
           emit "return fic_json_obj_new(k, v);"
     _ ->
-      do  failUnit ("a port of type " ++ mtypeText t ++ " (the C generator converts Int, Float, Bool, String, Json.Value, (), Maybe, List, Array, tuples and records)")
+      do  failUnit ("a port of type " ++ mtypeText t ++ " (the C generator converts Int, Float, Bool, String, Json.Value, (), Maybe, List, Array, tuples, records, and in a .fic module the sized types, Float32 and Vector)")
           emit "return fic_json_null();"
 
 
@@ -2142,11 +2160,13 @@ portDecBody info t =
     TyCon "elm/core:Basics.Float" [] ->
       do  emit "if (j->tag == FIC_TAG_JINT) { *out = (double)((fic_jint *)j)->i; return 1; }"
           emit "if (j->tag == FIC_TAG_JFLOAT) { *out = ((fic_jfloat *)j)->d; return 1; }"
+          emit "if (j->tag == FIC_TAG_JUINT) { *out = (double)((fic_juint *)j)->u; return 1; }    /* E3c (D5): the double it parses to */"
           emit "return 0;"
     TyCon "elm/core:Basics.Bool" [] -> emit "if (j->tag != FIC_TAG_JBOOL) return 0;" >> emit "*out = ((fic_jbool *)j)->b;" >> emit "return 1;"
     TyCon "elm/core:String.String" [] -> emit "if (j->tag != FIC_TAG_STRING) return 0;" >> emit "FIC_RC_DUP(j);" >> emit "*out = j;" >> emit "return 1;"
     -- E3b (D11): JavaScript's undefined (flags not given) never enters a Json.Value
-    TyCon "elm/json:Json.Encode.Value" [] -> emit "if (j->tag == FIC_TAG_JUNDEF) return 0;" >> emit "FIC_RC_DUP(j);" >> emit "*out = j;" >> emit "return 1;"
+    -- E3c, E3d: a JUINT node or a raw vector node of the host becomes what Json.Decode sees (runtime/fic_ports_fic.h fic_pv_plain)
+    TyCon "elm/json:Json.Encode.Value" [] -> emit "if (j->tag == FIC_TAG_JUNDEF) return 0;" >> emit "*out = fic_pv_plain(j);" >> emit "return 1;"
     TyUnit -> emit "if (j->tag != FIC_TAG_JNULL) return 0;" >> emit "*out = 0;" >> emit "return 1;"
     TyCon "elm/core:List.List" [e] ->
       do  let ec = clsOf info e
@@ -2195,6 +2215,31 @@ portDecBody info t =
           o <- allocObj afcs 0 ["alen", "ashift", "atree", "atail"]
           emit ("*out = " ++ o ++ ";")
           emit "return 1;"
+    _ | Just s <- PortFic.sizedOf t -> emit (PortFic.sizedDecode s)                -- E3c (D5): range checked
+    -- E3c, E3d: a JSON array of the elements, or (fixed width numbers) a raw vector node of the same element kind (D9, D10)
+    _ | Just e <- PortFic.vectorElem t ->
+      do  let ec = clsOf info e
+              ty = classType ec
+          needClass info ec
+          desc <- vecDesc info ec
+          d <- helper (HPortDec e)
+          case PortFic.rawElem e of
+            Just k -> emit ("if (j->tag == FIC_TAG_HV_VEC) return fic_pv_vec_in(j, " ++ k ++ ", out);")
+            Nothing -> return ()
+          emit "int64_t i, n;"
+          emit "fic_ref r;"
+          emit "if (j->tag != FIC_TAG_VEC_REF) return 0;"
+          emit "n = fic_json_len(j);"
+          emit ("r = fic_vector_new(n, (uint32_t)sizeof(" ++ ty ++ "), " ++ desc ++ ");")
+          emit "for (i = 0; i < n; i++) {"
+          indented $
+            do  emit (ty ++ " ev;")
+                emit ("if (!" ++ d ++ "(fic_json_at(j, i), &ev)) { FIC_VECTOR_LEN(r) = i; FIC_RC_DROP(r); return 0; }")
+                emit ("FIC_VECTOR_AT(r, " ++ ty ++ ", i) = ev;")
+          emit "}"
+          emit "FIC_VECTOR_LEN(r) = n;"
+          emit "*out = r;"
+          emit "return 1;"
     TyCon "elm/core:Maybe.Maybe" [e] | Just (jt, fe) <- justOf info e, Just ctors <- ctorsOf info "elm/core:Maybe.Maybe" [e]
                                      , [nt] <- [ tg | (_, tg, []) <- ctors ] ->
       do  let fc = clsOf info fe
@@ -2234,7 +2279,7 @@ portDecBody info t =
           emit ("*out = (" ++ classType (clsOf info t) ++ "){ " ++ List.intercalate ", " vs ++ " };")
           emit "return 1;"
     _ ->
-      do  failUnit ("a port of type " ++ mtypeText t ++ " (the C generator converts Int, Float, Bool, String, Json.Value, (), Maybe, List, Array, tuples and records)")
+      do  failUnit ("a port of type " ++ mtypeText t ++ " (the C generator converts Int, Float, Bool, String, Json.Value, (), Maybe, List, Array, tuples, records, and in a .fic module the sized types, Float32 and Vector)")
           emit "return 0;"
   where
     -- the parts of a struct (field i of the struct class: a nested struct is held boxed), decoded in order; a failure releases the

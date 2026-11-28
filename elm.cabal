@@ -172,6 +172,7 @@ executable elm
         AST.Utils.Shader
         AST.Utils.Type
         Canonicalize.Effects
+        Canonicalize.FicPayload
         Canonicalize.Environment
         Canonicalize.Environment.Dups
         Canonicalize.Environment.Foreign
@@ -213,6 +214,7 @@ executable elm
         Ficcus.Mono.ManagerTable
         Ficcus.Mono.PortsHeader
         Ficcus.Mono.PortDesc
+        Ficcus.Mono.PortFic
         Ficcus.Mono.LeafSplit
         Ficcus.Mono.ModelUnpack
         Ficcus.Mono.Spec

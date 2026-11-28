@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Canonicalize.Effects
   ( canonicalize
+  , PayloadCheck
   , checkPayload
   )
   where
@@ -33,19 +34,22 @@ type Result i w a =
 -- CANONICALIZE
 
 
+-- Ficcus (E3c): the payload check is a parameter (Canonicalize.FicPayload.checkPayload: Elm's `checkPayload` below for a `.elm`
+-- module, Elm's set plus the Ficcus types for a `.fic` module of a build to C)
 canonicalize
-  :: Env.Env
+  :: PayloadCheck
+  -> Env.Env
   -> [A.Located Src.Value]
   -> Map.Map T.Name union
   -> Src.Effects
   -> Result i w Can.Effects
-canonicalize env values unions effects =
+canonicalize payloadCheck env values unions effects =
   case effects of
     Src.NoEffects ->
       Result.ok Can.NoEffects
 
     Src.Ports ports ->
-      do  pairs <- traverse (canonicalizePort env) ports
+      do  pairs <- traverse (canonicalizePort payloadCheck env) ports
           return $ Can.Ports (Map.fromList pairs)
 
     Src.Manager region manager ->
@@ -78,8 +82,12 @@ canonicalize env values unions effects =
 -- CANONICALIZE PORT
 
 
-canonicalizePort :: Env.Env -> Src.Port -> Result i w (N.Name, Can.Port)
-canonicalizePort env (Src.Port (A.At region portName) tipe) =
+type PayloadCheck =
+  Can.Type -> Either (Can.Type, Error.InvalidPayload) ()
+
+
+canonicalizePort :: PayloadCheck -> Env.Env -> Src.Port -> Result i w (N.Name, Can.Port)
+canonicalizePort checkPayload env (Src.Port (A.At region portName) tipe) =
   do  (Can.Forall freeVars ctipe) <- Type.toAnnotation env tipe
       case reverse (Type.delambda (Type.deepDealias ctipe)) of
         Can.TType home name [msg] : revArgs
