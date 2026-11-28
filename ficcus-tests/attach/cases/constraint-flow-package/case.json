@@ -1,6 +1,0 @@
-{
- "desc": "A2: the type is defined in a module of a package that is not exposed (Hidden.Core); the exposed module Hidden carries its members in its interface; Main never sees Hidden.Core",
- "deps": [
-  "ficcus/hidden@1.0.0"
- ]
-}

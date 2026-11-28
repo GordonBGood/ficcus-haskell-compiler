@@ -17,7 +17,7 @@
    addresses. The core is `always_inline` with the element size and the comparator as arguments, so each wrapper below (Int, Float,
    Char, pairs) is a specialisation with a constant size and a direct, inlined comparison; the others call through a function pointer.
 
-   Comparison modes of the kernels (the generator picks one from the exact element type, Ficcus.Mono.CGen `vectorCall`):
+   Comparison modes of the kernels (the generator picks one from the exact element type, Ficus.Mono.CGen `vectorCall`):
      FIC_SORT_I64  Int, direct int64 compare          FIC_SORT_F64  Float, `!(a <= b)` (Elm's compare: a NaN is GT)
      FIC_SORT_U32  Char (code point)                  FIC_SORT_CMP  a generated comparator on element addresses (String: fic_str_cmp;
      and structural compare for tuples and lists: the same `fic_cmp_N` that `compare` uses)

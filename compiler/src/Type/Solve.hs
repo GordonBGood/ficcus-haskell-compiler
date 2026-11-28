@@ -46,7 +46,7 @@ run =
   runWith Members.emptyTable Map.empty
 
 
--- Ficcus (ATTACH A2): with the table of the members that the module can see (Type.Members)
+-- Ficus (ATTACH A2): with the table of the members that the module can see (Type.Members)
 -- (A5a: and what each definition is, for the monomorphism restriction, Type.Requirements)
 runWith :: Members.Table -> Requirements.Kinds -> Constraint -> IO (Either (NE.List Error.Error) (Map.Map N.Name Can.Annotation))
 runWith table kinds constraint =
@@ -64,7 +64,7 @@ runWith table kinds constraint =
       case Members.merge errors of
         [] ->
           do  annotations <- traverse Type.toAnnotation env
-              -- Ficcus (ATTACH A3): did an operator or a bundle meet a custom type? (the JavaScript output refuses such a program)
+              -- Ficus (ATTACH A3): did an operator or a bundle meet a custom type? (the JavaScript output refuses such a program)
               used <- readIORef flag
               return $ Right $
                 if used then Map.insert Constraints.customOperators (Can.Forall Map.empty Can.TUnit) annotations else annotations
@@ -97,11 +97,11 @@ data State =
     { _env :: Env
     , _mark :: Mark
     , _errors :: [Error.Error]
-    , _table :: Members.Table             -- Ficcus (ATTACH A2): the members the module can see
+    , _table :: Members.Table             -- Ficus (ATTACH A2): the members the module can see
     , _pending :: [Members.Obligation]    -- the member obligations not yet discharged
-    , _flag :: Maybe (IORef Bool)         -- Ficcus (ATTACH A3): set when a custom type took the place of a `number`, `comparable`, ... variable
-    , _kinds :: Requirements.Kinds        -- Ficcus (A5a): functions, values and annotated definitions by the region of their name
-    , _mrValues :: Map.Map N.Name (N.Name, [N.Name])   -- Ficcus (A5c): a `let` value whose requirements the monomorphism restriction held (by its name, and by the top level definitions that hold it): its name and the functions it uses
+    , _flag :: Maybe (IORef Bool)         -- Ficus (ATTACH A3): set when a custom type took the place of a `number`, `comparable`, ... variable
+    , _kinds :: Requirements.Kinds        -- Ficus (A5a): functions, values and annotated definitions by the region of their name
+    , _mrValues :: Map.Map N.Name (N.Name, [N.Name])   -- Ficus (A5c): a `let` value whose requirements the monomorphism restriction held (by its name, and by the top level definitions that hold it): its name and the functions it uses
     }
 
 
@@ -114,7 +114,7 @@ solve env rank pools state constraint =
     CSaveTheEnvironment ->
       return (state { _env = env })
 
-    -- Ficcus (A3b): a Float literal in a module that sees a type with `fromFloat` (Members.floatLiterals)
+    -- Ficus (A3b): a Float literal in a module that sees a type with `fromFloat` (Members.floatLiterals)
     CEqual region Error.Float _ expectation | Just (member, Can.Forall vars shape, defaultType) <- Members.floatLiterals (_table state) ->
       do  pair <- srcTypeToVariable rank pools vars shape
           (Descriptor content _ _ _) <- UF.get pair
@@ -160,7 +160,7 @@ solve env rank pools state constraint =
 
     CLocal region name expectation ->
       do  copy <- makeCopy rank pools $ $(Map.require 'solve) name env N.toChars
-          -- Ficcus (A5a): a definition with inferred requirements is bound to its carrier (Type.Requirements.carrier);
+          -- Ficus (A5a): a definition with inferred requirements is bound to its carrier (Type.Requirements.carrier);
           -- the copy gives the type of this use and its obligations, sharing their variables
           (actual, state1) <-
             do  (Descriptor content _ _ _) <- UF.get copy
@@ -188,7 +188,7 @@ solve env rank pools state constraint =
 
     CForeign region name home (Can.Forall freeVars srcType) expectation ->
       do  (actual0, state0) <- instantiateUse rank pools state region home name freeVars srcType
-          -- Ficcus (ATTACH A2): a constrained scheme leaves an obligation for each required member
+          -- Ficus (ATTACH A2): a constrained scheme leaves an obligation for each required member
           (actual, state1) <-
             if Constraints.isWrapped srcType
               then
@@ -333,7 +333,7 @@ solve env rank pools state constraint =
           escapes <- fmap concat (traverse (rigidEscape header) rigids)
 
           let newEnv = Map.union env (Map.union carriers (Map.map A.toValue locals))
-          -- a cycle among the variables of this definition that its type does not show (Ficcus D10, 1491);
+          -- a cycle among the variables of this definition that its type does not show (Ficus D10, 1491);
           -- only reported when nothing else went wrong before (after an error such cycles are a consequence)
           let cycles =
                 case Map.toList header of
@@ -428,7 +428,7 @@ patternExpectationToVariable rank pools expectation =
 -- ERROR HELPERS
 
 
--- Ficcus (ATTACH A3): a mismatch that involves a custom type with well known members says what is missing
+-- Ficus (ATTACH A3): a mismatch that involves a custom type with well known members says what is missing
 noted :: State -> ET.Type -> ET.Type -> Error.Error -> Error.Error
 noted state actualType expectedType err =
   case Members.notesFor (_table state) actualType expectedType of
@@ -468,7 +468,7 @@ mrNote state err =
         _ -> Nothing
 
 
--- Ficcus (ATTACH A3): the type of a use of a name or operator; `/`, `//`, `modBy` and `remainderBy` are typed `a -> a -> a` with an
+-- Ficus (ATTACH A3): the type of a use of a name or operator; `/`, `//`, `modBy` and `remainderBy` are typed `a -> a -> a` with an
 -- obligation when a type in sight has the member behind them (Type.Members.relax)
 instantiateUse :: Int -> Pools -> State -> A.Region -> ModuleName.Canonical -> N.Name -> Map.Map T.Var () -> Can.Type -> IO (Variable, State)
 instantiateUse rank pools state region home name freeVars srcType =
@@ -489,7 +489,7 @@ instantiateUse rank pools state region home name freeVars srcType =
               return (pair, state)
 
 
--- Ficcus (ATTACH A2): discharge the member obligations whose subject is known by now (Type.Members)
+-- Ficus (ATTACH A2): discharge the member obligations whose subject is known by now (Type.Members)
 discharge :: Env -> Int -> Pools -> State -> IO State
 discharge env rank pools state =
   case _pending state of
@@ -609,7 +609,7 @@ adjustRank youngMark visitMark grayMark cycleRef groupRank var =
   do  (Descriptor content rank mark copy) <- UF.get var
       if mark == youngMark then
           do  -- Set the variable as marked first because it may be cyclic. It is gray while its
-              -- content is visited: meeting a gray variable again is a cycle (Ficcus D10: the occurs
+              -- content is visited: meeting a gray variable again is a cycle (Ficus D10: the occurs
               -- check only looked at the types of the definitions, not at all variables).
               UF.set var $ Descriptor content rank grayMark copy
               maxRank <- adjustRankContent youngMark visitMark grayMark cycleRef groupRank content

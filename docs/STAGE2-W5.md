@@ -1,18 +1,18 @@
 # H16 stage 2, slice W5: rule 1a (lifted clones in the Inline table) and rule 1c (case identity)
 
-Branch `feat/stage2-w5`, based on `ficcus` 5f9d3bbf (binary `elmficM1`), final binary `bin/elmficW5`. All in `compiler/src/Ficcus/Mono/Inline.hs`.
+Branch `feat/stage2-w5`, based on `ficcus` 5f9d3bbf (binary `elmficM1`), final binary `bin/elmficW5`. All in `compiler/src/Ficus/Mono/Inline.hs`.
 
 ## Rules
 * **1a.** `table` admitted only clones with `mdLifted == Nothing`. Now a lifted clone that captures nothing (`Free.captures`) is admitted too, if it is not
   an owner of lifted clones, has no self call, size <= 80 (the existing limits). A lifted clone is dropped from the table while a body of its own
-  call cycle (SCC with a cycle) is rewritten (`tScc`, `tAdm`). Clones with captures stay out. Needs the Known pass on (`FICCUS_NO_KNOWN`
-  switches it off); own switch `FICCUS_NO_LIFTED_INLINE=1`.
+  call cycle (SCC with a cycle) is rewritten (`tScc`, `tAdm`). Clones with captures stay out. Needs the Known pass on (`FICUS_NO_KNOWN`
+  switches it off); own switch `FICUS_NO_LIFTED_INLINE=1`.
 * **1c (rule I).** `case x of C y1..yn -> C y1..yn` (same constructor, pattern variables in order, scrutinee and branch class `CRef`) gives `x`;
   the branch pattern becomes wildcards; a non variable scrutinee is let-bound first; a `case` whose branches are all identities is the scrutinee.
   The retyped form (`Bad c m` at `Step a`, rebuilt at `Step b`) is the same rule: the pattern variable and the argument are one local, so the field
-  classes are equal at both keys. Switch `FICCUS_NO_IDENT=1`; needs the Known pass on. Reuse and the Rc pass see the new body and decide afresh.
-* The `--no-rc` text and the pass off `--rc` text are unchanged (the 16 suite programs are byte identical to `elmficM1` with `--no-rc`, `FICCUS_NO_KNOWN=1`,
-  and with each switch; with the defaults too: neither rule changes a suite program). `ficcus-tests/w5_identity.py`.
+  classes are equal at both keys. Switch `FICUS_NO_IDENT=1`; needs the Known pass on. Reuse and the Rc pass see the new body and decide afresh.
+* The `--no-rc` text and the pass off `--rc` text are unchanged (the 16 suite programs are byte identical to `elmficM1` with `--no-rc`, `FICUS_NO_KNOWN=1`,
+  and with each switch; with the defaults too: neither rule changes a suite program). `ficus-tests/w5_identity.py`.
 
 ## Numbers (P1 A2, parse = stage 2 - stage 1, median of 5, checksum correct, machine load 1.0 to 1.6)
 | | pass off | M1 (before) | 1a | 1a + 1c | target |

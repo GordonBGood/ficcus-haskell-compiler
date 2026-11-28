@@ -55,7 +55,7 @@ import qualified System.FilePath as FP
 import System.FilePath ((</>), (<.>))
 
 import qualified File
-import qualified Ficcus.Flags as Flags
+import qualified Ficus.Flags as Flags
 
 import qualified AST.Prim.Module as Module
 import qualified Elm.Package as Pkg
@@ -102,7 +102,7 @@ newtype Stuff = Stuff FilePath
 
 getStuff :: Root -> IO Stuff
 getStuff (Root root) =
-  do  suffix <- Flags.getStuffSuffix   -- Ficcus (G43)
+  do  suffix <- Flags.getStuffSuffix   -- Ficus (G43)
       let dir = root </> "elm-stuff" </> (V.toChars V.compiler ++ suffix)
       Dir.createDirectoryIfMissing True dir
       return (Stuff dir)
@@ -139,12 +139,12 @@ elmi (Stuff stuff) name = stuff </> Module.toDashPath name <.> "elmi"
 elmo (Stuff stuff) name = stuff </> Module.toDashPath name <.> "elmo"
 
 
--- Ficcus: the type dump of one module (`--output=x.types`)
+-- Ficus: the type dump of one module (`--output=x.types`)
 typesFile :: Stuff -> Module.Name -> FilePath
 typesFile (Stuff stuff) name = stuff </> Module.toDashPath name <.> "types"
 
 
--- Ficcus: the type dumps of package modules (typed mode recompiles packages)
+-- Ficus: the type dumps of package modules (typed mode recompiles packages)
 packageTypesDir :: Stuff -> FilePath
 packageTypesDir (Stuff stuff) = stuff </> "typed"
 

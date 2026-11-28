@@ -1,4 +1,4 @@
-/* fic_rt.h -- the runtime core of generated Ficcus programs: header, allocator, reference counts, the generic drop,
+/* fic_rt.h -- the runtime core of generated Ficus programs: header, allocator, reference counts, the generic drop,
  * vectors (STAGE4-PLAN slices S0 and S1). Derived from targets/c/ficrt.h (the sketch the 16 hand written target programs
  * use; that file is not changed). Standard library only, C99. Emitted first by CRuntime.prelude.
  *
@@ -470,7 +470,7 @@ static int fic_shutdown(void) {
    A deep recursion that is not a tail call (a fold over a long list written by hand, a deep tree) needs C stack. The generated
    `main` runs the program (`fic_main`) on a thread with a stack of FIC_STACK_MB megabytes (default 1024; address space only, the
    pages are used on demand), where POSIX threads are available; if the thread cannot be made, and on other systems, or with
-   -DFIC_NO_BIG_STACK, the program runs on the stack of `main`. Counts stay non-atomic: there is still one thread that runs Ficcus
+   -DFIC_NO_BIG_STACK, the program runs on the stack of `main`. Counts stay non-atomic: there is still one thread that runs Ficus
    code. (Windows: not done yet, `CreateThread` with a stack size is the same idea.) */
 #ifndef FIC_STACK_MB
 #  define FIC_STACK_MB 1024

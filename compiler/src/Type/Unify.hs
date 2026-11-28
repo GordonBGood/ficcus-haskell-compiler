@@ -50,7 +50,7 @@ data RunawayException = RunawayException Bool
 instance Exception RunawayException
 
 
--- Ficcus (ATTACH A3): a custom type may take the place of one of Elm's `number`, `comparable` and `appendable`
+-- Ficus (ATTACH A3): a custom type may take the place of one of Elm's `number`, `comparable` and `appendable`
 -- variables when it has the members that the variable stands for (Type.Members builds the policy from the member
 -- table).  `noPolicy` is Elm's rule: no custom type does.
 --

@@ -77,14 +77,14 @@ data Error
   | ImportExposedTypeNotFound A.Region ModuleName.Canonical T.Name [T.Name]
   | ImportExposedBinopNotFound A.Region ModuleName.Canonical Op.Name [Op.Name]
   | NotFoundVar A.Region (Maybe Module.Prefix) N.Name (PossibleNames N.Name)
-  | NotFoundMember A.Region String N.Name [N.Name]    -- Ficcus (ATTACH A1): type, member, the members the type has
-  | NotFoundAttached A.Region N.Name [String] (PossibleNames N.Name)   -- Ficcus (A5c): an attached function of these types, whose types do not line up
-  | ConstraintTwice String N.Name A.Region A.Region            -- Ficcus (ATTACH A2): variable, member
+  | NotFoundMember A.Region String N.Name [N.Name]    -- Ficus (ATTACH A1): type, member, the members the type has
+  | NotFoundAttached A.Region N.Name [String] (PossibleNames N.Name)   -- Ficus (A5c): an attached function of these types, whose types do not line up
+  | ConstraintTwice String N.Name A.Region A.Region            -- Ficus (ATTACH A2): variable, member
   | ConstraintNameTwice N.Name String N.Name A.Region A.Region  -- local name, variable, member
   | ConstraintShadows N.Name String N.Name A.Region A.Region    -- local name, variable, member; the top level definition, the constraint
   | AmbiguousConstraint A.Region String N.Name String N.Name   -- the variable and the member of the constraint, the variable that the type lacks, the definition
-  | ConstraintShape A.Region String N.Name String   -- Ficcus (A5f): the variable and the well known member of a `where` line, the type it must have
-  | AmbiguousMember A.Region String N.Name ModuleName.Canonical (OneOrMore.OneOrMore ModuleName.Canonical)   -- Ficcus (ATTACH A1b): type, member, the modules of the types
+  | ConstraintShape A.Region String N.Name String   -- Ficus (A5f): the variable and the well known member of a `where` line, the type it must have
+  | AmbiguousMember A.Region String N.Name ModuleName.Canonical (OneOrMore.OneOrMore ModuleName.Canonical)   -- Ficus (ATTACH A1b): type, member, the modules of the types
   | NotFoundType A.Region (Maybe Module.Prefix) T.Name (PossibleNames T.Name)
   | NotFoundVariant A.Region (Maybe Module.Prefix) N.Name (PossibleNames N.Name)
   | NotFoundBinop A.Region Op.Name (Set.Set Op.Name)
@@ -100,7 +100,7 @@ data Error
   | TupleLargerThanThree A.Region
   | TypeVarsUnboundInUnion A.Region T.Name [T.Var] (T.Var, A.Region) [(T.Var, A.Region)]
   | TypeVarsMessedUpInAlias A.Region T.Name [T.Var] [(T.Var, A.Region)] [(T.Var, A.Region)]
-  | Derive Derive.Error                                        -- Ficcus (A4a): a `derive` line
+  | Derive Derive.Error                                        -- Ficus (A4a): a `derive` line
 
 
 data DuplicatePatternContext
@@ -1050,7 +1050,7 @@ badArity source region name expected actual toChars thing =
 -- NOT FOUND
 
 
--- Ficcus (ATTACH A2): the name a constraint gives is taken; `as` gives it another one
+-- Ficus (ATTACH A2): the name a constraint gives is taken; `as` gives it another one
 constraintClash :: Code.Source -> A.Region -> A.Region -> N.Name -> String -> N.Name -> String -> Report.Report
 constraintClash source r1 r2 local var member message =
   let
@@ -1073,7 +1073,7 @@ constraintClash source r1 r2 local var member message =
       )
 
 
--- Ficcus (ATTACH A1b): two imported types of one name are in scope and both have the member
+-- Ficus (ATTACH A1b): two imported types of one name are in scope and both have the member
 ambiguousMember :: Code.Source -> A.Region -> String -> N.Name -> ModuleName.Canonical -> OneOrMore.OneOrMore ModuleName.Canonical -> Report.Report
 ambiguousMember source region tipe member h hs =
   let
@@ -1099,7 +1099,7 @@ ambiguousMember source region tipe member h hs =
       )
 
 
--- Ficcus (ATTACH A1)
+-- Ficus (ATTACH A1)
 notFoundMember :: Code.Source -> A.Region -> String -> N.Name -> [N.Name] -> Report.Report
 notFoundMember source region tipe member members =
   let

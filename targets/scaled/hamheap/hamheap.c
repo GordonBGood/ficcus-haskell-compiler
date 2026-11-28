@@ -1,4 +1,4 @@
-/* hamheap.c -- what the Ficcus compiler should emit for HammingHeap.elm (C99).
+/* hamheap.c -- what the Ficus compiler should emit for HammingHeap.elm (C99).
  *
  *   gcc -std=c99 -pedantic -Wall -Wextra -O2 hamheap.c -o hamheap
  *

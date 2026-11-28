@@ -4,12 +4,12 @@ module FicOverlayRegex exposing
     , find, findAtMost, replace, replaceAtMost, split, splitAtMost
     )
 
-{-| Ficcus: elm/regex on the kernel of runtime/fic_regex.h (decision L24). Compiled only into projects that depend directly on
-elm/regex (Ficcus.Mono.Overlay); the specializer redirects every function of the package that is a kernel function in Elm
+{-| Ficus: elm/regex on the kernel of runtime/fic_regex.h (decision L24). Compiled only into projects that depend directly on
+elm/regex (Ficus.Mono.Overlay); the specializer redirects every function of the package that is a kernel function in Elm
 (`fromStringWith`, `never`, `contains`, `find`, `findAtMost`, `replace`, `replaceAtMost`, `split`, `splitAtMost`) to the function of
 the same name here.
 
-The first section only gives the types: those are kernel functions (`author/project:FicOverlayRegex.<name>` in Ficcus.Mono.Kernel),
+The first section only gives the types: those are kernel functions (`author/project:FicOverlayRegex.<name>` in Ficus.Mono.Kernel),
 their bodies are never compiled to C. `Regex` is the compiled program, `Caps` the result of one search (see `exec`). Offsets of the
 kernel are byte offsets of the UTF-8 text; the `index` of a match is a code point index (L22).
 

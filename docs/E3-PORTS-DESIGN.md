@@ -7,8 +7,8 @@ shared doc edited. Proposed entries for the shared files are in section 10.
 
 **Read:** `docs/EFFECTS-DESIGN.md` (D-fx-1 to 11 with the E1/E2 amendments), `docs/EFFECTS-CHECK.md` (on `design/fx-check`),
 `docs/E1-REVIEW.md`, `docs/E2-REVIEW.md`, `docs/E1P-DESIGN.md` (summary), `runtime/fic_sched.h` (ports, loop, teardown),
-`runtime/fic_json.h`, `fic_vector.h`, `fic_sized.h`, `fic_string.h`, `fic_rt.h` (`fic_alloc`), `Ficcus/Mono/CGen.hs`
-(`portEncode`, `portEncBody`, `portDecBody`), `Ficcus/Mono/Spec.hs` (`specWorker`, the flags refusal), `Optimize/Port.hs`, elm/core
+`runtime/fic_json.h`, `fic_vector.h`, `fic_sized.h`, `fic_string.h`, `fic_rt.h` (`fic_alloc`), `Ficus/Mono/CGen.hs`
+(`portEncode`, `portEncBody`, `portDecBody`), `Ficus/Mono/Spec.hs` (`specWorker`, the flags refusal), `Optimize/Port.hs`, elm/core
 1.0.5 `Elm/Kernel/{Platform,Debug}.js`, and the decisions of 25 Nov: ports payloads and host API (decisions line 604) and FFI layer 1
 (line 605).
 
@@ -31,7 +31,7 @@ What E2 left [S: `fic_sched.h` lines 693-845, `CGen.hs` 1847-2060]:
 
 Facts that shape the design:
 
-- A Ficcus `String` holds its bytes **inline** (`{hdr, len, cps, data[]}`, NUL terminated) [S: `fic_str_new`], and so does a `Vector`
+- A Ficus `String` holds its bytes **inline** (`{hdr, len, cps, data[]}`, NUL terminated) [S: `fic_str_new`], and so does a `Vector`
   (`{hdr, esize, spare, len, cap, desc, data[]}`) [S: `fic_rt.h:260`]. Nothing in the runtime can point at a buffer it did not allocate.
 - Sized integers and `Float32` occupy the **8 byte slot** of Int/Float, also as `Vector` elements [S: `SIZED-PLAN.md` line 23];
   natural width storage is G30/H24 (open). A `Vector Word8` of n bytes is 8n bytes today.
@@ -115,14 +115,14 @@ Int/Float distinction the tree already has. A larger one with per kind iterators
 
 **Recommend: `send` consumes, callbacks borrow, `retain`/`release` for anything kept.**
 
-- `fic_port_send` **consumes** its value. The decoder then *moves* leaves (strings, vectors, `Json.Value` subtrees) into the Ficcus
+- `fic_port_send` **consumes** its value. The decoder then *moves* leaves (strings, vectors, `Json.Value` subtrees) into the Ficus
   value instead of adding counts, so a 64 MB vector or string arrives in `update` with count 1 and `update` can write it in place
   (the D-fx-3 protocol and E1p's per leaf move keep it unique when it is stored in the model). A host that wants to keep the value
   calls `fic_hv_retain` first, and pays the copy at the first in place write: correct, slower, the same rule as everywhere (the count is
   the truth).
 - Builders consume what they store (`array_set`, `object_set`), like the runtime's kernels.
 - An outgoing callback gets a **borrowed** value, valid until it returns. To keep it (an async host, a batching writer), `retain` it and
-  `release` later on the loop thread. While the host holds a count the Ficcus side cannot write that object in place, so the host's view
+  `release` later on the loop thread. While the host holds a count the Ficus side cannot write that object in place, so the host's view
   is immutable; no copy and no lock are needed.
 - `fic_hv_release` of the last count frees on the loop thread; under `--rc` a value still retained at shutdown is a live object and is
   reported, as any leak (D15).
@@ -140,7 +140,7 @@ Outgoing: `fic_hv_get_string` gives the object's own bytes, borrowed (zero copy)
 accepts for `\uD800` escapes is accepted, raw bytes outside that rule are refused [A: the internal encoding of lone surrogates was not
 re-read for this note].
 
-Alternatives: accept any bytes (cheaper, but then a Ficcus `String` can hold what Elm cannot, and `String.length` disagrees with Elm);
+Alternatives: accept any bytes (cheaper, but then a Ficus `String` can hold what Elm cannot, and `String.length` disagrees with Elm);
 UTF-16 at the boundary (matches JavaScript, doubles the conversion cost for a C host that has UTF-8).
 
 ### D5. Numbers, sized integers and range checks
@@ -169,7 +169,7 @@ value above 2^53, which the `Word64` type is meant to avoid). The JS build is un
 derived `encode`/`decoder` members. Maybe: `null` or the value, so `Maybe (Maybe a)` cannot express `Just Nothing`, as in Elm (its
 decoder is `oneOf [null Nothing, map Just d]`). Records: a JSON object, extra fields ignored, missing ones a failure; outgoing fields in
 Elm's order (E2). The `.fic` extension of `checkPayload` is gated: an `.elm` module keeps Elm's error text exactly, and the JS build of
-a `.fic` program with a Ficcus only payload is refused (decided).
+a `.fic` program with a Ficus only payload is refused (decided).
 
 Alternative: allow custom types with a fixed encoding (`{"tag":..,"args":[..]}`). Not Elm's, not stable under constructor reordering,
 and A4 already gives the user a chosen encoding.
@@ -214,7 +214,7 @@ runner is rebuilt on these two functions plus `fic_port_subscribe`, so it stops 
 (`<port>: <JSON>`, `output` as text). `Json.Value` flows through unchanged both ways: parsed once into the tree, which becomes the Elm
 value by a move.
 
-Alternatives: a type directed parser that builds the Ficcus value straight from text without the tree (faster for large lists of
+Alternatives: a type directed parser that builds the Ficus value straight from text without the tree (faster for large lists of
 records, about half the allocations [A]); decide after the measurement (section 8). A separate `fic_port_subscribe_json` callback form:
 not needed, `to_json` inside the callback does it.
 
@@ -238,8 +238,8 @@ not needed, `to_json` inside the callback does it.
 - A raw node inside a **`Json.Value`** payload (a host that put one into a tree for a `Json.Value` port) is converted to an array of
   number nodes by the decoder, because Elm code may walk it with `Json.Decode`; `Json.Decode` never sees a vector node.
 
-Alternatives: (b) a **borrowed host buffer** inside a Ficcus vector (an "external data" vector with a destructor): true zero copy for a
-buffer the host did not let Ficcus allocate (an mmap'd file), but every inline vector access (`FIC_VECTOR_AT`) would need an
+Alternatives: (b) a **borrowed host buffer** inside a Ficus vector (an "external data" vector with a destructor): true zero copy for a
+buffer the host did not let Ficus allocate (an mmap'd file), but every inline vector access (`FIC_VECTOR_AT`) would need an
 indirection or a second tag test; rejected for the hot loops' sake, revisit with the F1 note (opaque handles with destructors are the
 better tool for mmap). (c) Always copy: simple, costs a `memcpy` per crossing.
 
@@ -271,7 +271,7 @@ change).
 - **Absent flags** are JavaScript `undefined`: a static node `JUNDEF` that every decoder rejects, whose text in `errorToString` is
   `undefined` (as JSON.stringify gives to Elm's `indent`), so `Program Int` started without flags fails with Elm's exact text. `()`
   flags accept anything, also absent, as Elm. A `Json.Value` flags type started without flags would pass `undefined` into the program in
-  Elm; Ficcus refuses to start instead (a recorded deviation: `JUNDEF` must never enter a `Json.Value`).
+  Elm; Ficus refuses to start instead (a recorded deviation: `JUNDEF` must never enter a `Json.Value`).
 - **Failure:** crash 2, the text `Problem with the flags given to your Elm program on initialization.\n\n` + `errorToString`, stdout
   flushed, exit 1, before `init` runs. `fic_app_start` returns `FIC_E_DECODE` with the same text instead of exiting.
 - `Browser.*` programs (later) reuse the same entry.
@@ -309,7 +309,7 @@ int fic_post_json(const char *port, const char *text, size_t n);      /* copies 
 ```
 
 A mutex protected queue plus an `eventfd`/self pipe that wakes the loop's wait (today a `nanosleep`; it becomes a `poll` on that fd
-with the timer deadline, which E3e needs anyway). No Ficcus object crosses a thread: another thread posts plain data (or a function that
+with the timer deadline, which E3e needs anyway). No Ficus object crosses a thread: another thread posts plain data (or a function that
 builds the value on the loop thread). This needs no atomics, no change to `fic_alloc`, and is what D-fx-10 (b) and D-fx-11 (a, b)
 assume. Large buffers from another thread: the host posts its own `malloc`ed buffer and the loop copies it into a vector (one
 `memcpy`); a zero copy "detached vector" allocated off the pool by any thread and adopted by the loop is possible because large objects
@@ -335,7 +335,7 @@ returns it, so the host can free `env`.
 
 ### D16. The benchmark
 
-Program `ficcus-tests/e3bench/` (one `.fic` worker with an incoming and an outgoing port per payload type, `update` echoing the payload
+Program `ficus-tests/e3bench/` (one `.fic` worker with an incoming and an outgoing port per payload type, `update` echoing the payload
 or folding it to a checksum) and a C host `bench_host.c`. Method of 19 Nov (the `PrimesBench` shape): timing inside the host with
 `CLOCK_MONOTONIC` around a repeat loop only, repeat count from the command line, median of 5, serial, idle machine, `-O2
 -ffp-contract=off`, `--rc`. Each case reports MB/s (payload bytes as the host holds them) and ns per message, and peak RSS.
@@ -370,7 +370,7 @@ L, R and `Array Int`/`Array Float` through ports (the JavaScript baseline, `app.
 |---|---|---|---|
 | **E3a** | value API (D1–D4, D7), `Array` payloads, subscribe/unsubscribe, error texts via the slow decoder path, the generated `<module>_ports.h`, the runner rebuilt on the API | C 700, Haskell 300 | **Opus soundness** (ownership at the boundary, moves into the value, error path) |
 | **E3b** | flags (D11): `JUNDEF`, `FIC_FLAGS`/`FIC_FLAGS_FILE`, crash 2, `fic_app_start` | C 150, Haskell 150 | with E3a's review |
-| **E3c** | Ficcus payloads (D5, D6): `Vector` of any approved element as arrays, sized integers with range checks, `Float32`, `JUINT`; `checkPayload` gate for `.fic` and the JS build refusal | Haskell 300, C 200 | **Opus** (range checks, the JS refusal, `.elm` error texts unchanged) |
+| **E3c** | Ficus payloads (D5, D6): `Vector` of any approved element as arrays, sized integers with range checks, `Float32`, `JUINT`; `checkPayload` gate for `.fic` and the JS build refusal | Haskell 300, C 200 | **Opus** (range checks, the JS refusal, `.elm` error texts unchanged) |
 | **E3d** | raw vector path (D9, D10) | C 300, Haskell 100 | with E3c's review (lifetime, staging buffers) |
 | **E3e** | embedding loop and threads (D13, D14): `poll` wait, eventfd, `fic_post`, holds, stop | C 400 | Opus, together with T1 |
 | **E3f** | benchmark and report (D16) | tests only | none |
@@ -380,14 +380,14 @@ Order: E3a+E3b, review; E3c+E3d, review; E3f on an idle machine; E3e after the T
 
 **Tests and gates.**
 
-- Differential against Elm 0.19.3 under node (`ficcus-tests/effects3/`, a node runner that subscribes and sends like the E2 harness):
+- Differential against Elm 0.19.3 under node (`ficus-tests/effects3/`, a node runner that subscribes and sends like the E2 harness):
   every payload type in and out; record field orders; `Maybe` nulls; Int given `1.0`/`1e3`; decode failures (stdout up to the failure,
   exit 1); an unknown port; flags of each type, absent flags, bad flags (exit 1, stderr text checked against Elm's crash 2, which is
   stable); a callback that sends synchronously (D12) and one that unsubscribes itself; `Array` payloads.
 - Host API unit tests in C (`runtime/test_ports.c`, the `test.sh` pattern): ownership (send consumes, retain/release, a vector sent
   with count 1 arrives unique: `FIC_STATS` 0 vector copies in an `update` that writes it), errors and texts, after-stop calls,
   `fic_post` from a second thread under TSan.
-- Ficcus only payloads: no Elm twin; expected outputs written by hand and checked by a round trip (send, echo, compare) plus range
+- Ficus only payloads: no Elm twin; expected outputs written by hand and checked by a round trip (send, echo, compare) plus range
   edge cases (`-129`, `128`, `256`, `2^64-1`, `2^64`).
 - Rejects: custom type and `Dict` ports (Elm's text, byte equal on `.elm`), `Vector`/`Word8` port in an `.elm` module and in the JS
   build of a `.fic` program.

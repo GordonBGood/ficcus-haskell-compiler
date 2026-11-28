@@ -1,5 +1,5 @@
 {-# LANGUAGE MagicHash #-}
--- Layout after a multi-line string (Ficcus track E4, cases K-1947 and K-2155).
+-- Layout after a multi-line string (Ficus track E4, cases K-1947 and K-2155).
 --
 -- The column of the parser is the column of the next character, so after
 --

@@ -12,9 +12,9 @@ one), the solver (A5a).
 | `Canonicalize/Selectors.hs` (new) | The candidate types (D5), the selector type of each member name (well known shape, or anti-unification), entered in the environment under `m$selector`. A module without candidates keeps its environment. |
 | `Canonicalize/Module.hs` | `canonicalizeValues` calls `Selectors.register` after `Constraints.register`. |
 | `Canonicalize/Expression.hs` | `findVarOrSelector` for an expression variable: Elm's lookup first; the selector only when the name is not in the environment. |
-| `Ficcus/Mono/Marks.hs` | Every variable of a selector's type at a use is a root of the exact-key fixpoint. |
-| `Ficcus/Mono/Spec.hs` | `resolve`: a selector is `memberRef` of its subject's exact type at the member type of the use (custom, built-in or sized). `deadByMembers`: a selector also decides the dead variables of a clone's body (`selectorDetermined`, through `Determined.fill`). |
-| `Ficcus/Mono/Determined.hs` | exports `substitute`. |
+| `Ficus/Mono/Marks.hs` | Every variable of a selector's type at a use is a root of the exact-key fixpoint. |
+| `Ficus/Mono/Spec.hs` | `resolve`: a selector is `memberRef` of its subject's exact type at the member type of the use (custom, built-in or sized). `deadByMembers`: a selector also decides the dead variables of a clone's body (`selectorDetermined`, through `Determined.fill`). |
+| `Ficus/Mono/Determined.hs` | exports `substitute`. |
 | `Nitpick/Constraints.hs`, `Compile.hs`, `builder/Generate.hs` | `markSelectors`: a node `elm/core:$attached.m` (no code) per selector a module uses, so the object graph is complete; the JavaScript output refuses it under CONSTRAINED FUNCTIONS, "the attached function `add` by its bare name". |
 
 No change in the solver: a selector is a `CForeign` with a `$where` scheme, so `Members.use` makes its requirement, as for a
@@ -42,7 +42,7 @@ call of a constrained function. The `$inferred` entry makes `Type.Dump` read it 
 
 ## Cases
 
-`ficcus-tests/attach/a5bgen.py --write` writes the cases and rows; `--expect` builds every twin (in `a5b-twins/`, on
+`ficus-tests/attach/a5bgen.py --write` writes the cases and rows; `--expect` builds every twin (in `a5b-twins/`, on
 `bin/elm0193` or `bin/elmficA5a`) and writes `expected.out`. Attach is now 307 cases (285 + 22).
 
 ### Converted (3)
@@ -83,7 +83,7 @@ The two q2 rows keep the old title; A5c renames it to INCOMPLETE TYPE ANNOTATION
 | a5b-js-refused | JavaScript refuses a selector | REJECT CONSTRAINED FUNCTIONS | |
 
 **Elm programs unchanged.** a5b-elm-naming: the `--report=json` output is byte identical for `bin/elm0193`,
-`bin/elmficA5a` and `bin/elmficA5b` (the terminal text differs between Elm and Ficcus already in A5a, not in A5b). The
+`bin/elmficA5a` and `bin/elmficA5b` (the terminal text differs between Elm and Ficus already in A5a, not in A5b). The
 gates (types matrix, elmdiff, typed corpus, JS identity, a3b-identity of the suite C text) check the rest.
 
 A scratch probe (not a case): a selector inside a function whose `where` line renames the member (`a has add as plusA`)
@@ -117,7 +117,7 @@ meets the written requirement, and a selector in a let inside a constrained func
 
 ## Gates
 
-2026-11-26, `BIN=elmficA5b KEEP=1 S=/home/gordon/claude-tmp/gates-a5b ficcus-tests/gates.sh` (log
+2026-11-26, `BIN=elmficA5b KEEP=1 S=/home/gordon/claude-tmp/gates-a5b ficus-tests/gates.sh` (log
 /home/gordon/claude-tmp/gates-a5b.log), all green: runtime 0; attach 307/0 (with `--rc`, ASan+UBSan; rerun alone, see
 below); sized-fuzz 40/0; stringdiff all agree; types 267 PASS + 1 XFAIL; JS identity 28/0; examples 298 x3; fbip 0;
 effects-e2, e1review, effects-e1, e1p all ok; e1pr all ok (2 target rows); e1p-identity all ok; **a3b-identity against

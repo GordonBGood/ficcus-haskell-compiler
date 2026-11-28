@@ -2,7 +2,7 @@
 
 27 Nov 2026, branch `feat/e3a` from `ficcus` 75e3ed9a, worktree `ficcus-haskell-compiler-e3a`. Implements slices E3a and E3b of
 `docs/E3-PORTS-DESIGN.md` (branch `design/e3`), decisions D1 to D16 as approved, with D11: both `FIC_FLAGS` and `FIC_FLAGS_FILE` set
-refuses the run. Binary `bin/elmficE3a`. Not in this session: E3c (Ficcus only payloads, range checks, `JUINT`), E3d (raw vectors,
+refuses the run. Binary `bin/elmficE3a`. Not in this session: E3c (Ficus only payloads, range checks, `JUINT`), E3d (raw vectors,
 D9, D10's staging buffers), E3e (embedding loop, threads, `fic_app_stop`, `FIC_E_THREAD`), E3f (benchmark).
 
 ## 1. First step: what Elm 0.19.3 does (bin/elm0193, node 21, debug build)
@@ -10,7 +10,7 @@ D9, D10's staging buffers), E3e (embedding loop, threads, `fic_app_stop`, `FIC_E
 Program with ports `inn` (record), `mb` (Maybe Int), `tup` (tuple), `out`, and two ports that `main` never uses; driven from JavaScript.
 
 - **Crash 4 prints `[object Object]`** (the note said "probably"; confirmed): `send("x")` on a record port throws
-  ``Trying to send an unexpected type of value through port `inn`:`` + newline + `[object Object]`. The Ficcus runner prints
+  ``Trying to send an unexpected type of value through port `inn`:`` + newline + `[object Object]`. The Ficus runner prints
   `errorToString` of the same error as the second line instead, as D7 decided (a recorded deviation, stderr only). The E3 tests
   compare that text with Elm's by patching the compiled JavaScript to print `Json.Decode.errorToString problem` (ref/run3.js).
 - **Unused ports are absent** from `app.ports` (`unused`, `unusedIn` declared, never used): the reachable set, as the C side's
@@ -25,7 +25,7 @@ Program with ports `inn` (record), `mb` (Maybe Int), `tup` (tuple), `out`, and t
 | Decision | Where | What |
 |---|---|---|
 | D1, D2, D3 | `runtime/fic_ports_api.h` (declarations, also the top of the generated header), `runtime/fic_ports.h` | `fic_hv` = a Json.Value node; builders (`array`/`object` + `_set` + `finish`, L35 order, last duplicate wins in the first place), readers, `retain`/`release`; `send` consumes (also on failure), callbacks borrow; the decoded value is delivered after the host's tree is released, so a received leaf keeps only its own count (D3's move) |
-| D2 header | `Ficcus.Mono.PortsHeader`, `Make` | `<Module>_ports.h` beside the C for a program with ports or flags other than (): the API text, per port its direction, Elm type, JSON shape and `#define FIC_PORT_<name> "<name>"`, the flags type |
+| D2 header | `Ficus.Mono.PortsHeader`, `Make` | `<Module>_ports.h` beside the C for a program with ports or flags other than (): the API text, per port its direction, Elm type, JSON shape and `#define FIC_PORT_<name> "<name>"`, the flags type |
 | D4 | `fic_hv_string`, `fic_hv_string_alloc`/`seal` | UTF-8 validated (no overlong forms, no surrogates, at most U+10FFFF), one copy in; zero copy out |
 | D5 (Elm's rules) | the generated decoders | Int: an Int node or a whole Float below 2^63 in size (now the same rule as `Json.Decode.int`, L21; E2's port decoder used ±9.2e18); Float: any number; NaN and the infinities pass the value API and print as `null` (L20) |
 | D6 Array | `CGen` portEncBody/portDecBody, `fic_port_array_build`/`_words` | `Array` in and out as a JSON array; the decoded Array is built as Elm's `Array.fromList` (Elm's `Json.Decode.array` uses `Array.initialize`, the same tree), tested up to 32803 elements (shift 15) and compared with `==` on Elm's own arrays |
@@ -57,7 +57,7 @@ Program with ports `inn` (record), `mb` (Maybe Int), `tup` (tuple), `out`, and t
 6. **() flags are never read**, so `FIC_FLAGS` text that is not JSON, or both variables, do not stop such a program (Elm's decoder is
    `succeed ()`; and those programs keep their C).
 7. **Json.Value and undefined:** absent flags of type `Json.Value` refuse to start (as D11 says) with the text
-   `Expecting a value: no flags were given, and Ficcus does not pass JavaScript's undefined into a Json.Value` inside crash 2's text;
+   `Expecting a value: no flags were given, and Ficus does not pass JavaScript's undefined into a Json.Value` inside crash 2's text;
    the same holds inside `Maybe Json.Value`: absent flags of type `Maybe Json.Value` refuse to start too, where Elm gives
    `Just undefined` (oneOf's `Json.Decode.value` takes undefined first; checked against Elm in the E3a review, N5).
 8. **`fic_port_error()` stays valid until the next failure** (D2 said "until the next call"); successful calls do not clear it.
@@ -65,13 +65,13 @@ Program with ports `inn` (record), `mb` (Maybe Int), `tup` (tuple), `out`, and t
    `Json.Decode.field` tests with JavaScript's `in`, which also finds keys that every object or array inherits: `length` on arrays,
    and `constructor`, `toString`, `valueOf`, `hasOwnProperty`, `__proto__` and the like on `{}` and `[]`. Elm: `{ constructor : Int }`
    given `{}` fails at `json.constructor` with "Expecting an INT" (value `undefined`), and `{ constructor : Json.Value }` given `{}`
-   is **accepted** (a JavaScript function enters the program and encodes as `undefined`). Ficcus refuses both with "Expecting an
+   is **accepted** (a JavaScript function enters the program and encodes as `undefined`). Ficus refuses both with "Expecting an
    OBJECT with a field named `constructor`" (fast decoder and error walker agree; no `internal:` text). Reproducer: the `pCtor` and
-   `pCtorV` lines of `ficcus-tests/e3ar/mklines.py`.
+   `pCtorV` lines of `ficus-tests/e3ar/mklines.py`.
 
 ## 4. Tests
 
-`ficcus-tests/effects_e3.py` (goldens: `--goldens --ref ../bin/elm0193`; expected files `expected/e3_<case>.{out,err,code}`), 31
+`ficus-tests/effects_e3.py` (goldens: `--goldens --ref ../bin/elm0193`; expected files `expected/e3_<case>.{out,err,code}`), 31
 cases, each run `--rc` (gcc -O2, ASan + UBSan without the pool, `-DFIC_DROP_ALL`) and `--no-rc` -O2: 124 checks of stdout, stderr
 (without the FIC_STATS lines) and exit status; `live 0` and `0 bad, 0 live after the free` for every run that ends normally.
 
@@ -108,7 +108,7 @@ rebuilt on the API prints the same lines.
 | fbip | 0 failures |
 | effects-e2, effects-e3 (new step) | all ok, all ok (124 checks) |
 | e1review, effects-e1, e1p, e1pr | all ok; e1pr 2 target rows as before |
-| e1p-identity vs elmficG70a | the gate run crashed in the tool on E2Ports (a sort of `None` with ints when the runtime prelude differs, which no slice before had); fixed (`ficcus-tests/e1p_identity.py`) and the step rerun alone: 51 ok, the 2 port programs FAIL as expected (E2Ports, E2PortsIn: the prelude and the last section, which holds the port decoders and the main; the generated code before the main differs only by the intended decoder changes: Json.Value refuses undefined, Int as `Json.Decode.int`) |
+| e1p-identity vs elmficG70a | the gate run crashed in the tool on E2Ports (a sort of `None` with ints when the runtime prelude differs, which no slice before had); fixed (`ficus-tests/e1p_identity.py`) and the step rerun alone: 51 ok, the 2 port programs FAIL as expected (E2Ports, E2PortsIn: the prelude and the last section, which holds the port decoders and the main; the generated code before the main differs only by the intended decoder changes: Json.Value refuses undefined, Int as `Json.Decode.int`) |
 | a3b-identity vs elmficA5c | 100 compiles, 4 differ: E2Ports and E2PortsIn, --rc and --no-rc (the only port programs); every program without ports identical, also the scheduler programs |
 | e2review | gates all ok (X1 to X3 moved to effects_e3), info 3 differ as before |
 | rcfaults, rcfaults-big | 2403 mutations 0 missed; 239 mutations 0 missed |
@@ -125,7 +125,7 @@ rebuilt on the API prints the same lines.
    string the host did not retain arrives with count 1). A retained value seen by a callback stays valid (test `api`).
 2. **Fast and slow decoders must agree.** The generated decoder decides; `fic_pd_explain` only explains. Where they would disagree the
    text is `internal: the generated decoder refused a value that Elm's decoder takes`. Known corner: a record with a field named
-   `length` given a JSON array is accepted by Elm (`'length' in array`) and refused by both Ficcus decoders (as E2 did).
+   `length` given a JSON array is accepted by Elm (`'length' in array`) and refused by both Ficus decoders (as E2 did).
 3. **The `#undef FIC_TAG_JNULL` wrapper** (deviation 2): correct only while nothing between the JSON runtime and the ports runtime but
    `fic_sched.h`'s port section reads that macro.
 4. **The Array tree** is built with `floor(log(n - 1) / log 32)` like Elm's `logBase`; the arguments (a multiple of 32, minus 1) are
@@ -158,6 +158,6 @@ rebuilt on the API prints the same lines.
 
 Decisions: a DONE entry for E3a+E3b (this note's section 2, the binary, the gate results); the recorded deviations: crash 4's second
 line is `errorToString` (confirmed: Elm's debug build prints `[object Object]`), absent `Json.Value` flags (and `Maybe Json.Value`)
-refuse to start, a `{ length : .. }` record port refuses a JSON array; NOTE: unused ports are dead code in Elm (checked) and in Ficcus.
+refuse to start, a `{ length : .. }` record port refuses a JSON array; NOTE: unused ports are dead code in Elm (checked) and in Ficus.
 Checklist: E3a and E3b ticked; E3c to E3f open; "remove fic_sched.h's E2 port section" as a cleanup item for the next slice that may
 change the C of scheduler programs.

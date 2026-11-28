@@ -1,1 +1,0 @@
-{"desc": "STAGE4-FIX2 step 4: a package with its own (hidden) module Vector keeps it; the core overlay Vector yields (runs on Elm too)", "deps": ["ficcus/ownvec@1.0.0"]}

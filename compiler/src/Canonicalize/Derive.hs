@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE MagicHash, PatternGuards #-}
--- Ficcus (A4a): the `derive` lines of a module (docs/A4-DERIVE-DESIGN.md; AST.Derive has the names).
+-- Ficus (A4a): the `derive` lines of a module (docs/A4-DERIVE-DESIGN.md; AST.Derive has the names).
 --
 -- Two steps around Canonicalize.Module.canonicalize:
 --
@@ -354,7 +354,7 @@ lacks table member path tipe =
     Can.TTriple a b c ->
       firstOf [ (path ++ " > tuple element 1", a), (path ++ " > tuple element 2", b), (path ++ " > tuple element 3", c) ]
 
-    -- (P1) an extensible record: its own fields here; the row is filled at the exact type (Ficcus.Mono.RowShape), and a
+    -- (P1) an extensible record: its own fields here; the row is filled at the exact type (Ficus.Mono.RowShape), and a
     -- row that holds a field without the member is refused where the type is used (the obligation reaches the row)
     Can.TRecord fields (Just _) ->
       firstOf [ (path ++ " > " ++ N.toChars f, t) | (f, Can.FieldType _ t) <- Map.toAscList fields ]

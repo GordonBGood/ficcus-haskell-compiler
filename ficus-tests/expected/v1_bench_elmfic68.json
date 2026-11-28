@@ -1,0 +1,115 @@
+{
+ "sieve (1 MB buffer)": {
+  "Ficus Array (gcc -O2)": [
+   388.8963109930046,
+   "Found 1077871 primes up to 16777218.: ()\n"
+  ],
+  "Ficus Array (clang -O3)": [
+   575.425181988976,
+   "Found 1077871 primes up to 16777218.: ()\n"
+  ],
+  "Ficus Array counters": "FIC_STATS: allocs 102541 live 0 peak 101382 dup 187655884 drop 187622069 free_slow 43 reuse_hit 61012028 reuse_miss 0 inplace 61012028 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
+  "Ficus Vector (gcc -O2)": [
+   29.570220998721197,
+   "Found 1077871 primes up to 16777218.: ()\n"
+  ],
+  "Ficus Vector (clang -O3)": [
+   27.777534996857867,
+   "Found 1077871 primes up to 16777218.: ()\n"
+  ],
+  "Ficus Vector counters": "FIC_STATS: allocs 7 live 0 peak 4 dup 0 drop 7 free_slow 7 reuse_hit 0 reuse_miss 0 inplace 16301583 copied 0 pap_steal 0 clo_steal 0 vec_copy 0",
+  "hand C plain (gcc -O2)": [
+   49.03718100104015,
+   "Running...\r\nFound 1077871 primes up to 16777218 for 0 loops in 0 milliseconds (check 0, 0 objects live).\r\n"
+  ],
+  "hand C plain (gcc -O3)": [
+   47.862421997706406,
+   "Running...\r\nFound 1077871 primes up to 16777218 for 0 loops in 0 milliseconds (check 0, 0 objects live).\r\n"
+  ],
+  "hand C plain (clang -O2)": [
+   46.481671000947244,
+   "Running...\r\nFound 1077871 primes up to 16777218 for 0 loops in 0 milliseconds (check 0, 0 objects live).\r\n"
+  ],
+  "hand C plain (clang -O3)": [
+   46.21643900463823,
+   "Running...\r\nFound 1077871 primes up to 16777218 for 0 loops in 0 milliseconds (check 0, 0 objects live).\r\n"
+  ],
+  "hand C plain best": [
+   46.21643900463823,
+   "Running...\r\nFound 1077871 primes up to 16777218 for 0 loops in 0 milliseconds (check 0, 0 objects live).\r\n",
+   "clang -O3"
+  ],
+  "hand C unrolled (gcc -O2)": [
+   9.170802004518919,
+   "Running...\r\nFound 1077871 primes up to 16777218 for 1 loops in 2 milliseconds."
+  ],
+  "hand C unrolled (gcc -O3)": [
+   9.059385003638454,
+   "Running...\r\nFound 1077871 primes up to 16777218 for 1 loops in 2 milliseconds."
+  ],
+  "hand C unrolled (clang -O2)": [
+   9.16751500335522,
+   "Running...\r\nFound 1077871 primes up to 16777218 for 1 loops in 3 milliseconds."
+  ],
+  "hand C unrolled (clang -O3)": [
+   8.95229600428138,
+   "Running...\r\nFound 1077871 primes up to 16777218 for 1 loops in 3 milliseconds."
+  ],
+  "hand C unrolled best": [
+   8.95229600428138,
+   "Running...\r\nFound 1077871 primes up to 16777218 for 1 loops in 3 milliseconds.",
+   "clang -O3"
+  ],
+  "Rust safe O3": [
+   12.107319009373896,
+   "Found 1077871 primes up to 16777218.\n"
+  ],
+  "agree": true
+ },
+ "fannkuch (n = 10)": {
+  "Ficus Array (gcc -O2)": [
+   767.759832990123,
+   "73196: ()\nPfannkuchen(10) = 38: ()\n"
+  ],
+  "Ficus Array (clang -O3)": [
+   801.936668009148,
+   "73196: ()\nPfannkuchen(10) = 38: ()\n"
+  ],
+  "Ficus Array counters": "FIC_STATS: allocs 13789454 live 0 peak 11 dup 17418244 drop 13789455 free_slow 6894729 reuse_hit 137668197 reuse_miss 3265920 inplace 137668197 copied 3265920 pap_steal 0 clo_steal 0 vec_copy 0",
+  "Ficus Vector (gcc -O2)": [
+   221.0344869963592,
+   "73196: ()\nPfannkuchen(10) = 38: ()\n"
+  ],
+  "Ficus Vector (clang -O3)": [
+   212.45859999908134,
+   "73196: ()\nPfannkuchen(10) = 38: ()\n"
+  ],
+  "Ficus Vector counters": "FIC_STATS: allocs 10523526 live 0 peak 4 dup 10886399 drop 10523528 free_slow 6894727 reuse_hit 0 reuse_miss 0 inplace 79671754 copied 3265920 pap_steal 0 clo_steal 0 vec_copy 3265920",
+  "hand C (gcc -O2)": [
+   163.6454940016847,
+   "73196\r\nPfannkuchen(10) = 38\r\n(0 runs in 0 milliseconds, check 0; 3265922 allocations per run, 0 objects still live)\r\n"
+  ],
+  "hand C (gcc -O3)": [
+   155.84310100530274,
+   "73196\r\nPfannkuchen(10) = 38\r\n(0 runs in 0 milliseconds, check 0; 3265922 allocations per run, 0 objects still live)\r\n"
+  ],
+  "hand C (clang -O2)": [
+   161.64061400922947,
+   "73196\r\nPfannkuchen(10) = 38\r\n(0 runs in 0 milliseconds, check 0; 3265922 allocations per run, 0 objects still live)\r\n"
+  ],
+  "hand C (clang -O3)": [
+   162.74017399700824,
+   "73196\r\nPfannkuchen(10) = 38\r\n(0 runs in 0 milliseconds, check 0; 3265922 allocations per run, 0 objects still live)\r\n"
+  ],
+  "hand C best": [
+   155.84310100530274,
+   "73196\r\nPfannkuchen(10) = 38\r\n(0 runs in 0 milliseconds, check 0; 3265922 allocations per run, 0 objects still live)\r\n",
+   "gcc -O3"
+  ],
+  "Rust safe O3": [
+   119.15822200535331,
+   "73196\nPfannkuchen(10) = 38\n"
+  ],
+  "agree": true
+ }
+}

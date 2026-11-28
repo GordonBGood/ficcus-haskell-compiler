@@ -1,7 +1,7 @@
 # H16 stage 2, slice W7a: rule 2, unboxed results of Known clones (version B: single clone SCCs)
 
-Branch `feat/stage2-w7a` from `ficcus` e7b620c0, final binary `bin/elmficW7a`. Files: `compiler/src/Ficcus/Mono/Unbox.hs` (new), `CGen.hs` (the sentinel exit
-check), `terminal/src/Make.hs` (the pass between Inline and Twin, the dumps, the post-Rc check), tests under `ficcus-tests/`. Design: `docs/H16-RULE2-DESIGN.md`
+Branch `feat/stage2-w7a` from `ficcus` e7b620c0, final binary `bin/elmficW7a`. Files: `compiler/src/Ficus/Mono/Unbox.hs` (new), `CGen.hs` (the sentinel exit
+check), `terminal/src/Make.hs` (the pass between Inline and Twin, the dumps, the post-Rc check), tests under `ficus-tests/`. Design: `docs/H16-RULE2-DESIGN.md`
 (decisions 1 to 7 accepted); estimate: `H16-W7-ESTIMATE.md` of `exp/w7-estimate`.
 
 ## What the pass does
@@ -15,7 +15,7 @@ check), `terminal/src/Make.hs` (the pass between Inline and Twin, the dumps, the
 * **Worker `f~unbox`** (new clone id): same parameters, same body, tail constructor leaves become the struct (reference slots not used by the constructor hold the counted
   sentinel `fic_nul0`, scalar slots 0), tail calls become worker calls (self tail calls stay `continue`). **Wrapper** (the original id): `case f_w .. of {slots} -> C ..`,
   the only place a cell is built. Every `case f args of` with plain constructor patterns, in any clone, calls the worker and matches the slots: one tuple pattern of every
-  slot, the tag selects the alternative; the Rc pass takes the struct apart with `MUnpack` (checked by `FICCUS_UNBOX_CHECK`, `Unbox.checkCounted`). A struct field of a
+  slot, the tag selects the alternative; the Rc pass takes the struct apart with `MUnpack` (checked by `FICUS_UNBOX_CHECK`, `Unbox.checkCounted`). A struct field of a
   constructor (the parser `State`) is flattened into slots at the producer (`case s of {src, offset}` unpack) and rebuilt from the slots at the consumer.
 * **Identity after unpack (decision 3), generalized:** in the alternative for constructor k of a rewritten site the reference slots k does not use are the sentinel with one
   count; a tail constructor leaf takes them (a move) for its own filler slots instead of dropping them and counting fresh ones (3 in A2's 26 sites at the stats build, 7 in
@@ -23,18 +23,18 @@ check), `terminal/src/Make.hs` (the pass between Inline and Twin, the dumps, the
   (`Bad _ _ -> id` at another `Step b`) needs no family union with the callee and the type check passes; a default alternative forwards the whole struct.
 * **Exit check (decision 7):** a program with workers ends with `if (fic_live_objects == 0 && fic_nul0.rc != FIC_IMMORTAL) -> "FIC_UNBOX_CHECK: the count of the sentinel
   drifted by N"` under `-DFIC_UNBOX_CHECK` (generated only when a worker exists; `fic_rt.h` and the other programs' text are unchanged).
-* **Switches:** `FICCUS_S2_UNBOX_ACYCLIC=1|0` (unset: on), `FICCUS_S2_NO_UNBOX=1`, `FICCUS_S2_NO_UNBOX_IDENT=1`, `FICCUS_S2_UNBOX_NOVEC=1` (needs the field types of
-  `mpUnions`: sees a field declared with a Vector/Array type, not a type parameter instantiated with one), `FICCUS_UNBOX_CHECK=1`, `FICCUS_UNBOX_STATS=1`,
-  `FICCUS_INLINE_DUMP=t`, `FICCUS_UNBOX_DUMP=t`; see `docs/FLAGS.md`.
+* **Switches:** `FICUS_S2_UNBOX_ACYCLIC=1|0` (unset: on), `FICUS_S2_NO_UNBOX=1`, `FICUS_S2_NO_UNBOX_IDENT=1`, `FICUS_S2_UNBOX_NOVEC=1` (needs the field types of
+  `mpUnions`: sees a field declared with a Vector/Array type, not a type parameter instantiated with one), `FICUS_UNBOX_CHECK=1`, `FICUS_UNBOX_STATS=1`,
+  `FICUS_INLINE_DUMP=t`, `FICUS_UNBOX_DUMP=t`; see `docs/FLAGS.md`.
 
 ## Step 0 (before the timings): the biggest risk, broken chains
-`FICCUS_UNBOX_STATS` on A2 (JsonCombV, 1 MB): 146 candidate clones, **107 workers, 39 refused**. Refusals: 24 in call cycles (B, as designed; 33.3 M of the 108.8 M removable
+`FICUS_UNBOX_STATS` on A2 (JsonCombV, 1 MB): 146 candidate clones, **107 workers, 39 refused**. Refusals: 24 in call cycles (B, as designed; 33.3 M of the 108.8 M removable
 allocations at 50 MB), 6 `wordHelp` (original id 121 < `base`, so not a Known clone) and 3 forwarders that tail call it (3.9 M), 6 clones that are not `Step` producers
 (`always`, `apply`, `List.foldl`). **No forwarder or identity pass of the acyclic hot chains is refused** by the leaf rule or the 8 word limit (workers have 2 to 4 words).
 Static prediction (workers' removable allocations from the estimate's site table): 71.5 M at 50 MB, estimate 70.6 M. B did not slide towards the spine only version.
 
 ## Results (P1 A2, parse = stage 2 minus stage 1, median of 5, checksum `nodes=87689 sum64=237203670393` correct in every run, machine load 0.8 to 1.3)
-| | pass off (`FICCUS_NO_KNOWN=1`) | W6 | **W7a** |
+| | pass off (`FICUS_NO_KNOWN=1`) | W6 | **W7a** |
 |---|---|---|---|
 | 50 MB parse time | 8,151 ms | 1,785 ms | **1,246 ms** (-30 % vs W6; 6.5 x pass off) |
 | 50 MB parse allocations | 832.1 M | 156.9 M | **90.35 M** |
@@ -54,12 +54,12 @@ Dups are not what the time follows; 167 M is above the estimate's 163 M by 4 M (
 `known14` (three constructors of mixed leaf classes; every use of a result: matched, tail call, self tail loop, non tail recursion, stored in a list and a record, closures,
 wildcard and nested patterns), `known15` (four constructors, slots shared across them, identity after unpack at the same and at another type, owned and borrowed, a producer with
 a local loop), `known16` (the vector shapes V1 to V5 on `Array`: in place / copied counters equal with the rule off: 15 / 63), `known17` (must not fire: a library result, a
-result taken from a list, a call cycle, 10 + 10 fields over 8 words, results used only as values: 0 workers). Goldens from Elm 0.19.3 (`ficcus-tests/golden.py`).
+result taken from a list, a call cycle, 10 + 10 fields over 8 words, results used only as values: 0 workers). Goldens from Elm 0.19.3 (`ficus-tests/golden.py`).
 `known_tests.py` settings `unbox`, `no-unbox`, `no-unbox-ident`, `unbox-novec` (all known1 to known17 pass in every setting under ASan + UBSan and -O2 with
 `-DFIC_UNBOX_CHECK`); `unbox_tests.py` (rule on/off outputs equal the golden, in place/copied counters equal, workers expected or none, `--no-rc` text identical);
 `rccheck_faults.py` with known14 to known16 (220 mutations, 0 missed); `libshape.unbox_shape` in rcfuzz and v2fuzz (four constructors, identity, `Vector` shapes V1 to V5,
 loops, recursion; the programs of earlier seeds are unchanged up to a section at the end), rcfuzz settings `unbox`, `unboxnoident`, `unboxnovec`, `nounbox`.
-`w7a_identity.py`: `--no-rc` (also with the rule on), `FICCUS_NO_KNOWN=1`, `FICCUS_S2_NO_UNBOX=1` and all stage 2 switches off: the 16 suite programs byte identical to
+`w7a_identity.py`: `--no-rc` (also with the rule on), `FICUS_NO_KNOWN=1`, `FICUS_S2_NO_UNBOX=1` and all stage 2 switches off: the 16 suite programs byte identical to
 `elmficW6`; with the rule on 15 of 16 identical, **`bintree` changes** (1 worker, 1 unpacked site: time 175.6 ms against 175.7 ms, 0.0 %, no warnings).
 
 ## Checks
@@ -74,8 +74,8 @@ attach 159 / 0 differ, sized-fuzz 40 seeds 0 differ, stringdiff all agree, types
 0 failures, rcfaults **2317 mutations, 0 missed** (known14 to known16 are now in the default list: 166 caught for known16 alone) and rcfaults-big 229 / 0 missed, rcgate-san ok, suite
 16 PASS, typed 568 SAME / 12 BOTH_REJECT_SAME / 1 VERDICT_DIFF (as before), library rcsan 108 PASS + 59 FIXED, no REGRESSION, elmdiff **1175 SAME, 0 DIFF**.
 Fuzz: rcfuzz 200 seeds x {unbox, nounbox, unboxnoident, unboxnovec}: 0 failures, 0 generator problems (the programs are valid Elm 0.19.3: `--elm-check` on the first seeds);
-v2fuzz 200 seeds x {rule on + check, `FICCUS_S2_NO_UNBOX=1`, `FICCUS_S2_NO_UNBOX_IDENT=1`, `FICCUS_S2_UNBOX_NOVEC=1`}: 0 flagged. `known_tests.py`: all 17 programs in all 13
-settings, 390 builds ok. With `FICCUS_KNOWN_CHECK=1 FICCUS_UNBOX_CHECK=1`: the 16 suite programs compile (norc/rc identity table above), the examples in rc mode (295 of 296: see below),
+v2fuzz 200 seeds x {rule on + check, `FICUS_S2_NO_UNBOX=1`, `FICUS_S2_NO_UNBOX_IDENT=1`, `FICUS_S2_UNBOX_NOVEC=1`}: 0 flagged. `known_tests.py`: all 17 programs in all 13
+settings, 390 builds ok. With `FICUS_KNOWN_CHECK=1 FICUS_UNBOX_CHECK=1`: the 16 suite programs compile (norc/rc identity table above), the examples in rc mode (295 of 296: see below),
 the library rcsan (108 PASS + 59 FIXED, no REGRESSION).
 **Known, not caused by W7a:** `examples.py` in the mode `FICTEST_RC=1` without sanitizers (not a gate mode) fails the build of `unres.c` on `-Wfree-nonheap-object` of `fic_nul0` in
 `elmficW6` as well (the same 2 warnings at -O1 and 1 at -O2 in the C text of both binaries; `unres` gets no worker). It is the gcc warning of decision rev 169 for a program where the

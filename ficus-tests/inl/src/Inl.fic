@@ -1,0 +1,224 @@
+module Inl exposing (main)
+
+-- S7 (Ficus.Mono.Inline): a constructor value made by a small known function and matched at once is not built. Every shape
+-- the pass takes apart, and the ones it must leave alone: Array.get under `case`, `Maybe.withDefault`, `Maybe.map`, `Maybe.andThen`,
+-- List.head, Result, a tuple of two lookups, records and tuples as elements, strings (shared afterwards), user producers and
+-- consumers, Debug.log inside the arguments (order and count as Elm). The output must equal Elm's (expected/inl.out, Elm 0.19.3).
+
+import Array exposing (Array)
+
+
+type Shape
+    = Circle Float
+    | Rect Float Float
+    | Dot
+
+
+classify : Int -> Shape
+classify n =
+    if n < 0 then
+        Dot
+
+    else if n < 10 then
+        Circle (toFloat n)
+
+    else
+        Rect (toFloat n) 2
+
+
+area : Shape -> Float
+area s =
+    case s of
+        Circle r ->
+            3 * r * r
+
+        Rect w h ->
+            w * h
+
+        Dot ->
+            0
+
+
+safeDiv : Int -> Int -> Result String Int
+safeDiv a b =
+    if b == 0 then
+        Err "zero"
+
+    else
+        Ok (a // b)
+
+
+first : List a -> Maybe a
+first xs =
+    case xs of
+        x :: _ ->
+            Just x
+
+        [] ->
+            Nothing
+
+
+pairAt : Int -> Array ( Int, String ) -> ( Int, String )
+pairAt i a =
+    Array.get i a |> Maybe.withDefault ( -1, "none" )
+
+
+sumAt : Int -> Int -> Array Int -> Int
+sumAt i j a =
+    case ( Array.get i a, Array.get j a ) of
+        ( Just x, Just y ) ->
+            x + y
+
+        _ ->
+            -1
+
+
+type alias Body =
+    { x : Float, name : String }
+
+
+moveAt : Int -> Array Body -> Array Body
+moveAt i bodies =
+    case Array.get i bodies of
+        Just b ->
+            Array.set i { b | x = b.x + 1 } bodies
+
+        Nothing ->
+            bodies
+
+
+loop : Int -> Array Int -> Int -> Int
+loop i a acc =
+    if i < 0 then
+        acc
+
+    else
+        loop (i - 1) a (acc + Maybe.withDefault 0 (Array.get i a))
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    ints =
+                        Array.initialize 100 (\i -> i * i)
+
+                    strs =
+                        Array.fromList [ "zero", "one", "two" ]
+
+                    pairs =
+                        Array.fromList [ ( 1, "a" ), ( 2, "b" ) ]
+
+                    bodies =
+                        Array.fromList [ { x = 1, name = "p" }, { x = 2, name = "q" } ]
+
+                    l1 =
+                        Debug.log "case get"
+                            (List.map
+                                (\i ->
+                                    case Array.get i ints of
+                                        Just v ->
+                                            v + 1
+
+                                        Nothing ->
+                                            -1
+                                )
+                                [ -1, 0, 31, 32, 33, 99, 100 ]
+                            )
+
+                    l2 =
+                        Debug.log "withDefault" (List.map (\i -> Maybe.withDefault "?" (Array.get i strs)) [ 0, 2, 3 ])
+
+                    l3 =
+                        Debug.log "map withDefault" (List.map (\i -> Array.get i strs |> Maybe.map String.length |> Maybe.withDefault 0) [ 1, 5 ])
+
+                    l4 =
+                        Debug.log "andThen" (List.map (\i -> Array.get i ints |> Maybe.andThen (\v -> Array.get v ints) |> Maybe.withDefault -5) [ 3, 20 ])
+
+                    l5 =
+                        Debug.log "kept" (Array.get 2 strs)
+
+                    l6 =
+                        Debug.log "pairs" ( pairAt 1 pairs, pairAt 7 pairs )
+
+                    l7 =
+                        Debug.log "sumAt" [ sumAt 1 2 ints, sumAt 1 200 ints, sumAt -1 2 ints ]
+
+                    l8 =
+                        Debug.log "bodies" (Array.toList (moveAt 5 (moveAt 1 bodies)))
+
+                    l9 =
+                        Debug.log "bodies kept" (Array.toList bodies)
+
+                    l10 =
+                        Debug.log "area" (List.map (\n -> area (classify n)) [ -1, 3, 12 ])
+
+                    l11 =
+                        Debug.log "result"
+                            (List.map
+                                (\b ->
+                                    case safeDiv 100 b of
+                                        Ok q ->
+                                            String.fromInt q
+
+                                        Err e ->
+                                            e
+                                )
+                                [ 0, 7 ]
+                            )
+
+                    l12 =
+                        Debug.log "result map" (List.map (\b -> safeDiv 100 b |> Result.map (\q -> q * 2) |> Result.withDefault 0) [ 0, 7 ])
+
+                    l13 =
+                        Debug.log "first" ( Maybe.withDefault 0 (first [ 4, 5 ]), Maybe.withDefault "e" (first []), List.head [ "h" ] |> Maybe.withDefault "" )
+
+                    l14 =
+                        Debug.log "logged default" (Maybe.withDefault (Debug.log "default evaluated" 7) (Array.get (Debug.log "index evaluated" 1) ints))
+
+                    l15 =
+                        Debug.log "logged payload"
+                            (case first [ Debug.log "element evaluated" 1, 2 ] of
+                                Just _ ->
+                                    "some"
+
+                                Nothing ->
+                                    "none"
+                            )
+
+                    l16 =
+                        Debug.log "other"
+                            (case classify 3 of
+                                Dot ->
+                                    "dot"
+
+                                other ->
+                                    String.fromFloat (area other)
+                            )
+
+                    l17 =
+                        Debug.log "loop" (loop 99 ints 0)
+
+                    l18 =
+                        Debug.log "shared" (List.map (\s -> s ++ Maybe.withDefault "" (Array.get 1 strs)) [ Maybe.withDefault "" (Array.get 1 strs), "x" ])
+
+                    l19 =
+                        Debug.log "tuple logged"
+                            (case ( Array.get 500 ints, Array.get 1 ints ) of
+                                ( Just a, Just b ) ->
+                                    a + b
+
+                                _ ->
+                                    0
+                            )
+                in
+                if List.length l1 + List.length l2 + List.length l3 + List.length l4 + List.length l7 + List.length l8 + List.length l9 + List.length l10 + List.length l11 + List.length l12 + List.length l18 + l14 + l17 + l19 + String.length l15 + String.length l16 + String.length (Debug.toString ( l5, l6, l13 )) > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

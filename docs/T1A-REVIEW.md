@@ -1,7 +1,7 @@
 # T1a review: Concurrent (green processes, channels, effect manager, JS reference)
 
 27 Nov 2026, branch `review/t1a` from `feat/t1a` f3650ba9, binary `bin/elmficT1b`. Read only: no compiler or runtime edits. Scratch tests
-in `ficcus-tests/t1ar/` (`run.sh`, 9 cases, expected outputs). Every case was built --rc at -O2 and under ASan+UBSan (no pool), and
+in `ficus-tests/t1ar/` (`run.sh`, 9 cases, expected outputs). Every case was built --rc at -O2 and under ASan+UBSan (no pool), and
 run under node where JavaScript applies.
 
 ## Verdict
@@ -56,7 +56,7 @@ unchanged.
 multi-line texts inside one function each. Duplicated text fails with `#error`, and missing text fails too. But a future second site
 that steps processes (for example the E3e post queue draining outside `fic_sched_enqueue`) would bypass the patch with no error.
 `fic_conc_cur` would then abort (loud: "a Concurrent operation outside a process"), but the shuffle would silently skip that site.
-Recommend a comment at the anchor in fic_sched.h ("patched by Ficcus.Mono.Concurrent.patchSched; every step goes through here"),
+Recommend a comment at the anchor in fic_sched.h ("patched by Ficus.Mono.Concurrent.patchSched; every step goes through here"),
 and a check in run.py that `fic_sched_step(` occurs once in the patched text.
 
 ## Notes (no action)

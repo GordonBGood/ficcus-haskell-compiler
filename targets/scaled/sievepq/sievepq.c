@@ -1,4 +1,4 @@
-/* sievepq.c -- what the Ficcus compiler should emit for SievePQ.elm (C99).
+/* sievepq.c -- what the Ficus compiler should emit for SievePQ.elm (C99).
  *
  *   gcc -std=c99 -pedantic -Wall -Wextra -O2 sievepq.c -o sievepq
  *

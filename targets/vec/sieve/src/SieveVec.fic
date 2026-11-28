@@ -1,7 +1,7 @@
 -- Problem: count the primes up to a limit with a bit-packed, odds-only Sieve of
 -- Eratosthenes, matching primebench.c (the culling loops there are unrolled by hand;
 -- this is the plain algorithm that the unrolled code implements).
--- compile with the Ficcus compiler: elm make src/SieveVec.fic --output=sieve_vec.c
+-- compile with the Ficus compiler: elm make src/SieveVec.fic --output=sieve_vec.c
 {-
    Bit k of the buffer stands for the odd number 2 * k + 3, so a buffer of
    bufBytes bytes covers the odd numbers up to 2 * (8 * bufBytes) + 1 and, with
@@ -16,7 +16,7 @@ import Bitwise exposing (and, or, shiftLeftBy, shiftRightBy)
 
 
 
--- V1 sanity measurement (docs/STAGE4-V1.md): Sieve.elm with the flat Vector of Ficcus in place of Array, written against the
+-- V1 sanity measurement (docs/STAGE4-V1.md): Sieve.elm with the flat Vector of Ficus in place of Array, written against the
 -- primitives of step V1 only. The elements are Int (one byte of the buffer per 8 byte element: there is no Word8 yet).
 
 

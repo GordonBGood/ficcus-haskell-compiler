@@ -104,7 +104,7 @@ attemptWithStyle style toReport work =
 
             Terminal mvar ->
               do  readMVar mvar
-                  hFlush stdout        -- Ficcus: the "Success! Compiled" line of the front end comes before the report, also when stdout is a pipe
+                  hFlush stdout        -- Ficus: the "Success! Compiled" line of the front end comes before the report, also when stdout is a pipe
                   Exit.toStderr (toReport x)
                   Exit.exitFailure
 

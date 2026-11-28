@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
--- Ficcus (ATTACH, stage A2): constraints of signatures in the canonicalizer.
+-- Ficus (ATTACH, stage A2): constraints of signatures in the canonicalizer.
 --
 -- The parser made every constrained definition a definition with hidden leading parameters
 -- (AST.Constraints).  This module

@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
--- Ficcus (ATTACH, stage A2): constraints on the type variables of a signature.
+-- Ficus (ATTACH, stage A2): constraints on the type variables of a signature.
 --
 --     sum : List a -> a
 --         where
@@ -210,7 +210,7 @@ fromChars =
   N.fromString . S.fromChars
 
 
--- | Ficcus (ATTACH A3): the name of the marker that says "this module uses operators (or `number`, `comparable`,
+-- | Ficus (ATTACH A3): the name of the marker that says "this module uses operators (or `number`, `comparable`,
 -- `appendable`) at a custom type".  The solver adds it to the annotations; `Compile` turns it into a node of the
 -- object graph, which the JavaScript output refuses like a constrained function.
 customOperators :: N.Name
@@ -222,7 +222,7 @@ customOperators =
 -- INFERRED SCHEMES (A5a)
 
 
--- | Ficcus (A5a, docs/A5-INFERENCE-DESIGN.md section 3): the scheme of a definition without a type annotation whose
+-- | Ficus (A5a, docs/A5-INFERENCE-DESIGN.md section 3): the scheme of a definition without a type annotation whose
 -- requirements the solver inferred.  It is a `$where` scheme like a written one, with the entry `$inferred` (no
 -- arguments) right after the real type, because the definition has no hidden parameters: a use calls it with its
 -- written arguments only (Type.Dump, Generate).

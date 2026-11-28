@@ -1,6 +1,6 @@
 module JsonGen exposing (document)
 
-{-| The deterministic document generator (specification and oracle: ficcus-tools/gen_json.py). Integer arithmetic only. The text is
+{-| The deterministic document generator (specification and oracle: ficus-tools/gen_json.py). Integer arithmetic only. The text is
 built as a list of pieces per record, the records are joined at the end.
 -}
 

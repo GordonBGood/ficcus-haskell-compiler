@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
--- Ficcus (A4a): the errors of a `derive` line (docs/A4-DERIVE-DESIGN.md, section 1); Canonicalize.Derive finds them.
+-- Ficus (A4a): the errors of a `derive` line (docs/A4-DERIVE-DESIGN.md, section 1); Canonicalize.Derive finds them.
 module Reporting.Error.Derive
   ( Error(..)
   , Reason(..)

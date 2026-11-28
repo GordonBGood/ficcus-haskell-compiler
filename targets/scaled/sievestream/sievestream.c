@@ -1,4 +1,4 @@
-/* sievestream.c -- what the Ficcus compiler should emit for SieveStream.elm (C99).
+/* sievestream.c -- what the Ficus compiler should emit for SieveStream.elm (C99).
  *
  *   gcc -std=c99 -pedantic -Wall -Wextra -O2 sievestream.c -o sievestream
  *

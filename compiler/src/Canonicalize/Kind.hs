@@ -1,4 +1,4 @@
--- The kind check of record extensions (Ficcus track D10).
+-- The kind check of record extensions (Ficus track D10).
 --
 -- Elm checks only the number of type arguments. A type like `{ a | x : Int }` needs `a` to be
 -- a record, but nothing checked that: `type alias A a = { a | x : () }` used as `A ()` or `A Int`

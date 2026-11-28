@@ -7,14 +7,14 @@ module FicOverlayBytes exposing
     , map, map2, map3, map4, map5, andThen, succeed, fail, loop
     )
 
-{-| Ficcus: `Bytes.Decode` of elm/bytes without exceptions. In Elm a read beyond the end of the bytes and `fail` throw a JavaScript
+{-| Ficus: `Bytes.Decode` of elm/bytes without exceptions. In Elm a read beyond the end of the bytes and `fail` throw a JavaScript
 exception that `decode` catches. Here a decoder is still a function `Bytes -> Int -> ( Int, a )`, but a failure is the offset `-1`
 with a placeholder value that is never looked at: every combinator below tests the offset before it uses the value, so a failed
 decode ends normally and frees what it built. Compiled only into projects that depend directly on elm/bytes
-(Ficcus.Mono.Overlay); the specializer redirects every function of `Bytes.Decode` to the function of the same name here.
+(Ficus.Mono.Overlay); the specializer redirects every function of `Bytes.Decode` to the function of the same name here.
 
 The definitions of the first two sections only give the types: they are kernel functions (`author/project:FicOverlayBytes.<name>`
-in Ficcus.Mono.Kernel, runtime/fic_bytes.h), their bodies are never compiled to C.
+in Ficus.Mono.Kernel, runtime/fic_bytes.h), their bodies are never compiled to C.
 
 -}
 

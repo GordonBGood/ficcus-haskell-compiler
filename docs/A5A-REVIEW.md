@@ -2,11 +2,11 @@
 
 Read-only review of `feat/a5a` a03a8f3b (binary `bin/elmficA5a`), branch `review/a5a`, 2026-11-26. Sources:
 `docs/A5-INFERENCE-DESIGN.md`, `docs/attach/A5A-NOTES.md`, `docs/attach/G71-INFERENCE.md`, and the code: `Type/Requirements.hs`,
-`Type/Solve.hs` (`CLet`, `CLocal`, `discharge`), `Type/Members.hs`, `Ficcus/Mono/Determined.hs`, `Ficcus/Mono/Spec.hs`
+`Type/Solve.hs` (`CLet`, `CLocal`, `discharge`), `Type/Members.hs`, `Ficus/Mono/Determined.hs`, `Ficus/Mono/Spec.hs`
 (`deadByMembers`, `determinedByMembers`), `Canonicalize/Constraints.hs` (`checkVars`, D2), `AST/Constraints.hs`, `Compile.hs`,
 `Nitpick/Constraints.hs`, `builder/Generate.hs` (D6).
 
-The counterexamples are in `ficcus-tests/a5ar/` (54 cases, all written by `gen.py`; runner `run.py`; expected results in the
+The counterexamples are in `ficus-tests/a5ar/` (54 cases, all written by `gen.py`; runner `run.py`; expected results in the
 README). Each was compiled to C with `--no-rc` and with `--rc` under ASan+UBSan (0 live required), and compared with an Elm twin
 (`bin/elm0193` + node) where one exists, otherwise with a hand-checked `expected.out`. No full gates were run (the A5a notes
 record them green). Every case that compiles and runs is clean under `--rc` and the sanitizers.
@@ -66,7 +66,7 @@ Two more facts:
 Fix, smallest first:
 
 1. Check the well-known shapes in signature `where` lines, as in type `where` blocks. This makes the case impossible.
-2. Make `deadByMembers` and `determinedByMembers` refuse, with a FICCUS error, a dead variable they cannot decide, rather
+2. Make `deadByMembers` and `determinedByMembers` refuse, with a FICUS error, a dead variable they cannot decide, rather
    than leave it at `ref`. This is a guard for anything else that reaches here.
 
 **M2. A recursive group drops a requirement that is ambiguous for one of its names (deviation 3).**
@@ -258,7 +258,7 @@ find an input where that shows.
 
 ## Proposed entries for the shared docs (for the user to apply)
 
-`docs/Ficcus-Design-Decisions.md`, a NOTE:
+`docs/Ficus-Design-Decisions.md`, a NOTE:
 
 > 2026-11-26 A5a review (review/a5a, docs/A5A-REVIEW.md): merge after M1 (built-in member deciding a variable: check
 > well-known shapes in signature `where` lines; guard in Spec) and M2 (recursive group: "determined by type" is the

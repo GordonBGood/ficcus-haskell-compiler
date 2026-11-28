@@ -1,6 +1,6 @@
 module FicOverlaySort exposing (..)
 
-{-| Ficcus: the sorts of elm/core (List.sort, sortBy, sortWith) in the C path. THE LIST VARIANT (used when the project has a module `Vector` of its own). Two variants of this module are embedded (Ficcus.Mono.Overlay) and
+{-| Ficus: the sorts of elm/core (List.sort, sortBy, sortWith) in the C path. THE LIST VARIANT (used when the project has a module `Vector` of its own). Two variants of this module are embedded (Ficus.Mono.Overlay) and
 `writeOverlay` (terminal/src/Make.hs) writes one of them: this one, on the flat Vector (Powersort, runtime/fic_sort.h), or, when the project has a
 module of its own named `Vector` (which wins over the overlay's), the one that is written in Elm on lists (overlay/FicOverlaySortList.elm).
 -}

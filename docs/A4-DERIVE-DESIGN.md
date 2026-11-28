@@ -14,7 +14,7 @@ Two generation styles, chosen per member by what already exists:
 | group | members | body | where the work is |
 |---|---|---|---|
 | **S** (structural) | `compare`, `hash`, `toString`, `fromString` | a stub calling a kernel (`FicDerive.structCompare` etc.) | CGen helper per exact type, beside the existing `HEq`, `HCmp` and `showStmt` (Debug.toString) |
-| **E** (Elm code) | `encode`, `decode`, `minValue`, `maxValue`, `succ`, `pred`, `enumerate`, `map` | generated Canonical Elm code | a deriver in canonicalization; helpers in an overlay module `FicDerive` (Ficcus source) |
+| **E** (Elm code) | `encode`, `decode`, `minValue`, `maxValue`, `succ`, `pred`, `enumerate`, `map` | generated Canonical Elm code | a deriver in canonicalization; helpers in an overlay module `FicDerive` (Ficus source) |
 
 Group S shares its C code with A3b (members inside containers): one structural walker that calls a member clone whenever the type
 at hand has one, and the structural code otherwise. Records, tuples, `List`, `Maybe`, `Result`, `Array`, `Vector`, `Dict`, `Set`
@@ -89,7 +89,7 @@ a type that wants a display form writes its own `toString`. The built in `toStri
 then also the quoted form (recorded as open decision 4).
 
 **`fromString : String -> Maybe T`.** Law: `fromString (toString x) == Just x` for every `x` (with `Float` this needs JS shortest
-round trip printing, which Ficcus has). Accepts exactly the `toString` grammar (no extra spaces, no `-0` normalization beyond what
+round trip printing, which Ficus has). Accepts exactly the `toString` grammar (no extra spaces, no `-0` normalization beyond what
 `toString` emits); returns `Nothing` otherwise, no error text (as `String.toInt`). Implemented as a C helper per exact type
 mirroring `showStmt` (`HParse t`) over a byte cursor, plus a few runtime functions (`fic_parse_int`, `_float`, `_string`, `_char`,
 `_ctor`). It is the most work of all members and the least asked for: last but one slice.
@@ -97,7 +97,7 @@ mirroring `showStmt` (`HParse t`) over a byte cursor, plus a few runtime functio
 **`encode : T -> Json.Encode.Value` and `decode : Json.Decode.Decoder T`.** The same `Value` and `Decoder` types as elm/json, so
 derived and hand written codecs mix freely (`Json.Decode.list Color.decode`, `field "c" Color.decode`). Recommended minimal scheme:
 
-| Ficcus value | JSON | decode accepts |
+| Ficus value | JSON | decode accepts |
 |---|---|---|
 | `Int`, sized ints, `Float` | number (`Encode.int` writes 64 bits; NaN, inf as `null`, L20) | `Decode.int` rules (L21); `Word64` above 2^63 needs a small kernel decoder |
 | `String`, `Char`, `Bool` | string, 1 character string, `true`/`false` | same |
@@ -224,7 +224,7 @@ Tree.map f t =
 
 ## 3. Other languages: what to copy, what to avoid
 
-| | Roc | Rust | Haskell | Ficcus A4 |
+| | Roc | Rust | Haskell | Ficus A4 |
 |---|---|---|---|---|
 | opt in | auto for records, tags, lists; `implements [Eq, Hash, Inspect, Encoding, Decoding]` for opaque types | `#[derive(...)]` | `deriving (...)` | `derive` in `where` |
 | format | format generic (`Encoding` over an `EncoderFormatting`); JSON is a package (`roc-json`) with `fieldNameMapping` | serde data model, many formats; attributes `rename`, `rename_all`, `default`, `skip`, `flatten`, `tag`, `untagged` | aeson via `Generic`, `Options` (`fieldLabelModifier`, `sumEncoding`, `omitNothingFields`) | JSON only, on elm/json's `Value`/`Decoder`; no options |
@@ -278,7 +278,7 @@ allocates): Opus review after A4b and after A4e. (2) The decode error texts beco
 before A4c) and `encode`. (4) `Vector` fields need the Vector parity slice for `compare`; until then CANNOT DERIVE with "not yet".
 (5) Opaque types leak through `encode`/`toString`: documented, the owner's choice.
 
-**Gates per slice.** (a) A derive matrix in `ficcus-tests/attach/` (or `tests/derive`): 3 type shapes (enumeration, record behind a
+**Gates per slice.** (a) A derive matrix in `ficus-tests/attach/` (or `tests/derive`): 3 type shapes (enumeration, record behind a
 constructor, recursive parametric) times each member times {works, CANNOT DERIVE, DERIVE AND DEFINE, DERIVE SHADOWED, JS refusal}, with
 `--rc` plus ASan/UBSan and 0 live objects. (b) Law tests over generated values (as the sized fuzz): `fromString (toString x) == Just x`,
 `decodeValue decode (encode x) == Ok x`, `compare` antisymmetric, transitive and `EQ` iff `==`, `hash` agrees with `==`, `enumerate ==

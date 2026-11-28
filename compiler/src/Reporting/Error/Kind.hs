@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
--- Problems found by the kind check of record extensions (Ficcus track D10).
+-- Problems found by the kind check of record extensions (Ficus track D10).
 -- See Canonicalize.Kind for the check itself.
 module Reporting.Error.Kind
   ( Problem(..)

@@ -1,0 +1,160 @@
+module Main exposing (main)
+
+-- Ficus only: types with attached members (`where` blocks), constrained signatures (`a has zero : a`), members called as T.name and
+-- through constraints, a constrained function used at three types, members that call each other, local use of a member alias.
+-- Expected output: expected.py (computed independently).
+
+type Money = Money Int
+    where
+        zero : Money
+        zero = Money 0
+
+        add : Money -> Money -> Money
+        add (Money a) (Money b) = Money (a + b)
+
+        show : Money -> String
+        show (Money a) = "$" ++ String.fromInt (a // 100) ++ "." ++ String.padLeft 2 '0' (String.fromInt (modBy 100 a))
+
+        scale : Int -> Money -> Money
+        scale k (Money a) = Money (k * a)
+
+
+type V2 = V2 Int Int
+    where
+        zero : V2
+        zero = V2 0 0
+
+        add : V2 -> V2 -> V2
+        add (V2 a b) (V2 c d) = V2 (a + c) (b + d)
+
+        show : V2 -> String
+        show (V2 a b) = "(" ++ String.fromInt a ++ "," ++ String.fromInt b ++ ")"
+
+        scale : Int -> V2 -> V2
+        scale k (V2 a b) = V2 (k * a) (k * b)
+
+
+type Poly = Poly (List Int)
+    where
+        zero : Poly
+        zero = Poly []
+
+        add : Poly -> Poly -> Poly
+        add (Poly a) (Poly b) = Poly (addLists a b)
+
+        show : Poly -> String
+        show (Poly cs) =
+            if List.isEmpty cs then "0" else String.join "+" (List.indexedMap (\i c -> String.fromInt c ++ "x" ++ String.fromInt i) cs)
+
+        scale : Int -> Poly -> Poly
+        scale k (Poly cs) = Poly (List.map ((*) k) cs)
+
+
+type Bag = Bag (List String)
+    where
+        zero : Bag
+        zero = Bag []
+
+        add : Bag -> Bag -> Bag
+        add (Bag a) (Bag b) = Bag (List.sort (a ++ b))
+
+        show : Bag -> String
+        show (Bag xs) = "{" ++ String.join "," xs ++ "}"
+
+        size : Bag -> Int
+        size (Bag xs) = List.length xs
+
+        sizes : List Bag -> List Int
+        sizes = List.map Bag.size
+
+
+addLists : List Int -> List Int -> List Int
+addLists a b =
+    case ( a, b ) of
+        ( [], _ ) ->
+            b
+
+        ( _, [] ) ->
+            a
+
+        ( x :: xs, y :: ys ) ->
+            (x + y) :: addLists xs ys
+
+
+sum : List a -> a
+    where
+        a has zero : a
+        a has add : a -> a -> a
+sum xs =
+    List.foldl add zero xs
+
+
+double : a -> a
+    where
+        a has add : a -> a -> a
+double x =
+    add x x
+
+
+render : List a -> String
+    where
+        a has show : a -> String
+render xs =
+    "[" ++ String.join " " (List.map show xs) ++ "]"
+
+
+sumShown : List a -> String
+    where
+        a has zero : a
+        a has add : a -> a -> a
+        a has show : a -> String
+sumShown xs =
+    show (double (sum xs))
+
+
+weighted : List ( Int, a ) -> a
+    where
+        a has zero : a
+        a has add : a -> a -> a
+        a has scale : Int -> a -> a
+weighted items =
+    let
+        go acc rest =
+            case rest of
+                [] ->
+                    acc
+
+                ( k, x ) :: more ->
+                    go (add acc (scale k x)) more
+    in
+    go zero items
+
+
+results : List ( String, String )
+results =
+    [ ( "money sum", Money.show (sum [ Money 150, Money 275, Money 5 ]) )
+    , ( "v2 sum", V2.show (sum [ V2 1 2, V2 3 4, V2 -10 7 ]) )
+    , ( "poly sum", Poly.show (sum [ Poly [ 1, 2 ], Poly [ 0, 0, 3 ], Poly [ 5 ] ]) )
+    , ( "bag sum", Bag.show (sum [ Bag [ "pear" ], Bag [ "apple", "fig" ] ]) )
+    , ( "empty sums", String.join " " [ Money.show (sum []), V2.show (sum []), Poly.show (sum []), Bag.show (sum []) ] )
+    , ( "render", render [ Money 1, Money 99999 ] ++ render [ V2 0 0 ] )
+    , ( "sumShown", sumShown [ Money 5, Money 7 ] ++ " " ++ sumShown [ V2 1 1, V2 2 3 ] ++ " " ++ sumShown [ Poly [ 1 ], Poly [ 1, 1 ] ] )
+    , ( "weighted", Money.show (weighted [ ( 2, Money 100 ), ( 3, Money 5 ) ]) ++ " " ++ V2.show (weighted [ ( -1, V2 4 4 ), ( 10, V2 1 0 ) ]) )
+    , ( "partial", String.join " " (List.map (Money.show << Money.scale 3) [ Money 1, Money 20 ]) )
+    , ( "pipeline", Money 7 |> Money.add (Money 8) |> Money.scale 2 |> Money.show )
+    , ( "sizes", String.join "," (List.map String.fromInt (Bag.sizes [ Bag [ "a" ], Bag [], Bag [ "x", "y", "z" ] ])) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

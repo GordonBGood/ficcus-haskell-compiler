@@ -1,4 +1,4 @@
-/* sieve_plain.c -- what the Ficcus compiler should emit for Sieve.elm (C99).
+/* sieve_plain.c -- what the Ficus compiler should emit for Sieve.elm (C99).
  *
  *   gcc -std=c99 -pedantic -Wall -Wextra -O2 -DBUFBYTES=262144L -DNUMLOOPS=1000 sieve_plain.c -o sieve_plain
  *   (add -DHOIST for the variant with the uniqueness test moved out of the inner loop)

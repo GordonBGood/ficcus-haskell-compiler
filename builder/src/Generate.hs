@@ -32,8 +32,8 @@ import qualified AST.Members as Members
 import qualified AST.Optimized as Opt
 import qualified AST.Prim.Module as Module
 import qualified AST.Prim.Name as N
-import qualified Ficcus.Mono.Overlay as Overlay
-import qualified Ficcus.Mono.ManagerOrder as ManagerOrder
+import qualified Ficus.Mono.Overlay as Overlay
+import qualified Ficus.Mono.ManagerOrder as ManagerOrder
 import qualified Build
 import qualified Elm.Compiler.Type.Extract as Extract
 import qualified Elm.Details as Details
@@ -99,7 +99,7 @@ prod stuff details (Build.Artifacts pkg _ roots modules) =
       return $ JS.generate mode graph mains
 
 
--- Ficcus: `--output=x.types`: the type dumps that Build wrote for the project modules
+-- Ficus: `--output=x.types`: the type dumps that Build wrote for the project modules
 typeDumps :: R.Stuff -> Build.Artifacts -> IO B.Builder
 typeDumps stuff (Build.Artifacts _ _ _ modules) =
   do  let names = List.sort (filter (\n -> Module.toChars n `notElem` Overlay.supportModuleNames) (map moduleName modules))
@@ -165,7 +165,7 @@ readDump stuff name =
         else return (BC.pack ("-- module " ++ Module.toChars name ++ ": no type dump (module was cached)"))
 
 
--- Ficcus: C back end (milestone 1: a dump of the reachable optimized graph)
+-- Ficus: C back end (milestone 1: a dump of the reachable optimized graph)
 c :: R.Stuff -> Details.Details -> Build.Artifacts -> Task B.Builder
 c stuff details (Build.Artifacts pkg _ roots modules) =
   do  objects <- finalizeObjects =<< loadObjects stuff details modules
@@ -174,7 +174,7 @@ c stuff details (Build.Artifacts pkg _ roots modules) =
       return $ GC.dump graph mains
 
 
--- Ficcus effects E2: the order of the effect managers and ports, as the JS generator emits them (Ficcus.Mono.ManagerOrder)
+-- Ficus effects E2: the order of the effect managers and ports, as the JS generator emits them (Ficus.Mono.ManagerOrder)
 managerOrder :: R.Stuff -> Details.Details -> Build.Artifacts -> Task [ManagerOrder.Entry]
 managerOrder stuff details (Build.Artifacts pkg _ roots modules) =
   do  objects <- finalizeObjects =<< loadObjects stuff details modules
@@ -203,23 +203,23 @@ checkForDebugUses (Objects _ locals) =
 
 
 
--- Ficcus (ATTACH A2): a constrained function (AST.Constraints) cannot be called from JavaScript yet
+-- Ficus (ATTACH A2): a constrained function (AST.Constraints) cannot be called from JavaScript yet
 checkForConstraints :: Objects -> Task ()
 checkForConstraints (Objects (Opt.GlobalGraph foreignNodes _) locals) =
   case concatMap NitpickConstraints.constrainedNodes (foreignNodes : map (\(Opt.LocalGraph _ nodes _) -> nodes) (Map.elems locals)) of
     [] -> return ()
     globals ->
-      -- Ficcus (A4a): a type with a `derive` line has its own report
+      -- Ficus (A4a): a type with a `derive` line has its own report
       case [ Module.toChars home ++ "." ++ tipe ++ " derives " ++ members | Opt.Global (ModuleName.Canonical _ home) name <- globals, Just (tipe, members) <- [Derive.markerText name] ] of
         [] -> Task.throw (Exit.GenerateConstrainedFunctions (List.sort (map toChars globals)))
         derived -> Task.throw (Exit.GenerateDerivedMembers (List.sort derived))
   where
     globalHome (Opt.Global h _) = h
     toChars global@(Opt.Global (ModuleName.Canonical _ home) name)
-      -- Ficcus (A5b): a selector
+      -- Ficus (A5b): a selector
       | Selectors.isAttachedHome (globalHome global) = "the attached function `" ++ N.toChars name ++ "` by its bare name"
       | name == Constraints.customOperators = Module.toChars home ++ ": operators on custom types (`+`, `<`, `==`, ...)"
-      -- Ficcus (A5a, D6): an inferred `where`
+      -- Ficus (A5a, D6): an inferred `where`
       | Constraints.splitInferredMarker name /= Nothing =
           let def = maybe name id (Constraints.splitInferredMarker name) in
           Module.toChars home ++ "." ++ Members.displayName def ++ " (no type annotation: "

@@ -1,4 +1,4 @@
-/* fic_sched.h -- Ficcus effects slice E2: the scheduler and the platform (docs/EFFECTS-CHECK.md section 5, steps 4 to 8;
+/* fic_sched.h -- Ficus effects slice E2: the scheduler and the platform (docs/EFFECTS-CHECK.md section 5, steps 4 to 8;
  * docs/EFFECTS-DESIGN.md sections 1 and 3). A port of elm/core 1.0.5 `Elm/Kernel/Scheduler.js` and `Platform.js`, line for line where
  * the order of events is observable; the effect managers themselves (Task, Time, Random) are compiled from their Elm source.
  * Needs fic_rt.h and the closure runtime (fic_closure.h). Emitted only by programs that use a task, a bag or a manager.

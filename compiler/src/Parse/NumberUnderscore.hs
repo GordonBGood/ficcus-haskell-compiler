@@ -6,9 +6,9 @@ module Parse.NumberUnderscore
   where
 
 
--- Ficcus (syntax track E5): underscores inside numeric literals, `1_000_000`, `0xFF_FF`, `1_000.000_1`, `1e1_0`.
+-- Ficus (syntax track E5): underscores inside numeric literals, `1_000_000`, `0xFF_FF`, `1_000.000_1`, `1e1_0`.
 --
--- Rule (docs/Ficcus-Design-Decisions.md, 7 Nov): an underscore, or a run of them, is allowed only between two digits of the
+-- Rule (docs/Ficus-Design-Decisions.md, 7 Nov): an underscore, or a run of them, is allowed only between two digits of the
 -- same digit run (decimal digits, or hexadecimal digits after `0x`), also in the fraction and the exponent. Not allowed at the
 -- start, at the end, or next to `.`, `e`, a sign or the `0x` prefix. The value is that of the literal without the underscores.
 --
@@ -71,7 +71,7 @@ rescan addr len =
   in
   if byte 0 == 0x30 && byte 1 == 0x62
   then
-    -- binary (Ficcus track E4, `0b1010`, with underscores between digits as in the other bases)
+    -- binary (Ficus track E4, `0b1010`, with underscores between digits as in the other bases)
     if not (isBin (byte 2)) then Err 2 E.NumberBinDigit
     else
       case run isBin 2 of

@@ -113,14 +113,14 @@ addImport ifaces (State vs ts cs bs qvs qts qcs) (Src.Import (A.At _ name) maybe
         (Map.mapMaybeWithKey (unionToType home) unions)
         (Map.mapMaybeWithKey (aliasToType home) aliases)
 
-    -- Ficcus (track E3): the built-in `List` type is reachable through the module `List` (`List.List`, `L.List`), also when
+    -- Ficus (track E3): the built-in `List` type is reachable through the module `List` (`List.List`, `L.List`), also when
     -- the module declares a `List` of its own, which wins for the unqualified name
     !rawTypeInfo =
       if home == ModuleName.list
       then Map.insert T.list (Env.Union 1 ModuleName.list, Map.empty) rawTypeInfo0
       else rawTypeInfo0
 
-    -- Ficcus (ATTACH A1): the members of types are not plain values; they are reached through their type
+    -- Ficus (ATTACH A1): the members of types are not plain values; they are reached through their type
     (plainDefs, memberDefs) = Members.partitionDefs defs
     !vars = Map.map (Env.Specific home) plainDefs
     !types = Map.map (Env.Specific home . fst) rawTypeInfo
@@ -309,7 +309,7 @@ addExposedValue home vars types memberInfo binops (State vs ts cs bs qvs qts qcs
           Result.throw (Error.ImportExposedBinopNotFound region home op (Map.keys binops))
 
 
--- Ficcus (ATTACH A1): the type is exposed by name, so `Name.member` reaches its members
+-- Ficus (ATTACH A1): the type is exposed by name, so `Name.member` reaches its members
 exposeMembers :: T.Name -> Map.Map T.Name (Env.Exposed N.Name Can.Annotation) -> Env.Qualified N.Name Can.Annotation -> Env.Qualified N.Name Can.Annotation
 exposeMembers name memberInfo qvs =
   case Map.lookup name memberInfo of

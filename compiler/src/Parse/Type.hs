@@ -57,7 +57,7 @@ term =
                     chompTupleEnd start tipe []
               ]
         ,
-          -- lists: `[a]` is `List a` (Ficcus, syntax track E2)
+          -- lists: `[a]` is `List a` (Ficus, syntax track E2)
           inContext E.TList (word1 0x5B#Word8 {-[-} E.TStart) $
             do  Space.chompAndCheckIndent E.TListSpace E.TListIndentType
                 (tipe, end) <- specialize E.TListType expression

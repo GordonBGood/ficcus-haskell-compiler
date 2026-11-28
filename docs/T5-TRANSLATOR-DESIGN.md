@@ -5,7 +5,7 @@ Inputs: decisions rev 179 (T5), 180/181 (25 Nov parser order, P2, P3), the 25 No
 
 ## 1. Survey of the Haskell sources
 
-Scope: `compiler/src` (165 modules, 60,310 lines), `builder/src` (18, 8,052), `terminal/src` + `terminal/impl` (19, 5,593), `src/utils` (14, 5,535). **Total 216 modules, 79,490 lines, 3,894 top level signatures.** `worker/` (7, 1,134) is outside the cabal sources. Largest groups: `Ficcus/*` 14,281 (`CGen` 3,655, `Spec` 2,187), `Reporting` 13,062, `Type` 7,973, `Parse` 4,975, `Canonicalize` 4,394, `AST` 3,771, `Elm` 3,455, `Generate` 3,026.
+Scope: `compiler/src` (165 modules, 60,310 lines), `builder/src` (18, 8,052), `terminal/src` + `terminal/impl` (19, 5,593), `src/utils` (14, 5,535). **Total 216 modules, 79,490 lines, 3,894 top level signatures.** `worker/` (7, 1,134) is outside the cabal sources. Largest groups: `Ficus/*` 14,281 (`CGen` 3,655, `Spec` 2,187), `Reporting` 13,062, `Type` 7,973, `Parse` 4,975, `Canonicalize` 4,394, `AST` 3,771, `Elm` 3,455, `Generate` 3,026.
 
 | Construct | Files | Hits | Translation impact |
 |---|---|---|---|
@@ -27,8 +27,8 @@ Scope: `compiler/src` (165 modules, 60,310 lines), `builder/src` (18, 8,052), `t
 | primed names `x'` | | 216 distinct | R1 |
 | `div`/`mod`/`rem` | | 41/22/14 | R14 (semantics differ) |
 | tuples of 4 or more | 0 | 0 | nothing to do |
-| `unsafePerformIO` | 18 | 65 | almost all `FICCUS_NO_*` environment flags (Stage A3) |
-| `IORef` | 8 | 97 | `Type.UnionFind`, `Solve`, `Recorder`, `Readout`, `Members`; `Ficcus.Flags`, `Mono.Facts`, `Mono.Modules` |
+| `unsafePerformIO` | 18 | 65 | almost all `FICUS_NO_*` environment flags (Stage A3) |
+| `IORef` | 8 | 97 | `Type.UnionFind`, `Solve`, `Recorder`, `Readout`, `Members`; `Ficus.Flags`, `Mono.Facts`, `Mono.Modules` |
 | `ST`/`STRef`/`MutableByteArray` | 14 | ~40 | `Data.Utf8`, `String`, `Bytes`, `Buffer`, `Array`, `Graph`, `Json.String`, `Parse.Variable`, `Optimize.Names`, ... (kernel) |
 | `MVar`; `forkIO`; STM | 6; 11; 0 | 91; 16; 0 | `Build`, `Elm.Details`, `Generate`, `File`, `Reporting`, `ThreadSafe.Fork` |
 | exceptions (`catch`, `try`, `bracket`) | 23 | 103 | IO kernel only |
@@ -37,14 +37,14 @@ Scope: `compiler/src` (165 modules, 60,310 lines), `builder/src` (18, 8,052), `t
 | `ByteString`; `Data.Text` | 51; 0 | 91; 0 | kernel |
 | `System.IO/Directory/FilePath/Process/Exit/Environment` | 47 | 100 | IO kernel (section 7) |
 | HTTP/network | 13 | 22 | out of the bootstrap scope |
-| `Control.Monad.State.Strict`/`StateT` | 13 | | `Ficcus.Mono.*` passes, `Canonicalize.Kind`, `Selectors`, `Type.Dump`, `Repl` (R22) |
+| `Control.Monad.State.Strict`/`StateT` | 13 | | `Ficus.Mono.*` passes, `Canonicalize.Kind`, `Selectors`, `Type.Dump`, `Repl` (R22) |
 | `MagicHash` (`Addr#`, `Int#`, `I#`, `indexWord8OffAddr#`) | 59 | ~1,360 | 11 `Parse.*`, 6 `AST.Prim`, 6 `Elm`, 13 `src/utils`, 6 others |
 | `INLINE`/`SPECIALIZE`/`UNPACK` pragmas | 65 | 460 | dropped |
 | quasiquotes `[N.ascii\|..\|]`, `[keyword\|..\|]`, `[fsm\|..\|]`, `[table\|..\|]` | ~80 | ~440 | R13; `fsm` and `table` (Literals) need a look |
 | `$(embedFile ...)` | 4 | | `Mono.Concurrent`, `CRuntime`, `Overlay`, `CorePackages`: a generated literal module |
 | laziness: `[0 ..]`, `iterate`, `repeat`; `fix`/`mdo`/`~` | ~25; 0 | | R20; **no knot tying found** |
 | module cycles (`.hs-boot`) | 0 | | none |
-| mutual recursion groups | | | not countable by grep; the survey mode computes SCCs (expected large ones: `Parse.Expression`, `Canonicalize.Expression`, `Type.Constrain.Expression`, `Optimize.Expression`, `Ficcus.Mono.*`) |
+| mutual recursion groups | | | not countable by grep; the survey mode computes SCCs (expected large ones: `Parse.Expression`, `Canonicalize.Expression`, `Type.Constrain.Expression`, `Optimize.Expression`, `Ficus.Mono.*`) |
 
 **LANGUAGE pragmas** (files): OverloadedStrings 76, MagicHash 58, BangPatterns 48, ExtendedLiterals 46, PatternGuards 35, TemplateHaskell 31, QuasiQuotes 25, UnboxedTuples 14, Rank2Types 12, EmptyDataDecls 6, CPP 5, GADTs 4, UnliftedDatatypes 3, TemplateHaskellQuotes 3, FlexibleInstances 3, MultiWayIf 2, ForeignFunctionInterface 2, BinaryLiterals 2, PolyKinds, PatternSynonyms, KindSignatures, FlexibleContexts, DoAndIfThenElse 1 each.
 
@@ -62,7 +62,7 @@ Scope: `compiler/src` (165 modules, 60,310 lines), `builder/src` (18, 8,052), `t
 |---|---|---|
 | A1 | de-CPS the six rank 2 newtypes into first order step types with the same API (`Result` first, then `Parser`, `Task`, `Tracker`, the two `Decoder`s). Example: `newtype Parser x a = Parser (State -> PStep x a)`, `data PStep x a = Cok a State \| Eok a State \| Cerr Row Col (Row -> Col -> x) \| Eerr Row Col (Row -> Col -> x)` | consumers (`do` blocks in 30 `Parse.*` files) do not change; the gates prove the error messages and ASTs equal; the translator then only needs rule R9 |
 | A2 | confine `Addr#`/`I#`/`ForeignPtr` to the kernel modules (`AST.Prim.Name`, `Data.Utf8`, `String`, `Bytes*`, `Buffer`, `Literals`, `Parse.Primitives`); the ~20 other files get API calls | the kernel is hand written once in Ficus; everything else stays translatable |
-| A3 | environment flags: one `Ficcus.Flags` lookup per flag (already mostly so) | becomes one `extern` with the FFI-D4 purity promise (the environment is constant per run) |
+| A3 | environment flags: one `Ficus.Flags` lookup per flag (already mostly so) | becomes one `extern` with the FFI-D4 purity promise (the environment is constant per run) |
 | A4 | union find on a persistent store (G21): `Type.UnionFind` over an `IntMap`/array state threaded through `Solve` | the solver is the most delicate code; the types matrix and typed corpus gate it in Haskell, where failures are debuggable |
 | A5 | a sequential build path in `Build`/`Details`/`Generate` (no `forkIO`/`MVar` when `-j1`) | the self hosted compiler starts sequential (T1 later); the path is gated by the same tests |
 | A6 | recursion depth: run the gates under `+RTS -K256k` (needs `-rtsopts` in a test build); rewrite into state machines (`Step`/`loop`) where depth grows with the input | GHC hides deep recursion on its growable stack; the C stack does not (T3) |
@@ -105,7 +105,7 @@ Each rule is a function in the rule engine with this number. An UNMAPPED case is
 
 ## 4. Translator architecture (Stage B, in Haskell)
 
-**Place:** `ficcus-tools/t5/`, its own cabal project (not in `elm.cabal`), so the compiler build and `cabal.project.freeze` are untouched. One executable, `t5`, with modes `survey`, `translate`, `harness`.
+**Place:** `ficus-tools/t5/`, its own cabal project (not in `elm.cabal`), so the compiler build and `cabal.project.freeze` are untouched. One executable, `t5`, with modes `survey`, `translate`, `harness`.
 
 **Front end.** The `ghc` 9.10.3 package is in the global package database, so no download: parse each module with the GHC parser (`ParsedSource`, with comments and positions), and read **types from HIE files**: a build with `-fwrite-ide-info -hiedir <dir>` (a `cabal.project.local` flag) records the type of every expression span. That decides R9 to R11, R14, R16 and the overloaded names (`fmap`, `<>`, `traverse`, `show`, `fromIntegral`, literals) without a type checker of our own. Taking the monad from the enclosing signature fails for local unannotated `do` blocks, so it is only a fallback. `ghc-lib-parser` only if the `ghc` package proves awkward.
 
@@ -122,7 +122,7 @@ Each rule is a function in the rule engine with this number. An UNMAPPED case is
 The user's method, automated: every exposed function of a translated module is called on generated cases, in Haskell and in Ficus, and the printed results must be equal byte for byte.
 
 1. **Generation (Haskell).** `t5 harness M` emits a driver `HarnessM.hs` compiled against the elm library modules (not GHCi, which is slow at this size). Generators: built in ones (Int, Char, String, Name, List, Maybe, Map, tuples) and ones derived from `data` declarations. **Edge limits first, then random with a fixed seed:** `Int` 0, 1, -1, min, max, 2^31 and 2^32 boundaries; empty and one element lists, maps and strings; UTF-8 of 1 to 4 bytes, a lone `\r`, tabs; names equal to keywords; positions at end of input; depth 10^5 (only under T3's small stack mode). Function arguments come from a fixed named set written in both languages (`identity`, `negate`, a constant, a failing parser).
-2. **Storage.** The driver writes, per function, the cases as a **Ficus source module** `ficcus-tests/t5/<M>/Cases.fic` (literals, so Ficus needs no decoder) and the Haskell results as `expected.txt`, both committed, together with the hash of the Haskell source. Cases are regenerated only when that hash changes.
+2. **Storage.** The driver writes, per function, the cases as a **Ficus source module** `ficus-tests/t5/<M>/Cases.fic` (literals, so Ficus needs no decoder) and the Haskell results as `expected.txt`, both committed, together with the hash of the Haskell source. Cases are regenerated only when that hash changes.
 3. **Ficus side.** A generated `Main.fic` imports the translated module and the cases, applies each function and prints with the same **canonical printer** (generated per type for both languages: constructor names, records with sorted fields, strings escaped, `Float` in JavaScript form; GHC's `show` is not used).
 4. **Crashes.** Haskell: `try (evaluate (force r))` prints `CRASH <message>`; Ficus: `Crash.crash` prints the same line and the driver continues by running each case in a child process when a crash is expected, or comparing only the crash category.
 5. **IO functions.** Run in a fresh temporary directory with a fixture tree; the result and a listing of the tree afterwards (names, sizes, hashes) are compared.
@@ -138,7 +138,7 @@ The user's method, automated: every exposed function of a translated module is c
 | Parser | `Parse.Primitives` 470 (after A1; hand kernel over `Vector Word8` and an `Int` position, rev 181), `Parse.Keyword` 47, `Parse.Number` 292, then `Parse.Pattern` 330 | the `Parser` members, R13, error text equality, `Step` loops (T4) |
 | IO | `builder/src/File.hs` 353 | the IO kernel, `Task`, binary file reads and writes, locking |
 
-About 2,900 lines in all. **Order of the rest:** leaves up the import graph: `Data.*`, `AST.Prim.*` (kernel), `Reporting.Annotation`, `AST.*` (data and encoders), `Reporting.Doc` and `Reporting.Error.*` (13,062 lines of mostly pure text, very mechanical), `Parse.*`, `Canonicalize.*`, `Type.*` (after A4), `Nitpick`, `Optimize`, `Ficcus.Mono.*` (14,281, pure passes on `State`), `Generate.*`, `Json`, then `builder/` and `terminal/` (make only).
+About 2,900 lines in all. **Order of the rest:** leaves up the import graph: `Data.*`, `AST.Prim.*` (kernel), `Reporting.Annotation`, `AST.*` (data and encoders), `Reporting.Doc` and `Reporting.Error.*` (13,062 lines of mostly pure text, very mechanical), `Parse.*`, `Canonicalize.*`, `Type.*` (after A4), `Nitpick`, `Optimize`, `Ficus.Mono.*` (14,281, pure passes on `State`), `Generate.*`, `Json`, then `builder/` and `terminal/` (make only).
 **Rate (to be replaced by the pilot's measurement):** once the rules settle, one session translates and tests about 1,500 to 3,000 lines (3 to 10 modules of the pure kind; 1 or 2 of `Type.Solve` or `CGen` size). About 75,000 lines of non kernel code gives **30 to 50 sessions**, plus 5 to 8 for kernels and shims; this is within the 4 to 10 week guess of rev 707. The pilot decides the figure.
 
 ## 7. Dependencies and the I/O model
@@ -172,7 +172,7 @@ About 2,900 lines in all. **Order of the rest:** leaves up the import graph: `Da
 
 1. **Stage A on `ficcus`** (revised, section 9), gated by the full gates: A1 on `Reporting.Result` with the user's port's type and API and Haskell's error accumulation; then A4, the union find on the port's `STRef` design; then A1 on `Parse.Primitives` (`Cok/Eok/Cerr/Eerr`), `Tracker`, `Task`, the two `Decoder`s.
 2. **Compile time limit:** at most 10 percent slower on the typed corpus per A1 or A4 step; otherwise the step stays on its branch for a rethink. If A4 exceeds it, Haskell keeps `IORef` and the Ficus union find becomes a kernel module over a mutable vector.
-3. **Front end:** the `ghc` 9.10.3 package parser plus HIE types; the translator in `ficcus-tools/t5/` as its own cabal project.
+3. **Front end:** the `ghc` 9.10.3 package parser plus HIE types; the translator in `ficus-tools/t5/` as its own cabal project.
 4. **No hand edits of generated files;** per function overrides with source hashes; UNMAPPED fails the build.
 5. **Kernel list, hand written in Ficus:** `AST.Prim.Name`, `Data.Utf8`, `String`, `Bytes.*`, `Buffer`, `Literals` (`fsm`, `table`), `Parse.Primitives` core, `Map`/`Set` shim, `Crash`, `Flags`, `File` and the IO table, `ThreadSafe.Fork` (sequential).
 6. **Bootstrap scope:** `make` only (C and JS output); HTTP commands, `reactor` and `repl` later or never.
@@ -190,7 +190,7 @@ About 2,900 lines in all. **Order of the rest:** leaves up the import graph: `Da
 
 ## Session 2 (Opus or Sonnet): translator skeleton
 
-- Worktree `feat/t5-skel` from `ficcus`. Create `ficcus-tools/t5/` (own cabal project, `ghc` package). Build the compiler once with `-fwrite-ide-info` into a scratch `hiedir` (`cabal.project.local`, not committed).
+- Worktree `feat/t5-skel` from `ficcus`. Create `ficus-tools/t5/` (own cabal project, `ghc` package). Build the compiler once with `-fwrite-ide-info` into a scratch `hiedir` (`cabal.project.local`, not committed).
 - Implement `t5 survey` (exact section 1 table per module, call graph and tail call SCCs, UNMAPPED preview) and check that HIE gives the type of every `do` node in `Parse.Number` and `Canonicalize.Pattern`.
 - Implement R1 to R8, R17, R19 to R21 and the printer; translate `Data.Index`, `Data.NonEmptyList`, `Data.OneOrMore`, `Data.Bag`; compile them with the current `elmfic` binary.
 - Implement the harness for those four modules (section 5, steps 1 to 4, 6) and report cases, differences, the UNMAPPED list and the time per module.
@@ -210,9 +210,9 @@ Source: `reference/elm-in-elm/elm-compiler.zip` (commit `afba103`, 9 Sep 2024, E
 | 9 stubs: `Error.Syntax` (495 / 6,198), `Error.Docs`, `Warning`, `Elm.String`, `Elm.Package`, `AST.Optimized`, ... | 1,057 / 7,927 | partial |
 | Libraries: `Data.Map` (39 functions, Haskell argument order, over `Dict`, `comparable` keys), `Data.Name` (`Name = String`), `Data.STRef` (`s -> (s, a)`, refs index a `Dict Int`), `Data.Graph` (SCC), `Data.Pretty` | 1,259 | reusable |
 
-Not started: the rest of `Optimize`, `Nitpick`, `Generate`, `Json`, binary encoders, `builder/`, `terminal/`, `Ficcus.*`: about 60,000 of the 79,490 lines.
+Not started: the rest of `Optimize`, `Nitpick`, `Generate`, `Json`, binary encoders, `builder/`, `terminal/`, `Ficus.*`: about 60,000 of the 79,490 lines.
 
-**Drift:** 56 of the 64 Haskell counterparts changed by 20 lines or more since `0.19.1` (mostly upstream 0.19.2/0.19.3; Ficcus adds e.g. 329 lines to `Type.Solve`). The port cannot be the self hosted source without redoing those diffs by hand at every merge: it is a second reference and a library source; the translator stays.
+**Drift:** 56 of the 64 Haskell counterparts changed by 20 lines or more since `0.19.1` (mostly upstream 0.19.2/0.19.3; Ficus adds e.g. 329 lines to `Type.Solve`). The port cannot be the self hosted source without redoing those diffs by hand at every merge: it is a second reference and a library source; the translator stays.
 
 ### 9.2 The six rank 2 monads
 

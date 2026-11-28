@@ -8,7 +8,7 @@
 //    which is what Elm's unique update does and what ownership expresses directly;
 //  * map over a tree still in use: map_copy builds a new tree from &Tree (persistence).
 //  * SHARED tree (both children the same object): a Box cannot be shared. Default build: the tree of depth 20
-//    is built in full, 2^21-1 real nodes (the Elm/Ficcus one has 21), so this part allocates more than the other
+//    is built in full, 2^21-1 real nodes (the Elm/Ficus one has 21), so this part allocates more than the other
 //    programs. DEVIATION, flagged. Build with `--cfg rc` (variant "Rc") to use Rc for that tree only (21 nodes,
 //    logical size computed by walking the DAG, 2^21-1 visits); everything else is identical.
 #![forbid(unsafe_code)]

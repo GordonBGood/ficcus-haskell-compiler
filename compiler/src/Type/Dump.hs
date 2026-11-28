@@ -21,7 +21,7 @@ module Type.Dump
   where
 
 
--- Ficcus milestone 2, steps 3 and 4: the `.types` dump.
+-- Ficus milestone 2, steps 3 and 4: the `.types` dump.
 --
 -- Walks a Can.Module and prints, for every expression and pattern node, its
 -- source region, its kind and its type; for every definition its scheme; for
@@ -58,7 +58,7 @@ import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Package as Pkg
 import qualified AST.Prim.Module as Module
 import qualified Reporting.Annotation as A
-import qualified Ficcus.Mono.Facts as Facts
+import qualified Ficus.Mono.Facts as Facts
 import Type.Readout
 import Type.Recorder (Key(..), DefKey(..))
 import qualified Type.Recorder as Recorder
@@ -560,7 +560,7 @@ displayName unique kind _ =
 
 
 
--- CALLEE IDENTITY (Ficcus stage (ii) step 7, item 1)
+-- CALLEE IDENTITY (Ficus stage (ii) step 7, item 1)
 --
 -- Every use of a named value says which definition it uses: `callee: pkg:Module.name`
 -- (home module and name; for an operator the function it resolves to). A name bound
@@ -723,7 +723,7 @@ instanceText ctx e raw =
         -- (ATTACH A3) `/`, `//`, `modBy`, `remainderBy` at a type with the member behind them are typed by that type, not by Float or Int
         Left _ | Just callee <- calleeId ctx e, callee `elem` ["elm/core:Basics.fdiv", "elm/core:Basics.idiv", "elm/core:Basics.modBy", "elm/core:Basics.remainderBy"] ->
           do  -- (A5a) at a variable of the owner (a function whose `a has div` was inferred): that variable is keyed by its exact
-              -- type, as the variable of a written constraint is (Ficcus.Mono.Marks, the roots of the relaxed operators)
+              -- type, as the variable of a written constraint is (Ficus.Mono.Marks, the roots of the relaxed operators)
               let dead n = not (Set.member n (_scope ctx))
               let owners = List.nub [ o | (n, _) <- tvars (applyDefault dead inst), Just tok <- [Map.lookup n (_owned ctx)], Just o <- [parseToken tok] ]
               if null owners then return () else modify' (\w -> w { _fUses = Facts.UseFact callee [(0, owners)] : _fUses w })
@@ -842,7 +842,7 @@ schemeOf ctx e raw =
 
     annotation (Can.Forall _ tipe) = canToTType tipe
 
-    -- Ficcus (ATTACH A2): the scheme of a constrained function is its type with the hidden parameters (the type
+    -- Ficus (ATTACH A2): the scheme of a constrained function is its type with the hidden parameters (the type
     -- its definition has); the instance gets the types of the members at this use in front
     constrained ann@(Can.Forall _ tipe) =
       case Constraints.unwrap tipe of

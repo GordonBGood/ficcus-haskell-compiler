@@ -1,6 +1,6 @@
 # E1 review: ownership of the model (feat/effects-e1 at ce4bdbf9)
 
-24 Nov 2026. Read-only review of E1 step 3 (`Ficcus.Mono.ModelUnpack`, the Borrow seed in `Program.modelSeeds` and `Borrow.inferBorrow`,
+24 Nov 2026. Read-only review of E1 step 3 (`Ficus.Mono.ModelUnpack`, the Borrow seed in `Program.modelSeeds` and `Borrow.inferBorrow`,
 `Spec.workerPhase`/`workerFn`, `CGen.stepperSection`/`stepperMain`), against `docs/EFFECTS-CHECK.md` (design/fx-check) and D-fx-2/D-fx-3
 as amended. No compiler source was changed. Binary `bin/elmficE1c` (= ce4bdbf9). Every program below was compiled `--rc`, run N steps
 with `-DFIC_STEP_TEST=N -DFIC_STATS` at `-O2` and under ASan+UBSan (no pool), and compared byte for byte with Elm 0.19.3 under node
@@ -35,7 +35,7 @@ second owner is sound because the counts are the truth: R2, R3 and R5 write in p
 Elm's. Tuple and custom-type models are not touched (no `MAccess`); their patterns already move the fields out (3 copies in 500 steps). A
 model passed whole to a helper stays correct (U6) and copies, as the E1 report says. The pass never adds copies (last column).
 **Performance gap, not a soundness issue:** `Spec` lowers `{ m | a = e }` to `let _upK = m in { a = e, d = _upK.d, n = _upK.n }`
-(Spec.hs:987-994). `_upK` keeps a count on `a` while `e` runs, so `Array.set` sees two counts and copies (FICCUS_RC_DUMP of R1 shows
+(Spec.hs:987-994). `_upK` keeps a count on `a` while `e` runs, so `Array.set` sees two counts and copies (FICUS_RC_DUMP of R1 shows
 `Let _up21 = Local m` between `_mf0_m` and the set). G17b reaches 0 copies only because it writes all three fields, which lowers to
 `MSeq m record` instead. 977 of the 1385 two-argument `update` bodies in `corpus/` (70%) use this partial form. Nested records (U4) have the
 same problem one level down.
@@ -43,7 +43,7 @@ same problem one level down.
 **Q2. Is the Borrow seed sound with Rc and RcCheck? Sound** [S, R]. The seed only adds `(update, m)` to the owned set (and as a root of the
 update rule, which propagates to callers only). Every path is then handled by the ordinary owned-parameter machinery of Rc. The IR has no
 early return. `Debug.todo` exits with status 1 as Elm does, so a leak there is moot. `Debug.log` was tested in U1, U7 and U9. The stepper
-reads `paramOwns` of the clone that Rc counted: owned means the model is moved in; borrowed (`FICCUS_NO_MODEL_SEED=1`) means `fic_m` is
+reads `paramOwns` of the clone that Rc counted: owned means the model is moved in; borrowed (`FICUS_NO_MODEL_SEED=1`) means `fic_m` is
 dropped after the call. Both modes give live 0 on every program. The message is handled the same way.
 
 **Q3. Is the model taken out of the result without a copy only when the box is unique? Sound; there is no box on the direct path** [S].
@@ -72,8 +72,8 @@ compile regression** [R]:
   transient until E2. None of `targets/` or `ElmFiccusSamples/` is affected.
 
 **Q6. Tests that catch an unsound ModelUnpack that G17b misses.** G17b never shares a leaf, so a missing dup, or a substitution under a
-shadowing binder, would still give its checksum. Five tests are added on review/e1 (`ficcus-tests/effects/src/R*.fic`, Elm sources in
-`effects/ref/src/`, goldens in `expected/e1r_*.out`, runner `ficcus-tests/e1_review.py`). Each runs O2 and sanitizer builds, with
+shadowing binder, would still give its checksum. Five tests are added on review/e1 (`ficus-tests/effects/src/R*.fic`, Elm sources in
+`effects/ref/src/`, goldens in `expected/e1r_*.out`, runner `ficus-tests/e1_review.py`). Each runs O2 and sanitizer builds, with
 and without each switch:
 - R2Alias, R3History and R5Capture: a leaf of the model is also held by another field, a list or a closure. An in-place write that should
   have copied changes the printed arrays, or ASan reports a use after free.
@@ -91,7 +91,7 @@ a record parameter from that same field (`{ p | f = g .. p.f .. }`) in `corpus/`
 | `update` | 1121 | 92 |
 | helpers | 2151 | 272 |
 
-So helpers hold about 3/4 of the sites where an in-place write matters. `targets/` and the Ficcus tests have none (init-only programs).
+So helpers hold about 3/4 of the sites where an in-place write matters. `targets/` and the Ficus tests have none (init-only programs).
 The cost of a miss: for `Array`, a path copy (about 2 JsArray nodes per `set` here); for `Dict`, a reuse miss per node on the path; for
 `Vector`, the whole vector (O(n)) per write. That last case makes the move necessary for vector models. A per-leaf move ("an owned
 struct whose remaining uses do not touch leaf i gives leaf i away instead of duplicating it") lives in Rc. It has the ownership facts that

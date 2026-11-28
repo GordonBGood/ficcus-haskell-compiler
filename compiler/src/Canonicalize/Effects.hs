@@ -34,8 +34,8 @@ type Result i w a =
 -- CANONICALIZE
 
 
--- Ficcus (E3c): the payload check is a parameter (Canonicalize.FicPayload.checkPayload: Elm's `checkPayload` below for a `.elm`
--- module, Elm's set plus the Ficcus types for a `.fic` module of a build to C)
+-- Ficus (E3c): the payload check is a parameter (Canonicalize.FicPayload.checkPayload: Elm's `checkPayload` below for a `.elm`
+-- module, Elm's set plus the Ficus types for a `.fic` module of a build to C)
 canonicalize
   :: PayloadCheck
   -> Env.Env

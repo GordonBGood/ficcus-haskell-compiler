@@ -1,6 +1,6 @@
 // hamroc.rs -- safe Rust for the algorithm of targets/roc/NthHamming.roc: two growable circular buffer queues (multiples of 2: bigq, of 3: smlq;
 // front, back, size, Vec, initial size 16, doubled by appending a copy of itself) and one running value fvs for the multiples of 5.
-// LogRep = { log2: f64, twos, threes, fives }; counts are u16 as in Roc (16 bytes), or i64 (32 bytes) with `--cfg wide` (as in the Ficcus program).
+// LogRep = { log2: f64, twos, threes, fives }; counts are u16 as in Roc (16 bytes), or i64 (32 bytes) with `--cfg wide` (as in the Ficus program).
 //   mode `direct`: the loop of nthHamming   mode `iter`: Iterator::nth(n - 1) on a struct whose next() is nextHammingCIS (first item = one)
 // rustc --edition 2021 -C opt-level=3 -C debug-assertions=no [--cfg wide] hamroc.rs    run: hamroc N [direct|iter]   (default 1000000 direct)
 #[cfg(not(wide))]

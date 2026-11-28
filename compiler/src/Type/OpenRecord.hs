@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
--- Ficcus (A4bf, the A4b review's F1): `a has compare` and `a has hash` at a record.  Only a closed record has them: an
+-- Ficus (A4bf, the A4b review's F1): `a has compare` and `a has hash` at a record.  Only a closed record has them: an
 -- extensible record (`{ r | x : Int }`) may hold more fields through its row, a function among them.  Type.Members.resolve
 -- asks `recordRest` about the row of the record and refuses an open one (`errorFor`; Reporting.Error.Type words it).
 module Type.OpenRecord

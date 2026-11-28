@@ -1,6 +1,6 @@
 #!/bin/sh
 # steady.sh CMD...: runs CMD 60 times in a row (the CPU clock ramps up: a cold first run is about 1.6 times slower) and prints the median of the
-# last 40 runs in ms. For the Ficcus benchmarks use targets/sort/sortbench.py --runs 60 --last 40 --patterns random --elm bin/elmficS4 (same rule,
+# last 40 runs in ms. For the Ficus benchmarks use targets/sort/sortbench.py --runs 60 --last 40 --patterns random --elm bin/elmficS4 (same rule,
 # with the generation time subtracted).
 n=${RUNS:-60}; last=${LAST:-40}
 python3 - "$n" "$last" "$@" <<'PY'

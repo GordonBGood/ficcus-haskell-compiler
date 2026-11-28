@@ -63,10 +63,10 @@ toReport source (Error region name unimportedModules problem) =
                   map D.fromModule (toSuggestions name unimportedModules)
               ,
                 case Map.lookup name Pkg.suggestions of
-                  -- Ficcus (SIZED, recommendation f): the sized integer and Float32 modules exist in builds to C only
+                  -- Ficus (SIZED, recommendation f): the sized integer and Float32 modules exist in builds to C only
                   Nothing | Module.toChars name `elem` sizedModuleNames ->
                     D.toSimpleHint $
-                      "`" ++ Module.toChars name ++ "` is a Ficcus module for builds to C (`elm make Main.elm --output=main.c`).\
+                      "`" ++ Module.toChars name ++ "` is a Ficus module for builds to C (`elm make Main.elm --output=main.c`).\
                       \ The JavaScript output does not support the sized integers and `Float32` (yet), so this program cannot be\
                       \ compiled to JavaScript."
 
@@ -169,7 +169,7 @@ toSuggestions name unimportedModules =
     Suggest.sort (Module.toChars name) Module.toChars (Set.toList unimportedModules)
 
 
--- | the modules of the sized integers and Float32 (overlay/Int8.elm ...; Ficcus.Mono.Sized): not in builds to JavaScript
+-- | the modules of the sized integers and Float32 (overlay/Int8.elm ...; Ficus.Mono.Sized): not in builds to JavaScript
 sizedModuleNames :: [String]
 sizedModuleNames =
   ["Int8", "Int16", "Int32", "Int64", "Word8", "Word16", "Word32", "Word64", "Float32", "Float64"]

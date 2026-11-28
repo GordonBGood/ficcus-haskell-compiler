@@ -27,7 +27,7 @@
 static void (*fic_re_exhausted_hook)(const char *) = NULL;
 static void fic_re_exhausted(const char *what) {
   if (fic_re_exhausted_hook != NULL) { fic_re_exhausted_hook(what); return; }
-  fprintf(stderr, "Ficcus: a regular expression exceeded its %s\n", what);
+  fprintf(stderr, "Ficus: a regular expression exceeded its %s\n", what);
   abort();
 }
 

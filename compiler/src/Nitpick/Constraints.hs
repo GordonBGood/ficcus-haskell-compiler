@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
--- Ficcus (ATTACH, stage A2): constrained functions in the object graph.
+-- Ficus (ATTACH, stage A2): constrained functions in the object graph.
 module Nitpick.Constraints
   ( constrainedNodes
   , markInferred
@@ -54,9 +54,9 @@ constrainedNodes nodes =
         _ -> []
 
     isMarker (Opt.Global h name) =
-      Selectors.isAttachedHome h                                                   -- Ficcus (A5b): a selector
-        || name == Constraints.customOperators || Derive.markerText name /= Nothing    -- Ficcus (A4a): a `derive` line
-        || Constraints.splitInferredMarker name /= Nothing                         -- Ficcus (A5a, D6): an inferred `where`
+      Selectors.isAttachedHome h                                                   -- Ficus (A5b): a selector
+        || name == Constraints.customOperators || Derive.markerText name /= Nothing    -- Ficus (A4a): a `derive` line
+        || Constraints.splitInferredMarker name /= Nothing                         -- Ficus (A5a, D6): an inferred `where`
 
     hiddenFirst body =
       case body of
@@ -69,7 +69,7 @@ constrainedNodes nodes =
 
 
 
--- | Ficcus (A5a, D6): a top level definition without a type annotation whose requirements were inferred (its scheme
+-- | Ficus (A5a, D6): a top level definition without a type annotation whose requirements were inferred (its scheme
 -- is `Constraints.isInferred`) gets a marker node `name$inferred`, a dependency of its own node so that it is in the
 -- graph of every program that uses it; the JavaScript output refuses the marker like a constrained function and
 -- suggests a type annotation
@@ -96,7 +96,7 @@ markInferred localizer home annotations graph@(Opt.LocalGraph main nodes fields)
 
 
 
--- | Ficcus (A5b): a selector (a bare attached function name, AST.Selectors) is a use of `elm/core:$attached.m`, which no
+-- | Ficus (A5b): a selector (a bare attached function name, AST.Selectors) is a use of `elm/core:$attached.m`, which no
 -- module defines.  Each one a module uses gets a node of that name in the module's graph (no code, no dependencies), so
 -- the graph is complete, and the JavaScript output refuses it like a constrained function.  A module without selectors
 -- (every Elm module) keeps its graph.

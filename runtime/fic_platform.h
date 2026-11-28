@@ -1,4 +1,4 @@
-/* Ficcus effects (docs/EFFECTS-CHECK.md, slice E1): the platform objects that exist before the scheduler (E2, fic_sched.h).
+/* Ficus effects (docs/EFFECTS-CHECK.md, slice E1): the platform objects that exist before the scheduler (E2, fic_sched.h).
  *
  * Cmd and Sub are one structure (Elm's Platform.js): a leaf (manager home, value), a batch (a list of bags) or a map (tagger, bag).
  * They are counted heap objects with the header convention (references first, nptr counts them). E1 only needs the empty batch:

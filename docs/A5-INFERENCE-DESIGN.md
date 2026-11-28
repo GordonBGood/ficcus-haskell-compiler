@@ -171,7 +171,7 @@ No hidden parameters are needed for inferred definitions.
 | L1 (bare member name is a NAMING ERROR) | mostly gone (section 2) |
 | L6 (`<` on an annotated `a`) | wording only (section 4) |
 
-**Programs that change behaviour** (cases of `ficcus-tests/attach`):
+**Programs that change behaviour** (cases of `ficus-tests/attach`):
 
 | case | today | A5 |
 |---|---|---|
@@ -293,7 +293,7 @@ Add it to the `where` block of `T`:
 
 **Updating the expectations mechanically:**
 
-1. `ficcus-tests/attach/rename_titles.py` holds this table. It rewrites the titles in column 3 of `expected.tsv` (split on
+1. `ficus-tests/attach/rename_titles.py` holds this table. It rewrites the titles in column 3 of `expected.tsv` (split on
    `;`), in `g71expect.py` and in `g70gen.py`. It then lists every REJECT line whose column 4 (the text that must be contained)
    uses a retired word.
 2. After the texts change, a new flag `attach.py --print-reports` prints the first paragraph of each REJECT case. Column 4 is
@@ -304,7 +304,7 @@ Add it to the `where` block of `T`:
 
 | slice | content | size |
 |---|---|---|
-| **A5a** | Solver: carrier, `qualified`, `CLocal` instantiation, improvement (rule 1), determined closure, MR, the new defaulting (replaces `defaulting`, F4, and the function half of `hold`), D2 (relax AMBIGUOUS CONSTRAINT). `Compile` writes inferred `$where` schemes. Specializer: marks roots from inferred schemes; determined variables keyed through the member instance (B2). | about 350 lines: `Type/Members.hs`, `Type/Solve.hs`, `Compile.hs`, `Canonicalize/Constraints.hs`, `Ficcus/Mono/Spec.hs`, `Marks.hs` |
+| **A5a** | Solver: carrier, `qualified`, `CLocal` instantiation, improvement (rule 1), determined closure, MR, the new defaulting (replaces `defaulting`, F4, and the function half of `hold`), D2 (relax AMBIGUOUS CONSTRAINT). `Compile` writes inferred `$where` schemes. Specializer: marks roots from inferred schemes; determined variables keyed through the member instance (B2). | about 350 lines: `Type/Members.hs`, `Type/Solve.hs`, `Compile.hs`, `Canonicalize/Constraints.hs`, `Ficus/Mono/Spec.hs`, `Marks.hs` |
 | **A5b** | Selectors: candidate set (`Canonicalize.Environment`), fallback in `findVar`, anti-unification, `attachedHome` in Spec and Nitpick | about 200 |
 | **A5c** | Texts, titles, NAMING ERROR suggestions, hints (MR, L6, `/` on Int), `rename_titles.py`, `--print-reports` | about 250, plus the script |
 

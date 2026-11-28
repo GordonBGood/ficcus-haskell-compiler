@@ -15,8 +15,8 @@ and title is the old one.
 | `Compile.hs`, `Nitpick/Constraints.hs`, `builder/Generate.hs` | D6: a marker node per inferred constrained top level definition, a dependency of its node; the JavaScript output refuses it under CONSTRAINED FUNCTIONS with "Main.half (no type annotation: give it one with concrete types, such as `half : Float -> Float`, ...)". |
 | `Canonicalize/Constraints.hs` | D2: a variable of a written `where` line is allowed when its subject is determined (closure from the type). AMBIGUOUS CONSTRAINT stays for an undetermined subject. |
 | `Type/Dump.hs` | An inferred scheme has no hidden parameters (no member types in front of the instance). A relaxed `/ // modBy remainderBy` at a variable of its owner is recorded as a use (index 0). |
-| `Ficcus/Mono/Marks.hs` | The relaxed operators are roots of the exact-key fixpoint (so `half x y = x / y` at two custom types gets two clones). |
-| `Ficcus/Mono/Determined.hs` (new), `Ficcus/Mono/Spec.hs` | D2 in the specializer: `determinedByMembers` (at a call of a constrained function, the variables only a member decides, from the member of the subject's exact type) and `deadByMembers` (the same for the variables of a clone's body that are not in its key: `b` in an inferred `get2 w = get (get w)`). |
+| `Ficus/Mono/Marks.hs` | The relaxed operators are roots of the exact-key fixpoint (so `half x y = x / y` at two custom types gets two clones). |
+| `Ficus/Mono/Determined.hs` (new), `Ficus/Mono/Spec.hs` | D2 in the specializer: `determinedByMembers` (at a call of a constrained function, the variables only a member decides, from the member of the subject's exact type) and `deadByMembers` (the same for the variables of a clone's body that are not in its key: `b` in an inferred `get2 w = get (get w)`). |
 
 ### Settling (Type.Requirements.settle)
 
@@ -56,7 +56,7 @@ Elm programs: no `where` block means no pending obligation, so none of the new c
 
 ## Cases
 
-`ficcus-tests/attach/a5agen.py --write` writes the cases and rows; `--expect` builds every twin (in `a5a-twins/`, on
+`ficus-tests/attach/a5agen.py --write` writes the cases and rows; `--expect` builds every twin (in `a5a-twins/`, on
 `bin/elm0193` or `bin/elmficA3b`) and writes `expected.out`. Attach is now 285 cases (267 + 18).
 
 ### Section 3 rows that change (19)
@@ -159,7 +159,7 @@ a5a-b2-chain; B4 by the G71 b4 cases, constraint-order and a5a-b4-held-generic.
 
 ## Gates
 
-2026-11-26, `BIN=elmficA5a KEEP=1 ficcus-tests/gates.sh` (log /home/gordon/claude-tmp/gates-a5a.log), all green:
+2026-11-26, `BIN=elmficA5a KEEP=1 ficus-tests/gates.sh` (log /home/gordon/claude-tmp/gates-a5a.log), all green:
 runtime 0; attach 285/0 (with `--rc`, ASan+UBSan, 0 live); sized-fuzz 40/0; stringdiff all agree; types 267 PASS + 1 XFAIL;
 JS identity 28/0; examples 298 x3; fbip 0; effects-e2, e1review, effects-e1, e1p all ok; e1pr all ok (2 target rows);
 e1p-identity all ok; **a3b-identity against elmficA3b: 100 compiles, 0 differ** (the C text of the 16 suite programs and

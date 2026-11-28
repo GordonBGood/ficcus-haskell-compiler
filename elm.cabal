@@ -155,11 +155,11 @@ executable elm
         Type.Members
         Type.OpenRecord
         Type.Requirements
-        Ficcus.Mono.Members
-        Ficcus.Mono.Determined
-        Ficcus.Mono.BuiltinMembers
-        Ficcus.Mono.ContainerMembers
-        Ficcus.Mono.Derived
+        Ficus.Mono.Members
+        Ficus.Mono.Determined
+        Ficus.Mono.BuiltinMembers
+        Ficus.Mono.ContainerMembers
+        Ficus.Mono.Derived
         Nitpick.Constraints
         AST.Source
         AST.Prim.Module
@@ -188,43 +188,43 @@ executable elm
         Canonicalize.Pattern
         Canonicalize.Type
         Compile
-        Ficcus.Flags
-        Ficcus.CorePackages
-        Ficcus.Mono.Facts
-        Ficcus.Mono.Marks
-        Ficcus.Mono.Class
-        Ficcus.Mono.Concurrent
-        Ficcus.Mono.Layout
-        Ficcus.Mono.Free
-        Ficcus.Mono.Reuse
-        Ficcus.Mono.Borrow
-        Ficcus.Mono.Rc
-        Ficcus.Mono.Inline
-        Ficcus.Mono.Known
-        Ficcus.Mono.Twin
-        Ficcus.Mono.Unbox
-        Ficcus.Mono.RcCheck
-        Ficcus.Mono.Ir
-        Ficcus.Mono.Print
-        Ficcus.Mono.Modules
-        Ficcus.Mono.RowShape
-        Ficcus.Mono.Sized
-        Ficcus.Mono.Kernel
-        Ficcus.Mono.Effects
-        Ficcus.Mono.Program
-        Ficcus.Mono.ManagerOrder
-        Ficcus.Mono.ManagerTable
-        Ficcus.Mono.PortsHeader
-        Ficcus.Mono.PortDesc
-        Ficcus.Mono.PortFic
-        Ficcus.Mono.LeafSplit
-        Ficcus.Mono.ModelUnpack
-        Ficcus.Mono.Spec
-        Ficcus.Mono.Embed
-        Ficcus.Mono.Overlay
-        Ficcus.Mono.CRuntime
-        Ficcus.Mono.CGen
-        Ficcus.TypesFile
+        Ficus.Flags
+        Ficus.CorePackages
+        Ficus.Mono.Facts
+        Ficus.Mono.Marks
+        Ficus.Mono.Class
+        Ficus.Mono.Concurrent
+        Ficus.Mono.Layout
+        Ficus.Mono.Free
+        Ficus.Mono.Reuse
+        Ficus.Mono.Borrow
+        Ficus.Mono.Rc
+        Ficus.Mono.Inline
+        Ficus.Mono.Known
+        Ficus.Mono.Twin
+        Ficus.Mono.Unbox
+        Ficus.Mono.RcCheck
+        Ficus.Mono.Ir
+        Ficus.Mono.Print
+        Ficus.Mono.Modules
+        Ficus.Mono.RowShape
+        Ficus.Mono.Sized
+        Ficus.Mono.Kernel
+        Ficus.Mono.Effects
+        Ficus.Mono.Program
+        Ficus.Mono.ManagerOrder
+        Ficus.Mono.ManagerTable
+        Ficus.Mono.PortsHeader
+        Ficus.Mono.PortDesc
+        Ficus.Mono.PortFic
+        Ficus.Mono.LeafSplit
+        Ficus.Mono.ModelUnpack
+        Ficus.Mono.Spec
+        Ficus.Mono.Embed
+        Ficus.Mono.Overlay
+        Ficus.Mono.CRuntime
+        Ficus.Mono.CGen
+        Ficus.TypesFile
         Generate.C
         Generate.Html
         Generate.JavaScript

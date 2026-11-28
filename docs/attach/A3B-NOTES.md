@@ -35,7 +35,7 @@ x = 0.1                                                                -- Float3
 
 | piece | where |
 |---|---|
-| find the member types inside an exact type (type arguments, tuple/record parts, constructor fields with the arguments substituted; each exact type once; sized types are scalars; a non-regular type stops after 2000 types with a FICCUS report) | new `Ficcus/Mono/ContainerMembers.hs` |
+| find the member types inside an exact type (type arguments, tuple/record parts, constructor fields with the arguments substituted; each exact type once; sized types are scalars; a non-regular type stops after 2000 types with a FICUS report) | new `Ficus/Mono/ContainerMembers.hs` |
 | at a use of `==`, `compare`, `<` ... at such a type: request the member clone of each (shape type), record `(member, exact type) -> clone`; an eta clone (`T$$m$eta`) when the member is not a function of two parameters | `Spec.hs` 514-570 (`containerMembers`, `containerMember`, `etaMember`), replacing the refusal in `wellKnownRef` (503) |
 | the table in the program; its clones are roots | `Ir.hs` 156 (`mpMembers`); `Spec.hs` 159 (state), 230 (`MProgram`), 255-262 (`ordered`: extra roots before main); `Inline.hs` 113; `Known.hs` 281 |
 | the structural helpers call the clone: `eqExpr`/`cmpExpr` look the exact type up first; `memberCall` makes a direct call, dups an argument whose parameter is owned (`--rc`; the helpers borrow), turns Order into a sign | `CGen.hs` 94 (`iMembers`), 145, 2642-2694 (`eqExpr`, `cmpExpr` now takes `Info`, `memberCall`), the four `cmpExpr` call sites |
@@ -43,22 +43,22 @@ x = 0.1                                                                -- Float3
 | the relaxed Float literal | `Type/Members.hs` 252-268 (`floatLiterals`, `floatLiteralName`); `Type/Solve.hs` 1 (`PatternGuards`), 110-135 (a `CEqual` case for the `Float` category, same error handling as `CEqual`) |
 | NO MEMBER wording for a literal | `Reporting/Error/Type.hs` 221-242 |
 | specializer: literal at Float32 / at a custom type; `fromFloat` of Float = identity; shape type | `Spec.hs` 454-457, 657, 973-985 (`floatLiteralAt`), 1013-1030; `Sized.hs` 180 (`memberOp` has `fromFloat`) |
-| Float32 gets the member | `ficcus-tools/gen_sized.py`, `overlay/Float32.elm` (regenerated: one member) |
+| Float32 gets the member | `ficus-tools/gen_sized.py`, `overlay/Float32.elm` (regenerated: one member) |
 
 JS: unchanged. Every new case is refused there (`$customOperators` from the comparable policy or the relaxed obligation; `eq` by
 definition), checked for the six container cases and `a3b-js-fromfloat`.
 
-## 3. Cases (`ficcus-tests/attach`, 267 = 252 + 15; generator `a3bgen.py`)
+## 3. Cases (`ficus-tests/attach`, 267 = 252 + 15; generator `a3bgen.py`)
 
-Expected outputs come from twins in `ficcus-tests/attach/a3b-twins/` (`a3bgen.py --expect`), never by eye: plain Elm on `bin/elm0193`
+Expected outputs come from twins in `ficus-tests/attach/a3b-twins/` (`a3bgen.py --expect`), never by eye: plain Elm on `bin/elm0193`
 + node, with each member type replaced by a representation whose structural `==`/`compare` is the member (`type alias Ci = String`,
-`ci = String.toLower`; `Desc n` as `negate n`; `Word64` as `(hi, lo)` with hi, lo < 2^32, printed `hi:lo`), or, for Float32, a Ficcus
+`ci = String.toLower`; `Desc n` as `negate n`; `Word64` as `(hi, lo)` with hi, lo < 2^32, printed `hi:lo`), or, for Float32, a Ficus
 program with explicit `Float32.fromFloat` run on `elmficA4b`. The converted A3 cases use their own sources with the strings of `Name`
 lowered and the `where` block removed.
 
 | case | elmficA4b | elmficA3b |
 |---|---|---|
-| a3b-eq-builtin (26 lines), a3b-eq-unions (15), a3b-eq-vector (5), a3b-ci-keys (13), a3b-cmp (19), a3b-member-forms (8), a3b-imported (5), a3b-word64 (13) | FICCUS refusal ("has its own ... member") | RUN c ok (gcc, clang, `--rc` ASan/UBSan 0 live) |
+| a3b-eq-builtin (26 lines), a3b-eq-unions (15), a3b-eq-vector (5), a3b-ci-keys (13), a3b-cmp (19), a3b-member-forms (8), a3b-imported (5), a3b-word64 (13) | FICUS refusal ("has its own ... member") | RUN c ok (gcc, clang, `--rc` ASan/UBSan 0 live) |
 | a3b-fromfloat-user (9), a3b-fromfloat-float32 (11) | TYPE MISMATCH | RUN c ok |
 | a3b-fromfloat-defaults (js+c, 6) | ok | ok (guard: a `fromFloat` type in sight, literals at Float, JS and C as Elm) |
 | a3b-err-float-literal-elm | TYPE MISMATCH | TYPE MISMATCH (guard: nothing in sight) |
@@ -99,7 +99,7 @@ attach 267/0 and a3b-identity 100/0 rerun.
 3. The C generator does not itself refuse a member type that reached `eqExpr`/`cmpExpr` without a table entry (it would be structural);
    every path found goes through `wellKnownRef` (`Basics.eq/neq/compare/lt/...`), sorts go through `vectorSortMember` (unchanged,
    still `holdsMember`). A guard would need the set of member types in `MProgram`.
-4. Non-regular recursion (`type Nest a = Nil | Cons a (Nest (List a))`) with a member inside stops with a FICCUS report after 2000 types
+4. Non-regular recursion (`type Nest a = Nil | Cons a (Nest (List a))`) with a member inside stops with a FICUS report after 2000 types
    (3 s); without a member inside, `==` on such a type was not looked at (pre-existing).
 5. `vectorSortMember` still routes element types that *hold* a member (not only types with one) through the overlay's `sortMember`
    (Elm level sort with `compare`); the kernel sort with a helper comparator would now also be correct and faster. Left as is (no C change).

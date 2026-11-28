@@ -266,7 +266,7 @@ chompLowerVar pos end cur =
     (# pos, cur #)
 
 
--- Ficcus (track E4): a name may start with an underscore when a letter, digit or underscore follows,
+-- Ficus (track E4): a name may start with an underscore when a letter, digit or underscore follows,
 -- `_b_`; a lone `_` stays the wildcard
 underscoreName :: Addr# -> Addr# -> Bool
 underscoreName pos end =

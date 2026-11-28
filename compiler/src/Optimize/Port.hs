@@ -52,7 +52,7 @@ toEncoder tipe =
       encodeTriple a b c
 
     Can.TType home name args
-      | Just t <- FicPayload.elmLike home name args ->      -- Ficcus (E3c): never run (a build to C), only kept total
+      | Just t <- FicPayload.elmLike home name args ->      -- Ficus (E3c): never run (a build to C), only kept total
           toEncoder t
 
     Can.TType _ name args ->
@@ -202,7 +202,7 @@ toDecoder tipe =
       decodeTriple a b c
 
     Can.TType home name args
-      | Just t <- FicPayload.elmLike home name args ->      -- Ficcus (E3c): never run (a build to C), only kept total
+      | Just t <- FicPayload.elmLike home name args ->      -- Ficus (E3c): never run (a build to C), only kept total
           toDecoder t
 
     Can.TType _ name args ->

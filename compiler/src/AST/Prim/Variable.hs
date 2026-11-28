@@ -33,7 +33,7 @@ chompLower = chomp isLower Char.isLower
 chompInner pos end w =
   if isTrue# (eqWord8# w 0x27#Word8 {-'-})
   then
-    -- Ficcus (track E4): `x'` is one name. As in Elm 0.19.3, a quote that starts a character
+    -- Ficus (track E4): `x'` is one name. As in Elm 0.19.3, a quote that starts a character
     -- literal (`f'a'`, `f'\n'`) still ends the name.
     if charLiteralAt pos end then pos else plusAddr# pos 1#
   else

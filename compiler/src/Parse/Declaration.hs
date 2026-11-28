@@ -39,7 +39,7 @@ import qualified Reporting.Error.Syntax as E
 data Decl
   = Value (Maybe Src.Comment) (A.Located Src.Value)
   | Union (Maybe Src.Comment) (A.Located Src.Union)
-  | UnionWith (Maybe Src.Comment) (A.Located Src.Union) [A.Located Src.Value]   -- Ficcus (ATTACH A1): with a `where` block; the values have mangled names
+  | UnionWith (Maybe Src.Comment) (A.Located Src.Union) [A.Located Src.Value]   -- Ficus (ATTACH A1): with a `where` block; the values have mangled names
   | Alias (Maybe Src.Comment) (A.Located Src.Alias)
   | Port (Maybe Src.Comment) Src.Port
 
@@ -94,7 +94,7 @@ valueDeclWith checkLine maybeDocs start =
                 do  word1 0x3A#Word8 {-:-} E.DeclDefEquals
                     Space.chompAndCheckIndent E.DeclDefSpace E.DeclDefIndentType
                     (tipe0, typeEnd) <- specialize E.DeclDefType Type.expression
-                    -- Ficcus (ATTACH A2): a `where` block of constraints makes hidden leading parameters
+                    -- Ficus (ATTACH A2): a `where` block of constraints makes hidden leading parameters
                     (tipe, hidden) <- Constraints.signatureWhere typeEnd tipe0
                     checkLine
                     defName <- chompMatchingName name
@@ -118,7 +118,7 @@ chompMemberDocComment =
     Nothing
 
 
--- Ficcus (ATTACH A1): one member of a `where` block, an ordinary definition (its documentation comment is ignored)
+-- Ficus (ATTACH A1): one member of a `where` block, an ordinary definition (its documentation comment is ignored)
 memberDecl :: Space.Parser E.Decl (A.Located Src.Value)
 memberDecl =
   do  maybeDocs <- chompMemberDocComment

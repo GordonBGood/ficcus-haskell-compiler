@@ -4,12 +4,12 @@ module FicOverlayJson exposing
     , array, keyValuePairs, map3, map4, map5, map6, map7, map8
     )
 
-{-| Ficcus: the part of elm/json that is written in Elm on top of the kernel (runtime/fic_json.h). Compiled only into projects
-that depend directly on elm/json (Ficcus.Mono.Overlay); the specializer redirects `Json.Encode.list`, `array`, `set`, `object`,
+{-| Ficus: the part of elm/json that is written in Elm on top of the kernel (runtime/fic_json.h). Compiled only into projects
+that depend directly on elm/json (Ficus.Mono.Overlay); the specializer redirects `Json.Encode.list`, `array`, `set`, `object`,
 `dict` and `Json.Decode.array`, `keyValuePairs`, `map3` to `map8` to the functions below (same types).
 
 The first five definitions only give the types: they are kernel functions (`author/project:FicOverlayJson.<name>` in
-Ficcus.Mono.Kernel), their bodies are never compiled to C.
+Ficus.Mono.Kernel), their bodies are never compiled to C.
 
 -}
 

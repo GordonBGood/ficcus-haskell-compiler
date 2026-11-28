@@ -1,0 +1,300 @@
+module VecDiff exposing (main)
+
+import Array exposing (Array)
+import Vector exposing (Vector)
+
+-- V2 differential test (docs/STAGE4-V2.md): random sequences of operations on an Array and on a Vector must agree after every step.
+-- The operations are drawn from a generator (Park-Miller, no product above 2^53, so the same numbers occur in Elm and in Ficus) and
+-- cover the whole API, with indices in range and out of range, empty and non empty vectors, and snapshots: a pair (array, vector) is
+-- saved now and then and checked again at the end, after the vector has been updated many times (an update of a vector that is still
+-- referenced must copy; of a unique one must not change anything else). The reference output is the output of Elm 0.19.3 running this
+-- source with the stand-in module ficus-tests/vecshim/Vector.elm (expected/vecdiff.out).
+
+
+type alias St =
+    { seed : Int
+    , a : Array Int
+    , v : Vector Int
+    , saved : List ( Array Int, Vector Int )
+    , bad : Int
+    , first : String
+    }
+
+
+next : Int -> Int
+next s =
+    modBy 2147483647 (s * 16807)
+
+
+draw : Int -> St -> ( Int, St )
+draw n st =
+    let
+        s =
+            next st.seed
+    in
+    ( modBy n (s // 8), { st | seed = s } )
+
+
+{-| an index from -3 to len + 3 -}
+drawIndex : St -> ( Int, St )
+drawIndex st =
+    let
+        ( r, st1 ) =
+            draw (Array.length st.a + 7) st
+    in
+    ( r - 3, st1 )
+
+
+swapA : Int -> Int -> Array Int -> Array Int
+swapA i j a =
+    case ( Array.get i a, Array.get j a ) of
+        ( Just x, Just y ) ->
+            Array.set i y (Array.set j x a)
+
+        _ ->
+            a
+
+
+updateA : Int -> (Int -> Int) -> Array Int -> Array Int
+updateA i f a =
+    case Array.get i a of
+        Just x ->
+            Array.set i (f x) a
+
+        Nothing ->
+            a
+
+
+agree : String -> St -> St
+agree what st =
+    if Array.toList st.a == Vector.toList st.v && Array.length st.a == Vector.length st.v then
+        st
+
+    else
+        { st | bad = st.bad + 1, first = if st.first == "" then what else st.first }
+
+
+cap : St -> St
+cap st =
+    if Array.length st.a > 150 then
+        { st | a = Array.slice 0 100 st.a, v = Vector.slice 0 100 st.v }
+
+    else
+        st
+
+
+step : Int -> St -> St
+step k st0 =
+    let
+        ( op, st ) =
+            draw 24 st0
+    in
+    cap <|
+        agree ("op " ++ String.fromInt op ++ " at step " ++ String.fromInt k) <|
+            case op of
+                0 ->
+                    let
+                        ( x, s ) =
+                            draw 1000 st
+                    in
+                    { s | a = Array.push x s.a, v = Vector.push x s.v }
+
+                1 ->
+                    let
+                        ( i, s1 ) =
+                            drawIndex st
+
+                        ( x, s ) =
+                            draw 1000 s1
+                    in
+                    { s | a = Array.set i x s.a, v = Vector.set i x s.v }
+
+                2 ->
+                    let
+                        ( i, s1 ) =
+                            drawIndex st
+
+                        ( x, s ) =
+                            draw 1000 s1
+                    in
+                    { s | a = updateA i (\e -> e * 3 + x) s.a, v = Vector.update i (\e -> e * 3 + x) s.v }
+
+                3 ->
+                    let
+                        ( i, s1 ) =
+                            drawIndex st
+
+                        ( j, s ) =
+                            drawIndex s1
+                    in
+                    { s | a = swapA i j s.a, v = Vector.swap i j s.v }
+
+                4 ->
+                    let
+                        ( i, s1 ) =
+                            drawIndex st
+
+                        ( j, s ) =
+                            drawIndex s1
+                    in
+                    { s | a = Array.slice i j s.a, v = Vector.slice i j s.v }
+
+                5 ->
+                    let
+                        ( n, s ) =
+                            draw 12 st
+                    in
+                    { s | a = Array.append s.a (Array.initialize n (\i -> i * i)), v = Vector.append s.v (Vector.initialize n (\i -> i * i)) }
+
+                6 ->
+                    { st | a = Array.map (\e -> e + 1) st.a, v = Vector.map (\e -> e + 1) st.v }
+
+                7 ->
+                    { st | a = Array.indexedMap (\i e -> i * 2 + e) st.a, v = Vector.indexedMap (\i e -> i * 2 + e) st.v }
+
+                8 ->
+                    { st | a = Array.filter (\e -> modBy 3 e /= 0) st.a, v = Vector.filter (\e -> modBy 3 e /= 0) st.v }
+
+                9 ->
+                    let
+                        ( n, s ) =
+                            draw 25 st
+                    in
+                    { s | a = Array.initialize (n - 2) (\i -> i * 7), v = Vector.initialize (n - 2) (\i -> i * 7) }
+
+                10 ->
+                    let
+                        ( n, s1 ) =
+                            draw 25 st
+
+                        ( x, s ) =
+                            draw 100 s1
+                    in
+                    { s | a = Array.repeat (n - 2) x, v = Vector.repeat (n - 2) x }
+
+                11 ->
+                    let
+                        ( n, s ) =
+                            draw 15 st
+                    in
+                    { s | a = Array.fromList (List.range 1 n), v = Vector.fromList (List.range 1 n) }
+
+                12 ->
+                    let
+                        ( i, s ) =
+                            drawIndex st
+                    in
+                    if Array.get i s.a == Vector.get i s.v then
+                        s
+
+                    else
+                        { s | bad = s.bad + 1, first = "get" }
+
+                13 ->
+                    -- folds in both directions with an operation that depends on the order
+                    if Array.foldl (\e acc -> acc * 31 + e) 7 st.a == Vector.foldl (\e acc -> acc * 31 + e) 7 st.v
+                        && Array.foldr (\e acc -> e :: acc) [] st.a == Vector.foldr (\e acc -> e :: acc) [] st.v
+                        && Array.foldl (::) [] st.a == Vector.foldl (::) [] st.v
+                    then
+                        st
+
+                    else
+                        { st | bad = st.bad + 1, first = "fold" }
+
+                14 ->
+                    if Array.toIndexedList st.a == Vector.toIndexedList st.v && Array.isEmpty st.a == Vector.isEmpty st.v then
+                        st
+
+                    else
+                        { st | bad = st.bad + 1, first = "indexed" }
+
+                15 ->
+                    { st | saved = List.take 6 (( st.a, st.v ) :: st.saved) }
+
+                16 ->
+                    { st | a = Array.slice 0 -1 st.a, v = Vector.slice 0 -1 st.v }
+
+                17 ->
+                    let
+                        ( x, s ) =
+                            draw 1000 st
+                    in
+                    { s | a = Array.push x (Array.push x (Array.push x s.a)), v = Vector.push x (Vector.push x (Vector.push x s.v)) }
+
+                18 ->
+                    -- go back to a snapshot (the vector is shared with the snapshot list from here on)
+                    case List.head st.saved of
+                        Just ( a, v ) ->
+                            { st | a = a, v = v }
+
+                        Nothing ->
+                            { st | a = Array.fromList [ 5 ], v = Vector.singleton 5 }
+
+                19 ->
+                    -- the same vector twice in one append, and a push on it
+                    { st | a = Array.push 1 (Array.append st.a st.a), v = Vector.push 1 (Vector.append st.v st.v) }
+
+                20 ->
+                    let
+                        ( i, s ) =
+                            drawIndex st
+                    in
+                    { s | a = Array.set i 0 (Array.set (i + 1) 1 s.a), v = Vector.set i 0 (Vector.set (i + 1) 1 s.v) }
+
+                21 ->
+                    { st | a = Array.empty, v = Vector.empty }
+
+                22 ->
+                    -- a swap on a vector that a snapshot may hold
+                    let
+                        ( i, s1 ) =
+                            drawIndex st
+
+                        ( j, s ) =
+                            drawIndex s1
+                    in
+                    { s | a = swapA i j (swapA j i s.a), v = Vector.swap i j (Vector.swap j i s.v) }
+
+                _ ->
+                    let
+                        ( n, s ) =
+                            draw 40 st
+                    in
+                    { s | a = Array.append (Array.repeat n 9) s.a, v = Vector.append (Vector.repeat n 9) s.v }
+
+
+run : Int -> Int -> { bad : Int, sum : Int, first : String, len : Int }
+run seed steps =
+    let
+        st0 =
+            { seed = seed, a = Array.empty, v = Vector.empty, saved = [], bad = 0, first = "" }
+
+        go k s =
+            if k >= steps then
+                s
+
+            else
+                go (k + 1) (step k s)
+
+        st =
+            go 0 st0
+
+        savedBad =
+            List.length (List.filter (\( a, v ) -> Array.toList a /= Vector.toList v) st.saved)
+    in
+    { bad = st.bad + savedBad, sum = List.sum (Vector.toList st.v), first = st.first, len = Vector.length st.v }
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    _ =
+                        List.map (\seed -> Debug.log ("seed " ++ String.fromInt seed) (run seed 400)) (List.range 1 40)
+                in
+                ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

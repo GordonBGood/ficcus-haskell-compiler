@@ -10,7 +10,7 @@ Debug.toString ( T { x = 1, y = 2 } == T { x = 1, y = 3 }, T { x = 1, y = 2 } )
 ```
 
 `bin/elmficA4bf` (and elmficA5c, A4b) print `(True,T { x = 1 })`; Elm (`bin/elm0193` + node) prints
-`(False,T { x = 1, y = 2 })`. Reproduced with `ficcus-tests/a4br/run.py --only row-var-eq-show`, both `--no-rc` and `--rc`.
+`(False,T { x = 1, y = 2 })`. Reproduced with `ficus-tests/a4br/run.py --only row-var-eq-show`, both `--no-rc` and `--rc`.
 
 ## Findings (step 1)
 
@@ -33,7 +33,7 @@ Debug.toString ( T { x = 1, y = 2 } == T { x = 1, y = 3 }, T { x = 1, y = 2 } )
 1. `Modules.canToM`: for `Can.TRecord fields (Just v)` add a slot `("#row", <v looked up in env>)` to the field list
    (a field name no Elm program can write). Only fields with a row variable change, so the shape of every other type,
    and so every program without an extensible record in a custom type, is unchanged.
-2. New module `Ficcus.Mono.RowShape` with `substShape :: [MType] -> MType -> MType`: the existing substitution of
+2. New module `Ficus.Mono.RowShape` with `substShape :: [MType] -> MType -> MType`: the existing substitution of
    `#i`, plus: a `TyRecord` with a `#row` slot whose substituted type is a `TyRecord rs` becomes the record of both field
    lists sorted by name (the same `MType` as the expression's own type, so helper keys agree); any other row (`ref`, or
    an unsubstituted `#i`) drops the slot. The four local `subst` copies are replaced by it.
@@ -44,13 +44,13 @@ M2 (refusal of `derive` over such a field) is left as is until the cases show ho
 ## What was done (steps 2 and 3)
 
 The fix is local, as proposed: commits 7747e4b6 and b13a5e69, binary `bin/elmficP1`. Code: +50 lines (new module
-`Ficcus.Mono.RowShape`), -35 lines (the four `subst` copies), 3 lines in `Modules.canToM`.
+`Ficus.Mono.RowShape`), -35 lines (the four `subst` copies), 3 lines in `Modules.canToM`.
 
 * **Field order (found by the cases).** The merged fields must be in Elm's `Name` order (`AST.Prim.Name`'s `Ord`: shorter
   names first, then bytes), not `String` order. That order is both the C struct layout of the record (`Map.toList` of the
   canonical fields) and the order Elm's `Debug.toString` prints (`{ x = 1, mid = .., zeta = .., alpha = .. }`). With a
   plain `sortOn fst` the helpers read the wrong slots (`alpha = ''`, a garbage `x`); `p1-show` catches it.
-* **Cases** `ficcus-tests/p1` (`p1gen.py` writes them, `run.py` runs them; each Main.elm is plain Elm and its own twin on
+* **Cases** `ficus-tests/p1` (`p1gen.py` writes them, `run.py` runs them; each Main.elm is plain Elm and its own twin on
   `bin/elm0193` + node): `p1-eq` (`==`/`/=` with Int, String, List, nested record and custom-type extra fields),
   `p1-show`, `p1-match` (case on the record, on extra fields, `T { x, y }`), `p1-update` (`{ r | .. }` then `==`/show),
   `p1-two-rows` (three rows of one `T` through polymorphic `showT : T r -> String` and `same : T r -> T r -> Bool`),
@@ -65,7 +65,7 @@ The fix is local, as proposed: commits 7747e4b6 and b13a5e69, binary `bin/elmfic
 ## M2 (refusal of derive over such a field): the facts
 
 A scratch build with the refusal replaced by a check of the record's own fields (`/home/gordon/claude-tmp/elmficP1-noM2`,
-source reverted, not committed) on the review cases `ficcus-tests/a4br`:
+source reverted, not committed) on the review cases `ficus-tests/a4br`:
 
 * `row-var-derive` (`<` and `compare` with the row deciding) and `row-var-derive-string-rev`: equal their Elm twins,
   `--no-rc` and `--rc`, live 0.
@@ -83,7 +83,7 @@ All green: runtime 0; attach 378/0 `--rc`; derive 56/0; sized fuzz 40/0; stringd
 JS identity 28/0; examples 298 x3; fbip 0; effects e1/e2 ok; e1review, e1p, e1pr (2 target rows), e1p-identity ok;
 a3b-identity against elmficA4bf 100 compiles, 0 differ (byte identical C); e2review gates ok (info 3, as before);
 rcfaults 2403/0, rcfaults-big 239/0; rcgate-san ok; suite 16/16; typed 568/12/1; lib 108 PASS + 59 FIXED;
-elmdiff 1175 SAME. The P1 cases are not in `gates.sh` / attach yet (run `ficcus-tests/p1/run.py`).
+elmdiff 1175 SAME. The P1 cases are not in `gates.sh` / attach yet (run `ficus-tests/p1/run.py`).
 
 ## P1b: M2 lifted (binary `bin/elmficP1b`)
 
@@ -96,7 +96,7 @@ elmdiff 1175 SAME. The P1 cases are not in `gates.sh` / attach yet (run `ficcus-
   for a closed record.
 * Attach: `a4bf-err-row-field` and `a4bf-err-row-field-hash` (ids kept) are now RUN rows with Elm twins
   (`a4bf-twins/`, tuples of the same fields); hashes are tested only by equality. The derive matrix had no M2 row.
-* `ficcus-tests/p1`: 13 cases. New: `p1-derive-compare` (also `List.sort`), `p1-derive-string` (now with an Elm twin, no
+* `ficus-tests/p1`: 13 cases. New: `p1-derive-compare` (also `List.sort`), `p1-derive-string` (now with an Elm twin, no
   hand check), `p1-derive-string-rev`, the two `-reject` cases, and `expected.err` for `p1-poly-row-limit`. `run.py`
   checks `expected.err` (each line in the compiler output) and ends with `p1: N cases, M failed` (exit 1 on a failure).
 * `gates.sh`: a `p1` step after `derive`, and a lock (`flock` on `$CLAUDE_CODE_TMPDIR/ficcus-gates.lock`, else `/tmp`):

@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
--- Ficcus (A5b, docs/A5-INFERENCE-DESIGN.md section 2, D5): the selectors of a module.
+-- Ficus (A5b, docs/A5-INFERENCE-DESIGN.md section 2, D5): the selectors of a module.
 --
 -- A selector is a bare name `m` of an attached function (AST.Selectors).  The *candidate types* are the custom types
 -- with a `where` block that the module defines (its top level values `T$$m`) or that it imports in any form (the

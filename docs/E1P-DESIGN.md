@@ -1,8 +1,8 @@
 # E1p: the per leaf move in the Rc pass (design note)
 
-25 Nov 2026, branch `design/e1p` from `ficcus` 43e2bb04; no compiler source changed. Programs in `ficcus-tests/e1p/src`, Elm references
+25 Nov 2026, branch `design/e1p` from `ficcus` 43e2bb04; no compiler source changed. Programs in `ficus-tests/e1p/src`, Elm references
 in `e1p/ref/src` (`init` folds `update` 1000 times, as G17bRef does), goldens in `expected/e1p_*.out`, runner
-`ficcus-tests/e1p_measure.py --elm B --elm-home H [--targets]`. Every run: `--rc`, 1000 steps (`-DFIC_STEP_TEST=1000 -DFIC_STATS`), `-O2`
+`ficus-tests/e1p_measure.py --elm B --elm-home H [--targets]`. Every run: `--rc`, 1000 steps (`-DFIC_STEP_TEST=1000 -DFIC_STATS`), `-O2`
 and ASan+UBSan, output = Elm 0.19.3 byte for byte, live 0. `bin/elmficE2g` and `bin/elmficG70a` give identical counts.
 
 ## 1. Which programs copy today, and why
@@ -39,7 +39,7 @@ A record pattern on an owned struct that dies at the match is already an `MUnpac
 design will produce: the floor, 5 copies (the first writes to the immortal `init` literal, R1Partial's target) and 4 misses. H7/X7
 shows that the closure fallback's copies also come from C1 and C2 in the real function, not from the box (E1-REVIEW Q3).
 
-Three minimal examples (sources in `ficcus-tests/e1p/src`; each has the 30 line prelude of R1Partial: the same `Model`, `initModel` and
+Three minimal examples (sources in `ficus-tests/e1p/src`; each has the 30 line prelude of R1Partial: the same `Model`, `initModel` and
 `final`); the third is in `update` itself:
 
 ```elm
@@ -47,7 +47,7 @@ Three minimal examples (sources in `ficcus-tests/e1p/src`; each has the 30 line 
 update _ m = ( final (setA m), Cmd.none )
 setA m = { m | a = Array.set (modBy 100 m.n) m.n m.a, n = m.n - 1 }
 ```
-`setA` after Rc (FICCUS_RC_DUMP): `Let _up25 = Dup m`, then `Own (Access .a (Local m))` as the array, and `Drop m` after the last `m.n`.
+`setA` after Rc (FICUS_RC_DUMP): `Let _up25 = Dup m`, then `Own (Access .a (Local m))` as the array, and `Drop m` after the last `m.n`.
 
 ```elm
 -- Example 2, H3CallerLive (C1 in the helper, C2 on m2): 1960 copies, 2954 misses
@@ -124,7 +124,7 @@ the dealias of `_up23`) is split at the record, so its unread `d` is dropped bef
   through the update rule. Not owned: a helper that rebuilds every field and writes only through `Dict` (H6DictFull), since a field
   read in an owned position leaves a struct borrowed (`Borrow.owned`: `MAccess r -> borrowed r`). See D3.
 - **Rule 2 workers.** The split runs after Unbox and makes no clones. A worker result read field by field may now be split too,
-  which only adds `MUnpack` sites; FICCUS_UNBOX_CHECK inspects only `let t = worker in case t` and stays valid.
+  which only adds `MUnpack` sites; FICUS_UNBOX_CHECK inspects only `let t = worker in case t` and stays valid.
 - **ModelUnpack** runs before Rc. Its `let _mf = Own (m.f)` bindings are reads of `m`, which the split rewrites too. With the split,
   `update`'s `m` is split at entry, or per branch where `m` is returned whole (R4), so the pass becomes redundant (D2).
 - **S4 and S6.** Split variables are plain owned locals, so takes (`takeCall`) and drop specializations (`specBranch`, `lateSpec`)
@@ -141,7 +141,7 @@ the dealias of `_up23`) is split at the record, so its unread `d` is dropped bef
 
 ## 4. Test plan
 
-**Switches.** `FICCUS_NO_LEAF_SPLIT=1` turns the rule off; `FICCUS_SPLIT_STATS=1` prints the splits per clone on stderr.
+**Switches.** `FICUS_NO_LEAF_SPLIT=1` turns the rule off; `FICUS_SPLIT_STATS=1` prints the splits per clone on stderr.
 
 **Targets.**
 - `e1p_measure.py --targets`: H1 to H5 and H7 at most 5 copies and 5 misses; H6DictUpd at most 5 misses; H6DictFull unchanged
@@ -149,7 +149,7 @@ the dealias of `_up23`) is split at the record, so its unread `d` is dropped bef
 - `e1_review.py --targets`: R1 at most 5, R4 0, and **exact** counts R2 = 10, R3 = 6, R5 = 12. Fewer copies there would mean an
   unsound in-place write, so the runner should check equality.
 - G17b and G17bFields 0; G17, G17a/c/s as in `effects_e2.py`.
-- Every program also runs with `FICCUS_NO_LEAF_SPLIT=1` (expected: today's counts) and with `FICCUS_NO_MODEL_UNPACK=1` (expected: the
+- Every program also runs with `FICUS_NO_LEAF_SPLIT=1` (expected: today's counts) and with `FICUS_NO_MODEL_UNPACK=1` (expected: the
   targets, which is the evidence for D2).
 
 **New programs** (with Elm goldens, in `e1p_measure.py`):
@@ -173,11 +173,11 @@ from a generator extension: functions taking a record with `Array`, `Dict` or `V
 after which the record is live or dead, nested records.
 
 **Identity (the C text may change only where a split happens).**
-1. With `FICCUS_NO_LEAF_SPLIT=1`, the C text must be byte-identical to elmficG70a's for: the 16 suite programs (`--rc` and `--no-rc`),
+1. With `FICUS_NO_LEAF_SPLIT=1`, the C text must be byte-identical to elmficG70a's for: the 16 suite programs (`--rc` and `--no-rc`),
    the 298 examples, the effects, effects2 and e1p programs, and A2 (both stages).
 2. With the split on and `--no-rc`, the text must be identical: the rule is Rc only.
 3. With the split on and `--rc`, a script cuts the C at the `/* cNN name key */` markers. Every function that differs must have at
-   least one split in FICCUS_SPLIT_STATS, and no function with 0 splits may differ (the separate name counter guarantees this).
+   least one split in FICUS_SPLIT_STATS, and no function with 0 splits may differ (the separate name counter guarantees this).
 4. Per function, the static number of `fic_dup(` + `fic_drop(` must not increase. Report it, and explain any exception.
 5. The 55 `.mono` listings must be unchanged (they are printed before Rc).
 
@@ -204,11 +204,11 @@ negative tests H10 to H12.
 
 - **D1. Approach E** (a leaf split in Rc onto `MUnpack`, with the dealias). *Recommend yes.*
 - **D2. ModelUnpack.** Keep it in the pipeline at the start of the slice. Once R1 to R5, G17* and H* are equal or better with
-  `FICCUS_NO_MODEL_UNPACK=1`, turn it off by default in the same slice (the switch turns it back on), and delete it in a later
+  `FICUS_NO_MODEL_UNPACK=1`, turn it off by default in the same slice (the switch turns it back on), and delete it in a later
   cleanup. *Recommend.*
 - **D3. Borrow for struct fields:** should a struct parameter whose reference field is read in an owned position become owned? This
   fixes H6DictFull, but it changes ownership, and with it callers' C text, in many library functions, and it adds dups where a caller
-  keeps the struct. *Recommend: not in E1p.* Measure it in the slice behind `FICCUS_BORROW_FIELD=1` (counts, C text spread) and
+  keeps the struct. *Recommend: not in E1p.* Measure it in the slice behind `FICUS_BORROW_FIELD=1` (counts, C text spread) and
   decide afterwards.
 - **D4. Profitability condition 3,** or split whenever conditions 1 and 2 hold. *Recommend condition 3:* the text changes only where a
   dup is saved or a dead leaf is held across a call. "Always" would move leaf drops earlier in every function that reads a struct

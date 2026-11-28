@@ -1,7 +1,7 @@
 # 1. Functions attached to a type, and constrained type variables
 
 State: binary `elmficA16` (branch `ficcus`, 17 Nov 2026). Every example below is a program in
-`ficcus-tests/guide/<name>/`, built with the compiler and run in three modes (`python3 ficcus-tests/guide/run.py`).
+`ficus-tests/guide/<name>/`, built with the compiler and run in three modes (`python3 ficus-tests/guide/run.py`).
 The examples print with `Debug.log`; the `main` that calls `report` is the same in all of them and left out here
 (see `a-money/Main.fic`). Output lines are what a run prints on stdout.
 

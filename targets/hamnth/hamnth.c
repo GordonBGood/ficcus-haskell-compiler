@@ -1,6 +1,6 @@
 /* hamnth.c -- hand written C for HamNth.fic: the nth Hamming number by the linear three pointer merge over exponent triples,
  * ordered by i ln2 + j ln3 + k ln5 in double. The queue is one malloc'd array (doubling), cut off in front by memmove when the
- * dead part is >= 65536 and as long as the live part, as in the Ficcus program. The number is printed by a base 1e9 digit multiply.
+ * dead part is >= 65536 and as long as the live part, as in the Ficus program. The number is printed by a base 1e9 digit multiply.
  *   gcc -std=c99 -O2 -ffp-contract=off -DTARGET=1000000 hamnth.c -o hamnth
  */
 #include <stdio.h>

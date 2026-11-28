@@ -1,0 +1,1 @@
+{"desc": "STAGE4-FIX2 step 4: the program imports the core Vector, a package has its own hidden Vector: two modules of one name, each used by its importer", "deps": ["ficus/ownvec@1.0.0"], "c_only": true}

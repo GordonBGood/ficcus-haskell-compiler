@@ -1,0 +1,59 @@
+module VecOrder exposing (main)
+
+import Vector exposing (Vector)
+
+-- V2: the order in which the functions of Vector evaluate their arguments and call their function arguments is the order of Array
+-- (left to right, index 0 first), also where the compiler writes the function out (`Vector.update` with a lambda, `Vector.fromList` of a
+-- list literal, D6). The output is the Debug.log lines; the reference is Elm 0.19.3 with the stand-in module ficus-tests/vecshim/Vector.elm.
+
+
+tag : String -> Int -> Int
+tag s x =
+    Debug.log s x
+
+
+total : Vector Int -> Int
+total v =
+    Vector.foldl (+) 0 v
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                    a =
+                        Vector.fromList [ tag "lit1" 1, tag "lit2" 2, tag "lit3" 3 ]
+
+                    b =
+                        Vector.initialize 3 (\i -> tag "init" (i * 10))
+
+                    c =
+                        Vector.map (\x -> tag "map" (x + 1)) a
+
+                    d =
+                        Vector.indexedMap (\i x -> tag "imap" (i + x)) b
+
+                    e =
+                        Vector.filter (\x -> tag "filter" x > 1) c
+
+                    f =
+                        Vector.update (tag "upd-index" 1) (\x -> tag "upd-fn" (x * 7)) d
+
+                    g =
+                        Vector.foldr (\x acc -> tag "foldr" x + acc) 0 f
+
+                    h =
+                        Vector.foldl (\x acc -> tag "foldl" x + acc) 0 f
+
+                    k =
+                        Vector.update (tag "out-index" 9) (\x -> tag "never" x) f
+
+                    _ =
+                        Debug.log "result" [ total a, total b, total c, total d, total e, g, h, total k ]
+                in
+                ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

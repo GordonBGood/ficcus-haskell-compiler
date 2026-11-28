@@ -53,7 +53,7 @@ data Error
   | RigidEscape A.Region N.Name String  -- annotated definition, type variable of its annotation
   | Runaway A.Region Bool               -- unification does not terminate; True: an infinite type
   | HiddenCycle A.Region N.Name         -- a cyclic type among the variables of a definition, not in its own type
-  -- Ficcus (ATTACH A2): the constrained function that was used, the member it needs
+  -- Ficus (ATTACH A2): the constrained function that was used, the member it needs
   -- (A5c: the texts speak of attached functions and `has`, docs/A5-INFERENCE-DESIGN.md section 4.)  The function is the name
   -- of the use: a function, an operator (`/`), `<Float literal>`, or a selector (`zero$selector`, a bare attached name).
   | NoMember A.Region N.Name T.Type [N.Name] Bool [(N.Name, T.Type)]   -- the type, the members it has, is it a built-in type, the members needed
@@ -62,7 +62,7 @@ data Error
   | MissingConstraint A.Region N.Name String [(N.Name, T.Type)] (Maybe Annotated) [String]   -- the type variable, the members needed, the annotated definition, the types in sight that have them
   | MissingSignature A.Region N.Name N.Name T.Type [(String, [(N.Name, T.Type)])]   -- (a value, the monomorphism restriction) the function used, the definition, its type, the requirements by variable
   | UnknownMemberType A.Region N.Name (Maybe String) [(N.Name, T.Type)] [String] (Maybe N.Name)   -- the kind of the variable (number, comparable, ...), the members needed, the types in sight that have them, the value whose type it is
-  -- Ficcus (ATTACH A3): a well known member (`add`, `compare`, ...) that has not the type the language needs
+  -- Ficus (ATTACH A3): a well known member (`add`, `compare`, ...) that has not the type the language needs
   | WellKnownShape A.Region String N.Name String        -- the type, the member, the type the member must have
   | WellKnownNoSignature A.Region String N.Name String  -- the same, for a member without a type annotation
   | WithNotes Error [String]                             -- an error with more to say about the members of the types in it
@@ -449,7 +449,7 @@ toReport source localizer err =
 
 
 
--- Ficcus (ATTACH A2; A5c texts; A4b: `hash`, the containers)
+-- Ficus (ATTACH A2; A5c texts; A4b: `hash`, the containers)
 openRecordNote :: [(N.Name, T.Type)] -> String
 openRecordNote needed =
   "Only a closed record (such as `{ x : Int, y : Int }`) has " <> them <> ". This type is an extensible record (`{ r | ... }`),\

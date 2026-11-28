@@ -2,7 +2,7 @@
 
 27 Nov 2026, branch `review/e3a` from `feat/e3a` e43c5ba1, binary `bin/elmficE3a`. Read: `docs/E3A-NOTES.md` sections 1 and 6,
 `runtime/fic_ports_api.h`, `runtime/fic_ports.h`, D1 to D3, D7, D11, D12 of `E3-PORTS-DESIGN.md`, and the CGen parts they lead to
-(the `#undef` wrapper, `portDecBody`, `appStart`). Reproducers in `ficcus-tests/e3ar/` (`run.sh <elmfic> <elm-home> <scratch>`).
+(the `#undef` wrapper, `portDecBody`, `appStart`). Reproducers in `ficus-tests/e3ar/` (`run.sh <elmfic> <elm-home> <scratch>`).
 
 **Recommendation: merge after F1** (one missing line, pre-existing since E2, now also reachable through flags). No memory safety
 problem was found: every ownership and re-entrancy case is clean under `--rc` with ASan and UBSan, live 0, `FIC_DROP_ALL` 0 bad.
@@ -25,7 +25,7 @@ depth limit (only the parser has).
 (b) A refused value is printed with indent 4 inside `indent`: the text grows with the square of the depth. `DEEP_MODE=refuse
 DEEP=10000` gives a 400 MB `fic_port_error()` text (0.8 GB RSS); 1,500,000 levels ran past 60 s. Through `fic_port_send_json` a
 100 KB text of 50,000 brackets would need about 10 GB. Elm does not get there: node's `JSON.stringify` throws "Maximum call stack size
-exceeded" at 10,000 levels (it manages 3,000: 36 MB, same as Ficcus). Suggest: `fic_hv_to_json` returns NULL when too deep; the
+exceeded" at 10,000 levels (it manages 3,000: 36 MB, same as Ficus). Suggest: `fic_hv_to_json` returns NULL when too deep; the
 error path stops encoding at a byte budget (say 1 MB) and appends `...`, a recorded deviation. Release of a 1,500,000 deep tree is
 fine (no recursion problem).
 
@@ -39,8 +39,8 @@ misleading; `FIC_E_INVALID` with "the program has not started" would be clearer.
 **F4. More field names that JavaScript's `in` finds on every object.** Besides the known `length` on arrays, `constructor`
 (and `toString`, `valueOf`, `hasOwnProperty`, `__proto__`, ...) is found on `{}` and `[]`. Elm: `{ constructor : Int }` given `{}`
 fails at `json.constructor` with the value `undefined` and "Expecting an INT"; `{ constructor : Json.Value }` given `{}` is
-**accepted** (a function enters the program and encodes as `undefined`). Ficcus refuses both with "Expecting an OBJECT with a field
-named `constructor`". Both Ficcus decoders agree (no internal text). Suggest: record it with the `length` corner as one deviation
+**accepted** (a function enters the program and encodes as `undefined`). Ficus refuses both with "Expecting an OBJECT with a field
+named `constructor`". Both Ficus decoders agree (no internal text). Suggest: record it with the `length` corner as one deviation
 ("a record field is an own key of a JSON object"). Reproducer: `pCtor`, `pCtorV` lines of `mklines.py`.
 
 ## Notes
@@ -85,7 +85,7 @@ all equal. `floor(log(32L-1)/log 32)` cannot round across an integer before abou
 **N5. Flags (D11).** Checked against run3.js: absent flags (crash 2 with `undefined`), a failure after partial work (`json.b[1]`),
 a non-object, a missing field: identical texts and exit 1; partial work released (live 0). `FIC_FLAGS` and `FIC_FLAGS_FILE` both set:
 refused; an empty `FIC_FLAGS` counts as unset (as run3.js); missing file, a directory, bad UTF-8 and trailing text: a message and
-exit 1. `Maybe Json.Value` flags absent: Elm gives `Just undefined`, Ficcus refuses with its D11 text; the recorded deviation should
+exit 1. `Maybe Json.Value` flags absent: Elm gives `Just undefined`, Ficus refuses with its D11 text; the recorded deviation should
 say it covers `Maybe Json.Value` too.
 
 ## Proposed entry for the shared files (not applied)

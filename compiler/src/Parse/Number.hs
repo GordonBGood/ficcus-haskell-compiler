@@ -52,7 +52,7 @@ number toExpectation toError =
 
           underscoreAt p = ltAddr p end && isUnderscore (indexWord8OffAddr# p 0#)
 
-          -- Ficcus (track E5): the scanner stopped at an underscore: read the literal again with underscores allowed
+          -- Ficus (track E5): the scanner stopped at an underscore: read the literal again with underscores allowed
           underscored =
             case NU.rescan pos (I# (minusAddr# end pos)) of
               NU.OkInt (I# n) value ->
@@ -69,7 +69,7 @@ number toExpectation toError =
                 do  let !newCur = slide cur (wordToWord64# (int2Word# n))
                     cerr newCur (toError bad)
 
-          -- Ficcus (track E4): a binary literal, `0b1010`; the scanner above does not know it
+          -- Ficus (track E4): a binary literal, `0b1010`; the scanner above does not know it
           binaryStart =
             isTrue# (eqWord8# w 0x30#Word8)
             && ltAddr (plusAddr# pos 1#) end

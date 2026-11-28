@@ -1,14 +1,14 @@
-# 3. Where Ficcus differs from Elm 0.19.3
+# 3. Where Ficus differs from Elm 0.19.3
 
-State: binary `elmficA16`, C output. The goal is that a program that compiles with Elm 0.19.x compiles with Ficcus
+State: binary `elmficA16`, C output. The goal is that a program that compiles with Elm 0.19.x compiles with Ficus
 and prints the same bytes. This page lists every place where it does not, and why. Each example is in
-`ficcus-tests/guide/d-*`. Where the example is `vs-elm`, the runner also compiles it as Elm 0.19.3 and runs it under node,
+`ficus-tests/guide/d-*`. Where the example is `vs-elm`, the runner also compiles it as Elm 0.19.3 and runs it under node,
 so the "Elm 0.19.3 prints" blocks are real output. Decision numbers (L0 to L48) are those of
-`docs/Ficcus-Design-Decisions.md`.
+`docs/Ficus-Design-Decisions.md`.
 
 The rule behind most differences (L0): where Elm's kernel is wrong against its own documentation or arithmetic,
-Ficcus gives the right answer, unless published packages depend on the wrong behaviour (then Elm's behaviour is kept,
-and said so). Library functions are total: where Elm would crash, loop or give a NaN typed as `Int`, Ficcus gives a
+Ficus gives the right answer, unless published packages depend on the wrong behaviour (then Elm's behaviour is kept,
+and said so). Library functions are total: where Elm would crash, loop or give a NaN typed as `Int`, Ficus gives a
 defined result.
 
 What does **not** differ: JavaScript output. `--output=x.js` and `--output=x.html` are Elm 0.19.3's generator, untouched,
@@ -23,7 +23,7 @@ Today a C program is a `Platform.worker` that prints with `Debug.log`. Not avail
 
 <!-- guide-out: n-task err -->
 ```text
--- FICCUS: the program cannot be compiled to C yet --------------------------------
+-- FICUS: the program cannot be compiled to C yet ---------------------------------
 
 `elm/core:Task.command` has no definition and is not in the kernel table (at 284:3-284:10)
 ```
@@ -161,7 +161,7 @@ logBase 10 1000: 2.9999999999999996
 RUN ERROR: Error: Cannot perform mod 0. Division by zero error.
 ```
 
-Ficcus prints `modBy 0 5: 0` for the same program, and `remainderBy 0 5: 0` where Elm prints `NaN`.
+Ficus prints `modBy 0 5: 0` for the same program, and `remainderBy 0 5: 0` where Elm prints `NaN`.
 
 ## 3.4 Strings and Chars: code points, not UTF-16 units (L8, L9, L11, L12, L14)
 
@@ -242,7 +242,7 @@ shiftRightZfBy 0 -1: 4294967295
 shiftRightBy 1 -8: -4
 ```
 
-Elm prints the same six lines. Ficcus adds a module **`Bitwise64`** (C builds; `import Bitwise64`) with the same seven functions
+Elm prints the same six lines. Ficus adds a module **`Bitwise64`** (C builds; `import Bitwise64`) with the same seven functions
 (`and or xor complement shiftLeftBy shiftRightBy shiftRightZfBy`, count first) on the whole 64 bit `Int`, count taken `& 63`.
 `shiftRightZfBy` returns the 64 bit pattern read back as a signed `Int`.
 
@@ -264,7 +264,7 @@ shiftLeftBy 64 1: 1
 
 Elm's behaviour is kept unless a row says otherwise. "Kept" means a known Elm quirk that packages depend on.
 
-| id | topic | Ficcus |
+| id | topic | Ficus |
 |---|---|---|
 | L0 | kernel bugs | fixed, not copied, unless packages depend on them (refined at L33) |
 | L1 | `//`, `modBy`, `remainderBy` by 0 | all 0 (3.3) |
@@ -369,7 +369,7 @@ The two `Random.int` draws from seed 42 equal Elm's (L31). `Random.float 10 0` e
 
 <!-- guide-out: d-regex-budget stderr -->
 ```text
-Ficcus: a regular expression exceeded its step budget
+Ficus: a regular expression exceeded its step budget
 ```
 
   The program prints nothing else and exits with a failure (the C `abort`, status 134 in a shell). Rewrite the pattern
@@ -380,7 +380,7 @@ Ficcus: a regular expression exceeded its step budget
 - **JSON nesting** 1,000,000 levels (L41), **Regex** see above, **`Int`** 64 bit.
 - **Equality of functions** crashes at run time, as in Elm: "Trying to use `(==)` on functions.".
 - **Memory** is reference counted: a value is freed when its last holder goes away. Cycles cannot be built (as in Elm); there is no collector.
-- Cases that Elm 0.19.3 accepts and Ficcus rejects: a recursive group that Elm's generalization bug lets through
+- Cases that Elm 0.19.3 accepts and Ficus rejects: a recursive group that Elm's generalization bug lets through
   (`docs/KNOWN-REJECTS.md`: one package, `mdgriffith/elm-markup 3.0.1`, in 581 packages scanned).
 
 ## 3.9 Planned, not implemented

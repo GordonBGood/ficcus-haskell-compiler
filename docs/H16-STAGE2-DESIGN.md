@@ -2,10 +2,10 @@
 
 Written for: the user and the Sonnet sessions that will implement W5 to W9. Branch `feat/known-pass` at fc2303d2 (binary `elmficK5`).
 Read first: `docs/H16-DESIGN.md` section 6 (the outline this note replaces), `docs/H16-EXPERIMENTS.md` (W1, W2), and on branch
-`bench/h16a` `docs/H16A.md` (hand versions S1, S2). `M.` = `compiler/src/Ficcus/Mono/`. A2 = `targets/p1/src/JsonCombV.elm`.
+`bench/h16a` `docs/H16A.md` (hand versions S1, S2). `M.` = `compiler/src/Ficus/Mono/`. A2 = `targets/p1/src/JsonCombV.elm`.
 
 Inputs that are not in the repository and were pasted by the user: the W3 report (step 3 measurement), the K4/K5 verification report
-(allocation sites, `FICCUS_ALLOC_SITES=1`), and the intermediate report on the 12 suite programs whose `--rc` text changes with the pass on.
+(allocation sites, `FICUS_ALLOC_SITES=1`), and the intermediate report on the 12 suite programs whose `--rc` text changes with the pass on.
 
 ## 0. Measured state (P1 A2, 50 MB, pass on = elmficK4/K5)
 
@@ -18,7 +18,7 @@ Inputs that are not in the repository and were pasted by the user: the W3 report
 | dups / drops | | not measured | 184 M / 169 M | 52.8 M / 58.2 M |
 | C text / `.text` | 645 KB / 109 KB | 688 KB / 103 KB | | |
 
-`fic_free_slow` is 48 % of the whole run (W3 perf). The allocation sites with `FICCUS_ALLOC_SITES=1`: stage 2 of the program makes 490.2 M
+`fic_free_slow` is 48 % of the whole run (W3 perf). The allocation sites with `FICUS_ALLOC_SITES=1`: stage 2 of the program makes 490.2 M
 allocations, stage 1 makes 63.5 M, so 426.7 M are parse. The top 15 sites cover 36 % of the run (table in the K5 report). They come as pairs:
 a `Good` cell and a **box** of equal count (13.5/13.5 M in `oneOfHelp` f65, 12.4/12.4 M at lambda@215, 7.0/7.0 M at lambda@56,
 7.1/7.1 M in f187). The box is the `State` record: a struct field of a constructor is always boxed (CGen.hs:351, `boxedClass`), so
@@ -34,7 +34,7 @@ argument boxed for the uniform closure ABI (`fic_ap1` in `oneOfHelp`'s call `p s
 
 ### 1a. Inline the small capture-free copies, then the existing rule A
 
-W3 made capture-free lifted clones eligible for Inline (Inline.hs, eligibility behind `FICCUS_NO_KNOWN`). Rule A (Inline.hs:424) takes apart
+W3 made capture-free lifted clones eligible for Inline (Inline.hs, eligibility behind `FICUS_NO_KNOWN`). Rule A (Inline.hs:424) takes apart
 `case e of ...` when every leaf of `e` is a constructor application or a producer call (`candidate`, Inline.hs:273). After inlining
 `symbol 44`'s copy into `ignore`'s copy, `case (if .. then Good True () {..} else Bad False "symbol") of ...` is a candidate. Rule A rewrites it
 to the branch bodies with the fields let-bound. No cell or box is made.
@@ -137,14 +137,14 @@ Rejected alternatives:
 * **`--no-rc`:** the rule lives in a new module `M.Unbox`, called only in the `rcMode` branch of Make.hs:208:
   `Rc.rcProgram (Twin.twinProgram (Unbox.unboxProgram (Inline.inlineProgram (Known.knownProgram p))))`. Spec is untouched, so the
   `--no-rc` text is byte identical by construction, checked by `norc_identity.py` without `--update`.
-* **Pass-off identity:** with `FICCUS_NO_STAGE2=1` the `--rc` text equals `elmficK5`'s pass-on text. With `FICCUS_NO_KNOWN=1` it equals
+* **Pass-off identity:** with `FICUS_NO_STAGE2=1` the `--rc` text equals `elmficK5`'s pass-on text. With `FICUS_NO_KNOWN=1` it equals
   `elmficA19` (as now).
 
 ### 2.3 Scope: needs a user decision
 
 Rule 2 is general: `Maybe` and `Result` returning library functions (`Dict.get`, `List.head`, `String.toInt`) qualify, and that would change
 most programs. **Recommendation:** in stage 2, apply it only to clones created by `M.Known` (copies, specializations) and the functions in
-their SCCs. Keep a switch `FICCUS_UNBOX_ALL=1` for a measured experiment on the 16 suite programs and elmdiff afterwards.
+their SCCs. Keep a switch `FICUS_UNBOX_ALL=1` for a measured experiment on the 16 suite programs and elmdiff afterwards.
 
 ## 3. Rule 3: scalar replacement of `State` and of small records; invariant fields
 
@@ -205,16 +205,16 @@ see.
 |---|---|---|---|
 | E | experiments E1 to E4 (section 7), no source change kept | half a day | go/no-go on the predicted shares |
 | W5 | 1a (whatever E1 shows is missing for inlining the copies; Inline only, behind a switch) and 1c (case identity, retyping by layout); test known10 | ~300 lines | A2 1 MB and 50 MB |
-| W6 | 1b spine keys in `M.Known` (static list detection, key, memo, budget, refusals in `FICCUS_KNOWN_STATS`); test known11 | ~300 lines | **checkpoint: 50 MB <= 2.6 s, allocations <= 200 M**, else stop and report |
-| W7 | rule 2, new `M.Unbox`: worker set, slot layout, fillers, wrappers, call sites, sweep, `FICCUS_UNBOX_CHECK` (each wrapper is the case on its worker, every leaf matched, slot classes consistent); test known12 | ~350 lines | A2; the 16 suite programs (text changes only through Known clones) |
+| W6 | 1b spine keys in `M.Known` (static list detection, key, memo, budget, refusals in `FICUS_KNOWN_STATS`); test known11 | ~300 lines | **checkpoint: 50 MB <= 2.6 s, allocations <= 200 M**, else stop and report |
+| W7 | rule 2, new `M.Unbox`: worker set, slot layout, fillers, wrappers, call sites, sweep, `FICUS_UNBOX_CHECK` (each wrapper is the case on its worker, every leaf matched, slot classes consistent); test known12 | ~350 lines | A2; the 16 suite programs (text changes only through Known clones) |
 | W8 | rule 3 in `M.Unbox`: parameter split, dead fields, invariant result slot; tests known13, known14 | ~300 lines | A2 with dups/drops |
 | W9 | validation only: full `gates.sh` with `KEEP=1` and the variant rows, elmdiff size and compile time, suite timing, final table, proposed decisions-file entry | machine time | final |
 
-**Switches** (environment, read once, like `FICCUS_NO_KNOWN`):
-* one per rule, so that each rule can be measured on its own: `FICCUS_S2_NO_INLINE`, `FICCUS_S2_NO_IDENT`, `FICCUS_S2_NO_SPINE`,
-  `FICCUS_S2_NO_UNBOX`, `FICCUS_S2_NO_SRA`;
-* `FICCUS_NO_STAGE2` (all of them off);
-* `FICCUS_UNBOX_CHECK` (on in all tests).
+**Switches** (environment, read once, like `FICUS_NO_KNOWN`):
+* one per rule, so that each rule can be measured on its own: `FICUS_S2_NO_INLINE`, `FICUS_S2_NO_IDENT`, `FICUS_S2_NO_SPINE`,
+  `FICUS_S2_NO_UNBOX`, `FICUS_S2_NO_SRA`;
+* `FICUS_NO_STAGE2` (all of them off);
+* `FICUS_UNBOX_CHECK` (on in all tests).
 
 **Every new switch goes into `rcfuzz.py` as a setting** (`s2off`, `noident`, `nospine`, `nounbox`, `nosra`) and into `known_tests.py`'s
 settings.
@@ -231,7 +231,7 @@ settings.
 
 **Gates after each slice:**
 * `norc_identity.py` 16/16, never `--update`;
-* pass-off identity: `FICCUS_NO_STAGE2=1` against K5 pass-on, and `FICCUS_NO_KNOWN=1` against A19, on the 16 programs and known1-9;
+* pass-off identity: `FICUS_NO_STAGE2=1` against K5 pass-on, and `FICUS_NO_KNOWN=1` against A19, on the 16 programs and known1-9;
 * `targets/run_all.py --san`;
 * `known_tests.py` in all settings under ASan and `-O2`;
 * rcfuzz and v2fuzz with 200 seeds per setting;
@@ -292,7 +292,7 @@ closures" changes nothing, since every specialization was already of that kind. 
 
 ## 7. Open questions (need an experiment first) and the biggest risk
 
-* **E1, why rule A does not fire today.** With W3's eligibility change on, dump (`FICCUS_KNOWN_STATS`, Inline's rule A/B counts) which
+* **E1, why rule A does not fire today.** With W3's eligibility change on, dump (`FICUS_KNOWN_STATS`, Inline's rule A/B counts) which
   specialized copies are inlined in A2 and which are refused, and why (size, `tProd`, SCC, the call going through the list). The 1a estimate
   (120 to 170 M) depends on it. **This is the biggest risk:** if the copies cannot be inlined for a structural reason, W5 grows and every
   later estimate shrinks with it (rule 2 then does the work of rule 1 at higher cost).
@@ -305,7 +305,7 @@ closures" changes nothing, since every specialization was already of that kind. 
   path (the K5 report implies it for `fic_nul0`; I did not read the runtime code).
 * **E4, `Bad` never freed** (site 14, 5.6 M, no free seen). Confirm that it is reuse, not a leak, under ASan with `FIC_NO_POOL`.
 * **E5, compile time.** Stage 1 compile time of A2 and of elmdiff, pass on against off. It is in no report, and stage 2 adds to it.
-* **Later:** `FICCUS_UNBOX_ALL` on the suite and elmdiff (2.3); the union encoding if the fillers cost (2.1); the `unres`
+* **Later:** `FICUS_UNBOX_ALL` on the suite and elmdiff (2.3); the union encoding if the fillers cost (2.1); the `unres`
   `-Wfree-nonheap-object` warning (K5 report). Fillers use the same immortal sentinel, so the warning may appear in more programs.
 
 ## 8. What I could not check

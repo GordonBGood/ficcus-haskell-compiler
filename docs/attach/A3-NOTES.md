@@ -2,7 +2,7 @@
 
 Branch `feat/a3` (worktree `ficcus-haskell-compiler-a3`, from `ficcus` 2e5f3b16), binary `bin/elmficA18` (A17 before the review fixes of section 9).
 A3c (section 10): branch `feat/a3c` from `ficcus` fd65b5a6, binary `bin/elmficA19`, F7 and F8 fixed.
-Tests: `ficcus-tests/attach/` of the branch (`python3 ficcus-tests/attach/attach.py --elm bin/elmficA17 --rc`; 122 cases, 43 new: `a3-*`).
+Tests: `ficus-tests/attach/` of the branch (`python3 ficus-tests/attach/attach.py --elm bin/elmficA17 --rc`; 122 cases, 43 new: `a3-*`).
 Note: `tests/attach` in the workspace is a symlink into the *main checkout* (`ficcus-haskell-compiler/`, branch feat/known-pass), so cases written
 there would land on the wrong branch; the new cases are in the worktree and `gates.sh` now runs from the worktree it lives in (section 8).
 
@@ -90,7 +90,7 @@ Nothing in `Type.Occurs`, `Type.Instantiate` changed; the review round (section 
 | `Type/Dump.hs` | 723-725 | the dump does not call a relaxed use a failed instance match |
 | `elm.cabal` | 145 | `AST.WellKnown` |
 
-### Specializer (`Ficcus/Mono/Spec.hs`, the C path)
+### Specializer (`Ficus/Mono/Spec.hs`, the C path)
 
 | lines | change |
 |---|---|
@@ -105,7 +105,7 @@ Nothing in `Type.Occurs`, `Type.Instantiate` changed; the review round (section 
 
 No change in `CGen`, the IR, the runtime or the Rc passes: a member call is an ordinary call of a clone.
 
-## 4. Worked examples (all are cases of `ficcus-tests/attach`, run as C with gcc and clang, and `--rc` under ASan+UBSan with 0 live objects)
+## 4. Worked examples (all are cases of `ficus-tests/attach`, run as C with gcc and clang, and `--rc` under ASan+UBSan with 0 live objects)
 
 | case | what it shows |
 |---|---|
@@ -151,13 +151,13 @@ WELL KNOWN MEMBER WITH THE WRONG TYPE, WELL KNOWN MEMBER WITHOUT TYPE ANNOTATION
 
 ## 7. What changed in other files
 
-`ficcus-tests/gates.sh`: `R` is the worktree the script is in (it was `$W/ficcus-haskell-compiler`, the main checkout), the attach step runs `$R/ficcus-tests/attach/attach.py`
+`ficus-tests/gates.sh`: `R` is the worktree the script is in (it was `$W/ficcus-haskell-compiler`, the main checkout), the attach step runs `$R/ficus-tests/attach/attach.py`
 (not the `tests/attach` symlink), default binary `elmficA17`, expected attach count 95. A2 cases: `constraint-wrong-type` (member `plus`), the text of `constraint-no-members-at-all`
 (`expected.tsv`). `bin/BUILDS.txt`: the line for `elmficA17`.
 
 ## 8. Gates
 
-Full `ficcus-tests/gates.sh` (`KEEP=1`, binary `elmficA17`, code commit 9eafcedc), all green:
+Full `ficus-tests/gates.sh` (`KEEP=1`, binary `elmficA17`, code commit 9eafcedc), all green:
 
 | gate | result |
 |---|---|
@@ -182,9 +182,9 @@ Byte identity: the C text of the 16 suite programs, `--rc` and `--no-rc`, is ide
 
 | finding | what was done |
 |---|---|
-| F1 | `holdsMember` follows constructor fields (section 5.1). `Ficcus.Mono.Spec`: `sUnions` in the state, `holdsMember tops unions member type` gives the path. Cases `a3-c-holds-*` (union, recursive, mutual, alias, generic, `List.member`, tuple, record, `Dict` key, `sortBy`, `Set`, imported type, imported holder and member type) and `a3-holds-ok` (no false positive; recursive and mutual types without a member compare structurally) |
+| F1 | `holdsMember` follows constructor fields (section 5.1). `Ficus.Mono.Spec`: `sUnions` in the state, `holdsMember tops unions member type` gives the path. Cases `a3-c-holds-*` (union, recursive, mutual, alias, generic, `List.member`, tuple, record, `Dict` key, `sortBy`, `Set`, imported type, imported holder and member type) and `a3-holds-ok` (no false positive; recursive and mutual types without a member compare structurally) |
 | F2 | `CForeign` and `COperator` carry the home module (`Type.Type`, `Type.Constrain.Expression`, `Type.Solve.instantiateUse`); `Members.relax` relaxes only `ModuleName.basics`. Cases `a3-err-lib-modby`, `a3-err-lib-remainderby` (TYPE MISMATCH as in Elm), `a3-modby-user` (a local `modBy`, an imported user `modBy` on Int, `Basics.modBy` at `Money`) |
-| F3 | every refusal of the specializer and the C generator is raised as `Exit.MakeFiccus` through the task error path (`Make.failWith`), rendered as `-- FICCUS: the program cannot be compiled to C yet`; no crash box (it came from `exitWith` inside the task, caught by the exception reporter), exit status 1, and `Reporting.attemptWithStyle` flushes stdout first so the front end's "Success! Compiled" line comes before the report, never after it. `attach.py` has the outcome REJECTC that checks all of this |
+| F3 | every refusal of the specializer and the C generator is raised as `Exit.MakeFicus` through the task error path (`Make.failWith`), rendered as `-- FICUS: the program cannot be compiled to C yet`; no crash box (it came from `exitWith` inside the task, caught by the exception reporter), exit status 1, and `Reporting.attemptWithStyle` flushes stdout first so the front end's "Success! Compiled" line comes before the report, never after it. `attach.py` has the outcome REJECTC that checks all of this |
 | F5 | `number has div` is accepted by the type checker, so the suggestion is right. It exposed a bug (below, fixed): case `a3-rigid-div`, `a3-err-rigid-div` (the message) |
 | F6 | `a3-js-eq-imported` |
 | F4 | not fixed; case `a3-known-let-div` records the behaviour (C only) |
@@ -213,7 +213,7 @@ the `number` variable itself has no obligation. The specializer defaults such a 
 Rule (Elm's): an unconstrained `number` defaults to Int, also inside a member's subject type (`V number`). A literal whose *own* variable has an obligation
 (`smallest 3 2` with `a has compare`) is not defaulted: UNKNOWN MEMBER TYPE, as before (`a3-err-ambiguous-literal`), in every output mode.
 **Check.** `Spec.mtypeOf` returns an error for a `number` variable that is neither in the clone's environment nor defaulted, and `Spec.classOfTy`
-reports one (`internal: the number variable ... is not resolved`, naming the definition): the build stops with the FICCUS report instead of a crash.
+reports one (`internal: the number variable ... is not resolved`, naming the definition): the build stops with the FICUS report instead of a crash.
 It stops no existing program: 0 hits in the suite (16), examples (281 x3), attach (126), library (167), rc tools, and the typed corpus run through the
 specializer (`TYPED_OUT=x.mono typed_check.py`, 581 projects: 524 SAME, 11 BOTH_REJECT_SAME, 1 BOTH_REJECT_TEXT_DIFF, 45 VERDICT_DIFF, every project with the same status on `elmficA18` and `elmficA19`, no internal error; the 45 are old limits of the `x.mono` path: packages it cannot resolve (`Random`, `Regex` imports), the Int literal range, dependency resolution).
 
@@ -234,7 +234,7 @@ Elm rejects F4, but the acceptance cannot change the meaning of any program Elm 
 `div` (or `idiv`, `mod`, `rem`) is in sight, which no Elm program has, and Float/Int uses keep Elm's type (top level default, checked against
 `bin/elm0193` on `a3-f8-closed-annotation` with the type removed: same output). F4 proper (generalizing a let `/` over `has div`) is not done.
 
-Cases (`ficcus-tests/attach`, 126): `a3-f7-literal` (typed and untyped definitions, Float literals, `<`, `max`, `++`, `List.sort`, `sortBy` on a record
+Cases (`ficus-tests/attach`, 126): `a3-f7-literal` (typed and untyped definitions, Float literals, `<`, `max`, `++`, `List.sort`, `sortBy` on a record
 field, a literal inside a record field, `Dict` keys and `Dict.get`, a generic `a has compare` function at `V`), `a3-f7-err-literal-obligation`,
 `a3-f8-closed-annotation` (js+c: direct, in a let, with arguments, recursive, unannotated), `a3-f8-err-let-div-two-types`; `a3-known-let-div` is no longer
 `c_only` (checked in both modes). On `elmficA18`: `a3-f7-literal` SIGSEGV, `a3-f8-closed-annotation` UNKNOWN MEMBER TYPE, `a3-known-let-div` TYPE MISMATCH.

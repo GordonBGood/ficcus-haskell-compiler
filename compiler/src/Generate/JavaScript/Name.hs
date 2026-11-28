@@ -60,7 +60,7 @@ fromInt n =
   Name (N.toBuilder (intToAscii n))
 
 
--- Ficcus (track E4): an Elm name may contain a prime, `x'`, which a JavaScript name cannot; it is written
+-- Ficus (track E4): an Elm name may contain a prime, `x'`, which a JavaScript name cannot; it is written
 -- as a dollar sign (no Elm name has one, so two names never get the same JavaScript name). Names without a
 -- prime come out byte for byte as before.
 nameBuilder :: N.Name -> B.Builder

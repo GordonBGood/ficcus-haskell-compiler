@@ -5,7 +5,7 @@ module Generate.C
   where
 
 
--- Ficcus milestone 1: the C back end is only a dump of the optimized graph.
+-- Ficus milestone 1: the C back end is only a dump of the optimized graph.
 --
 -- It walks the nodes reachable from each `main`, in the same way as
 -- Generate.JavaScript.addGlobal, but never expands Kernel nodes and stops at
@@ -47,7 +47,7 @@ dump (Opt.GlobalGraph graph _) mains =
     kernelNodes = Set.fromList (map kernelModule (_kernelNodes walk))
   in
   toBuilder (
-    [ "Ficcus milestone 1: dump of the optimized graph reachable from main"
+    [ "Ficus milestone 1: dump of the optimized graph reachable from main"
     , "roots: " ++ unwords (map showGlobal roots)
     , "nodes: " ++ show (length nodes)
     , ""
@@ -62,7 +62,7 @@ dump (Opt.GlobalGraph graph _) mains =
     ++ indent (map showGlobal (reverse (_missing walk)))
     ++ concatMap dumpNode nodes
   )
-  <> B.string7 "\ntypedef int ficcus_dump_is_not_a_program; /* keeps the translation unit non-empty */\n"
+  <> B.string7 "\ntypedef int ficus_dump_is_not_a_program; /* keeps the translation unit non-empty */\n"
 
 
 toBuilder :: [String] -> B.Builder

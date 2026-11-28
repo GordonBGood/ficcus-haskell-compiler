@@ -1,0 +1,28 @@
+module Grow1 exposing (main)
+
+-- Growth through a `comparable` variable: grow calls grow2 with a pair of its argument, grow2 is grow, so the exact type of
+-- the argument grows without end (Int, (Int, Int), ((Int, Int), (Int, Int)) ...). Elm accepts the program; the Ficus
+-- specializer stops at 64 instances with a message (expected/grow1.mono has the text).
+
+
+grow : comparable -> Int
+grow x =
+    if x < x then
+        0
+
+    else
+        grow2 ( x, x )
+
+
+grow2 : comparable -> Int
+grow2 =
+    grow
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> if grow 1 > 0 then ( (), Cmd.none ) else ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

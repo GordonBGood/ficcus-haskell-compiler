@@ -1,0 +1,8 @@
+#!/bin/bash
+# fic SRC.fic -o OUT.c : compile one Ficus program to C with the Ficus compiler.
+#   FICUS_ELM  the compiler binary (default: elm on the PATH)   ELM_HOME  package cache   FICUS_FLAGS  extra flags (e.g. --rc)
+# The project root is the nearest directory above SRC that holds elm.json.
+src=$(realpath "$1"); out=$(realpath -m "$3")
+d=$(dirname "$src")
+while [ ! -f "$d/elm.json" ] && [ "$d" != / ]; do d=$(dirname "$d"); done
+cd "$d" && exec "${FICUS_ELM:-elm}" make "${src#$d/}" --output="$out" $FICUS_FLAGS

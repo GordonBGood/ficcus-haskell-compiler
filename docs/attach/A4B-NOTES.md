@@ -26,13 +26,13 @@ compare (Array.fromList [ 5 ]) (Array.fromList [ 4, 9 ])   -- GT: Array, Vector,
 ## 2. Design
 
 The note's group S plan, with one simplification: the derived member is never cloned. A use of `T$$compare` (`T$$hash`) at the
-exact type `T args` is the kernel `Basics.compare` (the new kernel `ficcus:FicDerive.hash`) at the key `[ByType (T args)]`, and
+exact type `T args` is the kernel `Basics.compare` (the new kernel `ficus:FicDerive.hash`) at the key `[ByType (T args)]`, and
 `(member, T args)` goes into `MProgram.mpDerived`. The C generator's structural code then writes one helper per exact type, beside
 A3b's `HEq`/`HCmp`. A part with a written member calls its clone (A3b's table), and a part with a derived member calls its helper.
 
 | piece | where |
 |---|---|
-| the derived stub, the kernels, the parts of a type, types in source form, the constructor rank, the hash run time | new `Ficcus/Mono/Derived.hs` |
+| the derived stub, the kernels, the parts of a type, types in source form, the constructor rank, the hash run time | new `Ficus/Mono/Derived.hs` |
 | a derived member at an exact type is the kernel there: `memberClone` (hidden arguments, selectors, the walk), `wellKnownRef` (`compare`, `<`, `>`, `<=`, `>=`), `derivedRef` (a reference such as `Color.compare` or `Tree.hash`; the hidden parameters come first in the instance) | `Spec.hs` (`memberClone`, `wellKnownRef`, `derivedRef`, `foreignOrTop`) |
 | `derivedAt`: record the type, walk its fields for their own members | `Spec.hs` |
 | `builtinMember` `compare`/`eq`/`hash` walk the parts of a built-in type for members (a container held by a constrained function) | `Spec.hs` |
@@ -95,7 +95,7 @@ closed record is comparable: an extensible one could gain a function field throu
 
 ## 5. Cases
 
-`ficcus-tests/attach/a4bgen.py` (standalone: it imports only `attach` and `mkhome`, so the g71gen trap of A5B-NOTES cannot fire):
+`ficus-tests/attach/a4bgen.py` (standalone: it imports only `attach` and `mkhome`, so the g71gen trap of A5B-NOTES cannot fire):
 23 cases, attach is now 363. Twins in `a4b-twins/`, never hand written outputs. The `elm` twins are plain Elm on `bin/elm0193`.
 A derived type becomes a representation whose structural order is the derived one:
 * an enumeration becomes an `Int`, `Maybe a` becomes `List a`, a record becomes the tuple of its fields in alphabetical order;
@@ -104,7 +104,7 @@ A derived type becomes a representation whose structural order is the derived on
 * or the twin uses a hand-written comparison function with `Dict`/`Set` computed from it;
 * `hash` is the identity, so `hash a == hash b` prints `a == b`, the law.
 
-The `oldc` twin is the documented hash algorithm written with Word64 in Ficcus, run on `bin/elmficA5c`.
+The `oldc` twin is the documented hash algorithm written with Word64 in Ficus, run on `bin/elmficA5c`.
 
 | case | what | result |
 |---|---|---|
@@ -128,7 +128,7 @@ The `oldc` twin is the documented hash algorithm written with Word64 in Ficcus, 
 
 All RUN cases pass with gcc and clang (`-Wall -Wextra -pedantic`, no warning) and with `--rc` under ASan+UBSan with 0 live objects.
 
-**Derive matrix** (`ficcus-tests/derive`, `derivegen.py`): `c-operator-refused` and `operator-param-not-yet` are removed (they run
+**Derive matrix** (`ficus-tests/derive`, `derivegen.py`): `c-operator-refused` and `operator-param-not-yet` are removed (they run
 now; `a4b-enum` and `a4b-tree` test the same with twins). `c-use-refused` uses `Color.toString` (still refused until A4c).
 `cannot-json-hash` is new (it needs `elm/json` as a direct dependency, which only `derive.py` sets up). Three rows had A5c's old
 titles (NO MEMBER, MISSING CONSTRAINT), because A5c did not run this matrix. They now say NO ATTACHED FUNCTION and INCOMPLETE
@@ -178,7 +178,7 @@ TYPE ANNOTATION. 56 cases. `gates.sh` gained a `derive` step.
 ## 8. Gates
 
 2026-11-26, once at the end, on `elmficA4bb` (ae24c16f): `BIN=elmficA4bb KEEP=1 S=/home/gordon/claude-tmp/gates-a4bb
-ficcus-tests/gates.sh` (log /home/gordon/claude-tmp/gates-a4bb.log). All green:
+ficus-tests/gates.sh` (log /home/gordon/claude-tmp/gates-a4bb.log). All green:
 * runtime 0; attach 363/0 (with `--rc`, ASan+UBSan, 0 live); derive 56/0; sized-fuzz 40/0; stringdiff all agree;
 * types 267 PASS + 1 XFAIL; JS identity 28/0; examples 298 x3; fbip 0;
 * effects-e2, e1review, effects-e1, e1p all ok; e1pr all ok (2 target rows); e1p-identity all ok;
@@ -189,7 +189,7 @@ ficcus-tests/gates.sh` (log /home/gordon/claude-tmp/gates-a4bb.log). All green:
 
 ## 9. Proposed text for the shared files (for the user or the planning chat)
 
-* `docs/Ficcus-Design-Decisions.md`:
+* `docs/Ficus-Design-Decisions.md`:
   > **DONE (26 Nov) A4b (`feat/a4b` ae24c16f, `elmficA4bb`, not merged; docs/attach/A4B-NOTES.md):**
   > * derived `compare` and `hash`, as C helpers per exact type: the specializer maps the member to the kernel at the type, no clone;
   > * `compare` on closed records (fields in code point order of the names), `Maybe` (Nothing < Just), `Result` (Ok < Err), `Array`,

@@ -88,7 +88,7 @@ data Binop =
 fromModule :: Pkg.Name -> Can.Module -> Map.Map N.Name Can.Annotation -> Interface
 fromModule home (Can.Module _ exports _ _ unions aliases binops _) annotations =
   let
-    -- Ficcus (ATTACH A2): the members of foreign types that the exports mention travel with the interface
+    -- Ficus (ATTACH A2): the members of foreign types that the exports mention travel with the interface
     (foreignAll, ownAnnotations) = Map.partitionWithKey (\name _ -> Members.isForeign name) annotations
     exportedUnions = restrictUnions exports unions
     exportedAliases = restrictAliases exports aliases
@@ -154,7 +154,7 @@ restrictValues exports dict =
       dict
 
     Can.Export types values _ ->
-      -- Ficcus (ATTACH A1, G70 rule of rev 176): an exported type exports its members (names `Money$$add`), whether it
+      -- Ficus (ATTACH A1, G70 rule of rev 176): an exported type exports its members (names `Money$$add`), whether it
       -- is exported open (`Money(..)`) or opaque (`Money`); `(..)` decides only the constructors
       let
         exportedTypes = [ T.nameToChars name | (name, (_, export)) <- Map.toList types, isUnion export ]

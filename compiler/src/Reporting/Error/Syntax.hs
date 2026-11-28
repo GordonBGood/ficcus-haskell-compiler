@@ -74,7 +74,7 @@ data Error
   | NoPortsInPackage (A.Located N.Name)
   | NoPortModulesInPackage A.Region
   | NoEffectsOutsideKernel A.Region
-  | FicOnlyImport A.Region            -- Ficcus T1a-2 (O6): `import Concurrent` in a .elm module
+  | FicOnlyImport A.Region            -- Ficus T1a-2 (O6): `import Concurrent` in a .elm module
   | ParseError Module
 
 
@@ -154,7 +154,7 @@ data DeclDef
   | DeclDefNameMatch N.Name Cursor
   --
   | DeclDefIndentType Cursor
-  | DeclDefConstraint Cursor           -- Ficcus (ATTACH A2): a line of the `where` block of a signature
+  | DeclDefConstraint Cursor           -- Ficus (ATTACH A2): a line of the `where` block of a signature
   | DeclDefIndentConstraint Cursor
   | DeclDefIndentEquals Cursor
   | DeclDefIndentBody Cursor
@@ -191,7 +191,7 @@ data TypeAlias
   --
   | AliasIndentEquals Cursor
   | AliasIndentBody Cursor
-  | AliasWhere Cursor                 -- Ficcus (ATTACH A1): a type alias cannot carry members
+  | AliasWhere Cursor                 -- Ficus (ATTACH A1): a type alias cannot carry members
 
 
 data CustomType
@@ -207,9 +207,9 @@ data CustomType
   | CT_IndentAfterBar Cursor
   | CT_IndentAfterEquals Cursor
   --
-  | CT_Member Decl Cursor             -- Ficcus (ATTACH A1): a member in the `where` block
+  | CT_Member Decl Cursor             -- Ficus (ATTACH A1): a member in the `where` block
   | CT_IndentMember Cursor
-  | CT_Derive Cursor                  -- Ficcus (A4a): a member name expected after `derive` or a comma
+  | CT_Derive Cursor                  -- Ficus (A4a): a member name expected after `derive` or a comma
   | CT_DeriveComma Cursor             -- a comma expected between the names of a `derive` line
   | CT_DeriveSpace Space Cursor
 
@@ -350,7 +350,7 @@ data Def
   | DefIndentType Cursor
   | DefIndentBody Cursor
   | DefAlignment Indent Cursor
-  | DefWhere Cursor                    -- Ficcus (ATTACH A2): a `where` block on the signature of a local definition
+  | DefWhere Cursor                    -- Ficus (ATTACH A2): a `where` block on the signature of a local definition
 
 
 data Destruct
@@ -625,11 +625,11 @@ toReport source err =
           )
 
     FicOnlyImport region ->
-      Report.Report "FICCUS ONLY MODULE" region [] $
+      Report.Report "FICUS ONLY MODULE" region [] $
         Code.toSnippet source region Nothing
           (
             D.reflow $
-              "The module `Concurrent` is part of Ficcus, so only a Ficcus module (a file with a .fic extension) can import it:"
+              "The module `Concurrent` is part of Ficus, so only a Ficus module (a file with a .fic extension) can import it:"
           ,
             D.stack
               [ D.reflow $
@@ -2276,7 +2276,7 @@ toCustomTypeReport source customType startCur =
         \ separated by commas."
 
 
--- Ficcus (A4a)
+-- Ficus (A4a)
 deriveReport :: Code.Source -> Cursor -> Cursor -> D.Doc -> Report.Report
 deriveReport source startCur cur message =
   let
@@ -2327,7 +2327,7 @@ customTypeNote =
 -- DECL DEF
 
 
--- Ficcus (ATTACH A2)
+-- Ficus (ATTACH A2)
 constraintReport :: Code.Source -> N.Name -> Cursor -> Cursor -> [Char.Char] -> Report.Report
 constraintReport source name startCur cur title =
   let

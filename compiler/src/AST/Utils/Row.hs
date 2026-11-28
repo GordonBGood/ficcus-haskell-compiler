@@ -1,4 +1,4 @@
--- Substituting a record type for the extension variable of a record (Ficcus track D10).
+-- Substituting a record type for the extension variable of a record (Ficus track D10).
 -- `dealias` used to leave the extension variable of `{ r | x : Int }` alone when `r` was bound to a
 -- type argument (elm/compiler TODO "record extensions seem to be skipped during dealiasing"), so
 -- an unbound variable remained (case 1916).

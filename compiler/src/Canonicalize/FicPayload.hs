@@ -7,20 +7,20 @@ module Canonicalize.FicPayload
   where
 
 
--- Ficcus, effects slice E3c (docs/E3-PORTS-DESIGN.md D6): the payload types of a port in a `.fic` module of a build to C.
+-- Ficus, effects slice E3c (docs/E3-PORTS-DESIGN.md D6): the payload types of a port in a `.fic` module of a build to C.
 --
 -- Elm's set (Canonicalize.Effects.checkPayload, unchanged and still the check of every `.elm` module and of every build to
--- JavaScript) plus the types of Ficcus: the sized integers `Int8 Int16 Int32 Word8 Word16 Word32 Word64`, `Float32`, and `Vector a`
+-- JavaScript) plus the types of Ficus: the sized integers `Int8 Int16 Int32 Word8 Word16 Word32 Word64`, `Float32`, and `Vector a`
 -- of any payload type `a`. They are the overlay's types (overlay/*.elm, compiled as modules of the project), recognized by their
 -- ids AND by the overlay marker (E3c review M1): the type's interface, among the module's imports, has the marker as its only
--- constructor (`FicInt8Builtin`, `FicVectorBuiltin`; Ficcus.Mono.Sized.sizedEnabled checks the same). A project module of the
+-- constructor (`FicInt8Builtin`, `FicVectorBuiltin`; Ficus.Mono.Sized.sizedEnabled checks the same). A project module of the
 -- same name (it wins over the overlay) has no marker, so its type gets Elm's payload error, as any custom type; so does an overlay
 -- type whose module the port module does not import (only reached through an alias of another module: its interface is not here).
--- This check is the only gate: Ficcus.Mono.PortFic recognizes the ids alone, and flags keep Elm's check (Optimize.Module).
+-- This check is the only gate: Ficus.Mono.PortFic recognizes the ids alone, and flags keep Elm's check (Optimize.Module).
 -- Custom types and `Dict` stay refused, with Elm's error.
 --
 -- Build.compile decides which check a module gets: this one when the file is `.fic` and the build is to C (or `.mono`). A build to
--- JavaScript has no overlay modules, so a `.fic` program with a Ficcus payload is refused there by its import of `Int8` or `Vector`
+-- JavaScript has no overlay modules, so a `.fic` program with a Ficus payload is refused there by its import of `Int8` or `Vector`
 -- (D6: the JS build of such a program is refused), or, for a project module of that name, by Elm's payload error.
 
 
@@ -47,7 +47,7 @@ checkPayload ficPayloads ifaces =
   if ficPayloads then check (overlayIds ifaces) else Effects.checkPayload
 
 
--- | the ids of the Ficcus payload types whose module among the imports is the overlay's (its type has the marker constructor)
+-- | the ids of the Ficus payload types whose module among the imports is the overlay's (its type has the marker constructor)
 overlayIds :: Map.Map Module.Name I.Interface -> [String]
 overlayIds ifaces =
   [ tid
@@ -64,7 +64,7 @@ overlayIds ifaces =
     unionOf u = case u of { I.OpenUnion x -> x; I.ClosedUnion x -> x; I.PrivateUnion x -> x }
 
 
--- Elm's walk (Canonicalize.Effects.checkPayload) with the overlay's Ficcus types accepted; every refusal is the one Elm's walk gives
+-- Elm's walk (Canonicalize.Effects.checkPayload) with the overlay's Ficus types accepted; every refusal is the one Elm's walk gives
 check :: [String] -> Can.Type -> Either (Can.Type, Error.InvalidPayload) ()
 check overlay tipe =
   case tipe of
@@ -79,7 +79,7 @@ check overlay tipe =
             Right () -> F.traverse_ (check overlay) args       -- Json.Value, String, Int, Float, Bool, List, Maybe, Array
             Left _ -> Effects.checkPayload tipe                -- Elm's error for this type
       where
-        tid = ficcusId home name
+        tid = ficusId home name
 
     Can.TPair a b -> check overlay a *> check overlay b
     Can.TTriple a b c -> check overlay a *> check overlay b *> check overlay c
@@ -87,7 +87,7 @@ check overlay tipe =
     _ -> Effects.checkPayload tipe
 
 
--- | Optimize.Port: the Elm type a Ficcus payload type is converted like in the (unused) JavaScript converters of a build to C, so
+-- | Optimize.Port: the Elm type a Ficus payload type is converted like in the (unused) JavaScript converters of a build to C, so
 -- that the optimizer does not stop on it (a sized integer is an Int, `Float32` a Float, `Vector a` an `Array a`).
 -- Nothing for every other type.
 elmLike :: ModuleName.Canonical -> T.Name -> [Can.Type] -> Maybe Can.Type
@@ -100,11 +100,11 @@ elmLike home name args =
       | tid == vectorId -> Just (Can.TType ModuleName.array T.array [arg])
     _ -> Nothing
   where
-    tid = ficcusId home name
+    tid = ficusId home name
 
 
-ficcusId :: ModuleName.Canonical -> T.Name -> String
-ficcusId = Members.typeId
+ficusId :: ModuleName.Canonical -> T.Name -> String
+ficusId = Members.typeId
 
 
 sizedIds :: [String]

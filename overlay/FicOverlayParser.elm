@@ -1,10 +1,10 @@
 module FicOverlayParser exposing (multiComment)
 
-{-| Ficcus: elm/parser's `multiComment` with the fix of decision L33 (parser#2): for `NotNestable` Elm's version is
+{-| Ficus: elm/parser's `multiComment` with the fix of decision L33 (parser#2): for `NotNestable` Elm's version is
 `token open |. chompUntil close`, and because of the way `chompUntil` leaves the offset (before the terminator, the position
 after it) the closing token is never consumed. Here the comment is read up to and including the closing token with the
 public API only. `Nestable` is elm/parser's own `nestableComment` (copied: it is not exported). Compiled only into projects
-that depend on elm/parser (Ficcus.Mono.Overlay); the specializer redirects `Parser.Advanced.multiComment` here.
+that depend on elm/parser (Ficus.Mono.Overlay); the specializer redirects `Parser.Advanced.multiComment` here.
 -}
 
 import Parser.Advanced exposing ((|.), Nestable(..), Parser, Token(..), andThen, chompIf, chompWhile, oneOf, problem, token)

@@ -44,7 +44,7 @@ type RTV =
   Map.Map T.Var Type
 
 
--- Ficcus: the rigid variables plus, in typed mode, the type recorder.
+-- Ficus: the rigid variables plus, in typed mode, the type recorder.
 -- Without a recorder (Nothing, JavaScript output) constraints are exactly the
 -- ones Elm generates.
 data Env =
@@ -825,7 +825,7 @@ argsHelp maybeRec args state =
 -- CONSTRAIN TYPED ARGS
 
 
--- Ficcus (ATTACH A2): the hidden parameters of a constrained definition are not counted in "the 2nd argument"
+-- Ficus (ATTACH A2): the hidden parameters of a constrained definition are not counted in "the 2nd argument"
 isHidden :: Can.Pattern -> Bool
 isHidden (A.At _ pattern) =
   case pattern of

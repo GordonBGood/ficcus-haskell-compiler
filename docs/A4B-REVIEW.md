@@ -2,8 +2,8 @@
 
 Branch `review/a4b` from `feat/a4b` 639eeb26 (code ae24c16f), binary `bin/elmficA4bb`. Read only: no compiler change. Sources read:
 `docs/attach/A4B-NOTES.md`, `docs/A4-DERIVE-DESIGN.md` (design/a4), `docs/A3B-REVIEW.md`, `docs/attach/A5C-NOTES.md`, and the diff
-75e3ed9a..ae24c16f of `Type/Unify.hs`, `Type/Members.hs`, `AST/WellKnown.hs`, `Canonicalize/Derive.hs`, `Ficcus/Mono/{Spec,CGen,
-Derived,Ir,Kernel}.hs`. Scratch cases: `ficcus-tests/a4br/` (README there has every case and its verdict).
+75e3ed9a..ae24c16f of `Type/Unify.hs`, `Type/Members.hs`, `AST/WellKnown.hs`, `Canonicalize/Derive.hs`, `Ficus/Mono/{Spec,CGen,
+Derived,Ir,Kernel}.hs`. Scratch cases: `ficus-tests/a4br/` (README there has every case and its verdict).
 
 ## Verdict
 
@@ -18,7 +18,7 @@ complete and the "always" switch is one change.
 
 ## What was run
 
-* 52 scratch cases under `ficcus-tests/a4br/cases` with `run.py` (a copy of the A5a review runner: `--no-rc` gcc -O2 and `--rc`
+* 52 scratch cases under `ficus-tests/a4br/cases` with `run.py` (a copy of the A5a review runner: `--no-rc` gcc -O2 and `--rc`
   gcc -O1 with ASan+UBSan, FIC_STATS, FIC_NO_POOL; twins on `bin/elm0193` + node). 11 cases have Elm twins. The rest are expected
   rejections, measurements, or outputs I checked by hand (`mutual`, `alias`, `values`).
 * `elmficA5c` (ficcus 75e3ed9a) was used as the "before" binary for P1, M1 and the NaN sort.
@@ -57,8 +57,8 @@ Fix (both parts):
 
 ```elm
 type T r = T { r | x : Int }  where derive compare, hash
-T { x = 1, y = 2 } < T { x = 1, y = 3 }          -- Ficcus False, Elm-twin True
-compare (T { age = 5, name = "zz" }) (T { age = 5, name = "a" })   -- Ficcus LT, twin GT
+T { x = 1, y = 2 } < T { x = 1, y = 3 }          -- Ficus False, Elm-twin True
+compare (T { age = 5, name = "zz" }) (T { age = 5, name = "a" })   -- Ficus LT, twin GT
 ```
 
 Cases `row-var-derive` and `row-var-derive-string-rev`, both against twins, under `--no-rc` and `--rc`. The union shape keeps the
@@ -227,7 +227,7 @@ refusal can be lifted. For the decisions file as an open item.
 
 ## Proposed text for the shared files (for the user or the planning chat)
 
-* `docs/Ficcus-Design-Decisions.md`:
+* `docs/Ficus-Design-Decisions.md`:
   > **NOTE (27 Nov) A4b review (`review/a4b`, docs/A4B-REVIEW.md):** merge after M1 (the compiler does not stop on derived
   > `compare`/`hash` over mutually non-regular types; bound `derivedAt` and extend the deriver's non-regular check to the mutual
   > group) and M2 (refuse `derive` over an extensible-record field: the helpers read the row-less record). F1 (`a has compare`

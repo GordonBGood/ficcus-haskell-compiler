@@ -19,7 +19,7 @@ import qualified Literals
 
 import qualified Elm.String as ES
 import Parse.Primitives (Parser, Cursor, slide, newline, ltAddr, leAddr, notLtAddr, eqIndex, neIndex)
-import qualified Ficcus.Flags as Flags
+import qualified Ficus.Flags as Flags
 import qualified Parse.Number as Number
 import qualified Parse.Primitives as P
 import qualified Parse.StringLayout as StringLayout
@@ -128,7 +128,7 @@ string toExpectation toError =
           if isDoubleQuote pos2 end
           then
             case multiString pos end cur of
-              Ok p c u -> Ok p (StringLayout.afterMultiline cur c) u   -- Ficcus track E4
+              Ok p c u -> Ok p (StringLayout.afterMultiline cur c) u   -- Ficus track E4
               result -> result
           else Ok pos2 (slide cur 2#Word64) Utf8.empty
         else
@@ -355,7 +355,7 @@ eatUnicode pos end cur =
     else if code < 0 || 0x10FFFF < code then
       EscapeProblem cur $ E.BadUnicodeCode (wordToWord64# (int2Word# (3# +# minusAddr# newPos pos)))
 
-    else if Flags.ficcusChecks && 0xD800 <= code && code <= 0xDFFF then
+    else if Flags.ficusChecks && 0xD800 <= code && code <= 0xDFFF then
       EscapeProblem cur $ E.BadUnicodeSurrogate (wordToWord64# (int2Word# (3# +# minusAddr# newPos pos)))
 
     else if isTrue# (numDigits <# 4#) || isTrue# (6# <# numDigits) then

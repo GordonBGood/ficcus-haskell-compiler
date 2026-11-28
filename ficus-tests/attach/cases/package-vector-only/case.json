@@ -1,0 +1,1 @@
+{"desc": "STAGE4-FIX2 step 4: only a package imports the core Vector (the program does not)", "deps": ["ficus/vecuse@1.0.0"], "c_only": true}
