@@ -4,7 +4,7 @@ effect module Concurrent where { command = MyCmd, subscription = MySub } exposin
     , channel, toAddress, listen, sendCmd
     )
 
-{-| Ficcus T1a (docs/T1-THREADING-DESIGN.md T1-D2 to T1-D6; docs/attach/T1A-NOTES.md): green processes with typed mailboxes on the
+{-| Ficus T1a (docs/T1-THREADING-DESIGN.md T1-D2 to T1-D6; docs/attach/T1A-NOTES.md): green processes with typed mailboxes on the
 scheduler of the run time, one thread. Every operation is a `Task`; run them with `Task.perform` / `Task.attempt` from `init` or
 `update`, or inside a process. Importable from `.fic` modules only.
 
@@ -24,7 +24,7 @@ process starts when the current one waits or ends. A process runs until it waits
 the run time) or ends. A process that waits forever does not keep the program alive. Messages of channels reach `update` only through
 this module's effect manager, so the model keeps one writer.
 
-The module is added to the source directories of every build (Ficcus.Mono.Concurrent); a module `Concurrent` of the project wins. The
+The module is added to the source directories of every build (Ficus.Mono.Concurrent); a module `Concurrent` of the project wins. The
 types are run time objects (the constructors below are never built: they mark the types as built-ins). The functions of the section
 KERNELS are the kernels `elm/core:Concurrent.<name>` (runtime/fic_conc.h; in JavaScript runtime/fic_conc.js); their bodies only give
 the types (and, for JavaScript, the dependency on the scheduler).

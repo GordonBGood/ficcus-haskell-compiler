@@ -98,7 +98,7 @@ toEditorRowCol pos =
   )
 
 
--- | Ficcus (A5c): the line (from 1) where a region starts, for messages that point at another place in words
+-- | Ficus (A5c): the line (from 1) where a region starts, for messages that point at another place in words
 startLine :: Region -> Int
 startLine (Region start _) =
   fst (toEditorRowCol start)

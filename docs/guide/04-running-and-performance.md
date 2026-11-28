@@ -1,7 +1,7 @@
 # 4. Building, running, memory and speed
 
 State: binary `elmficA16` (the workspace keeps the compiler builds as `bin/elmficNN`; a build of the fork is the `elm` executable).
-Examples: `ficcus-tests/guide/`. Timings in 4.5 were measured for this guide on 17 Nov 2026 with `elmficA14` (the same code paths; not repeated on A16) on an AMD Ryzen 7 7840HS,
+Examples: `ficus-tests/guide/`. Timings in 4.5 were measured for this guide on 17 Nov 2026 with `elmficA14` (the same code paths; not repeated on A16) on an AMD Ryzen 7 7840HS,
 gcc 16.2.1, a quiet machine (load below 1), median of 5 whole-process runs, serial, under `ulimit -v` 6 GB.
 
 ## 4.1 Build and run
@@ -26,7 +26,7 @@ gcc -std=c99 -O2 -ffp-contract=off main.c -o main -lm
 - `-std=c99 -O2` is the tested setting. `-O3` and clang were measured and are no consistent gain (within 10 % either way,
   nbody under clang is 1.7 times slower). clang works; with sanitizers it needs `-fuse-ld=bfd`. `-lm` is needed; on a glibc older
   than 2.34 add `-lpthread` (the program runs `main` on a big-stack thread).
-- Every example of this guide is built this way in three modes by `python3 ficcus-tests/guide/run.py` (4.3).
+- Every example of this guide is built this way in three modes by `python3 ficus-tests/guide/run.py` (4.3).
 
 ## 4.2 What you can set
 
@@ -63,9 +63,9 @@ Always cap it (`ulimit -v`). The runner of this guide builds every example three
 | `san` | `--rc` | AddressSanitizer + UBSan, `-DFIC_NO_POOL` | the same, with no sanitizer report |
 
 ```sh
-python3 ficcus-tests/guide/run.py                       # all examples, three modes
-python3 ficcus-tests/guide/run.py --only d-int,v-fast   # some
-python3 ficcus-tests/guide/run.py --docs                # also check that every code block of docs/guide is a tested example
+python3 ficus-tests/guide/run.py                       # all examples, three modes
+python3 ficus-tests/guide/run.py --only d-int,v-fast   # some
+python3 ficus-tests/guide/run.py --docs                # also check that every code block of docs/guide is a tested example
 ```
 
 ## 4.4 Memory
@@ -81,7 +81,7 @@ python3 ficcus-tests/guide/run.py --docs                # also check that every 
 - **Arrays.** `Vector Int` is 8 bytes per element (`Vector Char` 4, `Bool` 1) plus a 40-byte header; a million `Int`s are 8 MB.
   The Elm `Array` costs more per element (boxed words in a tree). A byte buffer as `Vector Int` costs 8 bytes per byte (the P1 JSON benchmark peaks at
   640 MB for that reason; `Word8` vectors are planned).
-- **Peak against hand C.** On the Hamming benchmark (10^8) the Ficcus program uses 31 MB, hand-written C 26 MB, Rust 26 MB (4.5).
+- **Peak against hand C.** On the Hamming benchmark (10^8) the Ficus program uses 31 MB, hand-written C 26 MB, Rust 26 MB (4.5).
   Run with `-DFIC_STATS` to see the peak number of live objects of your own program.
 - **Stack.** 1 GB reserved (not used) so that a non-tail recursion such as a hand-written fold over a long list works.
   If the thread cannot be created (for example under a `ulimit -v` below the stack size) the program silently runs on the ordinary
@@ -89,7 +89,7 @@ python3 ficcus-tests/guide/run.py --docs                # also check that every 
 
 ## 4.5 What is fast and what is not
 
-Rule of thumb from the measurements: Ficcus C is close to hand-written C for programs that build and take apart persistent
+Rule of thumb from the measurements: Ficus C is close to hand-written C for programs that build and take apart persistent
 values (lists, trees, `Dict`, closures, heaps), and close to hand-written C and safe Rust for loops over a `Vector`.
 It is slower where the Elm code uses `Array`, and where Rust or C can mutate a record in place.
 
@@ -104,7 +104,7 @@ answers of all versions agree):
 | sieve (1 MB) | 322.6 | **29.0** | 24.8 plain, 9.0 unrolled | 13.9 | 11.1 | 1.17 (3.2 against unrolled) | 2.1 |
 | hamvec (1000 reps) | 171.7 | **29.3** | 29.4 | 27.3 | 5.9 | 1.00 | 1.07 |
 
-(`ficcus-tools/v3_bench.py --elm bin/elmficA16 --runs 5`. Ficcus: `--rc`, gcc -O2 -ffp-contract=off. Hand C: best of gcc and clang at -O2
+(`ficus-tools/v3_bench.py --elm bin/elmficA16 --runs 5`. Ficus: `--rc`, gcc -O2 -ffp-contract=off. Hand C: best of gcc and clang at -O2
 and -O3. The sieve has one byte per flag in C and Rust and 8 bytes in a `Vector Int`.)
 
 The `Vector` programs are 1.6 to 11 times faster than the `Array` programs (`docs/STAGE4-V3.md` measured 1.7 to 10.5 on a loaded
@@ -115,19 +115,19 @@ If speed matters in a C build, use `Vector`.
 
 **Hamming numbers, the n-th (10^8)** (`targets/hamnth`, a three-pointer merge over a growing and trimmed `Vector`):
 
-| 10^8 | Ficcus `Vector` (gcc -O2) | best hand C (gcc -O2) | safe Rust O3 |
+| 10^8 | Ficus `Vector` (gcc -O2) | best hand C (gcc -O2) | safe Rust O3 |
 |---|---|---|---|
 | time, ms | 629.5 | 511.7 | 631.7 |
 | max resident memory, MB | 31.1 | 25.8 | 26.4 |
-| Ficcus / this | 1.00 | 1.23 | 1.00 |
+| Ficus / this | 1.00 | 1.23 | 1.00 |
 
 (The 17 Nov run is the current one. `docs/STAGE4-V3.md` section 4 reports 3,293 ms and 62 MB for this program, 5.8 times hand C: that
 was before `Vector.slice` of a unique vector was made in place, in FIX1; the proposal it made is done.)
 
-**Persistent-structure programs** (`docs/RUST-COMPARISON.md` follow-up, 14 Nov, binary `elmfic67`, Ficcus gcc -O2; time of
-Ficcus divided by the best hand-written C, and by safe Rust O3):
+**Persistent-structure programs** (`docs/RUST-COMPARISON.md` follow-up, 14 Nov, binary `elmfic67`, Ficus gcc -O2; time of
+Ficus divided by the best hand-written C, and by safe Rust O3):
 
-| program | style | Ficcus / best hand C | Ficcus / Rust |
+| program | style | Ficus / best hand C | Ficus / Rust |
 |---|---|---|---|
 | bintree | allocation of trees | 1.20 | 0.27 (Rust `Box` with glibc `malloc` is 3.7 times slower; with an arena Rust is 0.8) |
 | mandel | records, `Float` loops | 1.10 | 1.24 |

@@ -1,0 +1,443 @@
+{-# OPTIONS_GHC -Wall #-}
+{-# LANGUAGE PatternGuards #-}
+module Ficus.Mono.Borrow
+  ( OwnCtx
+  , ownCtx
+  , inferBorrow
+  , ownedVars
+  , viewExpr
+  , viewRoot
+  )
+  where
+
+
+-- Ficus, stage (iv) slice S3: borrow inference (docs/STAGE4-PLAN.md, sections 4 and 13).
+--
+-- Per clone, which reference parameters are *borrowed*: the function only looks at them, the caller keeps the value alive for the
+-- whole call and no count is passed. A parameter is OWNED (the function consumes a count) when the body
+--
+--   * uses it in an owned position: returns it, stores it in a constructor, record, tuple, list or closure, binds it with a `let`,
+--     passes it to an owned parameter of a known call, to a closure call or to an owned kernel argument; or
+--   * passes it, in a self tail call (a loop), to a borrowed parameter a value that does not stay alive for the whole call: the loop
+--     has no "after" in which an owned temporary could be dropped (3.6).
+--
+-- Everything else is borrowed. Starting from "all borrowed" the inference only ever turns parameters into owned ones, so a plain
+-- iteration over all clones reaches the fixed point (the order of the clones does not matter; mutual recursion is covered).
+-- A pattern variable that is consumed does NOT make the scrutinee owned (Lean does: it prepares constructor reuse, which is S4).
+--
+-- `ownedVars` is also the question the Rc pass asks of a case branch: which of the variables the pattern binds are consumed (those
+-- get a count of their own at the start of the branch; the others are views into the scrutinee, which stays alive).
+
+
+import qualified Data.Graph as Graph
+import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
+import System.Environment (lookupEnv)
+import System.IO.Unsafe (unsafePerformIO)
+
+import Ficus.Mono.Class
+import Ficus.Mono.Free
+import Ficus.Mono.Ir
+import Ficus.Mono.Kernel (kernelSig, updateKernels)
+import Ficus.Mono.Layout (objSizeClass)
+import Ficus.Mono.Program (modelSeeds)
+import Ficus.Mono.Reuse
+
+
+data OwnCtx =
+  OwnCtx
+    { ocClones :: Map.Map CloneId MDef
+    , ocCaps :: Map.Map CloneId [(String, Class)]
+    }
+
+
+ownCtx :: Map.Map CloneId [(String, Class)] -> [MDef] -> OwnCtx
+ownCtx caps clones = OwnCtx (Map.fromList [ (mdClone d, d) | d <- clones ]) caps
+
+
+-- | the clones with `mdOwn` inferred; `root` (the `main` value) is left alone
+inferBorrow :: Map.Map String UnionShape -> Maybe CloneId -> [MDef] -> [MDef]
+inferBorrow unions root clones0 = go (map start clones0)
+  where
+    recTypes = recursiveTypes unions
+    sccs = sccOf clones0
+    caps = captures clones0
+    -- a call that hands a parameter a value of another class (a struct where a box is expected) makes a fresh box that only an owner drops
+    byId = Map.fromList [ (mdClone d, d) | d <- clones0 ]
+    mismatched = Set.fromList [ (c, i) | d <- clones0, Just body <- [mdBody d], (c, i) <- mismatches body ]
+    mismatches e =
+      concatMap mismatches (children e) ++
+      (case mNode e of
+         MCall h args
+           | MGlobal c <- mNode h, Just d <- Map.lookup c byId, mdKind d == Function, length args == length (mdParams d) ->
+               [ (c, i) | (i, a, (_, pc)) <- zip3 [0 :: Int ..] args (mdParams d), mRep a /= pc ]
+         _ -> [])
+    -- E1 step 3 (D-fx-3 amended): the model parameter of the program's `update` is owned whatever its body does (the seed), and it is
+    -- an extra root of the update rule
+    seeds = modelSeeds root clones0
+    updates = Set.union seeds (if updateRule then updateParamsFrom seeds clones0 else Set.empty)
+    start d = d { mdOwn = [ if refClass c && not (Set.member (mdClone d, i) mismatched) then Borrowed else Owned | (i, (_, c)) <- zip [0 :: Int ..] (mdParams d) ] }
+    go cs =
+      let ctx = ownCtx caps cs
+          cs' = map (step ctx) cs
+      in if map mdOwn cs' == map mdOwn cs then cs else go cs'
+    step ctx d =
+      case mdBody d of
+        Just body | mdKind d == Function, Just (mdClone d) /= root ->
+          let consumed = Set.unions [ownedVars ctx body, tailBad ctx d, if projRule then projOwned ctx d else Set.empty, if reuseRule then reuseOwned ctx d else Set.empty,
+                                       if hybridRule then hybridOwned unions recTypes sccs ctx d else Set.empty,
+                                       Set.fromList [ n | (c, n) <- Set.toList updates, c == mdClone d ]]
+              now = [ if o == Owned || Set.member n consumed then Owned else Borrowed | ((n, _), o) <- zip (mdParams d) (paramOwns d) ]
+          in d { mdOwn = now }
+        _ -> d
+
+
+-- OWNED POSITIONS
+
+
+-- | the variables an expression uses in an owned position (its value is consumed), by the conventions of the Rc pass
+ownedVars :: OwnCtx -> MExpr -> Set.Set String
+ownedVars ctx e0 = Set.union (owned e0) (if stealRule then calledOnce e0 else Set.empty)
+  where
+    owned e =
+      case mNode e of
+        MLit _ -> Set.empty
+        MLocal n -> if refClass (mRep e) then Set.singleton n else Set.empty
+        MGlobal c -> capturedRefs c
+        MKernel _ _ -> Set.empty
+        MCtor _ _ _ -> Set.empty
+        MCall h args -> call h args
+        MLam _ b -> owned b
+        MIf bs f -> Set.unions (owned f : [ Set.union (owned c) (owned b) | (c, b) <- bs ])
+        MLetVal _ v b -> Set.union (owned v) (owned b)
+        MSeq a b -> Set.union (owned a) (owned b)
+        MCase s bs -> Set.unions ((case mNode s of { MLocal _ -> Set.empty; _ -> owned s }) : map (owned . snd) bs)
+        MAccess r _ _ -> borrowed r
+        MUpdate r fs -> Set.unions (owned r : map (owned . snd) fs)
+        MRecord fs -> Set.unions (map (owned . snd) fs)
+        MTuple xs -> Set.unions (map owned xs)
+        MList xs -> Set.unions (map owned xs)
+        MDup _ b -> owned b
+        MDrop _ b -> owned b
+        MOwn b -> borrowed b
+        MUnpack _ _ _ b -> owned b
+        MSpec _ _ _ _ b -> owned b
+        MReuse _ b -> owned b
+        MFreeTok _ b -> owned b
+    -- an argument that is only looked at: a variable or a projection of one is used as it is, anything else is evaluated into a
+    -- temporary that the call drops afterwards
+    borrowed a = if viewExpr (ocClones ctx) a then Set.empty else owned a
+    capturedRefs c =
+      case Map.lookup c (ocClones ctx) of
+        Just d | mdKind d == Function -> Set.fromList [ n | (n, cc) <- Map.findWithDefault [] c (ocCaps ctx), refClass cc ]
+        _ -> Set.empty
+    call h args =
+      case mNode h of
+        MKernel name _
+          | name `elem` ["elm/core:Basics.and", "elm/core:Basics.or"] -> Set.unions (map owned args)
+          | Just sigText <- kernelSig name (keyOf h), length sigText == length args ->
+              Set.unions [ if l == 'o' && refClass (mRep a) then owned a else borrowed a | (l, a) <- zip sigText args ]
+          | otherwise -> Set.unions (map owned args)
+        MCtor _ _ _ -> Set.unions (map owned args)
+        MGlobal c
+          | Just d <- Map.lookup c (ocClones ctx), mdKind d == Function, length args == length (mdParams d) ->
+              Set.unions [ if o == Borrowed && refClass (mRep a) && mRep a == pc then borrowed a else owned a
+                         | (a, o, (_, pc)) <- zip3 args (paramOwns d) (mdParams d) ]
+        _ -> Set.unions (headUse h : map owned args)
+    headUse h =
+      case mNode h of
+        MGlobal c | Just d <- Map.lookup c (ocClones ctx), mdKind d == Value -> Set.empty
+                  | null (Map.findWithDefault [] c (ocCaps ctx)) -> Set.empty
+        _ -> if refClass (mRep h) then borrowed h else Set.empty
+    keyOf h = case mNode h of { MKernel _ k -> k; _ -> Key [] }
+
+
+{-# NOINLINE stealRule #-}
+-- | S6: the rule below is on unless `FICUS_NO_STEAL_RULE=1` (or `FICUS_NO_STEAL=1`, which also turns the owning calls off, `Rc.stealOn`).
+-- It was off by default for one build (elmfic64): an array carried in a runtime partial application was then copied on every step.
+stealRule :: Bool
+stealRule = unsafePerformIO (do { a <- lookupEnv "FICUS_NO_STEAL"; b <- lookupEnv "FICUS_NO_STEAL_RULE"; return (a /= Just "1" && b /= Just "1") })
+
+
+-- | S6, unique PAP stealing (docs/STAGE4-S6.md): the variables that the expression only CALLS, at most once on every path and at least
+-- once: the call can consume the function value (`fic_ap<n>_own`), so a parameter or a pattern variable used like this is owned and a
+-- partial application that nobody else holds gives its arguments to the function. A function value that is called several times (the
+-- function of `List.map`) or also passed on stays as it was.
+calledOnce :: MExpr -> Set.Set String
+calledOnce e0 = Set.fromList [ n | n <- heads e0, paths n e0 == Just 1 ]
+  where
+    heads e =
+      (case mNode e of
+         MCall h _ | MLocal n <- mNode h, mRep h == CRef -> [n]
+         _ -> [])
+      ++ concatMap heads (children e)
+    named n e =
+      case mNode e of
+        MLocal v -> v == n
+        _ -> any (named n) (children e)
+    -- the largest number of calls of `n` on a path through the expression; Nothing when `n` is used in another way, or called twice
+    paths :: String -> MExpr -> Maybe Int
+    paths n e
+      | not (named n e) = Just 0
+      | otherwise =
+          let one = paths n
+              atMostOne r = case r of { Just k | k <= 1 -> r; _ -> Nothing }
+          in atMostOne $
+             case mNode e of
+               MCall h args | MLocal v <- mNode h, v == n -> if any (named n) args then Nothing else Just 1
+               MIf bs f -> do { cs <- mapM (one . fst) bs; xs <- mapM (one . snd) bs; y <- one f; return (sum cs + maximum (y : xs)) }
+               MCase sc bs -> do { c <- one sc; xs <- mapM (one . snd) bs; return (c + maximum (0 : xs)) }
+               MLam _ _ -> Nothing
+               _ | null (children e) -> Nothing
+                 | otherwise -> fmap sum (mapM one (children e))
+
+
+-- | an expression that only reads a variable or something static: usable in a borrowed position without a temporary
+viewExpr :: Map.Map CloneId MDef -> MExpr -> Bool
+viewExpr clones a =
+  case mNode a of
+    MLocal _ -> True
+    MAccess r _ _ -> viewExpr clones r
+    MLit _ -> True
+    MCtor _ _ _ -> True
+    MGlobal c -> maybe False ((== Value) . mdKind) (Map.lookup c clones)
+    _ -> False
+
+
+-- | the variable a view reads (a variable, or the record a field is read from)
+viewRoot :: MExpr -> Maybe String
+viewRoot e =
+  case mNode e of
+    MLocal n -> Just n
+    MAccess r _ _ -> viewRoot r
+    _ -> Nothing
+
+
+-- TAIL CALLS
+
+
+-- | the parameters of a clone that must be owned because a self tail call hands a borrowed parameter a value that is not alive for
+-- the whole call
+tailBad :: OwnCtx -> MDef -> Set.Set String
+tailBad ctx d =
+  case mdBody d of
+    Nothing -> Set.empty
+    Just body -> go True env0 body
+  where
+    params = mdParams d
+    env0 = Map.fromList [ (n, o == Borrowed) | ((n, _), o) <- zip params (paramOwns d) ]     -- stable: alive for the whole call
+    stable env n = Map.findWithDefault True n env                                              -- a captured variable is borrowed too
+    go tl env e =
+      case mNode e of
+        MIf bs f -> Set.unions (go tl env f : [ go tl env b | (_, b) <- bs ])
+        MLetVal n _ b -> go tl (Map.insert n False env) b
+        MSeq _ b -> go tl env b
+        MDup _ b -> go tl env b
+        MDrop _ b -> go tl env b
+        MSpec _ _ _ _ b -> go tl env b
+        MFreeTok _ b -> go tl env b
+        MCase s bs ->
+          Set.unions
+            [ go tl (foldr (\(v, _) m -> Map.insert v viaScrutinee m) env (patBinders p)) b
+            | (p, b) <- bs ]
+          where viaScrutinee = case mNode s of { MLocal n -> stable env n; _ -> False }
+        MCall h args
+          | MGlobal c <- mNode h, c == mdClone d, length args == length params, tl ->
+              Set.fromList [ n | (((n, pc), o), a) <- zip (zip params (paramOwns d)) args, o == Borrowed, not (stableArg env pc a) ]
+          | MKernel name _ <- mNode h, name `elem` ["elm/core:Basics.and", "elm/core:Basics.or"], [_, b] <- args -> go tl env b
+        _ -> Set.empty
+    stableArg env pc a =
+      not (refClass pc) || (mRep a == pc && stableExpr env a)
+    stableExpr env a =
+      case mNode a of
+        MLocal n -> stable env n
+        MAccess r _ _ -> stableExpr env r
+        MLit _ -> True
+        MCtor _ _ _ -> True
+        MGlobal c -> maybe False ((== Value) . mdKind) (Map.lookup c (ocClones ctx))
+        _ -> False
+
+
+{-# NOINLINE reuseRule #-}
+-- | EXPERIMENT (S4): a parameter is owned when a case on it is a reuse candidate (`FICUS_BORROW_REUSE=1`)
+reuseRule :: Bool
+reuseRule = unsafePerformIO (fmap (== Just "1") (lookupEnv "FICUS_BORROW_REUSE"))
+
+
+-- | the parameters of which a case in tail position is a candidate for constructor reuse: the pattern is one constructor (or `::`) with
+-- variable arguments, the branch does not use the parameter again and builds an object of the size class of the matched cell
+reuseOwned :: OwnCtx -> MDef -> Set.Set String
+reuseOwned ctx d =
+  case mdBody d of
+    Nothing -> Set.empty
+    Just body ->
+      Set.fromList
+        [ n
+        | (n, p, b) <- reuseCandidates body, n `elem` map fst (mdParams d)
+        , Just cell <- [cellOfPat p], Just k <- [objSizeClass (cellFields cell)]
+        , Map.notMember n (freeVars (ocCaps ctx) b)
+        , Just _ <- [placeToken "tok" k b] ]
+
+
+{-# NOINLINE hybridRule #-}
+-- | The default rule since S5 (planning chat, 11 Nov): the projection rule only for recursion over recursive data (S4b, "hybrid").
+-- `FICUS_BORROW_S3=1` selects the S3 rule (no projection rule at all); `FICUS_BORROW_PROJ=1` the full projection rule (a superset);
+-- `FICUS_BORROW_REUSE=1` adds the reuse-driven rule to whichever is selected.
+hybridRule :: Bool
+hybridRule = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICUS_BORROW_S3"))
+
+
+-- | the custom types that contain themselves (directly, through another custom type, or inside a list, tuple or record field)
+recursiveTypes :: Map.Map String UnionShape -> Set.Set String
+recursiveTypes unions =
+  Set.fromList (concat [ ns | Graph.CyclicSCC ns <- Graph.stronglyConnComp [ (n, n, refsOf u) | (n, u) <- Map.toList unions ] ])
+  where
+    refsOf u = concat [ concatMap tyRefs fs | (_, _, fs) <- usCtors u ]
+    tyRefs t =
+      case t of
+        TyCon n args -> n : concatMap tyRefs args
+        TyFun a b -> tyRefs a ++ tyRefs b
+        TyRecord fs -> concatMap (tyRefs . snd) fs
+        TyTuple ts -> concatMap tyRefs ts
+        TyUnit -> []
+
+
+-- | for each clone that can reach itself through calls, a number that identifies its group of mutually recursive clones
+sccOf :: [MDef] -> Map.Map CloneId Int
+sccOf clones =
+  Map.fromList (concat [ [ (c, i) | c <- cs ] | (i, Graph.CyclicSCC cs) <- zip [0 :: Int ..] comps ])
+  where
+    comps = Graph.stronglyConnComp [ (mdClone d, mdClone d, maybe [] exprRefs (mdBody d)) | d <- clones ]
+
+
+-- | S4b, the hybrid rule: the parameters that Lean's projection rule would own (a pattern variable taken from them is consumed), but
+-- only when (1) the parameter is matched against a recursive data type (a list pattern, or a constructor of a custom type that
+-- contains itself) and (2) the parameter, or a pattern variable taken from it, is an argument of a call of a recursive function
+-- (itself: it recurses over the value; or another one: it hands the parts to a recursion, as `replaceMin` does with `siftdown`).
+-- A function that passes the whole parameter on gets it owned by the ordinary rule (an argument of an owned parameter). Everything else (numeric loops, arrays, records
+-- and tuples, a single match in a function that does not recurse) stays borrowed.
+hybridOwned :: Map.Map String UnionShape -> Set.Set String -> Map.Map CloneId Int -> OwnCtx -> MDef -> Set.Set String
+hybridOwned unions recTypes sccs ctx d =
+  case mdBody d of
+    Just body ->
+      let params = Set.fromList (map fst (mdParams d))
+          rootOf = roots (Map.fromList [ (n, n) | n <- Set.toList params ]) body
+          recData = Set.fromList [ n | (n, p) <- matches body, Set.member n params, recPat p ]
+          toRec = Set.fromList ([ q | args <- recCalls body, a <- args, v <- Map.keys (freeVars (ocCaps ctx) a), Just q <- [Map.lookup v rootOf] ]
+                                -- S7 part 3: or it is captured by a closure of a function of a recursive group (a stream: the thunk in the
+                                -- new cell holds the parts of the old one, `merge`); the closure takes a count on it in any case
+                                ++ (if hybridCloRule then [ q | c <- recClosures body, (v, vc) <- Map.findWithDefault [] c (ocCaps ctx), refClass vc, Just q <- [Map.lookup v rootOf] ] else []))
+      in Set.intersection (projOwned ctx d) (Set.intersection recData toRec)
+    _ -> Set.empty
+  where
+    -- every pattern variable taken (through any number of matches) from a parameter, with that parameter
+    roots env e =
+      case mNode e of
+        MCase s bs | MLocal n <- mNode s, Just q <- Map.lookup n env ->
+          Map.unions (env : roots env s : [ roots (foldr (\(v, _) m -> Map.insert v q m) env (patBinders p)) b | (p, b) <- bs ])
+        _ -> Map.unions (env : map (roots env) (children e))
+    matches e =
+      (case mNode e of
+         MCase s bs | MLocal n <- mNode s -> [ (n, p) | (p, _) <- bs ]
+         _ -> [])
+      ++ concatMap matches (children e)
+    recPat (MPat _ node) =
+      case node of
+        PCons _ _ -> True
+        PNil -> True
+        PAlias q _ -> recPat q
+        PCtor name tag ps ->
+          or [ Set.member t recTypes | (t, u) <- Map.toList unions, (n, k, fs) <- usCtors u, n == name, k == tag, length fs == length ps ]
+        _ -> False
+    -- the closure values of functions of a recursive group
+    recClosures e =
+      case mNode e of
+        MCall h args | MGlobal _ <- mNode h -> concatMap recClosures args
+        MGlobal c | Map.member c sccs -> [c]
+        _ -> concatMap recClosures (children e)
+    -- the calls of recursive functions (this one included)
+    recCalls e =
+      (case mNode e of
+         MCall h args | MGlobal c <- mNode h, Map.member c sccs -> [args]
+         _ -> [])
+      ++ concatMap recCalls (children e)
+
+
+{-# NOINLINE hybridCloRule #-}
+-- | S7 part 3: the closure clause of the hybrid rule is on unless `FICUS_NO_HYBRID_CLO=1`
+hybridCloRule :: Bool
+hybridCloRule = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICUS_NO_HYBRID_CLO"))
+
+
+{-# NOINLINE updateRule #-}
+-- | S6: the update rule is on unless `FICUS_NO_UPDATE_RULE=1`
+updateRule :: Bool
+updateRule = unsafePerformIO (fmap (/= Just "1") (lookupEnv "FICUS_NO_UPDATE_RULE"))
+
+
+-- | S6, the update rule (docs/STAGE4-S6.md): a parameter is owned when it, a pattern variable taken from it (through any number of
+-- matches) or a field read from it is UPDATED: it is the array of `JsArray.unsafeSet` or `JsArray.push` (the kernels that write in place
+-- when their array is unique), or an argument for a parameter that is itself updated (so the rule follows the array through
+-- `Array.set`, `setHelp`, `push`, a user's wrapper type or a loop). Without it the hybrid rule leaves `Array.set arr` borrowed (a
+-- single match in a function that does not recurse), the caller keeps its count and every update copies.
+-- The result: the updated parameters of every clone (a fixed point over all clones, independent of the other rules).
+updateParamsFrom :: Set.Set (CloneId, String) -> [MDef] -> Set.Set (CloneId, String)
+updateParamsFrom seeds clones = go seeds
+  where
+    byId = Map.fromList [ (mdClone d, d) | d <- clones ]
+    go set =
+      let set' = Set.union set (Set.fromList [ (mdClone d, q) | d <- clones, mdKind d == Function, Just body <- [mdBody d]
+                                                               , q <- found set (Map.fromList [ (n, n) | (n, c) <- mdParams d, refClass c ]) body ])
+      in if Set.size set' == Set.size set then set else go set'
+    -- the parameters behind the expressions in an update position
+    found set env e =
+      let here =
+            case mNode e of
+              MCall h args
+                | MKernel name _ <- mNode h, Just i <- lookup name updateKernels, i < length args -> rootsOf env (args !! i)
+                | MGlobal c <- mNode h, Just d <- Map.lookup c byId, mdKind d == Function, length args == length (mdParams d) ->
+                    concat [ rootsOf env a | (a, (pn, pc)) <- zip args (mdParams d), refClass pc, mRep a == pc, Set.member (c, pn) set ]
+              _ -> []
+          below =
+            case mNode e of
+              MCase s bs
+                | MLocal n <- mNode s, Just q <- Map.lookup n env ->
+                    concat [ found set (foldr (\(v, _) m -> Map.insert v q m) env (patBinders p)) b | (p, b) <- bs ]
+              MLetVal n _ _ -> concatMap (found set (Map.delete n env)) (children e)
+              _ -> concatMap (found set env) (children e)
+      in here ++ below
+    rootsOf env a = [ q | Just n <- [viewRoot a], Just q <- [Map.lookup n env] ]
+
+
+
+
+{-# NOINLINE projRule #-}
+projRule :: Bool
+projRule = unsafePerformIO (fmap (== Just "1") (lookupEnv "FICUS_BORROW_PROJ"))
+
+
+-- | EXPERIMENT (Lean's rule): a parameter of which a consumed pattern variable is a projection is owned too
+projOwned :: OwnCtx -> MDef -> Set.Set String
+projOwned ctx d =
+  case mdBody d of
+    Nothing -> Set.empty
+    Just body -> go (Map.fromList [ (n, n) | (n, _) <- mdParams d ]) body
+  where
+    go env e =
+      let here =
+            case mNode e of
+              MCase s bs
+                | MLocal n <- mNode s, Just q <- Map.lookup n env ->
+                    Set.unions [ Set.intersection (Set.fromList (map fst (patBinders p))) (ownedVars ctx b) `seq`
+                                 (if Set.null (Set.intersection (Set.fromList (map fst (patBinders p))) (ownedVars ctx b)) then Set.empty else Set.singleton q)
+                               | (p, b) <- bs ]
+              _ -> Set.empty
+          env' = case mNode e of
+                   MCase s _ | MLocal n <- mNode s, Just q <- Map.lookup n env -> \ps -> foldr (\v m -> Map.insert v q m) env ps
+                   _ -> const env
+          below =
+            case mNode e of
+              MCase s bs -> go env s : [ go (env' (map fst (patBinders p))) b | (p, b) <- bs ]
+              _ -> map (go env) (children e)
+      in Set.unions (here : below)
+

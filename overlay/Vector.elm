@@ -8,7 +8,7 @@ module Vector exposing
     , sort, sortBy, sortWith
     )
 
-{-| Ficcus: the flat `Vector` (decisions D1 to D8 of 12 Nov; docs/STAGE4-V1.md). The primitives of step V1 are the first section; the rest of the API of `Array`
+{-| Ficus: the flat `Vector` (decisions D1 to D8 of 12 Nov; docs/STAGE4-V1.md). The primitives of step V1 are the first section; the rest of the API of `Array`
 (`singleton`, `initialize`, `repeat`, `isEmpty`, `map`, `indexedMap`, `foldl`, `foldr`, `filter`, `toIndexedList`; step V2) is written in
 Elm on them, with the semantics of `Array` (an index out of range: `get` is `Nothing`, `set` returns the vector unchanged, a negative
 length gives the empty vector), and the loops keep the vector that they build unique, so every `push` is in place.
@@ -19,10 +19,10 @@ those inline, a reference as one pointer, a record or tuple that contains refere
 `update`, `swap`, `push`, `append`) is done in place when the vector has one owner and copies the whole vector otherwise; `push`
 doubles the capacity.
 
-The module is added to the source directories of `.c` and `.mono` builds (Ficcus.Mono.Overlay), so `import Vector` works there only.
+The module is added to the source directories of `.c` and `.mono` builds (Ficus.Mono.Overlay), so `import Vector` works there only.
 The type is the built-in vector of the runtime (runtime/fic_vector.h): the compiler recognises it by the constructor below, keys every
-function that touches the elements by the exact element type (Ficcus.Mono.Marks, `Element`), and replaces each function of the
-first section by the kernel function `elm/core:Vector.<name>` (Ficcus.Mono.Kernel). Their bodies only give the types.
+function that touches the elements by the exact element type (Ficus.Mono.Marks, `Element`), and replaces each function of the
+first section by the kernel function `elm/core:Vector.<name>` (Ficus.Mono.Kernel). Their bodies only give the types.
 
 -}
 

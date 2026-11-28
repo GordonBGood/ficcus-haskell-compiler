@@ -2,10 +2,10 @@
 
 25 Nov 2026, Opus 5.5, read only (no compiler source changed). Branch `review/e1p` from `feat/e1p` 99990ade, worktree
 `ficcus-haskell-compiler-e1pr`, binary `bin/elmficE1pa` (reference `bin/elmficG70a`). Read: `docs/E1P-DESIGN.md`,
-`docs/E1-REVIEW.md`, `Ficcus.Mono.LeafSplit`, `Rc.trySplit`/`rcDef`/`rcCase`, the ModelUnpack switch, `rcMutateSplit`,
+`docs/E1-REVIEW.md`, `Ficus.Mono.LeafSplit`, `Rc.trySplit`/`rcDef`/`rcCase`, the ModelUnpack switch, `rcMutateSplit`,
 `rccheck_faults.py`, `e1p_measure.py`, `e1p_identity.py`, the slice report (decisions file, 25 Nov DONE entry).
-New tests: `ficcus-tests/e1pr/src` (5 programs), goldens `expected/e1pr_*.out` (Elm 0.19.3 under node), runner
-`ficcus-tests/e1p_review.py --elm B --elm-home H [--strict]`. Every run: `--rc`, gcc -O2 and ASan+UBSan, output compared with Elm.
+New tests: `ficus-tests/e1pr/src` (5 programs), goldens `expected/e1pr_*.out` (Elm 0.19.3 under node), runner
+`ficus-tests/e1p_review.py --elm B --elm-home H [--strict]`. Every run: `--rc`, gcc -O2 and ASan+UBSan, output compared with Elm.
 
 ## Verdicts
 
@@ -85,7 +85,7 @@ E1's C2, not fixed. In `update` it is a **regression against G70a**, where Model
 
 **Sound.** The second run (`Rc.hs:123`, `cSplit = False`, from state `s0`) contributes only `rsN`; its output and its errors
 are discarded. Inside a split clone one counter still makes every name unique. `rc_N` are C locals, so overlapping numbers in
-different functions are harmless. **Identity:** with `FICCUS_NO_MODEL_UNPACK=0`, `e1p_identity.py --more` (16 suite programs
+different functions are harmless. **Identity:** with `FICUS_NO_MODEL_UNPACK=0`, `e1p_identity.py --more` (16 suite programs
 plus 37 e1p, effects and effects2 programs) is **all ok, no GROWS**. With the default (ModelUnpack off) it gives **10
 failures**: G17b, G17bFields, R4Lambda, R5Capture, SubsOrder, E2Teardown, G17, G17a, G17c, G17s. `update` changes without a
 split, which shifts the `rc_N` of later clones. The static count grows in three `update`s: SubsOrder 1 → 3, R4Lambda 10 → 12,
@@ -99,7 +99,7 @@ level and never split: 2.16 s against 2.24 s (no overhead).
 - **lateSpec**: the split runs after the dead drops and the lateSpec test, and excludes `cLate` and `cDeferred`. `lateSpec` calls
   `rc` on `e`, so the split is still tried there.
 - **Takes**: split variables become take operands (a gain).
-- **Rule 2**: `let t = worker in case t` has `t` as a scrutinee, which `usesOf` rejects, so `FICCUS_UNBOX_CHECK` stays valid.
+- **Rule 2**: `let t = worker in case t` has `t` as a scrutinee, which `usesOf` rejects, so `FICUS_UNBOX_CHECK` stays valid.
 - **Known and Inline clones**: ordinary clones. **Twin clones**: their owned captures are excluded.
 - **RcCheck** independently checks every split count. `MUnpack` must take distinct indices that are in range, the components
   per class, and each `_sp` variable once per path. That catches a double drop, a leak, a use after the move, a split of a live
@@ -121,7 +121,7 @@ take one leaf: RcCheck's distinctness test is never exercised). **Proposed**: p4
 of fix 1). p5, swap two variables of the same class in the rewrite: RcCheck must accept it and `e1p_measure`/`e1p_review` must
 fail; this measures the goldens, not the checker.
 
-**New programs** (`e1p_review.py`; with `FICCUS_NO_LEAFSPLIT=1` R1Name passes and R13 copies 313,600 times):
+**New programs** (`e1p_review.py`; with `FICUS_NO_LEAFSPLIT=1` R1Name passes and R13 copies 313,600 times):
 
 | program | result on E1pa |
 |---|---|
@@ -155,7 +155,7 @@ wrong for a lambda next to the write. Corrected text (rule 2 and the guaranteed 
    R1Name must pass.
 2. **ModelUnpack default** (Q2, Q4): keep it **on** while the split is on (`noUnpack` back to `== Just "1"`). With it on,
    identity `--more` is all ok and `e1p_measure`, `e1_review` and `effects_e1` pass. The exception is the G17bFields row with
-   `FICCUS_NO_MODEL_SEED=1`, which goes back to its G70a value of 199,200 copies; restore that expectation. D2 is not met: its
+   `FICUS_NO_MODEL_SEED=1`, which goes back to its G70a value of 199,200 copies; restore that expectation. D2 is not met: its
    test counted copies, not dups and drops.
 3. **Dealias independent of profit** (Q2): profit computed on `e0`, or the dealias applied wherever `m` dies. Re-measure
    SubsOrder and R4Lambda with ModelUnpack off; D2 can be revisited after that.

@@ -23,7 +23,7 @@ not the shape of `compare`. constraint-given-mismatch (`a has add : a -> Int -> 
 
 ### Titles (D7)
 
-`ficcus-tests/attach/rename_titles.py` holds the table of section 4 and rewrites column 3 of `expected.tsv` and the quoted titles
+`ficus-tests/attach/rename_titles.py` holds the table of section 4 and rewrites column 3 of `expected.tsv` and the quoted titles
 in the generators (g71expect.py, g70gen.py, g71gen.py, a3bgen.py, a5agen.py, a5bgen.py, a5fgen.py); it then lists the rows whose
 column 4 uses a retired word. `attach.py --print-reports` prints the first paragraph of each REJECT case. Every generator's
 `--write`, run in a copy, reproduces the committed `expected.tsv` and cases.
@@ -56,7 +56,7 @@ As decided: a member of `Int`, `Float` and the sized types, not in the `number` 
 
 ## Cases
 
-`ficcus-tests/attach/a5fgen.py` (15 a5f-* cases) and `a5cgen.py` (18 a5c-* cases, 1 converted row); twins in `a5f-twins/` and
+`ficus-tests/attach/a5fgen.py` (15 a5f-* cases) and `a5cgen.py` (18 a5c-* cases, 1 converted row); twins in `a5f-twins/` and
 `a5c-twins/` on `bin/elm0193` or `bin/elmficA3b`, never written by hand. Attach is now 340 cases (307 + 15 + 18). Both generators
 import a5agen with an empty command line, so the g71gen import trap of A5B-NOTES cannot fire.
 
@@ -126,7 +126,7 @@ and the a3b-identity of the suite C text cover the rest (section Gates).
 
 ## Gates
 
-2026-11-26, once at the end of part 2, `BIN=elmficA5c KEEP=1 S=/home/gordon/claude-tmp/gates-a5c ficcus-tests/gates.sh` (log
+2026-11-26, once at the end of part 2, `BIN=elmficA5c KEEP=1 S=/home/gordon/claude-tmp/gates-a5c ficus-tests/gates.sh` (log
 /home/gordon/claude-tmp/gates-a5c.log), all green: runtime 0; attach 340/0 (with `--rc`, ASan+UBSan, 0 live); sized-fuzz 40/0;
 stringdiff all agree; types 267 PASS + 1 XFAIL; JS identity 28/0; examples 298 x3; fbip 0; effects-e2, e1review, effects-e1, e1p
 all ok; e1pr all ok (2 target rows); e1p-identity all ok; **a3b-identity against elmficA5b: 100 compiles, 0 differ** (the C text of

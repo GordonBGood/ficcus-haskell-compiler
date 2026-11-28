@@ -46,9 +46,9 @@ import qualified Elm.Docs as Docs
 import qualified Elm.Interface as I
 import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Package as Pkg
-import qualified Ficcus.Flags as Flags
+import qualified Ficus.Flags as Flags
 import qualified File
-import qualified Ficcus.TypesFile as TypesFile
+import qualified Ficus.TypesFile as TypesFile
 import qualified Type.Readout as Typed
 import qualified Json.Encode as E
 import qualified Parse.Module as Parse
@@ -85,7 +85,7 @@ makeEnv key root stuff (Details.Details _ validOutline buildID locals foreigns _
   case validOutline of
     Details.ValidApp givenSrcDirs ->
       do  srcDirs0 <- traverse (toAbsoluteSrcDir root) (NE.toList givenSrcDirs)
-          extra <- Flags.getExtraSrcDir  -- Ficcus: the overlay module's directory
+          extra <- Flags.getExtraSrcDir  -- Ficus: the overlay module's directory
           let srcDirs = srcDirs0 ++ maybe [] (\d -> [AbsoluteSrcDir d]) extra
           return $ Env key root stuff Parse.Application srcDirs buildID locals foreigns
 
@@ -257,7 +257,7 @@ crawlModule env@(Env _ root _ projectType srcDirs buildID locals foreigns) mvar 
 
       paths0 <- concat <$> traverse (\d -> map AbsoluteElm <$> File.existingModuleFiles (coerce (toAbsoluteElm d baseName))) srcDirs
 
-      -- Ficcus (module rule, V2): a module that Ficcus adds to the core library (the overlay directory: Vector, Bitwise64, ...) yields to
+      -- Ficus (module rule, V2): a module that Ficus adds to the core library (the overlay directory: Vector, Bitwise64, ...) yields to
       -- a module of the project and to a module of a package of the same name, so that Elm's "ambiguous module" error does not appear
       -- in builds to C for a program that has its own `Vector`
       extraDir <- Flags.getExtraSrcDir
@@ -309,7 +309,7 @@ crawlModule env@(Env _ root _ projectType srcDirs buildID locals foreigns) mvar 
                 return $ SBadImport Import.NotFound
 
 
--- Ficcus (H21b, module rule): the sorts of the overlay (FicOverlaySort) are written on the overlay's `Vector`. When a package of the program
+-- Ficus (H21b, module rule): the sorts of the overlay (FicOverlaySort) are written on the overlay's `Vector`. When a package of the program
 -- exposes a module named `Vector`, that module wins over the overlay's (see `crawlModule`) and the sorts would import it: then the list
 -- variant that `writeOverlay` (Make.hs) writes beside it is read instead (a `Vector` of the project itself is found by `writeOverlay`)
 sortOverlaySource :: Map.Map Module.Name Details.Foreign -> FilePath -> Module.Name -> B.ByteString -> IO B.ByteString
@@ -321,7 +321,7 @@ sortOverlaySource foreigns path name source =
         else return source
 
 
--- Ficcus T1a-2: the overlay's Concurrent module (Ficcus.Mono.Concurrent)
+-- Ficus T1a-2: the overlay's Concurrent module (Ficus.Mono.Concurrent)
 isConcOverlay :: FilePath -> Module.Name -> IO Bool
 isConcOverlay path name =
   do  extra <- Flags.getExtraSrcDir
@@ -329,7 +329,7 @@ isConcOverlay path name =
       return (inOverlay && Module.toChars name == "Concurrent")
 
 
--- | Ficcus T1a-2 (O6): a .elm module of the project that imports the overlay's `Concurrent` (no module of that name in the project's
+-- | Ficus T1a-2 (O6): a .elm module of the project that imports the overlay's `Concurrent` (no module of that name in the project's
 -- source directories or its packages): the region of the import
 ficOnlyImport :: Env -> FilePath -> Src.Module -> IO (Maybe A.Region)
 ficOnlyImport (Env _ root _ _ srcDirs _ _ foreigns) path (Src.Module _ _ _ imports _ _ _ _ _) =
@@ -351,7 +351,7 @@ crawlFile :: Env -> MVar StatusDict -> DocsNeed -> Module.Name -> AbsoluteElm ->
 crawlFile env@(Env _ _ _ projectType _ buildID _ foreigns) mvar docsNeed expectedName (AbsoluteElm path) time lastChange =
   do  source0 <- File.readUtf8 path
       source <- sortOverlaySource foreigns path expectedName source0
-      -- Ficcus T1a-2: the overlay's `Concurrent` is an effect module of the core library: parsed as a module of a kernel package
+      -- Ficus T1a-2: the overlay's `Concurrent` is an effect module of the core library: parsed as a module of a kernel package
       concOverlay <- isConcOverlay path expectedName
       result <- Parse.fromByteString (if concOverlay then Parse.Package Pkg.kernel else projectType) source
       ficOnly <- either (const (return Nothing)) (ficOnlyImport env path) result
@@ -444,7 +444,7 @@ checkModule writer env@(Env _ _ stuff projectType _ _ _ _) foreigns resultsMVar 
 
     SChanged local@(Details.Local path time deps _ _ lastCompile) source modul@(Src.Module _ _ _ imports _ _ _ _ _) docsNeed ->
       do  results <- readMVar resultsMVar
-          hidden <- overlayOnlyImports env path imports      -- Ficcus (L42)
+          hidden <- overlayOnlyImports env path imports      -- Ficus (L42)
           depsStatus <- if null hidden then checkDeps stuff results deps lastCompile else return DepsBlock
           case hidden of
            h : hs ->
@@ -556,7 +556,7 @@ checkDepsHelp stuff results deps new same cached importProblems isBlocked lastDe
 
 
 
--- Ficcus (L42): the imports of a program module that name a module of a package which is importable only because an overlay
+-- Ficus (L42): the imports of a program module that name a module of a package which is importable only because an overlay
 -- module needs it (Elm.Details.verifyApp, Flags.getOverlayOnlyPkgs): for the program they are not found, as in Elm, with Elm's
 -- message. A module in the overlay directory may import them.
 overlayOnlyImports :: Env -> FilePath -> [Src.Import] -> IO [(Module.Name, Import.Problem)]
@@ -782,7 +782,7 @@ compile writer (Env key _ stuff projectType _ buildID _ _) docsNeed (Details.Loc
     pkg = projectTypeToPkg projectType
   in
   do  typedOutput <- Flags.getTypedOutput
-      -- Ficcus (E3c): a `.fic` module of a build to C (typed output) may have ports of the Ficcus payload types
+      -- Ficus (E3c): a `.fic` module of a build to C (typed output) may have ports of the Ficus payload types
       let ficPayloads = typedOutput && FP.takeExtension path == ".fic"
       let compiled =
             if typedOutput
@@ -827,7 +827,7 @@ compileHelp writer key stuff pkg path time deps main lastChange buildID docsNeed
         Error.Module (Src.getName modul) path time source err
 
 
--- Ficcus: the `.types` dump of one module, written next to its .elmo
+-- Ficus: the `.types` dump of one module, written next to its .elmo
 writeTypes :: File.Writer R.PROJECT -> R.Stuff -> Module.Name -> Can.Module -> Typed.Typed -> IO ()
 writeTypes writer stuff name canonical typed =
   TypesFile.write True writer (R.typesFile stuff name) name canonical typed

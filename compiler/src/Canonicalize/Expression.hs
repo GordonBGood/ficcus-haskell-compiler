@@ -43,7 +43,7 @@ import qualified Elm.Package as Pkg
 import qualified Reporting.Annotation as A
 import qualified Reporting.Error.Canonicalize as Error
 import qualified Reporting.Result as Result
-import qualified Ficcus.Flags as Flags
+import qualified Ficus.Flags as Flags
 import qualified Reporting.Warning as W
 
 
@@ -81,7 +81,7 @@ canonicalize env (A.At region expression) =
       Result.ok (Can.Chr char)
 
     Src.Int int ->
-      if Flags.ficcusChecks && int > 9223372036854775807
+      if Flags.ficusChecks && int > 9223372036854775807
         then Result.throw (Error.IntegerTooLarge region)
         else Result.ok (Can.Int (fromIntegral int))
 
@@ -741,7 +741,7 @@ findVar region (Env.Env localHome vs _ _ _ qvs _ _) name =
           logVar name (Can.VarLocal name)
 
         Env.TopLevel _ ->
-          -- Ficcus (ATTACH A1b): inside a `where` block a plain name may be a member of the type
+          -- Ficus (ATTACH A1b): inside a `where` block a plain name may be a member of the type
           -- (ATTACH A2): a constrained definition is used with its constrained scheme
           let real = Members.siblingName vs name in
           logVar real (Constraints.localVar vs localHome real)
@@ -760,7 +760,7 @@ findVar region (Env.Env localHome vs _ _ _ qvs _ _) name =
       Result.throw (Error.NotFoundVar region Nothing name (toPossibleNames vs qvs))
 
 
--- | Ficcus (A5b, docs/A5-INFERENCE-DESIGN.md section 2): a name that Elm's lookup does not find (Elm reports NAMING
+-- | Ficus (A5b, docs/A5-INFERENCE-DESIGN.md section 2): a name that Elm's lookup does not find (Elm reports NAMING
 -- ERROR) is the selector of that name when the module has one (Canonicalize.Selectors); any binding wins over it
 findVarOrSelector :: A.Region -> Env.Env -> N.Name -> Result FreeLocals w Can.Expr_
 findVarOrSelector region env@(Env.Env _ vs _ _ _ qvs _ _) name =
@@ -776,7 +776,7 @@ findVarOrSelector region env@(Env.Env _ vs _ _ _ qvs _ _) name =
 
 findVarQual :: A.Region -> Env.Env -> Module.Prefix -> N.Name -> Result FreeLocals w Can.Expr_
 findVarQual region env@(Env.Env localHome vs _ _ _ _ _ _) prefix name =
-  -- Ficcus (ATTACH A1): a module or alias path wins; if it does not name `name`, a member of the type `prefix`
+  -- Ficus (ATTACH A1): a module or alias path wins; if it does not name `name`, a member of the type `prefix`
   case Members.resolve env prefix name of
     Members.NotMember ->
       findVarQualModule region env prefix name
@@ -826,7 +826,7 @@ stripSuffix suffix chars =
 
 toPossibleNames :: Map.Map N.Name Env.Var -> Env.Qualified N.Name Can.Annotation -> Error.PossibleNames N.Name
 toPossibleNames exposed qualified =
-  -- Ficcus (ATTACH A1): the mangled names of members and the keys of their types are not names a program can write
+  -- Ficus (ATTACH A1): the mangled names of members and the keys of their types are not names a program can write
   Error.PossibleNames
     (Set.union
       (Map.keysSet (Map.filterWithKey (\n _ -> not ('$' `elem` N.toChars n)) exposed))

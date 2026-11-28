@@ -1,12 +1,12 @@
 # E2 review: scheduler, timers, Random, ports, teardown (feat/effects-e2 at d3fa66aa)
 
-25 Nov 2026. Read-only review of effects slice E2 (steps 4 to 8): `runtime/fic_sched.h`, `Ficcus.Mono.ManagerOrder`,
-`Ficcus.Mono.ManagerTable`, `overlay/FicOverlayTime.elm`, the Random hook, ports and teardown in `CGen`, against `docs/EFFECTS-CHECK.md`,
+25 Nov 2026. Read-only review of effects slice E2 (steps 4 to 8): `runtime/fic_sched.h`, `Ficus.Mono.ManagerOrder`,
+`Ficus.Mono.ManagerTable`, `overlay/FicOverlayTime.elm`, the Random hook, ports and teardown in `CGen`, against `docs/EFFECTS-CHECK.md`,
 D-fx-1 to D-fx-11 as amended, `docs/E1-REVIEW.md` and elm/core 1.0.5 `Scheduler.js`/`Platform.js`. No compiler source was changed.
 Binary `bin/elmficE2f` (= 48c18ac4, the generated C of d3fa66aa). Marks: **[R]** run, **[S]** read in the source.
 
-New tests: `ficcus-tests/e2review/` (programs `src/*.fic`, which are also the Elm references, goldens from `bin/elm0193` under node with
-`effects2/ref/run.js`) and the runner `ficcus-tests/e2_review.py`. Each gate is compiled `--rc` (gcc -O2, ASan+UBSan without the pool,
+New tests: `ficus-tests/e2review/` (programs `src/*.fic`, which are also the Elm references, goldens from `bin/elm0193` under node with
+`effects2/ref/run.js`) and the runner `ficus-tests/e2_review.py`. Each gate is compiled `--rc` (gcc -O2, ASan+UBSan without the pool,
 `-DFIC_DROP_ALL`) and `--no-rc`, and stdout, the exit status, `live 0` and Elm's manager order are compared. Result on E2f: **gates all
 ok** (13 programs, 14 entries, 5 compile rejects; 77 checks), **targets 4 fail** (below), 3 info entries differ (decisions to record).
 `effects_e2.py` is all ok on E2f in this worktree too.
@@ -42,7 +42,7 @@ ok** (13 programs, 14 entries, 5 compile rejects; 77 checks), **targets 4 fail**
   (`fic_sched_step` → `fic_sched_bind` → a second `fic_tm_add`, lines 263, 572). That is Elm's behaviour and it is observable: with a
   guard (no re-arm while a timer is pending) in a copy of R5's C, the port lines move after the ticks and R5 differs from Elm [R]. The
   code is right; the text must change. Only the outgoing port's manager sleeps while it receives mail.
-- New: Elm 0.19.3 **crashes on a second `Process.kill` of a killed process** (`_Scheduler_kill` reads `null.$`, node exit 1); Ficcus
+- New: Elm 0.19.3 **crashes on a second `Process.kill` of a killed process** (`_Scheduler_kill` reads `null.$`, node exit 1); Ficus
   continues (R1KillTwice). To record as a D-fx-6 deviation.
 
 **Q2 Per-node taggers: sound; not observable in Elm 0.19.3.** Effect modules exist only in `elm/*` and `elm-explorations/*` packages
@@ -66,11 +66,11 @@ Browser.Events (X4), Http (X5) and `Browser.element` (X6) fail to compile, but t
 **Q5 Timers and the clock: unsound in two places.** Delays 0, 0.5, negative, NaN and 1 are 1 ms in creation order, as node (R3); two
 intervals, dropped and re-subscribed, are equal (R8). But:
 - (a) **node truncates a delay to whole ms and makes a delay above 2^31-1 ms (also Infinity) 1 ms**; `fic_tm_add` (line 545) does
-  neither. `sleep 1.5` made before `sleep 1` fires first in Elm, second in Ficcus; `sleep 1e10` and `sleep (1/0)` fire after 1 ms in
-  Elm, last (virtual clock) or never in Ficcus; in real time an infinite delay reaches `nanosleep` through a UB `double`→`time_t`
+  neither. `sleep 1.5` made before `sleep 1` fires first in Elm, second in Ficus; `sleep 1e10` and `sleep (1/0)` fire after 1 ms in
+  Elm, last (virtual clock) or never in Ficus; in real time an infinite delay reaches `nanosleep` through a UB `double`→`time_t`
   conversion. Target **R4Delay**.
 - (b) **node re-arms an interval from the start of the late callback**; C re-arms from the previous deadline (line 669), so after one
-  slow update Ficcus fires the missed ticks back to back (0 ms gaps) where Elm keeps the spacing and has fewer ticks. Target
+  slow update Ficus fires the missed ticks back to back (0 ms gaps) where Elm keeps the spacing and has fewer ticks. Target
   **R9Slow** (real time: `True` in C, `False` in Elm). Under `FIC_TIME` both rules give the same deadlines.
 
 **Q6 Ports: sound except flags.** Equal to Elm [R: R5, R11, E2Ports, E2PortsIn]: order within a port (batch reversed) and across
@@ -94,7 +94,7 @@ sets `p->timer = -1` (line 664), so a later kill would miss the others; no kill 
 Random the variable is ignored (R1Kill: same output with it unset, `7`, `abc`). Nit: `abc` silently means seed 0.
 
 **Q9 Time zone: sound where the system tz data and ICU agree; the name is host-dependent.** [R] TZ=UTC and Asia/Tokyo equal node
-(gates). For Asia/Kolkata the offsets agree but ICU (node 21, ICU 74.1, tz 2023c) names it `Asia/Calcutta`, Ficcus gives TZ as set
+(gates). For Asia/Kolkata the offsets agree but ICU (node 21, ICU 74.1, tz 2023c) names it `Asia/Calcutta`, Ficus gives TZ as set
 (R10ZoneKolkata, info; Elm's result already depends on the browser). C side, TZ=America/Edmonton with `FIC_TIME`: 15 Jan 2026 `here`
 -07:00, 15 Jul 2026 -06:00, `Name "America/Edmonton"` both (Berlin +01:00/+02:00; `:America/Edmonton` the same). System tzdata 2026f
 keeps Edmonton at -06:00 from Nov 2026, where ICU 2023c still has -07:00 in winter: a data difference; Jan and Jul 2026 agree. Harness
@@ -112,7 +112,7 @@ comparisons need a zone without daylight time. Edge: TZ `EST5EDT,M3.2.0,M11.1.0`
    `deadline + period`. Target R9Slow. If the user prefers drift-free intervals, record the deviation instead (R9 shows it).
 4. **Correct the text** (docs only):
    - D-fx-6 and the `fic_sched.h` header: the binding *is* run again on a message (Elm's behaviour, required by R5); a self kill ends
-     the process (unreachable from Elm code); a second kill of a killed process crashes Elm and is a no-op in Ficcus.
+     the process (unreachable from Elm code); a second kill of a killed process crashes Elm and is a no-op in Ficus.
    - The `ManagerTable` comment on pair 0.
    - D-fx-7: the zone name is the TZ text and differs from ICU's canonical name for links (Asia/Kolkata).
 
@@ -124,7 +124,7 @@ comparisons need a zone without daylight time. Edge: TZ `EST5EDT,M3.2.0,M11.1.0`
 4. Crash 4 on stderr: add Elm's problem text (`Json.Decode.errorToString`).
 5. `FIC_SEED`: reject a non-integer value.
 6. `getZoneName` with a POSIX TZ rule string: return `Offset` of the current offset rather than `/etc/localtime`'s name.
-7. Gates: add `step e2review; python3 $R/ficcus-tests/e2_review.py --elm $B --elm-home $H > $G/e2review.txt 2>&1; tail -1
+7. Gates: add `step e2review; python3 $R/ficus-tests/e2_review.py --elm $B --elm-home $H > $G/e2review.txt 2>&1; tail -1
    $G/e2review.txt` (expected `gates all ok`), with `--targets` after fixes 1 to 3. The run takes about 75 s.
 
 Proposed for the shared files (not applied): decisions, the D-fx-6/7 amendments above plus the quirk "Elm crashes on a second kill";

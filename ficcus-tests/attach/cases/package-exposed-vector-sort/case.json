@@ -1,1 +1,0 @@
-{"desc": "H21 + module rule (rev 129): a package EXPOSES a module Vector and the project imports it; the sort overlay must not use it (list variant)", "deps": ["ficcus/exposedvec@1.0.0"]}

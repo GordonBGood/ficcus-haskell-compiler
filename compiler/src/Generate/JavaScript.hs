@@ -30,7 +30,7 @@ import qualified Generate.JavaScript.Expression as Expr
 import qualified Generate.JavaScript.Functions as Functions
 import qualified Generate.JavaScript.Name as JsName
 import qualified Generate.Mode as Mode
-import qualified Ficcus.Mono.Concurrent as Conc
+import qualified Ficus.Mono.Concurrent as Conc
 import qualified Reporting.Doc as D
 import qualified Reporting.Render.Type as RT
 import qualified Reporting.Render.Type.Localizer as L
@@ -194,7 +194,7 @@ addGlobalHelp mode graph global state =
     Nothing -> addGlobalHelp0 mode graph global state
 
 
--- Ficcus T1a-2: a kernel definition of the Concurrent overlay (Ficcus.Mono.Concurrent; its marker type is in the program) is the
+-- Ficus T1a-2: a kernel definition of the Concurrent overlay (Ficus.Mono.Concurrent; its marker type is in the program) is the
 -- JavaScript kernel `_FicConc_<name>` of runtime/fic_conc.js, which is emitted once, after the kernels of elm/core's Scheduler and
 -- Platform (reached through Task.succeed and Platform.sendToSelf)
 concKernelOf :: Graph -> Opt.Global -> Maybe String

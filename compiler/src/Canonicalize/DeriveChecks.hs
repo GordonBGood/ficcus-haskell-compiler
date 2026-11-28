@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE PatternGuards #-}
--- Ficcus (A4bf, the A4b review's M1, F2, F3): checks of a `derive` line that Canonicalize.Derive calls.
+-- Ficus (A4bf, the A4b review's M1, F2, F3): checks of a `derive` line that Canonicalize.Derive calls.
 --
 --   nonRegularGroup:  (M1) a type of the line used at growing arguments through the other types of its module that refer to it
 --     (`type A a = A a (B (List a))`, `type B a = B (A a)`): the derived member would be needed at infinitely many exact types.

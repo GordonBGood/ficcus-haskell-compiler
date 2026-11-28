@@ -1,7 +1,7 @@
 # A3b review: members inside containers, Word64 in compared containers, the `fromFloat` literal
 
 Read-only soundness review of `feat/a3b` (b1e8f696, binary `bin/elmficA3b` = f621dd68), on branch `review/a3b` (worktree
-`ficcus-haskell-compiler-a3br`). Nothing in the compiler was changed. Scratch cases: `ficcus-tests/a3br/` (runner `run.py`, cases in
+`ficcus-haskell-compiler-a3br`). Nothing in the compiler was changed. Scratch cases: `ficus-tests/a3br/` (runner `run.py`, cases in
 `cases/`, each with a plain Elm `twin/` run by `bin/elm0193` + node where the answer matters).
 
 ## Verdict
@@ -16,7 +16,7 @@ extends these helpers (records, `Maybe`, `Array`, `Vector`, `Dict` as `compare` 
 | run | result |
 |---|---|
 | attach: the 30 cases A3b adds or converts (`a3b-*`, `a3-c-holds-*`, `sized-err-word64-tuple`, `sized-err-float-literal`), `--rc` (ASan+UBSan, 0 live) | 30 / 0 differ |
-| `ficcus-tests/a3br/run.py`: 18 scratch cases, each `--no-rc` (gcc -O2) and `--rc` (ASan+UBSan, FIC_STATS, FIC_NO_POOL, 0 live), output against the Elm twin | all as described below |
+| `ficus-tests/a3br/run.py`: 18 scratch cases, each `--no-rc` (gcc -O2) and `--rc` (ASan+UBSan, FIC_STATS, FIC_NO_POOL, 0 live), output against the Elm twin | all as described below |
 
 I did not re-run the full gates (the notes record them green on 9babac1d; HEAD differs only in a message and the notes).
 
@@ -79,10 +79,10 @@ type Nest a = Nil | Cons a (Nest (List a))
 ... Cons 1 (Cons [ 2 ] Nil) == Cons 1 (Cons [ 2 ] Nil)
 ```
 
-(`ficcus-tests/a3br/cases/nonreg-elm`):
+(`ficus-tests/a3br/cases/nonreg-elm`):
 * `elmficA4b` **does not finish**: the compile was still running after 2 × 300 s and was stopped by the 3 GB / 300 s limit of
   `tools/safe`.
-* `elmficA3b` stops with `FICCUS ... the type (author/project:Main.Nest elm/core:Basics.Int) holds more than 2000 different
+* `elmficA3b` stops with `FICUS ... the type (author/project:Main.Nest elm/core:Basics.Int) holds more than 2000 different
   types (a type used at another argument inside itself)`.
 
 So A3b turns a pre-existing hang into a clean refusal. That is an improvement, but the refusal now comes from the member
@@ -173,7 +173,7 @@ the structural comparison would look at that field.
 
 ## Proposed text for the shared files (for the user or the planning chat to apply)
 
-* `docs/Ficcus-Design-Decisions.md`:
+* `docs/Ficus-Design-Decisions.md`:
   > **DONE (26 Nov) A3b review (docs/A3B-REVIEW.md on `review/a3b`):** merge recommended, nothing to fix first. For A4b: a
   > guard in the C generator for a member type reached without a table entry; `containerMembers` on the element type if
   > sorts move to the kernel comparator; cache the type walk and reword the non-regular recursion report (`==` on such a

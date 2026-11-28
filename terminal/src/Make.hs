@@ -25,28 +25,28 @@ import qualified AST.Optimized as Opt
 import qualified AST.Prim.Module as Module
 import qualified Build
 import qualified Elm.Details as Details
-import qualified Ficcus.CorePackages as CorePackages
-import qualified Ficcus.Flags as Flags
-import qualified Ficcus.Mono.CGen as CGen
-import qualified Ficcus.Mono.Facts as Facts
-import qualified Ficcus.Mono.Ir as Mono
-import qualified Ficcus.Mono.Members as MonoMembers
-import qualified Ficcus.Mono.LeafSplit as LeafSplit
-import qualified Ficcus.Mono.ModelUnpack as ModelUnpack
-import qualified Ficcus.Mono.ManagerTable as ManagerTable
-import qualified Ficcus.Mono.Marks as Marks
-import qualified Ficcus.Mono.Modules as Modules
-import qualified Ficcus.Mono.Overlay as Overlay
-import qualified Ficcus.Mono.Concurrent as Conc
-import qualified Ficcus.Mono.Print as Print
-import qualified Ficcus.Mono.PortsHeader as PortsHeader
-import qualified Ficcus.Mono.Rc as Rc
-import qualified Ficcus.Mono.Inline as Inline
-import qualified Ficcus.Mono.Known as Known
-import qualified Ficcus.Mono.Twin as Twin
-import qualified Ficcus.Mono.Unbox as Unbox
-import qualified Ficcus.Mono.RcCheck as RcCheck
-import qualified Ficcus.Mono.Spec as Spec
+import qualified Ficus.CorePackages as CorePackages
+import qualified Ficus.Flags as Flags
+import qualified Ficus.Mono.CGen as CGen
+import qualified Ficus.Mono.Facts as Facts
+import qualified Ficus.Mono.Ir as Mono
+import qualified Ficus.Mono.Members as MonoMembers
+import qualified Ficus.Mono.LeafSplit as LeafSplit
+import qualified Ficus.Mono.ModelUnpack as ModelUnpack
+import qualified Ficus.Mono.ManagerTable as ManagerTable
+import qualified Ficus.Mono.Marks as Marks
+import qualified Ficus.Mono.Modules as Modules
+import qualified Ficus.Mono.Overlay as Overlay
+import qualified Ficus.Mono.Concurrent as Conc
+import qualified Ficus.Mono.Print as Print
+import qualified Ficus.Mono.PortsHeader as PortsHeader
+import qualified Ficus.Mono.Rc as Rc
+import qualified Ficus.Mono.Inline as Inline
+import qualified Ficus.Mono.Known as Known
+import qualified Ficus.Mono.Twin as Twin
+import qualified Ficus.Mono.Unbox as Unbox
+import qualified Ficus.Mono.RcCheck as RcCheck
+import qualified Ficus.Mono.Spec as Spec
 import qualified File
 import qualified Generate
 import qualified Generate.Html as Html
@@ -62,10 +62,10 @@ readMaybeInt :: String -> Maybe Int
 readMaybeInt s = case reads s of { [(k, "")] -> Just k; _ -> Nothing }
 
 
--- Ficcus: report problems of the specializer or the C generator and stop
+-- Ficus: report problems of the specializer or the C generator and stop
 failWith :: [String] -> Task a
 failWith msgs =
-  Task.throw (Exit.MakeFiccus msgs)
+  Task.throw (Exit.MakeFicus msgs)
 
 
 
@@ -79,12 +79,12 @@ data Flags =
     , _output :: Maybe Output
     , _report :: Maybe ReportType
     , _docs :: Maybe FilePath
-    , _rc :: Bool                -- Ficcus: --output=x.c with reference counting (stage iv, `--rc`)
-    , _noRc :: Bool              -- Ficcus: --output=x.c without counts (`--no-rc`): the permanent oracle
+    , _rc :: Bool                -- Ficus: --output=x.c with reference counting (stage iv, `--rc`)
+    , _noRc :: Bool              -- Ficus: --output=x.c without counts (`--no-rc`): the permanent oracle
     }
 
 
--- | Ficcus: is `--output=x.c` counted when neither `--rc` nor `--no-rc` is given? (S5: the flip of this default is a commit of its own)
+-- | Ficus: is `--output=x.c` counted when neither `--rc` nor `--no-rc` is given? (S5: the flip of this default is a commit of its own)
 rcDefault :: Bool
 rcDefault = True
 
@@ -122,14 +122,14 @@ run paths flags@(Flags _ _ _ report _ _ _) =
 
 runHelp :: R.Root -> [FilePath] -> Reporting.Style -> Flags -> IO (Either Exit.Make ())
 runHelp root paths style flags@(Flags _ _ maybeOutput _ _ _ _) =
-  -- Ficcus (G43): the setting and the stuff directory of a build that may use a core package are decided before the root is locked
+  -- Ficus (G43): the setting and the stuff directory of a build that may use a core package are decided before the root is locked
   do  let elmJsonPath = R.toAbsolutePath root (R.Relative "elm.json")
       setting <- CorePackages.readSetting elmJsonPath
       Flags.setCorePackages setting
       mentioned <- CorePackages.mentionsCorePackage elmJsonPath
       case maybeOutput of
-        Just (Mono _) | setting && mentioned -> Flags.setStuffSuffix "-ficcus-core"
-        Just (FicC _) | setting && mentioned -> Flags.setStuffSuffix "-ficcus-core"
+        Just (Mono _) | setting && mentioned -> Flags.setStuffSuffix "-ficus-core"
+        Just (FicC _) | setting && mentioned -> Flags.setStuffSuffix "-ficus-core"
         _ -> return ()
       runLocked root paths style flags
 
@@ -145,7 +145,7 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
         Just (Mono _)  -> Task.io (Flags.setTypedOutput True >> Flags.setKeepModules True)
         Just (FicC _)  -> Task.io (Flags.setTypedOutput True >> Flags.setKeepModules True)
         _              -> return ()
-      -- Ficcus (FIX2): the overlay is written, and its directory made known (Flags.setExtraSrcDir), before the dependencies are built, so
+      -- Ficus (FIX2): the overlay is written, and its directory made known (Flags.setExtraSrcDir), before the dependencies are built, so
       -- that a package that imports the core `Vector` finds it (Details.crawlModule)
       overlayPaths <-
         case (paths, maybeOutput) of
@@ -161,7 +161,7 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
               buildExposed writer style root stuff details maybeDocs exposed
 
         p:ps ->
-          do  -- Ficcus: the elm/core overlay is an extra root module of the `.c` and `.mono` builds (written above)
+          do  -- Ficus: the elm/core overlay is an extra root module of the `.c` and `.mono` builds (written above)
               artifacts <- buildPaths writer style root stuff details (NE.List p (ps ++ overlayPaths))
               case maybeOutput of
                 Nothing ->
@@ -194,7 +194,7 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                       generate writer style target builder (Build.getRootNames artifacts)
 
                 Just (Mono target) ->
-                  -- Ficcus stage (iii) slice 0: the clone table and marks; the type dump is written beside it
+                  -- Ficus stage (iii) slice 0: the clone table and marks; the type dump is written beside it
                   do  typesBuilder <- Task.io (Generate.typeDumps stuff artifacts)
                       Task.io (Dir.createDirectoryIfMissing True (FP.takeDirectory target))
                       Task.io (File.writeBuilder writer (FP.replaceExtension target ".types") typesBuilder)
@@ -204,7 +204,7 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                       generate writer style target (B.stringUtf8 (unlines (Print.renderProgram facts program))) (Build.getRootNames artifacts)
 
                 Just (FicC target) ->
-                  -- Ficcus stage (iii): specialize, then generate C
+                  -- Ficus stage (iii): specialize, then generate C
                   do  facts <- Task.io Facts.takeAll
                       mods <- Task.io Modules.takeAll
                       case Spec.specialize mods (Marks.computeWith (MonoMembers.exactRoots mods) facts) of
@@ -212,30 +212,30 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                         Just (Left errs) -> failWith errs
                         Just (Right program) -> do
                           -- with `--rc`: the Rc pass, then its independent checker, then the generator with counts
-                          -- FICCUS_RC_MUTATE=n (tests of the checker): remove the n-th dup/drop the pass inserted, then check
-                          mutation <- Task.io (System.Environment.lookupEnv "FICCUS_RC_MUTATE")
+                          -- FICUS_RC_MUTATE=n (tests of the checker): remove the n-th dup/drop the pass inserted, then check
+                          mutation <- Task.io (System.Environment.lookupEnv "FICUS_RC_MUTATE")
                           -- "rN": only the S4 sites (drop specializations, tokens, reuses)
                           let mutated prog = case mutation of
                                                Just ('r' : digits) | Just k <- readMaybeInt digits ->
-                                                 maybe (Left ["FICCUS_RC_MUTATE: there is no reset or reuse number " ++ show k]) Right (Rc.rcMutate True k prog)
+                                                 maybe (Left ["FICUS_RC_MUTATE: there is no reset or reuse number " ++ show k]) Right (Rc.rcMutate True k prog)
                                                Just ('s' : digits) | Just k <- readMaybeInt digits ->
-                                                 maybe (Left ["FICCUS_RC_MUTATE: there is no S6 site number " ++ show k]) Right (Rc.rcMutateS6 k prog)
+                                                 maybe (Left ["FICUS_RC_MUTATE: there is no S6 site number " ++ show k]) Right (Rc.rcMutateS6 k prog)
                                                -- "pN" (E1p): the faults at the split sites (Rc.rcMutateSplit)
                                                Just ('p' : digits) | Just k <- readMaybeInt digits ->
-                                                 maybe (Left ["FICCUS_RC_MUTATE: there is no split fault number " ++ show k]) Right (Rc.rcMutateSplit k prog)
+                                                 maybe (Left ["FICUS_RC_MUTATE: there is no split fault number " ++ show k]) Right (Rc.rcMutateSplit k prog)
                                                _ -> case mutation >>= readMaybeInt of
                                                       Nothing -> Right prog
-                                                      Just k -> maybe (Left ["FICCUS_RC_MUTATE: there is no dup or drop number " ++ show k]) Right (Rc.rcMutate False k prog)
-                          -- FICCUS_RC_DUMP=text (debugging): print the counted clones whose definition name contains the text, before the check
-                          dumpText <- Task.io (System.Environment.lookupEnv "FICCUS_RC_DUMP")
+                                                      Just k -> maybe (Left ["FICUS_RC_MUTATE: there is no dup or drop number " ++ show k]) Right (Rc.rcMutate False k prog)
+                          -- FICUS_RC_DUMP=text (debugging): print the counted clones whose definition name contains the text, before the check
+                          dumpText <- Task.io (System.Environment.lookupEnv "FICUS_RC_DUMP")
                           -- S7: constructor values made by a small known function and matched at once are not built (counted builds only)
                           let (knownResult, knownCounters) = Known.knownRun program
-                          knownStatsOn <- Task.io (System.Environment.lookupEnv "FICCUS_KNOWN_STATS")
+                          knownStatsOn <- Task.io (System.Environment.lookupEnv "FICUS_KNOWN_STATS")
                           case knownStatsOn of
-                            Just "1" | rcMode -> Task.io (hPutStrLn stderr ("FICCUS_KNOWN_STATS: " ++ show knownCounters))
+                            Just "1" | rcMode -> Task.io (hPutStrLn stderr ("FICUS_KNOWN_STATS: " ++ show knownCounters))
                             _ -> return ()
-                          -- FICCUS_KNOWN_DUMP=text (debugging): print the clones of Known's output whose definition name contains the text
-                          knownDump <- Task.io (System.Environment.lookupEnv "FICCUS_KNOWN_DUMP")
+                          -- FICUS_KNOWN_DUMP=text (debugging): print the clones of Known's output whose definition name contains the text
+                          knownDump <- Task.io (System.Environment.lookupEnv "FICUS_KNOWN_DUMP")
                           case (knownDump, knownResult) of
                             (Just pat, Right kp) | rcMode ->
                               Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones kp, pat `List.isInfixOf` Mono.mdName d ]))
@@ -246,38 +246,38 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                                           Right known -> let ur = Unbox.unboxProgram unboxBase (Inline.inlineProgram known)
                                                          in if null (Unbox.urErrors ur) then Right ur else Left (Unbox.urErrors ur)
                                           Left errs0 -> Left errs0
-                          unboxStatsOn <- Task.io (System.Environment.lookupEnv "FICCUS_UNBOX_STATS")
+                          unboxStatsOn <- Task.io (System.Environment.lookupEnv "FICUS_UNBOX_STATS")
                           case (unboxStatsOn, unboxed) of
                             (Just "1", Right ur) | rcMode -> Task.io (mapM_ (hPutStrLn stderr) (Unbox.urStats ur))
                             _ -> return ()
-                          -- FICCUS_INLINE_DUMP=text, FICCUS_UNBOX_DUMP=text (debugging): the clones before and after the Unbox pass
-                          inlineDump <- Task.io (System.Environment.lookupEnv "FICCUS_INLINE_DUMP")
+                          -- FICUS_INLINE_DUMP=text, FICUS_UNBOX_DUMP=text (debugging): the clones before and after the Unbox pass
+                          inlineDump <- Task.io (System.Environment.lookupEnv "FICUS_INLINE_DUMP")
                           case (inlineDump, knownResult) of
                             (Just pat, Right kp) | rcMode ->
                               Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones (Inline.inlineProgram kp), pat `List.isInfixOf` Mono.mdName d ]))
                             _ -> return ()
-                          unboxDump <- Task.io (System.Environment.lookupEnv "FICCUS_UNBOX_DUMP")
+                          unboxDump <- Task.io (System.Environment.lookupEnv "FICUS_UNBOX_DUMP")
                           case (unboxDump, unboxed) of
                             (Just pat, Right ur) | rcMode ->
                               Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones (Unbox.urProgram ur), pat `List.isInfixOf` Mono.mdName d ]))
                             _ -> return ()
                           let rcRun = fmap (\ur -> Rc.rcProgramStats (ModelUnpack.unpackModel (Twin.twinProgram (Unbox.urProgram ur)))) unboxed
                           let rced = if rcMode then rcRun >>= \(r, _) -> r >>= mutated else Right program
-                          -- E1p: FICCUS_SPLIT_STATS=1 prints the leaf splits per clone (Ficcus.Mono.LeafSplit)
+                          -- E1p: FICUS_SPLIT_STATS=1 prints the leaf splits per clone (Ficus.Mono.LeafSplit)
                           case rcRun of
                             Right (_, splits) | rcMode, LeafSplit.splitStatsOn ->
-                              Task.io (mapM_ (\(Mono.CloneId c, name, k) -> hPutStrLn stderr ("FICCUS_SPLIT_STATS: c" ++ show c ++ " " ++ name ++ " " ++ show k)) splits)
+                              Task.io (mapM_ (\(Mono.CloneId c, name, k) -> hPutStrLn stderr ("FICUS_SPLIT_STATS: c" ++ show c ++ " " ++ name ++ " " ++ show k)) splits)
                             _ -> return ()
-                          twinStatsOn <- Task.io (System.Environment.lookupEnv "FICCUS_TWIN_STATS")
+                          twinStatsOn <- Task.io (System.Environment.lookupEnv "FICUS_TWIN_STATS")
                           case (twinStatsOn, rced) of
-                            (Just "1", Right _) | rcMode -> Task.io (hPutStrLn stderr ("FICCUS_TWIN_STATS: (twins, twins that build a cell of their closure's size class) = " ++ show (Twin.twinStats (Twin.twinProgram (Inline.inlineProgram program)))))
+                            (Just "1", Right _) | rcMode -> Task.io (hPutStrLn stderr ("FICUS_TWIN_STATS: (twins, twins that build a cell of their closure's size class) = " ++ show (Twin.twinStats (Twin.twinProgram (Inline.inlineProgram program)))))
                             _ -> return ()
                           case (dumpText, rced) of
                             (Just pat, Right prog) ->
                               Task.io (mapM_ (hPutStrLn stderr) (concat [ Print.renderClone Map.empty d | d <- Mono.mpClones prog, pat `List.isInfixOf` Mono.mdName d ]))
                             _ -> return ()
                           let counted = if rcMode then rced >>= \counted0 -> (case RcCheck.rcCheck counted0 of { [] -> Right counted0; errs -> Left errs }) else Right program
-                          -- H16 W7a: FICCUS_UNBOX_CHECK: every matched worker result is taken apart by an unpack, never by a view branch
+                          -- H16 W7a: FICUS_UNBOX_CHECK: every matched worker result is taken apart by an unpack, never by a view branch
                           unboxChecked <- case (rcMode && Unbox.unboxCheckOn, counted) of
                                             (True, Right c0) -> do { let { (msgs, nUnpack) = Unbox.checkCounted c0 }
                                                                    ; case unboxStatsOn of { Just "1" -> Task.io (hPutStrLn stderr ("UNBOX unpacked sites " ++ show nUnpack)); _ -> return () }
@@ -288,9 +288,9 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
                             Right program' ->
                               do  -- E2: the order of the effect managers of Elm's JS output (only programs with managers load the objects)
                                   order <- if ManagerTable.hasManagers program' then Task.mapError Exit.MakeBadGenerate (Generate.managerOrder stuff details artifacts) else return []
-                                  orderDump <- Task.io (System.Environment.lookupEnv "FICCUS_MANAGER_ORDER")
+                                  orderDump <- Task.io (System.Environment.lookupEnv "FICUS_MANAGER_ORDER")
                                   case orderDump of
-                                    Just "1" -> Task.io (hPutStrLn stderr ("FICCUS_MANAGER_ORDER: " ++ show order))
+                                    Just "1" -> Task.io (hPutStrLn stderr ("FICUS_MANAGER_ORDER: " ++ show order))
                                     _ -> return ()
                                   case CGen.generateWith order rcMode program' of
                                     Left errs -> failWith errs
@@ -318,11 +318,11 @@ runLocked root paths style (Flags debug optimize maybeOutput _ maybeDocs rcFlag 
 
 
 
--- Ficcus: write the overlay module (Ficcus.Mono.Overlay) into `elm-stuff/ficcus-overlay/` of the project and
+-- Ficus: write the overlay module (Ficus.Mono.Overlay) into `elm-stuff/ficus-overlay/` of the project and
 -- make that directory a source directory for this build; the result is the path to add to the root files
 writeOverlay :: R.Root -> IO [FilePath]
 writeOverlay root =
-  do  let dir = R.toAbsolutePath root (R.Relative "elm-stuff/ficcus-overlay")
+  do  let dir = R.toAbsolutePath root (R.Relative "elm-stuff/ficus-overlay")
       let file = dir FP.</> Overlay.overlayFileName
       Dir.createDirectoryIfMissing True dir
       old <- Dir.doesFileExist file
@@ -330,7 +330,7 @@ writeOverlay root =
       if same then return () else writeFile file Overlay.overlaySource
       writeFile (dir FP.</> Overlay.bitwise64FileName) Overlay.bitwise64Source
       writeFile (dir FP.</> Overlay.vectorFileName) Overlay.vectorSource
-      writeFile (dir FP.</> Conc.concFileName) Conc.concSource     -- T1a: the Concurrent module (Ficcus.Mono.Concurrent)
+      writeFile (dir FP.</> Conc.concFileName) Conc.concSource     -- T1a: the Concurrent module (Ficus.Mono.Concurrent)
       mapM_ (\(n, src) -> writeFile (dir FP.</> n) src) Overlay.sizedSources
       Flags.setExtraSrcDir (Just dir)
       -- the elm/parser overlay is a root module of the projects that depend on elm/parser
@@ -368,11 +368,11 @@ writeOverlay root =
       return (file : sortFile : parserFiles ++ randomFiles ++ timeFiles ++ jsonFiles ++ bytesFiles ++ regexFiles)
 
 
--- | T1a-2: for a build to JavaScript, `elm-stuff/ficcus-overlay-js/Concurrent.elm` is the only overlay module (Ficcus.Mono.Concurrent); it
+-- | T1a-2: for a build to JavaScript, `elm-stuff/ficus-overlay-js/Concurrent.elm` is the only overlay module (Ficus.Mono.Concurrent); it
 -- is not a root, so a program that does not import it is generated exactly as before
 writeConcOverlay :: R.Root -> IO [FilePath]
 writeConcOverlay root =
-  do  let dir = R.toAbsolutePath root (R.Relative "elm-stuff/ficcus-overlay-js")
+  do  let dir = R.toAbsolutePath root (R.Relative "elm-stuff/ficus-overlay-js")
       Dir.createDirectoryIfMissing True dir
       let file = dir FP.</> Conc.concFileName
       old <- Dir.doesFileExist file

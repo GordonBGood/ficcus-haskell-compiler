@@ -17,7 +17,7 @@ module Type.Readout
   where
 
 
--- Ficcus milestone 2, step 2: from solver variables to immutable types.
+-- Ficus milestone 2, step 2: from solver variables to immutable types.
 --
 -- After Type.Solve.run the union-find graph still holds the final type of every
 -- node variable that Type.Recorder collected. `readout` first gives every

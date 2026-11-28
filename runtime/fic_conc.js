@@ -1,6 +1,6 @@
 
-// fic_conc.js -- Ficcus T1a-2: the JavaScript kernels of the `Concurrent` module (overlay/Concurrent.elm), the differential reference of
-// runtime/fic_conc.h (docs/attach/T1A-NOTES.md, rules R1 to R8). Emitted once by the JavaScript generator (Ficcus.Mono.Concurrent.concJs)
+// fic_conc.js -- Ficus T1a-2: the JavaScript kernels of the `Concurrent` module (overlay/Concurrent.elm), the differential reference of
+// runtime/fic_conc.h (docs/attach/T1A-NOTES.md, rules R1 to R8). Emitted once by the JavaScript generator (Ficus.Mono.Concurrent.concJs)
 // after the kernels of elm/core's Scheduler and Platform, in a program that reaches a kernel of the overlay; each kernel definition of
 // the overlay becomes `var $author$project$Concurrent$<name> = _FicConc_<name>;`.
 // It uses elm/core 1.0.5's Scheduler.js as generated: a task's tag `$` (0 succeed, 2 binding), a binding's callback `b` and kill `c`, a

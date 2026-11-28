@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+"""Tests of the independent checker of the Rc pass (Ficus.Mono.RcCheck): fault injection.
+
+  python3 ficus-tests/rccheck_faults.py --elm bin/elmficNN --elm-home H [--only a,b] [--sample F --seed S]
+
+Every `dup` and `drop` that the pass inserts is needed (the counts are exact), so removing any single one of them must be reported
+by the checker. For each example the program is compiled with `--rc` and FICUS_RC_MUTATE=n for n = 0, K, 2K, ... (--sample F --seed S: a random
+fraction F of the sites, fixed seed); the compiler must fail with a message that starts with "rc check:". Exit status 1 when a mutated program is accepted.
+
+S4: the same for the reset/reuse operations (FICUS_RC_MUTATE=rK): removal of a drop specialization (MSpec), of the token of one, of a
+reuse (MReuse) and of a token free (MFreeTok). There are few of them, so they are ALWAYS tested in full, also with --sample (the sample
+covers only the dup/drop sites; STAGE4-PLAN 14: sample 0.05, seed 1).
+
+S6 (FICUS_RC_MUTATE=sK), also always in full: a take whose index is changed (the placeholder it leaves could be seen) and an owning call
+of a function value turned into an ordinary call (the function is never consumed). The example `fbip` has them; `vec` (V1) has the
+takes of `Vector.update` (elements with references).
+
+E1p (FICUS_RC_MUTATE=pK), also always in full: the faults at a leaf split site (Rc.rcMutateSplit): a field dropped twice, the drop of an
+unused field skipped (a leak), a field moved and also read from the struct after the unpack. The removal kinds above already reach a
+split's MUnpack. SPLIT programs (`dir/Module`, after the default list) are tested with the p kind only: they are the programs whose
+splits matter (docs/E1P-DESIGN.md), and their many Array/Dict dup/drop sites are the same as in the default list's programs."""
+import argparse, os, random, subprocess, sys, shutil, tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+SPLIT = ["e1p/H1Helper", "e1p/H2HelperFull", "e1p/H3CallerLive", "e1p/H4TwoLevel", "e1p/H5Nested", "e1p/H6DictUpd", "e1p/H7Closure", "effects/G17b",
+         "effects/G17bFields", "effects/R1Partial"]
+DEFAULT = ["fib", "lists", "acc", "clo", "dict", "letnum", "str2", "inl", "clos", "vecself", "recfn", "known14", "known15", "known16"]      # known14..16: worker programs of the unboxed results (W7a); recfn: calls of functions in record fields (issues 01, 02); inl: the output of Ficus.Mono.Inline (S7); clos: the twins of Ficus.Mono.Twin (S7 part 3)
+
+
+def compile_mutant(elm, home, work, mod, n, prefix=""):
+    env = dict(os.environ, ELM_HOME=home, FICUS_RC_MUTATE=prefix + str(n))
+    p = subprocess.run([elm, "make", "src/" + mod, "--output=x.c", "--rc"], cwd=work, env=env, capture_output=True, text=True, timeout=300)
+    return p.returncode, p.stdout + p.stderr
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--elm", required=True); ap.add_argument("--elm-home", required=True)
+    ap.add_argument("--only", default=",".join(DEFAULT + SPLIT)); ap.add_argument("--sample", type=float, default=1.0, help="fraction of the sites to test (1.0: all)"); ap.add_argument("--seed", type=int, default=1)
+    a = ap.parse_args()
+    elm = os.path.abspath(a.elm)
+    bad = total = 0
+    for name in a.only.split(","):
+        work = tempfile.mkdtemp(dir=os.environ.get("CLAUDE_CODE_TMPDIR"))
+        d, _, one = name.partition("/")          # dir/Module: that program of a directory, split faults only
+        dst = os.path.join(work, d)
+        shutil.copytree(os.path.join(HERE, d), dst, ignore=shutil.ignore_patterns("elm-stuff"))
+        mod = one + ".fic" if one else sorted(f for f in os.listdir(os.path.join(dst, "src")) if f.endswith(".fic"))[0]
+        caught = missed = 0
+        n = 0
+        rc0, text0 = compile_mutant(elm, a.elm_home, dst, mod, 10**9)      # no such site: only a program that compiles gets this far
+        if "there is no dup or drop number" not in text0:
+            print("%-8s skipped: does not compile with --rc (%s)" % (name, text0.strip().splitlines()[0][:80])); continue
+        rng = random.Random(a.seed)
+        reuse_n = 0
+        split_n = 0
+        for prefix in (("p",) if one else ("", "r", "s", "p")):
+            n = 0
+            while True:
+                if prefix == "" and a.sample < 1.0 and rng.random() >= a.sample: n += 1; continue
+                rc, text = compile_mutant(elm, a.elm_home, dst, mod, n, prefix)
+                if any(t in text for t in ("there is no dup or drop number", "there is no reset or reuse number", "there is no S6 site number",
+                                           "there is no split fault number")): break
+                if rc != 0 and "rc check:" in text: caught += 1
+                else:
+                    missed += 1; print("MISSED %s: removing %ssite %d was accepted (exit %d) %s" % (name, prefix, n, rc, text[-200:]))
+                if prefix in ("r", "s"): reuse_n += 1
+                if prefix == "p": split_n += 1
+                n += 1
+        total += caught + missed; bad += missed
+        print("%-8s %d mutations (%d reset/reuse/S6, %d split): %d caught, %d missed" % (name, caught + missed, reuse_n, split_n, caught, missed), flush=True)
+        shutil.rmtree(work, ignore_errors=True)
+    print("total %d mutations, %d missed" % (total, bad))
+    return 1 if bad else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

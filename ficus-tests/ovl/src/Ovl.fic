@@ -1,0 +1,130 @@
+module Ovl exposing (main)
+
+-- List functions that elm/core writes in JavaScript and Ficus writes in Elm (the overlay): map2..map5,
+-- indexedMap, sortBy, sortWith. The output, including the order of the Debug.log lines, must equal Elm's
+-- (expected/ovl.out, from Elm 0.19.3 under node). Sort comparators here are pure and consistent.
+
+
+type Color
+    = Red
+    | Green
+    | Blue
+
+
+f2 : Int -> Int -> Int
+f2 a b =
+    Debug.log "f2" (a * 10 + b)
+
+
+f3 : Int -> Float -> String -> String
+f3 a b c =
+    Debug.log "f3" (c ++ String.fromInt a ++ String.fromFloat b)
+
+
+f4 : Int -> Int -> Int -> Int -> Int
+f4 a b c d =
+    Debug.log "f4" (a + b * 2 + c * 3 + d * 4)
+
+
+f5 : Int -> Int -> Int -> Int -> Int -> Int
+f5 a b c d e =
+    Debug.log "f5" (a + b + c + d + e)
+
+
+key : Int -> Int
+key x =
+    modBy 3 x
+
+
+byLength : List Int -> Int
+byLength s =
+    List.length s
+
+
+descending : Int -> Int -> Order
+descending a b =
+    compare b a
+
+
+colorRank : Color -> Int
+colorRank c =
+    case c of
+        Red ->
+            0
+
+        Green ->
+            1
+
+        Blue ->
+            2
+
+
+showL : (a -> String) -> List a -> String
+showL conv xs =
+    "[" ++ List.foldl (\x acc -> acc ++ conv x ++ ",") "" xs ++ "]"
+
+
+showI : List Int -> String
+showI =
+    showL String.fromInt
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init =
+            \_ ->
+                let
+                        a =
+                            Debug.log "map2" (showI (List.map2 f2 [ 1, 2, 3 ] [ 4, 5 ]))
+
+                        b =
+                            Debug.log "map2 other" (showL identity (List.map2 (\x y -> String.fromFloat x ++ y) [ 1.5, 2.5 ] [ "a", "b", "c" ]))
+
+                        c =
+                            Debug.log "map3" (showL identity (List.map3 f3 [ 1, 2, 3 ] [ 0.5, 1.5 ] [ "x", "y", "z" ]))
+
+                        d =
+                            Debug.log "map4" (showI (List.map4 f4 [ 1, 2 ] [ 3, 4 ] [ 5, 6, 7 ] [ 8, 9 ]))
+
+                        e =
+                            Debug.log "map5" (showI (List.map5 f5 [ 1, 2 ] [ 3, 4 ] [ 5, 6 ] [ 7, 8 ] [ 9, 10, 11 ]))
+
+                        g =
+                            Debug.log "indexedMap" (showI (List.indexedMap (\i x -> Debug.log "im" (i * 100 + x)) [ 7, 8, 9 ]))
+
+                        h =
+                            Debug.log "indexedMap empty" (showI (List.indexedMap (\i x -> i + x) []))
+
+                        s1 =
+                            Debug.log "sortBy" (showI (List.sortBy key [ 5, 1, 9, 3, 4, 7, 2 ]))
+
+                        s2 =
+                            Debug.log "sortBy len" (showL (\l -> showI l) (List.sortBy byLength [ [ 1, 2, 3 ], [ 1 ], [ 1, 2 ], [ 4, 5 ], [ 9 ], [] ]))
+
+                        s3 =
+                            Debug.log "sortBy ctor" (showI (List.map colorRank (List.sortBy colorRank [ Blue, Red, Green, Red, Blue ])))
+
+                        s4 =
+                            Debug.log "sortWith" (showI (List.sortWith descending [ 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5 ]))
+
+                        s5 =
+                            Debug.log "sortWith pairs" (showL (\( n, t ) -> String.fromInt n ++ t) (List.sortWith (\( x, _ ) ( y, _ ) -> compare x y) [ ( 2, "a" ), ( 1, "b" ), ( 2, "c" ), ( 1, "d" ) ]))
+
+                        s6 =
+                            Debug.log "sortBy float" (showL String.fromFloat (List.sortBy (\x -> x * -1.5) [ 1.5, -2, 0, 3.25 ]))
+
+                        s7 =
+                            Debug.log "sorted big" (showI (List.take 12 (List.sortBy (\x -> modBy 1000 (x * 7919)) (List.range 1 5000))))
+
+                        s8 =
+                            Debug.log "sortBy empty, single" (showI (List.sortBy key []) ++ showI (List.sortBy key [ 4 ]))
+                in
+                if List.length [ a, b, c, d, e, g, h, s1, s2, s3, s4, s5, s6, s7, s8 ] > 0 then
+                    ( (), Cmd.none )
+
+                else
+                    ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

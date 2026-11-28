@@ -31,7 +31,7 @@ queue stays E3e.
 - `overlay/Concurrent.elm`: types `Pid exit msg`, `Address msg`, `Mailbox msg` (one marker constructor each, never built), `Exit err a
   = Done a | Failed err | Killed`; `spawn` and `spawnWith` written in Elm over the kernel `spawnRaw killed body` (the body's result is
   mapped to `Done`, its failure to `Failed`); kernels `address`, `self`, `send`, `receive`, `await`, `kill`.
-- `compiler/src/Ficcus/Mono/Concurrent.hs` (new): the embedded overlay and runtime, the marker test `concOn`, the redirect to
+- `compiler/src/Ficus/Mono/Concurrent.hs` (new): the embedded overlay and runtime, the marker test `concOn`, the redirect to
   `elm/core:Concurrent.<name>`, the kernel table, and `patchSched`. Hooks: Make writes the overlay (like Vector); Spec makes the three
   types references (like Vector) and redirects the calls; Kernel lists arities and signatures; CGen maps the seven kernels and emits
   the runtime.
@@ -63,7 +63,7 @@ queue stays E3e.
 - Shuffle (`FIC_SCHED_SEED=n`): the pick chooses uniformly among the queued Concurrent processes and the first queued other process (the
   app's processes keep their FIFO order); xorshift64*; per-sender order holds in every schedule (mailboxes are FIFO).
 
-Case reasoning (expected files in `ficcus-tests/t1a/expected/`):
+Case reasoning (expected files in `ficus-tests/t1a/expected/`):
 
 - **T1aOrder**: P (the app's perform process) spawns A, B (R2), logs, awaits A and waits (R5). A runs to its end (R1), wakes P (queued
   behind B); B runs; P then gets `Done 10`, `Done 20` at once, and `Done 10` again.
@@ -81,7 +81,7 @@ Case reasoning (expected files in `ficcus-tests/t1a/expected/`):
 
 ## 4. Tests and gates
 
-`ficcus-tests/t1a/run.py` (gates.sh step `t1a`): 6 cases, --rc (O2, ASan+UBSan, DROP_ALL; live 0, the stats line) and --no-rc;
+`ficus-tests/t1a/run.py` (gates.sh step `t1a`): 6 cases, --rc (O2, ASan+UBSan, DROP_ALL; live 0, the stats line) and --no-rc;
 shuffle seeds 1..30 (multiset, last line, sender order, reproducible, at least two orders where races exist) and 1..4 under the
 sanitizers; identity of the C text of effects3 and e2review (33 programs, both modes) against `elmficP1b`. Also checked by hand: clang
 `-Wall -Wextra -pedantic` clean, tcc output equal. Gate results: section 6.
@@ -132,9 +132,9 @@ O6, O7, O8 as below.
   onEffects. So channel messages enter `update` only through the manager, on the loop: one writer of the model.
 - **receiveWithin**: a message first gives `Just` (no timer); otherwise an E2 interval timer for the waiting process whose task wakes it
   with `Nothing`; a message first cancels the timer; an epoch makes a stale timeout a no-op; kill cancels it (E2's kill).
-- **O6**: a `.elm` module of the project that imports the overlay's `Concurrent` gets `FICCUS ONLY MODULE` (new `Syntax.FicOnlyImport`,
+- **O6**: a `.elm` module of the project that imports the overlay's `Concurrent` gets `FICUS ONLY MODULE` (new `Syntax.FicOnlyImport`,
   checked in `Build.crawlFile`), in C and JavaScript builds. JavaScript builds now get the overlay `Concurrent.elm` alone
-  (`elm-stuff/ficcus-overlay-js`, not a root): other programs are generated as before (JS identity gate).
+  (`elm-stuff/ficus-overlay-js`, not a root): other programs are generated as before (JS identity gate).
 - **O7**: `Debug.toString` of a handle is `<internals>`; `==` compares records (one per process or channel, so ids) in C
   (`isConcType` in CGen) and JavaScript (an object with a numeric `$` and a distinct `id`).
 - **O8**: `receive`/`receiveWithin` by any process but the mailbox's owner ends the program: `Concurrent.receive: the mailbox belongs to
@@ -213,7 +213,7 @@ a3b-identity --more vs elmficP1b 100/0; rcgate-san 16 ok; suite 16/16 PASS.
   (Concurrent.self box, x))`), or two whose exit values hold each other's, is a cycle; the sweep frees an ended record only at `rc == 1`,
   so it stays until fic_conc_teardown (live 0 at the end, but a long-running program that does this grows: R7CycleExit 111 MB against
   R7PlainExit 2.3 MB). Planned fix with the next Concurrent slice: weak handles (an id and a registry lookup).
-- **F5, documented**: a comment at patchSched's anchors (Ficcus.Mono.Concurrent): the drain of fic_sched_enqueue is the only place
+- **F5, documented**: a comment at patchSched's anchors (Ficus.Mono.Concurrent): the drain of fic_sched_enqueue is the only place
   fic_sched.h steps a process; a second stepping place added later would bypass the shuffle silently (fic_conc_cur would abort there)
   and must be patched too. fic_sched.h itself is not touched (other programs' C stays byte identical).
 - Build: elm.cabal `extra-source-files` now lists `runtime/*.js` and `overlay/*.elm`; they are embedded (Template Haskell) but cabal

@@ -1,4 +1,4 @@
-# E3c + E3d: Ficcus payloads, raw vectors, very deep values (session notes)
+# E3c + E3d: Ficus payloads, raw vectors, very deep values (session notes)
 
 Branch `feat/e3c` from ficcus af71a00e (T1c merged), binary `bin/elmficE3c`, identity reference `bin/elmficT1c`. Design:
 `docs/E3-PORTS-DESIGN.md` D5, D6, D9, D10 (and D16 for the timing line); `docs/E3A-REVIEW.md` F2. The shared files are not edited
@@ -12,11 +12,11 @@ Branch `feat/e3c` from ficcus af71a00e (T1c merged), binary `bin/elmficE3c`, ide
   Elm's walk gives. Elm's `Canonicalize.Effects.checkPayload` is unchanged and stays the check of every `.elm` module and every build
   to JavaScript. The check is now a parameter of `Effects.canonicalize`; `Canonicalize.Module.canonicalizeWith`, `Compile.compileWith`,
   `Compile.compileTypedWith` carry a Bool, set by `Build.compile` when the file is `.fic` and the build is typed (C or `.mono`).
-- `Optimize.Port`: a Ficcus type is converted like its Elm look-alike (sized integer as Int, Float32 as Float, Vector as Array) in the
+- `Optimize.Port`: a Ficus type is converted like its Elm look-alike (sized integer as Int, Float32 as Float, Vector as Array) in the
   JavaScript converters that a build to C keeps in its graph but never runs; it keeps the optimizer total and gives the manager order
   of the Elm twin (the twin cases compare that order too).
-- `Ficcus.Mono.PortFic` (new): the C pieces per type (encoder, range checked decoder, raw element kind, description character, header
-  shape). `Ficcus.Mono.PortDesc`: description characters `c h n C H N W g` and `V<T>`; `<Module>_ports.h` shapes. `Ficcus.Mono.CGen`:
+- `Ficus.Mono.PortFic` (new): the C pieces per type (encoder, range checked decoder, raw element kind, description character, header
+  shape). `Ficus.Mono.PortDesc`: description characters `c h n C H N W g` and `V<T>`; `<Module>_ports.h` shapes. `Ficus.Mono.CGen`:
   branches for sized types, Vector (raw or array), Float taking a JUINT, Json.Value through `fic_pv_plain`.
 
 **Runtime**
@@ -52,12 +52,12 @@ Branch `feat/e3c` from ficcus af71a00e (T1c merged), binary `bin/elmficE3c`, ide
 6. **Narrow kinds are narrowed by the encoder** (once, into the node), not lazily in `fic_hv_vector`.
 7. **Range texts** (D7 says "Expecting an INT8"-style): `Expecting an INT8 (a whole number from -128 to 127)`, likewise for the others;
    `Float32` refuses only a non-number, with Elm's `Expecting a FLOAT`.
-8. **The JS refusal** is the missing overlay module: a build to JavaScript has no `Int8`/`Vector` modules, and the existing Ficcus hint
+8. **The JS refusal** is the missing overlay module: a build to JavaScript has no `Int8`/`Vector` modules, and the existing Ficus hint
    says so (case `c_fic_js`). A project module of that name gets Elm's payload error.
 
 ## 3. Tests
 
-`python3 ficcus-tests/effects_e3c.py --elm B --elm-home H` (reuses `effects_e3.py`'s builds and checks: `--rc` gcc -O2, ASan + UBSan
+`python3 ficus-tests/effects_e3c.py --elm B --elm-home H` (reuses `effects_e3.py`'s builds and checks: `--rc` gcc -O2, ASan + UBSan
 without the pool, `-DFIC_DROP_ALL`, and `--no-rc`; live 0 and 0 bad, 0 live after the free): 7 runtime cases (28 checks) and 3
 compile cases. Goldens: `--goldens --ref ../bin/elm0193`.
 
@@ -102,7 +102,7 @@ stringdiff, examples, fbip, e1review, e1pr, e1p-identity, rcfaults, rcfaults-big
    that wins over the overlay and is used as a `.fic` port payload would get the sized converter (wrong C). The C generator could test
    the marker constructor as `Sized.sizedEnabled` does.
 5. **Float32 rounding** of an out of range double relies on IEEE conversion (`(double)(float)d`), as `Float32.fromFloat`.
-6. **Flags of a Ficcus type** stay refused (Elm's BAD FLAGS); `Build.compileOutside` (a root file outside the source directories) keeps
+6. **Flags of a Ficus type** stay refused (Elm's BAD FLAGS); `Build.compileOutside` (a root file outside the source directories) keeps
    Elm's payload check. Both could take the same gate.
 7. **Raw nodes at List/Array positions** are refused rather than converted (deviation 4).
 
@@ -113,7 +113,7 @@ normalization), the next commit (these notes, gate results).
 
 ## 7. Proposed entries for the shared files (not applied)
 
-- Decisions file, E3: DONE E3c + E3d (date): Ficcus payloads at ports (sized integers range checked, Word64 via JUINT on the host side
+- Decisions file, E3: DONE E3c + E3d (date): Ficus payloads at ports (sized integers range checked, Word64 via JUINT on the host side
   only, Float32 rounded, Vector as array or raw vector with zero copy for 8 byte kinds and staging for narrow kinds), F2 fixed
   (iterative host walks, 1 MB error text budget); deviations 1 to 8 of `docs/E3C-NOTES.md`; open points for the Opus review.
 - Checklist: tick E3c and E3d (pending review); note "G30 makes the D10 staging zero copy".

@@ -3,12 +3,12 @@
 Branch `test/g71` from `ficcus` cb7b6595 (includes E1p 5961e413 and A4a). Binary `bin/elmficA4b`. No compiler change.
 Date 2026-11-26.
 
-Cases: `ficcus-tests/attach/cases/g71-*` (56), written by `ficcus-tests/attach/g71gen.py --write`. The observed results
+Cases: `ficus-tests/attach/cases/g71-*` (56), written by `ficus-tests/attach/g71gen.py --write`. The observed results
 are in `g71expect.py` and the lines of `expected.tsv` (section `# G71`). The C cases are checked in C mode: RUN `c`
 (`--output=x.c --no-rc`, gcc and clang, output compared), or REJECTC with the report title and a text. Three pure Elm
 cases are RUN `js+c`. Run them with:
 
-    python3 ficcus-tests/attach/attach.py --elm bin/elmficA4b -j1 --only $(grep -o '^g71-[^\t]*' ficcus-tests/attach/expected.tsv | paste -sd,)
+    python3 ficus-tests/attach/attach.py --elm bin/elmficA4b -j1 --only $(grep -o '^g71-[^\t]*' ficus-tests/attach/expected.tsv | paste -sd,)
 
 Result: 56 cases, 0 differ. They were **not** run with `--rc` (ASan, counted). The gate's attach step runs every case
 that way, so the next gate run is the first `--rc` run of the 39 RUN cases.
@@ -177,7 +177,7 @@ output.
   obligation through its built-in member, or at least make the message say "the literal's type is not known; write
   `(9 : Int)` as a typed value" instead of suggesting a signature that will not help.
 - **L6 (minor message).** `<` on an unconstrained annotated `a` gives Elm's hint only (change to `comparable`). A line
-  saying that `a has compare : a -> a -> Order` also works would show the Ficcus option.
+  saying that `a has compare : a -> a -> Order` also works would show the Ficus option.
 
 Not limitations (by design, with good messages): constraints are never inferred for top-level functions (1, 3 lifted
 without signature, 4 unannotated outer). The message gives the exact signature, including several members on one
@@ -190,7 +190,7 @@ L1 and L6 are message problems that lifting does not touch.
 
 ## Proposed notes for the shared files (not edited here)
 
-- Ficcus-Design-Decisions.md: NOTE 2026-11-26 G71 (test only, `test/g71`, elmficA4b): review 1 B3 and B4 are no longer
+- Ficus-Design-Decisions.md: NOTE 2026-11-26 G71 (test only, `test/g71`, elmficA4b): review 1 B3 and B4 are no longer
   present, including the cross-module B3 (suspicion 5). Let generalization with a `div` type in sight: `/`, `//`,
   `modBy` are held (F4), and `+`, `compare`, `<` are generalized. Literals in a held let take the member type of another
   use (L4). Limitations L1 to L6 are in `docs/attach/G71-INFERENCE.md`.

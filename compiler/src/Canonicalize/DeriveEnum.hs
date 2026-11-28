@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE MagicHash, PatternGuards #-}
--- Ficcus (A4c, docs/A4-DERIVE-DESIGN.md section 2): the bodies of the derived enumeration members (group E), written as
+-- Ficus (A4c, docs/A4-DERIVE-DESIGN.md section 2): the bodies of the derived enumeration members (group E), written as
 -- source so that canonicalization, the type checker and the specializer treat them like the program's own code.  Only an
 -- enumeration (every constructor without fields; Canonicalize.Derive refuses the others) gets them:
 --

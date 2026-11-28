@@ -16,7 +16,7 @@ import Bitwise exposing (and, or, shiftLeftBy, shiftRightBy)
 
 
 
--- pretend Array is a Vector of bytes (a Vector Word8 in Ficcus), updated in place...
+-- pretend Array is a Vector of bytes (a Vector Word8 in Ficus), updated in place...
 
 
 bufBytes : Int

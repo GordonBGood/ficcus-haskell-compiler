@@ -1,4 +1,4 @@
-/* fic_ports_api.h -- the C host interface of a Ficcus program: its ports and its flags (effects slices E3a and E3b;
+/* fic_ports_api.h -- the C host interface of a Ficus program: its ports and its flags (effects slices E3a and E3b;
  * docs/E3-PORTS-DESIGN.md D1 to D4, D7, D8, D11, D12).
  *
  * This text is in two places: inside every generated program that has ports or flags (before runtime/fic_ports.h, which defines the

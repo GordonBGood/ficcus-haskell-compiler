@@ -1,0 +1,180 @@
+module Main exposing (main)
+
+-- Ficus only, large sizes (counted mode only: a no-RC build copies a vector on every update): a binary heap type whose attached
+-- members work on a Vector (push, pop, size, peek), heap sort of 60000 numbers, a ring buffer with push/get, a vector of 1,000,000
+-- Ints summed and updated in place, a vector of strings sorted by a Dict-free counting method. Expected output: expected.py.
+
+import Vector exposing (Vector)
+
+
+type Heap = Heap (Vector Int)
+    where
+        empty : Heap
+        empty = Heap Vector.empty
+
+        size : Heap -> Int
+        size (Heap v) = Vector.length v
+
+        peek : Heap -> Maybe Int
+        peek (Heap v) = Vector.get 0 v
+
+        push : Int -> Heap -> Heap
+        push x (Heap v) = Heap (siftUp (Vector.length v) (Vector.push x v))
+
+        pop : Heap -> Maybe ( Int, Heap )
+        pop (Heap v) =
+            let
+                n =
+                    Vector.length v
+            in
+            if n == 0 then
+                Nothing
+
+            else
+                let
+                    top =
+                        Vector.get 0 v |> Maybe.withDefault 0
+
+                    lastV =
+                        Vector.get (n - 1) v |> Maybe.withDefault 0
+
+                    shrunk =
+                        Vector.slice 0 (n - 1) v
+                in
+                if n == 1 then
+                    Just ( top, Heap shrunk )
+
+                else
+                    Just ( top, Heap (siftDown 0 (Vector.set 0 lastV shrunk)) )
+
+
+siftUp : Int -> Vector Int -> Vector Int
+siftUp i v =
+    if i == 0 then
+        v
+
+    else
+        let
+            parent =
+                (i - 1) // 2
+        in
+        case ( Vector.get parent v, Vector.get i v ) of
+            ( Just p, Just c ) ->
+                if c < p then
+                    siftUp parent (Vector.swap parent i v)
+
+                else
+                    v
+
+            _ ->
+                v
+
+
+siftDown : Int -> Vector Int -> Vector Int
+siftDown i v =
+    let
+        n =
+            Vector.length v
+
+        l =
+            2 * i + 1
+
+        r =
+            l + 1
+
+        val k =
+            Vector.get k v |> Maybe.withDefault 0
+
+        smallest =
+            if l < n && val l < val i then
+                if r < n && val r < val l then r else l
+
+            else if r < n && val r < val i then
+                r
+
+            else
+                i
+    in
+    if smallest == i then
+        v
+
+    else
+        siftDown smallest (Vector.swap i smallest v)
+
+
+heapSort : List Int -> List Int
+heapSort xs =
+    let
+        h =
+            List.foldl Heap.push Heap.empty xs
+
+        drain hp acc =
+            case Heap.pop hp of
+                Nothing ->
+                    List.reverse acc
+
+                Just ( x, rest ) ->
+                    drain rest (x :: acc)
+    in
+    drain h []
+
+
+type Ring = Ring Int Int (Vector Int)
+    where
+        make : Int -> Ring
+        make cap = Ring cap 0 (Vector.repeat cap 0)
+
+        add : Int -> Ring -> Ring
+        add x (Ring cap n v) = Ring cap (n + 1) (Vector.set (modBy cap n) x v)
+
+        toList : Ring -> List Int
+        toList (Ring cap n v) =
+            List.map (\i -> Vector.get (modBy cap i) v |> Maybe.withDefault -1) (List.range (max 0 (n - cap)) (n - 1))
+
+
+lcg : Int -> Int
+lcg x =
+    modBy 2147483647 (x * 48271)
+
+
+results : List ( String, String )
+results =
+    let
+        rands =
+            List.foldl (\_ ( x, acc ) -> ( lcg x, modBy 1000000 x :: acc )) ( 12345, [] ) (List.range 1 60000) |> Tuple.second
+
+        sorted =
+            heapSort rands
+
+        big =
+            Vector.initialize 1000000 (\i -> modBy 1000 (i * 7))
+
+        bumped =
+            List.foldl (\i v -> Vector.update i (\x -> x + 1) v) big (List.range 0 999999)
+
+        ring =
+            List.foldl Ring.add (Ring.make 5) (List.range 1 23)
+    in
+    [ ( "heap sorted ok", if sorted == List.sort rands then "yes" else "no" )
+    , ( "heap first/last", String.fromInt (List.head sorted |> Maybe.withDefault -1) ++ "/" ++ String.fromInt (List.reverse sorted |> List.head |> Maybe.withDefault -1) )
+    , ( "heap sizes", String.fromInt (Heap.size (List.foldl Heap.push Heap.empty rands)) ++ " " ++ String.fromInt (Heap.size Heap.empty) )
+    , ( "heap peek", String.fromInt (Heap.peek (List.foldl Heap.push Heap.empty [ 5, 3, 9 ]) |> Maybe.withDefault -1) )
+    , ( "big sum", String.fromInt (Vector.foldl (+) 0 big) )
+    , ( "bumped sum", String.fromInt (Vector.foldl (+) 0 bumped) )
+    , ( "big unchanged", String.fromInt (Vector.get 999999 big |> Maybe.withDefault -1) ++ " " ++ String.fromInt (Vector.get 999999 bumped |> Maybe.withDefault -1) )
+    , ( "ring", String.join "," (List.map String.fromInt (Ring.toList ring)) )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

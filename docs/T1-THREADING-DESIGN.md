@@ -16,7 +16,7 @@ Read: `docs/EFFECTS-DESIGN.md` (sections 1, 3.3, 4, D-fx-6, D-fx-10, D-fx-11), `
 
 What the run time is today [S]:
 
-- **One thread runs Ficcus.** `fic_run_main` starts one pthread with a 1 GB stack; counts are plain `rc++`/`--rc`
+- **One thread runs Ficus.** `fic_run_main` starts one pthread with a 1 GB stack; counts are plain `rc++`/`--rc`
   (`fic_dup`, `fic_drop`), the pool (`fic_free_list`, `fic_bump`, slabs), `fic_live_objects`, the `FIC_STATS` counters and the
   `FIC_DROP_ALL` registry are file statics.
 - **Header** `{rc:u32, tag:u16, nptr:u8, cls:u8}`, statics start at `FIC_IMMORTAL` = 2^30 and are counted like any object, so a
@@ -37,7 +37,7 @@ What the run time is today [S]:
   and pthread keys, but rejects `__thread` ("';' expected") and `_Thread_local` ("not implemented"). GCC with `-std=c99` accepts
   both. So thread-local storage is GCC/Clang only.
 
-Two facts shape everything below. (1) Ficcus values are immutable in the language; the only physical mutation is an in-place
+Two facts shape everything below. (1) Ficus values are immutable in the language; the only physical mutation is an in-place
 write when `rc == 1`. So the whole thread safety question is about **counts, the allocator and runtime globals**, never about data
 races on values. (2) The model's single-owner protocol (D-fx-3) needs exactly one writer of the model: `update` and the managers.
 
@@ -48,7 +48,7 @@ races on values. (2) The model's single-owner protocol (D-fx-3) needs exactly on
 ### T1-D1. Keep `Process` exactly Elm's; put the new API in a new `.fic` only module
 
 **Recommend:** `Process.spawn/sleep/kill` and `Process.Id` stay as they are (Elm's semantics, the E2 kernels, D-fx-6). The new API is
-a new module of the Ficcus core package, **`Concurrent`** (name open), importable only from `.fic` modules (dialect gating as for
+a new module of the Ficus core package, **`Concurrent`** (name open), importable only from `.fic` modules (dialect gating as for
 the other extensions), with its own types.
 
 Alternatives: (a) change `Process.Id` to `Id exit msg` as Elm's plan says: breaks every Elm package that names `Process.Id` (Time's
@@ -128,7 +128,7 @@ nothing a following `await` does not give.
 ### T1-D6. Relation to `Task`, `Cmd`, `Sub` and the model
 
 **Recommend:** every operation is a `Task` (as `Process`); the program uses `Task.perform`/`attempt` from `update`. `Concurrent` is an
-**effect module of the Ficcus core package** (as Time is in elm/time; effect modules are allowed only in core packages [S:
+**effect module of the Ficus core package** (as Time is in elm/time; effect modules are allowed only in core packages [S:
 `NoEffectsOutsideKernel`]) with `command = SendCmd` (`sendCmd`, so `update` can send without a dummy message) and `subscription =
 Listen` (`listen`). A message sent to a `Channel` goes to the manager as a self message (`sendToSelf`), and `onSelfMsg` calls
 `sendToApp (tagger v)` once per current `listen` of that channel, in Elm's order for subscriptions (as an incoming port: E2 step 7).
@@ -176,7 +176,7 @@ makes the loop's post queue the general cross-thread inbox of the app scheduler 
 E3's open item: a host-made "detached vector" is allowed **in MT mode only** (`malloc`ed, `cls 0`, atomic live counter, adopted by
 the loop with count 1); in ST mode the host's buffer is copied.
 
-**Fairness.** No preemption in any mode (Ficcus has no safe points in pure code). In T1c a process yields after a budget of task
+**Fairness.** No preemption in any mode (Ficus has no safe points in pure code). In T1c a process yields after a budget of task
 steps (scheduler loop iterations, not pure code), measured (section 7); T1a uses no budget, to keep E2's order.
 
 ---
@@ -202,7 +202,7 @@ sharing nodes) is copied as a tree unless a visited map preserves sharing, and b
 but a unique vector loses in-place update after one send. (c) **Move only, refuse shared**: the compiler cannot prove uniqueness
 statically; a runtime refusal is a crash for ordinary code.
 
-Which values may cross: all Ficcus values (they are immutable). Kernel values that belong to the app domain cross as handles whose
+Which values may cross: all Ficus values (they are immutable). Kernel values that belong to the app domain cross as handles whose
 operations are posted (T1-D7). A future mutable primitive (`Change` references, PROPOSED in the decisions file, line 68) cannot reach a send because
 `runChange`'s region type keeps references inside the pure computation; a future `Lazy` would need its force to be a CAS on a shared
 thunk: recorded as a constraint on those designs, not solved here.
@@ -320,11 +320,11 @@ aborts; moves update the owner. Gate: 0 TSan reports, 0 owner faults, live 0.
 
 | Slice | Content | Size [A] | Review |
 |---|---|---|---|
-| **T1a** | `Concurrent` API on the E2 scheduler (ST): user mailbox receive kind, `receiveWithin`, `await` waiters, exit values, channels through a core effect module, process registry, teardown; Spec/Kernel classes for the new types; `.fic` gating; JS kernel; differential tests C vs JS | C 500, Haskell 250, Ficcus 150, JS 200; 2 sessions | **Opus** (kill/await/teardown semantics, the channel order, identity) |
+| **T1a** | `Concurrent` API on the E2 scheduler (ST): user mailbox receive kind, `receiveWithin`, `await` waiters, exit values, channels through a core effect module, process registry, teardown; Spec/Kernel classes for the new types; `.fic` gating; JS kernel; differential tests C vs JS | C 500, Haskell 250, Ficus 150, JS 200; 2 sessions | **Opus** (kill/await/teardown semantics, the channel order, identity) |
 | **T1b** | worker pool for blocking bindings (D-fx-10 b), `poll` loop with eventfd, `fic_post` (= E3e) | C 600; 1 to 2 sessions | **Opus**, with E3e (queue, TSan) |
 | **T1m** | measurement only: MT count and pool variant of the runtime under a macro, no threads; the walk on synthetic messages | C 300, scripts; 1 session | none; report to the user |
 | **T1c** | MT runtime: counts (D9), per-thread pools with remote free (D11), per-worker schedulers with stealing, the crossing walk (D8), cross-thread kill/await, mode selection and the `FIC_UNIQUE` macro in CGen (D12), owner check, TSan gate | C 2,500, Haskell 200, tests 1,500; 4 to 6 sessions | **two Opus reviews**: counts and allocator; scheduler and shutdown |
-| **T1d** | `Parallel.map/foldl` over `Vector` and `List` (pure; chunked; input shared, results moved) on the pool | C 400, Ficcus 200, Haskell 100; 1 to 2 sessions | **Opus** (purity is invisible except `Debug.log` order and which crash is reported) |
+| **T1d** | `Parallel.map/foldl` over `Vector` and `List` (pure; chunked; input shared, results moved) on the pool | C 400, Ficus 200, Haskell 100; 1 to 2 sessions | **Opus** (purity is invisible except `Debug.log` order and which crash is reported) |
 | later | bounded mailboxes, links/monitors, the exclusive rule (D10) if not taken in T1c | | |
 
 Order: T1a now (after the E3a/E3b review, it touches the same runtime); T1b with E3e; T1m before T1c is started; T1c only after

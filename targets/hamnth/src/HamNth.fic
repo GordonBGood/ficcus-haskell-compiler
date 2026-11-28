@@ -1,5 +1,5 @@
 -- hamnth: the nth Hamming number (2^i 3^j 5^k, in increasing order, 1 first) by the linear three pointer merge.
--- compile with the Ficcus compiler: elm make src/HamNth.fic --output=hamnth.c   (n is the constant `target`)
+-- compile with the Ficus compiler: elm make src/HamNth.fic --output=hamnth.c   (n is the constant `target`)
 {-
    A number is kept as its exponent triple (i, j, k). Triples are ordered by the logarithm i*ln 2 + j*ln 3 + k*ln 5 in Float
    (the logarithms are literals, so Elm under JavaScript and C built with -ffp-contract=off compute the same bits). The queue of

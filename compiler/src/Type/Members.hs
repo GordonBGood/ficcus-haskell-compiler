@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
--- Ficcus (ATTACH, stage A2): the member obligations of the solver.
+-- Ficus (ATTACH, stage A2): the member obligations of the solver.
 --
 -- A use of a constrained function (AST.Constraints) leaves, for every `a has m : t` of its scheme, an
 -- obligation: the type the variable `a` becomes must have a member `m` of type `t`.  The obligations are
@@ -259,7 +259,7 @@ shapeErrors (Can.Module home _ _ decls unions _ _ _) =
         _ ->
           []
 
-    -- Ficcus (A4a): a derived member (its body is the stub of Canonicalize.Derive) has a synthesized signature, with
+    -- Ficus (A4a): a derived member (its body is the stub of Canonicalize.Derive) has a synthesized signature, with
     -- `a has m` for the parameters of the type (docs/A4-DERIVE-DESIGN.md, section 1); the A3 rule that a well known
     -- member has no constraints is for written members
     derived def =

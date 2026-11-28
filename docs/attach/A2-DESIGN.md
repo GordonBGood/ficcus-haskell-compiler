@@ -80,12 +80,12 @@ concrete type.
 what the solver reads out for the hidden-parameter form) by the wrapped scheme of section 1. That map is what `Elm.Interface` stores,
 so packages compile separately and a constrained function is exported and imported like any value.
 
-## 4. Specialization (`Ficcus.Mono.Spec`), the C path
+## 4. Specialization (`Ficus.Mono.Spec`), the C path
 
 The specializer already clones every definition per key. For a constrained definition:
 
 - every type variable that occurs in a constraint is keyed **by its exact type** (as `number` and `comparable` variables are); the
-  marks fixpoint (`Ficcus.Mono.Marks`) gets these variables as extra roots, so callers that pass their own variables are keyed
+  marks fixpoint (`Ficus.Mono.Marks`) gets these variables as extra roots, so callers that pass their own variables are keyed
   exactly too;
 - at a use, the scheme is the hidden-parameter type and the instance is padded with the instantiated member types
   (`Type.Dump.schemeOf`), so the existing matching, numbering and facts work unchanged;
@@ -125,10 +125,10 @@ suggesting `as`, AMBIGUOUS CONSTRAINT (a variable of a constraint that is not in
 ## 8. Files
 
 New: `AST.Constraints` (names, the hidden parameters, the wrapped scheme), `Parse.Constraints`, `Canonicalize.Constraints`,
-`Type.Members` (obligations, table, discharge), `Ficcus.Mono.Members` (specializer helpers). Changed, small: `Parse.Declaration`
+`Type.Members` (obligations, table, discharge), `Ficus.Mono.Members` (specializer helpers). Changed, small: `Parse.Declaration`
 (signature), `Reporting.Error.Syntax`, `Canonicalize.Module`, `Canonicalize.Expression` (top level use), `Reporting.Error.Canonicalize`,
 `Type.Solve` (state, `CForeign`, the three calls), `Reporting.Error.Type`, `Compile` (table, wrapped annotations), `Type.Dump`
-(`schemeOf`), `Ficcus.Mono.Spec`, `Ficcus.Mono.Marks`, `Generate` and `Reporting.Exit` (JS refusal).
+(`schemeOf`), `Ficus.Mono.Spec`, `Ficus.Mono.Marks`, `Generate` and `Reporting.Exit` (JS refusal).
 
 ## 9. What changed while implementing
 
@@ -140,7 +140,7 @@ New: `AST.Constraints` (names, the hidden parameters, the wrapped scheme), `Pars
   CONSTRAINTS ON A LOCAL DEFINITION (`where` on the signature of a `let` definition).
 - The JS refusal lives in `Nitpick.Constraints` (an import cycle kept it out of `AST.Constraints`); it checks every function of the
   object graph, used or not, as the `Debug` check of `--optimize` does.
-- The mark roots are passed to `Ficcus.Mono.Marks.computeWith` from `terminal/src/Make.hs` (two call sites).
+- The mark roots are passed to `Ficus.Mono.Marks.computeWith` from `terminal/src/Make.hs` (two call sites).
 - A member with constraints of its own (a `where` inside the `where` block of a type) works; it was not planned, it fell out.
 - A soundness gap found by a test and closed: `let y = get t in ...` where `t` becomes a known type only later in the enclosing
   definition. Elm generalizes `y` at the `let`; the obligation is discharged later and would then change a variable that is

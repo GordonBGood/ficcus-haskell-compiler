@@ -1,4 +1,4 @@
-/* hamvec.c -- what the Ficcus compiler should emit for HammingVec.elm (C99).
+/* hamvec.c -- what the Ficus compiler should emit for HammingVec.elm (C99).
  *
  *   gcc -std=c99 -pedantic -Wall -Wextra -O2 hamvec.c -o hamvec
  *

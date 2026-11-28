@@ -9,7 +9,7 @@ finished jobs, `nq/done/NAME.summary`, `nq/logs/NAME.log`, `nq/bin/NAME-elm` (bi
 
 - `build`: `cabal -j1 build exe:elm --ghc-options="+RTS -M6g -RTS"` in the worktree (GHC itself runs -j1, no `-j`
   in elm.cabal); writes only the ignored `dist-newstyle`; the binary is copied to `nq/bin` and used by later gate steps;
-- a step name of the worktree's `ficcus-tests/gates.sh` (`attach`, `types`, ... `summary`); needs `build` or `BIN`
+- a step name of the worktree's `ficus-tests/gates.sh` (`attach`, `types`, ... `summary`); needs `build` or `BIN`
   (a name in `bin/` or an absolute path). Consecutive gate steps run as one gates.sh run, generated from gates.sh
   with only those steps, its lock lines removed and W, R, B fixed;
 - `run:FILE`: `sh FILE` in the worktree; passes on exit 0.

@@ -3,7 +3,7 @@
 Written for: the user and the session that implements W7a/W7b. Branch `design/rule2` from `ficcus` e7b620c0. No source change, nothing built.
 Read: `docs/H16-STAGE2-DESIGN.md` (2.1 to 2.3, 3, 5), `H16-STAGE2-EXPERIMENTS.md` of `exp/stage2` (E3, E6), `H16-W7-ESTIMATE.md` of `exp/w7-estimate`
 (classification, versions A and B, risk, test shapes 1 to 8), `docs/W7-K/README.md` of `exp/w7-k` (hand conversion, findings 1 to 7), and the code cited below.
-`M.` = `compiler/src/Ficcus/Mono/`. A2 = P1 `JsonCombV`, 50 MB unless said otherwise.
+`M.` = `compiler/src/Ficus/Mono/`. A2 = P1 `JsonCombV`, 50 MB unless said otherwise.
 
 ## 0. State and targets
 
@@ -13,7 +13,7 @@ Read: `docs/H16-STAGE2-DESIGN.md` (2.1 to 2.3, 3, 5), `H16-STAGE2-EXPERIMENTS.md
 | parse allocations | 156.9 M | 119.5 M | 86.3 M | 48.1 M | <= 100 M |
 | dups (informational) | 196 M | | 163 M | 147 M (per-field fillers) | report only |
 
-k = 8.0 ns per removed allocation (W7-K, 7.7 to 8.3); the B range uses k = 3.9 (E3 floor) as its upper end. Scope: `M.Known` clones and their SCCs; `FICCUS_UNBOX_ALL` later.
+k = 8.0 ns per removed allocation (W7-K, 7.7 to 8.3); the B range uses k = 3.9 (E3 floor) as its upper end. Scope: `M.Known` clones and their SCCs; `FICUS_UNBOX_ALL` later.
 
 **Pipeline.** `terminal/src/Make.hs:232` today: `Rc.rcProgram (Twin.twinProgram (Inline.inlineProgram known))`, counted builds only. W7 inserts
 `Unbox.unboxProgram base` between Inline and Twin. `base` = 1 + the largest clone id of the program given to `Known.knownRun` (Known numbers its new clones from
@@ -91,11 +91,11 @@ Conditions:
   returned) only step (2) applies, slot by slot, where the classes agree;
 * a forwarded variable is used once on that path (it is moved), and on other paths it is dropped by liveness as before;
 * not when the branch is a `viewBranch` (the struct is still used in the branch): then the slot variables are views and moving one would be a second owner.
-  With the call-site form of section 3.1 the struct variable is never used in a branch, so `unpackable` holds; Unbox asserts it in `FICCUS_UNBOX_CHECK`.
+  With the call-site form of section 3.1 the struct variable is never used in a branch, so `unpackable` holds; Unbox asserts it in `FICUS_UNBOX_CHECK`.
 
 Soundness: a filler slot variable in branch k owns one count on the sentinel (the producer's dup). Moving it into the result instead of dropping it and dup'ing
 a fresh one leaves the sentinel's count unchanged on that path; RcCheck sees an ordinary move. In the non-k path the variable is dropped as before. The values are
-equal (the sentinel is one object). Switch `FICCUS_S2_NO_UNBOX_IDENT=1`. Gain: one pair per `Bad` that passes through an identity branch (`lambda@67:5` copies:
+equal (the sentinel is one object). Switch `FICUS_S2_NO_UNBOX_IDENT=1`. Gain: one pair per `Bad` that passes through an identity branch (`lambda@67:5` copies:
 71.6 K of 91.7 K calls of f242 at 1 MB, mostly `Bad`).
 
 ## 3. Boundary, SCC and entry rules, wrappers, tail calls
@@ -124,10 +124,10 @@ Rules:
 1. **SCC all or nothing (A):** the worker set is closed under the SCCs of the call graph (`Graph.stronglyConnComp` over `exprRefs`, as `Known.mkInfo`,
    Known.hs:149, on the clones after Inline): if one member is refused the SCC is refused. Reason: tail calls (3.3) and no boundary inside a cycle.
 2. **Pass-through closure:** a non-worker clone in the Known set whose leaves are only tail calls of workers and identity forwards (the `lambda@109:5`
-   forwarders) is a worker by the leaf rule; nothing extra is needed, but `FICCUS_UNBOX_STATS` lists every refused candidate that has a worker callee in tail
+   forwarders) is a worker by the leaf rule; nothing extra is needed, but `FICUS_UNBOX_STATS` lists every refused candidate that has a worker callee in tail
    position, so a broken chain is visible.
-3. **Boundary counter:** `FICCUS_UNBOX_STATS` reports per wrapper its static use count by kind (value, entry, non-Known caller, other). Dynamically, wrapper
-   allocations are ordinary `FICCUS_ALLOC_SITES` sites named after the wrapper; the W7a report lists the top 10.
+3. **Boundary counter:** `FICUS_UNBOX_STATS` reports per wrapper its static use count by kind (value, entry, non-Known caller, other). Dynamically, wrapper
+   allocations are ordinary `FICUS_ALLOC_SITES` sites named after the wrapper; the W7a report lists the top 10.
 4. **Refusal heuristic:** a candidate whose static uses are more than half wrapper uses is refused (its results would be re-boxed more often than matched).
    Not needed for soundness; a knob.
 
@@ -150,13 +150,13 @@ Three layers, from static to dynamic:
    uncounted one), slot variables bound by `MUnpack` must be consumed on every path (RcCheck.hs:150, 226). A missing drop of a dead filler slot is a "count
    left at the end of its scope" error. **No RcCheck change is needed** as long as no filler is skipped (1.3). `rccheck_faults.py` gets worker programs with three
    injected faults: a dead filler slot not dropped in one branch, a filler without `MOwn`, a forwarded filler used twice (2).
-2. **`FICCUS_UNBOX_CHECK=1` (compile time, structural, on in all tests):** each wrapper is a case on its worker with every tag matched; every call-site pattern
+2. **`FICUS_UNBOX_CHECK=1` (compile time, structural, on in all tests):** each wrapper is a case on its worker with every tag matched; every call-site pattern
    binds every slot with the slot's class; every reference filler is the tag-0 nullary constructor; branch k reads only constructor k's slots plus forwarded
    fillers (2); slot classes agree between producer leaves and the layout; `unpackable` holds at every rewritten site (counted: rewritten sites, `MUnpack`
    sites, sites that fell to `viewBranch`; the last must be 0).
 3. **Exit check (dynamic, `-DFIC_UNBOX_CHECK`):** emitted by the generator, only in programs where Unbox made a worker (a header change moves the text of all
    16 suite programs, E6(a)): at exit, when the `FIC_STATS` live count is 0, `fic_nul0`'s count must equal `FIC_IMMORTAL`; else print the delta and abort.
-   With live objects left at exit (globals holding `[]`, `Nothing`), compare the delta with the same program built with `FICCUS_S2_NO_UNBOX=1` on the same
+   With live objects left at exit (globals holding `[]`, `Nothing`), compare the delta with the same program built with `FICUS_S2_NO_UNBOX=1` on the same
    input: equal deltas required. W7-K used exactly this check (delta 0).
 
 **Fuzzing:** rcfuzz and v2fuzz compile with `-DFIC_STATS -DFIC_UNBOX_CHECK` in every unbox setting and fail on an abort; the delta comparison against the
@@ -189,12 +189,12 @@ Expected results (to be test shapes V1 to V5; "inplace/copied" = `FIC_STATS` cou
 Also: the vector reached as `s.src` through a bound `State` variable is an `MAccess`, not an `MLocal`, so the take needs the field bound by a pattern (Unbox's
 record-pattern rebuild in 1.2 gives a local only for slot leaves; a nested field accessed later stays an access, as today). Not a soundness issue, only a missed take.
 
-**Not exercised by W7-K** (finding 6: `src` is only read). Safety net: switch `FICCUS_S2_UNBOX_NOVEC=1` refuses workers whose layout has a reference leaf of
+**Not exercised by W7-K** (finding 6: `src` is only read). Safety net: switch `FICUS_S2_UNBOX_NOVEC=1` refuses workers whose layout has a reference leaf of
 type `Vector`/`Array`; a fuzz setting `novec`; if V1 to V5 differ from `nounbox` in any counter, W7a ships with `NOVEC` as the default and stops for a decision.
 
 ## 6. B before A
 
-* **Filter `FICCUS_S2_UNBOX_ACYCLIC=1`:** the call graph of 3.2 rule 1 (clones after Inline, edges = `exprRefs`, value references included). A candidate is
+* **Filter `FICUS_S2_UNBOX_ACYCLIC=1`:** the call graph of 3.2 rule 1 (clones after Inline, edges = `exprRefs`, value references included). A candidate is
   admitted in B when its SCC is trivial: a single clone, a self edge allowed (`loopHelp`, `wordHelp`: self tail loops are `continue`, non-tail self calls call
   `f_w`). This matches the estimate's split (acyclic 65 % of class (a), 70.6 M at 50 MB).
 * **What A adds:** the non-trivial SCCs: the 8 `lambda@67:5` copies of `value`/`jarray`/`jobject`, the two `sepByHelp` copies, two `lambda@468:5` (38.2 M).
@@ -209,12 +209,12 @@ type `Vector`/`Array`; a fuzz setting `novec`; if V1 to V5 differ from `nounbox`
 
 | slice | content | size | measurement |
 |---|---|---|---|
-| W7a (B) | new `M.Unbox`: candidates (`base`), leaf-class layout, fillers, worker, wrapper, call-site rewrite in all clones, tail in worker, filler forwarding (2), sweep, `FICCUS_UNBOX_CHECK`, `FICCUS_UNBOX_STATS`, exit check; Make.hs one line; switches `FICCUS_S2_NO_UNBOX`, `_UNBOX_ACYCLIC` (forced on), `_NO_UNBOX_IDENT`, `_UNBOX_NOVEC`; test known12 | ~300 lines | A2 1 MB and 50 MB; **checkpoint: stop and report if B is above 1.5 s or above 100 M allocations at 50 MB** |
+| W7a (B) | new `M.Unbox`: candidates (`base`), leaf-class layout, fillers, worker, wrapper, call-site rewrite in all clones, tail in worker, filler forwarding (2), sweep, `FICUS_UNBOX_CHECK`, `FICUS_UNBOX_STATS`, exit check; Make.hs one line; switches `FICUS_S2_NO_UNBOX`, `_UNBOX_ACYCLIC` (forced on), `_NO_UNBOX_IDENT`, `_UNBOX_NOVEC`; test known12 | ~300 lines | A2 1 MB and 50 MB; **checkpoint: stop and report if B is above 1.5 s or above 100 M allocations at 50 MB** |
 | W7b (A) | SCC all-or-nothing, cycle members, worker-to-worker sret tail calls, boundary report; test known13 (cycle) | ~150 to 300 lines | A2; expected 0.94 to 1.1 s, <= 60 M allocations; stop if above 1.6 s |
 | W7c (optional) | float `More ()` (a constructor with only constant fields) to a static immortal object (Known/Inline; CGen needs static objects of non-nullary constructors: not checked whether it has them) | ~100 to 150 lines | -7 M allocations, -28 to -60 ms |
 
-**Gates after each slice** (as design 5): `norc_identity.py` 16/16 without `--update`; pass-off identity (`FICCUS_S2_NO_UNBOX=1` = W6 text, `FICCUS_NO_STAGE2=1`
-= K5 pass-on, `FICCUS_NO_KNOWN=1` = A19) on the 16 programs and known1 to 11; `run_all.py --san`; `known_tests.py` in all settings under ASan and -O2;
+**Gates after each slice** (as design 5): `norc_identity.py` 16/16 without `--update`; pass-off identity (`FICUS_S2_NO_UNBOX=1` = W6 text, `FICUS_NO_STAGE2=1`
+= K5 pass-on, `FICUS_NO_KNOWN=1` = A19) on the 16 programs and known1 to 11; `run_all.py --san`; `known_tests.py` in all settings under ASan and -O2;
 rcfuzz and v2fuzz 200 seeds per setting; `rccheck_faults.py`; full `gates.sh` with `KEEP=1` after W7a and after W7b.
 `--no-rc` is identical by construction (Unbox is only in the `rcMode` branch, Make.hs:232).
 
@@ -238,7 +238,7 @@ where Known's counters are empty (it cannot, by the `base` rule), the condition 
 
 ## 8. Open questions (experiment first) and the biggest risk
 
-* **X1, acceptance of the hot clones.** Dump `FICCUS_UNBOX_STATS` on A2 before any timing: which of the 34 hot clones of the estimate are workers, which are
+* **X1, acceptance of the hot clones.** Dump `FICUS_UNBOX_STATS` on A2 before any timing: which of the 34 hot clones of the estimate are workers, which are
   refused and why (slot words, leaf rule, SCC). The A and B predictions assume every hop is a worker.
 * **X2, the `case`-site form at the Rc level.** That `case f_w(..) of {all slots}` with the struct unused in every branch really goes through `unpackable`
   (Rc.hs:555 needs `PVar`/`PWild` of exactly the field class; the `_` path of `rcCase`, Rc.hs:512-519, binds the call to a fresh owned `t`). Read, not run.
@@ -256,10 +256,10 @@ build. The largest soundness risk is section 5 (the owned vector leaf), argued s
 
 1. Slot layout by **leaf class** (b), counted fillers, instead of per field (design 2.1 changes).
 2. **No immortal skipping** in W7; revisit only if X4 shows more than about 10 M Bad filler pairs.
-3. Identity after unpack as **filler forwarding** in `M.Unbox` (2), with `FICCUS_S2_NO_UNBOX_IDENT`.
+3. Identity after unpack as **filler forwarding** in `M.Unbox` (2), with `FICUS_S2_NO_UNBOX_IDENT`.
 4. **SCC all or nothing** in A; B = trivial SCCs (self edge allowed).
 5. Known clones identified by **clone id >= `base`** (no Known change).
-6. No restriction on `Vector` leaves in B, with `FICCUS_S2_UNBOX_NOVEC` as the fallback and the V1 to V5 counters as the gate.
+6. No restriction on `Vector` leaves in B, with `FICUS_S2_UNBOX_NOVEC` as the fallback and the V1 to V5 counters as the gate.
 7. Exit check emitted by the generator only in programs with workers (not in `fic_rt.h`).
 
 ## 10. What I could not check
@@ -268,6 +268,6 @@ build. The largest soundness risk is section 5 (the owned vector leaf), argued s
 * Whether Inline creates clones (X5); whether CGen can emit a static immortal object of a constructor with fields (W7c).
 * That the call-site form reaches `MUnpack` and not `viewBranch` in all cases (X2); the sret tail call at -O2 beyond W7-K's one forwarder (X3).
 * The `Bad` counts per key (X4), so the filler-pair figure for (b) is a guess.
-* The ficcus-tools scripts (`rcfuzz.py`, `v2fuzz.py`, `libshape.py`, `rccheck_faults.py`) were not read; the new settings follow the pattern the design note
+* The ficus-tools scripts (`rcfuzz.py`, `v2fuzz.py`, `libshape.py`, `rccheck_faults.py`) were not read; the new settings follow the pattern the design note
   describes.
 * The text of decisions rev 169 (the opaque `free` block) was not read; I used the E6(a) proposal as its content.

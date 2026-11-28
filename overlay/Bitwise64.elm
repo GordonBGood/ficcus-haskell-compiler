@@ -3,12 +3,12 @@ module Bitwise64 exposing
     , shiftLeftBy, shiftRightBy, shiftRightZfBy
     )
 
-{-| Ficcus: the 64 bit counterpart of `Bitwise` (decision L6 reversed; docs/lib-issues/Bitwise64.md). Two's complement
+{-| Ficus: the 64 bit counterpart of `Bitwise` (decision L6 reversed; docs/lib-issues/Bitwise64.md). Two's complement
 on the full 64 bit `Int`, shift counts taken `& 63`, `shiftRightZfBy` reads the logical result back as a signed Int.
 
 The bodies below only give the types: the specializer replaces every call by the kernel function
 `elm/core:Bitwise64.<name>` (`fic_bw64_*` in runtime/fic_num.h). The module is added to the source directories of
-`.c` and `.mono` builds (Ficcus.Mono.Overlay), so `import Bitwise64` works there only.
+`.c` and `.mono` builds (Ficus.Mono.Overlay), so `import Bitwise64` works there only.
 -}
 
 import Basics exposing (Int)

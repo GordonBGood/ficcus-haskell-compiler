@@ -2,7 +2,7 @@
 
 Branch `feat/a3`, head `9c98adf5`, binary `bin/elmficA17`. A read only review: the code was read from `docs/attach/A3-NOTES.md`
 sections 3 and 5 (`Type/Unify.hs` `unifyFlexSuperStructure`, `Type/Members.hs` `policyOf` `shapeErrors` `relax` `defaulting`,
-`Compile.hs` `markCustomOperators` `checkShapes`, `Ficcus/Mono/Spec.hs` `wellKnownRef` `holdsMember`), and about 20 probe programs
+`Compile.hs` `markCustomOperators` `checkShapes`, `Ficus/Mono/Spec.hs` `wellKnownRef` `holdsMember`), and about 20 probe programs
 were compiled with `elmficA17` to C (gcc, `--no-rc`) and, where it mattered, to JS. Date: 2026-11-22.
 
 ## Verdict
@@ -63,7 +63,7 @@ mark the four Basics functions in their interface annotation); `Type.Constrain` 
 The `holdsMember` refusal (and any `report` that `wellKnownRef` issues) prints a raw line, then Elm's "I ran into something that
 bypassed the normal error reporting process ... ExitFailure 1 ... open a NEW issue at github.com/elm/compiler" box, then
 "Success! Compiled 3 modules." Repro: `pairEq x y = (x, 1) == (y, 1)` used at `Name`, or `{ n = Name "a" } == { n = Name "A" }`.
-The P6 path above shows that the `-- FICCUS: the program cannot be compiled to C yet` header exists. The `wellKnownRef` refusals should go
+The P6 path above shows that the `-- FICUS: the program cannot be compiled to C yet` header exists. The `wellKnownRef` refusals should go
 through it, not end in a crash box or report "Success".
 
 ### F4 (low): a let-bound function with a relaxed `/` is not generalized; a literal argument then takes the custom type
@@ -109,7 +109,7 @@ structural `==`.
 Not probed in depth: B2 AMBIGUOUS CONSTRAINT together with a bundle variable (only `a3-err-ambiguous-literal` exists). Also not probed:
 `a has add` in a `where` block combined with `+` in the body. By decision 1 this should be a mismatch with the "missing" note; it needs a case.
 
-## Missing test shapes (add to `ficcus-tests/attach`)
+## Missing test shapes (add to `ficus-tests/attach`)
 
 1. F1: `type W = W Name`, `==` (expected after the fix: refused).
 2. F2: imported `Lib.modBy` with a `mod` type in sight (expected: TYPE MISMATCH).

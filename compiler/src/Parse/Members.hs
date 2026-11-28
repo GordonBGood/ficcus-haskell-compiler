@@ -1,5 +1,5 @@
 {-# LANGUAGE ExtendedLiterals, MagicHash, OverloadedStrings #-}
--- Ficcus (ATTACH, stage A1): the `where` block after a custom type declaration, and the check that
+-- Ficus (ATTACH, stage A1): the `where` block after a custom type declaration, and the check that
 -- a type alias has none.
 --
 --     type Money = Money Int

@@ -1,4 +1,4 @@
--- Ficcus (ATTACH, stage A3): the well known members.
+-- Ficus (ATTACH, stage A3): the well known members.
 --
 -- A member of a custom type whose name is in the table below is used by the language itself: `add` by `+`,
 -- `compare` by `<`, `compare`, `Dict` keys and `List.sort`, and so on (docs/attach/A3-NOTES.md, section 1).  This

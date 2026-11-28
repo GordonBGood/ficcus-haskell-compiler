@@ -2,7 +2,7 @@
    shared and a unique Regex, an invalid pattern and a search without a match; the count of live objects is compared before and after
    each group of calls (a leak or a double free shows under ASan); the two resource limits (steps and stack) are reached with the hook
    of fic_re_exhausted. Built with -DFIC_RC -DFIC_RE_BUDGET=3000000ull -DFIC_RE_MAX_STACK=65536 (see test.sh). The correctness of the matcher
-   itself is tested against node's RegExp (ficcus-tests/regex). */
+   itself is tested against node's RegExp (ficus-tests/regex). */
 #include <stdio.h>
 #include "fic_rt.h"
 #include "fic_base.h"

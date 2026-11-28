@@ -1,0 +1,23 @@
+module Grow2 exposing (main)
+
+-- Growth through `==` (an equatable variable keyed by its exact type): eg calls eg2 at Maybe a, eg2 is eg.
+-- The Ficus specializer stops at 64 instances (expected/grow2.mono has the text).
+
+
+eg : a -> Bool
+eg x =
+    x == x || eg2 (Just x)
+
+
+eg2 : a -> Bool
+eg2 =
+    eg
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> if eg 1 then ( (), Cmd.none ) else ( (), Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

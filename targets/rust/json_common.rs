@@ -1,5 +1,5 @@
 // P1 JSON benchmark, Rust: what the three parsers share (generator, tree, checksum, escapes). Safe Rust, std only.
-// The generator is the one of ficcus-tools/gen_json.py (see there for the specification); the tree and the fold are the
+// The generator is the one of ficus-tools/gen_json.py (see there for the specification); the tree and the fold are the
 // ones of targets/p1/src/JsonTree.elm. Usage of every binary: json_X RECORDS STAGE   (STAGE 0: generate, 1: also take the
 // bytes, 2: also parse and print the checksum; 7500 records are about 1 MB, 375000 about 50 MB).
 

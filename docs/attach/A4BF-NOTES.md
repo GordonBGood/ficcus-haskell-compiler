@@ -1,7 +1,7 @@
 # A4bf: the A4b review's M1, M2, F1, F2, F3
 
 Branch `feat/a4bf` (worktree `ficcus-haskell-compiler-a4bf`), from `feat/a4b` 639eeb26 with `review/a4b` bb79ea88 merged (the
-report `docs/A4B-REVIEW.md` and the scratch cases `ficcus-tests/a4br/`). Binary `bin/elmficA4bf`. Not merged. Not in this session:
+report `docs/A4B-REVIEW.md` and the scratch cases `ficus-tests/a4br/`). Binary `bin/elmficA4bf`. Not merged. Not in this session:
 F4, F5, F6 and P1 (queued separately). None of them was entangled with these fixes (see section 4).
 
 ## 1. The fixes
@@ -37,7 +37,7 @@ and (b) refuses it), so it has no attach case. It was tested with a scratch buil
 
 ## 2. Cases
 
-`ficcus-tests/attach/a4bfgen.py` (standalone, like `a4bgen.py`, whose helpers it copies; it does not read `g71expect.py`, and
+`ficus-tests/attach/a4bfgen.py` (standalone, like `a4bgen.py`, whose helpers it copies; it does not read `g71expect.py`, and
 `g71expect.py` has no row these fixes change). 15 cases; attach is now 378. The two RUN cases have Elm twins on `bin/elm0193`
 (`a4bf-twins/`), never hand-written outputs.
 
@@ -54,7 +54,7 @@ and (b) refuses it), so it has no attach case. It was tested with a scratch buil
 | a4bf-err-hash-shape, -hash-shape-arity2 | the review's F2 reproducers (`T -> String`, `T -> Int -> Int`) | CANNOT DERIVE with the written type |
 | a4bf-err-beside-eq, -beside-eq-hash | the review's F3 reproducer (`Ci`), and `derive hash` alone | CANNOT DERIVE "its own `eq`" |
 
-The review's scratch cases (`ficcus-tests/a4br`, 52) on elmficA4bf: the fixed ones are refused as above; every other case gives the
+The review's scratch cases (`ficus-tests/a4br`, 52) on elmficA4bf: the fixed ones are refused as above; every other case gives the
 review's verdict unchanged (F4 `own-vector-member-fn`, F5 `phantom-wrapped`, F6 `value-at-comparable` still wrong rejects; P1
 `row-var-eq-show` and the NaN sort order `float-ties*` still differ; the rest ok, ASan 0 live). `row-var-derive-fn` and
 `-hash-fn` now get CANNOT DERIVE (M2) instead of TYPE MISMATCH / NO ATTACHED FUNCTION.
@@ -82,7 +82,7 @@ review's verdict unchanged (F4 `own-vector-member-fn`, F5 `phantom-wrapped`, F6 
 ## 5. Gates
 
 2026-11-27, once at the end, on `elmficA4bf` (83d77f94): `BIN=elmficA4bf KEEP=1 S=/home/gordon/claude-tmp/gates-a4bf
-ficcus-tests/gates.sh` (log /home/gordon/claude-tmp/gates-a4bf.log). All green:
+ficus-tests/gates.sh` (log /home/gordon/claude-tmp/gates-a4bf.log). All green:
 * runtime 0; attach 378/0 (with `--rc`, ASan+UBSan, 0 live); derive 56/0; sized-fuzz 40/0; stringdiff all agree;
 * types 267 PASS + 1 XFAIL; JS identity 28/0; examples 298 x3; fbip 0;
 * effects-e2, e1review, effects-e1, e1p all ok; e1pr all ok (2 target rows); e1p-identity all ok;
@@ -92,7 +92,7 @@ ficcus-tests/gates.sh` (log /home/gordon/claude-tmp/gates-a4bf.log). All green:
 
 ## 6. Proposed text for the shared files (for the user or the planning chat)
 
-* `docs/Ficcus-Design-Decisions.md`:
+* `docs/Ficus-Design-Decisions.md`:
   > **DONE (27 Nov) A4bf (`feat/a4bf`, `elmficA4bf`, not merged; docs/attach/A4BF-NOTES.md):** the A4b review's M1 (the deriver
   > refuses a group of types that refer to each other at growing arguments; the specializer stops after 200 nested derived types as a
   > backstop), M2 (derive over an extensible-record field: CANNOT DERIVE until P1), F1 (`a has compare/hash` at an open record: NO

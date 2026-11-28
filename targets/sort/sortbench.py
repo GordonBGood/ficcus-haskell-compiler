@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""H21 Ficcus level sort benchmark. One program per (pattern, operation), data from the LCG of bench_kernel.c, 1e6 Int; the wall time of the
+"""H21 Ficus level sort benchmark. One program per (pattern, operation), data from the LCG of bench_kernel.c, 1e6 Int; the wall time of the
 process is measured (median of 5) and the time of the program that only generates the list ("gen") is subtracted, so list generation is
 excluded. Operations: fromList (List to Vector), toList (Vector to List, fromList subtracted), vsort (Vector.sort of a unique vector, in place;
 fromList subtracted), lsort (List.sort), lsortWith (List.sortWith compare), lsortBy (List.sortBy (\\x -> x)).
@@ -72,7 +72,7 @@ main =
         , subscriptions = \\_ -> Sub.none
         }
 '''
-ELMJSON = open(os.path.join(HERE, "..", "..", "ficcus-tests", "ficc-exe-rc.sh")).read().split("<<'JSON'\n")[1].split("\nJSON")[0]
+ELMJSON = open(os.path.join(HERE, "..", "..", "ficus-tests", "fic-exe-rc.sh")).read().split("<<'JSON'\n")[1].split("\nJSON")[0]
 res = {}
 if a.patterns: PAT = {k: v for k, v in PAT.items() if k in a.patterns.split(",")}
 if a.ops: OPS = {k: v for k, v in OPS.items() if k in a.ops.split(",")}

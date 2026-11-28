@@ -1,8 +1,8 @@
-/* fic_conc.h -- Ficcus T1a: the kernels of the `Concurrent` module (overlay/Concurrent.elm; docs/attach/T1A-NOTES.md;
+/* fic_conc.h -- Ficus T1a: the kernels of the `Concurrent` module (overlay/Concurrent.elm; docs/attach/T1A-NOTES.md;
  * docs/T1-THREADING-DESIGN.md T1-D2 to T1-D6, T1-D13, T1-D14) on the E2 scheduler (runtime/fic_sched.h), one thread, green processes.
  * The JavaScript twin is runtime/fic_conc.js (same rules; the differential reference).
  * Emitted after fic_sched.h only by programs that reach a kernel of Concurrent; such a program gets fic_sched.h with three checked
- * text patches (Ficcus.Mono.Concurrent.patchSched): the run queue's pick is fic_conc_pick, the process being stepped is kept in
+ * text patches (Ficus.Mono.Concurrent.patchSched): the run queue's pick is fic_conc_pick, the process being stepped is kept in
  * fic_conc_cur_p, and fic_platform_teardown starts with fic_conc_teardown. Every other program gets fic_sched.h unchanged.
  *
  * Objects. A Concurrent process is a record (fic_cproc) beside its E2 process (fic_proc): the handles Pid, Address and Mailbox are all

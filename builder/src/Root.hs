@@ -50,12 +50,15 @@ module Root
 
 import qualified System.Directory as Dir
 import qualified System.Environment as Env
+import qualified Data.IORef as IORef
+import qualified System.IO as IO
+import qualified System.IO.Unsafe as Unsafe
 import qualified System.FileLock as Lock
 import qualified System.FilePath as FP
 import System.FilePath ((</>), (<.>))
 
 import qualified File
-import qualified Ficcus.Flags as Flags
+import qualified Ficus.Flags as Flags
 
 import qualified AST.Prim.Module as Module
 import qualified Elm.Package as Pkg
@@ -102,7 +105,7 @@ newtype Stuff = Stuff FilePath
 
 getStuff :: Root -> IO Stuff
 getStuff (Root root) =
-  do  suffix <- Flags.getStuffSuffix   -- Ficcus (G43)
+  do  suffix <- Flags.getStuffSuffix   -- Ficus (G43)
       let dir = root </> "elm-stuff" </> (V.toChars V.compiler ++ suffix)
       Dir.createDirectoryIfMissing True dir
       return (Stuff dir)
@@ -139,12 +142,12 @@ elmi (Stuff stuff) name = stuff </> Module.toDashPath name <.> "elmi"
 elmo (Stuff stuff) name = stuff </> Module.toDashPath name <.> "elmo"
 
 
--- Ficcus: the type dump of one module (`--output=x.types`)
+-- Ficus: the type dump of one module (`--output=x.types`)
 typesFile :: Stuff -> Module.Name -> FilePath
 typesFile (Stuff stuff) name = stuff </> Module.toDashPath name <.> "types"
 
 
--- Ficcus: the type dumps of package modules (typed mode recompiles packages)
+-- Ficus: the type dumps of package modules (typed mode recompiles packages)
 packageTypesDir :: Stuff -> FilePath
 packageTypesDir (Stuff stuff) = stuff </> "typed"
 
@@ -284,8 +287,29 @@ newtype ElmHome =
 
 getElmHome :: IO ElmHome
 getElmHome =
-  do  maybeCustomHome <- Env.lookupEnv "ELM_HOME"
-      case maybeCustomHome of
-        Just customHome -> return $ ElmHome customHome
-        Nothing -> ElmHome <$> Dir.getAppUserDataDirectory "elm"
+  do  ficusHome <- Env.lookupEnv "FICUS_HOME"
+      elmHome <- Env.lookupEnv "ELM_HOME"
+      case (ficusHome, elmHome) of
+        (Just customHome, _) -> return $ ElmHome customHome
+        (Nothing, Just customHome) ->
+          do  warnElmHome
+              return $ ElmHome customHome
+        (Nothing, Nothing) -> ElmHome <$> Dir.getAppUserDataDirectory "elm"
+
+
+-- R1: ELM_HOME is the deprecated fallback of FICUS_HOME. The warning goes to an interactive stderr only, once per
+-- process, so that captured output (the tests, differential runs against Elm) stays byte for byte as before.
+warnElmHome :: IO ()
+warnElmHome =
+  do  first <- IORef.atomicModifyIORef' elmHomeWarned (\w -> (True, not w))
+      tty <- IO.hIsTerminalDevice IO.stderr
+      if first && tty
+        then IO.hPutStrLn IO.stderr "warning: ELM_HOME is deprecated, set FICUS_HOME instead (ELM_HOME is used because FICUS_HOME is not set)"
+        else return ()
+
+
+{-# NOINLINE elmHomeWarned #-}
+elmHomeWarned :: IORef.IORef Bool
+elmHomeWarned =
+  Unsafe.unsafePerformIO (IORef.newIORef False)
 

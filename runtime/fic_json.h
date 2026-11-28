@@ -14,7 +14,7 @@
    (fic_word, a struct boxed, as in a closure); a class code says what a word holds: 'p' a reference, 'i' Int, 'd' Float, 'c' Char,
    'e' an enumeration, Bool or unit. The primitive decoders are static objects.
 
-   Ownership (the signatures are in Ficcus.Mono.Kernel): the functions that build a decoder CONSUME the decoders, closures and
+   Ownership (the signatures are in Ficus.Mono.Kernel): the functions that build a decoder CONSUME the decoders, closures and
    values they store; fic_jd_run BORROWS the decoder and the value and gives an owned result or an owned `Error`; Json.Encode
    functions give owned values. Without -DFIC_RC nothing is counted or freed (FIC_RC_DUP, FIC_RC_DROP). */
 

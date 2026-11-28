@@ -20,7 +20,7 @@ module Type.Recorder
   where
 
 
--- Ficcus milestone 2: the type recorder.
+-- Ficus milestone 2: the type recorder.
 --
 -- In typed mode the constraint generator gives every expression and pattern
 -- node (except the split Let/LetRec/LetDestruct nodes, whose type is the type

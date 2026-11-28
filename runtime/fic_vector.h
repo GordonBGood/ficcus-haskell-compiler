@@ -11,12 +11,12 @@
    and copies the whole vector otherwise; `push` on a unique vector without room moves into one of twice the capacity (amortized
    constant time). Without counts every update copies (the oracle build).
 
-   The generated code has the fast paths INLINE (Ficcus.Mono.CGen, `vectorCall`): a read is `FIC_VECTOR_AT(v, T, i)`, and the checked
+   The generated code has the fast paths INLINE (Ficus.Mono.CGen, `vectorCall`): a read is `FIC_VECTOR_AT(v, T, i)`, and the checked
    update is `if (FIC_VECTOR_UNIQUE_AT(v, i)) <write> else v = fic_vector_set(...)`. The functions below are the slow paths; each
    repeats every test, so it is correct for any caller. The two planned elisions of the count test (docs/STAGE4-S6.md section 2) only
    replace FIC_VECTOR_UNIQUE_AT by FIC_VECTOR_IN_RANGE(FIC_CHECK_UNIQUE(v), i) in the generated code: nothing here changes.
 
-   Ownership (the signatures are in Ficcus.Mono.Kernel): `set`, `swap`, `push` consume their vector, `set` and `push` also the element
+   Ownership (the signatures are in Ficus.Mono.Kernel): `set`, `swap`, `push` consume their vector, `set` and `push` also the element
    they store (passed by address; the references in it are moved); `append` consumes its first vector and borrows the second; `slice`
    consumes its vector (in place when it is unique); a read gives a borrowed element (the generated code adds the counts), a take moves the element out of a unique vector.
 

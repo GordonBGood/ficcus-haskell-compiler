@@ -1,6 +1,6 @@
 #!/bin/sh
 # Night queue runner.  nq/run.sh [--until HH:MM] [--once]   (see docs/NQ.md)
-# Runs pending jobs in name order, one at a time, under the gate lock of ficcus-tests/gates.sh. Never pushes; never
+# Runs pending jobs in name order, one at a time, under the gate lock of ficus-tests/gates.sh. Never pushes; never
 # writes the worktree's tracked files (a build step writes only its ignored dist-newstyle).
 set -u
 NQ=${NQ_DIR:-$(cd "$(dirname "$0")" && pwd)}
@@ -28,7 +28,7 @@ gates_subset() {
     /^step [a-z0-9-]+/ { n = $2; sub(/;.*/, "", n); cur = n; if (index(want, " " n " ")) print; if (n != "summary") cur = ""; next }
     /^echo "=== DONE/ { cur = "" }
     cur == "summary" && !index(want, " summary ") { next }
-    { print }' "$WORKTREE/ficcus-tests/gates.sh"
+    { print }' "$(g=$WORKTREE/ficus-tests/gates.sh; [ -f "$g" ] || g=$WORKTREE/ficcus-tests/gates.sh; echo "$g")"   # R1: or a worktree from before the rename
 }
 
 # per-step verdicts of one gates run: the log lines from $1 on, the steps $2; prints "name status seconds" lines

@@ -1,0 +1,6 @@
+{
+ "desc": "the package function that uses a private member works from the application",
+ "deps": [
+  "ficus/vault@1.0.0"
+ ]
+}

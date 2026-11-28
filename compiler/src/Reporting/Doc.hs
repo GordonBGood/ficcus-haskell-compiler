@@ -76,7 +76,7 @@ import qualified Json.String as Json
 
 
 fromChars   :: String        -> P.Doc; fromChars     = P.text
-fromName    :: N.Name        -> P.Doc; fromName    n = P.text (Members.displayName n)   -- Ficcus (ATTACH A1): a member `Money$$add` is shown as `Money.add`
+fromName    :: N.Name        -> P.Doc; fromName    n = P.text (Members.displayName n)   -- Ficus (ATTACH A1): a member `Money$$add` is shown as `Money.add`
 fromType    :: T.Name        -> P.Doc; fromType    t = P.text (T.nameToChars t)
 fromVar     :: T.Var         -> P.Doc; fromVar     v = P.text (T.varToChars v)
 fromModule  :: Module.Name   -> P.Doc; fromModule  h = P.text (Module.toChars h)

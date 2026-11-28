@@ -58,9 +58,9 @@ import qualified Elm.ModuleName as ModuleName
 import qualified Elm.Outline as Outline
 import qualified Elm.Package as Pkg
 import qualified Elm.Version as V
-import qualified Ficcus.CorePackages as CorePackages
-import qualified Ficcus.Flags as Flags
-import qualified Ficcus.TypesFile as TypesFile
+import qualified Ficus.CorePackages as CorePackages
+import qualified Ficus.Flags as Flags
+import qualified Ficus.TypesFile as TypesFile
 import qualified File
 import qualified Http
 import qualified Json.Decode as JD
@@ -178,7 +178,7 @@ verifyInstall writer root stuff (Solver.Env cache manager connection registry) o
 load :: File.Writer R.PROJECT -> Reporting.Style -> R.Root -> R.Stuff -> IO (Either Exit.Details Details)
 load writer style root stuff =
   do  newTime <- File.getTime (R.elm_json root)
-      -- Ficcus: typed output (`--output=x.types`) recompiles packages from
+      -- Ficus: typed output (`--output=x.types`) recompiles packages from
       -- source, so the cached details are not used and the old dumps go.
       typedOutput <- Flags.getTypedOutput
       maybeDetails <-
@@ -274,7 +274,7 @@ verifyApp writer env time outline@(Outline.AppOutline elmVersion srcDirs direct 
   then
     do  stated <- checkAppDeps outline
         actual <- verifyConstraints env (Map.map Con.exactly stated)
-        -- Ficcus (L42): the overlays of elm/json, elm/bytes, elm/parser, elm/random, elm/regex and elm/time (E2) (Ficcus.Mono.Overlay) import the
+        -- Ficus (L42): the overlays of elm/json, elm/bytes, elm/parser, elm/random, elm/regex and elm/time (E2) (Ficus.Mono.Overlay) import the
         -- package, which an application that reaches it only through another package lists as indirect: for a build to C (or
         -- `.mono`) these six count as direct here, so that their interfaces are public. Build.checkModule lets only the overlay
         -- modules import them (Flags.getOverlayOnlyPkgs): for the program Elm's rule is unchanged.
@@ -476,14 +476,14 @@ build writer key cache typed depsMVar pkg (Solver.Details vsn _) f fs =
                       return $ Left $ Nothing
 
                 Right directArtifacts ->
-                  do  -- Ficcus (G43): in a build to C a core package replaces the Elm package of the same name (version inside its range)
+                  do  -- Ficus (G43): in a build to C a core package replaces the Elm package of the same name (version inside its range)
                       useCore <- Flags.getCorePackages
                       keep <- Flags.getKeepModules
                       src <-
                         case (typed, CorePackages.substitute pkg vsn) of
                           (Just st, Just core) | useCore && keep ->
                             do  dir <- CorePackages.writeSource (R.packageTypesDir st) pkg core
-                                hPutStrLn stderr ("Ficcus: " ++ Pkg.toChars pkg ++ " " ++ V.toChars vsn ++ " is replaced by the core package")
+                                hPutStrLn stderr ("Ficus: " ++ Pkg.toChars pkg ++ " " ++ V.toChars vsn ++ " is replaced by the core package")
                                 return dir
                           _ -> return (R.package cache pkg vsn </> "src")
                       let foreignDeps = gatherForeignInterfaces directArtifacts
@@ -604,7 +604,7 @@ type StatusDict =
 
 data Status
   = SLocal DocsStatus (Map.Map Module.Name ()) Src.Module
-  | SOverlay DocsStatus (Map.Map Module.Name ()) Src.Module      -- a module of the Ficcus overlay, compiled as `author/project` (FIX2)
+  | SOverlay DocsStatus (Map.Map Module.Name ()) Src.Module      -- a module of the Ficus overlay, compiled as `author/project` (FIX2)
   | SForeign I.Interface
   | SKernelLocal [Kernel.Chunk]
   | SKernelForeign
@@ -634,10 +634,10 @@ crawlModule foreignDeps mvar pkg src docsStatus name () =
             crawlOverlay foreignDeps mvar pkg src docsStatus name
 
 
--- Ficcus (FIX2): a package of a build to C may import a module that Ficcus adds to the core library (the overlay directory: Vector).
+-- Ficus (FIX2): a package of a build to C may import a module that Ficus adds to the core library (the overlay directory: Vector).
 -- It is searched for only when the package has no module of that name and no dependency exposes one (the yield rule of Build.crawlModule
 -- holds here too). The module is compiled as part of the package but under the name of the application's dummy package, so that its
--- types and definitions are those of the module `Vector` that the program itself imports (the ids of Ficcus.Mono.Overlay are
+-- types and definitions are those of the module `Vector` that the program itself imports (the ids of Ficus.Mono.Overlay are
 -- `author/project:Vector.*`): the types of the package and of the program agree. A build to JavaScript has no overlay directory.
 crawlOverlay :: Map.Map Module.Name ForeignInterface -> MVar StatusDict -> Pkg.Name -> FilePath -> DocsStatus -> Module.Name -> IO (Maybe Status)
 crawlOverlay foreignDeps mvar pkg src docsStatus name =
@@ -770,7 +770,7 @@ compile typed pkg mvar name status =
       return (Just RKernelForeign)
 
 
--- Ficcus: the interface of a module is evaluated in full by the thread that compiled the module, before the threads
+-- Ficus: the interface of a module is evaluated in full by the thread that compiled the module, before the threads
 -- of the modules that import it read it; several threads forcing one lazily built interface at once can deadlock
 -- ("thread blocked indefinitely in an MVar operation": two of them block on thunks the other one has claimed)
 forceInterface :: I.Interface -> IO I.Interface

@@ -23,17 +23,17 @@ inside its owner; that only matters for Inline's rule U, not for Known.
 
 | | parse (stage 2 - stage 1) | allocations | closures | dup / drop |
 |---|---|---|---|---|
-| pass off (FICCUS_NO_KNOWN=1) | 163.2 ms | 19,046,020 | 3,516,330 | 20,140,285 / 15,255,442 |
+| pass off (FICUS_NO_KNOWN=1) | 163.2 ms | 19,046,020 | 3,516,330 | 20,140,285 / 15,255,442 |
 | pass on (rule V only) | 173.5 ms (noise) | 19,046,020 | 3,516,330 | 20,140,282 / 15,255,439 |
 
-Counters (FICCUS_KNOWN_STATS): aliases 3, aliases removed 3, value uses replaced 6, direct calls 0, new functions 0 (the copy kit is not used yet;
-with FICCUS_KNOWN_COPYTEST=1 it copied 32 families and refused 20 on shape, the scope check passed on all copies). Rule V alone does not move A2, as expected:
+Counters (FICUS_KNOWN_STATS): aliases 3, aliases removed 3, value uses replaced 6, direct calls 0, new functions 0 (the copy kit is not used yet;
+with FICUS_KNOWN_COPYTEST=1 it copied 32 families and refused 20 on shape, the scope check passed on all copies). Rule V alone does not move A2, as expected:
 the combinators receive `item` & co. as arguments, so no call head is an alias. Output equals the expected checksum in both modes.
 
 ## W2 (binary elmficK3, commit 2daf14c9 + tests): copy kit fix, expansion, rules C and F
 
 Copy kit: renaming is scope aware (a name maps to "renamed" or "replaced by an atom" per scope; a family whose root captures a name that is also a
-binder of the family is refused as `copy-refused-capture-clash`, 0 times on A2). FICCUS_KNOWN_COPYTEST on A2: **52 of 52 families copied**, 0 refused,
+binder of the family is refused as `copy-refused-capture-clash`, 0 times on A2). FICUS_KNOWN_COPYTEST on A2: **52 of 52 families copied**, 0 refused,
 scope check passes (W1's "32 copied, 20 refused" were the same 52). Expansion: builders (a function whose body is a closure lifted out of it, or a call
 of a builder), non-recursive, when an argument is a known function or all are static; non-atomic arguments are let-bound in order; known functions
 with captures only where the body calls them. Rules C and F, rounds (2 on A2), sweep. A2 counters: 103 expansions, 9 floated, 5 memo hits, 4 const calls,

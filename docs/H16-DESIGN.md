@@ -1,7 +1,7 @@
 # H16 design: known function specialization with inlining (stage 1), outline of stage 2
 
 Written for: the user and the Sonnet sessions that will implement it. Branch `design/h16-survey`. Read `docs/H16-SURVEY.md` first; line
-numbers below are those of the survey (branch `ficcus` at 2e5f3b16). `M.` = `compiler/src/Ficcus/Mono/`. Benchmark facts are from
+numbers below are those of the survey (branch `ficcus` at 2e5f3b16). `M.` = `compiler/src/Ficus/Mono/`. Benchmark facts are from
 `docs/H16A.md` on branch `bench/h16a` (A2 = `targets/p1/src/JsonCombV.elm`, 50 MB parse 7,895 ms, 832 M allocations, 170 M closures; hand S1
 1,951 ms, 158 M allocations, 1.9 M closures). Target: A2 at 50 MB <= 2.6 s with the pass on, without `oneOf` unrolling.
 
@@ -25,10 +25,10 @@ Chosen: **(c)**. Inline changes only in one eligibility detail (1.5); Spec, Free
 direct call whenever the head is `MGlobal c` of a Function clone with matching arity (CGen.hs:557) and prepends the captured variables of a lifted
 callee by name (`caps ++ vals`); so the pass only has to put `MGlobal` heads where today there are `MLocal` heads, and keep the names right.
 
-Switches (the project's pattern, survey 6): `FICCUS_NO_KNOWN=1` turns the pass off (the program is returned unchanged, so the RC text equals
-today's byte for byte); `FICCUS_KNOWN_STATS=1` prints counters (expansions, specializations, calls made direct, aliases, floated constants,
-refusals by reason, nodes added); `FICCUS_KNOWN_CHECK=1` runs the scope checker of 1.2 and fails the compile on a violation;
-`FICCUS_KNOWN_BUDGET=<n>` overrides the program budget (experiments). The pass is called only inside the `rcMode` branch, so `--no-rc` output
+Switches (the project's pattern, survey 6): `FICUS_NO_KNOWN=1` turns the pass off (the program is returned unchanged, so the RC text equals
+today's byte for byte); `FICUS_KNOWN_STATS=1` prints counters (expansions, specializations, calls made direct, aliases, floated constants,
+refusals by reason, nodes added); `FICUS_KNOWN_CHECK=1` runs the scope checker of 1.2 and fails the compile on a violation;
+`FICUS_KNOWN_BUDGET=<n>` overrides the program budget (experiments). The pass is called only inside the `rcMode` branch, so `--no-rc` output
 cannot change (checked by `norc_identity.py`, no `--update`).
 
 ### 1.2 Captured variables: keep "capture by name", copy families, never compute captures by hand
@@ -49,7 +49,7 @@ nothing checks that a lifted clone is referenced only from its owner. So the rul
   `mdCapsOwned = False`, `mdInit = Nothing`, `mdNeeds = []`, a fresh `CloneId` (`1 + maximum`, as Twin).
 * A substitution maps a name to an **atom** (`MLocal`, `MLit`, `MGlobal` of a Value) or to a **known function** (below). Because every name that
   a copy captures is either substituted away or renamed to a name bound in the new scope, invariant S holds by construction; the checker of
-  `FICCUS_KNOWN_CHECK` verifies it (for every reference to a lifted clone: `captures l` is a subset of the names bound there).
+  `FICUS_KNOWN_CHECK` verifies it (for every reference to a lifted clone: `captures l` is a subset of the names bound there).
 
 A **known function value** is `Known { kCode :: CloneId, kCaps :: [MExpr] }`: the code (a top level Function clone with arity >= 1, or a lifted
 clone) and, positionally for `captures kCode`, the atoms that hold the captured values in the current scope. Materialising it at a use:
@@ -170,7 +170,7 @@ Steps, in the order the pass does them:
 7. **Round 2** for clones that refer to one that gained a fact in round 1 (here none; in JsonCombV the thunk of `value`, whose `jarray ()` becomes
    a constant closure (rule C) after `jarray` is rewritten in the same SCC).
 8. **Sweep**: remove Functions and alias Values not reachable from `mpMain` (c13, c9's original lambda, c11, c5, ...), then **check**: with
-   `FICCUS_KNOWN_CHECK=1` verify invariant S and that every Value refers eagerly only to Values before it in `mpClones`.
+   `FICUS_KNOWN_CHECK=1` verify invariant S and that every Value refers eagerly only to Values before it in `mpClones`.
 
 Partial and over application. A known function `k` whose code has arity `n` called with `m` arguments: `m == n` direct; `m > n`
 (`loopHelp`'s `f st s` with `f = \st -> ...`) is split to `MCall (MCall (MGlobal k) first-n) rest`, and the inner call is treated again (it may be
@@ -204,7 +204,7 @@ data St = St
   , sPerOrig  :: Map.Map CloneId Int                  -- budget used per origin
   , sAdded    :: Int                                  -- nodes added (program budget)
   , sStack    :: [CloneId]                            -- builders being expanded (rule 3 of 1.4)
-  , sStats    :: Stats                                -- counters for FICCUS_KNOWN_STATS, refusals by reason
+  , sStats    :: Stats                                -- counters for FICUS_KNOWN_STATS, refusals by reason
   }
 type K = State St
 
@@ -226,12 +226,12 @@ Functions: `knownProgram :: MProgram -> MProgram` (switch, rounds, sweep, check,
 | module | change |
 |---|---|
 | `M.Known` (new) | the pass above |
-| `terminal/src/Make.hs:208` | `Inline.inlineProgram program` -> `Inline.inlineProgram (Known.knownProgram program)`, inside the `rcMode` branch only; import. `FICCUS_KNOWN_STATS` printing next to the existing debug aids (Make.hs:~212) |
-| the compiler's `.cabal` file | add `Ficcus.Mono.Known` to the module list |
-| `M.Inline` | export `size` (:136) and `atom` (:183) for reuse; eligibility in `table` (:95-99): a reference to a **capture-free** lifted clone no longer disqualifies a body (it needs no scope), so the small specialized copies (`symbol 44`'s lambda, `succeed`'s) can be inlined and reached by rules A/B in stage 2. Behind the same `FICCUS_NO_KNOWN` switch, so with the pass off Inline is byte-identical. `canCallDirect` (:260) unchanged |
+| `terminal/src/Make.hs:208` | `Inline.inlineProgram program` -> `Inline.inlineProgram (Known.knownProgram program)`, inside the `rcMode` branch only; import. `FICUS_KNOWN_STATS` printing next to the existing debug aids (Make.hs:~212) |
+| the compiler's `.cabal` file | add `Ficus.Mono.Known` to the module list |
+| `M.Inline` | export `size` (:136) and `atom` (:183) for reuse; eligibility in `table` (:95-99): a reference to a **capture-free** lifted clone no longer disqualifies a body (it needs no scope), so the small specialized copies (`symbol 44`'s lambda, `succeed`'s) can be inlined and reached by rules A/B in stage 2. Behind the same `FICUS_NO_KNOWN` switch, so with the pass off Inline is byte-identical. `canCallDirect` (:260) unchanged |
 | `M.Free`, `M.Twin`, `M.Borrow`, `M.Rc`, `M.RcCheck`, `M.CGen`, `M.Spec`, `M.Ir` | unchanged. CGen makes the direct calls because the heads are now `MGlobal` with matching arity (CGen.hs:557); copies are ordinary lifted clones for Free/Twin/Borrow |
-| `ficcus-tests/rcfuzz.py:27-33` | a setting `noknown` (`FICCUS_NO_KNOWN=1`) |
-| `ficcus-tests/gates.sh` | one variant row: examples and suite with `FICCUS_NO_KNOWN=1` |
+| `ficus-tests/rcfuzz.py:27-33` | a setting `noknown` (`FICUS_NO_KNOWN=1`) |
+| `ficus-tests/gates.sh` | one variant row: examples and suite with `FICUS_NO_KNOWN=1` |
 | workspace `docs/FLAGS.md` section 4 | the four environment variables (proposed text for the user, not edited by the implementing session if it is a shared file) |
 
 ### 2.4 What stays out of the no-RC path
@@ -242,7 +242,7 @@ with `--no-rc`. `v2fuzz.py` (no-RC against RC under ASan) therefore compares the
 
 ## 3. Test plan
 
-### 3.1 New test programs (`ficcus-tests/known/`, each with an Elm 0.19.3 golden output; vectors through `ficcus-tests/vecshim` where needed)
+### 3.1 New test programs (`ficus-tests/known/`, each with an Elm 0.19.3 golden output; vectors through `ficus-tests/vecshim` where needed)
 
 | name | covers |
 |---|---|
@@ -251,26 +251,26 @@ with `--no-rc`. `v2fuzz.py` (no-RC against RC under ASan) therefore compares the
 | K3 `Caps.elm` | knowns with captures: `succeed n` with a local `n`, `map2 f` partial application, a capturing known passed into a recursive function (extra parameters), the same known used in value position (no extra allocation: check `FIC_STATS`) |
 | K4 `Cycle.elm` | `value = lazy (\_ -> oneOf [ .. value .. ])` in the cyclic form without the `()` workaround, mutual recursion through closures, init order of floated constants and aliases |
 | K5 `Grow.elm` | termination stressors: `f p = \s -> f (map g p) s`, a builder that returns a builder, polymorphic combinators used at three types, `Debug.log` in combinator arguments (order of output equals Elm) |
-| K6 `Big.elm` | 500 combinator uses (generated): the program budget is hit, output still correct, `FICCUS_KNOWN_STATS` shows refusals, C size within 2 x of pass off |
+| K6 `Big.elm` | 500 combinator uses (generated): the program budget is hit, output still correct, `FICUS_KNOWN_STATS` shows refusals, C size within 2 x of pass off |
 | K7 `Arity.elm` | under and over application of knowns, a known function stored in a record and in a list (not specialized, still correct) |
 
-Each runs with the pass on, off (`FICCUS_NO_KNOWN=1`), with `FICCUS_KNOWN_CHECK=1`, and under `FICTEST_RC=1 FICTEST_SAN=1`.
+Each runs with the pass on, off (`FICUS_NO_KNOWN=1`), with `FICUS_KNOWN_CHECK=1`, and under `FICTEST_RC=1 FICTEST_SAN=1`.
 
 ### 3.2 Gates and differential checks
 
 * After each work item: `norc_identity.py` (16/16 identical, never `--update`); **pass-off identity**: the `--rc` C text of the 16 suite
-  programs and of K1-K7 with `FICCUS_NO_KNOWN=1` equals the text of the binary before the change (sha256 of both, a small script next to
+  programs and of K1-K7 with `FICUS_NO_KNOWN=1` equals the text of the binary before the change (sha256 of both, a small script next to
   `norc_identity.py`); `targets/run_all.py --san`; `rcfuzz.py --settings default,noknown,noinline` (500 programs); `v2fuzz.py`;
   `rccheck_faults.py` (RcCheck must still catch the mutations in programs that now have copies).
-* Before merge: full `ficcus-tests/gates.sh` with the pass on (all expected numbers unchanged) plus the new `FICCUS_NO_KNOWN=1` row; elmdiff
+* Before merge: full `ficus-tests/gates.sh` with the pass on (all expected numbers unchanged) plus the new `FICUS_NO_KNOWN=1` row; elmdiff
   (1160 SAME + 15 apps) is the main code-size and compile-time exposure: record total C bytes and compile time against pass off.
-* `ficcus-tests/expected/*.mono`: if they are dumped after Inline they will change with the pass on; refresh only with a stated reason
+* `ficus-tests/expected/*.mono`: if they are dumped after Inline they will change with the pass on; refresh only with a stated reason
   (question 2).
 
 ### 3.3 Measurement protocol (P1 A2)
 
-`ficcus-tools/h16a_bench.py` (branch `bench/h16a`) on `JsonCombV.elm` (A2), sizes 7500 (1 MB) and 375000 (50 MB), 5 runs, median of
-parse = stage 2 - stage 1, the same session measures A2 with `FICCUS_NO_KNOWN=1` and with the pass on (absolute times drift 3-10 % between
+`ficus-tools/h16a_bench.py` (branch `bench/h16a`) on `JsonCombV.elm` (A2), sizes 7500 (1 MB) and 375000 (50 MB), 5 runs, median of
+parse = stage 2 - stage 1, the same session measures A2 with `FICUS_NO_KNOWN=1` and with the pass on (absolute times drift 3-10 % between
 sessions, H16A.md). Counters from a `-DFIC_STATS` build: allocations, dups, drops, closures. Checksums must equal `gen_json.py`'s.
 
 | measure | A2 today | success (pass on) | S1 by hand |
@@ -287,7 +287,7 @@ Secondary: `JsonComb.elm` (A) and `JsonStrComb.elm` with the same protocol; the 
 ## 4. Risks (ranked)
 
 1. **Scope errors in copies** (a lifted copy referenced where its captured names are not bound, or a renaming that misses a binder): C that does not
-   compile or reads the wrong variable. Mitigation: invariant S checker (`FICCUS_KNOWN_CHECK`, on in all tests), RcCheck, ASan, v2fuzz.
+   compile or reads the wrong variable. Mitigation: invariant S checker (`FICUS_KNOWN_CHECK`, on in all tests), RcCheck, ASan, v2fuzz.
 2. **Missing the 2.6 s target** because the gain of S1 partly came from `oneOf` written as a chain of `case` (excluded) and from `lazy` removal.
    Rules C and F remove the per-use rebuilding, but every `value` still goes through `oneOfHelp` and up to seven `fic_ap1`. Estimate: closures
    170 M -> few M, allocations about 5 x down as in S1, time 2.2-2.8 s. Measure after work item 2 before writing item 3.
@@ -331,7 +331,7 @@ S2's (c) (dropping the unread message) needs a dead-field analysis and is not pl
 
 1. Do CGen, Rc, Borrow and Twin accept a lifted clone referenced from a clone that is not its owner, and a lifted clone whose owner is a Value
    (reading says yes: captures are by name, `mdLifted` is only tested for `Nothing`)? A five line test in W1.
-2. Are `ficcus-tests/expected/*.mono` dumped before or after Inline?
+2. Are `ficus-tests/expected/*.mono` dumped before or after Inline?
 3. Is the position of Function clones in `mpClones` significant for CGen (prototypes, order of definitions)? Where must copies go?
 4. Does anything rely on `mdName` being unique per clone (C names seem to use the clone id: `f9_map2`)?
 5. How much of S1's gain does stage 1 without `oneOf` unrolling keep (risk 2)? Count with `FIC_STATS` after W2.

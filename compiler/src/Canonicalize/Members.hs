@@ -1,4 +1,4 @@
--- Ficcus (ATTACH, stage A1): members attached to custom types, in the canonicalizer.
+-- Ficus (ATTACH, stage A1): members attached to custom types, in the canonicalizer.
 --
 -- A member `add` of `Money` is the top level definition `Money$$add` (see AST.Members).  This module
 --   * sorts the values of an interface into plain values and members,

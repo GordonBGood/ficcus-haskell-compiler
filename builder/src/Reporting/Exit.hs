@@ -1602,21 +1602,21 @@ data Make
   | MakeNonMainFilesIntoJavaScript Module.Name [Module.Name]
   | MakeCannotBuild BuildProblem
   | MakeBadGenerate Generate
-  | MakeFiccus [String]     -- Ficcus: the specializer or the C generator refuses the program
+  | MakeFicus [String]     -- Ficus: the specializer or the C generator refuses the program
 
 
 makeToReport :: Make -> Help.Report
 makeToReport make =
   case make of
     -- SIZED: a message that starts with "@@ TITLE" is a report of its own, in Elm's voice (a literal out of range)
-    MakeFiccus (('@' : '@' : ' ' : titled) : more) ->
+    MakeFicus (('@' : '@' : ' ' : titled) : more) ->
       let (title, body) = break (== '\n') titled
       in Help.docReport title Nothing
            (D.vcat (map D.fromChars (drop 1 (lines body) ++ more)))
            []
 
-    MakeFiccus msgs ->
-      Help.docReport "FICCUS: the program cannot be compiled to C yet" Nothing
+    MakeFicus msgs ->
+      Help.docReport "FICUS: the program cannot be compiled to C yet" Nothing
         (D.vcat (map D.fromChars msgs))
         []
 
@@ -1817,7 +1817,7 @@ toProjectProblemReport projectProblem =
 
     BP_WithBadExtension path ->
       Help.report "UNEXPECTED FILE EXTENSION" Nothing
-        "I can only compile Elm files (with a .elm extension) or Ficcus files (with a .fic extension) but you want me to compile:"
+        "I can only compile Elm files (with a .elm extension) or Ficus files (with a .fic extension) but you want me to compile:"
         [ D.indent 4 $ D.red $ D.fromChars path
         , D.reflow $ "Is there a typo? Can the file extension be changed?"
         ]
@@ -1970,8 +1970,8 @@ toModuleNameConventionTable srcDir names =
 data Generate
   = GenerateCannotLoadArtifacts
   | GenerateCannotOptimizeDebugValues Module.Name [Module.Name]
-  | GenerateConstrainedFunctions [String]     -- Ficcus (ATTACH A2)
-  | GenerateDerivedMembers [String]           -- Ficcus (A4a): `Main.Color derives compare, hash`
+  | GenerateConstrainedFunctions [String]     -- Ficus (ATTACH A2)
+  | GenerateDerivedMembers [String]           -- Ficus (A4a): `Main.Color derives compare, hash`
 
 
 toGenerateReport :: Generate -> Help.Report

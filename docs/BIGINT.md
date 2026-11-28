@@ -1,21 +1,21 @@
-# BigInt in Ficcus (BIGINT session, branch `feat/bigint`)
+# BigInt in Ficus (BIGINT session, branch `feat/bigint`)
 
-A Ficcus implementation of the API of `cmditch/elm-bigint` **2.1.2** (the version in `corpus/pkgs`), on `Vector Int`.
+A Ficus implementation of the API of `cmditch/elm-bigint` **2.1.2** (the version in `corpus/pkgs`), on `Vector Int`.
 No compiler change; binary used: `bin/elmficA14` (head `f6385a05` of `ficcus`). Sonnet 5.5 commits.
 
 ## 1. Files
 
 | path | what |
 |---|---|
-| `ficcus-tests/bigint/src/BigInt.fic` | the package module (1434 lines), exposes exactly the 25 names of the Elm package |
-| `ficcus-tests/bigint/bigint_cases.py` | Python case generator (expected values from Python integers) |
-| `ficcus-tests/bigint/t/main_template.fic` | one test `Main`, valid Ficcus **and** Elm (`BigInt` API only) |
-| `ficcus-tests/bigint/bigint_diff.py` | differential runner: modes `plain`, `dropall` (`FIC_DROP_ALL=1`), `san` (counted + ASan/UBSan, no pool), `elm` (the Elm package under node, same cases) |
-| `ficcus-tests/bigint/bbuild.sh` | build a program that imports `BigInt` (`BB_SRC` = other package source, used by the sweep) |
-| `ficcus-tests/bigint/bench/` | `bench.py` (median of 5), `bench_check.py` (benchmarks in the three modes), `kara_sweep.py`, `ham_bench.py`, `ref.c` (hand C), `gmpb.c` (GMP), `body/*.fic`, `ham/*.fic` |
-| `ficcus-tests/bigint/results/` | `bench.json`, `ham.json` (this report's numbers) |
+| `ficus-tests/bigint/src/BigInt.fic` | the package module (1434 lines), exposes exactly the 25 names of the Elm package |
+| `ficus-tests/bigint/bigint_cases.py` | Python case generator (expected values from Python integers) |
+| `ficus-tests/bigint/t/main_template.fic` | one test `Main`, valid Ficus **and** Elm (`BigInt` API only) |
+| `ficus-tests/bigint/bigint_diff.py` | differential runner: modes `plain`, `dropall` (`FIC_DROP_ALL=1`), `san` (counted + ASan/UBSan, no pool), `elm` (the Elm package under node, same cases) |
+| `ficus-tests/bigint/bbuild.sh` | build a program that imports `BigInt` (`BB_SRC` = other package source, used by the sweep) |
+| `ficus-tests/bigint/bench/` | `bench.py` (median of 5), `bench_check.py` (benchmarks in the three modes), `kara_sweep.py`, `ham_bench.py`, `ref.c` (hand C), `gmpb.c` (GMP), `body/*.fic`, `ham/*.fic` |
+| `ficus-tests/bigint/results/` | `bench.json`, `ham.json` (this report's numbers) |
 
-Use: an application whose `source-directories` contain `ficcus-tests/bigint/src` and `import BigInt`. Only this use is tested (see open question 1).
+Use: an application whose `source-directories` contain `ficus-tests/bigint/src` and `import BigInt`. Only this use is tested (see open question 1).
 
 ## 2. Design
 
@@ -42,7 +42,7 @@ Use: an application whose `source-directories` contain `ficcus-tests/bigint/src`
 
 ## 3. Tests (all pass)
 
-`python3 ficcus-tests/bigint/bigint_diff.py --modes plain,dropall,san,elm --n 400 --maxbits 500 --big 10 --seed S --work DIR`
+`python3 ficus-tests/bigint/bigint_diff.py --modes plain,dropall,san,elm --n 400 --maxbits 500 --big 10 --seed S --work DIR`
 
 * Cases: add, sub, mul, div, modBy, divmod, pow, gcd, compare/lt/gt/lte/gte, max, min, negate, abs, isEven, isOdd, toHexString, hex round trip, fromInt, fromIntString, fromHexString,
   structural equality of results (`canon`). Operands: all four sign combinations, 0, ±1, one limb, 2^31 ± d, (2^31)^k ± d, 2^j and 2^j ± 1, runs of ones and zeros,
@@ -63,7 +63,7 @@ capped (4 GB address space, 200 s). `-O2`, gcc, `-ffp-contract=off`, counted (`-
 
 Full sizes (seconds, peak MB in brackets):
 
-| benchmark | Ficcus | hand C (same limbs, same algorithms) | ratio | GMP | Ficcus / GMP |
+| benchmark | Ficus | hand C (same limbs, same algorithms) | ratio | GMP | Ficus / GMP |
 |---|---|---|---|---|---|
 | fact 10,000 (35,660 digits; includes toString) | 0.048 (2) | 0.037 (1) | 1.3 | 0.012 | 4 |
 | fib 100,000 by addition (20,899 digits) | 0.160 (2) | 0.074 (1) | 2.2 | 0.017 | 9 |
@@ -74,12 +74,12 @@ Full sizes (seconds, peak MB in brackets):
 | divmod: 10 x (100k digit / 50k digit) | 0.509 (2) | 0.305 (2) | 1.7 | 0.013 | 39 |
 | mulbig: 5 x (232k bit * 252k bit), mod 10^9+7 | 0.116 (2) | 0.038 (2) | 3.1 | 0.007 | 17 |
 
-Ficcus counters (`FIC_STATS`, full sizes): `live 0` everywhere; `vec_copy 0`; `inplace` = 25.6M (fact), 114.6M (fib), 61.9M (pow3), 8.3M (build), 67.9M (tostr), 59.5M (fromstr), 313.7M (divmod), 62.9M (mulbig);
+Ficus counters (`FIC_STATS`, full sizes): `live 0` everywhere; `vec_copy 0`; `inplace` = 25.6M (fact), 114.6M (fib), 61.9M (pow3), 8.3M (build), 67.9M (tostr), 59.5M (fromstr), 313.7M (divmod), 62.9M (mulbig);
 `allocs` 63.9k, 212k, 81k, 17k, 84k, 22k, 56k, 208k; `peak` live objects 11.9k, 7.0k, 36.4k, 40, 38.4k, 6, 16.7k, 50 (a limb vector is one object).
 
-Elm package (`bin/elm0193`, node 21, dev build: Debug.log forbids `--optimize`) at sizes where it finishes, and Ficcus at the same sizes (`ficcus-s`):
+Elm package (`bin/elm0193`, node 21, dev build: Debug.log forbids `--optimize`) at sizes where it finishes, and Ficus at the same sizes (`ficus-s`):
 
-| benchmark (size) | Elm + node | Ficcus | Elm / Ficcus | Elm peak MB | Ficcus peak MB |
+| benchmark (size) | Elm + node | Ficus | Elm / Ficus | Elm peak MB | Ficus peak MB |
 |---|---|---|---|---|---|
 | fact 2,000 | 6.34 | 0.007 | 900 | 91 | 2 |
 | fib 100,000 | 5.03 | 0.160 | 31 | 82 | 2 |
@@ -116,7 +116,7 @@ Flat from 32 to 96; 48 chosen (the hand C uses 48 too). Karatsuba is 4.8x on mul
 
 ## 5. What is slow, and why
 
-* **Ficcus is 1.0 to 3.1x the hand C, 4 to 40x GMP** (and GMP is 10 to 100x anything portable: assembly inner loops, Toom, FFT, subquadratic division and conversion). The hand C is the right yardstick for the compiler.
+* **Ficus is 1.0 to 3.1x the hand C, 4 to 40x GMP** (and GMP is 10 to 100x anything portable: assembly inner loops, Toom, FFT, subquadratic division and conversion). The hand C is the right yardstick for the compiler.
 * Per limb the generated loops do what the C does plus checks: `Vector.get` is a checked read (`fic_vector_checked` / `IN_RANGE`, 2 per add step, 3 per multiply-subtract step), the in-place `set` tests `rc == 1` and the range, `push` tests capacity;
   the hand C does neither. This explains fib (2.2x: 2 reads + a push per limb, one allocation per addition), divmod (1.7x: Knuth's inner loop), fromstr (2.2x) and mulbig (3.1x: Karatsuba is slice copies, `magAdd` temporaries and `addInto`, 208k allocations against a few thousand in C, each with a zero fill).
 * `Vector.repeat` is an Elm level loop of pushes (no `memset`): the zero filled outputs (`schoolLoop`, `addInto`) pay for it; where the output is sequential I build by pushes instead (add 1.4x faster, fact 1.8x faster).

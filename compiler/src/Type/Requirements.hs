@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
--- Ficcus (A5a): inference of requirements (`a has m : t`) for definitions without a type annotation, and let
+-- Ficus (A5a): inference of requirements (`a has m : t`) for definitions without a type annotation, and let
 -- generalization over them.  docs/A5-INFERENCE-DESIGN.md sections 1 and 3; decisions D1 to D4, D9.
 --
 -- Type.Members keeps the obligations (requirements of the uses) and discharges them when a subject is known.  This

@@ -1,0 +1,1 @@
+{"desc": "STAGE4-FIX2 step 4: a package that imports the core Vector builds in a build to C (the package gets the core overlay; Elm has no module Vector, so there is no JS or /dev/null build: c_only)", "deps": ["ficus/vecpkg@1.0.0"], "c_only": true}

@@ -5,7 +5,7 @@
    later reference counting find the references by that tag).
    Arrays are values. Without counts (no -DFIC_RC) every operation that changes an array makes a copy, like the JavaScript kernel;
    in a counted program `set` and `push` update a unique array in place (S6, see fic_ja_set below).
-   Ownership in a counted program (-DFIC_RC; the signatures are in Ficcus.Mono.Kernel): an array is BORROWED unless the signature
+   Ownership in a counted program (-DFIC_RC; the signatures are in Ficus.Mono.Kernel): an array is BORROWED unless the signature
    says it is consumed (`set` and `push` consume their array and the element they store, `singleton` its element); the result is
    owned; the elements of a REF vector each hold a count, so a copy dups them, a function that gets an element from a borrowed array
    gives the callee its own count, and `get` returns a borrowed element (the generated code adds the count).
@@ -53,7 +53,7 @@ static fic_word fic_ja_get(int64_t i, fic_ref a) {
   return z;
 }
 
-/* S6, take (Ficcus.Mono.Rc `takeCall`): the element at i as an OWNED value; the array is borrowed. The compiler uses it only where the
+/* S6, take (Ficus.Mono.Rc `takeCall`): the element at i as an OWNED value; the array is borrowed. The compiler uses it only where the
    one later use of the array is `set` at the same index. A unique array gives up its element (no count is touched) and holds a
    placeholder there, the static empty list with a count, which the set overwrites and drops; a shared array gives a counted copy. */
 static fic_word fic_ja_take(int64_t i, fic_ref a) {

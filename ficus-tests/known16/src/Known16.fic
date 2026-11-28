@@ -1,0 +1,199 @@
+module Known16 exposing (main)
+
+-- H16 stage 2, W7a (rule 2): the State of a parser holds an Array (an owned reference leaf after the unpack): the five shapes V1 to V5 of the
+-- design note, section 5. V1: the result is matched and the array updated, nothing else holds it (in place); V2: the caller keeps the state and
+-- reads it after the match (a copy); V3: a worker loop that updates its array each step; V4: the array shares a slot with the message of `Bad`;
+-- V5: the array is read and then updated. Outputs equal Elm 0.19.3; the counters of in place and copied updates are compared with the rule off by
+-- ficus-tests/unbox_tests.py.
+
+import Array exposing (Array)
+
+
+type alias State =
+    { arr : Array Int, pos : Int }
+
+
+type Step a
+    = Good Bool a State
+    | Bad Bool String
+
+
+type alias Parser a =
+    State -> Step a
+
+
+-- set the next odd or last cell at `pos` to f of its value and move on (a local loop: not put in place of its calls)
+bump : (Int -> Int) -> Parser Int
+bump f =
+    \s ->
+        let
+            go i =
+                case Array.get i s.arr of
+                    Just v ->
+                        if modBy 2 v == 0 && i < 6 then
+                            go (i + 1)
+
+                        else
+                            Good True v { arr = Array.set i (f v) s.arr, pos = i + 1 }
+
+                    Nothing ->
+                        Bad False "end"
+        in
+        go s.pos
+
+
+peek : Parser Int
+peek =
+    \s ->
+        case Array.get s.pos s.arr of
+            Just v ->
+                Good False v s
+
+            Nothing ->
+                Bad False "end"
+
+
+map : (a -> b) -> Parser a -> Parser b
+map f p =
+    \s ->
+        case p s of
+            Good c a s1 ->
+                Good c (f a) s1
+
+            Bad c m ->
+                Bad c m
+
+
+andThen : (a -> Parser b) -> Parser a -> Parser b
+andThen f p =
+    \s ->
+        case p s of
+            Good c a s1 ->
+                case f a s1 of
+                    Good c2 b s2 ->
+                        Good (c || c2) b s2
+
+                    Bad c2 m ->
+                        Bad (c || c2) m
+
+            Bad c m ->
+                Bad c m
+
+
+-- V3: a loop that updates the array on every step and returns the state with it
+loop : Int -> Parser Int -> Parser Int
+loop n p =
+    \s ->
+        let
+            go i acc st =
+                if i <= 0 then
+                    Good (i /= n) acc st
+
+                else
+                    case p st of
+                        Good _ a st1 ->
+                            go (i - 1) (acc + a) st1
+
+                        Bad c m ->
+                            Bad c m
+        in
+        go n 0 s
+
+
+sumArr : Array Int -> Int
+sumArr a =
+    Array.foldl (+) 0 a
+
+
+arr0 : Array Int
+arr0 =
+    Array.fromList [ 1, 2, 3, 4, 5, 6, 7, 8 ]
+
+
+start : Int -> State
+start k =
+    { arr = Array.set 0 k arr0, pos = 0 }
+
+
+-- V1: matched, updated once, nothing else holds the array
+v1 : Int -> String
+v1 k =
+    case bump (\x -> x * 10) (start k) of
+        Good _ a st ->
+            String.fromInt a ++ ":" ++ String.fromInt (sumArr (Array.set 5 99 st.arr))
+
+        Bad _ m ->
+            m
+
+
+-- V2: the caller keeps the state and reads it after the match
+v2 : Int -> String
+v2 k =
+    let
+        s =
+            start k
+    in
+    case bump (\x -> x + 1) s of
+        Good _ a st ->
+            String.fromInt a ++ ":" ++ String.fromInt (sumArr (Array.set 6 77 st.arr)) ++ ":" ++ String.fromInt (sumArr s.arr)
+
+        Bad _ m ->
+            m
+
+
+-- V3
+v3 : Int -> String
+v3 k =
+    case loop 6 (bump (\x -> x * 2)) (start k) of
+        Good c a st ->
+            Debug.toString c ++ ":" ++ String.fromInt a ++ ":" ++ String.fromInt (sumArr st.arr)
+
+        Bad _ m ->
+            m
+
+
+-- V4: `Bad` shares a slot with the array; the Bad branch drops the message, the Good branch updates the array
+v4 : Int -> String
+v4 k =
+    case loop (if k > 10 then 12 else 3) (bump (\x -> x + 3)) (start k) of
+        Bad _ m ->
+            "bad " ++ m
+
+        Good _ a st ->
+            String.fromInt a ++ ":" ++ String.fromInt (sumArr (Array.set 1 5 st.arr))
+
+
+-- V5: the array is read and then updated
+v5 : Int -> String
+v5 k =
+    case andThen (\a -> bump (\x -> x + a)) peek (start k) of
+        Good _ a st ->
+            let
+                first =
+                    Maybe.withDefault -1 (Array.get 0 st.arr)
+
+                st2 =
+                    Array.set 0 (first * 2) st.arr
+            in
+            String.fromInt a ++ ":" ++ String.fromInt first ++ ":" ++ String.fromInt (sumArr st2)
+
+        Bad _ m ->
+            m
+
+
+init : () -> ( (), Cmd () )
+init _ =
+    let
+        _ =
+            List.map (\k -> Debug.log (String.fromInt k) [ v1 k, v2 k, v3 k, v4 k, v5 k ]) [ 0, 1, 5, 20 ]
+    in
+    ( (), Cmd.none )
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \f -> init f
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }

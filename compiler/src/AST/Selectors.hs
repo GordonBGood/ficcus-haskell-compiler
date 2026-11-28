@@ -1,4 +1,4 @@
--- Ficcus (A5b, docs/A5-INFERENCE-DESIGN.md section 2): bare names of attached functions (selectors).
+-- Ficus (A5b, docs/A5-INFERENCE-DESIGN.md section 2): bare names of attached functions (selectors).
 --
 -- An unqualified `add` that no variable binds (Elm would report NAMING ERROR) means the attached function `add` of
 -- whatever type the use is at, when a type with a `where` block that the module defines or imports has one.  There is
@@ -9,7 +9,7 @@
 -- a use of a function of a module that cannot exist (`$attached`), with an inferred constrained scheme: its type `t` is
 -- the type of the member, and its one requirement says that the subject `a` has the member at that type.  The solver
 -- turns it into that requirement (Type.Members.use, as for a call of a constrained function); the specializer calls
--- the member of the subject's exact type (Ficcus.Mono.Spec); the JavaScript output refuses it (Nitpick.Constraints).
+-- the member of the subject's exact type (Ficus.Mono.Spec); the JavaScript output refuses it (Nitpick.Constraints).
 module AST.Selectors
   ( attachedHome
   , isAttachedHome

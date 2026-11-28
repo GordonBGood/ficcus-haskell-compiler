@@ -58,7 +58,7 @@ termHelp start =
               Var.Unqualified n -> Src.PCtor     region   n []
               Var.Qualified h n -> Src.PCtorQual region h n []
     ,
-      -- a negative literal, `-1` (Ficcus, syntax track E1): an Int pattern
+      -- a negative literal, `-1` (Ficus, syntax track E1): an Int pattern
       do  negativeStart
           number <- Number.number E.PStart E.PNumber
           end <- getPosition
@@ -95,7 +95,7 @@ termHelp start =
 
 
 
--- NEGATIVE LITERAL (Ficcus, syntax track E1)
+-- NEGATIVE LITERAL (Ficus, syntax track E1)
 
 
 -- a minus sign directly followed by a digit; otherwise the pattern parser does not consume anything (the `-` of `->` ends
@@ -134,7 +134,7 @@ wildcard =
               cok () newState
 
         _ ->
-          -- Ficcus (track E4): `_b_` is a variable with a leading underscore (read by Var.lower), not a
+          -- Ficus (track E4): `_b_` is a variable with a leading underscore (read by Var.lower), not a
           -- wildcard followed by letters
           eerr cur E.PStart
 

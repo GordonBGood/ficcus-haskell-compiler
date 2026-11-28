@@ -59,7 +59,7 @@ compile =
   compileWith False
 
 
--- | Ficcus (E3c): True lets the ports of the module carry the Ficcus payload types (Canonicalize.FicPayload; Build.compile passes
+-- | Ficus (E3c): True lets the ports of the module carry the Ficus payload types (Canonicalize.FicPayload; Build.compile passes
 -- it for a `.fic` module of a build to C)
 compileWith :: Bool -> Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Either E.Error Artifacts
 compileWith ficPayloads pkg ifaces modul =
@@ -72,7 +72,7 @@ compileWith ficPayloads pkg ifaces modul =
 
 
 
--- Ficcus: the same phases with the type recorder switched on. The extra
+-- Ficus: the same phases with the type recorder switched on. The extra
 -- result holds the type of every expression and pattern node.
 compileTyped :: Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Either E.Error (Artifacts, Readout.Typed)
 compileTyped =
@@ -103,7 +103,7 @@ canonicalize ficPayloads pkg ifaces modul =
       Left $ E.BadNames errors
 
 
--- Ficcus (ATTACH A2): the solver gets the table of the members the module can see, and the annotation of a
+-- Ficus (ATTACH A2): the solver gets the table of the members the module can see, and the annotation of a
 -- constrained definition becomes its constrained scheme (Type.Members, AST.Constraints)
 typeCheck :: Map.Map Module.Name I.Interface -> Src.Module -> Can.Module -> Either E.Error (Map.Map N.Name Can.Annotation)
 typeCheck ifaces modul canonical =
@@ -139,13 +139,13 @@ typeCheckTypedIO ifaces canonical =
               return (Right (Map.union (Members.wrapAnnotations canonical annotations) (Members.embedded ifaces), typed))
 
 
--- Ficcus (ATTACH A3): a module that uses operators at a custom type gets a marker node in its object graph (the
+-- Ficus (ATTACH A3): a module that uses operators at a custom type gets a marker node in its object graph (the
 -- JavaScript output refuses it, Nitpick.Constraints); the annotation the solver made for the marker is dropped
 markCustomOperators :: Localizer.Localizer -> Can.Module -> Map.Map N.Name Can.Annotation -> Opt.LocalGraph -> (Map.Map N.Name Can.Annotation, Opt.LocalGraph)
 markCustomOperators localizer canonical@(Can.Module home _ _ _ _ _ _ _) annotations1 objects =
   markCustomOperators1 canonical (Map.filterWithKey (\name _ -> Derive.markerText name == Nothing) annotations1)
-    (NitpickConstraints.markSelectors (NitpickConstraints.markInferred localizer home annotations1 objects))     -- Ficcus (A5a, D6; A5b; A5c B3)
-  -- Ficcus (A4a): the markers of the `derive` lines (Canonicalize.Derive) stay in the object graph, not in the interface
+    (NitpickConstraints.markSelectors (NitpickConstraints.markInferred localizer home annotations1 objects))     -- Ficus (A5a, D6; A5b; A5c B3)
+  -- Ficus (A4a): the markers of the `derive` lines (Canonicalize.Derive) stay in the object graph, not in the interface
 
 
 markCustomOperators1 :: Can.Module -> Map.Map N.Name Can.Annotation -> Opt.LocalGraph -> (Map.Map N.Name Can.Annotation, Opt.LocalGraph)
@@ -164,7 +164,7 @@ markCustomOperators1 (Can.Module home _ _ decls _ _ _ _) annotations objects@(Op
       any (\def -> fmap snd (AMembers.split (Members.nameOf def)) == Just eqName) (Members.defsOf decls)
     eqName = N.fromString (S.fromChars "eq")
 
--- Ficcus (ATTACH A3): a well known member with the wrong type is reported before anything else is checked
+-- Ficus (ATTACH A3): a well known member with the wrong type is reported before anything else is checked
 checkShapes :: Can.Module -> IO (Either (NE.List Error.Error) a) -> IO (Either (NE.List Error.Error) a)
 checkShapes canonical check =
   case Members.shapeErrors canonical of

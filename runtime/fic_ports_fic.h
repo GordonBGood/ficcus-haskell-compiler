@@ -1,4 +1,4 @@
-/* fic_ports_fic.h -- the payloads of Ficcus at the host interface (effects slices E3c and E3d; docs/E3-PORTS-DESIGN.md D5, D6, D9,
+/* fic_ports_fic.h -- the payloads of Ficus at the host interface (effects slices E3c and E3d; docs/E3-PORTS-DESIGN.md D5, D6, D9,
  * D10) and the walks of a host value that do not recurse (E3A-REVIEW F2). Emitted between runtime/fic_ports_api.h and
  * runtime/fic_ports.h, only into programs that have ports or flags; runtime/fic_json.h is unchanged, so the C of every other program
  * is unchanged too.
@@ -69,7 +69,7 @@ int fic_hv_get_uint(fic_hv v, uint64_t *out) {
   return FIC_OK;
 }
 
-/* the range of a narrow integer type by its description character (Ficcus.Mono.PortFic) */
+/* the range of a narrow integer type by its description character (Ficus.Mono.PortFic) */
 static int fic_pv_range(char d, int64_t *lo, int64_t *hi, const char **what) {
   switch (d) {
   case 'c': *lo = -128; *hi = 127; *what = "an INT8 (a whole number from -128 to 127)"; return 1;

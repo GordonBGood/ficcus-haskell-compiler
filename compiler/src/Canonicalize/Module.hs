@@ -57,11 +57,11 @@ canonicalize =
   canonicalizeWith False
 
 
--- | Ficcus (E3c): with True, the ports of the module may carry the Ficcus payload types (a `.fic` module of a build to C;
+-- | Ficus (E3c): with True, the ports of the module may carry the Ficus payload types (a `.fic` module of a build to C;
 -- Canonicalize.FicPayload)
 canonicalizeWith :: Bool -> Pkg.Name -> Map.Map Module.Name I.Interface -> Src.Module -> Result i [W.Warning] Can.Module
 canonicalizeWith ficPayloads pkg ifaces modul0 =
-  do  (modul, derived) <- Derive.prepare modul0     -- Ficcus (A4a): the `derive` lines become members
+  do  (modul, derived) <- Derive.prepare modul0     -- Ficus (A4a): the `derive` lines become members
       canonicalizeModule ficPayloads pkg ifaces modul >>= Derive.finish ifaces derived
 
 
@@ -102,8 +102,8 @@ canonicalizeBinop (A.At _ (Src.Infix op associativity precedence func)) =
 
 canonicalizeValues :: Env.Env -> [A.Located Src.Value] -> Result i [W.Warning] Can.Decls
 canonicalizeValues env0 values =
-  do  env1 <- Constraints.register env0 values     -- Ficcus (ATTACH A2): the constrained schemes of this module
-      let env = Selectors.register env1 values      -- Ficcus (A5b): the bare names of attached functions
+  do  env1 <- Constraints.register env0 values     -- Ficus (ATTACH A2): the constrained schemes of this module
+      let env = Selectors.register env1 values      -- Ficus (A5b): the bare names of attached functions
       nodes <- traverse (toNodeOne env) values
       detectCycles (Graph.toSCC nodes)
 
@@ -163,7 +163,7 @@ type NodeTwo = Graph.Node N.Name Can.Def
 
 toNodeOne :: Env.Env -> A.Located Src.Value -> Result i [W.Warning] NodeOne
 toNodeOne env0 (A.At _ (Src.Value aname@(A.At _ name) srcArgs body maybeType)) =
-  -- Ficcus (ATTACH A1b): a member sees the other members of its type under their plain names
+  -- Ficus (ATTACH A1b): a member sees the other members of its type under their plain names
   let env = Members.memberEnv name env0 in
   case maybeType of
     Nothing ->

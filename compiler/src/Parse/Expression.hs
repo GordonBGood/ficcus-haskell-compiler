@@ -521,7 +521,7 @@ definition =
                 do  word1 0x3A#Word8 {-:-} E.DefEquals
                     Space.chompAndCheckIndent E.DefSpace E.DefIndentType
                     (tipe, typeEnd) <- specialize E.DefType Type.expression
-                    Constraints.noLocalWhere typeEnd      -- Ficcus (ATTACH A2): no constraints on a local definition
+                    Constraints.noLocalWhere typeEnd      -- Ficus (ATTACH A2): no constraints on a local definition
                     Space.checkAligned E.DefAlignment
                     defName <- chompMatchingName name
                     Space.chompAndCheckIndent E.DefSpace E.DefIndentEquals

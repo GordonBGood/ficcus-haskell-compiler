@@ -1,6 +1,6 @@
 #!/bin/sh
 # Night queue: submit one job.  [BIN=elmficX|/abs/path] [MINFREE_GB=8] nq/submit.sh NAME WORKTREE COMMIT STEP...
-# STEP: build | a step name of WORKTREE/ficcus-tests/gates.sh | run:FILE (sh FILE in the worktree). See docs/NQ.md.
+# STEP: build | a step name of WORKTREE/ficus-tests/gates.sh | run:FILE (sh FILE in the worktree). See docs/NQ.md.
 set -eu
 NQ=${NQ_DIR:-$(cd "$(dirname "$0")" && pwd)}
 die() { echo "nq submit: $*" >&2; exit 2; }
@@ -13,7 +13,7 @@ HEAD=$(git -C "$WT" rev-parse HEAD)
 [ "$HEAD" = "$COMMIT" ] || die "$WT HEAD is $HEAD, not $COMMIT"
 [ -z "$(git -C "$WT" status --porcelain --untracked-files=no)" ] || die "$WT has uncommitted changes"
 BRANCH=$(git -C "$WT" symbolic-ref --short -q HEAD || echo detached)
-GATES=$WT/ficcus-tests/gates.sh; BUILD=; GATE=
+GATES=$WT/ficus-tests/gates.sh; [ -f "$GATES" ] || GATES=$WT/ficcus-tests/gates.sh; BUILD=; GATE=
 for s in "$@"; do
   case $s in
     build) BUILD=1;;

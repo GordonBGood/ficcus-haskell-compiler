@@ -15,18 +15,18 @@ comparisons, `compare`, `min max clamp`, `==`, `Dict`/`Set` keys, `List.sort` wo
 A sized type is declared in its overlay module like `Vector` is: `type Int8 = FicInt8Builtin where add : Int8 -> Int8 -> Int8 ...`
 with the A3 members of its row of the table (`number` bundle and `compare` for all; `idiv mod rem` for integers; `div` for
 `Float32`; `eq` is structural). The type checker therefore already accepts `+` and `Dict` keys at it (A3 policy). The overlay
-sources are generated (`ficcus-tools/gen_sized.py`, output checked in under `overlay/`) and added to the `.c`/`.mono` source
+sources are generated (`ficus-tools/gen_sized.py`, output checked in under `overlay/`) and added to the `.c`/`.mono` source
 directories like `Bitwise64`; a project or package module of the same name wins (module rule, `Build.crawlModule`), and the
 marker constructor tells the overlay's type from a user type of the same name (as `vectorMarker`).
 
-The specializer (`Ficcus.Mono.Sized`, new; hooks in `Spec` and `CGen`) knows the set of sized types (unions with the marker):
+The specializer (`Ficus.Mono.Sized`, new; hooks in `Spec` and `CGen`) knows the set of sized types (unions with the marker):
 * class: the 8 byte slot, `CI64` for integers and `CF64` for `Float32`; scalars, struct fields and `Vector` elements are the
   same slots as `Int`/`Float` (recommendation d; natural width storage is H24/G30);
 * members and operators at a sized type become kernel calls `elm/core:Sized.<Type>.<op>` whose C is a macro of the new
   `runtime/fic_sized.h` (a call of a member by name, `memberRef`, and the operator functions, `wellKnownRef`, give the same kernel;
   `< > <= >= /=` are kernels too, no `ficLt` detour);
 * a literal at a sized type is checked against the range of the type at compile time and emitted as a constant
-  (`300 : Word8` is `-- INTEGER OUT OF RANGE`-style report, in the FICCUS refusal channel); `-128 : Int8` is accepted, `-1 : Word8`
+  (`300 : Word8` is `-- INTEGER OUT OF RANGE`-style report, in the FICUS refusal channel); `-128 : Int8` is accepted, `-1 : Word8`
   is rejected (write `complement 0`);
 * structural code (`==` on records/lists, `Debug.toString`, structural `compare`) treats them as `Int`/`Float` slots, except
   `Word64` (unsigned print, unsigned order) and `Float32` (printed at float precision).
@@ -59,15 +59,15 @@ operations, not `-fwrapv`**; the UBSan runs of the gates confirm it, and a test 
 ## 5. Steps (each committed)
 
 1. this plan; 2. `runtime/fic_sized.h` and a C oracle test with boundary values and a random check; 3. generator, overlay
-modules, `Ficcus.Mono.Sized`, the hooks, build `elmficN1`; 4. tests (attach cases, boundary program against the C oracle, fuzz of
+modules, `Ficus.Mono.Sized`, the hooks, build `elmficN1`; 4. tests (attach cases, boundary program against the C oracle, fuzz of
 200 seeds, literal range errors, conversions, `Dict`/`List.sort`); 5. corpus scan (`vscan2.py`) for package modules named like
 these; 6. full gates `KEEP=1`; notes `docs/attach/SIZED-NOTES.md`-style report in this file, `bin/BUILDS.txt`.
 
 ## 6. What was built, and where it differs from the plan above
 
-Code: `compiler/src/Ficcus/Mono/Sized.hs` (new: types, kernel ids, C text, literal ranges), `runtime/fic_sized.h` (new, emitted only by programs that
+Code: `compiler/src/Ficus/Mono/Sized.hs` (new: types, kernel ids, C text, literal ranges), `runtime/fic_sized.h` (new, emitted only by programs that
 use it, so the C text of other programs is unchanged: 32 of 32 suite outputs byte identical to `elmficA19`, `--rc` and `--no-rc`),
-`ficcus-tools/gen_sized.py` + `overlay/{Int8..Word64,Float32,Int64,Float64}.elm`. Small changes to upstream files: `Spec.hs` (the set of
+`ficus-tools/gen_sized.py` + `overlay/{Int8..Word64,Float32,Int64,Float64}.elm`. Small changes to upstream files: `Spec.hs` (the set of
 sized types from the marker unions, class, `memberRef`/`wellKnownRef` kernels, literals, `-x`, module functions, the unreached definitions
 pass, `holdsMember` exemption), `Kernel.hs` (arity and signature through `Sized`), `CGen.hs` (kernel text, `cmpExpr`, `showStmt`, class table,
 runtime emission), `CRuntime.hs`, `Overlay.hs` + `Make.hs` (the ten modules), `Exit.hs` (a message `@@ TITLE` is a report of its own),
@@ -88,7 +88,7 @@ Differences from the plan:
 
 ## 7. Gates
 
-Full `ficcus-tests/gates.sh`, `KEEP=1`, binary `elmficN1` (code commit f2595a30, gates.sh 7ddb8715), all green: runtime 0 non-ok (with `test_sized`), attach 153 cases 0 differ
+Full `ficus-tests/gates.sh`, `KEEP=1`, binary `elmficN1` (code commit f2595a30, gates.sh 7ddb8715), all green: runtime 0 non-ok (with `test_sized`), attach 153 cases 0 differ
 (`--rc`, ASan/UBSan, 0 live; 27 new `sized-*`), sized fuzz 40 seeds 0 differ (200 seeds run separately: 0 differ), stringdiff agree, types 267 PASS 1 XFAIL, JS identity 28 identical 0 different,
 examples 283 x3 (0 FAIL), fbip 0 failures, rcfaults 0 missed of 1362, rcfaults-big 0 missed of 295, rcgate-san ok, suite 16 PASS, typed corpus 581: 568 SAME, 12 BOTH_REJECT_SAME,
 1 VERDICT_DIFF (salix-aws-spec, as before), lib-rcsan 108 PASS 59 FIXED, elmdiff 1160 SAME + 15 apps SAME, 0 DIFF.

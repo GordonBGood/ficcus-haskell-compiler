@@ -1,4 +1,4 @@
--- Ficcus (ATTACH, stage A1): names of members attached to custom types.
+-- Ficus (ATTACH, stage A1): names of members attached to custom types.
 --
 -- A member `add` of the type `Money` is an ordinary top level definition whose name is `Money$$add`.
 -- `$` cannot occur in an Elm name, so no program can write (or clash with) such a name, and every later

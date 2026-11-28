@@ -1,7 +1,0 @@
-Problem with the flags given to your Elm program on initialization.
-
-Problem with the given value:
-
-undefined
-
-Expecting a value: no flags were given, and Ficcus does not pass JavaScript's undefined into a Json.Value

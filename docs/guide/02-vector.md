@@ -1,6 +1,6 @@
 # 2. Vector: a flat array that updates in place
 
-State: binary `elmficA16`. Examples are in `ficcus-tests/guide/v-*`; "FIC_STATS" lines come from a run built with
+State: binary `elmficA16`. Examples are in `ficus-tests/guide/v-*`; "FIC_STATS" lines come from a run built with
 `-DFIC_STATS` (see 2.4). Source: `overlay/Vector.elm`, `runtime/fic_vector.h`; design notes `docs/STAGE4-V1.md`, `V2`, `V3`.
 
 `Vector a` is a new type of the core library: a sequence of values stored side by side in one block of memory.

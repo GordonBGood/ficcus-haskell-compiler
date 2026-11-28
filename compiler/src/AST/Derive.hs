@@ -1,4 +1,4 @@
--- Ficcus (A4a): the `derive` line of a custom type (docs/A4-DERIVE-DESIGN.md).
+-- Ficus (A4a): the `derive` line of a custom type (docs/A4-DERIVE-DESIGN.md).
 --
 --     type Color = Red | Green | Blue
 --         where

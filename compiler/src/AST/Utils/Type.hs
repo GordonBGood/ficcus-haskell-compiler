@@ -32,7 +32,7 @@ delambda tipe =
 
 -- DEALIAS
 --
--- (the extension of a record is substituted by AST.Utils.Row, Ficcus D10)
+-- (the extension of a record is substituted by AST.Utils.Row, Ficus D10)
 
 
 dealias :: [(T.Var, Type)] -> AliasType -> Type
@@ -58,7 +58,7 @@ dealiasHelp typeTable =
         TTriple a b c   -> TTriple (go a) (go b) (go c)
 
 
--- the extension variable is replaced as well (Ficcus D10: it used to stay as it was)
+-- the extension variable is replaced as well (Ficus D10: it used to stay as it was)
 dealiasRecord :: Map.Map T.Var Type -> Map.Map N.Name FieldType -> Maybe T.Var -> Type
 dealiasRecord typeTable fields maybeExt =
   case maybeExt of

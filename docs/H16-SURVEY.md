@@ -2,7 +2,7 @@
 
 Written for the Opus design note on "stage 1: known function specialization with inlining" (later stage 2: case of known
 constructor, unboxed results, scalar replacement). Branch `design/h16-survey`, from `ficcus`. All line numbers are those of
-branch `ficcus` at 2e5f3b16. Paths are relative to `ficcus-haskell-compiler/`. `M.` = `compiler/src/Ficcus/Mono/`.
+branch `ficcus` at 2e5f3b16. Paths are relative to `ficcus-haskell-compiler/`. `M.` = `compiler/src/Ficus/Mono/`.
 
 ## 1. The pipeline after type checking
 
@@ -11,7 +11,7 @@ The C back end does NOT use Elm's `Optimize/*` or `AST.Optimized` (those are the
 
 | # | stage | module (lines) | in -> out | main types |
 |---|-------|----------------|-----------|------------|
-| 0 | record | `builder/src/Ficcus/TypesFile.hs:29-30` (`Modules.register`, `Facts.register`), `M.Modules`(101), `M.Facts`(86), `Type/Dump`(in `compiler/src/Type`) | each project module, while compiled (flag `--output=x.c` sets `keepModules`, `compiler/src/Ficcus/Flags.hs`) | `ModuleData` (Canonical module + recorded types), `ModuleFacts` (schemes, kinds, substitution at each use, init order) |
+| 0 | record | `builder/src/Ficus/TypesFile.hs:29-30` (`Modules.register`, `Facts.register`), `M.Modules`(101), `M.Facts`(86), `Type/Dump`(in `compiler/src/Type`) | each project module, while compiled (flag `--output=x.c` sets `keepModules`, `compiler/src/Ficus/Flags.hs`) | `ModuleData` (Canonical module + recorded types), `ModuleFacts` (schemes, kinds, substitution at each use, init order) |
 | 1 | marks | `M.Marks`(92), `M.Members`(107) | facts -> `Marks` (which type variables need exact types: number, comparable, equatable, printed) | `Marks` |
 | 2 | specializer | `M.Spec`(1186) `specialize` :181 | Canonical + marks -> `MProgram` | `MProgram{mpClones,mpMain,mpUnions}` (`M.Ir`:~150), `MDef`, `MExpr{mRep::Class, mNode::MNode}`, `MNode` (Ir.hs:41-73), `Class` = CI64/CF64/CU32/CEnum/CUnit/CRef/CStruct (`M.Class`), `Key`/`KeyPart` (specialization key) |
 | 3 | inliner | `M.Inline`(688) `inlineProgram` :75 | `MProgram` -> `MProgram` | same IR; see section 2 |
@@ -43,10 +43,10 @@ with `--no-rc` the specializer output goes straight to `CGen` (this no-RC C text
 
 | pass | where | trigger | cannot do now |
 |------|-------|---------|---------------|
-| **Inliner / known-constructor** (rules A, B, T, L, U) | `M.Inline` | always with `--rc` (default); `FICCUS_NO_INLINE=1` off (Inline.hs:51); not run with `--no-rc` | see list below |
+| **Inliner / known-constructor** (rules A, B, T, L, U) | `M.Inline` | always with `--rc` (default); `FICUS_NO_INLINE=1` off (Inline.hs:51); not run with `--no-rc` | see list below |
 | **compile-time top-level constants** (FIX3) | `CGen.constText` CGen.hs:207, `constOf` :218 (fuel 40) | CGen, per use: `MGlobal c` of a non-function whose body is a literal Int/Float/Char/enum or Int arithmetic/bit ops on constants (CGen.hs:158, 552) | only scalars; Int ops (add, sub, mul, negate, Bitwise64.*) are folded, Float arithmetic is not (constOf CGen.hs:236-239); no String, record, list or constructor values; no folding across function calls; done in the C generator, so it is invisible to the IR passes |
 | **init-order fix** (FIX2) | `Spec.ordered` Spec.hs:222 | always, in the specializer | only orders top-level values; does not make a cycle through a lazily-referenced lifted function a non-cycle at runtime (it relies on the lifted clone being only a closure) |
-| **Twin** (closure steals captured values) | `M.Twin` | `--rc` only; `FICCUS_NO_CLO_STEAL=1` off | works on closure *objects* made from lifted clones; does not remove the closure |
+| **Twin** (closure steals captured values) | `M.Twin` | `--rc` only; `FICUS_NO_CLO_STEAL=1` off | works on closure *objects* made from lifted clones; does not remove the closure |
 | **Reuse / drop specialization** | `M.Reuse`, `M.Rc` (MSpec, MReuse) | in the Rc pass | constructor cell reuse only; not scalar replacement |
 | **Elm's `Optimize` (decision trees, case-of-case in JS)** | `compiler/src/Optimize/*` | JS path only | not used by the C path |
 
@@ -187,17 +187,17 @@ given, and `RcCheck` verifies the result, so a pass after Rc would have to maint
 
 ## 6. Test and gate hooks, and switching a pass off
 
-Gates (`ficcus-tests/gates.sh`, about one hour, serial; header lists expected numbers): runtime (`runtime/test.sh`), attach (79 cases), stringdiff, types (267 PASS 1 XFAIL), jsid (28),
-examples x3 (plain, `FIC_DROP_ALL=1`, `FICTEST_RC=1 FICTEST_SAN=1`), fbip (`fbip_check.py`), rcfaults and rcfaults-big (`rccheck_faults.py`, mutation of dup/drop via `FICCUS_RC_MUTATE`), rcgate-san
+Gates (`ficus-tests/gates.sh`, about one hour, serial; header lists expected numbers): runtime (`runtime/test.sh`), attach (79 cases), stringdiff, types (267 PASS 1 XFAIL), jsid (28),
+examples x3 (plain, `FIC_DROP_ALL=1`, `FICTEST_RC=1 FICTEST_SAN=1`), fbip (`fbip_check.py`), rcfaults and rcfaults-big (`rccheck_faults.py`, mutation of dup/drop via `FICUS_RC_MUTATE`), rcgate-san
 (`rc_gate.py --san`), suite (`targets/run_all.py --san`: the 16 programs against Elm's golden outputs), typed (568/12/1), lib-rcsan (`libsuite.sh rcsan`), elmdiff (1160 SAME + 15 apps).
-Others: `ficcus-tests/norc_identity.py` (SHA-256 of the no-RC C text of the 16 programs against `ficcus-tests/expected/norc_identity.sha256`; refresh only with `--update --reason`),
-`ficcus-tests/rcfuzz.py` (random well-typed programs; `--settings` selects an experiment switch, `noinline` = `FICCUS_NO_INLINE`), `v2fuzz.py` (compares `--no-rc` with `--rc` under ASan),
-`p1_bench.py` (`tools/p1_bench.py`/`ficcus-tools/p1_bench.py`: the combinator program, allocation counters through `FIC_STATS`), `targets/` suite for the differential comparison against Elm.
-`ficcus-tests/expected/*.mono` are the `--output` Mono dumps of the suite (`Print.renderProgram`, `M.Print`), the natural place to see whether a pass changed the IR.
+Others: `ficus-tests/norc_identity.py` (SHA-256 of the no-RC C text of the 16 programs against `ficus-tests/expected/norc_identity.sha256`; refresh only with `--update --reason`),
+`ficus-tests/rcfuzz.py` (random well-typed programs; `--settings` selects an experiment switch, `noinline` = `FICUS_NO_INLINE`), `v2fuzz.py` (compares `--no-rc` with `--rc` under ASan),
+`p1_bench.py` (`tools/p1_bench.py`/`ficus-tools/p1_bench.py`: the combinator program, allocation counters through `FIC_STATS`), `targets/` suite for the differential comparison against Elm.
+`ficus-tests/expected/*.mono` are the `--output` Mono dumps of the suite (`Print.renderProgram`, `M.Print`), the natural place to see whether a pass changed the IR.
 
-Switches: each pass reads a process-wide environment variable once through `unsafePerformIO (lookupEnv ..)`: Inline `FICCUS_NO_INLINE=1` (Inline.hs:51), Twin `FICCUS_NO_CLO_STEAL=1` (Twin.hs:41), Rc
-`FICCUS_NO_SPEC`, `FICCUS_NO_REUSE`, `FICCUS_NO_STEAL`, `FICCUS_NO_ALIAS_LET`, Borrow `FICCUS_NO_STEAL_RULE`, `FICCUS_BORROW_*` (list in the workspace `docs/FLAGS.md`, section 4, and `rcfuzz.py:27-33`, which has one
+Switches: each pass reads a process-wide environment variable once through `unsafePerformIO (lookupEnv ..)`: Inline `FICUS_NO_INLINE=1` (Inline.hs:51), Twin `FICUS_NO_CLO_STEAL=1` (Twin.hs:41), Rc
+`FICUS_NO_SPEC`, `FICUS_NO_REUSE`, `FICUS_NO_STEAL`, `FICUS_NO_ALIAS_LET`, Borrow `FICUS_NO_STEAL_RULE`, `FICUS_BORROW_*` (list in the workspace `docs/FLAGS.md`, section 4, and `rcfuzz.py:27-33`, which has one
 setting per switch). Command line flags: `--rc`/`--no-rc` (Make.hs:120; `Flags` are defined in the `terminal` package's `Flags` record, `Make.hs:107` pattern). A new pass would follow the same pattern
-(`FICCUS_NO_<NAME>=1`, plus a line in `rcfuzz.py`'s list and in `docs/FLAGS.md`) and a variant row in the gates. Debug aids: `FICCUS_RC_DUMP=text` prints the counted clones whose name contains the text
-(Make.hs:~212), `FICCUS_TWIN_STATS=1` prints counters; `Inline.inlineStats` returns the rule counts (a new pass would want the same).
+(`FICUS_NO_<NAME>=1`, plus a line in `rcfuzz.py`'s list and in `docs/FLAGS.md`) and a variant row in the gates. Debug aids: `FICUS_RC_DUMP=text` prints the counted clones whose name contains the text
+(Make.hs:~212), `FICUS_TWIN_STATS=1` prints counters; `Inline.inlineStats` returns the rule counts (a new pass would want the same).
 The binary of a gate is `bin/elmficNN`; the build is `cabal -j1 build exe:elm --ghc-options="+RTS -M6g -RTS"` (not run for this survey).

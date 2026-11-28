@@ -1,17 +1,17 @@
-# P1: JSON parsing with parser combinators (Ficcus, Rust, C)
+# P1: JSON parsing with parser combinators (Ficus, Rust, C)
 
 Bench session, 16-17 Nov 2026. Branch `bench/p1` (from `ficcus` at `4888a213`, own worktree), binary `bin/elmfic80`, no compiler change, shared files untouched, nothing committed or merged.
 Machine: AMD Ryzen 7 7840HS, gcc 16.2.1, rustc 1.100.0, load below 1.5. Serial, `ulimit -v` 6 GB, median of 5 wall times (whole process), max RSS of one more run.
 Results: `results/p1/p1_bench.json` (workspace), inputs `results/p1/json_1mb.json` (990,950 bytes, 87,689 nodes) and `json_50mb.json` (46,649,545 bytes, 4,131,606 nodes).
 
 ## Files
-- `ficcus-tools/gen_json.py N [OUT]`: the generator (specification in its header) and the oracle checksum (Python `json`). `N=7500` is the 1 MB document, `N=375000` the 50 MB one.
-- `ficcus-tools/p1_bench.py`: the driver (builds, measures, compares, patches a per-tag allocation count into a copy of the generated C, removes its builds).
-- `targets/p1/` (an Elm/Ficcus project): `src/JsonConfig.elm` (records, stage; rewritten by the driver), `JsonGen.elm`, `JsonTree.elm` (type `Json`, checksum fold), **`JsonComb.elm` (version A)**, `JsonHand.elm` (C), `JsonStrComb.elm` (A on a String), `JsonPkg.elm` (B, real elm/parser); `json_hand.c` (hand C).
+- `ficus-tools/gen_json.py N [OUT]`: the generator (specification in its header) and the oracle checksum (Python `json`). `N=7500` is the 1 MB document, `N=375000` the 50 MB one.
+- `ficus-tools/p1_bench.py`: the driver (builds, measures, compares, patches a per-tag allocation count into a copy of the generated C, removes its builds).
+- `targets/p1/` (an Elm/Ficus project): `src/JsonConfig.elm` (records, stage; rewritten by the driver), `JsonGen.elm`, `JsonTree.elm` (type `Json`, checksum fold), **`JsonComb.elm` (version A)**, `JsonHand.elm` (C), `JsonStrComb.elm` (A on a String), `JsonPkg.elm` (B, real elm/parser); `json_hand.c` (hand C).
 - `targets/rust/`: `json_common.rs`, `json_comb_dyn.rs`, `json_comb_impl.rs`, `json_rd.rs`.
 
 ## Method
-The C path cannot read a file (a `Platform.worker` has no input), so, as in wordfreq, **every version builds the document itself** from the same integer generator, and `gen_json.py` is its specification. The text is a `String` (Ficcus) or a byte buffer; it is converted once to a `Vector Int` of byte values (the text is pure ASCII, non-ASCII characters occur as `\u` escapes). The program takes a stage (a constant in Ficcus, an argument in Rust and C): 0 generate, 1 also convert, 2 also parse and print `nodes sum64 strlen depth`. **Generation = stage 0, conversion = stage 1 - stage 0, parse = stage 2 - stage 1.** Every stage 2 output equals the checksum of `gen_json.py` on both sizes, A and C also equal Elm 0.19.3 under node on the 1 MB document (`Vector` replaced by `ficcus-tests/vecshim`); stage 0 and 1 print the text length, which equals the file size. (The generated text itself was not compared byte for byte; equal checksums and lengths from independent parsers are the evidence.)
+The C path cannot read a file (a `Platform.worker` has no input), so, as in wordfreq, **every version builds the document itself** from the same integer generator, and `gen_json.py` is its specification. The text is a `String` (Ficus) or a byte buffer; it is converted once to a `Vector Int` of byte values (the text is pure ASCII, non-ASCII characters occur as `\u` escapes). The program takes a stage (a constant in Ficus, an argument in Rust and C): 0 generate, 1 also convert, 2 also parse and print `nodes sum64 strlen depth`. **Generation = stage 0, conversion = stage 1 - stage 0, parse = stage 2 - stage 1.** Every stage 2 output equals the checksum of `gen_json.py` on both sizes, A and C also equal Elm 0.19.3 under node on the 1 MB document (`Vector` replaced by `ficus-tests/vecshim`); stage 0 and 1 print the text length, which equals the file size. (The generated text itself was not compared byte for byte; equal checksums and lengths from independent parsers are the evidence.)
 Document: depth up to 12, objects, arrays, strings with escapes (`\" \\ \/ \n \t \b é A`), integers, floats (multiples of 1/64, some with an exponent, so sums are exact), booleans, null.
 Checksum prints `floor (sum * 64)`: Elm's `truncate` wraps at 32 bits (known quirk), `floor` does not.
 
@@ -21,16 +21,16 @@ The state is `{ src : Vector Int, offset : Int }` (no row, column, indent, conte
 ## Results (ms, whole process; parse = stage 2 - stage 1)
 | version | 1 MB gen | conv | **parse** | total | RSS MB | 50 MB gen | conv | **parse** | total | RSS MB |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Ficcus A (combinators, Vector Int) | 23 | 6 | **186** | 214 | 16 | 939 | 274 | **8297** | 9510 | 640 |
-| Ficcus C (recursive descent) | 34 | 8 | **25** | 67 | 16 | 913 | 273 | **767** | 1953 | 640 |
+| Ficus A (combinators, Vector Int) | 23 | 6 | **186** | 214 | 16 | 939 | 274 | **8297** | 9510 | 640 |
+| Ficus C (recursive descent) | 34 | 8 | **25** | 67 | 16 | 913 | 273 | **767** | 1953 | 640 |
 | Rust, Rc<dyn Fn> combinators | 8 | 0 | **232** | 239 | 10 | 223 | 0 | **11761** | 11980 | 362 |
 | Rust, impl Fn combinators | 8 | 0 | **14** | 21 | 10 | 226 | 0 | **627** | 850 | 357 |
 | Rust, recursive descent | 8 | 0 | **11** | 20 | 11 | 217 | 2 | **529** | 748 | 403 |
 | hand C, recursive descent (gcc -O3) | 7 | 1 | **12** | 19 | 15 | 234 | 0 | **574** | 807 | 606 |
-| Ficcus B, real elm/parser (String) | 22 | - | **13,176** | 13,199 | 10 | not run | | | | |
-| Ficcus A on a String | 23 | - | **481,619** (1 run) | 481,642 | 10 | not run | | | | |
+| Ficus B, real elm/parser (String) | 22 | - | **13,176** | 13,199 | 10 | not run | | | | |
+| Ficus A on a String | 23 | - | **481,619** (1 run) | 481,642 | 10 | not run | | | | |
 
-Ratios (parse, 50 MB): A / C = **10.8** (1 MB: 7.4), A / hand C = 14.5, C / hand C = 1.34, Rust dyn / Rust rd = 22, Rust impl / Rust rd = 1.19, Ficcus A / Rust dyn = 0.71. Peak memory: a `Vector Int` is 8 bytes per input byte (373 MB of the 465 MB at stage 1); Rust and C hold 1 byte per byte.
+Ratios (parse, 50 MB): A / C = **10.8** (1 MB: 7.4), A / hand C = 14.5, C / hand C = 1.34, Rust dyn / Rust rd = 22, Rust impl / Rust rd = 1.19, Ficus A / Rust dyn = 0.71. Peak memory: a `Vector Int` is 8 bytes per input byte (373 MB of the 465 MB at stage 1); Rust and C hold 1 byte per byte.
 String variant, quadratic (one run each): 125 records 207 ms, 250 774 ms, 500 3,290 ms, 1000 9,407 ms (136 KB), 7500 481,642 ms. B on the same grammar: 13.2 s for 1 MB.
 
 ## Counters (FIC_STATS, parse only = stage 2 - stage 1; closures = closure + partial application allocations)
@@ -60,10 +60,10 @@ A makes 21.5 allocations, 22.5 dups, 16.4 drops and 4.8 closures per input byte 
 
 ## For the Roc translation
 Translate **`targets/p1/src/JsonComb.elm` (632 lines; everything but `toVector` and `main` is the library, the grammar and `unescape`) with `targets/p1/src/JsonTree.elm`** (the tree and the checksum); read the file instead of generating it:
-`python3 ficcus-tools/gen_json.py 375000 json_50mb.json` (or `7500 json_1mb.json`); the expected line is printed by that command and stored in the JSON results (`nodes=4131606 sum64=11196337623888 strlen=10937203 depth=12` for 50 MB, `nodes=87689 sum64=237203670393 strlen=233720 depth=12` for 1 MB). The generator (`JsonGen.elm`, 242 lines) is only needed if Roc must build the text itself. The smallest complete version is `JsonHand.elm` (C, 439 lines), the one with the higher order code that the Morphic comparison needs is A. Notes: `Parser a` is a plain function type (a Roc function), `Step` and `Loop` are tags, `Vector Int` is `List U8`, the sepBy accumulator is reversed once at the end (finding 3), the recursive rules are functions of `{}`.
+`python3 ficus-tools/gen_json.py 375000 json_50mb.json` (or `7500 json_1mb.json`); the expected line is printed by that command and stored in the JSON results (`nodes=4131606 sum64=11196337623888 strlen=10937203 depth=12` for 50 MB, `nodes=87689 sum64=237203670393 strlen=233720 depth=12` for 1 MB). The generator (`JsonGen.elm`, 242 lines) is only needed if Roc must build the text itself. The smallest complete version is `JsonHand.elm` (C, 439 lines), the one with the higher order code that the Morphic comparison needs is A. Notes: `Parser a` is a plain function type (a Roc function), `Step` and `Loop` are tags, `Vector Int` is `List U8`, the sepBy accumulator is reversed once at the end (finding 3), the recursive rules are functions of `{}`.
 
 ## Reproduce
-`python3 ficcus-tools/p1_bench.py --elm bin/elmfic80 --elm-home H --out results/p1 --sizes 7500,375000 --runs 5 --str-runs 1 --elm-check` (the String variant at 1 MB takes 8 minutes; `--only a,b` selects versions; H a private copy of an ELM_HOME with elm/core, json, parser).
+`python3 ficus-tools/p1_bench.py --elm bin/elmfic80 --elm-home H --out results/p1 --sizes 7500,375000 --runs 5 --str-runs 1 --elm-check` (the String variant at 1 MB takes 8 minutes; `--only a,b` selects versions; H a private copy of an ELM_HOME with elm/core, json, parser).
 
 ## Update 17 Nov (FIX2, `docs/STAGE4-FIX2.md`)
 Finding 1 is fixed (`Spec.ordered`; the cyclic form of `JsonComb` gives the right checksum, the programs here keep the `()` workaround so that results stay comparable). Finding 2 is fixed (`fic_us_off`): B on the 1 MB document 12,965 ms to 275 ms, A on a String 479,852 ms to 241 ms (whole process, `elmfic80`-era runtime against `elmficA14`).

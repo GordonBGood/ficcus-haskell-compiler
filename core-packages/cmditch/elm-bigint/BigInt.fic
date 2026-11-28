@@ -7,7 +7,7 @@ module BigInt exposing
     , isEven, isOdd
     )
 
-{-| Arbitrary size integers, with the API of cmditch/elm-bigint 2.1.2 (the same exposed functions and behaviour), in Ficcus.
+{-| Arbitrary size integers, with the API of cmditch/elm-bigint 2.1.2 (the same exposed functions and behaviour), in Ficus.
 
 A number is a sign and a magnitude. The magnitude is a `Vector Int` of limbs, least significant first, each limb in `0 .. base - 1`,
 no zero limb at the top, and zero has its own constructor, so one value has one representation and `==` works on `BigInt`.

@@ -1,9 +1,9 @@
 module FicOverlay exposing (..)
 
-{-| Ficcus: elm/core functions that are written in JavaScript (`Elm.Kernel.*`) in the real library and
+{-| Ficus: elm/core functions that are written in JavaScript (`Elm.Kernel.*`) in the real library and
 here in Elm, so that the specializer clones them per class like any other definition.
 The compiler adds this module to every `.c` and `.mono` build and redirects the kernel id
-(`elm/core:List.map2` ...) to the definition named in Ficcus.Mono.Overlay. The type annotations are
+(`elm/core:List.map2` ...) to the definition named in Ficus.Mono.Overlay. The type annotations are
 the ones of elm/core (same variable names, same order): the call site's instance is matched against them.
 
 Rules: results and the order of evaluation equal the JavaScript kernels (first to last element,
@@ -127,7 +127,7 @@ indexedMapHelp f i xs acc =
             indexedMapHelp f (i + 1) xr (f i x :: acc)
 
 
-{-| Ficcus (ATTACH A3): `<`, `>`, `<=`, `>=` and `/=` at a custom type that has the member `compare` (or `eq`) are these
+{-| Ficus (ATTACH A3): `<`, `>`, `<=`, `>=` and `/=` at a custom type that has the member `compare` (or `eq`) are these
 definitions: the specializer redirects the kernel function to them for such a type only (the primitives are used for
 every other type). `compare` and `==` inside are the member calls. -}
 ficLt : comparable -> comparable -> Bool
@@ -157,7 +157,7 @@ ficNeq a b =
 
 
 -- A4c: the enumeration members of the built-in types Bool, Order (all five, declaration order: False < True as A4b's
--- `compare`, LT < EQ < GT) and Int (`minValue`, `maxValue`); Ficcus.Mono.BuiltinMembers maps a member to these.
+-- `compare`, LT < EQ < GT) and Int (`minValue`, `maxValue`); Ficus.Mono.BuiltinMembers maps a member to these.
 
 
 ficBoolMinValue : Bool

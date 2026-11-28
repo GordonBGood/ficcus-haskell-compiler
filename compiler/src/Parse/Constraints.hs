@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wall -fno-warn-unused-do-bind #-}
 {-# LANGUAGE BangPatterns, ExtendedLiterals, MagicHash, OverloadedStrings #-}
--- Ficcus (ATTACH, stage A2): the `where` block after a signature.
+-- Ficus (ATTACH, stage A2): the `where` block after a signature.
 --
 --     sum : List a -> a
 --         where

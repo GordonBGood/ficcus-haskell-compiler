@@ -1,0 +1,176 @@
+module Main exposing (main)
+
+-- Ficus only: Vector programs: sieve, prefix sums, in place insertion sort with swap, flat matrix product, vector of records
+-- (particles), vector of strings, vector of vectors (grid), push growth, slice/append, filter, persistence of old versions.
+-- Expected output: expected.py (computed independently).
+
+import Vector exposing (Vector)
+
+
+sieve : Int -> Vector Bool
+sieve n =
+    let
+        init =
+            Vector.initialize (n + 1) (\i -> i >= 2)
+
+        outer i v =
+            if i * i > n then
+                v
+
+            else if Vector.get i v == Just True then
+                outer (i + 1) (inner (i * i) i v)
+
+            else
+                outer (i + 1) v
+
+        inner j step v =
+            if j > n then
+                v
+
+            else
+                inner (j + step) step (Vector.set j False v)
+    in
+    outer 2 init
+
+
+countTrue : Vector Bool -> Int
+countTrue =
+    Vector.foldl (\b n -> if b then n + 1 else n) 0
+
+
+prefix : Vector Int -> Vector Int
+prefix v =
+    Vector.foldl (\x acc -> Vector.push (x + (Vector.get (Vector.length acc - 1) acc |> Maybe.withDefault 0)) acc) Vector.empty v
+
+
+insertionSort : Vector Int -> Vector Int
+insertionSort v =
+    let
+        outer i vec =
+            if i >= Vector.length vec then
+                vec
+
+            else
+                outer (i + 1) (sink i vec)
+
+        sink j vec =
+            if j <= 0 then
+                vec
+
+            else
+                case ( Vector.get (j - 1) vec, Vector.get j vec ) of
+                    ( Just a, Just b ) ->
+                        if a > b then
+                            sink (j - 1) (Vector.swap (j - 1) j vec)
+
+                        else
+                            vec
+
+                    _ ->
+                        vec
+    in
+    outer 1 v
+
+
+matMul : Int -> Vector Int -> Vector Int -> Vector Int
+matMul n a b =
+    Vector.initialize (n * n)
+        (\idx ->
+            let
+                i =
+                    idx // n
+
+                j =
+                    modBy n idx
+
+                at m r c =
+                    Vector.get (r * n + c) m |> Maybe.withDefault 0
+            in
+            List.foldl (\k acc -> acc + at a i k * at b k j) 0 (List.range 0 (n - 1))
+        )
+
+
+type alias Particle =
+    { x : Int, v : Int, name : String }
+
+
+stepAll : Vector Particle -> Vector Particle
+stepAll =
+    Vector.map (\p -> { p | x = p.x + p.v, v = if abs (p.x + p.v) > 20 then -p.v else p.v })
+
+
+grid : Int -> Vector (Vector Int)
+grid n =
+    Vector.initialize n (\r -> Vector.initialize n (\c -> r * 10 + c))
+
+
+transposeG : Vector (Vector Int) -> Vector (Vector Int)
+transposeG g =
+    let
+        n =
+            Vector.length g
+    in
+    Vector.initialize n (\c -> Vector.initialize n (\r -> Vector.get r g |> Maybe.andThen (Vector.get c) |> Maybe.withDefault -1))
+
+
+lcg : Int -> Int
+lcg x =
+    modBy 2147483647 (x * 48271)
+
+
+results : List ( String, String )
+results =
+    let
+        s =
+            sieve 5000
+
+        data =
+            Vector.fromList (List.foldl (\_ ( x, acc ) -> ( lcg x, modBy 100 x :: acc )) ( 7, [] ) (List.range 1 40) |> Tuple.second)
+
+        a =
+            Vector.initialize 9 (\i -> i + 1)
+
+        b =
+            Vector.initialize 9 (\i -> if modBy 4 i == 0 then 1 else 0)
+
+        ps =
+            Vector.fromList [ { x = 0, v = 3, name = "a" }, { x = 10, v = -4, name = "b" }, { x = -15, v = 7, name = "c" } ]
+
+        ps8 =
+            List.foldl (\_ v -> stepAll v) ps (List.range 1 8)
+
+        old =
+            Vector.fromList [ 1, 2, 3 ]
+
+        newer =
+            old |> Vector.set 0 99 |> Vector.push 4
+    in
+    [ ( "primes below 5000", String.fromInt (countTrue s) )
+    , ( "primes list", String.join "," (List.map String.fromInt (List.take 10 (List.filterMap (\( i, p ) -> if p then Just i else Nothing) (Vector.toIndexedList s)))) )
+    , ( "prefix", String.join "," (List.map String.fromInt (Vector.toList (prefix (Vector.initialize 10 (\i -> i * i))))) )
+    , ( "sorted", String.join "," (List.map String.fromInt (Vector.toList (insertionSort data))) )
+    , ( "unsorted untouched", String.join "," (List.map String.fromInt (List.take 8 (Vector.toList data))) )
+    , ( "matmul", String.join "," (List.map String.fromInt (Vector.toList (matMul 3 a b))) )
+    , ( "particles", String.join " " (List.map (\p -> p.name ++ ":" ++ String.fromInt p.x ++ "/" ++ String.fromInt p.v) (Vector.toList ps8)) )
+    , ( "strings", String.join "-" (Vector.toList (Vector.map String.toUpper (Vector.fromList [ "ab", "cd", "ef" ]))) )
+    , ( "grid transpose", String.join "," (List.map String.fromInt (List.concatMap Vector.toList (Vector.toList (transposeG (grid 3))))) )
+    , ( "slice/append", String.join "," (List.map String.fromInt (Vector.toList (Vector.append (Vector.slice 1 3 a) (Vector.slice -2 9 a)))) )
+    , ( "filter", String.join "," (List.map String.fromInt (Vector.toList (Vector.filter (\x -> modBy 3 x == 0) (Vector.initialize 20 identity)))) )
+    , ( "persistence", String.join "|" [ String.join "," (List.map String.fromInt (Vector.toList old)), String.join "," (List.map String.fromInt (Vector.toList newer)) ] )
+    , ( "push 3000", String.fromInt (Vector.length (List.foldl Vector.push Vector.empty (List.range 1 3000))) )
+    , ( "out of range", String.join "," [ Debug.toString (Vector.get 10 old), Debug.toString (Vector.get -1 old), String.fromInt (Vector.length (Vector.set 7 0 old)) ] )
+    ]
+
+
+main : Program () () ()
+main =
+    Platform.worker
+        { init = \_ -> ( run results, Cmd.none )
+        , update = \_ m -> ( m, Cmd.none )
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+run : List ( String, String ) -> ()
+run items =
+    List.foldl (\( k, v ) _ -> always () (Debug.log k v)) () items

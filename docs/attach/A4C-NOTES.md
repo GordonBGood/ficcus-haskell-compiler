@@ -49,7 +49,7 @@ walk : a -> List a where a has succ : a -> Maybe a                    -- Bool, O
 |---|---|
 | the shapes `ToString` (`s -> String`), `Step` (`s -> Maybe s`), `Enumerate` (`List s`); `minValue`/`maxValue` reuse `Value`; built-in shapes, not well known names (as `hash`, `zero`) | `AST/WellKnown.hs` |
 | `toString` a built-in member of Int, Float, String, Char, List, tuples, `()` and (behind A4b's gate) records, Maybe, Result, Array, Vector, Dict, Set; parts need it too. New kind `BBounded` = Bool and Order (A4b's members plus the five). Int: `minValue`, `maxValue`. The sized types: `toString`, and the integers `minValue`/`maxValue` | `AST/WellKnown.hs`, `Type/Members.hs` (`sizedBuiltin`) |
-| `toString` at an exact type (built in, or a derived `T$$toString`, also as a value `List.map Shape.toString`) is the kernel `Debug.toString` at `[ByType t]`: `showStmt`. Not recorded in `mpDerived` (no helper of its own) | `Ficcus/Mono/BuiltinMembers.hs` (new), `Derived.derivedKernel`, `Spec.builtinMember`/`memberRef` |
+| `toString` at an exact type (built in, or a derived `T$$toString`, also as a value `List.map Shape.toString`) is the kernel `Debug.toString` at `[ByType t]`: `showStmt`. Not recorded in `mpDerived` (no helper of its own) | `Ficus/Mono/BuiltinMembers.hs` (new), `Derived.derivedKernel`, `Spec.builtinMember`/`memberRef` |
 | the enumeration members of Bool, Order, Int: definitions `ficBoolSucc` ... `ficIntMaxValue` in `overlay/FicOverlay.elm`; the sized integers: their modules' own top level `minValue`/`maxValue`. A clone at `Key []` | `BuiltinMembers.enumMemberDef`, `Spec.builtinMember` |
 | derived `minValue` ... `enumerate` (group E): bodies written as **source** in `prepare` (constructors unqualified, `Maybe.Just`/`Maybe.Nothing` qualified), each node at its own region (the type recorder keys by region and kind); `finish` gives them no kernel stub | new `Canonicalize/DeriveEnum.hs`, `Derive.stub`, `Derive.finish` |
 
@@ -82,7 +82,7 @@ walk : a -> List a where a has succ : a -> Maybe a                    -- Bool, O
 
 ## 6. Cases
 
-`ficcus-tests/attach/a4cgen.py` (standalone; helpers of a4bfgen.py; one source with markers gives both the Ficcus program and its
+`ficus-tests/attach/a4cgen.py` (standalone; helpers of a4bfgen.py; one source with markers gives both the Ficus program and its
 twin). 17 cases, attach is now 395. Twins in `a4c-twins/`: `elm` (bin/elm0193 + node; `Debug.toString` for each `toString`,
 hand-written `nextIn`/`prevIn` over the declaration list for the enumeration members) or `oldc` (Debug.toString on elmficT1c).
 
@@ -130,7 +130,7 @@ for; log /home/gordon/claude-tmp/gates-a4c.log, S kept). All green:
 
 ## 9. Proposed text for the shared files (for the user or the planning chat)
 
-* `docs/Ficcus-Design-Decisions.md`:
+* `docs/Ficus-Design-Decisions.md`:
   > **DONE (27 Nov) A4c (`feat/a4c` 19169bb2, `elmficA4c`, not merged; docs/attach/A4C-NOTES.md):** derived `toString` (= Elm's
   > Debug.toString, verified on elm0193; structural all the way down), derived `minValue`, `maxValue`, `succ`, `pred`, `enumerate`;
   > built in `toString` of every showable type, the five enumeration members of Bool and Order, `minValue`/`maxValue` of Int and the

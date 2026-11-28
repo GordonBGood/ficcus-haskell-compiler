@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* ---- the generator (specification: ficcus-tools/gen_json.py) ---- */
+/* ---- the generator (specification: ficus-tools/gen_json.py) ---- */
 typedef struct { char *p; size_t n, cap; } buf;
 static void put(buf *b, const char *s, size_t k) {
   if (b->n + k + 1 > b->cap) { b->cap = (b->n + k + 1) * 2; b->p = realloc(b->p, b->cap); if (!b->p) abort(); }

@@ -9,7 +9,7 @@
 //    is kept, so after the first tree the allocator is not called at all. The long-lived tree, the shared tree
 //    and the trees of the map test are ordinary arenas as in the default build.
 //  * the shared tree (both children the same object): both links hold the same index, so it has 21 real nodes as in
-//    Elm/Ficcus; its logical size is counted by walking the DAG (2^21-1 visits).
+//    Elm/Ficus; its logical size is counted by walking the DAG (2^21-1 visits).
 //  * map over a unique tree is in place on the arena; map over a tree still in use builds a copy into a new arena.
 // Differences to the Box program that matter: no per-node malloc/free, nodes of a tree contiguous in memory,
 // links are 4 byte indices (a node is 24 bytes), every access is bounds checked.

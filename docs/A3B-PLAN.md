@@ -8,15 +8,15 @@ Inputs: A3-NOTES 5.1 and 9 (F1), A4-DERIVE-DESIGN sections 1 and 5 (group S shar
 
 | where | today | after |
 |---|---|---|
-| `Spec.wellKnownRef` → `nested` (`holdsMember ... "eq"/"compare"`) | FICCUS "has its own `eq`/`compare` member ... does not call yet" for `==`, `/=`, `compare`, `<` `<=` `>` `>=`, `max`, `min`, `List.member`, `Dict`/`Set` keys, `sortBy` key, `List.maximum`, at any type that holds a custom type with the member | no refusal: the member clones of every member type inside the exact type are requested and handed to the C generator (section 2) |
-| same, `Sized.wordWithoutStructuralOrder` (Word64 inside a compared type) | FICCUS "has its own `compare` member" (`sized-err-word64-tuple`) | no refusal: `cmpExpr` already compares a Word64 part with `fic_sz_u64_cmp` (unsigned) |
+| `Spec.wellKnownRef` → `nested` (`holdsMember ... "eq"/"compare"`) | FICUS "has its own `eq`/`compare` member ... does not call yet" for `==`, `/=`, `compare`, `<` `<=` `>` `>=`, `max`, `min`, `List.member`, `Dict`/`Set` keys, `sortBy` key, `List.maximum`, at any type that holds a custom type with the member | no refusal: the member clones of every member type inside the exact type are requested and handed to the C generator (section 2) |
+| same, `Sized.wordWithoutStructuralOrder` (Word64 inside a compared type) | FICUS "has its own `compare` member" (`sized-err-word64-tuple`) | no refusal: `cmpExpr` already compares a Word64 part with `fic_sz_u64_cmp` (unsigned) |
 | Float literal at a type that is not `Float` | TYPE MISMATCH (`sized-err-float-literal`) | when a type in sight has a `fromFloat` member, the literal is typed as the relaxed `/` is (decision 3 of A3): a variable with the obligation `has fromFloat`, Elm's `Float` as its default |
 
 `Spec.vectorSortMember` (sorting through the overlay's `sortMember`) keeps `holdsMember` as it is: correct, and no C text change.
 
 ## 2. Helper design per container (C path)
 
-* **Specializer** (new module `Ficcus.Mono.ContainerMembers`, a few lines in `Spec`): `containerMembers` walks an exact type like
+* **Specializer** (new module `Ficus.Mono.ContainerMembers`, a few lines in `Spec`): `containerMembers` walks an exact type like
   `holdsMember` (type arguments, tuples, records, constructor fields of custom types with the arguments put in, a set of the exact types
   seen) and returns every exact custom type inside that has the member (not entering it: its own member is called). `Spec` requests the
   clone of each (`memberClone`, at the member's shape) and records it in a table `(member, exact type) -> clone`, which goes into
@@ -42,7 +42,7 @@ before generalization as `/` is); without such a type nothing changes. Specializ
 gets the member (`gen_sized.py`, regenerated `overlay/Float32.elm`). JS: the relaxed obligation that meets a custom type sets the
 `$customOperators` marker (`_note`), as for `/`. `-0.5` is `neg (fromFloat 0.5)`.
 
-## 4. Test matrix (attach style, `ficcus-tests/attach/cases/a3b-*`)
+## 4. Test matrix (attach style, `ficus-tests/attach/cases/a3b-*`)
 
 RUN `c` cases, with `expected.out` taken from a hand written Elm twin of the program (the member calls written out) run by `bin/elm0193`
 and node, never by eye: `eq` through list, tuple, record, `Maybe`, `Result`, user union, recursive and mutually recursive union,

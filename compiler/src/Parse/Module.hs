@@ -94,7 +94,7 @@ checkModule :: ProjectType -> Module -> Either E.Error Src.Module
 checkModule projectType (Module maybeHeader imports0 infixes decls) =
   let
     (values, unions, aliases, ports) = categorizeDecls [] [] [] [] decls
-    imports = Members.deriveImports values imports0     -- Ficcus (A4a): Json.Encode, Json.Decode for derived members
+    imports = Members.deriveImports values imports0     -- Ficus (A4a): Json.Encode, Json.Decode for derived members
   in
   case maybeHeader of
     Just (Header name effects exports docs) ->
@@ -399,7 +399,7 @@ chompAs :: A.Located Module.Name -> Parser E.Module Src.Import
 chompAs name =
   do  Keyword.as_ E.ImportAs
       Space.chompAndCheckIndent E.ModuleSpace E.ImportIndentAlias
-      alias <- fmap Module.toPrefix (Var.moduleName E.ImportAlias)   -- Ficcus track E4: a dotted alias, `as Tree.Path`
+      alias <- fmap Module.toPrefix (Var.moduleName E.ImportAlias)   -- Ficus track E4: a dotted alias, `as Tree.Path`
       end <- getPosition
       Space.chomp E.ModuleSpace
       oneOf E.ImportEnd
