@@ -1,4 +1,4 @@
-                            Detected problems in 1 module.
+Detected problems in 1 module.
 -- PORT ERROR ---------------------------------------------- src/ElmPortInt8.elm
 
 The `p` port is trying to transmit a `Int8` value:

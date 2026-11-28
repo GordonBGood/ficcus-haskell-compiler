@@ -1,4 +1,4 @@
-                            Detected problems in 1 module.
+Detected problems in 1 module.
 -- MODULE NOT FOUND ------------------------------------------ src/FicPortJs.elm
 
 You are trying to import a `Int8` module:

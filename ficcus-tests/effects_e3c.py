@@ -117,8 +117,11 @@ def goldens(a, names):
 
 def norm(text):
     """a compiler report without the parts that differ between the two compilers (the file extension, the build progress lines)"""
-    text = re.sub(r"\.fic\b", ".elm", text)
-    return "".join(l for l in text.splitlines(True) if not re.match(r"^(Compiling|Success|Dependencies|Starting|Verifying|Building)", l.strip()))
+    text = re.sub(r"\.fic\b", ".elm", text).replace("\r", "\n")
+    lines = [l.rstrip() for l in text.split("\n")]
+    lines = [l for l in lines if not re.match(r"^(Compiling|Success|Dependencies|Starting|Verifying|Building)", l.strip())]
+    while lines and lines[0] == "": lines.pop(0)
+    return "\n".join(l.strip() if l.strip().startswith("Detected problems") else l for l in lines)
 
 
 def compile_cases(a, names):

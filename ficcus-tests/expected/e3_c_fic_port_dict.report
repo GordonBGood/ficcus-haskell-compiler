@@ -1,4 +1,4 @@
-                            Detected problems in 1 module.
+Detected problems in 1 module.
 -- PORT ERROR ---------------------------------------------- src/FicPortDict.elm
 
 The `p` port is trying to transmit a `Dict` value:
