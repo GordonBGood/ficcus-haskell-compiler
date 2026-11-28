@@ -86,7 +86,12 @@ fic_hv fic_hv_field(fic_hv o, const char *key);                       /* NULL if
    Int, Word64 and Float vectors are the program's own memory (zero copy); the narrow kinds are a copy made once by the encoder (D10,
    until G30). Incoming, fic_hv_vector_alloc returns a vector of n elements to fill at *data (all n, before the value is sent; do not
    write after sending), and a Vector port takes it when the element kind is the port's (zero copy for the 8 byte kinds, one widening
-   pass for the others); a Vector port also takes a JSON array. Inside a Json.Value payload a raw vector becomes an array of numbers. */
+   pass for the others); a Vector port also takes a JSON array. Inside a Json.Value payload a raw vector becomes an array of numbers.
+   WARNING: the *data pointer of fic_hv_vector_alloc is valid only until the value is sent. Reading it after fic_port_send is a use
+   after free for the narrow kinds (the send frees the staging node); for the 8 byte kinds (zero copy) the memory becomes the
+   program's, so a read is a use after free once the program drops the Vector, and a write silently changes the program's
+   (immutable) value, unseen by any sanitizer. To keep reading, fic_hv_retain the value before sending and read through
+   fic_hv_vector. */
 fic_hv fic_hv_vector_alloc(enum fic_el elem, size_t n, void **data);
 fic_hv fic_hv_vector_copy(enum fic_el elem, const void *data, size_t n);   /* fic_hv_vector_alloc and one memcpy */
 const void *fic_hv_vector(fic_hv v, enum fic_el *elem, size_t *n);    /* NULL if v is not a raw vector */

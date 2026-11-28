@@ -30,7 +30,8 @@
 typedef struct { fic_hdr h; uint64_t u; } fic_juint;
 typedef struct { fic_hdr h; fic_ref vec; int64_t n; uint32_t elem; uint32_t spare; unsigned char data[]; } fic_hvvec;
 
-/* the number of JUINT and HV_VEC nodes ever made: while it is 0 a Json.Value payload cannot hold one, and is not walked */
+/* the number of JUINT and HV_VEC nodes ever made: while it is 0 a Json.Value payload cannot hold one, and is not walked
+   (never decremented: after the first such node every Json.Value payload is walked once; results are the same, performance only) */
 static uint64_t fic_hv_specials;
 
 static const unsigned char fic_el_size[10] = { 1, 2, 4, 8, 1, 2, 4, 8, 4, 8 };

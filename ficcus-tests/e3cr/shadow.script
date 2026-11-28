@@ -1,0 +1,3 @@
+sub output
+send numsIn [1,27,28,200,-300]
+send numsIn []

@@ -1,0 +1,4 @@
+sub output
+sub i8Out
+send i8In 5
+send i8In 200

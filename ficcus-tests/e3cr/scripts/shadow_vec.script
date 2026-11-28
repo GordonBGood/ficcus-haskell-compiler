@@ -1,0 +1,3 @@
+sub output
+sub vOut
+send vIn [1,2]

@@ -28,7 +28,8 @@ import qualified Ficcus.Mono.Sized as Sized
 import Ficcus.Mono.Sized (Sized(..))
 
 
--- | the sized type of a payload type (the overlay's; a project's own `Int8` is refused by the generator later, as any custom type)
+-- | the sized type of a payload type (the overlay's: Canonicalize.FicPayload, the only gate, refuses a project's own `Int8` or
+-- `Vector` with Elm's payload error, so the ids alone suffice here)
 sizedOf :: MType -> Maybe Sized
 sizedOf t =
   case t of

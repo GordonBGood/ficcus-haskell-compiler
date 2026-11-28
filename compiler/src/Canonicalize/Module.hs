@@ -75,7 +75,7 @@ canonicalizeModule ficPayloads pkg ifaces modul@(Src.Module _ exports docs impor
           Foreign.createInitialEnv home ifaces imports
 
       cvalues <- canonicalizeValues env values
-      ceffects <- Effects.canonicalize (FicPayload.checkPayload ficPayloads) env values cunions effects
+      ceffects <- Effects.canonicalize (FicPayload.checkPayload ficPayloads ifaces) env values cunions effects
       cexports <- canonicalizeExports values cunions caliases cbinops ceffects exports
 
       return $ Can.Module home cexports docs cvalues cunions caliases cbinops ceffects

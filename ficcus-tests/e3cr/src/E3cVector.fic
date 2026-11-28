@@ -1,0 +1,142 @@
+port module E3cVector exposing (main)
+
+-- E3c, E3d (D6, D9, D10): Vector payloads. A Vector of Int, Float or a sized type crosses as a raw vector (runner: printed as a JSON
+-- array), every other Vector as a JSON array. Each vector that comes in goes out again on its own port, with its length and sum on
+-- `output`; init sends one of each kind. The Elm twin (effects_e3c.py `twin`) is this program with Array for Vector and Int or Float
+-- for the Ficcus number types.
+
+import Float32 exposing (Float32)
+import Int16 exposing (Int16)
+import Vector exposing (Vector)
+import Word64 exposing (Word64)
+import Word8 exposing (Word8)
+
+
+port output : String -> Cmd msg
+
+
+port viOut : Vector Int -> Cmd msg
+
+
+port vfOut : Vector Float -> Cmd msg
+
+
+port vbOut : Vector Word8 -> Cmd msg
+
+
+port vhOut : Vector Int16 -> Cmd msg
+
+
+port vgOut : Vector Float32 -> Cmd msg
+
+
+port vwOut : Vector Word64 -> Cmd msg
+
+
+port vsOut : Vector String -> Cmd msg
+
+
+port vrOut : Vector { id : Int, name : String } -> Cmd msg
+
+
+port vmOut : Vector (Maybe (Vector Word8)) -> Cmd msg
+
+
+port viIn : (Vector Int -> msg) -> Sub msg
+
+
+port vfIn : (Vector Float -> msg) -> Sub msg
+
+
+port vbIn : (Vector Word8 -> msg) -> Sub msg
+
+
+port vhIn : (Vector Int16 -> msg) -> Sub msg
+
+
+port vgIn : (Vector Float32 -> msg) -> Sub msg
+
+
+port vwIn : (Vector Word64 -> msg) -> Sub msg
+
+
+port vsIn : (Vector String -> msg) -> Sub msg
+
+
+port vrIn : (Vector { id : Int, name : String } -> msg) -> Sub msg
+
+
+port vmIn : (Vector (Maybe (Vector Word8)) -> msg) -> Sub msg
+
+
+type Msg
+    = VI (Vector Int)
+    | VF (Vector Float)
+    | VB (Vector Word8)
+    | VH (Vector Int16)
+    | VG (Vector Float32)
+    | VW (Vector Word64)
+    | VS (Vector String)
+    | VR (Vector { id : Int, name : String })
+    | VM (Vector (Maybe (Vector Word8)))
+
+
+line : String -> Int -> String -> String
+line tag n s =
+    tag ++ " " ++ String.fromInt n ++ " " ++ s
+
+
+update : Msg -> () -> ( (), Cmd Msg )
+update msg m =
+    case msg of
+        VI v ->
+            ( m, Cmd.batch [ output (line "vi" (Vector.length v) (String.fromInt (Vector.foldl (+) 0 v))), viOut v ] )
+
+        VF v ->
+            ( m, Cmd.batch [ output (line "vf" (Vector.length v) (String.fromFloat (Vector.foldl (+) 0 v))), vfOut v ] )
+
+        VB v ->
+            ( m, Cmd.batch [ output (line "vb" (Vector.length v) (String.fromInt (Vector.foldl (\x a -> a + Word8.toInt x) 0 v))), vbOut v ] )
+
+        VH v ->
+            ( m, Cmd.batch [ output (line "vh" (Vector.length v) (String.fromInt (Vector.foldl (\x a -> a + Int16.toInt x) 0 v))), vhOut v ] )
+
+        VG v ->
+            ( m, Cmd.batch [ output (line "vg" (Vector.length v) (String.fromFloat (Vector.foldl (\x a -> a + Float32.toFloat x) 0 v))), vgOut v ] )
+
+        VW v ->
+            ( m, Cmd.batch [ output (line "vw" (Vector.length v) (String.join "," (List.map Word64.toString (Vector.toList v)))), vwOut v ] )
+
+        VS v ->
+            ( m, Cmd.batch [ output (line "vs" (Vector.length v) (String.join "," (Vector.toList v))), vsOut v ] )
+
+        VR v ->
+            ( m, Cmd.batch [ output (line "vr" (Vector.length v) (String.join "," (List.map .name (Vector.toList v)))), vrOut v ] )
+
+        VM v ->
+            ( m, Cmd.batch [ output (line "vm" (Vector.length v) ""), vmOut v ] )
+
+
+initCmd : Cmd Msg
+initCmd =
+    Cmd.batch
+        [ viOut (Vector.fromList [ 1, -2, 9007199254740991 ])
+        , vfOut (Vector.fromList [ 0.1, -0, 1.0e300 ])
+        , vbOut (Vector.fromList (List.map Word8.fromInt [ 0, 7, 255 ]))
+        , vhOut (Vector.fromList (List.map Int16.fromInt [ -32768, 0, 32767 ]))
+        , vgOut (Vector.fromList (List.map Float32.fromFloat [ 0.5, -2.25, 16777216 ]))
+        , vwOut (Vector.fromList (List.map Word64.fromInt [ 0, 9007199254740991 ]))
+        , vsOut (Vector.fromList [ "a", "é", "" ])
+        , vrOut (Vector.fromList [ { id = 1, name = "x" } ])
+        , vmOut (Vector.fromList [ Nothing, Just (Vector.fromList (List.map Word8.fromInt [ 1, 2 ])) ])
+        , viOut Vector.empty
+        ]
+
+
+main : Program () () Msg
+main =
+    Platform.worker
+        { init = \_ -> ( (), initCmd )
+        , update = update
+        , subscriptions = \_ -> Sub.batch [ viIn VI, vfIn VF, vbIn VB, vhIn VH, vgIn VG, vwIn VW, vsIn VS, vrIn VR, vmIn VM ]
+        }

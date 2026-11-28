@@ -2736,7 +2736,7 @@ showStmt info t sb v =
   case t of
     TyCon "elm/core:Basics.Int" [] -> emit ("fic_sb_int(" ++ sb ++ ", " ++ v ++ ");")
     TyCon "elm/core:Basics.Float" [] -> emit ("fic_sb_float(" ++ sb ++ ", " ++ v ++ ");")
-    TyCon n [] | Just sz <- Sized.sizedOfTypeId n -> emit (Sized.showC sz sb v)
+    TyCon n [] | Just sz <- Sized.sizedEnabled (iUnions info) n -> emit (Sized.showC sz sb v)    -- the overlay only (E3c review M1)
     TyCon "elm/core:Char.Char" [] -> emit ("fic_sb_char(" ++ sb ++ ", " ++ v ++ ");")
     TyCon "elm/core:String.String" [] -> emit ("fic_sb_string(" ++ sb ++ ", " ++ v ++ ");")
     TyCon "elm/core:Basics.Bool" [] -> emit ("fic_sb_puts(" ++ sb ++ ", " ++ v ++ " ? \"True\" : \"False\");")
@@ -2914,7 +2914,7 @@ cmpExpr info t a b =
     -- (A4b) False < True; () has one value
     TyCon "elm/core:Basics.Bool" [] -> return ("fic_i_cmp((int64_t)(" ++ a ++ " != 0), (int64_t)(" ++ b ++ " != 0))")
     TyUnit -> return ("((void)" ++ a ++ ", (void)" ++ b ++ ", 0)")
-    TyCon n [] | Just sz <- Sized.sizedOfTypeId n -> return (Sized.cmpC sz a b)
+    TyCon n [] | Just sz <- Sized.sizedEnabled (iUnions info) n -> return (Sized.cmpC sz a b)    -- the overlay only (E3c review M1)
     _ | isStringT t -> return ("fic_str_cmp(" ++ a ++ ", " ++ b ++ ")")
     _ -> do { h <- helper (HCmp t); return (h ++ "(" ++ a ++ ", " ++ b ++ ")") }
 
@@ -2931,7 +2931,7 @@ hashExpr info t a =
     TyCon "elm/core:Basics.Float" [] -> return ("fic_hash_f64(" ++ a ++ ")")
     TyCon "elm/core:Basics.Bool" [] -> return ("fic_hash_mix((uint64_t)(" ++ a ++ " != 0))")
     TyUnit -> return ("((void)" ++ a ++ ", fic_hash_mix(0u))")
-    TyCon n [] | Just sz <- Sized.sizedOfTypeId n ->
+    TyCon n [] | Just sz <- Sized.sizedEnabled (iUnions info) n ->    -- the overlay only (E3c review M1)
       return (if Sized.isFloat sz then "fic_hash_f64((double)" ++ a ++ ")" else "fic_hash_mix((uint64_t)(int64_t)" ++ a ++ ")")
     _ | isStringT t -> return ("fic_hash_bytes((const uint8_t *)FIC_STR(" ++ a ++ ")->data, FIC_STR(" ++ a ++ ")->len)")
     _ -> do { h <- helper (HHash t); return (h ++ "(" ++ a ++ ")") }

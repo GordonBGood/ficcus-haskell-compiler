@@ -1,0 +1,12 @@
+# E3c review item 3 (host_api.c): JUINT and raw vector nodes inside a Json.Value payload; json_twin.script sends the same values as
+# JSON text (run under the Elm twin and under Ficcus): the program's lines must be equal
+sub output
+sub jsonOut
+deep jsonIn 0 u
+deep jsonIn 0 v
+deep jsonIn 2 u
+deep jsonIn 2 v
+vec jsonIn f64 3 -0 0.5
+vec jsonIn u64 2 18446744073709547520 2048
+vec jsonIn f32 2 0.1 1
+vec jsonIn i8 3 -128 127

@@ -1,0 +1,23 @@
+port module Main exposing (main)
+
+import Int8 exposing (Int8)
+
+
+port output : String -> Cmd msg
+
+
+port numsIn : (List Int -> msg) -> Sub msg
+
+
+update : List Int -> () -> ( (), Cmd (List Int) )
+update x m =
+    ( m, output (String.join " " (List.map (Int8.fromInt >> Int8.add (Int8.fromInt 100) >> Int8.toString) x)) )
+
+
+main : Program () () (List Int)
+main =
+    Platform.worker
+        { init = \_ -> ( (), output (Int8.toString (Int8.add (Int8.fromInt 127) (Int8.fromInt 1)) ++ " " ++ Debug.toString (Int8.fromInt 300)) )
+        , update = update
+        , subscriptions = \_ -> numsIn identity
+        }
