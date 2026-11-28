@@ -13,7 +13,7 @@ HEAD=$(git -C "$WT" rev-parse HEAD)
 [ "$HEAD" = "$COMMIT" ] || die "$WT HEAD is $HEAD, not $COMMIT"
 [ -z "$(git -C "$WT" status --porcelain --untracked-files=no)" ] || die "$WT has uncommitted changes"
 BRANCH=$(git -C "$WT" symbolic-ref --short -q HEAD || echo detached)
-GATES=$WT/ficus-tests/gates.sh; BUILD=; GATE=
+GATES=$WT/ficus-tests/gates.sh; [ -f "$GATES" ] || GATES=$WT/ficcus-tests/gates.sh; BUILD=; GATE=
 for s in "$@"; do
   case $s in
     build) BUILD=1;;

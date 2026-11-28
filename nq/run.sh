@@ -28,7 +28,7 @@ gates_subset() {
     /^step [a-z0-9-]+/ { n = $2; sub(/;.*/, "", n); cur = n; if (index(want, " " n " ")) print; if (n != "summary") cur = ""; next }
     /^echo "=== DONE/ { cur = "" }
     cur == "summary" && !index(want, " summary ") { next }
-    { print }' "$WORKTREE/ficus-tests/gates.sh"
+    { print }' "$(g=$WORKTREE/ficus-tests/gates.sh; [ -f "$g" ] || g=$WORKTREE/ficcus-tests/gates.sh; echo "$g")"   # R1: or a worktree from before the rename
 }
 
 # per-step verdicts of one gates run: the log lines from $1 on, the steps $2; prints "name status seconds" lines
