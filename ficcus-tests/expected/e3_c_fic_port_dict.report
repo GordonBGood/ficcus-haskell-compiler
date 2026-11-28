@@ -1,0 +1,20 @@
+                            Detected problems in 1 module.
+-- PORT ERROR ---------------------------------------------- src/FicPortDict.elm
+
+The `p` port is trying to transmit a `Dict` value:
+
+8| port p : Dict String Int -> Cmd msg
+        ^
+I cannot handle that. The types that CAN flow in and out of Elm include:
+
+    Ints, Floats, Bools, Strings, Maybes, Lists, Arrays, tuples, records, and
+    JSON values.
+
+Since JSON values can flow through, you can use JSON encoders and decoders to
+allow other types through as well. More advanced users often just do everything
+with encoders and decoders for more control and better errors.
+
+Hint: Ports are not a traditional FFI, so if you have tons of annoying ports,
+definitely read <https://elm-lang.org/0.19.3/ports> to learn how they are meant
+to work. They require a different mindset!
+

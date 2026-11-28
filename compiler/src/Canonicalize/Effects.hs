@@ -87,7 +87,7 @@ type PayloadCheck =
 
 
 canonicalizePort :: PayloadCheck -> Env.Env -> Src.Port -> Result i w (N.Name, Can.Port)
-canonicalizePort checkPayload env (Src.Port (A.At region portName) tipe) =
+canonicalizePort check env (Src.Port (A.At region portName) tipe) =
   do  (Can.Forall freeVars ctipe) <- Type.toAnnotation env tipe
       case reverse (Type.delambda (Type.deepDealias ctipe)) of
         Can.TType home name [msg] : revArgs
@@ -99,7 +99,7 @@ canonicalizePort checkPayload env (Src.Port (A.At region portName) tipe) =
                   [outgoingType] ->
                     case msg of
                       Can.TVar _ ->
-                        case checkPayload outgoingType of
+                        case check outgoingType of
                           Right () ->
                             Result.ok (portName, Can.Outgoing freeVars outgoingType ctipe)
 
@@ -117,7 +117,7 @@ canonicalizePort checkPayload env (Src.Port (A.At region portName) tipe) =
                   [Can.TLambda incomingType (Can.TVar msg1)] ->
                     case msg of
                       Can.TVar msg2 | msg1 == msg2 ->
-                        case checkPayload incomingType of
+                        case check incomingType of
                           Right () ->
                             Result.ok (portName, Can.Incoming freeVars incomingType ctipe)
 

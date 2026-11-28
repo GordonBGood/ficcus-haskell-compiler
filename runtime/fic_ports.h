@@ -271,7 +271,7 @@ size_t fic_hv_len(fic_hv v) {
 }
 
 fic_hv fic_hv_at(fic_hv v, size_t i) {
-  if (v == NULL || i >= fic_hv_len(v)) return NULL;
+  if (v == NULL || (v->tag != FIC_TAG_VEC_REF && v->tag != FIC_TAG_JOBJ) || i >= fic_hv_len(v)) return NULL;   /* a raw vector: fic_hv_vector */
   return v->tag == FIC_TAG_VEC_REF ? fic_json_at(v, (int64_t)i) : fic_json_at(((fic_jobj *)v)->vals, (int64_t)i);
 }
 

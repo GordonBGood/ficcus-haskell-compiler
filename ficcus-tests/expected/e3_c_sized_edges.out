@@ -1,0 +1,245 @@
+> sub i8Out
+subscribe: ok
+> sub w8Out
+subscribe: ok
+> sub w64Out
+subscribe: ok
+> sub f32Out
+subscribe: ok
+> sub i32Out
+subscribe: ok
+> sub w32Out
+subscribe: ok
+> sub recOut
+subscribe: ok
+> int i8In -128
+send: ok
+> int i8In 127
+send: ok
+> int i8In -129
+send: rc -2
+error: Problem with the given value:
+
+-129
+
+Expecting an INT8 (a whole number from -128 to 127)
+> int i8In 128
+send: rc -2
+error: Problem with the given value:
+
+128
+
+Expecting an INT8 (a whole number from -128 to 127)
+> json i8In -129
+send_json: rc -2
+error: Problem with the given value:
+
+-129
+
+Expecting an INT8 (a whole number from -128 to 127)
+> json i8In 1e2
+send_json: ok
+> json i8In 1.5
+send_json: rc -2
+error: Problem with the given value:
+
+1.5
+
+Expecting an INT8 (a whole number from -128 to 127)
+> json i8In "1"
+send_json: rc -2
+error: Problem with the given value:
+
+"1"
+
+Expecting an INT8 (a whole number from -128 to 127)
+> float i8In nan
+send: rc -2
+error: Problem with the given value:
+
+null
+
+Expecting an INT8 (a whole number from -128 to 127)
+> float i8In -0
+send: ok
+> int w8In 255
+send: ok
+> int w8In 256
+send: rc -2
+error: Problem with the given value:
+
+256
+
+Expecting a WORD8 (a whole number from 0 to 255)
+> int w8In -1
+send: rc -2
+error: Problem with the given value:
+
+-1
+
+Expecting a WORD8 (a whole number from 0 to 255)
+> json w8In -0.0
+send_json: ok
+> uint w64In 0
+send: ok
+> uint w64In 9223372036854775807
+send: ok
+> uint w64In 9223372036854775808
+send: ok
+> uint w64In 18446744073709551615
+send: ok
+> json w64In 18446744073709551615
+send_json: ok
+> json w64In 18446744073709551616
+send_json: rc -2
+error: Problem with the given value:
+
+18446744073709552000
+
+Expecting a WORD64 (a whole number from 0 to 18446744073709551615)
+> json w64In 1.8446744073709552e19
+send_json: rc -2
+error: Problem with the given value:
+
+18446744073709552000
+
+Expecting a WORD64 (a whole number from 0 to 18446744073709551615)
+> json w64In 9.2233720368547758e18
+send_json: ok
+> int w64In -1
+send: rc -2
+error: Problem with the given value:
+
+-1
+
+Expecting a WORD64 (a whole number from 0 to 18446744073709551615)
+> json w64In -1
+send_json: rc -2
+error: Problem with the given value:
+
+-1
+
+Expecting a WORD64 (a whole number from 0 to 18446744073709551615)
+> float w64In nan
+send: rc -2
+error: Problem with the given value:
+
+null
+
+Expecting a WORD64 (a whole number from 0 to 18446744073709551615)
+> int i32In -2147483648
+send: ok
+> int i32In -2147483649
+send: rc -2
+error: Problem with the given value:
+
+-2147483649
+
+Expecting an INT32 (a whole number from -2147483648 to 2147483647)
+> json i32In 2147483648
+send_json: rc -2
+error: Problem with the given value:
+
+2147483648
+
+Expecting an INT32 (a whole number from -2147483648 to 2147483647)
+> int w32In 4294967295
+send: ok
+> int w32In 4294967296
+send: rc -2
+error: Problem with the given value:
+
+4294967296
+
+Expecting a WORD32 (a whole number from 0 to 4294967295)
+> float f32In nan
+send: ok
+> float f32In inf
+send: ok
+> float f32In -inf
+send: ok
+> float f32In 1e39
+send: ok
+> float f32In -1e39
+send: ok
+> float f32In 3.4028235677973366e38
+send: ok
+> float f32In 3.4028235e38
+send: ok
+> float f32In 0.1
+send: ok
+> uint f32In 18446744073709551615
+send: ok
+> json f32In null
+send_json: rc -2
+error: Problem with the given value:
+
+null
+
+Expecting a FLOAT
+> json recIn {"a":-1,"b":18446744073709551615,"c":0.1,"d":[65535],"e":[-2147483648,255]}
+send_json: ok
+> json recIn {"a":-1,"b":3,"c":null,"d":[65536],"e":[0,0]}
+send_json: rc -2
+error: Problem with the value at json.d[0]:
+
+    65536
+
+Expecting a WORD16 (a whole number from 0 to 65535)
+> json recIn {"a":-1,"b":-3,"c":null,"d":[],"e":[0,0]}
+send_json: rc -2
+error: Problem with the value at json.b:
+
+    -3
+
+Expecting a WORD64 (a whole number from 0 to 18446744073709551615)
+> json recIn {"a":-1,"b":3,"c":"x","d":[],"e":[0,0]}
+send_json: rc -2
+error: The Json.Decode.oneOf at json.c failed in the following 2 ways:
+
+
+
+(1) Problem with the given value:
+    
+    "x"
+    
+    Expecting null
+
+
+
+(2) Problem with the given value:
+    
+    "x"
+    
+    Expecting a FLOAT
+> json recIn {"a":-1,"b":3,"c":null,"d":[],"e":[0,256]}
+send_json: rc -2
+error: Problem with the value at json.e[1]:
+
+    256
+
+Expecting a WORD8 (a whole number from 0 to 255)
+i8Out: -128
+i8Out: 127
+i8Out: 100
+i8Out: 0
+w8Out: 255
+w8Out: 0
+w64Out: 0
+w64Out: 9223372036854775807
+w64Out: 9223372036854775808
+w64Out: 18446744073709551615
+w64Out: 18446744073709551615
+w64Out: 9223372036854775808
+i32Out: -2147483648
+w32Out: 4294967295
+f32Out: null
+f32Out: null
+f32Out: null
+f32Out: null
+f32Out: null
+f32Out: null
+f32Out: 3.4028234663852886e+38
+f32Out: 0.10000000149011612
+f32Out: 18446744073709552000
+recOut: {"a":-1,"b":18446744073709551615,"c":0.10000000149011612,"d":[65535],"e":[-2147483648,255]}

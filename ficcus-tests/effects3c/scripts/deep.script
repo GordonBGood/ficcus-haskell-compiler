@@ -1,0 +1,17 @@
+# E3A-REVIEW F2: very deep values; nothing exits, the error text stops at its budget
+sub jsonOut
+sub output
+deepjson 10000
+deepjson 1000000
+deep jsonIn 10000 1
+deep jsonIn 1000000 1
+deeptext jsonIn 10000
+deeptext jsonIn 1000000
+deep listIn 10000 1
+deep listIn 1000000 1
+deeptext listIn 1000000
+deep jsonIn 1000000 u
+deep jsonIn 10000 v
+deep w64In 3 u
+json w64In 18446744073709551615
+vec viIn i64 2 1 1

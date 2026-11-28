@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE QuasiQuotes, TemplateHaskell #-}
 module Optimize.Port
   ( toEncoder

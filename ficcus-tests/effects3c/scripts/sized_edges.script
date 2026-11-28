@@ -1,0 +1,53 @@
+# E3c (D5): range checks at the edges, through the value API and through JSON text
+sub i8Out
+sub w8Out
+sub w64Out
+sub f32Out
+sub i32Out
+sub w32Out
+sub recOut
+int i8In -128
+int i8In 127
+int i8In -129
+int i8In 128
+json i8In -129
+json i8In 1e2
+json i8In 1.5
+json i8In "1"
+float i8In nan
+float i8In -0
+int w8In 255
+int w8In 256
+int w8In -1
+json w8In -0.0
+uint w64In 0
+uint w64In 9223372036854775807
+uint w64In 9223372036854775808
+uint w64In 18446744073709551615
+json w64In 18446744073709551615
+json w64In 18446744073709551616
+json w64In 1.8446744073709552e19
+json w64In 9.2233720368547758e18
+int w64In -1
+json w64In -1
+float w64In nan
+int i32In -2147483648
+int i32In -2147483649
+json i32In 2147483648
+int w32In 4294967295
+int w32In 4294967296
+float f32In nan
+float f32In inf
+float f32In -inf
+float f32In 1e39
+float f32In -1e39
+float f32In 3.4028235677973366e38
+float f32In 3.4028235e38
+float f32In 0.1
+uint f32In 18446744073709551615
+json f32In null
+json recIn {"a":-1,"b":18446744073709551615,"c":0.1,"d":[65535],"e":[-2147483648,255]}
+json recIn {"a":-1,"b":3,"c":null,"d":[65536],"e":[0,0]}
+json recIn {"a":-1,"b":-3,"c":null,"d":[],"e":[0,0]}
+json recIn {"a":-1,"b":3,"c":"x","d":[],"e":[0,0]}
+json recIn {"a":-1,"b":3,"c":null,"d":[],"e":[0,256]}

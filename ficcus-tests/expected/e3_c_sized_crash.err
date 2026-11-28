@@ -1,0 +1,6 @@
+Trying to send an unexpected type of value through port `i8In`:
+Problem with the given value:
+
+128
+
+Expecting an INT8 (a whole number from -128 to 127)

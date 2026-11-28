@@ -1,0 +1,31 @@
+# E3d (D9, D10): raw vectors through the value API; zero copy for the 8 byte kinds (`same`), staging buffers for the narrow kinds
+sub output
+sub viOut
+sub vfOut
+sub vbOut
+sub vhOut
+sub vgOut
+sub vwOut
+sub vsOut
+api
+vec viIn i64 5 -2 3
+vec vfIn f64 3 0.5 0.25
+vec vwIn u64 3 18446744073709549568 -2048
+vec vbIn u8 6 250 1
+vec vhIn i16 3 -32768 32767
+vec vgIn f32 3 0.1 1
+veccopy vbIn u8 4 1 1
+veccopy viIn i64 2 7 1
+vec viIn i64 0 0 0
+vec vbIn u8 0 0 0
+vec vbIn i8 3 1 1
+vec viIn f64 2 1 1
+vec vhIn i32 2 1 1
+vec vsIn u8 2 1 1
+vec vmIn u8 2 1 1
+json vmIn [null, [1, 2], []]
+json vbIn [1, 2, 256]
+json vhIn [1, 40000]
+json vgIn [1e39, "x"]
+json vwIn [0, -1]
+bytes vbIn 1048576

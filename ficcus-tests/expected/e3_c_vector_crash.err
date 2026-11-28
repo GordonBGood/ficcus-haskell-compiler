@@ -1,0 +1,6 @@
+Trying to send an unexpected type of value through port `vbIn`:
+Problem with the value at json[1]:
+
+    256
+
+Expecting a WORD8 (a whole number from 0 to 255)

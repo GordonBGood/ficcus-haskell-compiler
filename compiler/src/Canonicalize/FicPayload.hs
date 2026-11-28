@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternGuards #-}
 {-# OPTIONS_GHC -Wall #-}
 module Canonicalize.FicPayload
   ( checkPayload
@@ -59,7 +60,7 @@ check tipe =
 
 
 -- | Optimize.Port: the Elm type a Ficcus payload type is converted like in the (unused) JavaScript converters of a build to C, so
--- that the optimizer does not stop on it (a sized integer is an Int, `Word64` and `Float32` a Float, `Vector a` an `Array a`).
+-- that the optimizer does not stop on it (a sized integer is an Int, `Float32` a Float, `Vector a` an `Array a`).
 -- Nothing for every other type.
 elmLike :: ModuleName.Canonical -> T.Name -> [Can.Type] -> Maybe Can.Type
 elmLike home name args =
@@ -85,7 +86,7 @@ sizedIds =
 
 floatIds :: [String]
 floatIds =
-  [ "author/project:Word64.Word64", "author/project:Float32.Float32" ]
+  [ "author/project:Float32.Float32" ]
 
 
 vectorId :: String

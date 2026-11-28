@@ -1,0 +1,13 @@
+port module FicPortDict exposing (main)
+
+-- E3c (D6): a .fic module of a build to C: Dict stays refused, with Elm's text
+
+import Dict exposing (Dict)
+
+
+port p : Dict String Int -> Cmd msg
+
+
+main : Program () () ()
+main =
+    Platform.worker { init = \_ -> ( (), p Dict.empty ), update = \_ m -> ( m, Cmd.none ), subscriptions = \_ -> Sub.none }

@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternGuards #-}
 {-# OPTIONS_GHC -Wall #-}
 module Ficcus.Mono.PortDesc
   ( portDesc
